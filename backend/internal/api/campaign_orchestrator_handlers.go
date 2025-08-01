@@ -85,6 +85,9 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 	// Domain generation utilities - standalone service
 	group.POST("/domain-generation/pattern-offset", h.getPatternOffset)
 
+	// Campaign domains endpoint - standalone service
+	group.GET("/:campaignId/domains/status", h.getCampaignDomainsStatus)
+
 	// --- B2B BULK APIS FOR LARGE-SCALE OPERATIONS ---
 	// Bulk enriched data endpoint for processing millions of domains
 	group.POST("/bulk/enriched-data", h.getBulkEnrichedCampaignData)
@@ -589,6 +592,42 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignsStandalone(c *gin.Context) 
 			"updatedAt":    campaign.UpdatedAt.Format(time.RFC3339),
 		}
 
+		// 🆕 CRITICAL FIX: Add campaign phases data that frontend expects
+		phases, err := h.campaignStore.GetCampaignPhases(c.Request.Context(), h.db, campaign.ID)
+		if err != nil {
+			log.Printf("Warning: Failed to get phases for campaign %s: %v", campaign.ID, err)
+			// Provide default phases if database query fails
+			campaignData["phases"] = []map[string]interface{}{
+				{"phaseType": "domain_generation", "status": "not_started", "phaseOrder": 1},
+				{"phaseType": "dns_validation", "status": "not_started", "phaseOrder": 2},
+				{"phaseType": "http_keyword_validation", "status": "not_started", "phaseOrder": 3},
+				{"phaseType": "analysis", "status": "not_started", "phaseOrder": 4},
+			}
+		} else {
+			// Convert phases to format expected by frontend
+			phasesData := make([]map[string]interface{}, len(phases))
+			for i, phase := range phases {
+				phasesData[i] = map[string]interface{}{
+					"id":                phase.ID.String(),
+					"campaignId":        phase.CampaignID.String(),
+					"phaseType":         string(phase.PhaseType),
+					"phaseOrder":        phase.PhaseOrder,
+					"status":            string(phase.Status),
+					"progressPercentage": phase.ProgressPercentage,
+					"startedAt":         phase.StartedAt,
+					"completedAt":       phase.CompletedAt,
+					"errorMessage":      phase.ErrorMessage,
+					"totalItems":        phase.TotalItems,
+					"processedItems":    phase.ProcessedItems,
+					"successfulItems":   phase.SuccessfulItems,
+					"failedItems":       phase.FailedItems,
+					"createdAt":         phase.CreatedAt.Format(time.RFC3339),
+					"updatedAt":         phase.UpdatedAt.Format(time.RFC3339),
+				}
+			}
+			campaignData["phases"] = phasesData
+		}
+
 		// Include bulk JSONB data for enterprise-scale processing
 		if campaign.DomainsData != nil {
 			var domainsData interface{}
@@ -759,6 +798,34 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 			progressData["dnsValidatedDomains"] = *campaign.DNSValidatedDomains
 		}
 
+		// CRITICAL FIX: Fetch actual domain records from generated_domains table
+		var domains []models.GeneratedDomain
+		if request.Limit > 0 {
+			// Use pagination parameters if provided
+			fetchedDomains, err := h.campaignStore.GetGeneratedDomainsByCampaign(
+				c.Request.Context(), h.db, campaign.ID, request.Limit, int64(request.Offset))
+			if err == nil {
+				domains = make([]models.GeneratedDomain, len(fetchedDomains))
+				for i, d := range fetchedDomains {
+					domains[i] = *d
+				}
+			} else {
+				log.Printf("Error fetching domains for campaign %s: %v", campaign.ID, err)
+			}
+		} else {
+			// Default fetch (limit 1000 for performance)
+			fetchedDomains, err := h.campaignStore.GetGeneratedDomainsByCampaign(
+				c.Request.Context(), h.db, campaign.ID, 1000, 0)
+			if err == nil {
+				domains = make([]models.GeneratedDomain, len(fetchedDomains))
+				for i, d := range fetchedDomains {
+					domains[i] = *d
+				}
+			} else {
+				log.Printf("Error fetching domains for campaign %s: %v", campaign.ID, err)
+			}
+		}
+
 		// Create enriched campaign data
 		enrichedData := EnrichedCampaignData{
 			Campaign: CampaignData{
@@ -770,6 +837,7 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 				UpdatedAt:    campaign.UpdatedAt.Format(time.RFC3339),
 				Progress:     progressData,
 			},
+			Domains: domains, // CRITICAL FIX: Populate domains field with actual domain records
 		}
 
 		enrichedCampaigns[campaign.ID.String()] = enrichedData
@@ -859,31 +927,16 @@ func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
 	// Query existing offset from campaign store if available
 	if h.campaignStore != nil {
 		ctx := c.Request.Context()
+		log.Printf("DEBUG [PatternOffset]: Looking up config state for hash: %s", configHashString)
 
 		// Get existing config state directly from campaign store
 		if configState, err := h.campaignStore.GetDomainGenerationPhaseConfigStateByHash(ctx, h.db, configHashString); err == nil && configState != nil {
-			// Check if there are any active campaigns using this pattern
-			countQuery := `
-				SELECT COUNT(DISTINCT dgcp.campaign_id)
-				FROM domain_generation_campaign_params dgcp
-				INNER JOIN campaigns c ON c.id = dgcp.campaign_id
-				WHERE c.current_phase = 'generation'
-				AND dgcp.pattern_type = $1
-				AND dgcp.variable_length = $2
-				AND dgcp.character_set = $3
-				AND COALESCE(dgcp.constant_string, '') = $4
-				AND dgcp.tld = $5
-			`
-			var existingCampaignCount int
-			if countErr := h.db.GetContext(ctx, &existingCampaignCount, countQuery,
-				req.PatternType, req.VariableLength, req.CharacterSet, req.ConstantString, req.TLD); countErr == nil {
-
-				if existingCampaignCount == 0 {
-					currentOffset = 0 // Reset to 0 when no existing campaigns
-				} else {
-					currentOffset = configState.LastOffset
-				}
-			}
+			// Always use the global offset from config state - it tracks actual domain generation
+			// regardless of campaign status to prevent duplicate domain generation
+			log.Printf("DEBUG [PatternOffset]: Found config state with LastOffset: %d", configState.LastOffset)
+			currentOffset = configState.LastOffset
+		} else {
+			log.Printf("DEBUG [PatternOffset]: No config state found for hash %s, error: %v", configHashString, err)
 		}
 	}
 
@@ -898,4 +951,142 @@ func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
 	}
 
 	respondWithJSONGin(c, http.StatusOK, response)
+}
+
+// getCampaignDomainsStatus retrieves domain status summary for a campaign
+// @Summary Get campaign domain status summary
+// @Description Retrieve domain status summary and counts for a campaign
+// @Tags campaigns
+// @ID getCampaignDomainsStatus
+// @Produce json
+// @Param campaignId path string true "Campaign ID (UUID)"
+// @Success 200 {object} APIResponse "Domain status summary retrieved successfully"
+// @Failure 400 {object} ErrorResponse "Bad Request"
+// @Failure 404 {object} ErrorResponse "Campaign not found"
+// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Router /campaigns/{campaignId}/domains/status [get]
+func (h *CampaignOrchestratorAPIHandler) getCampaignDomainsStatus(c *gin.Context) {
+	campaignId := c.Param("campaignId")
+
+	// Get user from context
+	userID, exists := c.Get("user_id")
+	if !exists {
+		respondWithDetailedErrorGin(c, http.StatusUnauthorized, ErrorCodeUnauthorized,
+			"User not authenticated", nil)
+		return
+	}
+
+	userUUID, ok := userID.(uuid.UUID)
+	if !ok {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Invalid user ID", nil)
+		return
+	}
+
+	// Parse campaign ID
+	campaignUUID, err := uuid.Parse(campaignId)
+	if err != nil {
+		respondWithDetailedErrorGin(c, http.StatusBadRequest, ErrorCodeValidation,
+			"Invalid campaign ID", nil)
+		return
+	}
+
+	// Get campaign to verify ownership
+	campaign, err := h.campaignStore.GetCampaignByID(c.Request.Context(), h.db, campaignUUID)
+	if err != nil {
+		respondWithDetailedErrorGin(c, http.StatusNotFound, ErrorCodeNotFound,
+			"Campaign not found", nil)
+		return
+	}
+
+	// Verify user owns this campaign
+	if campaign.UserID == nil || *campaign.UserID != userUUID {
+		respondWithDetailedErrorGin(c, http.StatusForbidden, ErrorCodeForbidden,
+			"Access denied", nil)
+		return
+	}
+
+	// Calculate domain status summary
+	statusSummary := map[string]interface{}{
+		"campaignId": campaignId,
+		"summary": map[string]int{
+			"total":          0,
+			"generated":      0,
+			"dnsValidated":   0,
+			"httpValidated":  0,
+			"leadsGenerated": 0,
+			"failed":         0,
+		},
+		"currentPhase": getCurrentPhaseString(campaign),
+		"phaseStatus":  getPhaseStatusString(campaign),
+	}
+
+	// Count domains from JSONB data
+	if campaign.DomainsData != nil {
+		var domainsData []interface{}
+		if err := json.Unmarshal(*campaign.DomainsData, &domainsData); err == nil {
+			statusSummary["summary"].(map[string]int)["total"] = len(domainsData)
+			statusSummary["summary"].(map[string]int)["generated"] = len(domainsData)
+		}
+	}
+
+	// Count DNS validated domains
+	if campaign.DNSResults != nil {
+		var dnsResults []interface{}
+		if err := json.Unmarshal(*campaign.DNSResults, &dnsResults); err == nil {
+			statusSummary["summary"].(map[string]int)["dnsValidated"] = len(dnsResults)
+		}
+	}
+
+	// Count HTTP validated domains
+	if campaign.HTTPResults != nil {
+		var httpResults []interface{}
+		if err := json.Unmarshal(*campaign.HTTPResults, &httpResults); err == nil {
+			statusSummary["summary"].(map[string]int)["httpValidated"] = len(httpResults)
+		}
+	}
+
+	// Count leads generated
+	if campaign.AnalysisResults != nil {
+		var analysisResults []interface{}
+		if err := json.Unmarshal(*campaign.AnalysisResults, &analysisResults); err == nil {
+			statusSummary["summary"].(map[string]int)["leadsGenerated"] = len(analysisResults)
+		}
+	}
+
+	apiResponse := NewSuccessResponse(statusSummary, getRequestID(c))
+	respondWithJSONGin(c, http.StatusOK, apiResponse)
+}
+
+// Helper function to filter domains based on status and phase
+func filterDomains(domains []interface{}, statusFilter, phaseFilter string) []interface{} {
+	if statusFilter == "" && phaseFilter == "" {
+		return domains
+	}
+
+	var filtered []interface{}
+	for _, domain := range domains {
+		domainMap, ok := domain.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		// Apply status filter
+		if statusFilter != "" {
+			if status, exists := domainMap["status"]; !exists || status != statusFilter {
+				continue
+			}
+		}
+
+		// Apply phase filter
+		if phaseFilter != "" {
+			if phase, exists := domainMap["phase"]; !exists || phase != phaseFilter {
+				continue
+			}
+		}
+
+		filtered = append(filtered, domain)
+	}
+
+	return filtered
 }

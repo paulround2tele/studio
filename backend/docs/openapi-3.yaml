@@ -4650,6 +4650,8 @@ components:
                     format: int64
                     type: integer
             type: object
+        PhaseStatusDerivationService:
+            type: object
         PhaseStatusEnum:
             type: string
         PhaseTypeEnum:
@@ -6582,6 +6584,43 @@ paths:
             security:
                 - sessionAuth: []
             summary: List campaigns (standalone)
+            tags:
+                - campaigns
+    /campaigns/{campaignId}/domains/status:
+        get:
+            description: Retrieve domain status summary and counts for a campaign
+            operationId: getCampaignDomainsStatus
+            parameters:
+                - description: Campaign ID (UUID)
+                  in: path
+                  name: campaignId
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/APIResponse'
+                    description: Operation successful
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad Request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal Server Error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get campaign domain status summary
             tags:
                 - campaigns
     /campaigns/{campaignId}/phases/{phase}/configure:

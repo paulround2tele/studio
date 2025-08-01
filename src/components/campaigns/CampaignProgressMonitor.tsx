@@ -97,7 +97,7 @@ phaseStatus: campaign.phaseStatus  as any,
 status: campaign.phaseStatus
   }), [campaign.id, campaign.currentPhase, campaign.phaseStatus, campaign.phaseStatus]);
 
-  // Optimized WebSocket message handler with stable dependencies
+  // Optimized WebSocket message handler - REFACTORED: Domain data handlers removed
   const handleWebSocketMessage = useCallback((message: WebSocketMessage & { campaignId?: string; message?: string }) => {
     setConnectionHealth(prev => ({ ...prev, lastHeartbeat: new Date() }));
     
@@ -113,18 +113,9 @@ title: "Campaign Subscription Active",
         });
         break;
 
-      case 'domain_generated':
-        const domainData = message.data as { domains?: string[] };
-        if (domainData && domainData.domains && domainData.domains.length > 0) {
-          setRealtimeData(prev => ({
-            ...prev,
-            domainsGenerated: prev.domainsGenerated + domainData.domains!.length,
-            lastActivity: new Date()
-          }));
-          domainData.domains.forEach((domain: string) => onDomainReceived?.(domain));
-        }
-        break;
-
+      // REMOVED: Domain data handlers - use REST API polling for domain data
+      // case 'domain_generated': Use polling or bulk endpoints for domain data
+      
       case 'progress':
         const progressData = message.data as { progress?: number };
         if (progressData && typeof progressData.progress === 'number') {

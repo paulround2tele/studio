@@ -30,7 +30,7 @@
     "gen:types": "openapi-typescript backend/docs/openapi-3.yaml -o src/lib/api-client/types.ts",
     "gen:clients": "openapi-generator-cli generate -i backend/docs/openapi-3.yaml -g typescript-axios -o src/lib/api-client --additional-properties=supportsES6=true,withInterfaces=true,typescriptThreePlus=true,withSeparateModelsAndApi=true,apiPackage=apis,modelPackage=models,stringEnums=true,enumPropertyNaming=original,generateAliasAsModel=true",
     "gen:docs": "openapi-generator-cli generate -i backend/docs/openapi-3.yaml -g html2 -o src/lib/api-client/docs",
-    "gen:all": "npm run gen:openapi && npm run gen:types && npm run gen:clients && npm run gen:docs && npx tsx scripts/fix-uuid-types.ts && npx tsx scripts/fix-enum-types.ts",
+    "gen:all": "npm run gen:openapi && npm run gen:types && npm run gen:clients && npm run gen:docs && npx tsx scripts/fix-uuid-types.ts && npx tsx scripts/fix-enum-types.ts && npx tsx scripts/fix-numeric-types.ts",
     "test:visual": "percy exec -- jest src/components/ui/__tests__/visual/",
     "percy:start": "percy exec -- start-server-and-test start http://localhost:8080 'npm run test:visual'",
     "test:e2e": "playwright test",

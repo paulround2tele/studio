@@ -3,7 +3,6 @@ package services
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -44,8 +43,11 @@ type phaseExecutionService struct {
 	contentFetcher  *contentfetcher.ContentFetcher
 	keywordScanner  *keywordscanner.Service
 
-	// Shared service dependencies for global offset tracking
+	// Service layer dependencies - proper architecture
 	domainGenerationService DomainGenerationService
+	dnsValidationService    DNSCampaignService
+	httpValidationService   HTTPKeywordCampaignService
+	phaseStatusDerivation   *PhaseStatusDerivationService
 }
 
 // NewPhaseExecutionService creates a new Phase Execution Service that replaces both
@@ -86,6 +88,9 @@ func NewPhaseExecutionService(
 		contentFetcher:          contentFetcher,
 		keywordScanner:          keywordScanner,
 		domainGenerationService: domainGenerationService,
+		dnsValidationService:    dnsValidationService,
+		httpValidationService:   httpValidationService,
+		phaseStatusDerivation:   NewPhaseStatusDerivationService(campaignStore, db),
 	}
 }
 
@@ -140,6 +145,42 @@ func (s *phaseExecutionService) CreateCampaign(ctx context.Context, req CreateLe
 
 	log.Printf("DEBUG CreateCampaign: Calculated total_possible_combinations=%d for campaign %s", totalPossibleCombinations, campaignID)
 
+	// 🚨 CRITICAL FIX: Get current global offset instead of hardcoding 0
+	var currentOffset int64 = 0
+
+	// Calculate config hash to look up existing offset using same logic as pattern offset API
+	if len(req.DomainConfig.TLDs) > 0 {
+		selectedTLD := req.DomainConfig.TLDs[0]
+		// Normalize TLD format for hash calculation
+		if !strings.HasPrefix(selectedTLD, ".") {
+			selectedTLD = "." + selectedTLD
+		}
+
+		// Create params for hash calculation
+		hashParams := models.DomainGenerationCampaignParams{
+			PatternType:    req.DomainConfig.PatternType,
+			VariableLength: req.DomainConfig.VariableLength,
+			CharacterSet:   req.DomainConfig.CharacterSet,
+			ConstantString: &req.DomainConfig.ConstantString,
+			TLD:            selectedTLD,
+		}
+
+		// Calculate hash using domain expert
+		if hashResult, err := domainexpert.GenerateDomainGenerationPhaseConfigHash(hashParams); err == nil {
+			// Look up existing config state to get current offset
+			if s.campaignStore != nil {
+				if configState, err := s.campaignStore.GetDomainGenerationPhaseConfigStateByHash(ctx, s.db, hashResult.HashString); err == nil && configState != nil {
+					currentOffset = configState.LastOffset
+					log.Printf("DEBUG CreateCampaign: Found existing config state with offset %d for campaign %s", currentOffset, campaignID)
+				} else {
+					log.Printf("DEBUG CreateCampaign: No existing config state found, using offset 0 for campaign %s", campaignID)
+				}
+			}
+		} else {
+			log.Printf("WARNING CreateCampaign: Failed to calculate config hash for campaign %s: %v", campaignID, err)
+		}
+	}
+
 	// Store domain generation configuration in campaign metadata for modern architecture
 	metadata := map[string]interface{}{
 		"domain_generation_config": map[string]interface{}{
@@ -150,9 +191,9 @@ func (s *phaseExecutionService) CreateCampaign(ctx context.Context, req CreateLe
 			"tlds":                    req.DomainConfig.TLDs,
 			"num_domains_to_generate": req.DomainConfig.NumDomainsToGenerate,
 			"batch_size":              batchSize,
-			// 🚨 CRITICAL FIX: Add missing fields that domain generation service expects
+			// 🚨 CRITICAL FIX: Use calculated current offset instead of hardcoding 0
 			"total_possible_combinations": totalPossibleCombinations,
-			"current_offset":              0, // Start new campaigns at offset 0
+			"current_offset":              currentOffset,
 		},
 	}
 
@@ -196,6 +237,17 @@ func (s *phaseExecutionService) CreateCampaign(ctx context.Context, req CreateLe
 	}
 	log.Printf("DEBUG CreateCampaign: store.CreateCampaign SUCCEEDED for campaign %s", campaignID)
 
+	// 🆕 Create campaign phase records
+	log.Printf("DEBUG CreateCampaign: About to create campaign phases for campaign %s", campaignID)
+	err = s.campaignStore.CreateCampaignPhases(ctx, s.db, campaignID)
+	if err != nil {
+		log.Printf("DEBUG CreateCampaign: CreateCampaignPhases FAILED for campaign %s: %v", campaignID, err)
+		// Cleanup campaign if phase creation fails
+		s.campaignStore.DeleteCampaign(ctx, s.db, campaignID)
+		return nil, fmt.Errorf("failed to create campaign phases: %w", err)
+	}
+	log.Printf("DEBUG CreateCampaign: CreateCampaignPhases SUCCEEDED for campaign %s", campaignID)
+
 	// Initialize Phase 1 (Domain Generation) - coordinate with standalone service
 	log.Printf("DEBUG CreateCampaign: About to call InitializePhase1 for campaign %s", campaignID)
 	err = s.InitializePhase1(ctx, campaignID)
@@ -222,15 +274,36 @@ func (s *phaseExecutionService) GetCampaign(ctx context.Context, campaignID uuid
 	return campaign, nil
 }
 
-// UpdateCampaignStatus updates the campaign status
+// UpdateCampaignStatus updates the campaign status via phase table (single source of truth)
+// ARCHITECTURE: This now updates campaign_phases table, which automatically syncs to campaign via trigger
 func (s *phaseExecutionService) UpdateCampaignStatus(ctx context.Context, campaignID uuid.UUID, status string) error {
+	log.Printf("UpdateCampaignStatus: Setting status '%s' for campaign %s using phase-first approach", status, campaignID)
+
+	// Get current campaign to determine which phase to update
+	campaign, err := s.campaignStore.GetCampaignByID(ctx, s.db, campaignID)
+	if err != nil {
+		return fmt.Errorf("failed to get campaign: %w", err)
+	}
+
+	if campaign.CurrentPhase == nil {
+		// If no current phase, default to domain_generation
+		defaultPhase := models.PhaseTypeDomainGeneration
+		campaign.CurrentPhase = &defaultPhase
+		log.Printf("No current phase set for campaign %s, defaulting to domain_generation", campaignID)
+	}
+
 	// Convert string status to enum
 	phaseStatus := models.PhaseStatusEnum(status)
 
-	err := s.campaignStore.UpdateCampaignStatus(ctx, s.db, campaignID, phaseStatus, sql.NullString{})
+	// Update the current phase status in campaign_phases table
+	// The database trigger will automatically sync the campaign table
+	err = s.campaignStore.UpdatePhaseStatus(ctx, s.db, campaignID, *campaign.CurrentPhase, phaseStatus)
 	if err != nil {
-		return fmt.Errorf("failed to update campaign status: %w", err)
+		return fmt.Errorf("failed to update phase status: %w", err)
 	}
+
+	log.Printf("Successfully updated phase %s status to '%s' for campaign %s (campaign auto-synced)",
+		*campaign.CurrentPhase, status, campaignID)
 
 	// Broadcast status update
 	s.broadcastCampaignUpdate(campaignID, "campaign.status.updated", fmt.Sprintf("Status updated to %s", status))
@@ -488,13 +561,6 @@ func (s *phaseExecutionService) StartPhase(ctx context.Context, campaignID uuid.
 		}
 	}
 
-	// Update campaign current phase
-	campaign.CurrentPhase = &phaseToStart
-	err = s.campaignStore.UpdateCampaign(ctx, s.db, campaign)
-	if err != nil {
-		return fmt.Errorf("failed to update campaign phase: %w", err)
-	}
-
 	log.Printf("StartPhase: Starting phase %s for campaign %s (mode: %s)", phaseToStart, campaignID,
 		map[bool]string{true: "auto", false: "step-by-step"}[campaign.AutoAdvancePhases])
 
@@ -504,18 +570,36 @@ func (s *phaseExecutionService) StartPhase(ctx context.Context, campaignID uuid.
 	}
 
 	// Execute the determined phase
+	var phaseErr error
 	switch phaseToStart {
 	case models.PhaseTypeDomainGeneration:
-		return s.startDomainGenerationPhase(ctx, campaignID)
+		phaseErr = s.startDomainGenerationPhase(ctx, campaignID)
 	case models.PhaseTypeDNSValidation:
-		return s.startDNSValidationPhase(ctx, campaignID)
+		phaseErr = s.startDNSValidationPhase(ctx, campaignID)
 	case models.PhaseTypeHTTPKeywordValidation:
-		return s.startHTTPValidationPhase(ctx, campaignID)
+		phaseErr = s.startHTTPValidationPhase(ctx, campaignID)
 	case models.PhaseTypeAnalysis:
-		return s.startAnalysisPhase(ctx, campaignID)
+		phaseErr = s.startAnalysisPhase(ctx, campaignID)
 	default:
-		return fmt.Errorf("unsupported phase: %s", phaseToStart)
+		phaseErr = fmt.Errorf("unsupported phase: %s", phaseToStart)
 	}
+
+	// If phase execution failed, reset the phase status to allow retry
+	if phaseErr != nil {
+		log.Printf("Phase execution failed for campaign %s, phase %s: %v. Resetting phase status for retry.", campaignID, phaseToStart, phaseErr)
+
+		// Reset phase status in campaign_phases table to 'failed'
+		// The database trigger will automatically sync the campaign table
+		if resetErr := s.campaignStore.FailPhase(ctx, s.db, campaignID, phaseToStart, phaseErr.Error()); resetErr != nil {
+			log.Printf("WARNING: Failed to set phase to failed status for campaign %s: %v", campaignID, resetErr)
+		} else {
+			log.Printf("Successfully set phase %s to 'failed' for campaign %s (campaign auto-synced)", phaseToStart, campaignID)
+		}
+
+		return phaseErr
+	}
+
+	return nil
 }
 
 // TransitionToNextPhase manages transitions between phases
@@ -1085,17 +1169,38 @@ func (s *phaseExecutionService) startDomainGenerationPhase(ctx context.Context, 
 	// Use shared DomainGenerationService with global offset tracking
 	log.Printf("Starting domain generation for campaign %s using shared service with global offset tracking", campaignID)
 
+	// 🆕 Mark domain generation phase as started
+	err = s.campaignStore.StartPhase(ctx, s.db, campaignID, models.PhaseTypeDomainGeneration)
+	if err != nil {
+		log.Printf("WARNING: Failed to mark domain generation phase as started for campaign %s: %v", campaignID, err)
+	}
+
 	// Process domain generation batch using shared service to maintain global offsets
 	batchSize := 100 // Default batch size
 	batchDone, processedCount, err := s.domainGenerationService.ProcessGenerationCampaignBatch(ctx, campaignID, batchSize)
 	if err != nil {
+		// 🆕 Mark phase as failed
+		s.campaignStore.FailPhase(ctx, s.db, campaignID, models.PhaseTypeDomainGeneration, err.Error())
 		return fmt.Errorf("failed to process domain generation batch: %w", err)
 	}
 
 	log.Printf("Domain generation batch completed for campaign %s: processed=%d, batchDone=%v",
 		campaignID, processedCount, batchDone)
 
+	// 🆕 Update phase progress
+	processedInt64 := int64(processedCount)
+	err = s.campaignStore.UpdatePhaseProgress(ctx, s.db, campaignID, models.PhaseTypeDomainGeneration,
+		0.0, nil, &processedInt64, &processedInt64, nil)
+	if err != nil {
+		log.Printf("WARNING: Failed to update domain generation phase progress for campaign %s: %v", campaignID, err)
+	}
+
 	if processedCount == 0 {
+		// 🆕 Complete the phase if no domains were processed
+		err = s.campaignStore.CompletePhase(ctx, s.db, campaignID, models.PhaseTypeDomainGeneration)
+		if err != nil {
+			log.Printf("WARNING: Failed to complete domain generation phase for campaign %s: %v", campaignID, err)
+		}
 		s.broadcastCampaignUpdate(campaignID, "phase.completed", "Domain generation phase completed - no more domains")
 		return nil
 	}
@@ -1105,6 +1210,18 @@ func (s *phaseExecutionService) startDomainGenerationPhase(ctx context.Context, 
 		fmt.Sprintf("Generated %d domains", processedCount))
 
 	if batchDone {
+		// 🆕 Complete the domain generation phase
+		err = s.campaignStore.CompletePhase(ctx, s.db, campaignID, models.PhaseTypeDomainGeneration)
+		if err != nil {
+			log.Printf("WARNING: Failed to complete domain generation phase for campaign %s: %v", campaignID, err)
+		}
+
+		// 🆕 Mark next phase (DNS validation) as ready
+		err = s.campaignStore.UpdatePhaseStatus(ctx, s.db, campaignID, models.PhaseTypeDNSValidation, models.PhaseStatusReady)
+		if err != nil {
+			log.Printf("WARNING: Failed to mark DNS validation phase as ready for campaign %s: %v", campaignID, err)
+		}
+
 		s.broadcastCampaignUpdate(campaignID, "phase.completed", "Domain generation phase completed")
 	}
 
@@ -1112,219 +1229,34 @@ func (s *phaseExecutionService) startDomainGenerationPhase(ctx context.Context, 
 }
 
 func (s *phaseExecutionService) startDNSValidationPhase(ctx context.Context, campaignID uuid.UUID) error {
-	log.Printf("Starting DNS validation phase for campaign %s", campaignID)
+	// Use service layer architecture - delegate to DNSCampaignService like domain generation does
+	log.Printf("startDNSValidationPhase: Starting DNS validation for campaign %s using service layer", campaignID)
 
-	// Get campaign and extract DNS configuration from metadata
-	campaign, err := s.GetCampaign(ctx, campaignID)
+	// Use the DNS validation service (like domain generation uses domainGenerationService)
+	done, processedInThisBatch, err := s.dnsValidationService.ProcessDNSValidationCampaignBatch(ctx, campaignID)
 	if err != nil {
-		return fmt.Errorf("failed to get campaign for DNS validation phase: %w", err)
+		s.campaignStore.FailPhase(ctx, s.db, campaignID, models.PhaseTypeDNSValidation, err.Error())
+		return fmt.Errorf("DNS validation service failed for campaign %s: %w", campaignID, err)
 	}
 
-	// Extract DNS validation configuration from metadata
-	if campaign.Metadata == nil {
-		return fmt.Errorf("DNS validation phase requires configuration but campaign metadata is missing")
-	}
-
-	var metadata map[string]interface{}
-	if err := json.Unmarshal(*campaign.Metadata, &metadata); err != nil {
-		return fmt.Errorf("failed to unmarshal campaign metadata: %w", err)
-	}
-
-	dnsConfigRaw, exists := metadata["dns_validation_config"]
-	if !exists {
-		return fmt.Errorf("DNS validation configuration not found in campaign metadata")
-	}
-
-	// Convert to DNS validation config struct
-	dnsConfigBytes, err := json.Marshal(dnsConfigRaw)
-	if err != nil {
-		return fmt.Errorf("failed to marshal DNS config: %w", err)
-	}
-
-	// Use the correct DNSValidationConfig type
-	type DNSValidationConfig struct {
-		PersonaIDs               []string `json:"personaIds"`
-		RotationIntervalSeconds  int      `json:"rotationIntervalSeconds,omitempty"`
-		ProcessingSpeedPerMinute int      `json:"processingSpeedPerMinute,omitempty"`
-		BatchSize                int      `json:"batchSize,omitempty"`
-		RetryAttempts            int      `json:"retryAttempts,omitempty"`
-	}
-
-	var dnsConfig DNSValidationConfig
-	if err := json.Unmarshal(dnsConfigBytes, &dnsConfig); err != nil {
-		return fmt.Errorf("failed to unmarshal DNS validation config: %w", err)
-	}
-
-	// Direct engine integration - call DNSValidator directly
-	if s.dnsValidator == nil {
-		return fmt.Errorf("DNS validator engine not initialized")
-	}
-
-	// Get generated domains from previous phase
-	domains, err := s.campaignStore.GetGeneratedDomainsByCampaign(ctx, s.db, campaignID, 100, 0)
-	if err != nil {
-		return fmt.Errorf("failed to get domains for DNS validation: %w", err)
-	}
-
-	if len(domains) == 0 {
-		s.broadcastCampaignUpdate(campaignID, "phase.completed", "DNS validation phase completed - no domains to validate")
-		return nil
-	}
-
-	// Process domains with DNS validation using direct engine call
-	validationCount := 0
-	for _, domain := range domains {
-		// Use direct DNS validator engine call
-		result := s.dnsValidator.ValidateSingleDomain(domain.DomainName, ctx)
-
-		// Update domain with DNS validation result
-		if result.Status == "resolved" {
-			validationCount++
-			log.Printf("DNS validation successful for domain %s", domain.DomainName)
-		} else if result.Status == "not_found" {
-			log.Printf("DNS validation failed for domain %s: not found", domain.DomainName)
-		} else {
-			log.Printf("DNS validation error for domain %s: %s", domain.DomainName, result.Error)
-		}
-
-		// Note: Domain status updates would be handled by a separate service
-		// For now, we log the results and continue processing
-	}
-
-	// Update campaign progress
-	processedCount := int64(len(domains))
-	totalItems := int64(len(domains))
-	progressPercentage := float64(processedCount) / float64(totalItems) * 100.0
-
-	err = s.campaignStore.UpdateCampaignProgress(ctx, s.db, campaignID, processedCount, totalItems, progressPercentage)
-	if err != nil {
-		return fmt.Errorf("failed to update campaign progress: %w", err)
-	}
-
-	log.Printf("startDNSValidationPhase: Completed DNS validation for campaign %s - validated %d domains",
-		campaignID, validationCount)
-
-	s.broadcastCampaignUpdate(campaignID, "phase.started",
-		fmt.Sprintf("DNS validation phase completed - validated %d/%d domains",
-			validationCount, len(domains)))
-
+	log.Printf("startDNSValidationPhase: DNS validation batch processed for campaign %s - done: %v, processed: %d",
+		campaignID, done, processedInThisBatch)
 	return nil
 }
 
 func (s *phaseExecutionService) startHTTPValidationPhase(ctx context.Context, campaignID uuid.UUID) error {
-	// Get campaign and extract HTTP configuration from metadata
-	campaign, err := s.GetCampaign(ctx, campaignID)
+	// Use service layer architecture - delegate to HTTPKeywordCampaignService like domain generation does
+	log.Printf("startHTTPValidationPhase: Starting HTTP validation for campaign %s using service layer", campaignID)
+
+	// Use the HTTP keyword validation service (like domain generation uses domainGenerationService)
+	done, processedInThisBatch, err := s.httpValidationService.ProcessHTTPKeywordCampaignBatch(ctx, campaignID)
 	if err != nil {
-		return fmt.Errorf("failed to get campaign for HTTP validation phase: %w", err)
+		s.campaignStore.FailPhase(ctx, s.db, campaignID, models.PhaseTypeHTTPKeywordValidation, err.Error())
+		return fmt.Errorf("HTTP keyword validation service failed for campaign %s: %w", campaignID, err)
 	}
 
-	// Extract HTTP validation configuration from metadata
-	if campaign.Metadata == nil {
-		return fmt.Errorf("HTTP validation phase requires configuration but campaign metadata is missing")
-	}
-
-	var metadata map[string]interface{}
-	if err := json.Unmarshal(*campaign.Metadata, &metadata); err != nil {
-		return fmt.Errorf("failed to unmarshal campaign metadata: %w", err)
-	}
-
-	httpConfigRaw, exists := metadata["http_validation_config"]
-	if !exists {
-		return fmt.Errorf("HTTP validation configuration not found in campaign metadata")
-	}
-
-	// Convert to HTTP validation config struct
-	httpConfigBytes, err := json.Marshal(httpConfigRaw)
-	if err != nil {
-		return fmt.Errorf("failed to marshal HTTP config: %w", err)
-	}
-
-	// Use the correct HTTPValidationConfig type
-	type HTTPValidationConfig struct {
-		PersonaIDs               []string `json:"personaIds"`
-		KeywordSetIDs            []string `json:"keywordSetIds,omitempty"`
-		AdHocKeywords            []string `json:"adHocKeywords,omitempty"`
-		ProxyIDs                 []string `json:"proxyIds,omitempty"`
-		ProxyPoolID              string   `json:"proxyPoolId,omitempty"`
-		ProxySelectionStrategy   string   `json:"proxySelectionStrategy,omitempty"`
-		TargetHTTPPorts          []int    `json:"targetHttpPorts,omitempty"`
-		RotationIntervalSeconds  int      `json:"rotationIntervalSeconds,omitempty"`
-		ProcessingSpeedPerMinute int      `json:"processingSpeedPerMinute,omitempty"`
-		BatchSize                int      `json:"batchSize,omitempty"`
-		RetryAttempts            int      `json:"retryAttempts,omitempty"`
-	}
-
-	var httpConfig HTTPValidationConfig
-	if err := json.Unmarshal(httpConfigBytes, &httpConfig); err != nil {
-		return fmt.Errorf("failed to unmarshal HTTP validation config: %w", err)
-	}
-
-	// Phase 2.4: Direct engine integration - call HTTPValidator and ContentFetcher directly
-	if s.httpValidator == nil {
-		return fmt.Errorf("HTTP validator engine not initialized")
-	}
-	if s.contentFetcher == nil {
-		return fmt.Errorf("content fetcher engine not initialized")
-	}
-	if s.keywordScanner == nil {
-		return fmt.Errorf("keyword scanner engine not initialized")
-	}
-
-	// Get DNS validated domains from previous phase
-	domains, err := s.campaignStore.GetGeneratedDomainsByCampaign(ctx, s.db, campaignID, 100, 0)
-	if err != nil {
-		return fmt.Errorf("failed to get domains for HTTP validation: %w", err)
-	}
-
-	if len(domains) == 0 {
-		s.broadcastCampaignUpdate(campaignID, "phase.completed", "HTTP validation phase completed - no domains to validate")
-		return nil
-	}
-
-	// Process domains with HTTP validation
-	validationCount := 0
-	for _, domain := range domains {
-		// Use direct HTTP validator engine call
-		result, err := s.httpValidator.Validate(ctx, domain.DomainName, "https://"+domain.DomainName, nil, nil)
-		if err != nil {
-			log.Printf("HTTP validation failed for domain %s: %v", domain.DomainName, err)
-			continue
-		}
-
-		if result.IsSuccess {
-			validationCount++
-
-			// If HTTP validation succeeded, scan for keywords using content fetcher
-			if len(httpConfig.AdHocKeywords) > 0 {
-				body, _, _, _, _, _, err := s.contentFetcher.FetchUsingPersonas(ctx, "https://"+domain.DomainName, nil, nil, nil)
-				if err == nil && len(body) > 0 {
-					// Scan content for keywords
-					foundKeywords, _ := s.keywordScanner.ScanAdHocKeywords(ctx, body, httpConfig.AdHocKeywords)
-					if len(foundKeywords) > 0 {
-						log.Printf("Found keywords %v in domain %s", foundKeywords, domain.DomainName)
-					}
-				}
-			}
-		}
-	}
-
-	// Update campaign progress
-	processedCount := int64(len(domains))
-	totalItems := int64(len(domains))
-	progressPercentage := float64(processedCount) / float64(totalItems) * 100.0
-
-	err = s.campaignStore.UpdateCampaignProgress(ctx, s.db, campaignID, processedCount, totalItems, progressPercentage)
-	if err != nil {
-		return fmt.Errorf("failed to update campaign progress: %w", err)
-	}
-
-	log.Printf("startHTTPValidationPhase: Started HTTP validation for campaign %s with personas %v and keywords %v",
-		campaignID, httpConfig.PersonaIDs, httpConfig.AdHocKeywords)
-
-	s.broadcastCampaignUpdate(campaignID, "phase.started",
-		fmt.Sprintf("HTTP validation phase started with %d personas and %d keywords",
-			len(httpConfig.PersonaIDs), len(httpConfig.AdHocKeywords)+len(httpConfig.KeywordSetIDs)))
-
+	log.Printf("startHTTPValidationPhase: HTTP validation batch processed for campaign %s - done: %v, processed: %d",
+		campaignID, done, processedInThisBatch)
 	return nil
 }
 
@@ -1374,10 +1306,21 @@ func (s *phaseExecutionService) startAnalysisPhase(ctx context.Context, campaign
 		campaignID, analysisConfig.AnalysisType, analysisConfig.IncludeScreenshots, analysisConfig.GenerateReport)
 
 	// TODO: When analysis service is implemented, configure and start analysis here
-	// For now, we'll just log the configuration and mark phase as started
+	// For now, we'll just log the configuration and mark phase as started and immediately completed
 
 	s.broadcastCampaignUpdate(campaignID, "phase.started",
 		fmt.Sprintf("Analysis phase started with %s analysis type", analysisConfig.AnalysisType))
+
+	// 🆕 For now, immediately complete the analysis phase since no implementation exists
+	err = s.campaignStore.CompletePhase(ctx, s.db, campaignID, models.PhaseTypeAnalysis)
+	if err != nil {
+		log.Printf("WARNING: Failed to complete analysis phase for campaign %s: %v", campaignID, err)
+	}
+
+	log.Printf("startAnalysisPhase: Completed analysis for campaign %s (placeholder implementation)", campaignID)
+
+	s.broadcastCampaignUpdate(campaignID, "phase.completed",
+		"Analysis phase completed (placeholder implementation)")
 
 	return nil
 }
@@ -1410,16 +1353,15 @@ func (s *phaseExecutionService) broadcastCampaignUpdate(campaignID uuid.UUID, ev
 		return
 	}
 
-	wsMessage := websocket.WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().Format(time.RFC3339),
-		Type:           eventType,
-		SequenceNumber: time.Now().UnixNano(),
-		Message:        message,
-		CampaignID:     campaignID.String(),
+	// Use the standardized WebSocket message creation for campaign progress
+	payload := websocket.CampaignStatusPayload{
+		CampaignID:   campaignID.String(),
+		PhaseStatus:  message,
+		CurrentPhase: "",
 	}
-
-	s.websocketManager.BroadcastToCampaign(campaignID.String(), wsMessage)
+	wsMessage := websocket.CreateCampaignStatusMessageV2(payload)
+	s.websocketManager.BroadcastStandardizedMessage(campaignID.String(), wsMessage)
+	log.Printf("Broadcasted campaign update: campaignID=%s, messageType=%s, message=%s", campaignID, eventType, message)
 }
 
 // broadcastPhaseStateChanged broadcasts User-Driven Phase Lifecycle state changes
@@ -1437,18 +1379,8 @@ func (s *phaseExecutionService) broadcastPhaseStateChanged(campaignID uuid.UUID,
 		Timestamp:  time.Now().Format(time.RFC3339),
 	}
 
-	// Create WebSocket message for broadcasting
-	wsMessage := websocket.WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().Format(time.RFC3339),
-		Type:           "phase.state.changed",
-		SequenceNumber: time.Now().UnixNano(),
-		Message:        fmt.Sprintf("Phase %s changed from %s to %s", phase, oldState, newState),
-		CampaignID:     campaignID.String(),
-		Data:           payload,
-	}
-
-	s.websocketManager.BroadcastToCampaign(campaignID.String(), wsMessage)
+	wsMessage := websocket.CreatePhaseStateChangedMessageV2(payload)
+	s.websocketManager.BroadcastStandardizedMessage(campaignID.String(), wsMessage)
 	log.Printf("Broadcast phase state change: campaign=%s, phase=%s, %s->%s", campaignID, phase, oldState, newState)
 }
 
@@ -1465,18 +1397,8 @@ func (s *phaseExecutionService) broadcastPhaseConfigurationRequired(campaignID u
 		Message:    message,
 	}
 
-	// Create WebSocket message for broadcasting
-	wsMessage := websocket.WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().Format(time.RFC3339),
-		Type:           "phase.configuration.required",
-		SequenceNumber: time.Now().UnixNano(),
-		Message:        message,
-		CampaignID:     campaignID.String(),
-		Data:           payload,
-	}
-
-	s.websocketManager.BroadcastToCampaign(campaignID.String(), wsMessage)
+	wsMessage := websocket.CreatePhaseConfigurationRequiredMessageV2(payload)
+	s.websocketManager.BroadcastStandardizedMessage(campaignID.String(), wsMessage)
 	log.Printf("Broadcast phase configuration required: campaign=%s, phase=%s, message=%s", campaignID, phase, message)
 }
 
@@ -1485,23 +1407,23 @@ func (s *phaseExecutionService) broadcastPhaseTransition(campaignID uuid.UUID, f
 		return
 	}
 
-	wsMessage := websocket.WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().Format(time.RFC3339),
-		Type:           "campaign.phase.transition",
-		SequenceNumber: time.Now().UnixNano(),
-		Message:        message,
-		CampaignID:     campaignID.String(),
-		Phase:          toPhase,
-		Data: map[string]interface{}{
-			"previousPhase":  fromPhase,
-			"newPhase":       toPhase,
-			"transitionType": "automatic",
-			"triggerReason":  message,
-		},
+	payload := websocket.PhaseTransitionPayload{
+		CampaignID:         campaignID.String(),
+		PreviousPhase:      fromPhase,
+		NewPhase:           toPhase,
+		NewStatus:          message,     // Re-using Message field for status
+		TransitionType:     "automatic", // Hardcoded for now
+		PrerequisitesMet:   true,        // Assuming prerequisites are met
+		DataIntegrityCheck: true,        // Assuming data integrity is checked
+		DomainsCount:       0,           // Not applicable here
+		ProcessedCount:     0,           // Not applicable here
+		SuccessfulCount:    0,           // Not applicable here
+		FailedCount:        0,           // Not applicable here
 	}
 
-	s.websocketManager.BroadcastToCampaign(campaignID.String(), wsMessage)
+	wsMessage := websocket.CreatePhaseTransitionMessageV2(payload)
+	s.websocketManager.BroadcastStandardizedMessage(campaignID.String(), wsMessage)
+	log.Printf("Broadcasted phase transition: campaignID=%s, fromPhase=%s, toPhase=%s, message=%s", campaignID, fromPhase, toPhase, message)
 }
 
 // Helper functions

@@ -9453,6 +9453,9 @@ ul.nav-tabs {
                     <li data-group="Campaigns" data-name="getBulkEnrichedCampaignData" class="">
                       <a href="#api-Campaigns-getBulkEnrichedCampaignData">getBulkEnrichedCampaignData</a>
                     </li>
+                    <li data-group="Campaigns" data-name="getCampaignDomainsStatus" class="">
+                      <a href="#api-Campaigns-getCampaignDomainsStatus">getCampaignDomainsStatus</a>
+                    </li>
                     <li data-group="Campaigns" data-name="getCampaignProgressStandalone" class="">
                       <a href="#api-Campaigns-getCampaignProgressStandalone">getCampaignProgressStandalone</a>
                     </li>
@@ -13924,6 +13927,527 @@ $(document).ready(function() {
                                   </script>
                                 </div>
                                 <input id='responses-Campaigns-getBulkEnrichedCampaignData-500-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-Campaigns-getCampaignDomainsStatus">
+                      <article id="api-Campaigns-getCampaignDomainsStatus-0" data-group="User" data-name="getCampaignDomainsStatus" data-version="0">
+                        <div class="pull-left">
+                          <h1>getCampaignDomainsStatus</h1>
+                          <p>Get campaign domain status summary</p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Retrieve domain status summary and counts for a campaign</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/campaigns/{campaignId}/domains/status</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-Campaigns-getCampaignDomainsStatus-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-Campaigns-getCampaignDomainsStatus-0-java">Java</a></li>
+                          <li class=""><a href="#examples-Campaigns-getCampaignDomainsStatus-0-dart">Dart</a></li>
+                          <li class=""><a href="#examples-Campaigns-getCampaignDomainsStatus-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-Campaigns-getCampaignDomainsStatus-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-Campaigns-getCampaignDomainsStatus-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-Campaigns-getCampaignDomainsStatus-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-Campaigns-getCampaignDomainsStatus-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-Campaigns-getCampaignDomainsStatus-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-Campaigns-getCampaignDomainsStatus-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-Campaigns-getCampaignDomainsStatus-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-Campaigns-getCampaignDomainsStatus-0-python">Python</a></li>
+                          <li class=""><a href="#examples-Campaigns-getCampaignDomainsStatus-0-rust">Rust</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-Campaigns-getCampaignDomainsStatus-0-curl">
+                            <pre class="prettyprint"><code class="language-bsh">curl -X GET \
+ -H "Accept: application/json" \
+ "http://localhost/campaigns/{campaignId}/domains/status"
+</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-Campaigns-getCampaignDomainsStatus-0-java">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.*;
+import org.openapitools.client.auth.*;
+import org.openapitools.client.model.*;
+import org.openapitools.client.api.CampaignsApi;
+
+import java.io.File;
+import java.util.*;
+
+public class CampaignsApiExample {
+    public static void main(String[] args) {
+
+        // Create an instance of the API class
+        CampaignsApi apiInstance = new CampaignsApi();
+        String campaignId = campaignId_example; // String | Campaign ID (UUID)
+
+        try {
+            APIResponse result = apiInstance.getCampaignDomainsStatus(campaignId);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling CampaignsApi#getCampaignDomainsStatus");
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Campaigns-getCampaignDomainsStatus-0-dart">
+                            <pre class="prettyprint"><code class="language-dart">import 'package:openapi/api.dart';
+
+final api_instance = DefaultApi();
+
+final String campaignId = new String(); // String | Campaign ID (UUID)
+
+try {
+    final result = await api_instance.getCampaignDomainsStatus(campaignId);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getCampaignDomainsStatus: $e\n');
+}
+
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-Campaigns-getCampaignDomainsStatus-0-android">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.api.CampaignsApi;
+
+public class CampaignsApiExample {
+    public static void main(String[] args) {
+        CampaignsApi apiInstance = new CampaignsApi();
+        String campaignId = campaignId_example; // String | Campaign ID (UUID)
+
+        try {
+            APIResponse result = apiInstance.getCampaignDomainsStatus(campaignId);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling CampaignsApi#getCampaignDomainsStatus");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-Campaigns-getCampaignDomainsStatus-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-Campaigns-getCampaignDomainsStatus-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+
+// Create an instance of the API class
+CampaignsApi *apiInstance = [[CampaignsApi alloc] init];
+String *campaignId = campaignId_example; // Campaign ID (UUID) (default to null)
+
+// Get campaign domain status summary
+[apiInstance getCampaignDomainsStatusWith:campaignId
+              completionHandler: ^(APIResponse output, NSError* error) {
+    if (output) {
+        NSLog(@"%@", output);
+    }
+    if (error) {
+        NSLog(@"Error: %@", error);
+    }
+}];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getCampaignDomainsStatus-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var StudioApi = require('studio_api');
+
+// Create an instance of the API class
+var api = new StudioApi.CampaignsApi()
+var campaignId = campaignId_example; // {String} Campaign ID (UUID)
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.getCampaignDomainsStatus(campaignId, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-Campaigns-getCampaignDomainsStatus-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-Campaigns-getCampaignDomainsStatus-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using Org.OpenAPITools.Api;
+using Org.OpenAPITools.Client;
+using Org.OpenAPITools.Model;
+
+namespace Example
+{
+    public class getCampaignDomainsStatusExample
+    {
+        public void main()
+        {
+
+            // Create an instance of the API class
+            var apiInstance = new CampaignsApi();
+            var campaignId = campaignId_example;  // String | Campaign ID (UUID) (default to null)
+
+            try {
+                // Get campaign domain status summary
+                APIResponse result = apiInstance.getCampaignDomainsStatus(campaignId);
+                Debug.WriteLine(result);
+            } catch (Exception e) {
+                Debug.Print("Exception when calling CampaignsApi.getCampaignDomainsStatus: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getCampaignDomainsStatus-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+// Create an instance of the API class
+$api_instance = new OpenAPITools\Client\Api\CampaignsApi();
+$campaignId = campaignId_example; // String | Campaign ID (UUID)
+
+try {
+    $result = $api_instance->getCampaignDomainsStatus($campaignId);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling CampaignsApi->getCampaignDomainsStatus: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getCampaignDomainsStatus-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::OPenAPIClient::Configuration;
+use WWW::OPenAPIClient::CampaignsApi;
+
+# Create an instance of the API class
+my $api_instance = WWW::OPenAPIClient::CampaignsApi->new();
+my $campaignId = campaignId_example; # String | Campaign ID (UUID)
+
+eval {
+    my $result = $api_instance->getCampaignDomainsStatus(campaignId => $campaignId);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling CampaignsApi->getCampaignDomainsStatus: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getCampaignDomainsStatus-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import openapi_client
+from openapi_client.rest import ApiException
+from pprint import pprint
+
+# Create an instance of the API class
+api_instance = openapi_client.CampaignsApi()
+campaignId = campaignId_example # String | Campaign ID (UUID) (default to null)
+
+try:
+    # Get campaign domain status summary
+    api_response = api_instance.get_campaign_domains_status(campaignId)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling CampaignsApi->getCampaignDomainsStatus: %s\n" % e)</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-Campaigns-getCampaignDomainsStatus-0-rust">
+                              <pre class="prettyprint"><code class="language-rust">extern crate CampaignsApi;
+
+pub fn main() {
+    let campaignId = campaignId_example; // String
+
+    let mut context = CampaignsApi::Context::default();
+    let result = client.getCampaignDomainsStatus(campaignId, &context).wait();
+
+    println!("{:?}", result);
+}
+</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Scopes</h2>
+                          <table>
+                            
+                          </table>
+
+                          <h2>Parameters</h2>
+
+                            <div class="methodsubtabletitle">Path parameters</div>
+                            <table id="methodsubtable">
+                                <tr>
+                                  <th width="150px">Name</th>
+                                  <th>Description</th>
+                                </tr>
+                                  <tr><td style="width:150px;">campaignId*</td>
+<td>
+
+
+    <div id="d2e199_getCampaignDomainsStatus_campaignId">
+        <div class="json-schema-view">
+            <div class="primitive">
+                <span class="type">
+                    String
+                </span>
+
+                    <div class="inner description marked">
+Campaign ID (UUID)
+                    </div>
+            </div>
+                <div class="inner required">
+                    Required
+                </div>
+        </div>
+    </div>
+</td>
+</tr>
+
+                            </table>
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3 id="examples-Campaigns-getCampaignDomainsStatus-title-200"></h3>
+                            <p id="examples-Campaigns-getCampaignDomainsStatus-description-200" class="marked"></p>
+                            <script>
+                              var responseCampaigns200_description = `Operation successful`;
+                              var responseCampaigns200_description_break = responseCampaigns200_description.indexOf('\n');
+                              if (responseCampaigns200_description_break == -1) {
+                                $("#examples-Campaigns-getCampaignDomainsStatus-title-200").text("Status: 200 - " + responseCampaigns200_description);
+                              } else {
+                                $("#examples-Campaigns-getCampaignDomainsStatus-title-200").text("Status: 200 - " + responseCampaigns200_description.substring(0, responseCampaigns200_description_break));
+                                $("#examples-Campaigns-getCampaignDomainsStatus-description-200").html(responseCampaigns200_description.substring(responseCampaigns200_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-getCampaignDomainsStatus-200" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-getCampaignDomainsStatus-200-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-getCampaignDomainsStatus-200-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-getCampaignDomainsStatus-200-schema">
+                                <div id="responses-Campaigns-getCampaignDomainsStatus-schema-200" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Operation successful",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-getCampaignDomainsStatus-200-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-getCampaignDomainsStatus-schema-200');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-getCampaignDomainsStatus-200-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-Campaigns-getCampaignDomainsStatus-title-400"></h3>
+                            <p id="examples-Campaigns-getCampaignDomainsStatus-description-400" class="marked"></p>
+                            <script>
+                              var responseCampaigns400_description = `Bad Request`;
+                              var responseCampaigns400_description_break = responseCampaigns400_description.indexOf('\n');
+                              if (responseCampaigns400_description_break == -1) {
+                                $("#examples-Campaigns-getCampaignDomainsStatus-title-400").text("Status: 400 - " + responseCampaigns400_description);
+                              } else {
+                                $("#examples-Campaigns-getCampaignDomainsStatus-title-400").text("Status: 400 - " + responseCampaigns400_description.substring(0, responseCampaigns400_description_break));
+                                $("#examples-Campaigns-getCampaignDomainsStatus-description-400").html(responseCampaigns400_description.substring(responseCampaigns400_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-getCampaignDomainsStatus-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-getCampaignDomainsStatus-400-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-getCampaignDomainsStatus-400-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-getCampaignDomainsStatus-400-schema">
+                                <div id="responses-Campaigns-getCampaignDomainsStatus-schema-400" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Bad Request",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-getCampaignDomainsStatus-400-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-getCampaignDomainsStatus-schema-400');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-getCampaignDomainsStatus-400-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-Campaigns-getCampaignDomainsStatus-title-500"></h3>
+                            <p id="examples-Campaigns-getCampaignDomainsStatus-description-500" class="marked"></p>
+                            <script>
+                              var responseCampaigns500_description = `Internal Server Error`;
+                              var responseCampaigns500_description_break = responseCampaigns500_description.indexOf('\n');
+                              if (responseCampaigns500_description_break == -1) {
+                                $("#examples-Campaigns-getCampaignDomainsStatus-title-500").text("Status: 500 - " + responseCampaigns500_description);
+                              } else {
+                                $("#examples-Campaigns-getCampaignDomainsStatus-title-500").text("Status: 500 - " + responseCampaigns500_description.substring(0, responseCampaigns500_description_break));
+                                $("#examples-Campaigns-getCampaignDomainsStatus-description-500").html(responseCampaigns500_description.substring(responseCampaigns500_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-Campaigns-getCampaignDomainsStatus-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-Campaigns-getCampaignDomainsStatus-500-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-Campaigns-getCampaignDomainsStatus-500-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-Campaigns-getCampaignDomainsStatus-500-schema">
+                                <div id="responses-Campaigns-getCampaignDomainsStatus-schema-500" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Internal Server Error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/ErrorResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-Campaigns-getCampaignDomainsStatus-500-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-Campaigns-getCampaignDomainsStatus-schema-500');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-Campaigns-getCampaignDomainsStatus-500-schema-data' type='hidden' value=''></input>
                               </div>
                             </div>
                         </article>

@@ -40,6 +40,7 @@ type CampaignStore interface {
 	CountCampaigns(ctx context.Context, exec Querier, filter ListCampaignsFilter) (int64, error)
 	UpdateCampaignStatus(ctx context.Context, exec Querier, id uuid.UUID, status models.PhaseStatusEnum, errorMessage sql.NullString) error
 	UpdateCampaignProgress(ctx context.Context, exec Querier, id uuid.UUID, processedItems, totalItems int64, progressPercentage float64) error
+	UpdateCampaignPhaseFields(ctx context.Context, exec Querier, id uuid.UUID, currentPhase *models.PhaseTypeEnum, phaseStatus *models.PhaseStatusEnum) error
 
 	// Methods for DomainGenerationPhaseConfigState
 	GetDomainGenerationPhaseConfigStateByHash(ctx context.Context, exec Querier, configHash string) (*models.DomainGenerationPhaseConfigState, error)
@@ -48,6 +49,18 @@ type CampaignStore interface {
 	// Methods for pattern reference counting and cleanup
 	CountCampaignsWithPatternHash(ctx context.Context, exec Querier, patternHash string) (int, error)
 	CleanupUnusedPatternConfigState(ctx context.Context, exec Querier, patternHash string) error
+
+	// Campaign Phase Management Methods
+	CreateCampaignPhases(ctx context.Context, exec Querier, campaignID uuid.UUID) error
+	GetCampaignPhases(ctx context.Context, exec Querier, campaignID uuid.UUID) ([]*models.CampaignPhase, error)
+	GetCampaignPhase(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) (*models.CampaignPhase, error)
+	UpdatePhaseStatus(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, status models.PhaseStatusEnum) error
+	UpdatePhaseProgress(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, progress float64, totalItems, processedItems, successfulItems, failedItems *int64) error
+	UpdatePhaseConfiguration(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, config json.RawMessage) error
+	CompletePhase(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error
+	StartPhase(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error
+	PausePhase(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error
+	FailPhase(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, errorMessage string) error
 
 	CreateGeneratedDomains(ctx context.Context, exec Querier, domains []*models.GeneratedDomain) error
 	GetGeneratedDomainsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID, limit int, lastOffsetIndex int64) ([]*models.GeneratedDomain, error)

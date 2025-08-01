@@ -13,6 +13,7 @@ type Broadcaster interface {
 	UnregisterClient(client *Client)
 	BroadcastMessage(message []byte)
 	BroadcastToCampaign(campaignID string, message WebSocketMessage)
+	BroadcastStandardizedMessage(campaignID string, message StandardizedWebSocketMessage)
 	// Run is a blocking method that should be started as a goroutine
 	// to handle the lifecycle of the broadcaster (e.g., processing messages).
 	Run()
@@ -223,70 +224,6 @@ func (m *WebSocketManager) Stats() (active int, total int) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 	return len(m.clients), m.totalConnections
-}
-
-// BroadcastSequencedMessage broadcasts a sequenced message with data integrity checks
-func (m *WebSocketManager) BroadcastSequencedMessage(campaignID string, message SequencedWebSocketMessage) error {
-	// Record event in history for deduplication
-	if err := m.recordEventHistory(campaignID, message); err != nil {
-		log.Printf("[ERROR] Failed to record event history for campaign %s: %v", campaignID, err)
-		return err
-	}
-
-	// Update sequence tracking
-	m.eventSequenceMap.Store(campaignID, message.Sequence.SequenceNumber)
-
-	// Convert to JSON for broadcasting
-	messageBytes, err := json.Marshal(message)
-	if err != nil {
-		log.Printf("[ERROR] Failed to marshal sequenced message: %v", err)
-		return err
-	}
-
-	// Broadcast with retry logic
-	m.broadcastWithRetry(campaignID, messageBytes)
-
-	log.Printf("[INTEGRITY] Broadcast sequenced message: campaignID=%s, eventID=%s, seq=%d",
-		campaignID, message.Sequence.EventID, message.Sequence.SequenceNumber)
-
-	return nil
-}
-
-// recordEventHistory records an event for deduplication and recovery
-func (m *WebSocketManager) recordEventHistory(campaignID string, message SequencedWebSocketMessage) error {
-	historyKey := campaignID
-	var history []EventRecord
-
-	if existingHistory, ok := m.eventHistory.Load(historyKey); ok {
-		history = existingHistory.([]EventRecord)
-	}
-
-	// Check for duplicate events
-	for _, record := range history {
-		if record.EventHash == message.Sequence.EventHash {
-			log.Printf("[INTEGRITY] Duplicate event detected and skipped: %s", message.Sequence.EventID)
-			return nil // Skip duplicate
-		}
-	}
-
-	// Add new event record
-	newRecord := EventRecord{
-		EventID:        message.Sequence.EventID,
-		EventHash:      message.Sequence.EventHash,
-		Timestamp:      message.Timestamp,
-		SequenceNumber: message.Sequence.SequenceNumber,
-		MessageType:    message.Type,
-	}
-
-	history = append(history, newRecord)
-
-	// Keep only last 1000 events per campaign to prevent memory issues
-	if len(history) > 1000 {
-		history = history[len(history)-1000:]
-	}
-
-	m.eventHistory.Store(historyKey, history)
-	return nil
 }
 
 // broadcastWithRetry broadcasts message with retry logic for failed clients

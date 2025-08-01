@@ -17,16 +17,21 @@ import { assertBulkEnrichedDataResponse, extractCampaignsMap, LocalEnrichedCampa
  * @param requestType Type of bulk request ('enriched', 'logs', 'leads')
  * @throws Error if campaign count exceeds the limit for the request type
  */
-const validateBulkRequest = (campaignIds: string[], requestType: string) => {
-  const limits = {
+interface Limits {
+  readonly enriched: 1000;
+  readonly logs: 50;
+  readonly leads: 50;
+}
+const validateBulkRequest = (campaignIds: string[], requestType: keyof Limits) => {
+  const limits: Limits = {
     'enriched': 1000,
     'logs': 50,
     'leads': 50
   } as const;
   
-  const limit = limits[requestType as keyof typeof limits];
-  if (!limit) {
-    throw new Error(`Unknown bulk request type: ${requestType}`);
+  const limit = limits[requestType];
+  if (limit === undefined) {
+    throw new Error(`Unknown bulk request type: ${String(requestType)}`);
   }
   
   if (campaignIds.length > limit) {
@@ -55,14 +60,12 @@ export interface BulkCampaignDataResult {
  * Eliminates N+1 API calls by fetching multiple campaigns in a single request
  */
 export function useBulkCampaignData(options: BulkCampaignDataOptions): BulkCampaignDataResult {
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const { campaignIds, autoRefresh = false, refreshInterval = 30000, limit = 100, offset = 0 } = options;
   
   const [campaigns, setCampaigns] = useState<Map<string, LocalEnrichedCampaignData>>(new Map());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // 🚀 WEBSOCKET PUSH MODEL: Real-time campaign updates
-  const wsCleanupRef = useRef<(() => void) | null>(null);
 
   // Real-time campaign progress handler
   const handleCampaignProgress = useCallback((message: { type: string; data?: unknown }) => {
@@ -151,7 +154,9 @@ export function useBulkCampaignData(options: BulkCampaignDataOptions): BulkCampa
       // Validate UUID format and count against backend limits
       const uuidValidationResult = validateBulkEnrichedDataRequest(campaignIds);
       if (!uuidValidationResult.isValid) {
-        throw new Error(uuidValidationResult.error || 'Invalid campaign IDs provided');
+        setError(uuidValidationResult.error || `Invalid campaignIds provided`);
+		console.error('[useDashboardCampaigns] Invalid campaignIds found:', uuidValidationResult.error);
+        return;
       }
 
       // Validate campaign count against backend limits (legacy validation for additional safety)
@@ -173,7 +178,7 @@ export function useBulkCampaignData(options: BulkCampaignDataOptions): BulkCampa
       // Use type-safe campaigns map extraction
       const campaignsMap = extractCampaignsMap(enrichedData);
 
-      setCampaigns(campaignsMap);
+      setCampaigns(prev => new Map([...prev, ...campaignsMap]));
       console.log(`[BulkCampaignData] ENTERPRISE: Successfully loaded ${campaignsMap.size} campaigns`);
 
     } catch (err) {
@@ -184,113 +189,46 @@ export function useBulkCampaignData(options: BulkCampaignDataOptions): BulkCampa
     }
   }, [campaignIds, limit, offset]);
 
-  // 🚀 WEBSOCKET PUSH MODEL: Real-time campaign connections
-  const connectCampaignWebSockets = useCallback(async (campaignIds: string[]) => {
-    if (!campaignIds.length) return;
-    
-    try {
-      // Import the WebSocket service dynamically to avoid SSR issues
-      const { websocketService } = await import('@/lib/services/websocketService.simple');
-      
-      console.log(`[BulkCampaignData] 🚀 Connecting to WebSocket for ${campaignIds.length} campaigns...`);
-      
-      // Clean up existing connections
-      if (wsCleanupRef.current) {
-        wsCleanupRef.current();
-        wsCleanupRef.current = null;
-      }
-      
-      // Connect to each campaign individually for targeted updates
-      const cleanupFunctions: (() => void)[] = [];
-      
-      for (const campaignId of campaignIds) {
-        const cleanup = websocketService.connect(`campaign-${campaignId}`, {
-          onMessage: (standardMessage: { type: string; data?: unknown }) => {
-            console.log(`[BulkCampaignData] 🚀 WebSocket message for campaign ${campaignId}:`, standardMessage);
-            
-            // Route campaign-specific messages
-            if (standardMessage.type === 'campaign_progress') {
-              handleCampaignProgress(standardMessage);
-            } else if (standardMessage.type === 'phase_transition') {
-              handlePhaseTransition(standardMessage);
-            } else if (standardMessage.type === 'campaign_complete') {
-              handleCampaignProgress(standardMessage); // Treat as progress update
-            }
-          },
-          onConnect: () => {
-            console.log(`[BulkCampaignData] 🚀 WebSocket connected for campaign ${campaignId}`);
-          },
-          onError: (error: Error | Event) => {
-            console.error(`[BulkCampaignData] WebSocket error for campaign ${campaignId}:`, error);
-          },
-          onDisconnect: () => {
-            console.log(`[BulkCampaignData] WebSocket disconnected for campaign ${campaignId}`);
-          }
-        });
-        
-        if (cleanup) {
-          cleanupFunctions.push(cleanup);
-        }
-      }
-      
-      // Store combined cleanup function
-      wsCleanupRef.current = () => {
-        console.log('[BulkCampaignData] 🚀 Cleaning up all campaign WebSocket connections');
-        cleanupFunctions.forEach(cleanup => cleanup());
-      };
-      
-      console.log(`[BulkCampaignData] 🚀 WebSocket connections established for ${campaignIds.length} campaigns`);
-      
-    } catch (error) {
-      console.error('[BulkCampaignData] Failed to connect campaign WebSockets:', error);
-    }
-  }, [handleCampaignProgress, handlePhaseTransition]);
-
   // Auto-refresh functionality (reduced frequency with WebSocket push model)
   useEffect(() => {
-    if (!autoRefresh || !campaignIds.length) return;
+    if (!campaignIds.length || !autoRefresh) return;
+    
+    // Set up new interval for periodic refresh (throttled)
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+    }
 
-    // 🚀 WEBSOCKET PUSH MODEL: Reduced polling frequency as WebSocket provides real-time updates
-    const interval = setInterval(() => {
-      console.log('[BulkCampaignData] 🚀 Polling fallback refresh (WebSocket primary)');
-      fetchBulkData();
-    }, refreshInterval);
+    const intervalId = setInterval(fetchBulkData, refreshInterval);
+    intervalRef.current = intervalId;
 
-    return () => clearInterval(interval);
-  }, [autoRefresh, refreshInterval, fetchBulkData, campaignIds.length]);
+    console.log(`[BulkCampaignData] 🔄 Auto-refresh interval set to ${refreshInterval}ms`);
+    return () => {
+      console.log('[BulkCampaignData] 🔄 Clearing auto-refresh interval');
+      clearInterval(intervalId);
+    };
+  }, [campaignIds, autoRefresh, refreshInterval, fetchBulkData]);
 
   // Initial fetch and WebSocket setup
   useEffect(() => {
     fetchBulkData();
     
-    // 🚀 WEBSOCKET PUSH MODEL: Connect to real-time updates for all campaigns
-    if (campaignIds.length > 0) {
-      connectCampaignWebSockets(campaignIds);
-    }
-    
-    return () => {
-      // Cleanup WebSocket connections when component unmounts or campaignIds change
-      if (wsCleanupRef.current) {
-        wsCleanupRef.current();
-        wsCleanupRef.current = null;
-      }
-    };
-  }, [fetchBulkData, campaignIds, connectCampaignWebSockets]);
+    return () => {};
+  }, [fetchBulkData]);
 
-  // Memoized getter function
-  const getCampaign = useCallback((campaignId: string): LocalEnrichedCampaignData | undefined => {
-    return campaigns.get(campaignId);
-  }, [campaigns]);
-
-  return useMemo(() => ({
-    campaigns,
-    loading,
-    error,
-    refetch: fetchBulkData,
-    getCampaign
-  }), [campaigns, loading, error, fetchBulkData, getCampaign]);
-}
-
+  
+    // Memoized getter function
+    const getCampaign = useCallback((campaignId: string): LocalEnrichedCampaignData | undefined => {
+      return campaigns.get(campaignId);
+    }, [campaigns]);
+  
+    return useMemo(() => ({
+      campaigns,
+      loading,
+      error,
+      refetch: fetchBulkData,
+      getCampaign
+    }), [campaigns, loading, error, fetchBulkData]);
+  }
 /**
  * Convenience hook for single campaign data (still uses bulk API internally)
  */
@@ -333,7 +271,7 @@ export function useDashboardCampaigns(campaignIds: string[], pageSize: number = 
     const slicedIds = campaignIds.slice(0, pageSize);
     const uuidValidationResult = validateBulkEnrichedDataRequest(slicedIds);
     if (!uuidValidationResult.isValid) {
-      console.error('[useDashboardCampaigns] Invalid campaign IDs found:', uuidValidationResult.error);
+      console.error('[useDashboardCampaigns] Invalid campaignIds found:', uuidValidationResult.error);
       // Filter out invalid UUIDs and continue with valid ones
       return slicedIds.filter(id => {
         const singleValidation = validateBulkEnrichedDataRequest([id]);

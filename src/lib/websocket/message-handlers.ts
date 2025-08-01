@@ -4,27 +4,35 @@
  * Updated to use OpenAPI types directly
  */
 
-// WebSocket Message Types (replacing deleted websocket-types-fixed)
+// WebSocket Message Types - REFACTORED: Domain data types removed, use REST APIs
 export const WebSocketMessageTypes = {
+  // Campaign progress and lifecycle events (KEEP - WebSocket appropriate)
   CAMPAIGN_PROGRESS: 'campaign_progress',
   CAMPAIGN_STATUS: 'campaign_status',
-  CAMPAIGN_LIST_UPDATE: 'campaign_list_update', // NEW: Complete campaign list updates
-  CAMPAIGN_CREATED: 'campaign_created',         // NEW: Single campaign added
-  CAMPAIGN_DELETED: 'campaign_deleted',         // NEW: Single campaign removed
-  PHASE_TRANSITION: 'phase_transition',         // NEW: Campaign phase transitions
+  CAMPAIGN_LIST_UPDATE: 'campaign_list_update', // Complete campaign list updates
+  CAMPAIGN_CREATED: 'campaign_created',         // Single campaign added
+  CAMPAIGN_DELETED: 'campaign_deleted',         // Single campaign removed
+  PHASE_TRANSITION: 'phase_transition',         // Campaign phase transitions
   CAMPAIGN_PHASE_TRANSITION: 'campaign.phase.transition', // Enhanced phase transitions with data integrity
-  // User-Driven Phase Lifecycle WebSocket events
+  
+  // User-Driven Phase Lifecycle WebSocket events (KEEP - Single event notifications)
   PHASE_STATE_CHANGED: 'phase.state.changed',  // Phase state transitions (ready -> configured -> running -> completed)
   PHASE_CONFIGURATION_REQUIRED: 'phase.configuration.required', // Phase requires configuration before start
-  DOMAIN_GENERATED: 'domain_generated',
-  DNS_VALIDATION_RESULT: 'dns.validation.result', // Updated to standardized format
-  HTTP_VALIDATION_RESULT: 'http.validation.result', // Updated to standardized format
+  
+  // System and proxy events (KEEP - Appropriate for WebSocket)
   SYSTEM_NOTIFICATION: 'system_notification',
   PROXY_STATUS: 'proxy_status',
-  PROXY_LIST_UPDATE: 'proxy_list_update',       // NEW: Proxy CRUD operations
-  PROXY_STATUS_UPDATE: 'proxy_status_update',   // NEW: Proxy status changes
-  DASHBOARD_ACTIVITY: 'dashboard_activity',     // NEW: Real-time dashboard activity updates
-  ERROR: 'error'
+  PROXY_LIST_UPDATE: 'proxy_list_update',       // Proxy CRUD operations
+  PROXY_STATUS_UPDATE: 'proxy_status_update',   // Proxy status changes
+  
+  // Error handling (KEEP)
+  ERROR: 'error',
+  
+  // REMOVED: Domain data streaming (use REST APIs instead)
+  // - DOMAIN_GENERATED: Use GET /campaigns/{id}/domains or bulk endpoints
+  // - DNS_VALIDATION_RESULT: Use GET /campaigns/{id}/domains with polling
+  // - HTTP_VALIDATION_RESULT: Use GET /campaigns/{id}/domains with polling  
+  // - DASHBOARD_ACTIVITY: Use REST endpoints for domain activity data
 } as const;
 
 export type WebSocketMessageType = typeof WebSocketMessageTypes[keyof typeof WebSocketMessageTypes];
@@ -150,25 +158,33 @@ export type TypedWebSocketMessage =
   | ErrorMessage
   | BaseWebSocketMessage;
 
-// WebSocket handlers interface
+// WebSocket handlers interface - REFACTORED: Domain data handlers removed
 export interface WebSocketHandlers {
+  // Campaign progress and lifecycle (KEEP - appropriate for WebSocket)
   onCampaignProgress?: (message: CampaignProgressMessage) => void;
   onCampaignStatus?: (message: CampaignStatusMessage) => void;
   onPhaseTransition?: (message: PhaseTransitionMessage) => void;
   onEnhancedPhaseTransition?: (message: EnhancedPhaseTransitionMessage) => void;
-  // User-Driven Phase Lifecycle handlers
+  
+  // User-Driven Phase Lifecycle handlers (KEEP - single event notifications)
   onPhaseStateChanged?: (message: PhaseStateChangedMessage) => void;
   onPhaseConfigurationRequired?: (message: PhaseConfigurationRequiredMessage) => void;
-  onDomainGenerated?: (message: BaseWebSocketMessage) => void;
-  onDNSValidationResult?: (message: BaseWebSocketMessage) => void;
-  onHTTPValidationResult?: (message: BaseWebSocketMessage) => void;
+  
+  // System notifications and proxy status (KEEP - appropriate for WebSocket)
   onSystemNotification?: (message: SystemNotificationMessage) => void;
   onProxyStatus?: (message: BaseWebSocketMessage) => void;
   onProxyListUpdate?: (message: BaseWebSocketMessage) => void;
   onProxyStatusUpdate?: (message: BaseWebSocketMessage) => void;
-  onDashboardActivity?: (message: BaseWebSocketMessage) => void;
+  
+  // Error handling (KEEP)
   onError?: (message: ErrorMessage) => void;
   onUnknownMessage?: (message: BaseWebSocketMessage) => void;
+  
+  // REMOVED: Domain data handlers - use REST APIs instead
+  // onDomainGenerated?: Use GET /campaigns/{id}/domains with polling or bulk endpoints
+  // onDNSValidationResult?: Use GET /campaigns/{id}/domains with polling
+  // onHTTPValidationResult?: Use GET /campaigns/{id}/domains with polling
+  // onDashboardActivity?: Use REST endpoints for domain activity data
 }
 
 // Parse WebSocket message from raw string
@@ -186,7 +202,7 @@ export function parseWebSocketMessage(rawMessage: string): TypedWebSocketMessage
   }
 }
 
-// Route message to appropriate handler
+// Route message to appropriate handler - REFACTORED: Domain data handlers removed
 export function routeWebSocketMessage(
   message: TypedWebSocketMessage,
   handlers: WebSocketHandlers
@@ -210,15 +226,11 @@ export function routeWebSocketMessage(
     case WebSocketMessageTypes.PHASE_CONFIGURATION_REQUIRED:
       handlers.onPhaseConfigurationRequired?.(message as PhaseConfigurationRequiredMessage);
       break;
-    case WebSocketMessageTypes.DOMAIN_GENERATED:
-      handlers.onDomainGenerated?.(message);
-      break;
-    case WebSocketMessageTypes.DNS_VALIDATION_RESULT:
-      handlers.onDNSValidationResult?.(message);
-      break;
-    case WebSocketMessageTypes.HTTP_VALIDATION_RESULT:
-      handlers.onHTTPValidationResult?.(message);
-      break;
+    // REMOVED: Domain data handlers - use REST APIs instead
+    // case WebSocketMessageTypes.DOMAIN_GENERATED:
+    // case WebSocketMessageTypes.DNS_VALIDATION_RESULT:
+    // case WebSocketMessageTypes.HTTP_VALIDATION_RESULT:
+    // case WebSocketMessageTypes.DASHBOARD_ACTIVITY:
     case WebSocketMessageTypes.SYSTEM_NOTIFICATION:
       handlers.onSystemNotification?.(message as SystemNotificationMessage);
       break;
@@ -230,9 +242,6 @@ export function routeWebSocketMessage(
       break;
     case WebSocketMessageTypes.PROXY_STATUS_UPDATE:
       handlers.onProxyStatusUpdate?.(message);
-      break;
-    case WebSocketMessageTypes.DASHBOARD_ACTIVITY:
-      handlers.onDashboardActivity?.(message);
       break;
     case WebSocketMessageTypes.ERROR:
       handlers.onError?.(message as ErrorMessage);
@@ -370,7 +379,7 @@ function handleTypedMessage(
 }
 
 /**
- * Extract campaign ID from message
+ * Extract campaign ID from message - REFACTORED: Domain message types removed
  */
 function extractCampaignId(message: TypedWebSocketMessage): string | null {
   switch (message.type) {
@@ -378,10 +387,11 @@ function extractCampaignId(message: TypedWebSocketMessage): string | null {
     case WebSocketMessageTypes.CAMPAIGN_STATUS:
       return (message.data as { campaignId: string }).campaignId;
     
-    case WebSocketMessageTypes.DOMAIN_GENERATED:
-    case WebSocketMessageTypes.DNS_VALIDATION_RESULT:
-    case WebSocketMessageTypes.HTTP_VALIDATION_RESULT:
-      return (message.data as { campaignId: string }).campaignId;
+    // REMOVED: Domain data message types - use REST APIs for domain data
+    // case WebSocketMessageTypes.DOMAIN_GENERATED:
+    // case WebSocketMessageTypes.DNS_VALIDATION_RESULT:
+    // case WebSocketMessageTypes.HTTP_VALIDATION_RESULT:
+    //   return (message.data as { campaignId: string }).campaignId;
     
     case WebSocketMessageTypes.PROXY_STATUS:
       const proxyData = message.data as { campaignId?: string };
@@ -462,21 +472,10 @@ export function createValidatedWebSocketHandlers(
       console.log('[WebSocket] Campaign status:', message.data);
     }),
     
-    // Domain handlers
-    onDomainGenerated: customHandlers.onDomainGenerated || ((message) => {
-      console.log('[WebSocket] Domain generated:', message.data);
-    }),
+    // REMOVED: Domain handlers - use REST APIs instead
+    // Domain data should be fetched via polling or bulk endpoints
     
-    // Validation handlers
-    onDNSValidationResult: customHandlers.onDNSValidationResult || ((message) => {
-      console.log('[WebSocket] DNS validation:', message.data);
-    }),
-    
-    onHTTPValidationResult: customHandlers.onHTTPValidationResult || ((message) => {
-      console.log('[WebSocket] HTTP validation:', message.data);
-    }),
-    
-    // System handlers
+    // System handlers (KEEP - appropriate for WebSocket)
     onSystemNotification: customHandlers.onSystemNotification || ((message) => {
       console.log('[WebSocket] System notification:', message.data);
     }),
@@ -491,10 +490,6 @@ export function createValidatedWebSocketHandlers(
     
     onProxyStatusUpdate: customHandlers.onProxyStatusUpdate || ((message) => {
       console.log('[WebSocket] Proxy status update:', message.data);
-    }),
-    
-    onDashboardActivity: customHandlers.onDashboardActivity || ((message) => {
-      console.log('[WebSocket] Dashboard activity:', message.data);
     }),
     
     // Error handler with automatic tracking

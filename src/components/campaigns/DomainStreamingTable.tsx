@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, RefreshCw } from 'lucide-react';
 import type {
   CampaignViewModel,
   CampaignValidationItem
@@ -11,12 +11,15 @@ import type { GeneratedDomain } from '@/lib/api-client';
 import { ScrollArea } from '../ui/scroll-area';
 import { StatusBadge, type DomainActivityStatus } from '@/components/shared/StatusBadge';
 import { LeadScoreDisplay } from '@/components/shared/LeadScoreDisplay';
+import { Button } from '@/components/ui/button';
+import { useDomainData, useDomainStatusSummary } from '@/hooks/useDomainData';
 
 interface DomainStreamingTableProps {
   campaign: CampaignViewModel;
-  generatedDomains: GeneratedDomain[];
-  dnsCampaignItems: CampaignValidationItem[];
-  httpCampaignItems: CampaignValidationItem[];
+  // Legacy props for backward compatibility - no longer used
+  generatedDomains?: GeneratedDomain[];
+  dnsCampaignItems?: CampaignValidationItem[];
+  httpCampaignItems?: CampaignValidationItem[];
   totalDomains?: number;
   loading?: boolean;
   filters?: any;
@@ -31,7 +34,7 @@ interface EnrichedDomain {
   httpStatus: DomainActivityStatus;
   leadScanStatus: DomainActivityStatus;
   leadScore: number; // 0-100 range
-  // Rich domain data from GeneratedDomain
+  // Rich domain data from REST API
   dnsIp?: string;
   httpStatusCode?: string;
   httpTitle?: string;
@@ -320,86 +323,141 @@ const DomainRow = React.memo<{ domain: EnrichedDomain }>(function DomainRow({ do
 DomainRow.displayName = 'DomainRow';
 
 /**
- * ARCHITECTURAL NOTE: DomainStreamingTable vs LatestActivityTable
+ * ARCHITECTURAL NOTE: DomainStreamingTable vs LatestActivityTable - POST-REFACTOR
  *
- * DomainStreamingTable:
- * - Single campaign focus with prop-based data
- * - Uses generatedDomains + campaign.domains fallback
- * - Simplified lead processing (mock logic)
- * - No real-time updates (static display)
+ * DomainStreamingTable (REST API ONLY):
+ * - Single campaign focus with prop-based data from REST APIs
+ * - Uses generatedDomains from bulk enriched data endpoints
+ * - No WebSocket dependencies - pure REST API driven
  * - Performance optimized with React.memo
+ * - Domain data fetched via polling or on-demand API calls
  *
- * LatestActivityTable:
- * - Multi-campaign dashboard with API + WebSocket
+ * LatestActivityTable (WebSocket + REST):
+ * - Multi-campaign dashboard with limited WebSocket for campaign progress only
  * - Complex getRichCampaignDataBatch integration
- * - Full getGlobalLeadStatusAndScore processing
- * - Real-time WebSocket updates with fallback polling
- * - Campaign phase-aware logic with CAMPAIGN_PHASES_ORDERED
+ * - WebSocket used only for campaign progress, not domain data
+ * - Campaign phase-aware logic with REST API domain data fetching
  *
  * Both components now share identical:
  * - Status conversion logic (convertStatus function)
  * - StatusBadge rendering with score support
  * - Domain extraction patterns (defensive programming)
  * - React.memo performance optimization
+ * - REST API domain data consumption patterns
  */
 export default function DomainStreamingTable({
-  campaign,
-  generatedDomains,
-  dnsCampaignItems,
-  httpCampaignItems
+  campaign
 }: DomainStreamingTableProps) {
+  // REFACTORED: Use REST API hook instead of WebSocket streaming
+  const {
+    domains: apiDomains,
+    statusSummary,
+    total,
+    loading,
+    error,
+    hasMore,
+    loadMore,
+    refresh
+  } = useDomainData(campaign.id, {
+    limit: 100,
+    enablePolling: true,
+    pollingInterval: 10000 // Poll every 10 seconds for updates
+  });
 
-  const enrichedDomains = useMemo((): EnrichedDomain[] => {
-    // 🚀 TRULY BACKEND-DRIVEN: Use API response exactly as provided
-    console.log('🚀 [BACKEND-DRIVEN] Using API response directly:', {
-      count: generatedDomains?.length || 0,
-      firstDomain: generatedDomains?.[0]
-    });
-    
-    if (!Array.isArray(generatedDomains) || generatedDomains.length === 0) {
-      console.log('🚀 [BACKEND-DRIVEN] No domains in API response');
+  // Transform API domain data to enriched format
+  const enrichedDomains: EnrichedDomain[] = useMemo(() => {
+    if (!apiDomains || apiDomains.length === 0) {
       return [];
     }
 
-    // Use domain objects directly from API - no extraction, no helper functions
-    return generatedDomains.map((domainObject: any) => {
-      console.log('🚀 [BACKEND-DRIVEN] Processing domain object from API:', domainObject);
+    return apiDomains.map((domain) => {
+      const dnsStatus = convertStatus(domain.dnsStatus) || 'not_validated';
+      const httpStatus = convertStatus(domain.httpStatus) || 'not_validated';
+      const leadStatus = convertStatus(domain.leadStatus) || 'not_validated';
+      const leadScore = typeof domain.leadScore === 'string' ? parseFloat(domain.leadScore) || 0 : 0;
       
-      // Use API fields directly - trust the backend completely
-      const domainName = domainObject.domainName || 'Unknown';
-      const dnsStatus = convertStatus(domainObject.dnsStatus) || 'Unknown';
-      const httpStatus = convertStatus(domainObject.httpStatus) || 'Unknown';
-      const leadStatus = convertStatus(domainObject.leadStatus) || 'Unknown';
-      const leadScore = typeof domainObject.leadScore === 'number' ? domainObject.leadScore : 0;
-      
-      console.log('🚀 [BACKEND-DRIVEN] Direct API mapping:', {
-        domainName,
-        dnsStatus: `${domainObject.dnsStatus} → ${dnsStatus}`,
-        httpStatus: `${domainObject.httpStatus} → ${httpStatus}`,
-        leadStatus: `${domainObject.leadStatus} → ${leadStatus}`,
-        leadScore: `${domainObject.leadScore} → ${leadScore}`
+      console.log('🚀 [REST-API-DRIVEN] Domain data from API:', {
+        domainName: domain.domainName,
+        dnsStatus: `${domain.dnsStatus} → ${dnsStatus}`,
+        httpStatus: `${domain.httpStatus} → ${httpStatus}`,
+        leadStatus: `${domain.leadStatus} → ${leadStatus}`,
+        leadScore: `${domain.leadScore} → ${leadScore}`
       });
 
       return {
-        domainName,
+        domainName: domain.domainName,
         dnsStatus,
         httpStatus,
         leadScanStatus: leadStatus,
-        leadScore
+        leadScore,
+        dnsIp: domain.dnsIp,
+        httpStatusCode: domain.httpStatusCode?.toString(),
+        httpTitle: domain.httpTitle,
+        httpKeywords: domain.httpKeywords,
+        sourceKeyword: domain.sourceKeyword,
+        sourcePattern: domain.sourcePattern,
+        tld: domain.tld,
+        generatedAt: domain.createdAt
       };
     });
-  }, [generatedDomains]); // Only depend on API data
+  }, [apiDomains]);
+
+  if (loading && enrichedDomains.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
+        Loading domain data...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-destructive mb-4">Error loading domain data: {error}</p>
+        <Button onClick={refresh} variant="outline" size="sm">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   if (enrichedDomains.length === 0) {
     return (
-      <div className="text-center py-4 text-muted-foreground">
-        No domains found for this campaign
+      <div className="text-center py-8 text-muted-foreground">
+        <p className="mb-4">No domains found for this campaign</p>
+        {statusSummary && (
+          <div className="text-sm space-y-1">
+            <p>Phase: {statusSummary.currentPhase}</p>
+            <p>Status: {statusSummary.phaseStatus}</p>
+          </div>
+        )}
+        <Button onClick={refresh} variant="outline" size="sm" className="mt-4">
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <h3 className="text-lg font-semibold">Domain List</h3>
+          {statusSummary && (
+            <div className="text-sm text-muted-foreground">
+              {statusSummary.summary.total} total domains
+            </div>
+          )}
+        </div>
+        <Button onClick={refresh} variant="outline" size="sm" disabled={loading}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </div>
+
       <ScrollArea className="h-[400px] rounded-md border">
         <Table>
           <TableHeader className="sticky top-0 bg-background z-10">
@@ -419,9 +477,41 @@ export default function DomainStreamingTable({
         </Table>
       </ScrollArea>
       
-      <div className="text-sm text-muted-foreground">
-        Total domains: {enrichedDomains.length}
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <div>
+          Showing {enrichedDomains.length} of {total} domains
+        </div>
+        
+        {hasMore && (
+          <Button onClick={loadMore} variant="outline" size="sm" disabled={loading}>
+            {loading ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              'Load More'
+            )}
+          </Button>
+        )}
       </div>
+
+      {statusSummary && (
+        <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+          <h4 className="font-medium mb-2">Campaign Status</h4>
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <span className="text-muted-foreground">Phase:</span> {statusSummary.currentPhase}
+            </div>
+            <div>
+              <span className="text-muted-foreground">Status:</span> {statusSummary.phaseStatus}
+            </div>
+            <div>
+              <span className="text-muted-foreground">DNS Validated:</span> {statusSummary.summary.dnsValidated}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

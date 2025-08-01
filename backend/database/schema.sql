@@ -1584,7 +1584,7 @@ $$;
 --
 
 CREATE FUNCTION public.trigger_campaign_state_transition() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
+    LANGUAGE plpgsql
     AS $$
 DECLARE
     valid_transition BOOLEAN := FALSE;
@@ -1643,47 +1643,50 @@ BEGIN
             state_change_data
         );
 
-        -- Create state snapshot for significant changes
-        IF NEW.business_status IN ('running', 'completed', 'failed', 'cancelled') THEN
-            INSERT INTO campaign_state_snapshots (
-                campaign_id,
-                snapshot_data,
-                snapshot_reason
-            ) VALUES (
-                NEW.id,
-                to_jsonb(NEW),
-                'State transition to ' || NEW.business_status
-            );
-        END IF;
-
-        -- Update campaign phase status if transitioning to running
-        IF NEW.business_status = 'running' AND OLD.business_status != 'running' THEN
-            NEW.started_at = COALESCE(NEW.started_at, NOW());
-        END IF;
-
-        -- Update completion timestamp
-        IF NEW.business_status IN ('completed', 'failed', 'cancelled') AND OLD.business_status NOT IN ('completed', 'failed', 'cancelled') THEN
-            NEW.completed_at = NOW();
-        END IF;
+        -- Create campaign snapshot
+        INSERT INTO campaign_snapshots (
+            campaign_id,
+            snapshot_data,
+            snapshot_reason
+        ) VALUES (
+            NEW.id,
+            to_jsonb(NEW),
+            'State transition to ' || NEW.business_status
+        );
     END IF;
 
     -- Handle phase transitions
     IF OLD.current_phase IS DISTINCT FROM NEW.current_phase THEN
-        -- Log phase transition
+        -- Log phase transition to campaign_state_events with correct column names
         INSERT INTO campaign_state_events (
             campaign_id,
             event_type,
+            source_state,
+            target_state,
+            reason,
+            triggered_by,                    -- ✅ Fixed: use triggered_by instead of user_id
             event_data,
-            user_id
+            operation_context,               -- ✅ Fixed: include required operation_context
+            user_id                          -- ✅ Keep user_id for backward compatibility
         ) VALUES (
             NEW.id,
             'phase_transition',
+            OLD.current_phase,
+            NEW.current_phase,
+            'Phase transition triggered by campaign update',
+            COALESCE(current_user_id::text, 'system'),  -- ✅ Fixed: ensure NOT NULL and convert to text
             jsonb_build_object(
                 'old_phase', OLD.current_phase,
                 'new_phase', NEW.current_phase,
                 'timestamp', NOW()
             ),
-            current_user_id
+            jsonb_build_object(                -- ✅ Fixed: provide operation_context
+                'trigger_type', 'automatic',
+                'source', 'campaign_update',
+                'user_id', current_user_id,
+                'session_id', current_setting('app.session_id', true)
+            ),
+            current_user_id                    -- ✅ Keep user_id populated
         );
 
         -- Update phase completion status
@@ -1696,11 +1699,11 @@ BEGIN
             WHERE campaign_id = NEW.id AND phase_type = OLD.current_phase;
         END IF;
 
-        -- Start new phase
+        -- ✅ FIXED: Start new phase with correct enum value
         IF NEW.current_phase IS NOT NULL THEN
             UPDATE campaign_phases
             SET
-                status = 'running',
+                status = 'in_progress',              -- ✅ Fixed: use 'in_progress' instead of 'running'
                 started_at = COALESCE(started_at, NOW()),
                 updated_at = NOW()
             WHERE campaign_id = NEW.id AND phase_type = NEW.current_phase;
@@ -1713,84 +1716,10 @@ $$;
 
 
 --
--- Name: trigger_domain_validation_update(); Type: FUNCTION; Schema: public; Owner: -
+-- Name: FUNCTION trigger_campaign_state_transition(); Type: COMMENT; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trigger_domain_validation_update() RETURNS trigger
-    LANGUAGE plpgsql SECURITY DEFINER
-    AS $$
-DECLARE
-    campaign_domains_total INTEGER;
-    campaign_domains_validated INTEGER;
-    validation_completion_rate DECIMAL(5,2);
-BEGIN
-    -- Only process if validation status changed
-    IF OLD.validation_status IS DISTINCT FROM NEW.validation_status OR
-       OLD.dns_validation_status IS DISTINCT FROM NEW.dns_validation_status OR
-       OLD.http_validation_status IS DISTINCT FROM NEW.http_validation_status THEN
-        
-        -- Update campaign validation counters
-        SELECT 
-            COUNT(*),
-            COUNT(*) FILTER (WHERE validation_status = 'validated')
-        INTO campaign_domains_total, campaign_domains_validated
-        FROM generated_domains 
-        WHERE campaign_id = NEW.campaign_id;
-
-        -- Calculate completion rate
-        validation_completion_rate := CASE 
-            WHEN campaign_domains_total > 0 THEN 
-                (campaign_domains_validated::DECIMAL / campaign_domains_total) * 100
-            ELSE 0
-        END;
-
-        -- Update campaign validation statistics
-        UPDATE lead_generation_campaigns 
-        SET 
-            domains_validated_count = campaign_domains_validated,
-            validation_completion_rate = validation_completion_rate,
-            updated_at = NOW()
-        WHERE id = NEW.campaign_id;
-
-        -- Log validation event
-        INSERT INTO campaign_state_events (
-            campaign_id,
-            event_type,
-            event_data,
-            user_id
-        ) VALUES (
-            NEW.campaign_id,
-            'domain_validation_update',
-            jsonb_build_object(
-                'domain_name', NEW.domain_name,
-                'old_validation_status', OLD.validation_status,
-                'new_validation_status', NEW.validation_status,
-                'dns_status', NEW.dns_validation_status,
-                'http_status', NEW.http_validation_status,
-                'completion_rate', validation_completion_rate
-            ),
-            COALESCE(current_setting('app.current_user_id', true)::UUID, NEW.created_by)
-        );
-
-        -- Check if campaign phase should advance
-        IF validation_completion_rate >= 95 AND NEW.validation_status = 'validated' THEN
-            -- Update campaign to next phase if appropriate
-            UPDATE lead_generation_campaigns 
-            SET 
-                current_phase = CASE current_phase
-                    WHEN 'dns_validation' THEN 'http_keyword_validation'
-                    WHEN 'http_keyword_validation' THEN 'analysis'
-                    ELSE current_phase
-                END,
-                updated_at = NOW()
-            WHERE id = NEW.campaign_id 
-            AND current_phase IN ('dns_validation', 'http_keyword_validation');
-        END IF;
-    END IF;
-
-    RETURN NEW;
-END;
-$$;
+COMMENT ON FUNCTION public.trigger_campaign_state_transition() IS 'Fixed to use in_progress instead of running for phase_status_enum compatibility';
 
 
 --
@@ -1901,6 +1830,47 @@ BEGIN
     RETURN NEW;
 END;
 $$;
+
+
+--
+-- Name: update_keyword_set_rules_jsonb(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.update_keyword_set_rules_jsonb() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+    -- Update the keyword_sets.rules JSONB column with current rules
+    UPDATE keyword_sets 
+    SET rules = (
+        SELECT COALESCE(jsonb_agg(
+            jsonb_build_object(
+                'id', kr.id,
+                'pattern', kr.pattern,
+                'ruleType', kr.rule_type,
+                'isCaseSensitive', kr.is_case_sensitive,
+                'category', kr.category,
+                'contextChars', kr.context_chars,
+                'createdAt', kr.created_at,
+                'updatedAt', kr.updated_at
+            )
+        ), '[]'::jsonb)
+        FROM keyword_rules kr 
+        WHERE kr.keyword_set_id = COALESCE(NEW.keyword_set_id, OLD.keyword_set_id)
+    ),
+    updated_at = NOW()
+    WHERE id = COALESCE(NEW.keyword_set_id, OLD.keyword_set_id);
+    
+    RETURN COALESCE(NEW, OLD);
+END;
+$$;
+
+
+--
+-- Name: FUNCTION update_keyword_set_rules_jsonb(); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.update_keyword_set_rules_jsonb() IS 'Automatically syncs keyword_rules table changes to keyword_sets.rules JSONB for high-performance scanning';
 
 
 SET default_tablespace = '';
@@ -2488,8 +2458,16 @@ CREATE TABLE public.campaign_state_events (
     persisted_at timestamp with time zone DEFAULT now() NOT NULL,
     processing_status character varying(50) DEFAULT 'pending'::character varying NOT NULL,
     processing_error text,
-    correlation_id uuid
+    correlation_id uuid,
+    user_id uuid
 );
+
+
+--
+-- Name: COLUMN campaign_state_events.user_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.campaign_state_events.user_id IS 'User who triggered the campaign state change (optional, NULL for system-generated events)';
 
 
 --
@@ -5685,6 +5663,13 @@ CREATE INDEX idx_campaign_state_events_source_target ON public.campaign_state_ev
 
 
 --
+-- Name: idx_campaign_state_events_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_campaign_state_events_user_id ON public.campaign_state_events USING btree (user_id) WHERE (user_id IS NOT NULL);
+
+
+--
 -- Name: idx_campaign_state_snapshots_campaign_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -8331,6 +8316,20 @@ CREATE INDEX idx_worker_coordination_worker_id ON public.worker_coordination USI
 
 
 --
+-- Name: keyword_rules sync_keyword_rules_to_jsonb; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER sync_keyword_rules_to_jsonb AFTER INSERT OR DELETE OR UPDATE ON public.keyword_rules FOR EACH ROW EXECUTE FUNCTION public.update_keyword_set_rules_jsonb();
+
+
+--
+-- Name: TRIGGER sync_keyword_rules_to_jsonb ON keyword_rules; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TRIGGER sync_keyword_rules_to_jsonb ON public.keyword_rules IS 'Maintains hybrid storage: relational keyword_rules for management, JSONB for Phase 3 HTTP scanning performance';
+
+
+--
 -- Name: cache_entries trigger_cache_lifecycle; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -8342,13 +8341,6 @@ CREATE TRIGGER trigger_cache_lifecycle BEFORE INSERT OR UPDATE ON public.cache_e
 --
 
 CREATE TRIGGER trigger_campaign_transitions BEFORE UPDATE ON public.lead_generation_campaigns FOR EACH ROW EXECUTE FUNCTION public.trigger_campaign_state_transition();
-
-
---
--- Name: generated_domains trigger_domain_validation; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER trigger_domain_validation AFTER UPDATE ON public.generated_domains FOR EACH ROW EXECUTE FUNCTION public.trigger_domain_validation_update();
 
 
 --
@@ -8370,13 +8362,6 @@ CREATE TRIGGER trigger_proxy_membership_consistency BEFORE INSERT OR UPDATE ON p
 --
 
 CREATE TRIGGER trigger_timestamp_campaigns BEFORE UPDATE ON public.lead_generation_campaigns FOR EACH ROW EXECUTE FUNCTION public.trigger_update_timestamp();
-
-
---
--- Name: generated_domains trigger_timestamp_domains; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER trigger_timestamp_domains BEFORE UPDATE ON public.generated_domains FOR EACH ROW EXECUTE FUNCTION public.trigger_update_timestamp();
 
 
 --

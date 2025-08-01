@@ -160,6 +160,40 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             };
         },
         /**
+         * Retrieve domain status summary and counts for a campaign
+         * @summary Get campaign domain status summary
+         * @param {string} campaignId Campaign ID (UUID)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getCampaignDomainsStatus: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('getCampaignDomainsStatus', 'campaignId', campaignId)
+            const localVarPath = `/campaigns/{campaignId}/domains/status`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
          * Get campaign progress information using standalone services
          * @summary Get campaign progress (standalone)
          * @param {string} campaignId Campaign ID (UUID)
@@ -387,6 +421,19 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
+         * Retrieve domain status summary and counts for a campaign
+         * @summary Get campaign domain status summary
+         * @param {string} campaignId Campaign ID (UUID)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getCampaignDomainsStatus(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<APIResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getCampaignDomainsStatus(campaignId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.getCampaignDomainsStatus']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Get campaign progress information using standalone services
          * @summary Get campaign progress (standalone)
          * @param {string} campaignId Campaign ID (UUID)
@@ -495,6 +542,16 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
             return localVarFp.getBulkEnrichedCampaignData(bulkEnrichedDataRequest, options).then((request) => request(axios, basePath));
         },
         /**
+         * Retrieve domain status summary and counts for a campaign
+         * @summary Get campaign domain status summary
+         * @param {string} campaignId Campaign ID (UUID)
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getCampaignDomainsStatus(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse> {
+            return localVarFp.getCampaignDomainsStatus(campaignId, options).then((request) => request(axios, basePath));
+        },
+        /**
          * Get campaign progress information using standalone services
          * @summary Get campaign progress (standalone)
          * @param {string} campaignId Campaign ID (UUID)
@@ -585,6 +642,16 @@ export interface CampaignsApiInterface {
      * @memberof CampaignsApiInterface
      */
     getBulkEnrichedCampaignData(bulkEnrichedDataRequest: BulkEnrichedDataRequest, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse>;
+
+    /**
+     * Retrieve domain status summary and counts for a campaign
+     * @summary Get campaign domain status summary
+     * @param {string} campaignId Campaign ID (UUID)
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    getCampaignDomainsStatus(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<APIResponse>;
 
     /**
      * Get campaign progress information using standalone services
@@ -682,6 +749,18 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
      */
     public getBulkEnrichedCampaignData(bulkEnrichedDataRequest: BulkEnrichedDataRequest, options?: RawAxiosRequestConfig) {
         return CampaignsApiFp(this.configuration).getBulkEnrichedCampaignData(bulkEnrichedDataRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Retrieve domain status summary and counts for a campaign
+     * @summary Get campaign domain status summary
+     * @param {string} campaignId Campaign ID (UUID)
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public getCampaignDomainsStatus(campaignId: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).getCampaignDomainsStatus(campaignId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

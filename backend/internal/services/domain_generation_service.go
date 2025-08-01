@@ -1349,6 +1349,9 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 				"offset":      domain.OffsetIndex,
 				"created_at":  domain.CreatedAt.Format(time.RFC3339),
 			}
+
+			// Real-time streaming: Broadcast each domain individually as it's generated
+			log.Printf("Removing real-time domain streaming for campaign %s", campaignID)
 		}
 
 		// Structure the data for frontend consumption
@@ -1369,42 +1372,11 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		// Real-time streaming: Broadcast each domain individually as it's generated
 		log.Printf("🔵 [DOMAIN_STREAMING_DEBUG] Starting to stream %d domains for campaign %s", len(generatedDomainsToStore), campaignID)
 
-		broadcaster := websocket.GetBroadcaster()
-		if broadcaster == nil {
-			log.Printf("❌ [DOMAIN_STREAMING_CRITICAL] No broadcaster available! Cannot stream domains for campaign %s", campaignID)
-		} else {
-			log.Printf("✅ [DOMAIN_STREAMING_DEBUG] Broadcaster available, proceeding with streaming for campaign %s", campaignID)
-		}
-
-		for i, domain := range generatedDomainsToStore {
-			if broadcaster != nil {
-				// OPTIMIZED: Send ONLY standardized domain.generated format - 50% traffic reduction achieved
-				payload := websocket.DomainGenerationPayload{
-					CampaignID:     campaignID.String(),
-					DomainID:       domain.ID.String(),
-					Domain:         domain.DomainName,
-					Offset:         int64(domain.OffsetIndex),
-					BatchSize:      len(generatedDomainsToStore),
-					TotalGenerated: int64(i + 1),
-				}
-				message := websocket.CreateDomainGenerationMessageV2(payload)
-
-				// Convert to JSON for broadcasting
-				messageBytes, err := json.Marshal(message)
-				if err != nil {
-					log.Printf("❌ [DOMAIN_STREAMING_DEBUG] Failed to marshal standardized domain message: %v", err)
-					continue
-				}
-				broadcaster.BroadcastMessage(messageBytes)
-
-				log.Printf("✅ [DOMAIN_STREAMING_OPTIMIZED] Broadcasted standardized domain.generated %d/%d: %s for campaign %s",
-					i+1, len(generatedDomainsToStore), domain.DomainName, campaignID)
-
-			} else {
-				log.Printf("❌ [DOMAIN_STREAMING_DEBUG] No broadcaster available for domain %d/%d: %s for campaign %s",
-					i+1, len(generatedDomainsToStore), domain.DomainName, campaignID)
-			}
-		}
+		// DEPRECATED: Domain data now served via REST APIs only
+		// WebSocket streaming for domain generation has been disabled as part of architecture refactoring
+		// Domain data is now accessible through GET /campaigns/{id}/domains endpoint with pagination
+		log.Printf("ℹ️ [DOMAIN_GENERATION] Generated %d domains for campaign %s - domain data available via REST API",
+			len(generatedDomainsToStore), campaignID)
 
 		// ELIMINATED: Dual broadcasting removed - campaign progress already handles this
 		// Domain generation progress is now covered by campaign.progress messages above
@@ -2202,24 +2174,6 @@ func (s *domainGenerationServiceImpl) GenerateDomains(ctx context.Context, req G
 
 		// Real-time WebSocket streaming with sophisticated broadcasting
 		progress := float64(totalGenerated) / float64(targetDomains) * 100
-
-		// Individual domain streaming
-		broadcaster := websocket.GetBroadcaster()
-		if broadcaster != nil {
-			for i, domain := range domains {
-				payload := websocket.DomainGenerationPayload{
-					CampaignID:     req.CampaignID.String(),
-					DomainID:       uuid.New().String(),
-					Domain:         domain,
-					Offset:         startOffset + int64(i),
-					BatchSize:      len(domains),
-					TotalGenerated: totalGenerated,
-				}
-				message := websocket.CreateDomainGenerationMessageV2(payload)
-				messageBytes, _ := json.Marshal(message)
-				broadcaster.BroadcastMessage(messageBytes)
-			}
-		}
 
 		// Campaign progress broadcasting
 		websocket.BroadcastCampaignProgress(req.CampaignID.String(), progress, "running", "domain_generation", totalGenerated, targetDomains)

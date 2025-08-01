@@ -102,8 +102,15 @@ func (s *analysisServiceImpl) ProcessAnalysisCampaignBatch(ctx context.Context, 
 
 	// Start campaign if it's not running
 	if campaign.PhaseStatus == nil || *campaign.PhaseStatus != models.PhaseStatusInProgress {
-		status := models.PhaseStatusInProgress
-		campaign.PhaseStatus = &status
+		// Use phase-first approach: Start analysis phase
+		// The database trigger will automatically sync the campaign table
+		err := s.campaignStore.UpdatePhaseStatus(ctx, querier, campaignID, models.PhaseTypeAnalysis, models.PhaseStatusInProgress)
+		if err != nil {
+			opErr = fmt.Errorf("failed to start analysis phase for campaign %s: %w", campaignID, err)
+			return false, 0, opErr
+		}
+
+		// Update started_at timestamp directly on campaign (doesn't conflict with trigger)
 		campaign.StartedAt = &[]time.Time{time.Now().UTC()}[0]
 		log.Printf("ProcessAnalysisCampaignBatch: Campaign %s marked as Running for analysis phase.", campaignID)
 	}
@@ -161,8 +168,15 @@ func (s *analysisServiceImpl) ProcessAnalysisCampaignBatch(ctx context.Context, 
 	log.Printf("ProcessAnalysisCampaignBatch: Stored %d analysis results for campaign %s", len(analysisResults.ExtractedContent), campaignID)
 
 	// Mark analysis as complete
-	status := models.PhaseStatusCompleted
-	campaign.PhaseStatus = &status
+	// Use phase-first approach: Complete analysis phase
+	// The database trigger will automatically sync the campaign table
+	err = s.campaignStore.CompletePhase(ctx, querier, campaignID, models.PhaseTypeAnalysis)
+	if err != nil {
+		opErr = fmt.Errorf("failed to complete analysis phase for campaign %s: %w", campaignID, err)
+		return false, 0, opErr
+	}
+
+	// Update progress and completion data directly on campaign (doesn't conflict with trigger)
 	campaign.ProgressPercentage = models.Float64Ptr(100.0)
 	campaign.ProcessedItems = models.Int64Ptr(int64(totalResults))
 	now := time.Now().UTC()

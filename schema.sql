@@ -18,11 +18,13 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: auth; Type: SCHEMA; Schema: -; Owner: -
+-- Name: auth; Type: SCHEMA; Schema: -; Owner: domainflow
 --
 
 CREATE SCHEMA auth;
 
+
+ALTER SCHEMA auth OWNER TO domainflow;
 
 --
 -- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
@@ -32,7 +34,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: -
+-- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: 
 --
 
 COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
@@ -46,14 +48,14 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;
 
 
 --
--- Name: EXTENSION "uuid-ossp"; Type: COMMENT; Schema: -; Owner: -
+-- Name: EXTENSION "uuid-ossp"; Type: COMMENT; Schema: -; Owner: 
 --
 
 COMMENT ON EXTENSION "uuid-ossp" IS 'generate universally unique identifiers (UUIDs)';
 
 
 --
--- Name: access_grant_type_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: access_grant_type_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.access_grant_type_enum AS ENUM (
@@ -68,8 +70,10 @@ CREATE TYPE public.access_grant_type_enum AS ENUM (
 );
 
 
+ALTER TYPE public.access_grant_type_enum OWNER TO domainflow;
+
 --
--- Name: authorization_decision_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: authorization_decision_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.authorization_decision_enum AS ENUM (
@@ -79,8 +83,10 @@ CREATE TYPE public.authorization_decision_enum AS ENUM (
 );
 
 
+ALTER TYPE public.authorization_decision_enum OWNER TO domainflow;
+
 --
--- Name: authorization_resource_type_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: authorization_resource_type_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.authorization_resource_type_enum AS ENUM (
@@ -101,8 +107,10 @@ CREATE TYPE public.authorization_resource_type_enum AS ENUM (
 );
 
 
+ALTER TYPE public.authorization_resource_type_enum OWNER TO domainflow;
+
 --
--- Name: cache_entry_status_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: cache_entry_status_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.cache_entry_status_enum AS ENUM (
@@ -115,8 +123,10 @@ CREATE TYPE public.cache_entry_status_enum AS ENUM (
 );
 
 
+ALTER TYPE public.cache_entry_status_enum OWNER TO domainflow;
+
 --
--- Name: cache_invalidation_type_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: cache_invalidation_type_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.cache_invalidation_type_enum AS ENUM (
@@ -133,8 +143,10 @@ CREATE TYPE public.cache_invalidation_type_enum AS ENUM (
 );
 
 
+ALTER TYPE public.cache_invalidation_type_enum OWNER TO domainflow;
+
 --
--- Name: cache_strategy_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: cache_strategy_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.cache_strategy_enum AS ENUM (
@@ -149,8 +161,10 @@ CREATE TYPE public.cache_strategy_enum AS ENUM (
 );
 
 
+ALTER TYPE public.cache_strategy_enum OWNER TO domainflow;
+
 --
--- Name: cache_type_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: cache_type_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.cache_type_enum AS ENUM (
@@ -163,8 +177,10 @@ CREATE TYPE public.cache_type_enum AS ENUM (
 );
 
 
+ALTER TYPE public.cache_type_enum OWNER TO domainflow;
+
 --
--- Name: campaign_job_status_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: campaign_job_status_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.campaign_job_status_enum AS ENUM (
@@ -177,8 +193,10 @@ CREATE TYPE public.campaign_job_status_enum AS ENUM (
 );
 
 
+ALTER TYPE public.campaign_job_status_enum OWNER TO domainflow;
+
 --
--- Name: communication_protocol_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: communication_protocol_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.communication_protocol_enum AS ENUM (
@@ -196,8 +214,10 @@ CREATE TYPE public.communication_protocol_enum AS ENUM (
 );
 
 
+ALTER TYPE public.communication_protocol_enum OWNER TO domainflow;
+
 --
--- Name: config_lock_type_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: config_lock_type_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.config_lock_type_enum AS ENUM (
@@ -208,8 +228,10 @@ CREATE TYPE public.config_lock_type_enum AS ENUM (
 );
 
 
+ALTER TYPE public.config_lock_type_enum OWNER TO domainflow;
+
 --
--- Name: dependency_type_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: dependency_type_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.dependency_type_enum AS ENUM (
@@ -227,8 +249,10 @@ CREATE TYPE public.dependency_type_enum AS ENUM (
 );
 
 
+ALTER TYPE public.dependency_type_enum OWNER TO domainflow;
+
 --
--- Name: domain_dns_status_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: domain_dns_status_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.domain_dns_status_enum AS ENUM (
@@ -239,8 +263,10 @@ CREATE TYPE public.domain_dns_status_enum AS ENUM (
 );
 
 
+ALTER TYPE public.domain_dns_status_enum OWNER TO domainflow;
+
 --
--- Name: domain_http_status_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: domain_http_status_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.domain_http_status_enum AS ENUM (
@@ -251,8 +277,10 @@ CREATE TYPE public.domain_http_status_enum AS ENUM (
 );
 
 
+ALTER TYPE public.domain_http_status_enum OWNER TO domainflow;
+
 --
--- Name: domain_lead_status_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: domain_lead_status_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.domain_lead_status_enum AS ENUM (
@@ -264,8 +292,10 @@ CREATE TYPE public.domain_lead_status_enum AS ENUM (
 );
 
 
+ALTER TYPE public.domain_lead_status_enum OWNER TO domainflow;
+
 --
--- Name: domain_pattern_type_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: domain_pattern_type_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.domain_pattern_type_enum AS ENUM (
@@ -275,8 +305,10 @@ CREATE TYPE public.domain_pattern_type_enum AS ENUM (
 );
 
 
+ALTER TYPE public.domain_pattern_type_enum OWNER TO domainflow;
+
 --
--- Name: event_type_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: event_type_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.event_type_enum AS ENUM (
@@ -330,8 +362,10 @@ CREATE TYPE public.event_type_enum AS ENUM (
 );
 
 
+ALTER TYPE public.event_type_enum OWNER TO domainflow;
+
 --
--- Name: job_business_status_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: job_business_status_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.job_business_status_enum AS ENUM (
@@ -342,8 +376,10 @@ CREATE TYPE public.job_business_status_enum AS ENUM (
 );
 
 
+ALTER TYPE public.job_business_status_enum OWNER TO domainflow;
+
 --
--- Name: job_type_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: job_type_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.job_type_enum AS ENUM (
@@ -354,8 +390,10 @@ CREATE TYPE public.job_type_enum AS ENUM (
 );
 
 
+ALTER TYPE public.job_type_enum OWNER TO domainflow;
+
 --
--- Name: keyword_rule_type_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: keyword_rule_type_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.keyword_rule_type_enum AS ENUM (
@@ -364,8 +402,10 @@ CREATE TYPE public.keyword_rule_type_enum AS ENUM (
 );
 
 
+ALTER TYPE public.keyword_rule_type_enum OWNER TO domainflow;
+
 --
--- Name: persona_status_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: persona_status_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.persona_status_enum AS ENUM (
@@ -376,8 +416,10 @@ CREATE TYPE public.persona_status_enum AS ENUM (
 );
 
 
+ALTER TYPE public.persona_status_enum OWNER TO domainflow;
+
 --
--- Name: persona_type_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: persona_type_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.persona_type_enum AS ENUM (
@@ -386,8 +428,10 @@ CREATE TYPE public.persona_type_enum AS ENUM (
 );
 
 
+ALTER TYPE public.persona_type_enum OWNER TO domainflow;
+
 --
--- Name: phase_status_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: phase_status_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.phase_status_enum AS ENUM (
@@ -401,8 +445,10 @@ CREATE TYPE public.phase_status_enum AS ENUM (
 );
 
 
+ALTER TYPE public.phase_status_enum OWNER TO domainflow;
+
 --
--- Name: phase_type_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: phase_type_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.phase_type_enum AS ENUM (
@@ -413,8 +459,10 @@ CREATE TYPE public.phase_type_enum AS ENUM (
 );
 
 
+ALTER TYPE public.phase_type_enum OWNER TO domainflow;
+
 --
--- Name: projection_status_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: projection_status_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.projection_status_enum AS ENUM (
@@ -426,8 +474,10 @@ CREATE TYPE public.projection_status_enum AS ENUM (
 );
 
 
+ALTER TYPE public.projection_status_enum OWNER TO domainflow;
+
 --
--- Name: proxy_protocol_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: proxy_protocol_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.proxy_protocol_enum AS ENUM (
@@ -438,8 +488,10 @@ CREATE TYPE public.proxy_protocol_enum AS ENUM (
 );
 
 
+ALTER TYPE public.proxy_protocol_enum OWNER TO domainflow;
+
 --
--- Name: proxy_status_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: proxy_status_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.proxy_status_enum AS ENUM (
@@ -450,8 +502,10 @@ CREATE TYPE public.proxy_status_enum AS ENUM (
 );
 
 
+ALTER TYPE public.proxy_status_enum OWNER TO domainflow;
+
 --
--- Name: refactor_type_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: refactor_type_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.refactor_type_enum AS ENUM (
@@ -471,8 +525,10 @@ CREATE TYPE public.refactor_type_enum AS ENUM (
 );
 
 
+ALTER TYPE public.refactor_type_enum OWNER TO domainflow;
+
 --
--- Name: security_event_type_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: security_event_type_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.security_event_type_enum AS ENUM (
@@ -510,8 +566,10 @@ CREATE TYPE public.security_event_type_enum AS ENUM (
 );
 
 
+ALTER TYPE public.security_event_type_enum OWNER TO domainflow;
+
 --
--- Name: service_type_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: service_type_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.service_type_enum AS ENUM (
@@ -533,8 +591,10 @@ CREATE TYPE public.service_type_enum AS ENUM (
 );
 
 
+ALTER TYPE public.service_type_enum OWNER TO domainflow;
+
 --
--- Name: validation_status_enum; Type: TYPE; Schema: public; Owner: -
+-- Name: validation_status_enum; Type: TYPE; Schema: public; Owner: domainflow
 --
 
 CREATE TYPE public.validation_status_enum AS ENUM (
@@ -546,8 +606,10 @@ CREATE TYPE public.validation_status_enum AS ENUM (
 );
 
 
+ALTER TYPE public.validation_status_enum OWNER TO domainflow;
+
 --
--- Name: advance_campaign_phase(uuid, uuid, numeric); Type: FUNCTION; Schema: public; Owner: -
+-- Name: advance_campaign_phase(uuid, uuid, numeric); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.advance_campaign_phase(p_campaign_id uuid, p_user_id uuid, p_completion_threshold numeric DEFAULT 95.0) RETURNS jsonb
@@ -683,8 +745,10 @@ END;
 $$;
 
 
+ALTER FUNCTION public.advance_campaign_phase(p_campaign_id uuid, p_user_id uuid, p_completion_threshold numeric) OWNER TO domainflow;
+
 --
--- Name: analyze_trigger_performance(); Type: FUNCTION; Schema: public; Owner: -
+-- Name: analyze_trigger_performance(); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.analyze_trigger_performance() RETURNS TABLE(table_name text, trigger_name text, avg_execution_time_ms numeric, total_executions bigint)
@@ -706,15 +770,17 @@ END;
 $$;
 
 
+ALTER FUNCTION public.analyze_trigger_performance() OWNER TO domainflow;
+
 --
--- Name: FUNCTION analyze_trigger_performance(); Type: COMMENT; Schema: public; Owner: -
+-- Name: FUNCTION analyze_trigger_performance(); Type: COMMENT; Schema: public; Owner: domainflow
 --
 
 COMMENT ON FUNCTION public.analyze_trigger_performance() IS 'Analyze trigger execution performance - placeholder for monitoring implementation';
 
 
 --
--- Name: batch_update_domain_validation(uuid, jsonb); Type: FUNCTION; Schema: public; Owner: -
+-- Name: batch_update_domain_validation(uuid, jsonb); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.batch_update_domain_validation(p_campaign_id uuid, p_domain_updates jsonb) RETURNS jsonb
@@ -786,8 +852,10 @@ END;
 $$;
 
 
+ALTER FUNCTION public.batch_update_domain_validation(p_campaign_id uuid, p_domain_updates jsonb) OWNER TO domainflow;
+
 --
--- Name: check_phase_completion(uuid); Type: FUNCTION; Schema: public; Owner: -
+-- Name: check_phase_completion(uuid); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.check_phase_completion(p_campaign_id uuid) RETURNS boolean
@@ -830,8 +898,10 @@ END;
 $$;
 
 
+ALTER FUNCTION public.check_phase_completion(p_campaign_id uuid) OWNER TO domainflow;
+
 --
--- Name: cleanup_audit_logs_by_retention(); Type: FUNCTION; Schema: public; Owner: -
+-- Name: cleanup_audit_logs_by_retention(); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.cleanup_audit_logs_by_retention() RETURNS integer
@@ -881,8 +951,10 @@ END;
 $$;
 
 
+ALTER FUNCTION public.cleanup_audit_logs_by_retention() OWNER TO domainflow;
+
 --
--- Name: cleanup_old_jobs(integer, integer); Type: FUNCTION; Schema: public; Owner: -
+-- Name: cleanup_old_jobs(integer, integer); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.cleanup_old_jobs(p_retention_days integer DEFAULT 90, p_batch_size integer DEFAULT 1000) RETURNS jsonb
@@ -917,8 +989,10 @@ END;
 $$;
 
 
+ALTER FUNCTION public.cleanup_old_jobs(p_retention_days integer, p_batch_size integer) OWNER TO domainflow;
+
 --
--- Name: complete_job(uuid, boolean, jsonb, text); Type: FUNCTION; Schema: public; Owner: -
+-- Name: complete_job(uuid, boolean, jsonb, text); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.complete_job(p_job_id uuid, p_success boolean, p_result_data jsonb DEFAULT NULL::jsonb, p_error_message text DEFAULT NULL::text) RETURNS jsonb
@@ -995,8 +1069,10 @@ END;
 $$;
 
 
+ALTER FUNCTION public.complete_job(p_job_id uuid, p_success boolean, p_result_data jsonb, p_error_message text) OWNER TO domainflow;
+
 --
--- Name: create_phase_jobs(uuid, public.phase_type_enum, uuid); Type: FUNCTION; Schema: public; Owner: -
+-- Name: create_phase_jobs(uuid, public.phase_type_enum, uuid); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.create_phase_jobs(p_campaign_id uuid, p_phase_type public.phase_type_enum, p_user_id uuid) RETURNS jsonb
@@ -1108,8 +1184,10 @@ END;
 $$;
 
 
+ALTER FUNCTION public.create_phase_jobs(p_campaign_id uuid, p_phase_type public.phase_type_enum, p_user_id uuid) OWNER TO domainflow;
+
 --
--- Name: generate_campaign_analytics(uuid, boolean); Type: FUNCTION; Schema: public; Owner: -
+-- Name: generate_campaign_analytics(uuid, boolean); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.generate_campaign_analytics(p_campaign_id uuid, p_include_details boolean DEFAULT false) RETURNS jsonb
@@ -1252,8 +1330,10 @@ END;
 $$;
 
 
+ALTER FUNCTION public.generate_campaign_analytics(p_campaign_id uuid, p_include_details boolean) OWNER TO domainflow;
+
 --
--- Name: manage_triggers(character varying, character varying); Type: FUNCTION; Schema: public; Owner: -
+-- Name: manage_triggers(character varying, character varying); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.manage_triggers(action character varying, table_name character varying DEFAULT NULL::character varying) RETURNS text
@@ -1294,8 +1374,10 @@ END;
 $$;
 
 
+ALTER FUNCTION public.manage_triggers(action character varying, table_name character varying) OWNER TO domainflow;
+
 --
--- Name: process_job_queue(character varying, text[], integer); Type: FUNCTION; Schema: public; Owner: -
+-- Name: process_job_queue(character varying, text[], integer); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.process_job_queue(p_processing_server_id character varying, p_job_types text[] DEFAULT NULL::text[], p_max_jobs integer DEFAULT 10) RETURNS jsonb
@@ -1345,8 +1427,10 @@ END;
 $$;
 
 
+ALTER FUNCTION public.process_job_queue(p_processing_server_id character varying, p_job_types text[], p_max_jobs integer) OWNER TO domainflow;
+
 --
--- Name: setup_campaign_phases(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+-- Name: setup_campaign_phases(uuid, uuid); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.setup_campaign_phases(p_campaign_id uuid, p_user_id uuid) RETURNS jsonb
@@ -1392,8 +1476,10 @@ END;
 $$;
 
 
+ALTER FUNCTION public.setup_campaign_phases(p_campaign_id uuid, p_user_id uuid) OWNER TO domainflow;
+
 --
--- Name: start_campaign(uuid, uuid, boolean); Type: FUNCTION; Schema: public; Owner: -
+-- Name: start_campaign(uuid, uuid, boolean); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.start_campaign(p_campaign_id uuid, p_user_id uuid, p_force_start boolean DEFAULT false) RETURNS jsonb
@@ -1517,8 +1603,10 @@ END;
 $$;
 
 
+ALTER FUNCTION public.start_campaign(p_campaign_id uuid, p_user_id uuid, p_force_start boolean) OWNER TO domainflow;
+
 --
--- Name: trigger_cache_entry_lifecycle(); Type: FUNCTION; Schema: public; Owner: -
+-- Name: trigger_cache_entry_lifecycle(); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.trigger_cache_entry_lifecycle() RETURNS trigger
@@ -1579,8 +1667,10 @@ END;
 $$;
 
 
+ALTER FUNCTION public.trigger_cache_entry_lifecycle() OWNER TO domainflow;
+
 --
--- Name: trigger_campaign_state_transition(); Type: FUNCTION; Schema: public; Owner: -
+-- Name: trigger_campaign_state_transition(); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.trigger_campaign_state_transition() RETURNS trigger
@@ -1712,8 +1802,10 @@ END;
 $$;
 
 
+ALTER FUNCTION public.trigger_campaign_state_transition() OWNER TO domainflow;
+
 --
--- Name: trigger_domain_validation_update(); Type: FUNCTION; Schema: public; Owner: -
+-- Name: trigger_domain_validation_update(); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.trigger_domain_validation_update() RETURNS trigger
@@ -1793,8 +1885,10 @@ END;
 $$;
 
 
+ALTER FUNCTION public.trigger_domain_validation_update() OWNER TO domainflow;
+
 --
--- Name: trigger_job_status_update(); Type: FUNCTION; Schema: public; Owner: -
+-- Name: trigger_job_status_update(); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.trigger_job_status_update() RETURNS trigger
@@ -1864,8 +1958,10 @@ END;
 $$;
 
 
+ALTER FUNCTION public.trigger_job_status_update() OWNER TO domainflow;
+
 --
--- Name: trigger_proxy_pool_consistency(); Type: FUNCTION; Schema: public; Owner: -
+-- Name: trigger_proxy_pool_consistency(); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.trigger_proxy_pool_consistency() RETURNS trigger
@@ -1889,8 +1985,10 @@ END;
 $$;
 
 
+ALTER FUNCTION public.trigger_proxy_pool_consistency() OWNER TO domainflow;
+
 --
--- Name: trigger_update_timestamp(); Type: FUNCTION; Schema: public; Owner: -
+-- Name: trigger_update_timestamp(); Type: FUNCTION; Schema: public; Owner: domainflow
 --
 
 CREATE FUNCTION public.trigger_update_timestamp() RETURNS trigger
@@ -1903,12 +2001,57 @@ END;
 $$;
 
 
+ALTER FUNCTION public.trigger_update_timestamp() OWNER TO domainflow;
+
+--
+-- Name: update_keyword_set_rules_jsonb(); Type: FUNCTION; Schema: public; Owner: domainflow
+--
+
+CREATE FUNCTION public.update_keyword_set_rules_jsonb() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+    -- Update the keyword_sets.rules JSONB column with current rules
+    UPDATE keyword_sets 
+    SET rules = (
+        SELECT COALESCE(jsonb_agg(
+            jsonb_build_object(
+                'id', kr.id,
+                'pattern', kr.pattern,
+                'ruleType', kr.rule_type,
+                'isCaseSensitive', kr.is_case_sensitive,
+                'category', kr.category,
+                'contextChars', kr.context_chars,
+                'createdAt', kr.created_at,
+                'updatedAt', kr.updated_at
+            )
+        ), '[]'::jsonb)
+        FROM keyword_rules kr 
+        WHERE kr.keyword_set_id = COALESCE(NEW.keyword_set_id, OLD.keyword_set_id)
+    ),
+    updated_at = NOW()
+    WHERE id = COALESCE(NEW.keyword_set_id, OLD.keyword_set_id);
+    
+    RETURN COALESCE(NEW, OLD);
+END;
+$$;
+
+
+ALTER FUNCTION public.update_keyword_set_rules_jsonb() OWNER TO domainflow;
+
+--
+-- Name: FUNCTION update_keyword_set_rules_jsonb(); Type: COMMENT; Schema: public; Owner: domainflow
+--
+
+COMMENT ON FUNCTION public.update_keyword_set_rules_jsonb() IS 'Automatically syncs keyword_rules table changes to keyword_sets.rules JSONB for high-performance scanning';
+
+
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: password_reset_tokens; Type: TABLE; Schema: auth; Owner: -
+-- Name: password_reset_tokens; Type: TABLE; Schema: auth; Owner: domainflow
 --
 
 CREATE TABLE auth.password_reset_tokens (
@@ -1923,8 +2066,10 @@ CREATE TABLE auth.password_reset_tokens (
 );
 
 
+ALTER TABLE auth.password_reset_tokens OWNER TO domainflow;
+
 --
--- Name: rate_limits; Type: TABLE; Schema: auth; Owner: -
+-- Name: rate_limits; Type: TABLE; Schema: auth; Owner: domainflow
 --
 
 CREATE TABLE auth.rate_limits (
@@ -1937,8 +2082,10 @@ CREATE TABLE auth.rate_limits (
 );
 
 
+ALTER TABLE auth.rate_limits OWNER TO domainflow;
+
 --
--- Name: rate_limits_id_seq; Type: SEQUENCE; Schema: auth; Owner: -
+-- Name: rate_limits_id_seq; Type: SEQUENCE; Schema: auth; Owner: domainflow
 --
 
 CREATE SEQUENCE auth.rate_limits_id_seq
@@ -1949,15 +2096,17 @@ CREATE SEQUENCE auth.rate_limits_id_seq
     CACHE 1;
 
 
+ALTER SEQUENCE auth.rate_limits_id_seq OWNER TO domainflow;
+
 --
--- Name: rate_limits_id_seq; Type: SEQUENCE OWNED BY; Schema: auth; Owner: -
+-- Name: rate_limits_id_seq; Type: SEQUENCE OWNED BY; Schema: auth; Owner: domainflow
 --
 
 ALTER SEQUENCE auth.rate_limits_id_seq OWNED BY auth.rate_limits.id;
 
 
 --
--- Name: sessions; Type: TABLE; Schema: auth; Owner: -
+-- Name: sessions; Type: TABLE; Schema: auth; Owner: domainflow
 --
 
 CREATE TABLE auth.sessions (
@@ -1976,8 +2125,10 @@ CREATE TABLE auth.sessions (
 );
 
 
+ALTER TABLE auth.sessions OWNER TO domainflow;
+
 --
--- Name: users; Type: TABLE; Schema: auth; Owner: -
+-- Name: users; Type: TABLE; Schema: auth; Owner: domainflow
 --
 
 CREATE TABLE auth.users (
@@ -2010,8 +2161,10 @@ CREATE TABLE auth.users (
 );
 
 
+ALTER TABLE auth.users OWNER TO domainflow;
+
 --
--- Name: architecture_refactor_log; Type: TABLE; Schema: public; Owner: -
+-- Name: architecture_refactor_log; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.architecture_refactor_log (
@@ -2053,8 +2206,10 @@ CREATE TABLE public.architecture_refactor_log (
 );
 
 
+ALTER TABLE public.architecture_refactor_log OWNER TO domainflow;
+
 --
--- Name: audit_logs; Type: TABLE; Schema: public; Owner: -
+-- Name: audit_logs; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.audit_logs (
@@ -2087,8 +2242,10 @@ CREATE TABLE public.audit_logs (
 );
 
 
+ALTER TABLE public.audit_logs OWNER TO domainflow;
+
 --
--- Name: auth_audit_logs; Type: TABLE; Schema: public; Owner: -
+-- Name: auth_audit_logs; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.auth_audit_logs (
@@ -2107,8 +2264,10 @@ CREATE TABLE public.auth_audit_logs (
 );
 
 
+ALTER TABLE public.auth_audit_logs OWNER TO domainflow;
+
 --
--- Name: auth_audit_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: auth_audit_logs_id_seq; Type: SEQUENCE; Schema: public; Owner: domainflow
 --
 
 CREATE SEQUENCE public.auth_audit_logs_id_seq
@@ -2119,15 +2278,17 @@ CREATE SEQUENCE public.auth_audit_logs_id_seq
     CACHE 1;
 
 
+ALTER SEQUENCE public.auth_audit_logs_id_seq OWNER TO domainflow;
+
 --
--- Name: auth_audit_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: auth_audit_logs_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: domainflow
 --
 
 ALTER SEQUENCE public.auth_audit_logs_id_seq OWNED BY public.auth_audit_logs.id;
 
 
 --
--- Name: authorization_decisions; Type: TABLE; Schema: public; Owner: -
+-- Name: authorization_decisions; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.authorization_decisions (
@@ -2163,8 +2324,10 @@ CREATE TABLE public.authorization_decisions (
 );
 
 
+ALTER TABLE public.authorization_decisions OWNER TO domainflow;
+
 --
--- Name: cache_configurations; Type: TABLE; Schema: public; Owner: -
+-- Name: cache_configurations; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.cache_configurations (
@@ -2201,8 +2364,10 @@ CREATE TABLE public.cache_configurations (
 );
 
 
+ALTER TABLE public.cache_configurations OWNER TO domainflow;
+
 --
--- Name: cache_entries; Type: TABLE; Schema: public; Owner: -
+-- Name: cache_entries; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.cache_entries (
@@ -2238,8 +2403,10 @@ CREATE TABLE public.cache_entries (
 );
 
 
+ALTER TABLE public.cache_entries OWNER TO domainflow;
+
 --
--- Name: cache_invalidation_log; Type: TABLE; Schema: public; Owner: -
+-- Name: cache_invalidation_log; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.cache_invalidation_log (
@@ -2266,8 +2433,10 @@ CREATE TABLE public.cache_invalidation_log (
 );
 
 
+ALTER TABLE public.cache_invalidation_log OWNER TO domainflow;
+
 --
--- Name: cache_invalidations; Type: TABLE; Schema: public; Owner: -
+-- Name: cache_invalidations; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.cache_invalidations (
@@ -2302,8 +2471,10 @@ CREATE TABLE public.cache_invalidations (
 );
 
 
+ALTER TABLE public.cache_invalidations OWNER TO domainflow;
+
 --
--- Name: cache_metrics; Type: TABLE; Schema: public; Owner: -
+-- Name: cache_metrics; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.cache_metrics (
@@ -2347,8 +2518,10 @@ CREATE TABLE public.cache_metrics (
 );
 
 
+ALTER TABLE public.cache_metrics OWNER TO domainflow;
+
 --
--- Name: cache_metrics_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: cache_metrics_id_seq; Type: SEQUENCE; Schema: public; Owner: domainflow
 --
 
 CREATE SEQUENCE public.cache_metrics_id_seq
@@ -2359,15 +2532,17 @@ CREATE SEQUENCE public.cache_metrics_id_seq
     CACHE 1;
 
 
+ALTER SEQUENCE public.cache_metrics_id_seq OWNER TO domainflow;
+
 --
--- Name: cache_metrics_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: cache_metrics_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: domainflow
 --
 
 ALTER SEQUENCE public.cache_metrics_id_seq OWNED BY public.cache_metrics.id;
 
 
 --
--- Name: campaign_access_grants; Type: TABLE; Schema: public; Owner: -
+-- Name: campaign_access_grants; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.campaign_access_grants (
@@ -2404,8 +2579,10 @@ CREATE TABLE public.campaign_access_grants (
 );
 
 
+ALTER TABLE public.campaign_access_grants OWNER TO domainflow;
+
 --
--- Name: campaign_jobs; Type: TABLE; Schema: public; Owner: -
+-- Name: campaign_jobs; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.campaign_jobs (
@@ -2435,8 +2612,10 @@ CREATE TABLE public.campaign_jobs (
 );
 
 
+ALTER TABLE public.campaign_jobs OWNER TO domainflow;
+
 --
--- Name: campaign_phases; Type: TABLE; Schema: public; Owner: -
+-- Name: campaign_phases; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.campaign_phases (
@@ -2469,8 +2648,10 @@ CREATE TABLE public.campaign_phases (
 );
 
 
+ALTER TABLE public.campaign_phases OWNER TO domainflow;
+
 --
--- Name: campaign_state_events; Type: TABLE; Schema: public; Owner: -
+-- Name: campaign_state_events; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.campaign_state_events (
@@ -2492,8 +2673,10 @@ CREATE TABLE public.campaign_state_events (
 );
 
 
+ALTER TABLE public.campaign_state_events OWNER TO domainflow;
+
 --
--- Name: campaign_state_events_sequence_number_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: campaign_state_events_sequence_number_seq; Type: SEQUENCE; Schema: public; Owner: domainflow
 --
 
 CREATE SEQUENCE public.campaign_state_events_sequence_number_seq
@@ -2504,15 +2687,17 @@ CREATE SEQUENCE public.campaign_state_events_sequence_number_seq
     CACHE 1;
 
 
+ALTER SEQUENCE public.campaign_state_events_sequence_number_seq OWNER TO domainflow;
+
 --
--- Name: campaign_state_events_sequence_number_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: campaign_state_events_sequence_number_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: domainflow
 --
 
 ALTER SEQUENCE public.campaign_state_events_sequence_number_seq OWNED BY public.campaign_state_events.sequence_number;
 
 
 --
--- Name: campaign_state_snapshots; Type: TABLE; Schema: public; Owner: -
+-- Name: campaign_state_snapshots; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.campaign_state_snapshots (
@@ -2528,8 +2713,10 @@ CREATE TABLE public.campaign_state_snapshots (
 );
 
 
+ALTER TABLE public.campaign_state_snapshots OWNER TO domainflow;
+
 --
--- Name: campaign_state_transitions; Type: TABLE; Schema: public; Owner: -
+-- Name: campaign_state_transitions; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.campaign_state_transitions (
@@ -2548,8 +2735,10 @@ CREATE TABLE public.campaign_state_transitions (
 );
 
 
+ALTER TABLE public.campaign_state_transitions OWNER TO domainflow;
+
 --
--- Name: communication_patterns; Type: TABLE; Schema: public; Owner: -
+-- Name: communication_patterns; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.communication_patterns (
@@ -2601,8 +2790,10 @@ CREATE TABLE public.communication_patterns (
 );
 
 
+ALTER TABLE public.communication_patterns OWNER TO domainflow;
+
 --
--- Name: config_locks; Type: TABLE; Schema: public; Owner: -
+-- Name: config_locks; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.config_locks (
@@ -2642,8 +2833,10 @@ CREATE TABLE public.config_locks (
 );
 
 
+ALTER TABLE public.config_locks OWNER TO domainflow;
+
 --
--- Name: config_versions; Type: TABLE; Schema: public; Owner: -
+-- Name: config_versions; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.config_versions (
@@ -2689,8 +2882,10 @@ CREATE TABLE public.config_versions (
 );
 
 
+ALTER TABLE public.config_versions OWNER TO domainflow;
+
 --
--- Name: connection_pool_metrics; Type: TABLE; Schema: public; Owner: -
+-- Name: connection_pool_metrics; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.connection_pool_metrics (
@@ -2720,8 +2915,10 @@ CREATE TABLE public.connection_pool_metrics (
 );
 
 
+ALTER TABLE public.connection_pool_metrics OWNER TO domainflow;
+
 --
--- Name: connection_pool_metrics_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: connection_pool_metrics_id_seq; Type: SEQUENCE; Schema: public; Owner: domainflow
 --
 
 CREATE SEQUENCE public.connection_pool_metrics_id_seq
@@ -2732,15 +2929,17 @@ CREATE SEQUENCE public.connection_pool_metrics_id_seq
     CACHE 1;
 
 
+ALTER SEQUENCE public.connection_pool_metrics_id_seq OWNER TO domainflow;
+
 --
--- Name: connection_pool_metrics_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: connection_pool_metrics_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: domainflow
 --
 
 ALTER SEQUENCE public.connection_pool_metrics_id_seq OWNED BY public.connection_pool_metrics.id;
 
 
 --
--- Name: dns_validation_results; Type: TABLE; Schema: public; Owner: -
+-- Name: dns_validation_results; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.dns_validation_results (
@@ -2759,8 +2958,10 @@ CREATE TABLE public.dns_validation_results (
 );
 
 
+ALTER TABLE public.dns_validation_results OWNER TO domainflow;
+
 --
--- Name: domain_generation_campaign_params; Type: TABLE; Schema: public; Owner: -
+-- Name: domain_generation_campaign_params; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.domain_generation_campaign_params (
@@ -2782,8 +2983,10 @@ CREATE TABLE public.domain_generation_campaign_params (
 );
 
 
+ALTER TABLE public.domain_generation_campaign_params OWNER TO domainflow;
+
 --
--- Name: domain_generation_config_states; Type: TABLE; Schema: public; Owner: -
+-- Name: domain_generation_config_states; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.domain_generation_config_states (
@@ -2795,8 +2998,10 @@ CREATE TABLE public.domain_generation_config_states (
 );
 
 
+ALTER TABLE public.domain_generation_config_states OWNER TO domainflow;
+
 --
--- Name: event_projections; Type: TABLE; Schema: public; Owner: -
+-- Name: event_projections; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.event_projections (
@@ -2847,8 +3052,10 @@ CREATE TABLE public.event_projections (
 );
 
 
+ALTER TABLE public.event_projections OWNER TO domainflow;
+
 --
--- Name: event_store; Type: TABLE; Schema: public; Owner: -
+-- Name: event_store; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.event_store (
@@ -2889,8 +3096,10 @@ CREATE TABLE public.event_store (
 );
 
 
+ALTER TABLE public.event_store OWNER TO domainflow;
+
 --
--- Name: event_store_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: event_store_id_seq; Type: SEQUENCE; Schema: public; Owner: domainflow
 --
 
 CREATE SEQUENCE public.event_store_id_seq
@@ -2901,15 +3110,17 @@ CREATE SEQUENCE public.event_store_id_seq
     CACHE 1;
 
 
+ALTER SEQUENCE public.event_store_id_seq OWNER TO domainflow;
+
 --
--- Name: event_store_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: event_store_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: domainflow
 --
 
 ALTER SEQUENCE public.event_store_id_seq OWNED BY public.event_store.id;
 
 
 --
--- Name: foreign_key_violations; Type: VIEW; Schema: public; Owner: -
+-- Name: foreign_key_violations; Type: VIEW; Schema: public; Owner: domainflow
 --
 
 CREATE VIEW public.foreign_key_violations AS
@@ -2922,15 +3133,17 @@ CREATE VIEW public.foreign_key_violations AS
   GROUP BY schemaname, relname;
 
 
+ALTER VIEW public.foreign_key_violations OWNER TO domainflow;
+
 --
--- Name: VIEW foreign_key_violations; Type: COMMENT; Schema: public; Owner: -
+-- Name: VIEW foreign_key_violations; Type: COMMENT; Schema: public; Owner: domainflow
 --
 
 COMMENT ON VIEW public.foreign_key_violations IS 'Monitor potential foreign key constraint violations - for maintenance purposes';
 
 
 --
--- Name: generated_domains; Type: TABLE; Schema: public; Owner: -
+-- Name: generated_domains; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.generated_domains (
@@ -2958,8 +3171,10 @@ CREATE TABLE public.generated_domains (
 );
 
 
+ALTER TABLE public.generated_domains OWNER TO domainflow;
+
 --
--- Name: http_keyword_results; Type: TABLE; Schema: public; Owner: -
+-- Name: http_keyword_results; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.http_keyword_results (
@@ -2985,8 +3200,10 @@ CREATE TABLE public.http_keyword_results (
 );
 
 
+ALTER TABLE public.http_keyword_results OWNER TO domainflow;
+
 --
--- Name: keyword_rules; Type: TABLE; Schema: public; Owner: -
+-- Name: keyword_rules; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.keyword_rules (
@@ -3003,8 +3220,10 @@ CREATE TABLE public.keyword_rules (
 );
 
 
+ALTER TABLE public.keyword_rules OWNER TO domainflow;
+
 --
--- Name: keyword_sets; Type: TABLE; Schema: public; Owner: -
+-- Name: keyword_sets; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.keyword_sets (
@@ -3018,8 +3237,10 @@ CREATE TABLE public.keyword_sets (
 );
 
 
+ALTER TABLE public.keyword_sets OWNER TO domainflow;
+
 --
--- Name: lead_generation_campaigns; Type: TABLE; Schema: public; Owner: -
+-- Name: lead_generation_campaigns; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.lead_generation_campaigns (
@@ -3068,8 +3289,10 @@ CREATE TABLE public.lead_generation_campaigns (
 );
 
 
+ALTER TABLE public.lead_generation_campaigns OWNER TO domainflow;
+
 --
--- Name: pagination_performance_metrics; Type: TABLE; Schema: public; Owner: -
+-- Name: pagination_performance_metrics; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.pagination_performance_metrics (
@@ -3100,8 +3323,10 @@ CREATE TABLE public.pagination_performance_metrics (
 );
 
 
+ALTER TABLE public.pagination_performance_metrics OWNER TO domainflow;
+
 --
--- Name: pagination_performance_metrics_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: pagination_performance_metrics_id_seq; Type: SEQUENCE; Schema: public; Owner: domainflow
 --
 
 CREATE SEQUENCE public.pagination_performance_metrics_id_seq
@@ -3112,15 +3337,17 @@ CREATE SEQUENCE public.pagination_performance_metrics_id_seq
     CACHE 1;
 
 
+ALTER SEQUENCE public.pagination_performance_metrics_id_seq OWNER TO domainflow;
+
 --
--- Name: pagination_performance_metrics_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: pagination_performance_metrics_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: domainflow
 --
 
 ALTER SEQUENCE public.pagination_performance_metrics_id_seq OWNED BY public.pagination_performance_metrics.id;
 
 
 --
--- Name: personas; Type: TABLE; Schema: public; Owner: -
+-- Name: personas; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.personas (
@@ -3139,8 +3366,10 @@ CREATE TABLE public.personas (
 );
 
 
+ALTER TABLE public.personas OWNER TO domainflow;
+
 --
--- Name: proxies; Type: TABLE; Schema: public; Owner: -
+-- Name: proxies; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.proxies (
@@ -3176,8 +3405,10 @@ CREATE TABLE public.proxies (
 );
 
 
+ALTER TABLE public.proxies OWNER TO domainflow;
+
 --
--- Name: proxy_pool_memberships; Type: TABLE; Schema: public; Owner: -
+-- Name: proxy_pool_memberships; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.proxy_pool_memberships (
@@ -3190,8 +3421,10 @@ CREATE TABLE public.proxy_pool_memberships (
 );
 
 
+ALTER TABLE public.proxy_pool_memberships OWNER TO domainflow;
+
 --
--- Name: proxy_pools; Type: TABLE; Schema: public; Owner: -
+-- Name: proxy_pools; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.proxy_pools (
@@ -3212,8 +3445,10 @@ CREATE TABLE public.proxy_pools (
 );
 
 
+ALTER TABLE public.proxy_pools OWNER TO domainflow;
+
 --
--- Name: query_performance_metrics; Type: TABLE; Schema: public; Owner: -
+-- Name: query_performance_metrics; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.query_performance_metrics (
@@ -3258,8 +3493,10 @@ CREATE TABLE public.query_performance_metrics (
 );
 
 
+ALTER TABLE public.query_performance_metrics OWNER TO domainflow;
+
 --
--- Name: resource_utilization_metrics; Type: TABLE; Schema: public; Owner: -
+-- Name: resource_utilization_metrics; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.resource_utilization_metrics (
@@ -3285,8 +3522,10 @@ CREATE TABLE public.resource_utilization_metrics (
 );
 
 
+ALTER TABLE public.resource_utilization_metrics OWNER TO domainflow;
+
 --
--- Name: schema_migrations; Type: TABLE; Schema: public; Owner: -
+-- Name: schema_migrations; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.schema_migrations (
@@ -3295,8 +3534,10 @@ CREATE TABLE public.schema_migrations (
 );
 
 
+ALTER TABLE public.schema_migrations OWNER TO domainflow;
+
 --
--- Name: security_events; Type: TABLE; Schema: public; Owner: -
+-- Name: security_events; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.security_events (
@@ -3337,8 +3578,10 @@ CREATE TABLE public.security_events (
 );
 
 
+ALTER TABLE public.security_events OWNER TO domainflow;
+
 --
--- Name: service_architecture_metrics; Type: TABLE; Schema: public; Owner: -
+-- Name: service_architecture_metrics; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.service_architecture_metrics (
@@ -3400,8 +3643,10 @@ CREATE TABLE public.service_architecture_metrics (
 );
 
 
+ALTER TABLE public.service_architecture_metrics OWNER TO domainflow;
+
 --
--- Name: service_capacity_metrics; Type: TABLE; Schema: public; Owner: -
+-- Name: service_capacity_metrics; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.service_capacity_metrics (
@@ -3465,8 +3710,48 @@ CREATE TABLE public.service_capacity_metrics (
 );
 
 
+ALTER TABLE public.service_capacity_metrics OWNER TO domainflow;
+
 --
--- Name: service_dependencies; Type: TABLE; Schema: public; Owner: -
+-- Name: service_contracts; Type: TABLE; Schema: public; Owner: domainflow
+--
+
+CREATE TABLE public.service_contracts (
+    id integer NOT NULL,
+    service_name character varying(255) NOT NULL,
+    version character varying(50) NOT NULL,
+    contract jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+
+ALTER TABLE public.service_contracts OWNER TO domainflow;
+
+--
+-- Name: service_contracts_id_seq; Type: SEQUENCE; Schema: public; Owner: domainflow
+--
+
+CREATE SEQUENCE public.service_contracts_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.service_contracts_id_seq OWNER TO domainflow;
+
+--
+-- Name: service_contracts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: domainflow
+--
+
+ALTER SEQUENCE public.service_contracts_id_seq OWNED BY public.service_contracts.id;
+
+
+--
+-- Name: service_dependencies; Type: TABLE; Schema: public; Owner: domainflow
 --
 
 CREATE TABLE public.service_dependencies (
@@ -3509,8 +3794,10 @@ CREATE TABLE public.service_dependencies (
 );
 
 
+ALTER TABLE public.service_dependencies OWNER TO domainflow;
+
 --
--- Name: trigger_monitoring; Type: VIEW; Schema: public; Owner: -
+-- Name: trigger_monitoring; Type: VIEW; Schema: public; Owner: domainflow
 --
 
 CREATE VIEW public.trigger_monitoring AS
@@ -3527,64 +3814,123 @@ CREATE VIEW public.trigger_monitoring AS
   ORDER BY c.relname, t.tgname;
 
 
+ALTER VIEW public.trigger_monitoring OWNER TO domainflow;
+
 --
--- Name: VIEW trigger_monitoring; Type: COMMENT; Schema: public; Owner: -
+-- Name: VIEW trigger_monitoring; Type: COMMENT; Schema: public; Owner: domainflow
 --
 
 COMMENT ON VIEW public.trigger_monitoring IS 'Monitor trigger status and configuration across all tables';
 
 
 --
--- Name: rate_limits id; Type: DEFAULT; Schema: auth; Owner: -
+-- Name: worker_coordination; Type: TABLE; Schema: public; Owner: domainflow
+--
+
+CREATE TABLE public.worker_coordination (
+    id integer NOT NULL,
+    worker_id character varying(255) NOT NULL,
+    campaign_id character varying(255),
+    worker_type character varying(100) NOT NULL,
+    status character varying(50) DEFAULT 'inactive'::character varying NOT NULL,
+    metadata jsonb,
+    last_operation character varying(255),
+    registered_at timestamp with time zone DEFAULT now() NOT NULL,
+    last_heartbeat timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now(),
+    created_at timestamp with time zone DEFAULT now()
+);
+
+
+ALTER TABLE public.worker_coordination OWNER TO domainflow;
+
+--
+-- Name: worker_coordination_id_seq; Type: SEQUENCE; Schema: public; Owner: domainflow
+--
+
+CREATE SEQUENCE public.worker_coordination_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.worker_coordination_id_seq OWNER TO domainflow;
+
+--
+-- Name: worker_coordination_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: domainflow
+--
+
+ALTER SEQUENCE public.worker_coordination_id_seq OWNED BY public.worker_coordination.id;
+
+
+--
+-- Name: rate_limits id; Type: DEFAULT; Schema: auth; Owner: domainflow
 --
 
 ALTER TABLE ONLY auth.rate_limits ALTER COLUMN id SET DEFAULT nextval('auth.rate_limits_id_seq'::regclass);
 
 
 --
--- Name: auth_audit_logs id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: auth_audit_logs id; Type: DEFAULT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.auth_audit_logs ALTER COLUMN id SET DEFAULT nextval('public.auth_audit_logs_id_seq'::regclass);
 
 
 --
--- Name: cache_metrics id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: cache_metrics id; Type: DEFAULT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_metrics ALTER COLUMN id SET DEFAULT nextval('public.cache_metrics_id_seq'::regclass);
 
 
 --
--- Name: campaign_state_events sequence_number; Type: DEFAULT; Schema: public; Owner: -
+-- Name: campaign_state_events sequence_number; Type: DEFAULT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_state_events ALTER COLUMN sequence_number SET DEFAULT nextval('public.campaign_state_events_sequence_number_seq'::regclass);
 
 
 --
--- Name: connection_pool_metrics id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: connection_pool_metrics id; Type: DEFAULT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.connection_pool_metrics ALTER COLUMN id SET DEFAULT nextval('public.connection_pool_metrics_id_seq'::regclass);
 
 
 --
--- Name: event_store id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: event_store id; Type: DEFAULT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.event_store ALTER COLUMN id SET DEFAULT nextval('public.event_store_id_seq'::regclass);
 
 
 --
--- Name: pagination_performance_metrics id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: pagination_performance_metrics id; Type: DEFAULT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.pagination_performance_metrics ALTER COLUMN id SET DEFAULT nextval('public.pagination_performance_metrics_id_seq'::regclass);
 
 
 --
--- Name: password_reset_tokens password_reset_tokens_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
+-- Name: service_contracts id; Type: DEFAULT; Schema: public; Owner: domainflow
+--
+
+ALTER TABLE ONLY public.service_contracts ALTER COLUMN id SET DEFAULT nextval('public.service_contracts_id_seq'::regclass);
+
+
+--
+-- Name: worker_coordination id; Type: DEFAULT; Schema: public; Owner: domainflow
+--
+
+ALTER TABLE ONLY public.worker_coordination ALTER COLUMN id SET DEFAULT nextval('public.worker_coordination_id_seq'::regclass);
+
+
+--
+-- Name: password_reset_tokens password_reset_tokens_pkey; Type: CONSTRAINT; Schema: auth; Owner: domainflow
 --
 
 ALTER TABLE ONLY auth.password_reset_tokens
@@ -3592,7 +3938,7 @@ ALTER TABLE ONLY auth.password_reset_tokens
 
 
 --
--- Name: password_reset_tokens password_reset_tokens_token_hash_key; Type: CONSTRAINT; Schema: auth; Owner: -
+-- Name: password_reset_tokens password_reset_tokens_token_hash_key; Type: CONSTRAINT; Schema: auth; Owner: domainflow
 --
 
 ALTER TABLE ONLY auth.password_reset_tokens
@@ -3600,7 +3946,7 @@ ALTER TABLE ONLY auth.password_reset_tokens
 
 
 --
--- Name: rate_limits rate_limits_identifier_action_key; Type: CONSTRAINT; Schema: auth; Owner: -
+-- Name: rate_limits rate_limits_identifier_action_key; Type: CONSTRAINT; Schema: auth; Owner: domainflow
 --
 
 ALTER TABLE ONLY auth.rate_limits
@@ -3608,7 +3954,7 @@ ALTER TABLE ONLY auth.rate_limits
 
 
 --
--- Name: rate_limits rate_limits_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
+-- Name: rate_limits rate_limits_pkey; Type: CONSTRAINT; Schema: auth; Owner: domainflow
 --
 
 ALTER TABLE ONLY auth.rate_limits
@@ -3616,7 +3962,7 @@ ALTER TABLE ONLY auth.rate_limits
 
 
 --
--- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
+-- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: auth; Owner: domainflow
 --
 
 ALTER TABLE ONLY auth.sessions
@@ -3624,7 +3970,7 @@ ALTER TABLE ONLY auth.sessions
 
 
 --
--- Name: users users_email_key; Type: CONSTRAINT; Schema: auth; Owner: -
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: auth; Owner: domainflow
 --
 
 ALTER TABLE ONLY auth.users
@@ -3632,7 +3978,7 @@ ALTER TABLE ONLY auth.users
 
 
 --
--- Name: users users_pkey; Type: CONSTRAINT; Schema: auth; Owner: -
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: auth; Owner: domainflow
 --
 
 ALTER TABLE ONLY auth.users
@@ -3640,14 +3986,14 @@ ALTER TABLE ONLY auth.users
 
 
 --
--- Name: CONSTRAINT users_pkey ON users; Type: COMMENT; Schema: auth; Owner: -
+-- Name: CONSTRAINT users_pkey ON users; Type: COMMENT; Schema: auth; Owner: domainflow
 --
 
 COMMENT ON CONSTRAINT users_pkey ON auth.users IS 'Primary key for users table - referenced by most other tables for user tracking';
 
 
 --
--- Name: architecture_refactor_log architecture_refactor_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: architecture_refactor_log architecture_refactor_log_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.architecture_refactor_log
@@ -3655,7 +4001,7 @@ ALTER TABLE ONLY public.architecture_refactor_log
 
 
 --
--- Name: audit_logs audit_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: audit_logs audit_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.audit_logs
@@ -3663,7 +4009,7 @@ ALTER TABLE ONLY public.audit_logs
 
 
 --
--- Name: auth_audit_logs auth_audit_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: auth_audit_logs auth_audit_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.auth_audit_logs
@@ -3671,7 +4017,7 @@ ALTER TABLE ONLY public.auth_audit_logs
 
 
 --
--- Name: authorization_decisions authorization_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: authorization_decisions authorization_decisions_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.authorization_decisions
@@ -3679,7 +4025,7 @@ ALTER TABLE ONLY public.authorization_decisions
 
 
 --
--- Name: cache_configurations cache_configurations_cache_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_configurations cache_configurations_cache_name_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_configurations
@@ -3687,7 +4033,7 @@ ALTER TABLE ONLY public.cache_configurations
 
 
 --
--- Name: cache_configurations cache_configurations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_configurations cache_configurations_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_configurations
@@ -3695,7 +4041,7 @@ ALTER TABLE ONLY public.cache_configurations
 
 
 --
--- Name: cache_entries cache_entries_cache_configuration_id_cache_key_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_entries cache_entries_cache_configuration_id_cache_key_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_entries
@@ -3703,7 +4049,7 @@ ALTER TABLE ONLY public.cache_entries
 
 
 --
--- Name: cache_entries cache_entries_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_entries cache_entries_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_entries
@@ -3711,7 +4057,7 @@ ALTER TABLE ONLY public.cache_entries
 
 
 --
--- Name: cache_invalidation_log cache_invalidation_log_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_invalidation_log cache_invalidation_log_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_invalidation_log
@@ -3719,7 +4065,7 @@ ALTER TABLE ONLY public.cache_invalidation_log
 
 
 --
--- Name: cache_invalidations cache_invalidations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_invalidations cache_invalidations_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_invalidations
@@ -3727,7 +4073,7 @@ ALTER TABLE ONLY public.cache_invalidations
 
 
 --
--- Name: cache_metrics cache_metrics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_metrics cache_metrics_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_metrics
@@ -3735,7 +4081,7 @@ ALTER TABLE ONLY public.cache_metrics
 
 
 --
--- Name: campaign_access_grants campaign_access_grants_campaign_id_user_id_access_type_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_access_grants campaign_access_grants_campaign_id_user_id_access_type_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_access_grants
@@ -3743,7 +4089,7 @@ ALTER TABLE ONLY public.campaign_access_grants
 
 
 --
--- Name: campaign_access_grants campaign_access_grants_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_access_grants campaign_access_grants_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_access_grants
@@ -3751,7 +4097,7 @@ ALTER TABLE ONLY public.campaign_access_grants
 
 
 --
--- Name: campaign_jobs campaign_jobs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_jobs campaign_jobs_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_jobs
@@ -3759,7 +4105,7 @@ ALTER TABLE ONLY public.campaign_jobs
 
 
 --
--- Name: campaign_phases campaign_phases_campaign_id_phase_order_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_phases campaign_phases_campaign_id_phase_order_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_phases
@@ -3767,7 +4113,7 @@ ALTER TABLE ONLY public.campaign_phases
 
 
 --
--- Name: campaign_phases campaign_phases_campaign_id_phase_type_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_phases campaign_phases_campaign_id_phase_type_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_phases
@@ -3775,7 +4121,7 @@ ALTER TABLE ONLY public.campaign_phases
 
 
 --
--- Name: campaign_phases campaign_phases_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_phases campaign_phases_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_phases
@@ -3783,7 +4129,7 @@ ALTER TABLE ONLY public.campaign_phases
 
 
 --
--- Name: campaign_state_events campaign_state_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_state_events campaign_state_events_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_state_events
@@ -3791,7 +4137,7 @@ ALTER TABLE ONLY public.campaign_state_events
 
 
 --
--- Name: campaign_state_snapshots campaign_state_snapshots_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_state_snapshots campaign_state_snapshots_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_state_snapshots
@@ -3799,7 +4145,7 @@ ALTER TABLE ONLY public.campaign_state_snapshots
 
 
 --
--- Name: campaign_state_transitions campaign_state_transitions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_state_transitions campaign_state_transitions_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_state_transitions
@@ -3807,7 +4153,7 @@ ALTER TABLE ONLY public.campaign_state_transitions
 
 
 --
--- Name: communication_patterns communication_patterns_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: communication_patterns communication_patterns_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.communication_patterns
@@ -3815,7 +4161,7 @@ ALTER TABLE ONLY public.communication_patterns
 
 
 --
--- Name: config_locks config_locks_lock_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: config_locks config_locks_lock_name_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.config_locks
@@ -3823,7 +4169,7 @@ ALTER TABLE ONLY public.config_locks
 
 
 --
--- Name: config_locks config_locks_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: config_locks config_locks_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.config_locks
@@ -3831,7 +4177,7 @@ ALTER TABLE ONLY public.config_locks
 
 
 --
--- Name: config_versions config_versions_config_key_version_number_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: config_versions config_versions_config_key_version_number_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.config_versions
@@ -3839,7 +4185,7 @@ ALTER TABLE ONLY public.config_versions
 
 
 --
--- Name: config_versions config_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: config_versions config_versions_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.config_versions
@@ -3847,7 +4193,7 @@ ALTER TABLE ONLY public.config_versions
 
 
 --
--- Name: connection_pool_metrics connection_pool_metrics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: connection_pool_metrics connection_pool_metrics_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.connection_pool_metrics
@@ -3855,7 +4201,7 @@ ALTER TABLE ONLY public.connection_pool_metrics
 
 
 --
--- Name: dns_validation_results dns_validation_results_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: dns_validation_results dns_validation_results_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.dns_validation_results
@@ -3863,7 +4209,7 @@ ALTER TABLE ONLY public.dns_validation_results
 
 
 --
--- Name: domain_generation_campaign_params domain_generation_campaign_params_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: domain_generation_campaign_params domain_generation_campaign_params_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.domain_generation_campaign_params
@@ -3871,7 +4217,7 @@ ALTER TABLE ONLY public.domain_generation_campaign_params
 
 
 --
--- Name: domain_generation_config_states domain_generation_config_states_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: domain_generation_config_states domain_generation_config_states_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.domain_generation_config_states
@@ -3879,7 +4225,7 @@ ALTER TABLE ONLY public.domain_generation_config_states
 
 
 --
--- Name: event_projections event_projections_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: event_projections event_projections_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.event_projections
@@ -3887,7 +4233,7 @@ ALTER TABLE ONLY public.event_projections
 
 
 --
--- Name: event_projections event_projections_projection_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: event_projections event_projections_projection_name_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.event_projections
@@ -3895,7 +4241,7 @@ ALTER TABLE ONLY public.event_projections
 
 
 --
--- Name: event_store event_store_aggregate_id_aggregate_version_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: event_store event_store_aggregate_id_aggregate_version_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.event_store
@@ -3903,7 +4249,7 @@ ALTER TABLE ONLY public.event_store
 
 
 --
--- Name: event_store event_store_aggregate_id_sequence_number_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: event_store event_store_aggregate_id_sequence_number_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.event_store
@@ -3911,7 +4257,7 @@ ALTER TABLE ONLY public.event_store
 
 
 --
--- Name: event_store event_store_event_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: event_store event_store_event_id_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.event_store
@@ -3919,7 +4265,7 @@ ALTER TABLE ONLY public.event_store
 
 
 --
--- Name: event_store event_store_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: event_store event_store_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.event_store
@@ -3927,7 +4273,7 @@ ALTER TABLE ONLY public.event_store
 
 
 --
--- Name: generated_domains generated_domains_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: generated_domains generated_domains_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.generated_domains
@@ -3935,7 +4281,7 @@ ALTER TABLE ONLY public.generated_domains
 
 
 --
--- Name: http_keyword_results http_keyword_results_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: http_keyword_results http_keyword_results_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.http_keyword_results
@@ -3943,7 +4289,7 @@ ALTER TABLE ONLY public.http_keyword_results
 
 
 --
--- Name: keyword_rules keyword_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: keyword_rules keyword_rules_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.keyword_rules
@@ -3951,7 +4297,7 @@ ALTER TABLE ONLY public.keyword_rules
 
 
 --
--- Name: keyword_sets keyword_sets_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: keyword_sets keyword_sets_name_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.keyword_sets
@@ -3959,7 +4305,7 @@ ALTER TABLE ONLY public.keyword_sets
 
 
 --
--- Name: keyword_sets keyword_sets_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: keyword_sets keyword_sets_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.keyword_sets
@@ -3967,7 +4313,7 @@ ALTER TABLE ONLY public.keyword_sets
 
 
 --
--- Name: lead_generation_campaigns lead_generation_campaigns_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: lead_generation_campaigns lead_generation_campaigns_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.lead_generation_campaigns
@@ -3975,14 +4321,14 @@ ALTER TABLE ONLY public.lead_generation_campaigns
 
 
 --
--- Name: CONSTRAINT lead_generation_campaigns_pkey ON lead_generation_campaigns; Type: COMMENT; Schema: public; Owner: -
+-- Name: CONSTRAINT lead_generation_campaigns_pkey ON lead_generation_campaigns; Type: COMMENT; Schema: public; Owner: domainflow
 --
 
 COMMENT ON CONSTRAINT lead_generation_campaigns_pkey ON public.lead_generation_campaigns IS 'Primary key for campaigns - central entity referenced by domain, job, and audit tables';
 
 
 --
--- Name: pagination_performance_metrics pagination_performance_metrics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: pagination_performance_metrics pagination_performance_metrics_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.pagination_performance_metrics
@@ -3990,7 +4336,7 @@ ALTER TABLE ONLY public.pagination_performance_metrics
 
 
 --
--- Name: personas personas_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: personas personas_name_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.personas
@@ -3998,7 +4344,7 @@ ALTER TABLE ONLY public.personas
 
 
 --
--- Name: personas personas_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: personas personas_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.personas
@@ -4006,7 +4352,7 @@ ALTER TABLE ONLY public.personas
 
 
 --
--- Name: proxies proxies_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: proxies proxies_name_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.proxies
@@ -4014,7 +4360,7 @@ ALTER TABLE ONLY public.proxies
 
 
 --
--- Name: proxies proxies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: proxies proxies_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.proxies
@@ -4022,7 +4368,7 @@ ALTER TABLE ONLY public.proxies
 
 
 --
--- Name: proxy_pool_memberships proxy_pool_memberships_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: proxy_pool_memberships proxy_pool_memberships_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.proxy_pool_memberships
@@ -4030,7 +4376,7 @@ ALTER TABLE ONLY public.proxy_pool_memberships
 
 
 --
--- Name: proxy_pools proxy_pools_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: proxy_pools proxy_pools_name_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.proxy_pools
@@ -4038,7 +4384,7 @@ ALTER TABLE ONLY public.proxy_pools
 
 
 --
--- Name: proxy_pools proxy_pools_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: proxy_pools proxy_pools_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.proxy_pools
@@ -4046,7 +4392,7 @@ ALTER TABLE ONLY public.proxy_pools
 
 
 --
--- Name: query_performance_metrics query_performance_metrics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: query_performance_metrics query_performance_metrics_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.query_performance_metrics
@@ -4054,7 +4400,7 @@ ALTER TABLE ONLY public.query_performance_metrics
 
 
 --
--- Name: resource_utilization_metrics resource_utilization_metrics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: resource_utilization_metrics resource_utilization_metrics_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.resource_utilization_metrics
@@ -4062,7 +4408,7 @@ ALTER TABLE ONLY public.resource_utilization_metrics
 
 
 --
--- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: schema_migrations schema_migrations_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.schema_migrations
@@ -4070,7 +4416,7 @@ ALTER TABLE ONLY public.schema_migrations
 
 
 --
--- Name: security_events security_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: security_events security_events_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.security_events
@@ -4078,7 +4424,7 @@ ALTER TABLE ONLY public.security_events
 
 
 --
--- Name: service_architecture_metrics service_architecture_metrics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: service_architecture_metrics service_architecture_metrics_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.service_architecture_metrics
@@ -4086,7 +4432,7 @@ ALTER TABLE ONLY public.service_architecture_metrics
 
 
 --
--- Name: service_capacity_metrics service_capacity_metrics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: service_capacity_metrics service_capacity_metrics_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.service_capacity_metrics
@@ -4094,7 +4440,23 @@ ALTER TABLE ONLY public.service_capacity_metrics
 
 
 --
--- Name: service_dependencies service_dependencies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: service_contracts service_contracts_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
+--
+
+ALTER TABLE ONLY public.service_contracts
+    ADD CONSTRAINT service_contracts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: service_contracts service_contracts_service_name_version_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
+--
+
+ALTER TABLE ONLY public.service_contracts
+    ADD CONSTRAINT service_contracts_service_name_version_key UNIQUE (service_name, version);
+
+
+--
+-- Name: service_dependencies service_dependencies_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.service_dependencies
@@ -4102,7 +4464,7 @@ ALTER TABLE ONLY public.service_dependencies
 
 
 --
--- Name: service_dependencies service_dependencies_source_service_target_service_dependen_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: service_dependencies service_dependencies_source_service_target_service_dependen_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.service_dependencies
@@ -4110,4137 +4472,4195 @@ ALTER TABLE ONLY public.service_dependencies
 
 
 --
--- Name: idx_expired_sessions_cleanup; Type: INDEX; Schema: auth; Owner: -
+-- Name: worker_coordination worker_coordination_pkey; Type: CONSTRAINT; Schema: public; Owner: domainflow
+--
+
+ALTER TABLE ONLY public.worker_coordination
+    ADD CONSTRAINT worker_coordination_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: worker_coordination worker_coordination_worker_id_key; Type: CONSTRAINT; Schema: public; Owner: domainflow
+--
+
+ALTER TABLE ONLY public.worker_coordination
+    ADD CONSTRAINT worker_coordination_worker_id_key UNIQUE (worker_id);
+
+
+--
+-- Name: idx_expired_sessions_cleanup; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_expired_sessions_cleanup ON auth.sessions USING btree (expires_at) WHERE (is_active = true);
 
 
 --
--- Name: idx_password_reset_tokens_expires_at; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_password_reset_tokens_expires_at; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_password_reset_tokens_expires_at ON auth.password_reset_tokens USING btree (expires_at);
 
 
 --
--- Name: idx_password_reset_tokens_token_hash; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_password_reset_tokens_token_hash; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_password_reset_tokens_token_hash ON auth.password_reset_tokens USING btree (token_hash);
 
 
 --
--- Name: idx_password_reset_tokens_user_id; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_password_reset_tokens_user_id; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_password_reset_tokens_user_id ON auth.password_reset_tokens USING btree (user_id);
 
 
 --
--- Name: idx_rate_limits_blocked_until; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_rate_limits_blocked_until; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_rate_limits_blocked_until ON auth.rate_limits USING btree (blocked_until) WHERE (blocked_until IS NOT NULL);
 
 
 --
--- Name: idx_rate_limits_enforcement; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_rate_limits_enforcement; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_rate_limits_enforcement ON auth.rate_limits USING btree (identifier, action, blocked_until) WHERE (blocked_until IS NOT NULL);
 
 
 --
--- Name: idx_rate_limits_identifier_action; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_rate_limits_identifier_action; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_rate_limits_identifier_action ON auth.rate_limits USING btree (identifier, action);
 
 
 --
--- Name: idx_rate_limits_window_start; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_rate_limits_window_start; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_rate_limits_window_start ON auth.rate_limits USING btree (window_start);
 
 
 --
--- Name: idx_sessions_cleanup_expired; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_sessions_cleanup_expired; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_sessions_cleanup_expired ON auth.sessions USING btree (expires_at, is_active) WHERE (is_active = true);
 
 
 --
--- Name: idx_sessions_expires_at; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_sessions_expires_at; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_sessions_expires_at ON auth.sessions USING btree (expires_at);
 
 
 --
--- Name: idx_sessions_is_active; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_sessions_is_active; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_sessions_is_active ON auth.sessions USING btree (is_active) WHERE (is_active = true);
 
 
 --
--- Name: idx_sessions_last_activity; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_sessions_last_activity; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_sessions_last_activity ON auth.sessions USING btree (last_activity_at);
 
 
 --
--- Name: idx_sessions_token_lookup; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_sessions_token_lookup; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_sessions_token_lookup ON auth.sessions USING btree (id) INCLUDE (user_id, expires_at, is_active);
 
 
 --
--- Name: idx_sessions_user_active; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_sessions_user_active; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_sessions_user_active ON auth.sessions USING btree (user_id, is_active, created_at DESC) WHERE (is_active = true);
 
 
 --
--- Name: idx_sessions_user_id; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_sessions_user_id; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_sessions_user_id ON auth.sessions USING btree (user_id);
 
 
 --
--- Name: idx_users_email; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_users_email; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_users_email ON auth.users USING btree (email);
 
 
 --
--- Name: idx_users_email_verified; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_users_email_verified; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_users_email_verified ON auth.users USING btree (email_verified) WHERE (email_verified = true);
 
 
 --
--- Name: idx_users_is_active; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_users_is_active; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_users_is_active ON auth.users USING btree (is_active) WHERE (is_active = true);
 
 
 --
--- Name: idx_users_locked_until; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_users_locked_until; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_users_locked_until ON auth.users USING btree (locked_until) WHERE (locked_until IS NOT NULL);
 
 
 --
--- Name: idx_users_offset_pagination; Type: INDEX; Schema: auth; Owner: -
+-- Name: idx_users_offset_pagination; Type: INDEX; Schema: auth; Owner: domainflow
 --
 
 CREATE INDEX idx_users_offset_pagination ON auth.users USING btree (created_at DESC, id) WHERE (is_active = true);
 
 
 --
--- Name: idx_architecture_refactor_log_approved_by; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_architecture_refactor_log_approved_by; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_architecture_refactor_log_approved_by ON public.architecture_refactor_log USING btree (approved_by) WHERE (approved_by IS NOT NULL);
 
 
 --
--- Name: idx_architecture_refactor_log_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_architecture_refactor_log_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_architecture_refactor_log_campaign_id ON public.architecture_refactor_log USING btree (campaign_id) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_architecture_refactor_log_created_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_architecture_refactor_log_created_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_architecture_refactor_log_created_at ON public.architecture_refactor_log USING btree (created_at);
 
 
 --
--- Name: idx_architecture_refactor_log_dependencies_changed_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_architecture_refactor_log_dependencies_changed_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_architecture_refactor_log_dependencies_changed_gin ON public.architecture_refactor_log USING gin (dependencies_changed) WHERE (dependencies_changed IS NOT NULL);
 
 
 --
--- Name: idx_architecture_refactor_log_initiated_by; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_architecture_refactor_log_initiated_by; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_architecture_refactor_log_initiated_by ON public.architecture_refactor_log USING btree (initiated_by) WHERE (initiated_by IS NOT NULL);
 
 
 --
--- Name: idx_architecture_refactor_log_refactor_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_architecture_refactor_log_refactor_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_architecture_refactor_log_refactor_type ON public.architecture_refactor_log USING btree (refactor_type);
 
 
 --
--- Name: idx_architecture_refactor_log_risk_level; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_architecture_refactor_log_risk_level; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_architecture_refactor_log_risk_level ON public.architecture_refactor_log USING btree (risk_level);
 
 
 --
--- Name: idx_architecture_refactor_log_services_affected_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_architecture_refactor_log_services_affected_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_architecture_refactor_log_services_affected_gin ON public.architecture_refactor_log USING gin (services_affected);
 
 
 --
--- Name: idx_architecture_refactor_log_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_architecture_refactor_log_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_architecture_refactor_log_status ON public.architecture_refactor_log USING btree (status);
 
 
 --
--- Name: idx_archival_candidates; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_archival_candidates; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_archival_candidates ON public.event_store USING btree (archived, event_timestamp) WHERE (archived = false);
 
 
 --
--- Name: idx_audit_cursor_forward; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_cursor_forward; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_cursor_forward ON public.audit_logs USING btree ("timestamp", id);
 
 
 --
--- Name: idx_audit_logs_action; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_action; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_action ON public.audit_logs USING btree (action);
 
 
 --
--- Name: idx_audit_logs_action_timestamp; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_action_timestamp; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_action_timestamp ON public.audit_logs USING btree (action, "timestamp" DESC);
 
 
 --
--- Name: idx_audit_logs_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_campaign_id ON public.audit_logs USING btree (campaign_id) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_campaign_phase; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_campaign_phase; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_campaign_phase ON public.audit_logs USING btree (campaign_phase) WHERE (campaign_phase IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_campaign_timeline; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_campaign_timeline; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_campaign_timeline ON public.audit_logs USING btree (entity_id, "timestamp" DESC, action) WHERE ((entity_type)::text = 'campaign'::text);
 
 
 --
--- Name: idx_audit_logs_campaign_timestamp; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_campaign_timestamp; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_campaign_timestamp ON public.audit_logs USING btree (campaign_id, "timestamp" DESC) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_client_ip; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_client_ip; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_client_ip ON public.audit_logs USING btree (client_ip) WHERE (client_ip IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_compliance; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_compliance; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_compliance ON public.audit_logs USING btree ("timestamp", action, user_id);
 
 
 --
--- Name: idx_audit_logs_compliance_tags_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_compliance_tags_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_compliance_tags_gin ON public.audit_logs USING gin (compliance_tags) WHERE (compliance_tags IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_daily; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_daily; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_daily ON public.audit_logs USING btree ("timestamp");
 
 
 --
--- Name: idx_audit_logs_data_classification; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_data_classification; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_data_classification ON public.audit_logs USING btree (data_classification) WHERE (data_classification IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_details_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_details_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_details_gin ON public.audit_logs USING gin (details) WHERE (details IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_endpoint; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_endpoint; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_endpoint ON public.audit_logs USING btree (endpoint) WHERE (endpoint IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_entity_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_entity_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_entity_id ON public.audit_logs USING btree (entity_id) WHERE (entity_id IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_entity_timestamp; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_entity_timestamp; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_entity_timestamp ON public.audit_logs USING btree (entity_type, entity_id, "timestamp" DESC) WHERE ((entity_type IS NOT NULL) AND (entity_id IS NOT NULL));
 
 
 --
--- Name: idx_audit_logs_entity_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_entity_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_entity_type ON public.audit_logs USING btree (entity_type) WHERE (entity_type IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_error_responses; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_error_responses; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_error_responses ON public.audit_logs USING btree (response_status, "timestamp") WHERE (response_status >= 400);
 
 
 --
--- Name: idx_audit_logs_failed_requests; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_failed_requests; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_failed_requests ON public.audit_logs USING btree (endpoint, response_status, "timestamp") WHERE ((response_status >= 400) AND (endpoint IS NOT NULL));
 
 
 --
--- Name: idx_audit_logs_http_method; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_http_method; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_http_method ON public.audit_logs USING btree (http_method) WHERE (http_method IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_ip_timestamp; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_ip_timestamp; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_ip_timestamp ON public.audit_logs USING btree (client_ip, "timestamp" DESC) WHERE (client_ip IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_long_requests; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_long_requests; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_long_requests ON public.audit_logs USING btree (execution_time_ms, "timestamp") WHERE (execution_time_ms > 5000);
 
 
 --
--- Name: idx_audit_logs_monthly; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_monthly; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_monthly ON public.audit_logs USING btree ("timestamp");
 
 
 --
--- Name: idx_audit_logs_old_records; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_old_records; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_old_records ON public.audit_logs USING btree ("timestamp");
 
 
 --
--- Name: idx_audit_logs_request_correlation; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_request_correlation; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_request_correlation ON public.audit_logs USING btree (request_id, "timestamp") WHERE (request_id IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_request_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_request_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_request_id ON public.audit_logs USING btree (request_id) WHERE (request_id IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_response_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_response_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_response_status ON public.audit_logs USING btree (response_status) WHERE (response_status IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_retention_policy; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_retention_policy; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_retention_policy ON public.audit_logs USING btree (retention_policy, "timestamp") WHERE (retention_policy IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_security_events; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_security_events; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_security_events ON public.audit_logs USING btree (action, client_ip, "timestamp") WHERE ((action)::text = ANY ((ARRAY['login_failed'::character varying, 'account_locked'::character varying, 'permission_denied'::character varying, 'suspicious_activity'::character varying])::text[]));
 
 
 --
--- Name: idx_audit_logs_service_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_service_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_service_name ON public.audit_logs USING btree (service_name) WHERE (service_name IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_service_timestamp; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_service_timestamp; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_service_timestamp ON public.audit_logs USING btree (service_name, "timestamp" DESC) WHERE (service_name IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_session_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_session_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_session_id ON public.audit_logs USING btree (session_id) WHERE (session_id IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_slow_endpoints; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_slow_endpoints; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_slow_endpoints ON public.audit_logs USING btree (endpoint, execution_time_ms, "timestamp") WHERE ((execution_time_ms > 1000) AND (endpoint IS NOT NULL));
 
 
 --
--- Name: idx_audit_logs_timestamp; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_timestamp; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_timestamp ON public.audit_logs USING btree ("timestamp");
 
 
 --
--- Name: idx_audit_logs_trail_reconstruction; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_trail_reconstruction; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_trail_reconstruction ON public.audit_logs USING btree (entity_type, entity_id, "timestamp") WHERE ((entity_type IS NOT NULL) AND (entity_id IS NOT NULL));
 
 
 --
--- Name: idx_audit_logs_user_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_user_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_user_id ON public.audit_logs USING btree (user_id) WHERE (user_id IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_user_timeline; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_user_timeline; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_user_timeline ON public.audit_logs USING btree (user_id, "timestamp" DESC, action) WHERE (user_id IS NOT NULL);
 
 
 --
--- Name: idx_audit_logs_user_timestamp; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_audit_logs_user_timestamp; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_audit_logs_user_timestamp ON public.audit_logs USING btree (user_id, "timestamp" DESC) WHERE (user_id IS NOT NULL);
 
 
 --
--- Name: idx_authorization_decisions_additional_context_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_authorization_decisions_additional_context_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_authorization_decisions_additional_context_gin ON public.authorization_decisions USING gin (additional_context) WHERE (additional_context IS NOT NULL);
 
 
 --
--- Name: idx_authorization_decisions_cache_hit; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_authorization_decisions_cache_hit; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_authorization_decisions_cache_hit ON public.authorization_decisions USING btree (cache_hit);
 
 
 --
--- Name: idx_authorization_decisions_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_authorization_decisions_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_authorization_decisions_campaign_id ON public.authorization_decisions USING btree (campaign_id) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_authorization_decisions_compliance_tags_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_authorization_decisions_compliance_tags_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_authorization_decisions_compliance_tags_gin ON public.authorization_decisions USING gin (compliance_tags) WHERE (compliance_tags IS NOT NULL);
 
 
 --
--- Name: idx_authorization_decisions_conditions_met_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_authorization_decisions_conditions_met_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_authorization_decisions_conditions_met_gin ON public.authorization_decisions USING gin (conditions_met) WHERE (conditions_met IS NOT NULL);
 
 
 --
--- Name: idx_authorization_decisions_decision; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_authorization_decisions_decision; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_authorization_decisions_decision ON public.authorization_decisions USING btree (decision);
 
 
 --
--- Name: idx_authorization_decisions_decision_timestamp; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_authorization_decisions_decision_timestamp; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_authorization_decisions_decision_timestamp ON public.authorization_decisions USING btree (decision_timestamp);
 
 
 --
--- Name: idx_authorization_decisions_denied_access; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_authorization_decisions_denied_access; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_authorization_decisions_denied_access ON public.authorization_decisions USING btree (decision, decision_timestamp DESC) WHERE (decision = 'deny'::public.authorization_decision_enum);
 
 
 --
--- Name: idx_authorization_decisions_follow_up_required; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_authorization_decisions_follow_up_required; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_authorization_decisions_follow_up_required ON public.authorization_decisions USING btree (follow_up_required) WHERE (follow_up_required = true);
 
 
 --
--- Name: idx_authorization_decisions_permissions_checked_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_authorization_decisions_permissions_checked_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_authorization_decisions_permissions_checked_gin ON public.authorization_decisions USING gin (permissions_checked) WHERE (permissions_checked IS NOT NULL);
 
 
 --
--- Name: idx_authorization_decisions_resource_decision; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_authorization_decisions_resource_decision; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_authorization_decisions_resource_decision ON public.authorization_decisions USING btree (resource_type, resource_id, decision, decision_timestamp DESC) WHERE (resource_id IS NOT NULL);
 
 
 --
--- Name: idx_authorization_decisions_resource_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_authorization_decisions_resource_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_authorization_decisions_resource_id ON public.authorization_decisions USING btree (resource_id) WHERE (resource_id IS NOT NULL);
 
 
 --
--- Name: idx_authorization_decisions_resource_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_authorization_decisions_resource_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_authorization_decisions_resource_type ON public.authorization_decisions USING btree (resource_type);
 
 
 --
--- Name: idx_authorization_decisions_reviewed; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_authorization_decisions_reviewed; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_authorization_decisions_reviewed ON public.authorization_decisions USING btree (reviewed) WHERE (reviewed = false);
 
 
 --
--- Name: idx_authorization_decisions_risk_factors_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_authorization_decisions_risk_factors_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_authorization_decisions_risk_factors_gin ON public.authorization_decisions USING gin (risk_factors) WHERE (risk_factors IS NOT NULL);
 
 
 --
--- Name: idx_authorization_decisions_session_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_authorization_decisions_session_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_authorization_decisions_session_id ON public.authorization_decisions USING btree (session_id) WHERE (session_id IS NOT NULL);
 
 
 --
--- Name: idx_authorization_decisions_user_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_authorization_decisions_user_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_authorization_decisions_user_id ON public.authorization_decisions USING btree (user_id) WHERE (user_id IS NOT NULL);
 
 
 --
--- Name: idx_authorization_decisions_user_resource; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_authorization_decisions_user_resource; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_authorization_decisions_user_resource ON public.authorization_decisions USING btree (user_id, resource_type, decision_timestamp DESC) WHERE (user_id IS NOT NULL);
 
 
 --
--- Name: idx_cache_configurations_active; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_configurations_active; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_configurations_active ON public.cache_configurations USING btree (active) WHERE (active = true);
 
 
 --
--- Name: idx_cache_configurations_cache_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_configurations_cache_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_configurations_cache_name ON public.cache_configurations USING btree (cache_name);
 
 
 --
--- Name: idx_cache_configurations_cache_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_configurations_cache_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_configurations_cache_type ON public.cache_configurations USING btree (cache_type);
 
 
 --
--- Name: idx_cache_configurations_connection_config_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_configurations_connection_config_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_configurations_connection_config_gin ON public.cache_configurations USING gin (connection_config) WHERE (connection_config IS NOT NULL);
 
 
 --
--- Name: idx_cache_configurations_created_by; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_configurations_created_by; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_configurations_created_by ON public.cache_configurations USING btree (created_by) WHERE (created_by IS NOT NULL);
 
 
 --
--- Name: idx_cache_configurations_environment; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_configurations_environment; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_configurations_environment ON public.cache_configurations USING btree (environment);
 
 
 --
--- Name: idx_cache_configurations_eviction_policy_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_configurations_eviction_policy_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_configurations_eviction_policy_gin ON public.cache_configurations USING gin (eviction_policy) WHERE (eviction_policy IS NOT NULL);
 
 
 --
--- Name: idx_cache_configurations_service_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_configurations_service_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_configurations_service_name ON public.cache_configurations USING btree (service_name) WHERE (service_name IS NOT NULL);
 
 
 --
--- Name: idx_cache_entries_access_count; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_entries_access_count; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_entries_access_count ON public.cache_entries USING btree (access_count);
 
 
 --
--- Name: idx_cache_entries_cache_configuration_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_entries_cache_configuration_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_entries_cache_configuration_id ON public.cache_entries USING btree (cache_configuration_id);
 
 
 --
--- Name: idx_cache_entries_cache_key; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_entries_cache_key; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_entries_cache_key ON public.cache_entries USING btree (cache_key);
 
 
 --
--- Name: idx_cache_entries_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_entries_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_entries_campaign_id ON public.cache_entries USING btree (campaign_id) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_cache_entries_config_key_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_entries_config_key_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_entries_config_key_status ON public.cache_entries USING btree (cache_configuration_id, cache_key, status);
 
 
 --
--- Name: idx_cache_entries_config_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_entries_config_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_entries_config_status ON public.cache_entries USING btree (cache_configuration_id, status);
 
 
 --
--- Name: idx_cache_entries_dependency_keys_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_entries_dependency_keys_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_entries_dependency_keys_gin ON public.cache_entries USING gin (dependency_keys) WHERE (dependency_keys IS NOT NULL);
 
 
 --
--- Name: idx_cache_entries_expiration; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_entries_expiration; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_entries_expiration ON public.cache_entries USING btree (expires_at, status) WHERE ((status = 'active'::public.cache_entry_status_enum) AND (expires_at IS NOT NULL));
 
 
 --
--- Name: idx_cache_entries_expired; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_entries_expired; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_entries_expired ON public.cache_entries USING btree (expires_at, status) WHERE (status = 'active'::public.cache_entry_status_enum);
 
 
 --
--- Name: idx_cache_entries_expires_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_entries_expires_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_entries_expires_at ON public.cache_entries USING btree (expires_at) WHERE (expires_at IS NOT NULL);
 
 
 --
--- Name: idx_cache_entries_invalidation_tags_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_entries_invalidation_tags_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_entries_invalidation_tags_gin ON public.cache_entries USING gin (invalidation_tags) WHERE (invalidation_tags IS NOT NULL);
 
 
 --
--- Name: idx_cache_entries_last_accessed_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_entries_last_accessed_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_entries_last_accessed_at ON public.cache_entries USING btree (last_accessed_at);
 
 
 --
--- Name: idx_cache_entries_locked; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_entries_locked; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_entries_locked ON public.cache_entries USING btree (locked) WHERE (locked = true);
 
 
 --
--- Name: idx_cache_entries_lookup; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_entries_lookup; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_entries_lookup ON public.cache_entries USING btree (cache_configuration_id, cache_key) INCLUDE (cache_value, expires_at, status);
 
 
 --
--- Name: idx_cache_entries_lru_eviction; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_entries_lru_eviction; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_entries_lru_eviction ON public.cache_entries USING btree (cache_configuration_id, last_accessed_at) WHERE (status = 'active'::public.cache_entry_status_enum);
 
 
 --
--- Name: idx_cache_entries_size_bytes; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_entries_size_bytes; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_entries_size_bytes ON public.cache_entries USING btree (size_bytes);
 
 
 --
--- Name: idx_cache_entries_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_entries_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_entries_status ON public.cache_entries USING btree (status);
 
 
 --
--- Name: idx_cache_entries_user_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_entries_user_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_entries_user_id ON public.cache_entries USING btree (user_id) WHERE (user_id IS NOT NULL);
 
 
 --
--- Name: idx_cache_invalidation_log_automatic; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidation_log_automatic; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidation_log_automatic ON public.cache_invalidation_log USING btree (automatic);
 
 
 --
--- Name: idx_cache_invalidation_log_cache_configuration_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidation_log_cache_configuration_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidation_log_cache_configuration_id ON public.cache_invalidation_log USING btree (cache_configuration_id);
 
 
 --
--- Name: idx_cache_invalidation_log_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidation_log_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidation_log_campaign_id ON public.cache_invalidation_log USING btree (campaign_id) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_cache_invalidation_log_invalidated_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidation_log_invalidated_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidation_log_invalidated_at ON public.cache_invalidation_log USING btree (invalidated_at);
 
 
 --
--- Name: idx_cache_invalidation_log_invalidation_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidation_log_invalidation_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidation_log_invalidation_type ON public.cache_invalidation_log USING btree (invalidation_type);
 
 
 --
--- Name: idx_cache_invalidation_log_keys_invalidated_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidation_log_keys_invalidated_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidation_log_keys_invalidated_gin ON public.cache_invalidation_log USING gin (keys_invalidated) WHERE (keys_invalidated IS NOT NULL);
 
 
 --
--- Name: idx_cache_invalidation_log_success; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidation_log_success; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidation_log_success ON public.cache_invalidation_log USING btree (success) WHERE (success = false);
 
 
 --
--- Name: idx_cache_invalidation_log_tags_used_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidation_log_tags_used_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidation_log_tags_used_gin ON public.cache_invalidation_log USING gin (tags_used) WHERE (tags_used IS NOT NULL);
 
 
 --
--- Name: idx_cache_invalidation_log_triggered_by; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidation_log_triggered_by; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidation_log_triggered_by ON public.cache_invalidation_log USING btree (triggered_by) WHERE (triggered_by IS NOT NULL);
 
 
 --
--- Name: idx_cache_invalidations_cache_configuration_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidations_cache_configuration_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidations_cache_configuration_id ON public.cache_invalidations USING btree (cache_configuration_id);
 
 
 --
--- Name: idx_cache_invalidations_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidations_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidations_campaign_id ON public.cache_invalidations USING btree (campaign_id) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_cache_invalidations_depends_on; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidations_depends_on; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidations_depends_on ON public.cache_invalidations USING btree (depends_on) WHERE (depends_on IS NOT NULL);
 
 
 --
--- Name: idx_cache_invalidations_invalidation_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidations_invalidation_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidations_invalidation_type ON public.cache_invalidations USING btree (invalidation_type);
 
 
 --
--- Name: idx_cache_invalidations_pending; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidations_pending; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidations_pending ON public.cache_invalidations USING btree (status, priority DESC, scheduled_for) WHERE ((status)::text = 'pending'::text);
 
 
 --
--- Name: idx_cache_invalidations_priority; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidations_priority; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidations_priority ON public.cache_invalidations USING btree (priority);
 
 
 --
--- Name: idx_cache_invalidations_processing; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidations_processing; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidations_processing ON public.cache_invalidations USING btree (status, processed_at) WHERE ((status)::text = 'processing'::text);
 
 
 --
--- Name: idx_cache_invalidations_requested_by; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidations_requested_by; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidations_requested_by ON public.cache_invalidations USING btree (requested_by) WHERE (requested_by IS NOT NULL);
 
 
 --
--- Name: idx_cache_invalidations_scheduled_for; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidations_scheduled_for; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidations_scheduled_for ON public.cache_invalidations USING btree (scheduled_for);
 
 
 --
--- Name: idx_cache_invalidations_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidations_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidations_status ON public.cache_invalidations USING btree (status);
 
 
 --
--- Name: idx_cache_invalidations_tags_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_invalidations_tags_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_invalidations_tags_gin ON public.cache_invalidations USING gin (tags) WHERE (tags IS NOT NULL);
 
 
 --
--- Name: idx_cache_metrics_analysis; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_metrics_analysis; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_metrics_analysis ON public.cache_metrics USING btree (cache_configuration_id, period_end DESC, hit_ratio);
 
 
 --
--- Name: idx_cache_metrics_cache_configuration_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_metrics_cache_configuration_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_metrics_cache_configuration_id ON public.cache_metrics USING btree (cache_configuration_id);
 
 
 --
--- Name: idx_cache_metrics_config_period; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_metrics_config_period; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_metrics_config_period ON public.cache_metrics USING btree (cache_configuration_id, period_start DESC);
 
 
 --
--- Name: idx_cache_metrics_environment; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_metrics_environment; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_metrics_environment ON public.cache_metrics USING btree (environment) WHERE (environment IS NOT NULL);
 
 
 --
--- Name: idx_cache_metrics_hit_ratio; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_metrics_hit_ratio; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_metrics_hit_ratio ON public.cache_metrics USING btree (hit_ratio);
 
 
 --
--- Name: idx_cache_metrics_performance; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_metrics_performance; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_metrics_performance ON public.cache_metrics USING btree (cache_configuration_id, hit_ratio DESC, avg_response_time_ms);
 
 
 --
--- Name: idx_cache_metrics_period_end; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_metrics_period_end; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_metrics_period_end ON public.cache_metrics USING btree (period_end);
 
 
 --
--- Name: idx_cache_metrics_period_start; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_metrics_period_start; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_metrics_period_start ON public.cache_metrics USING btree (period_start);
 
 
 --
--- Name: idx_cache_metrics_recorded_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_metrics_recorded_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_metrics_recorded_at ON public.cache_metrics USING btree (recorded_at);
 
 
 --
--- Name: idx_cache_metrics_service_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_cache_metrics_service_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_cache_metrics_service_name ON public.cache_metrics USING btree (service_name) WHERE (service_name IS NOT NULL);
 
 
 --
--- Name: idx_campaign_access_grants_access_pattern_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_access_pattern_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_access_pattern_gin ON public.campaign_access_grants USING gin (access_pattern) WHERE (access_pattern IS NOT NULL);
 
 
 --
--- Name: idx_campaign_access_grants_access_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_access_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_access_type ON public.campaign_access_grants USING btree (access_type);
 
 
 --
--- Name: idx_campaign_access_grants_active; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_active; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_active ON public.campaign_access_grants USING btree (active) WHERE (active = true);
 
 
 --
--- Name: idx_campaign_access_grants_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_campaign_id ON public.campaign_access_grants USING btree (campaign_id);
 
 
 --
--- Name: idx_campaign_access_grants_campaign_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_campaign_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_campaign_type ON public.campaign_access_grants USING btree (campaign_id, access_type, active) WHERE (active = true);
 
 
 --
--- Name: idx_campaign_access_grants_can_delegate; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_can_delegate; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_can_delegate ON public.campaign_access_grants USING btree (can_delegate) WHERE (can_delegate = true);
 
 
 --
--- Name: idx_campaign_access_grants_conditions_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_conditions_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_conditions_gin ON public.campaign_access_grants USING gin (conditions) WHERE (conditions IS NOT NULL);
 
 
 --
--- Name: idx_campaign_access_grants_expires_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_expires_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_expires_at ON public.campaign_access_grants USING btree (expires_at) WHERE (expires_at IS NOT NULL);
 
 
 --
--- Name: idx_campaign_access_grants_expiring_soon; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_expiring_soon; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_expiring_soon ON public.campaign_access_grants USING btree (expires_at, active) WHERE ((expires_at IS NOT NULL) AND (active = true));
 
 
 --
--- Name: idx_campaign_access_grants_granted_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_granted_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_granted_at ON public.campaign_access_grants USING btree (granted_at);
 
 
 --
--- Name: idx_campaign_access_grants_granted_by; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_granted_by; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_granted_by ON public.campaign_access_grants USING btree (granted_by);
 
 
 --
--- Name: idx_campaign_access_grants_inherited_from; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_inherited_from; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_inherited_from ON public.campaign_access_grants USING btree (inherited_from) WHERE (inherited_from IS NOT NULL);
 
 
 --
--- Name: idx_campaign_access_grants_ip_restrictions_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_ip_restrictions_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_ip_restrictions_gin ON public.campaign_access_grants USING gin (ip_restrictions) WHERE (ip_restrictions IS NOT NULL);
 
 
 --
--- Name: idx_campaign_access_grants_last_used_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_last_used_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_last_used_at ON public.campaign_access_grants USING btree (last_used_at) WHERE (last_used_at IS NOT NULL);
 
 
 --
--- Name: idx_campaign_access_grants_phase_restrictions_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_phase_restrictions_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_phase_restrictions_gin ON public.campaign_access_grants USING gin (phase_restrictions) WHERE (phase_restrictions IS NOT NULL);
 
 
 --
--- Name: idx_campaign_access_grants_revoked; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_revoked; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_revoked ON public.campaign_access_grants USING btree (revoked) WHERE (revoked = true);
 
 
 --
--- Name: idx_campaign_access_grants_time_restrictions_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_time_restrictions_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_time_restrictions_gin ON public.campaign_access_grants USING gin (time_restrictions) WHERE (time_restrictions IS NOT NULL);
 
 
 --
--- Name: idx_campaign_access_grants_user_campaign; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_user_campaign; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_user_campaign ON public.campaign_access_grants USING btree (user_id, campaign_id, active) WHERE (active = true);
 
 
 --
--- Name: idx_campaign_access_grants_user_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_access_grants_user_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_access_grants_user_id ON public.campaign_access_grants USING btree (user_id);
 
 
 --
--- Name: idx_campaign_audit_join; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_audit_join; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_audit_join ON public.audit_logs USING btree (entity_id, entity_type) INCLUDE (user_id, action, "timestamp") WHERE ((entity_type)::text = 'campaign'::text);
 
 
 --
--- Name: idx_campaign_domains_join; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_domains_join; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_domains_join ON public.generated_domains USING btree (campaign_id) INCLUDE (id, domain_name, dns_status, created_at);
 
 
 --
--- Name: idx_campaign_jobs_business_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_business_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_business_status ON public.campaign_jobs USING btree (business_status) WHERE (business_status IS NOT NULL);
 
 
 --
--- Name: idx_campaign_jobs_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_campaign_id ON public.campaign_jobs USING btree (campaign_id);
 
 
 --
--- Name: idx_campaign_jobs_completed; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_completed; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_completed ON public.campaign_jobs USING btree (campaign_id, job_type, updated_at) WHERE (status = 'completed'::public.campaign_job_status_enum);
 
 
 --
--- Name: idx_campaign_jobs_created_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_created_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_created_at ON public.campaign_jobs USING btree (created_at);
 
 
 --
--- Name: idx_campaign_jobs_failed; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_failed; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_failed ON public.campaign_jobs USING btree (campaign_id, job_type, last_attempted_at) WHERE (status = 'failed'::public.campaign_job_status_enum);
 
 
 --
--- Name: idx_campaign_jobs_job_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_job_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_job_type ON public.campaign_jobs USING btree (job_type);
 
 
 --
--- Name: idx_campaign_jobs_join; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_join; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_join ON public.campaign_jobs USING btree (campaign_id) INCLUDE (id, job_type, status, created_at, attempts);
 
 
 --
--- Name: idx_campaign_jobs_last_attempted_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_last_attempted_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_last_attempted_at ON public.campaign_jobs USING btree (last_attempted_at) WHERE (last_attempted_at IS NOT NULL);
 
 
 --
--- Name: idx_campaign_jobs_locked_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_locked_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_locked_at ON public.campaign_jobs USING btree (locked_at) WHERE (locked_at IS NOT NULL);
 
 
 --
--- Name: idx_campaign_jobs_locked_by; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_locked_by; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_locked_by ON public.campaign_jobs USING btree (locked_by) WHERE (locked_by IS NOT NULL);
 
 
 --
--- Name: idx_campaign_jobs_long_running; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_long_running; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_long_running ON public.campaign_jobs USING btree (locked_at, job_type) WHERE (status = 'running'::public.campaign_job_status_enum);
 
 
 --
--- Name: idx_campaign_jobs_next_execution_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_next_execution_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_next_execution_at ON public.campaign_jobs USING btree (next_execution_at) WHERE (next_execution_at IS NOT NULL);
 
 
 --
--- Name: idx_campaign_jobs_next_queued; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_next_queued; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_next_queued ON public.campaign_jobs USING btree (status, scheduled_at, created_at) WHERE (status = 'queued'::public.campaign_job_status_enum);
 
 
 --
--- Name: idx_campaign_jobs_payload_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_payload_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_payload_gin ON public.campaign_jobs USING gin (job_payload) WHERE (job_payload IS NOT NULL);
 
 
 --
--- Name: idx_campaign_jobs_processing_server; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_processing_server; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_processing_server ON public.campaign_jobs USING btree (processing_server_id, status, updated_at) WHERE ((processing_server_id IS NOT NULL) AND (status = 'running'::public.campaign_job_status_enum));
 
 
 --
--- Name: idx_campaign_jobs_processing_server_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_processing_server_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_processing_server_id ON public.campaign_jobs USING btree (processing_server_id) WHERE (processing_server_id IS NOT NULL);
 
 
 --
--- Name: idx_campaign_jobs_queue_worker_selection; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_queue_worker_selection; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_queue_worker_selection ON public.campaign_jobs USING btree (COALESCE(scheduled_at, '1970-01-01 00:00:00+00'::timestamp with time zone), created_at) WHERE ((status = 'queued'::public.campaign_job_status_enum) OR (business_status = 'retry'::public.job_business_status_enum));
 
 
 --
--- Name: idx_campaign_jobs_retry_candidates; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_retry_candidates; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_retry_candidates ON public.campaign_jobs USING btree (attempts, max_attempts, last_attempted_at) WHERE ((status = 'failed'::public.campaign_job_status_enum) AND (attempts < max_attempts));
 
 
 --
--- Name: idx_campaign_jobs_retry_ready; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_retry_ready; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_retry_ready ON public.campaign_jobs USING btree (business_status, next_execution_at) WHERE (business_status = 'retry'::public.job_business_status_enum);
 
 
 --
--- Name: idx_campaign_jobs_running; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_running; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_running ON public.campaign_jobs USING btree (processing_server_id, locked_at) WHERE (status = 'running'::public.campaign_job_status_enum);
 
 
 --
--- Name: idx_campaign_jobs_scheduled_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_scheduled_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_scheduled_at ON public.campaign_jobs USING btree (scheduled_at);
 
 
 --
--- Name: idx_campaign_jobs_stale_running; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_stale_running; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_stale_running ON public.campaign_jobs USING btree (locked_at, processing_server_id) WHERE (status = 'running'::public.campaign_job_status_enum);
 
 
 --
--- Name: idx_campaign_jobs_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_status ON public.campaign_jobs USING btree (status);
 
 
 --
--- Name: idx_campaign_jobs_status_scheduled; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_status_scheduled; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_status_scheduled ON public.campaign_jobs USING btree (status, scheduled_at) WHERE (status = ANY (ARRAY['queued'::public.campaign_job_status_enum, 'pending'::public.campaign_job_status_enum]));
 
 
 --
--- Name: idx_campaign_jobs_type_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_type_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_type_status ON public.campaign_jobs USING btree (job_type, status, scheduled_at) WHERE (status = ANY (ARRAY['queued'::public.campaign_job_status_enum, 'pending'::public.campaign_job_status_enum]));
 
 
 --
--- Name: idx_campaign_jobs_unique_pending; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_unique_pending; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE UNIQUE INDEX idx_campaign_jobs_unique_pending ON public.campaign_jobs USING btree (campaign_id, job_type) WHERE (status = ANY (ARRAY['pending'::public.campaign_job_status_enum, 'queued'::public.campaign_job_status_enum, 'running'::public.campaign_job_status_enum]));
 
 
 --
--- Name: idx_campaign_jobs_updated_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_updated_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_updated_at ON public.campaign_jobs USING btree (updated_at);
 
 
 --
--- Name: idx_campaign_jobs_worker_processing; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_jobs_worker_processing; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_jobs_worker_processing ON public.campaign_jobs USING btree (processing_server_id, status, created_at) WHERE (status = ANY (ARRAY['pending'::public.campaign_job_status_enum, 'running'::public.campaign_job_status_enum]));
 
 
 --
--- Name: idx_campaign_phases_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_phases_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_phases_campaign_id ON public.campaign_phases USING btree (campaign_id);
 
 
 --
--- Name: idx_campaign_phases_completed_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_phases_completed_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_phases_completed_at ON public.campaign_phases USING btree (completed_at) WHERE (completed_at IS NOT NULL);
 
 
 --
--- Name: idx_campaign_phases_configuration_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_phases_configuration_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_phases_configuration_gin ON public.campaign_phases USING gin (configuration) WHERE (configuration IS NOT NULL);
 
 
 --
--- Name: idx_campaign_phases_phase_order; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_phases_phase_order; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_phases_phase_order ON public.campaign_phases USING btree (phase_order);
 
 
 --
--- Name: idx_campaign_phases_phase_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_phases_phase_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_phases_phase_type ON public.campaign_phases USING btree (phase_type);
 
 
 --
--- Name: idx_campaign_phases_started_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_phases_started_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_phases_started_at ON public.campaign_phases USING btree (started_at) WHERE (started_at IS NOT NULL);
 
 
 --
--- Name: idx_campaign_phases_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_phases_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_phases_status ON public.campaign_phases USING btree (status);
 
 
 --
--- Name: idx_campaign_state_events_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_events_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_events_campaign_id ON public.campaign_state_events USING btree (campaign_id);
 
 
 --
--- Name: idx_campaign_state_events_correlation_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_events_correlation_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_events_correlation_id ON public.campaign_state_events USING btree (correlation_id) WHERE (correlation_id IS NOT NULL);
 
 
 --
--- Name: idx_campaign_state_events_event_data_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_events_event_data_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_events_event_data_gin ON public.campaign_state_events USING gin (event_data);
 
 
 --
--- Name: idx_campaign_state_events_event_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_events_event_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_events_event_type ON public.campaign_state_events USING btree (event_type);
 
 
 --
--- Name: idx_campaign_state_events_occurred_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_events_occurred_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_events_occurred_at ON public.campaign_state_events USING btree (occurred_at);
 
 
 --
--- Name: idx_campaign_state_events_operation_context_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_events_operation_context_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_events_operation_context_gin ON public.campaign_state_events USING gin (operation_context);
 
 
 --
--- Name: idx_campaign_state_events_processing_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_events_processing_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_events_processing_status ON public.campaign_state_events USING btree (processing_status);
 
 
 --
--- Name: idx_campaign_state_events_sequence_number; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_events_sequence_number; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_events_sequence_number ON public.campaign_state_events USING btree (sequence_number);
 
 
 --
--- Name: idx_campaign_state_events_sequence_unique; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_events_sequence_unique; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE UNIQUE INDEX idx_campaign_state_events_sequence_unique ON public.campaign_state_events USING btree (campaign_id, sequence_number);
 
 
 --
--- Name: idx_campaign_state_events_source_target; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_events_source_target; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_events_source_target ON public.campaign_state_events USING btree (source_state, target_state) WHERE ((source_state IS NOT NULL) AND (target_state IS NOT NULL));
 
 
 --
--- Name: idx_campaign_state_snapshots_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_snapshots_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_snapshots_campaign_id ON public.campaign_state_snapshots USING btree (campaign_id);
 
 
 --
--- Name: idx_campaign_state_snapshots_created_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_snapshots_created_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_snapshots_created_at ON public.campaign_state_snapshots USING btree (created_at);
 
 
 --
--- Name: idx_campaign_state_snapshots_current_state; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_snapshots_current_state; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_snapshots_current_state ON public.campaign_state_snapshots USING btree (current_state);
 
 
 --
--- Name: idx_campaign_state_snapshots_is_valid; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_snapshots_is_valid; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_snapshots_is_valid ON public.campaign_state_snapshots USING btree (is_valid) WHERE (is_valid = true);
 
 
 --
--- Name: idx_campaign_state_snapshots_last_event_sequence; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_snapshots_last_event_sequence; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_snapshots_last_event_sequence ON public.campaign_state_snapshots USING btree (last_event_sequence);
 
 
 --
--- Name: idx_campaign_state_snapshots_latest; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_snapshots_latest; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE UNIQUE INDEX idx_campaign_state_snapshots_latest ON public.campaign_state_snapshots USING btree (campaign_id, created_at DESC);
 
 
 --
--- Name: idx_campaign_state_snapshots_snapshot_metadata_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_snapshots_snapshot_metadata_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_snapshots_snapshot_metadata_gin ON public.campaign_state_snapshots USING gin (snapshot_metadata);
 
 
 --
--- Name: idx_campaign_state_snapshots_state_data_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_snapshots_state_data_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_snapshots_state_data_gin ON public.campaign_state_snapshots USING gin (state_data);
 
 
 --
--- Name: idx_campaign_state_transitions_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_transitions_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_transitions_campaign_id ON public.campaign_state_transitions USING btree (campaign_id);
 
 
 --
--- Name: idx_campaign_state_transitions_completed_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_transitions_completed_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_transitions_completed_at ON public.campaign_state_transitions USING btree (completed_at) WHERE (completed_at IS NOT NULL);
 
 
 --
--- Name: idx_campaign_state_transitions_from_to_state; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_transitions_from_to_state; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_transitions_from_to_state ON public.campaign_state_transitions USING btree (from_state, to_state);
 
 
 --
--- Name: idx_campaign_state_transitions_initiated_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_transitions_initiated_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_transitions_initiated_at ON public.campaign_state_transitions USING btree (initiated_at);
 
 
 --
--- Name: idx_campaign_state_transitions_is_valid; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_transitions_is_valid; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_transitions_is_valid ON public.campaign_state_transitions USING btree (is_valid_transition);
 
 
 --
--- Name: idx_campaign_state_transitions_state_event_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_transitions_state_event_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_transitions_state_event_id ON public.campaign_state_transitions USING btree (state_event_id);
 
 
 --
--- Name: idx_campaign_state_transitions_transition_metadata_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_transitions_transition_metadata_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_transitions_transition_metadata_gin ON public.campaign_state_transitions USING gin (transition_metadata) WHERE (transition_metadata IS NOT NULL);
 
 
 --
--- Name: idx_campaign_state_transitions_validation_errors_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaign_state_transitions_validation_errors_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaign_state_transitions_validation_errors_gin ON public.campaign_state_transitions USING gin (validation_errors) WHERE (validation_errors IS NOT NULL);
 
 
 --
--- Name: idx_campaigns_business_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaigns_business_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaigns_business_status ON public.lead_generation_campaigns USING btree (business_status, created_at DESC) WHERE (business_status IS NOT NULL);
 
 
 --
--- Name: idx_campaigns_completion_analytics; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaigns_completion_analytics; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaigns_completion_analytics ON public.lead_generation_campaigns USING btree (phase_status, completed_at, created_at) WHERE (completed_at IS NOT NULL);
 
 
 --
--- Name: idx_campaigns_dashboard_active; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaigns_dashboard_active; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaigns_dashboard_active ON public.lead_generation_campaigns USING btree (phase_status, created_at DESC) WHERE (phase_status = ANY (ARRAY['in_progress'::public.phase_status_enum, 'ready'::public.phase_status_enum]));
 
 
 --
--- Name: idx_campaigns_name_search; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaigns_name_search; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaigns_name_search ON public.lead_generation_campaigns USING gin (to_tsvector('english'::regconfig, (name)::text));
 
 
 --
--- Name: idx_campaigns_offset_pagination; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaigns_offset_pagination; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaigns_offset_pagination ON public.lead_generation_campaigns USING btree (created_at DESC, id) WHERE (phase_status IS NOT NULL);
 
 
 --
--- Name: idx_campaigns_phase_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaigns_phase_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaigns_phase_status ON public.lead_generation_campaigns USING btree (current_phase, phase_status, updated_at DESC);
 
 
 --
--- Name: idx_campaigns_progress_percentage; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaigns_progress_percentage; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaigns_progress_percentage ON public.lead_generation_campaigns USING btree (progress_percentage DESC, phase_status, created_at DESC) WHERE (progress_percentage IS NOT NULL);
 
 
 --
--- Name: idx_campaigns_progress_tracking; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaigns_progress_tracking; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaigns_progress_tracking ON public.lead_generation_campaigns USING btree (id, current_phase, phase_status, total_items, processed_items);
 
 
 --
--- Name: idx_campaigns_success_analytics; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaigns_success_analytics; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaigns_success_analytics ON public.lead_generation_campaigns USING btree (phase_status, created_at, completed_at) INCLUDE (total_items, processed_items);
 
 
 --
--- Name: idx_campaigns_user_recent; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_campaigns_user_recent; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_campaigns_user_recent ON public.lead_generation_campaigns USING btree (user_id, created_at DESC, phase_status) WHERE (phase_status IS NOT NULL);
 
 
 --
--- Name: idx_communication_patterns_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_communication_patterns_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_communication_patterns_campaign_id ON public.communication_patterns USING btree (campaign_id) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_communication_patterns_environment; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_communication_patterns_environment; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_communication_patterns_environment ON public.communication_patterns USING btree (environment);
 
 
 --
--- Name: idx_communication_patterns_last_observed; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_communication_patterns_last_observed; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_communication_patterns_last_observed ON public.communication_patterns USING btree (last_observed);
 
 
 --
--- Name: idx_communication_patterns_low_success_rate; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_communication_patterns_low_success_rate; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_communication_patterns_low_success_rate ON public.communication_patterns USING btree (success_rate_percent, last_observed DESC) WHERE (success_rate_percent < (95)::numeric);
 
 
 --
--- Name: idx_communication_patterns_protocol; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_communication_patterns_protocol; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_communication_patterns_protocol ON public.communication_patterns USING btree (protocol);
 
 
 --
--- Name: idx_communication_patterns_source_service; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_communication_patterns_source_service; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_communication_patterns_source_service ON public.communication_patterns USING btree (source_service);
 
 
 --
--- Name: idx_communication_patterns_source_target; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_communication_patterns_source_target; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_communication_patterns_source_target ON public.communication_patterns USING btree (source_service, target_service, protocol);
 
 
 --
--- Name: idx_communication_patterns_success_rate_percent; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_communication_patterns_success_rate_percent; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_communication_patterns_success_rate_percent ON public.communication_patterns USING btree (success_rate_percent);
 
 
 --
--- Name: idx_communication_patterns_target_service; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_communication_patterns_target_service; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_communication_patterns_target_service ON public.communication_patterns USING btree (target_service);
 
 
 --
--- Name: idx_compaction_candidates; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_compaction_candidates; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_compaction_candidates ON public.event_store USING btree (compacted, aggregate_id, sequence_number) WHERE (compacted = false);
 
 
 --
--- Name: idx_completed_jobs_cleanup; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_completed_jobs_cleanup; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_completed_jobs_cleanup ON public.campaign_jobs USING btree (status, updated_at) WHERE (status = 'completed'::public.campaign_job_status_enum);
 
 
 --
--- Name: idx_config_locks_active; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_locks_active; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_locks_active ON public.config_locks USING btree (active) WHERE (active = true);
 
 
 --
--- Name: idx_config_locks_auto_renewal_enabled; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_locks_auto_renewal_enabled; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_locks_auto_renewal_enabled ON public.config_locks USING btree (auto_renewal_enabled) WHERE (auto_renewal_enabled = true);
 
 
 --
--- Name: idx_config_locks_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_locks_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_locks_campaign_id ON public.config_locks USING btree (campaign_id) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_config_locks_expires_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_locks_expires_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_locks_expires_at ON public.config_locks USING btree (expires_at);
 
 
 --
--- Name: idx_config_locks_expiring_soon; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_locks_expiring_soon; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_locks_expiring_soon ON public.config_locks USING btree (expires_at, active) WHERE (active = true);
 
 
 --
--- Name: idx_config_locks_last_heartbeat; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_locks_last_heartbeat; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_locks_last_heartbeat ON public.config_locks USING btree (last_heartbeat) WHERE (auto_renewal_enabled = true);
 
 
 --
--- Name: idx_config_locks_lock_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_locks_lock_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_locks_lock_name ON public.config_locks USING btree (lock_name);
 
 
 --
--- Name: idx_config_locks_lock_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_locks_lock_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_locks_lock_type ON public.config_locks USING btree (lock_type);
 
 
 --
--- Name: idx_config_locks_locked_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_locks_locked_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_locks_locked_at ON public.config_locks USING btree (locked_at);
 
 
 --
--- Name: idx_config_locks_locked_by; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_locks_locked_by; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_locks_locked_by ON public.config_locks USING btree (locked_by);
 
 
 --
--- Name: idx_config_locks_parent_lock_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_locks_parent_lock_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_locks_parent_lock_id ON public.config_locks USING btree (parent_lock_id) WHERE (parent_lock_id IS NOT NULL);
 
 
 --
--- Name: idx_config_locks_resource_active; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_locks_resource_active; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_locks_resource_active ON public.config_locks USING btree (resource_type, resource_id, active) WHERE (active = true);
 
 
 --
--- Name: idx_config_locks_resource_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_locks_resource_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_locks_resource_id ON public.config_locks USING btree (resource_id) WHERE (resource_id IS NOT NULL);
 
 
 --
--- Name: idx_config_locks_resource_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_locks_resource_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_locks_resource_type ON public.config_locks USING btree (resource_type);
 
 
 --
--- Name: idx_config_locks_session_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_locks_session_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_locks_session_id ON public.config_locks USING btree (session_id) WHERE (session_id IS NOT NULL);
 
 
 --
--- Name: idx_config_locks_stale_heartbeat; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_locks_stale_heartbeat; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_locks_stale_heartbeat ON public.config_locks USING btree (last_heartbeat, auto_renewal_enabled, active) WHERE ((auto_renewal_enabled = true) AND (active = true));
 
 
 --
--- Name: idx_config_versions_affected_services_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_affected_services_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_affected_services_gin ON public.config_versions USING gin (affected_services) WHERE (affected_services IS NOT NULL);
 
 
 --
--- Name: idx_config_versions_affects_campaigns; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_affects_campaigns; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_affects_campaigns ON public.config_versions USING btree (affects_campaigns) WHERE (affects_campaigns = true);
 
 
 --
--- Name: idx_config_versions_approval_required; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_approval_required; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_approval_required ON public.config_versions USING btree (approval_required) WHERE (approval_required = true);
 
 
 --
--- Name: idx_config_versions_approved; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_approved; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_approved ON public.config_versions USING btree (approved) WHERE (approval_required = true);
 
 
 --
--- Name: idx_config_versions_approved_by; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_approved_by; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_approved_by ON public.config_versions USING btree (approved_by) WHERE (approved_by IS NOT NULL);
 
 
 --
--- Name: idx_config_versions_audit_trail_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_audit_trail_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_audit_trail_gin ON public.config_versions USING gin (audit_trail) WHERE (audit_trail IS NOT NULL);
 
 
 --
--- Name: idx_config_versions_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_campaign_id ON public.config_versions USING btree (campaign_id) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_config_versions_can_rollback; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_can_rollback; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_can_rollback ON public.config_versions USING btree (can_rollback) WHERE (can_rollback = true);
 
 
 --
--- Name: idx_config_versions_change_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_change_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_change_type ON public.config_versions USING btree (change_type);
 
 
 --
--- Name: idx_config_versions_config_key; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_config_key; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_config_key ON public.config_versions USING btree (config_key);
 
 
 --
--- Name: idx_config_versions_config_value_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_config_value_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_config_value_gin ON public.config_versions USING gin (config_value);
 
 
 --
--- Name: idx_config_versions_created_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_created_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_created_at ON public.config_versions USING btree (created_at);
 
 
 --
--- Name: idx_config_versions_created_by; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_created_by; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_created_by ON public.config_versions USING btree (created_by);
 
 
 --
--- Name: idx_config_versions_dependency_configs_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_dependency_configs_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_dependency_configs_gin ON public.config_versions USING gin (dependency_configs) WHERE (dependency_configs IS NOT NULL);
 
 
 --
--- Name: idx_config_versions_deployed; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_deployed; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_deployed ON public.config_versions USING btree (deployed);
 
 
 --
--- Name: idx_config_versions_deployed_by; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_deployed_by; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_deployed_by ON public.config_versions USING btree (deployed_by) WHERE (deployed_by IS NOT NULL);
 
 
 --
--- Name: idx_config_versions_deployment_environment; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_deployment_environment; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_deployment_environment ON public.config_versions USING btree (deployment_environment) WHERE (deployment_environment IS NOT NULL);
 
 
 --
--- Name: idx_config_versions_is_active; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_is_active; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_is_active ON public.config_versions USING btree (is_active) WHERE (is_active = true);
 
 
 --
--- Name: idx_config_versions_is_current; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_is_current; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_is_current ON public.config_versions USING btree (is_current) WHERE (is_current = true);
 
 
 --
--- Name: idx_config_versions_key_current; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_key_current; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_key_current ON public.config_versions USING btree (config_key, is_current) WHERE (is_current = true);
 
 
 --
--- Name: idx_config_versions_key_version; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_key_version; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_key_version ON public.config_versions USING btree (config_key, version_number);
 
 
 --
--- Name: idx_config_versions_pending_approval; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_pending_approval; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_pending_approval ON public.config_versions USING btree (approval_required, approved, created_at DESC) WHERE ((approval_required = true) AND (approved = false));
 
 
 --
--- Name: idx_config_versions_pending_deployment; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_pending_deployment; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_pending_deployment ON public.config_versions USING btree (deployed, approved, created_at DESC) WHERE ((deployed = false) AND ((approval_required = false) OR (approved = true)));
 
 
 --
--- Name: idx_config_versions_rollback_metadata_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_rollback_metadata_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_rollback_metadata_gin ON public.config_versions USING gin (rollback_metadata) WHERE (rollback_metadata IS NOT NULL);
 
 
 --
--- Name: idx_config_versions_rollback_version; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_rollback_version; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_rollback_version ON public.config_versions USING btree (rollback_version) WHERE (rollback_version IS NOT NULL);
 
 
 --
--- Name: idx_config_versions_validation_errors_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_validation_errors_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_validation_errors_gin ON public.config_versions USING gin (validation_errors) WHERE (validation_errors IS NOT NULL);
 
 
 --
--- Name: idx_config_versions_validation_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_validation_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_validation_status ON public.config_versions USING btree (validation_status);
 
 
 --
--- Name: idx_config_versions_version_number; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_config_versions_version_number; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_config_versions_version_number ON public.config_versions USING btree (version_number);
 
 
 --
--- Name: idx_connection_pool_metrics_connection_errors; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_connection_pool_metrics_connection_errors; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_connection_pool_metrics_connection_errors ON public.connection_pool_metrics USING btree (connection_errors) WHERE (connection_errors > 0);
 
 
 --
--- Name: idx_connection_pool_metrics_database_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_connection_pool_metrics_database_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_connection_pool_metrics_database_name ON public.connection_pool_metrics USING btree (database_name) WHERE (database_name IS NOT NULL);
 
 
 --
--- Name: idx_connection_pool_metrics_high_utilization; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_connection_pool_metrics_high_utilization; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_connection_pool_metrics_high_utilization ON public.connection_pool_metrics USING btree (pool_utilization_percent DESC, recorded_at DESC) WHERE (pool_utilization_percent > (80)::numeric);
 
 
 --
--- Name: idx_connection_pool_metrics_pool_utilization; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_connection_pool_metrics_pool_utilization; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_connection_pool_metrics_pool_utilization ON public.connection_pool_metrics USING btree (pool_utilization_percent);
 
 
 --
--- Name: idx_connection_pool_metrics_recorded_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_connection_pool_metrics_recorded_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_connection_pool_metrics_recorded_at ON public.connection_pool_metrics USING btree (recorded_at);
 
 
 --
--- Name: idx_connection_pool_metrics_service_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_connection_pool_metrics_service_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_connection_pool_metrics_service_name ON public.connection_pool_metrics USING btree (service_name) WHERE (service_name IS NOT NULL);
 
 
 --
--- Name: idx_connection_pool_metrics_service_utilization; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_connection_pool_metrics_service_utilization; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_connection_pool_metrics_service_utilization ON public.connection_pool_metrics USING btree (service_name, pool_utilization_percent DESC, recorded_at DESC) WHERE (service_name IS NOT NULL);
 
 
 --
--- Name: idx_connection_pool_metrics_wait_count; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_connection_pool_metrics_wait_count; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_connection_pool_metrics_wait_count ON public.connection_pool_metrics USING btree (wait_count) WHERE (wait_count > 0);
 
 
 --
--- Name: idx_connection_pool_monitoring; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_connection_pool_monitoring; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_connection_pool_monitoring ON public.connection_pool_metrics USING btree (pool_utilization_percent DESC, recorded_at DESC) WHERE (pool_utilization_percent > (80)::numeric);
 
 
 --
--- Name: idx_dns_validation_results_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_dns_validation_results_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_dns_validation_results_campaign_id ON public.dns_validation_results USING btree (dns_campaign_id);
 
 
 --
--- Name: idx_dns_validation_results_dns_records_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_dns_validation_results_dns_records_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_dns_validation_results_dns_records_gin ON public.dns_validation_results USING gin (dns_records) WHERE (dns_records IS NOT NULL);
 
 
 --
--- Name: idx_dns_validation_results_domain_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_dns_validation_results_domain_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_dns_validation_results_domain_id ON public.dns_validation_results USING btree (generated_domain_id) WHERE (generated_domain_id IS NOT NULL);
 
 
 --
--- Name: idx_dns_validation_results_domain_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_dns_validation_results_domain_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_dns_validation_results_domain_name ON public.dns_validation_results USING btree (domain_name);
 
 
 --
--- Name: idx_dns_validation_results_last_checked; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_dns_validation_results_last_checked; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_dns_validation_results_last_checked ON public.dns_validation_results USING btree (last_checked_at) WHERE (last_checked_at IS NOT NULL);
 
 
 --
--- Name: idx_dns_validation_results_persona_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_dns_validation_results_persona_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_dns_validation_results_persona_id ON public.dns_validation_results USING btree (validated_by_persona_id) WHERE (validated_by_persona_id IS NOT NULL);
 
 
 --
--- Name: idx_dns_validation_results_validation_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_dns_validation_results_validation_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_dns_validation_results_validation_status ON public.dns_validation_results USING btree (validation_status);
 
 
 --
--- Name: idx_domain_campaign_status_join; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_domain_campaign_status_join; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_domain_campaign_status_join ON public.lead_generation_campaigns USING btree (id) INCLUDE (phase_status, current_phase, name, user_id);
 
 
 --
--- Name: idx_domain_generation_config_states_details_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_domain_generation_config_states_details_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_domain_generation_config_states_details_gin ON public.domain_generation_config_states USING gin (config_details);
 
 
 --
--- Name: idx_domain_generation_config_states_last_offset; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_domain_generation_config_states_last_offset; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_domain_generation_config_states_last_offset ON public.domain_generation_config_states USING btree (last_offset);
 
 
 --
--- Name: idx_domain_generation_config_states_updated_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_domain_generation_config_states_updated_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_domain_generation_config_states_updated_at ON public.domain_generation_config_states USING btree (updated_at);
 
 
 --
--- Name: idx_domain_generation_params_pattern_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_domain_generation_params_pattern_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_domain_generation_params_pattern_type ON public.domain_generation_campaign_params USING btree (pattern_type);
 
 
 --
--- Name: idx_domain_generation_params_tld; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_domain_generation_params_tld; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_domain_generation_params_tld ON public.domain_generation_campaign_params USING btree (tld);
 
 
 --
--- Name: idx_domain_generation_params_updated_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_domain_generation_params_updated_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_domain_generation_params_updated_at ON public.domain_generation_campaign_params USING btree (updated_at);
 
 
 --
--- Name: idx_domains_campaign_analytics; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_domains_campaign_analytics; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_domains_campaign_analytics ON public.generated_domains USING btree (campaign_id, dns_status, http_status, lead_status);
 
 
 --
--- Name: idx_domains_campaign_pagination; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_domains_campaign_pagination; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_domains_campaign_pagination ON public.generated_domains USING btree (campaign_id, created_at DESC, id) INCLUDE (domain_name, dns_status);
 
 
 --
--- Name: idx_domains_cursor_forward; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_domains_cursor_forward; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_domains_cursor_forward ON public.generated_domains USING btree (created_at, id) WHERE (dns_status IS NOT NULL);
 
 
 --
--- Name: idx_domains_cursor_pagination; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_domains_cursor_pagination; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_domains_cursor_pagination ON public.generated_domains USING btree (id, created_at) WHERE (dns_status IS NOT NULL);
 
 
 --
--- Name: idx_domains_dns_validation_pending; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_domains_dns_validation_pending; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_domains_dns_validation_pending ON public.generated_domains USING btree (campaign_id, dns_status, generated_at) WHERE (dns_status = 'pending'::public.domain_dns_status_enum);
 
 
 --
--- Name: idx_domains_failure_analysis; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_domains_failure_analysis; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_domains_failure_analysis ON public.generated_domains USING btree (lead_status, dns_status, generated_at DESC) WHERE (lead_status = 'error'::public.domain_lead_status_enum);
 
 
 --
--- Name: idx_domains_http_validation_pending; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_domains_http_validation_pending; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_domains_http_validation_pending ON public.generated_domains USING btree (campaign_id, http_status, generated_at) WHERE (http_status = 'pending'::public.domain_http_status_enum);
 
 
 --
--- Name: idx_domains_validation_analytics; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_domains_validation_analytics; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_domains_validation_analytics ON public.generated_domains USING btree (campaign_id, dns_status) INCLUDE (http_status, lead_status, created_at);
 
 
 --
--- Name: idx_domains_validation_lookup; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_domains_validation_lookup; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_domains_validation_lookup ON public.generated_domains USING btree (domain_name, dns_status) INCLUDE (http_status, lead_status);
 
 
 --
--- Name: idx_domains_validation_status_pagination; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_domains_validation_status_pagination; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_domains_validation_status_pagination ON public.generated_domains USING btree (dns_status, created_at DESC, id) INCLUDE (domain_name, campaign_id);
 
 
 --
--- Name: idx_error_rate_monitoring; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_error_rate_monitoring; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_error_rate_monitoring ON public.campaign_jobs USING btree (status, created_at DESC) WHERE (status = 'failed'::public.campaign_job_status_enum);
 
 
 --
--- Name: idx_event_projections_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_projections_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_projections_campaign_id ON public.event_projections USING btree (campaign_id) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_event_projections_campaign_specific; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_projections_campaign_specific; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_projections_campaign_specific ON public.event_projections USING btree (campaign_specific) WHERE (campaign_specific = true);
 
 
 --
--- Name: idx_event_projections_created_by; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_projections_created_by; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_projections_created_by ON public.event_projections USING btree (created_by) WHERE (created_by IS NOT NULL);
 
 
 --
--- Name: idx_event_projections_current_position; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_projections_current_position; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_projections_current_position ON public.event_projections USING btree (current_position);
 
 
 --
--- Name: idx_event_projections_dependencies_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_projections_dependencies_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_projections_dependencies_gin ON public.event_projections USING gin (dependencies) WHERE (dependencies IS NOT NULL);
 
 
 --
--- Name: idx_event_projections_event_filters_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_projections_event_filters_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_projections_event_filters_gin ON public.event_projections USING gin (event_filters) WHERE (event_filters IS NOT NULL);
 
 
 --
--- Name: idx_event_projections_lag_monitoring; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_projections_lag_monitoring; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_projections_lag_monitoring ON public.event_projections USING btree (processing_lag_ms DESC, status) WHERE (monitoring_enabled = true);
 
 
 --
--- Name: idx_event_projections_last_processed_event_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_projections_last_processed_event_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_projections_last_processed_event_id ON public.event_projections USING btree (last_processed_event_id) WHERE (last_processed_event_id IS NOT NULL);
 
 
 --
--- Name: idx_event_projections_monitoring_enabled; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_projections_monitoring_enabled; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_projections_monitoring_enabled ON public.event_projections USING btree (monitoring_enabled) WHERE (monitoring_enabled = true);
 
 
 --
--- Name: idx_event_projections_projection_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_projections_projection_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_projections_projection_name ON public.event_projections USING btree (projection_name);
 
 
 --
--- Name: idx_event_projections_projection_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_projections_projection_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_projections_projection_type ON public.event_projections USING btree (projection_type);
 
 
 --
--- Name: idx_event_projections_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_projections_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_projections_status ON public.event_projections USING btree (status);
 
 
 --
--- Name: idx_event_projections_status_position; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_projections_status_position; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_projections_status_position ON public.event_projections USING btree (status, current_position);
 
 
 --
--- Name: idx_event_store_aggregate_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_aggregate_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_aggregate_id ON public.event_store USING btree (aggregate_id);
 
 
 --
--- Name: idx_event_store_aggregate_sequence; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_aggregate_sequence; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_aggregate_sequence ON public.event_store USING btree (aggregate_id, sequence_number);
 
 
 --
--- Name: idx_event_store_aggregate_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_aggregate_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_aggregate_type ON public.event_store USING btree (aggregate_type);
 
 
 --
--- Name: idx_event_store_aggregate_version; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_aggregate_version; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_aggregate_version ON public.event_store USING btree (aggregate_id, aggregate_version);
 
 
 --
--- Name: idx_event_store_archived; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_archived; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_archived ON public.event_store USING btree (archived) WHERE (archived = false);
 
 
 --
--- Name: idx_event_store_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_campaign_id ON public.event_store USING btree (campaign_id) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_event_store_campaign_phase; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_campaign_phase; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_campaign_phase ON public.event_store USING btree (campaign_phase) WHERE (campaign_phase IS NOT NULL);
 
 
 --
--- Name: idx_event_store_campaign_type_timestamp; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_campaign_type_timestamp; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_campaign_type_timestamp ON public.event_store USING btree (campaign_id, event_type, event_timestamp DESC) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_event_store_causation_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_causation_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_causation_id ON public.event_store USING btree (causation_id) WHERE (causation_id IS NOT NULL);
 
 
 --
--- Name: idx_event_store_compacted; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_compacted; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_compacted ON public.event_store USING btree (compacted) WHERE (compacted = false);
 
 
 --
--- Name: idx_event_store_correlation_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_correlation_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_correlation_id ON public.event_store USING btree (correlation_id) WHERE (correlation_id IS NOT NULL);
 
 
 --
--- Name: idx_event_store_correlation_tracking; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_correlation_tracking; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_correlation_tracking ON public.event_store USING btree (correlation_id, sequence_number) WHERE (correlation_id IS NOT NULL);
 
 
 --
--- Name: idx_event_store_event_data_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_event_data_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_event_data_gin ON public.event_store USING gin (event_data);
 
 
 --
--- Name: idx_event_store_event_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_event_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_event_id ON public.event_store USING btree (event_id);
 
 
 --
--- Name: idx_event_store_event_metadata_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_event_metadata_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_event_metadata_gin ON public.event_store USING gin (event_metadata) WHERE (event_metadata IS NOT NULL);
 
 
 --
--- Name: idx_event_store_event_timestamp; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_event_timestamp; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_event_timestamp ON public.event_store USING btree (event_timestamp);
 
 
 --
--- Name: idx_event_store_event_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_event_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_event_type ON public.event_store USING btree (event_type);
 
 
 --
--- Name: idx_event_store_is_snapshot; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_is_snapshot; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_is_snapshot ON public.event_store USING btree (is_snapshot) WHERE (is_snapshot = true);
 
 
 --
--- Name: idx_event_store_parent_event_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_parent_event_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_parent_event_id ON public.event_store USING btree (parent_event_id) WHERE (parent_event_id IS NOT NULL);
 
 
 --
--- Name: idx_event_store_partition_key; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_partition_key; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_partition_key ON public.event_store USING btree (partition_key);
 
 
 --
--- Name: idx_event_store_processing_pending; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_processing_pending; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_processing_pending ON public.event_store USING btree (processing_status, sequence_number) WHERE ((processing_status)::text = 'pending'::text);
 
 
 --
--- Name: idx_event_store_processing_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_processing_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_processing_status ON public.event_store USING btree (processing_status);
 
 
 --
--- Name: idx_event_store_projection_rebuild; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_projection_rebuild; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_projection_rebuild ON public.event_store USING btree (event_type, sequence_number) INCLUDE (aggregate_id, event_data);
 
 
 --
--- Name: idx_event_store_retry_after; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_retry_after; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_retry_after ON public.event_store USING btree (retry_after) WHERE (retry_after IS NOT NULL);
 
 
 --
--- Name: idx_event_store_sequence_number; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_sequence_number; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_sequence_number ON public.event_store USING btree (sequence_number);
 
 
 --
--- Name: idx_event_store_session_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_session_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_session_id ON public.event_store USING btree (session_id) WHERE (session_id IS NOT NULL);
 
 
 --
--- Name: idx_event_store_streaming; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_streaming; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_streaming ON public.event_store USING btree (aggregate_type, sequence_number) WHERE ((processing_status)::text = 'processed'::text);
 
 
 --
--- Name: idx_event_store_type_timestamp; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_type_timestamp; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_type_timestamp ON public.event_store USING btree (event_type, event_timestamp DESC);
 
 
 --
--- Name: idx_event_store_user_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_user_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_user_id ON public.event_store USING btree (user_id) WHERE (user_id IS NOT NULL);
 
 
 --
--- Name: idx_event_store_user_timestamp; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_event_store_user_timestamp; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_event_store_user_timestamp ON public.event_store USING btree (user_id, event_timestamp DESC) WHERE (user_id IS NOT NULL);
 
 
 --
--- Name: idx_events_cursor_forward; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_events_cursor_forward; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_events_cursor_forward ON public.event_store USING btree (sequence_number, event_id) WHERE ((processing_status)::text = 'processed'::text);
 
 
 --
--- Name: idx_expired_cache_cleanup; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_expired_cache_cleanup; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_expired_cache_cleanup ON public.cache_entries USING btree (expires_at, status) WHERE (status = 'active'::public.cache_entry_status_enum);
 
 
 --
--- Name: idx_generated_domains_batch_validation; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_generated_domains_batch_validation; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_generated_domains_batch_validation ON public.generated_domains USING btree (campaign_id, lead_status, created_at) WHERE (lead_status = ANY (ARRAY['pending'::public.domain_lead_status_enum, 'no_match'::public.domain_lead_status_enum]));
 
 
 --
--- Name: idx_generated_domains_campaign_dns_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_generated_domains_campaign_dns_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_generated_domains_campaign_dns_status ON public.generated_domains USING btree (campaign_id, dns_status);
 
 
 --
--- Name: idx_generated_domains_campaign_http_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_generated_domains_campaign_http_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_generated_domains_campaign_http_status ON public.generated_domains USING btree (campaign_id, http_status);
 
 
 --
--- Name: idx_generated_domains_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_generated_domains_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_generated_domains_campaign_id ON public.generated_domains USING btree (campaign_id);
 
 
 --
--- Name: idx_generated_domains_campaign_offset; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_generated_domains_campaign_offset; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_generated_domains_campaign_offset ON public.generated_domains USING btree (campaign_id, offset_index);
 
 
 --
--- Name: idx_generated_domains_campaign_offset_unique; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_generated_domains_campaign_offset_unique; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE UNIQUE INDEX idx_generated_domains_campaign_offset_unique ON public.generated_domains USING btree (campaign_id, offset_index);
 
 
 --
--- Name: idx_generated_domains_dns_pending; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_generated_domains_dns_pending; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_generated_domains_dns_pending ON public.generated_domains USING btree (campaign_id, offset_index) WHERE (dns_status = ANY (ARRAY['pending'::public.domain_dns_status_enum, 'error'::public.domain_dns_status_enum]));
 
 
 --
--- Name: idx_generated_domains_dns_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_generated_domains_dns_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_generated_domains_dns_status ON public.generated_domains USING btree (dns_status);
 
 
 --
--- Name: idx_generated_domains_domain_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_generated_domains_domain_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_generated_domains_domain_name ON public.generated_domains USING btree (domain_name);
 
 
 --
--- Name: idx_generated_domains_domain_name_unique; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_generated_domains_domain_name_unique; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE UNIQUE INDEX idx_generated_domains_domain_name_unique ON public.generated_domains USING btree (domain_name);
 
 
 --
--- Name: idx_generated_domains_generated_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_generated_domains_generated_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_generated_domains_generated_at ON public.generated_domains USING btree (generated_at);
 
 
 --
--- Name: idx_generated_domains_http_pending; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_generated_domains_http_pending; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_generated_domains_http_pending ON public.generated_domains USING btree (campaign_id, offset_index) WHERE (http_status = ANY (ARRAY['pending'::public.domain_http_status_enum, 'error'::public.domain_http_status_enum]));
 
 
 --
--- Name: idx_generated_domains_http_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_generated_domains_http_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_generated_domains_http_status ON public.generated_domains USING btree (http_status);
 
 
 --
--- Name: idx_generated_domains_last_validated_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_generated_domains_last_validated_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_generated_domains_last_validated_at ON public.generated_domains USING btree (last_validated_at) WHERE (last_validated_at IS NOT NULL);
 
 
 --
--- Name: idx_generated_domains_lead_score; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_generated_domains_lead_score; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_generated_domains_lead_score ON public.generated_domains USING btree (lead_score) WHERE (lead_score > (0)::numeric);
 
 
 --
--- Name: idx_generated_domains_lead_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_generated_domains_lead_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_generated_domains_lead_status ON public.generated_domains USING btree (lead_status);
 
 
 --
--- Name: idx_generated_domains_offset_index; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_generated_domains_offset_index; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_generated_domains_offset_index ON public.generated_domains USING btree (offset_index);
 
 
 --
--- Name: idx_generated_domains_tld; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_generated_domains_tld; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_generated_domains_tld ON public.generated_domains USING btree (tld) WHERE (tld IS NOT NULL);
 
 
 --
--- Name: idx_http_keyword_results_ad_hoc_keywords_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_http_keyword_results_ad_hoc_keywords_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_http_keyword_results_ad_hoc_keywords_gin ON public.http_keyword_results USING gin (found_ad_hoc_keywords) WHERE (found_ad_hoc_keywords IS NOT NULL);
 
 
 --
--- Name: idx_http_keyword_results_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_http_keyword_results_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_http_keyword_results_campaign_id ON public.http_keyword_results USING btree (http_keyword_campaign_id);
 
 
 --
--- Name: idx_http_keyword_results_content_hash; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_http_keyword_results_content_hash; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_http_keyword_results_content_hash ON public.http_keyword_results USING btree (content_hash) WHERE (content_hash IS NOT NULL);
 
 
 --
--- Name: idx_http_keyword_results_dns_result_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_http_keyword_results_dns_result_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_http_keyword_results_dns_result_id ON public.http_keyword_results USING btree (dns_result_id) WHERE (dns_result_id IS NOT NULL);
 
 
 --
--- Name: idx_http_keyword_results_domain_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_http_keyword_results_domain_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_http_keyword_results_domain_name ON public.http_keyword_results USING btree (domain_name);
 
 
 --
--- Name: idx_http_keyword_results_http_status_code; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_http_keyword_results_http_status_code; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_http_keyword_results_http_status_code ON public.http_keyword_results USING btree (http_status_code) WHERE (http_status_code IS NOT NULL);
 
 
 --
--- Name: idx_http_keyword_results_keywords_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_http_keyword_results_keywords_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_http_keyword_results_keywords_gin ON public.http_keyword_results USING gin (found_keywords_from_sets) WHERE (found_keywords_from_sets IS NOT NULL);
 
 
 --
--- Name: idx_http_keyword_results_persona_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_http_keyword_results_persona_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_http_keyword_results_persona_id ON public.http_keyword_results USING btree (validated_by_persona_id) WHERE (validated_by_persona_id IS NOT NULL);
 
 
 --
--- Name: idx_http_keyword_results_proxy_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_http_keyword_results_proxy_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_http_keyword_results_proxy_id ON public.http_keyword_results USING btree (used_proxy_id) WHERE (used_proxy_id IS NOT NULL);
 
 
 --
--- Name: idx_http_keyword_results_response_headers_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_http_keyword_results_response_headers_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_http_keyword_results_response_headers_gin ON public.http_keyword_results USING gin (response_headers) WHERE (response_headers IS NOT NULL);
 
 
 --
--- Name: idx_http_keyword_results_validation_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_http_keyword_results_validation_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_http_keyword_results_validation_status ON public.http_keyword_results USING btree (validation_status);
 
 
 --
--- Name: idx_http_results_campaign; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_http_results_campaign; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_http_results_campaign ON public.http_keyword_results USING btree (http_keyword_campaign_id, domain_name, validation_status, created_at DESC);
 
 
 --
--- Name: idx_http_results_domain_lookup; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_http_results_domain_lookup; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_http_results_domain_lookup ON public.http_keyword_results USING btree (domain_name, validation_status) INCLUDE (http_status_code, created_at);
 
 
 --
--- Name: idx_jobs_campaign_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_jobs_campaign_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_jobs_campaign_status ON public.campaign_jobs USING btree (campaign_id, status, job_type, created_at DESC);
 
 
 --
--- Name: idx_jobs_cleanup_completed; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_jobs_cleanup_completed; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_jobs_cleanup_completed ON public.campaign_jobs USING btree (status, updated_at) WHERE (status = 'completed'::public.campaign_job_status_enum);
 
 
 --
--- Name: idx_jobs_cursor_forward; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_jobs_cursor_forward; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_jobs_cursor_forward ON public.campaign_jobs USING btree (created_at, id) WHERE (status <> 'cancelled'::public.campaign_job_status_enum);
 
 
 --
--- Name: idx_jobs_failure_analysis; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_jobs_failure_analysis; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_jobs_failure_analysis ON public.campaign_jobs USING btree (status, last_error, attempts, created_at DESC) WHERE (status = 'failed'::public.campaign_job_status_enum);
 
 
 --
--- Name: idx_jobs_performance_analysis; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_jobs_performance_analysis; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_jobs_performance_analysis ON public.campaign_jobs USING btree (job_type, status, attempts, created_at DESC);
 
 
 --
--- Name: idx_jobs_performance_analytics; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_jobs_performance_analytics; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_jobs_performance_analytics ON public.campaign_jobs USING btree (job_type, status, created_at) INCLUDE (attempts, last_attempted_at);
 
 
 --
--- Name: idx_jobs_processing_queue; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_jobs_processing_queue; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_jobs_processing_queue ON public.campaign_jobs USING btree (status, scheduled_at, created_at) WHERE (status = ANY (ARRAY['pending'::public.campaign_job_status_enum, 'queued'::public.campaign_job_status_enum]));
 
 
 --
--- Name: idx_jobs_retry_queue; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_jobs_retry_queue; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_jobs_retry_queue ON public.campaign_jobs USING btree (status, attempts, next_execution_at) WHERE ((status = 'failed'::public.campaign_job_status_enum) AND (attempts > 0));
 
 
 --
--- Name: idx_jobs_stale_running; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_jobs_stale_running; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_jobs_stale_running ON public.campaign_jobs USING btree (status, last_attempted_at) WHERE (status = 'running'::public.campaign_job_status_enum);
 
 
 --
--- Name: idx_jobs_worker_assignment; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_jobs_worker_assignment; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_jobs_worker_assignment ON public.campaign_jobs USING btree (status, job_type, processing_server_id, last_attempted_at) WHERE (status = 'running'::public.campaign_job_status_enum);
 
 
 --
--- Name: idx_keyword_rules_category; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_keyword_rules_category; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_keyword_rules_category ON public.keyword_rules USING btree (category) WHERE (category IS NOT NULL);
 
 
 --
--- Name: idx_keyword_rules_created_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_keyword_rules_created_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_keyword_rules_created_at ON public.keyword_rules USING btree (created_at);
 
 
 --
--- Name: idx_keyword_rules_is_case_sensitive; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_keyword_rules_is_case_sensitive; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_keyword_rules_is_case_sensitive ON public.keyword_rules USING btree (is_case_sensitive);
 
 
 --
--- Name: idx_keyword_rules_keyword_set_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_keyword_rules_keyword_set_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_keyword_rules_keyword_set_id ON public.keyword_rules USING btree (keyword_set_id);
 
 
 --
--- Name: idx_keyword_rules_pattern; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_keyword_rules_pattern; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_keyword_rules_pattern ON public.keyword_rules USING btree (pattern);
 
 
 --
--- Name: idx_keyword_rules_rule_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_keyword_rules_rule_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_keyword_rules_rule_type ON public.keyword_rules USING btree (rule_type);
 
 
 --
--- Name: idx_keyword_rules_set; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_keyword_rules_set; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_keyword_rules_set ON public.keyword_rules USING btree (keyword_set_id, rule_type, created_at DESC);
 
 
 --
--- Name: idx_keyword_rules_set_pattern; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_keyword_rules_set_pattern; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_keyword_rules_set_pattern ON public.keyword_rules USING btree (keyword_set_id, pattern);
 
 
 --
--- Name: idx_keyword_rules_set_pattern_unique; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_keyword_rules_set_pattern_unique; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE UNIQUE INDEX idx_keyword_rules_set_pattern_unique ON public.keyword_rules USING btree (keyword_set_id, pattern, rule_type, is_case_sensitive);
 
 
 --
--- Name: idx_keyword_rules_set_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_keyword_rules_set_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_keyword_rules_set_type ON public.keyword_rules USING btree (keyword_set_id, rule_type);
 
 
 --
--- Name: idx_keyword_rules_updated_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_keyword_rules_updated_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_keyword_rules_updated_at ON public.keyword_rules USING btree (updated_at);
 
 
 --
--- Name: idx_keyword_sets_created_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_keyword_sets_created_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_keyword_sets_created_at ON public.keyword_sets USING btree (created_at);
 
 
 --
--- Name: idx_keyword_sets_enabled; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_keyword_sets_enabled; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_keyword_sets_enabled ON public.keyword_sets USING btree (is_enabled, created_at DESC) WHERE (is_enabled = true);
 
 
 --
--- Name: idx_keyword_sets_is_enabled; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_keyword_sets_is_enabled; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_keyword_sets_is_enabled ON public.keyword_sets USING btree (is_enabled) WHERE (is_enabled = true);
 
 
 --
--- Name: idx_keyword_sets_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_keyword_sets_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_keyword_sets_name ON public.keyword_sets USING btree (name);
 
 
 --
--- Name: idx_keyword_sets_rules_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_keyword_sets_rules_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_keyword_sets_rules_gin ON public.keyword_sets USING gin (rules) WHERE (rules IS NOT NULL);
 
 
 --
--- Name: idx_keyword_sets_updated_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_keyword_sets_updated_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_keyword_sets_updated_at ON public.keyword_sets USING btree (updated_at);
 
 
 --
--- Name: idx_lead_generation_campaigns_analysis_results_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lead_generation_campaigns_analysis_results_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_lead_generation_campaigns_analysis_results_gin ON public.lead_generation_campaigns USING gin (analysis_results) WHERE (analysis_results IS NOT NULL);
 
 
 --
--- Name: idx_lead_generation_campaigns_business_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lead_generation_campaigns_business_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_lead_generation_campaigns_business_status ON public.lead_generation_campaigns USING btree (business_status) WHERE (business_status IS NOT NULL);
 
 
 --
--- Name: idx_lead_generation_campaigns_completed_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lead_generation_campaigns_completed_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_lead_generation_campaigns_completed_at ON public.lead_generation_campaigns USING btree (completed_at) WHERE (completed_at IS NOT NULL);
 
 
 --
--- Name: idx_lead_generation_campaigns_created_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lead_generation_campaigns_created_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_lead_generation_campaigns_created_at ON public.lead_generation_campaigns USING btree (created_at);
 
 
 --
--- Name: idx_lead_generation_campaigns_current_phase; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lead_generation_campaigns_current_phase; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_lead_generation_campaigns_current_phase ON public.lead_generation_campaigns USING btree (current_phase);
 
 
 --
--- Name: idx_lead_generation_campaigns_dns_results_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lead_generation_campaigns_dns_results_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_lead_generation_campaigns_dns_results_gin ON public.lead_generation_campaigns USING gin (dns_results) WHERE (dns_results IS NOT NULL);
 
 
 --
--- Name: idx_lead_generation_campaigns_domains_data_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lead_generation_campaigns_domains_data_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_lead_generation_campaigns_domains_data_gin ON public.lead_generation_campaigns USING gin (domains_data) WHERE (domains_data IS NOT NULL);
 
 
 --
--- Name: idx_lead_generation_campaigns_http_results_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lead_generation_campaigns_http_results_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_lead_generation_campaigns_http_results_gin ON public.lead_generation_campaigns USING gin (http_results) WHERE (http_results IS NOT NULL);
 
 
 --
--- Name: idx_lead_generation_campaigns_metadata_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lead_generation_campaigns_metadata_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_lead_generation_campaigns_metadata_gin ON public.lead_generation_campaigns USING gin (metadata) WHERE (metadata IS NOT NULL);
 
 
 --
--- Name: idx_lead_generation_campaigns_phase_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lead_generation_campaigns_phase_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_lead_generation_campaigns_phase_status ON public.lead_generation_campaigns USING btree (phase_status);
 
 
 --
--- Name: idx_lead_generation_campaigns_updated_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lead_generation_campaigns_updated_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_lead_generation_campaigns_updated_at ON public.lead_generation_campaigns USING btree (updated_at);
 
 
 --
--- Name: idx_lead_generation_campaigns_user_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_lead_generation_campaigns_user_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_lead_generation_campaigns_user_id ON public.lead_generation_campaigns USING btree (user_id);
 
 
 --
--- Name: idx_live_campaign_stats; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_live_campaign_stats; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_live_campaign_stats ON public.lead_generation_campaigns USING btree (phase_status, updated_at DESC) WHERE (phase_status = ANY (ARRAY['in_progress'::public.phase_status_enum, 'ready'::public.phase_status_enum]));
 
 
 --
--- Name: idx_live_domain_stats; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_live_domain_stats; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_live_domain_stats ON public.generated_domains USING btree (dns_status, created_at DESC);
 
 
 --
--- Name: idx_live_job_queue_stats; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_live_job_queue_stats; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_live_job_queue_stats ON public.campaign_jobs USING btree (status, created_at DESC) WHERE (status = ANY (ARRAY['pending'::public.campaign_job_status_enum, 'running'::public.campaign_job_status_enum]));
 
 
 --
--- Name: idx_old_audit_logs_cleanup; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_old_audit_logs_cleanup; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_old_audit_logs_cleanup ON public.audit_logs USING btree ("timestamp");
 
 
 --
--- Name: idx_pagination_performance_metrics_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_pagination_performance_metrics_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_pagination_performance_metrics_campaign_id ON public.pagination_performance_metrics USING btree (campaign_id) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_pagination_performance_metrics_execution_time; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_pagination_performance_metrics_execution_time; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_pagination_performance_metrics_execution_time ON public.pagination_performance_metrics USING btree (execution_time_ms);
 
 
 --
--- Name: idx_pagination_performance_metrics_large_pages; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_pagination_performance_metrics_large_pages; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_pagination_performance_metrics_large_pages ON public.pagination_performance_metrics USING btree (page_size DESC, execution_time_ms DESC) WHERE (page_size > 1000);
 
 
 --
--- Name: idx_pagination_performance_metrics_page_size; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_pagination_performance_metrics_page_size; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_pagination_performance_metrics_page_size ON public.pagination_performance_metrics USING btree (page_size);
 
 
 --
--- Name: idx_pagination_performance_metrics_pagination_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_pagination_performance_metrics_pagination_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_pagination_performance_metrics_pagination_type ON public.pagination_performance_metrics USING btree (pagination_type);
 
 
 --
--- Name: idx_pagination_performance_metrics_recorded_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_pagination_performance_metrics_recorded_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_pagination_performance_metrics_recorded_at ON public.pagination_performance_metrics USING btree (recorded_at);
 
 
 --
--- Name: idx_pagination_performance_metrics_service_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_pagination_performance_metrics_service_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_pagination_performance_metrics_service_name ON public.pagination_performance_metrics USING btree (service_name) WHERE (service_name IS NOT NULL);
 
 
 --
--- Name: idx_pagination_performance_metrics_slow_pagination; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_pagination_performance_metrics_slow_pagination; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_pagination_performance_metrics_slow_pagination ON public.pagination_performance_metrics USING btree (execution_time_ms DESC, recorded_at DESC) WHERE (execution_time_ms > 100);
 
 
 --
--- Name: idx_pagination_performance_metrics_table_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_pagination_performance_metrics_table_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_pagination_performance_metrics_table_name ON public.pagination_performance_metrics USING btree (table_name);
 
 
 --
--- Name: idx_pagination_performance_metrics_table_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_pagination_performance_metrics_table_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_pagination_performance_metrics_table_type ON public.pagination_performance_metrics USING btree (table_name, pagination_type, execution_time_ms DESC);
 
 
 --
--- Name: idx_pagination_performance_metrics_user_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_pagination_performance_metrics_user_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_pagination_performance_metrics_user_id ON public.pagination_performance_metrics USING btree (user_id) WHERE (user_id IS NOT NULL);
 
 
 --
--- Name: idx_personas_availability; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_personas_availability; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_personas_availability ON public.personas USING btree (status, last_tested) WHERE (status = 'Active'::public.persona_status_enum);
 
 
 --
--- Name: idx_personas_campaign_assignment; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_personas_campaign_assignment; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_personas_campaign_assignment ON public.personas USING btree (id, status, persona_type) INCLUDE (name, last_tested);
 
 
 --
--- Name: idx_personas_config_details_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_personas_config_details_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_personas_config_details_gin ON public.personas USING gin (config_details);
 
 
 --
--- Name: idx_personas_created_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_personas_created_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_personas_created_at ON public.personas USING btree (created_at);
 
 
 --
--- Name: idx_personas_is_enabled; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_personas_is_enabled; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_personas_is_enabled ON public.personas USING btree (is_enabled) WHERE (is_enabled = true);
 
 
 --
--- Name: idx_personas_last_tested; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_personas_last_tested; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_personas_last_tested ON public.personas USING btree (last_tested) WHERE (last_tested IS NOT NULL);
 
 
 --
--- Name: idx_personas_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_personas_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_personas_name ON public.personas USING btree (name);
 
 
 --
--- Name: idx_personas_persona_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_personas_persona_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_personas_persona_type ON public.personas USING btree (persona_type);
 
 
 --
--- Name: idx_personas_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_personas_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_personas_status ON public.personas USING btree (status) WHERE (status IS NOT NULL);
 
 
 --
--- Name: idx_personas_tags_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_personas_tags_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_personas_tags_gin ON public.personas USING gin (tags) WHERE (tags IS NOT NULL);
 
 
 --
--- Name: idx_personas_updated_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_personas_updated_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_personas_updated_at ON public.personas USING btree (updated_at);
 
 
 --
--- Name: idx_proxies_availability; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_availability; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_availability ON public.proxies USING btree (status, last_checked_at, is_healthy) WHERE (status = 'Active'::public.proxy_status_enum);
 
 
 --
--- Name: idx_proxies_campaign_usage; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_campaign_usage; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_campaign_usage ON public.proxies USING btree (id, status) INCLUDE (host, port, last_checked_at);
 
 
 --
--- Name: idx_proxies_country_code; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_country_code; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_country_code ON public.proxies USING btree (country_code) WHERE (country_code IS NOT NULL);
 
 
 --
--- Name: idx_proxies_country_enabled; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_country_enabled; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_country_enabled ON public.proxies USING btree (country_code, is_enabled) WHERE ((country_code IS NOT NULL) AND (is_enabled = true));
 
 
 --
--- Name: idx_proxies_created_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_created_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_created_at ON public.proxies USING btree (created_at);
 
 
 --
--- Name: idx_proxies_enabled_healthy; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_enabled_healthy; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_enabled_healthy ON public.proxies USING btree (is_enabled, is_healthy) WHERE (is_enabled = true);
 
 
 --
--- Name: idx_proxies_host; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_host; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_host ON public.proxies USING btree (host) WHERE (host IS NOT NULL);
 
 
 --
--- Name: idx_proxies_is_enabled; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_is_enabled; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_is_enabled ON public.proxies USING btree (is_enabled) WHERE (is_enabled = true);
 
 
 --
--- Name: idx_proxies_is_healthy; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_is_healthy; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_is_healthy ON public.proxies USING btree (is_healthy);
 
 
 --
--- Name: idx_proxies_last_checked_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_last_checked_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_last_checked_at ON public.proxies USING btree (last_checked_at) WHERE (last_checked_at IS NOT NULL);
 
 
 --
--- Name: idx_proxies_last_tested; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_last_tested; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_last_tested ON public.proxies USING btree (last_tested) WHERE (last_tested IS NOT NULL);
 
 
 --
--- Name: idx_proxies_latency_ms; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_latency_ms; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_latency_ms ON public.proxies USING btree (latency_ms) WHERE (latency_ms IS NOT NULL);
 
 
 --
--- Name: idx_proxies_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_name ON public.proxies USING btree (name);
 
 
 --
--- Name: idx_proxies_pool_assignment; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_pool_assignment; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_pool_assignment ON public.proxy_pool_memberships USING btree (pool_id, proxy_id, is_active) WHERE (is_active = true);
 
 
 --
--- Name: idx_proxies_port; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_port; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_port ON public.proxies USING btree (port) WHERE (port IS NOT NULL);
 
 
 --
--- Name: idx_proxies_protocol; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_protocol; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_protocol ON public.proxies USING btree (protocol) WHERE (protocol IS NOT NULL);
 
 
 --
--- Name: idx_proxies_protocol_enabled; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_protocol_enabled; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_protocol_enabled ON public.proxies USING btree (protocol, is_enabled) WHERE (is_enabled = true);
 
 
 --
--- Name: idx_proxies_provider; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_provider; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_provider ON public.proxies USING btree (provider) WHERE (provider IS NOT NULL);
 
 
 --
--- Name: idx_proxies_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_status ON public.proxies USING btree (status) WHERE (status IS NOT NULL);
 
 
 --
--- Name: idx_proxies_updated_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxies_updated_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxies_updated_at ON public.proxies USING btree (updated_at);
 
 
 --
--- Name: idx_proxy_pool_memberships_added_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxy_pool_memberships_added_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxy_pool_memberships_added_at ON public.proxy_pool_memberships USING btree (added_at);
 
 
 --
--- Name: idx_proxy_pool_memberships_is_active; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxy_pool_memberships_is_active; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxy_pool_memberships_is_active ON public.proxy_pool_memberships USING btree (is_active) WHERE (is_active = true);
 
 
 --
--- Name: idx_proxy_pool_memberships_pool_active; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxy_pool_memberships_pool_active; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxy_pool_memberships_pool_active ON public.proxy_pool_memberships USING btree (pool_id, is_active) WHERE (is_active = true);
 
 
 --
--- Name: idx_proxy_pool_memberships_pool_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxy_pool_memberships_pool_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxy_pool_memberships_pool_id ON public.proxy_pool_memberships USING btree (pool_id);
 
 
 --
--- Name: idx_proxy_pool_memberships_pool_weight; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxy_pool_memberships_pool_weight; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxy_pool_memberships_pool_weight ON public.proxy_pool_memberships USING btree (pool_id, weight DESC) WHERE ((is_active = true) AND (weight IS NOT NULL));
 
 
 --
--- Name: idx_proxy_pool_memberships_proxy_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxy_pool_memberships_proxy_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxy_pool_memberships_proxy_id ON public.proxy_pool_memberships USING btree (proxy_id);
 
 
 --
--- Name: idx_proxy_pool_memberships_weight; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxy_pool_memberships_weight; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxy_pool_memberships_weight ON public.proxy_pool_memberships USING btree (weight) WHERE (weight IS NOT NULL);
 
 
 --
--- Name: idx_proxy_pools_created_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxy_pools_created_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxy_pools_created_at ON public.proxy_pools USING btree (created_at);
 
 
 --
--- Name: idx_proxy_pools_health_check_enabled; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxy_pools_health_check_enabled; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxy_pools_health_check_enabled ON public.proxy_pools USING btree (health_check_enabled) WHERE (health_check_enabled = true);
 
 
 --
--- Name: idx_proxy_pools_is_enabled; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxy_pools_is_enabled; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxy_pools_is_enabled ON public.proxy_pools USING btree (is_enabled) WHERE (is_enabled = true);
 
 
 --
--- Name: idx_proxy_pools_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxy_pools_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxy_pools_name ON public.proxy_pools USING btree (name);
 
 
 --
--- Name: idx_proxy_pools_pool_strategy; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxy_pools_pool_strategy; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxy_pools_pool_strategy ON public.proxy_pools USING btree (pool_strategy) WHERE (pool_strategy IS NOT NULL);
 
 
 --
--- Name: idx_proxy_pools_updated_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_proxy_pools_updated_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_proxy_pools_updated_at ON public.proxy_pools USING btree (updated_at);
 
 
 --
--- Name: idx_query_performance_metrics_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_metrics_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_metrics_campaign_id ON public.query_performance_metrics USING btree (campaign_id) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_query_performance_metrics_campaign_phase; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_metrics_campaign_phase; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_metrics_campaign_phase ON public.query_performance_metrics USING btree (campaign_phase) WHERE (campaign_phase IS NOT NULL);
 
 
 --
--- Name: idx_query_performance_metrics_executed_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_metrics_executed_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_metrics_executed_at ON public.query_performance_metrics USING btree (executed_at);
 
 
 --
--- Name: idx_query_performance_metrics_execution_time; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_metrics_execution_time; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_metrics_execution_time ON public.query_performance_metrics USING btree (execution_time_ms);
 
 
 --
--- Name: idx_query_performance_metrics_index_usage_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_metrics_index_usage_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_metrics_index_usage_gin ON public.query_performance_metrics USING gin (index_usage) WHERE (index_usage IS NOT NULL);
 
 
 --
--- Name: idx_query_performance_metrics_needs_optimization; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_metrics_needs_optimization; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_metrics_needs_optimization ON public.query_performance_metrics USING btree (needs_optimization) WHERE (needs_optimization = true);
 
 
 --
--- Name: idx_query_performance_metrics_optimization_suggestions_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_metrics_optimization_suggestions_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_metrics_optimization_suggestions_gin ON public.query_performance_metrics USING gin (optimization_suggestions) WHERE (optimization_suggestions IS NOT NULL);
 
 
 --
--- Name: idx_query_performance_metrics_performance_category; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_metrics_performance_category; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_metrics_performance_category ON public.query_performance_metrics USING btree (performance_category);
 
 
 --
--- Name: idx_query_performance_metrics_query_hash; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_metrics_query_hash; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_metrics_query_hash ON public.query_performance_metrics USING btree (query_hash);
 
 
 --
--- Name: idx_query_performance_metrics_query_plan_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_metrics_query_plan_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_metrics_query_plan_gin ON public.query_performance_metrics USING gin (query_plan) WHERE (query_plan IS NOT NULL);
 
 
 --
--- Name: idx_query_performance_metrics_query_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_metrics_query_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_metrics_query_type ON public.query_performance_metrics USING btree (query_type);
 
 
 --
--- Name: idx_query_performance_metrics_service_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_metrics_service_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_metrics_service_name ON public.query_performance_metrics USING btree (service_name);
 
 
 --
--- Name: idx_query_performance_metrics_service_time; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_metrics_service_time; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_metrics_service_time ON public.query_performance_metrics USING btree (service_name, executed_at DESC);
 
 
 --
--- Name: idx_query_performance_metrics_slow_queries; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_metrics_slow_queries; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_metrics_slow_queries ON public.query_performance_metrics USING btree (execution_time_ms DESC, executed_at DESC) WHERE (execution_time_ms > (1000)::numeric);
 
 
 --
--- Name: idx_query_performance_metrics_table_names_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_metrics_table_names_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_metrics_table_names_gin ON public.query_performance_metrics USING gin (table_names);
 
 
 --
--- Name: idx_query_performance_metrics_type_time; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_metrics_type_time; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_metrics_type_time ON public.query_performance_metrics USING btree (query_type, execution_time_ms DESC);
 
 
 --
--- Name: idx_query_performance_metrics_user_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_metrics_user_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_metrics_user_id ON public.query_performance_metrics USING btree (user_id) WHERE (user_id IS NOT NULL);
 
 
 --
--- Name: idx_query_performance_slow_queries; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_slow_queries; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_slow_queries ON public.query_performance_metrics USING btree (execution_time_ms DESC, executed_at DESC) WHERE (execution_time_ms > (1000)::numeric);
 
 
 --
--- Name: idx_query_performance_trending; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_query_performance_trending; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_query_performance_trending ON public.query_performance_metrics USING btree (service_name, executed_at DESC, execution_time_ms);
 
 
 --
--- Name: idx_resource_utilization_alerts; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_resource_utilization_alerts; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_resource_utilization_alerts ON public.resource_utilization_metrics USING btree (service_name, utilization_pct DESC, recorded_at DESC) WHERE (utilization_pct > (80)::numeric);
 
 
 --
--- Name: idx_resource_utilization_metrics_bottleneck_detected; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_resource_utilization_metrics_bottleneck_detected; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_resource_utilization_metrics_bottleneck_detected ON public.resource_utilization_metrics USING btree (bottleneck_detected) WHERE (bottleneck_detected = true);
 
 
 --
--- Name: idx_resource_utilization_metrics_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_resource_utilization_metrics_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_resource_utilization_metrics_campaign_id ON public.resource_utilization_metrics USING btree (campaign_id) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_resource_utilization_metrics_campaign_phase; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_resource_utilization_metrics_campaign_phase; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_resource_utilization_metrics_campaign_phase ON public.resource_utilization_metrics USING btree (campaign_phase) WHERE (campaign_phase IS NOT NULL);
 
 
 --
--- Name: idx_resource_utilization_metrics_component; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_resource_utilization_metrics_component; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_resource_utilization_metrics_component ON public.resource_utilization_metrics USING btree (component) WHERE (component IS NOT NULL);
 
 
 --
--- Name: idx_resource_utilization_metrics_high_utilization; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_resource_utilization_metrics_high_utilization; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_resource_utilization_metrics_high_utilization ON public.resource_utilization_metrics USING btree (utilization_pct DESC, recorded_at DESC) WHERE (utilization_pct > (80)::numeric);
 
 
 --
--- Name: idx_resource_utilization_metrics_optimization_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_resource_utilization_metrics_optimization_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_resource_utilization_metrics_optimization_gin ON public.resource_utilization_metrics USING gin (optimization_applied) WHERE (optimization_applied IS NOT NULL);
 
 
 --
--- Name: idx_resource_utilization_metrics_recorded_at; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_resource_utilization_metrics_recorded_at; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_resource_utilization_metrics_recorded_at ON public.resource_utilization_metrics USING btree (recorded_at);
 
 
 --
--- Name: idx_resource_utilization_metrics_resource_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_resource_utilization_metrics_resource_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_resource_utilization_metrics_resource_type ON public.resource_utilization_metrics USING btree (resource_type);
 
 
 --
--- Name: idx_resource_utilization_metrics_service_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_resource_utilization_metrics_service_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_resource_utilization_metrics_service_name ON public.resource_utilization_metrics USING btree (service_name);
 
 
 --
--- Name: idx_resource_utilization_metrics_service_resource; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_resource_utilization_metrics_service_resource; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_resource_utilization_metrics_service_resource ON public.resource_utilization_metrics USING btree (service_name, resource_type, recorded_at DESC);
 
 
 --
--- Name: idx_resource_utilization_metrics_utilization_pct; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_resource_utilization_metrics_utilization_pct; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_resource_utilization_metrics_utilization_pct ON public.resource_utilization_metrics USING btree (utilization_pct);
 
 
 --
--- Name: idx_security_events_additional_data_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_additional_data_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_additional_data_gin ON public.security_events USING gin (additional_data) WHERE (additional_data IS NOT NULL);
 
 
 --
--- Name: idx_security_events_archived; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_archived; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_archived ON public.security_events USING btree (archived) WHERE (archived = false);
 
 
 --
--- Name: idx_security_events_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_campaign_id ON public.security_events USING btree (campaign_id) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_security_events_compliance_relevant; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_compliance_relevant; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_compliance_relevant ON public.security_events USING btree (compliance_relevant) WHERE (compliance_relevant = true);
 
 
 --
--- Name: idx_security_events_event_timestamp; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_event_timestamp; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_event_timestamp ON public.security_events USING btree (event_timestamp);
 
 
 --
--- Name: idx_security_events_event_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_event_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_event_type ON public.security_events USING btree (event_type);
 
 
 --
--- Name: idx_security_events_investigated; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_investigated; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_investigated ON public.security_events USING btree (investigated) WHERE (investigated = false);
 
 
 --
--- Name: idx_security_events_ip_address; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_ip_address; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_ip_address ON public.security_events USING btree (ip_address);
 
 
 --
--- Name: idx_security_events_ip_tracking; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_ip_tracking; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_ip_tracking ON public.security_events USING btree (ip_address, event_timestamp DESC, event_type);
 
 
 --
--- Name: idx_security_events_ip_type_time; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_ip_type_time; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_ip_type_time ON public.security_events USING btree (ip_address, event_type, event_timestamp DESC);
 
 
 --
--- Name: idx_security_events_monitoring; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_monitoring; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_monitoring ON public.security_events USING btree (event_type, event_timestamp DESC, severity) WHERE (threat_detected = true);
 
 
 --
--- Name: idx_security_events_resolved; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_resolved; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_resolved ON public.security_events USING btree (resolved) WHERE (resolved = false);
 
 
 --
--- Name: idx_security_events_resource_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_resource_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_resource_type ON public.security_events USING btree (resource_type) WHERE (resource_type IS NOT NULL);
 
 
 --
--- Name: idx_security_events_response_actions_gin; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_response_actions_gin; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_response_actions_gin ON public.security_events USING gin (response_actions) WHERE (response_actions IS NOT NULL);
 
 
 --
--- Name: idx_security_events_session_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_session_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_session_id ON public.security_events USING btree (session_id) WHERE (session_id IS NOT NULL);
 
 
 --
--- Name: idx_security_events_severity; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_severity; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_severity ON public.security_events USING btree (severity);
 
 
 --
--- Name: idx_security_events_severity_time; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_severity_time; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_severity_time ON public.security_events USING btree (severity, event_timestamp DESC) WHERE ((severity)::text = ANY ((ARRAY['critical'::character varying, 'high'::character varying])::text[]));
 
 
 --
--- Name: idx_security_events_threat_detected; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_threat_detected; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_threat_detected ON public.security_events USING btree (threat_detected) WHERE (threat_detected = true);
 
 
 --
--- Name: idx_security_events_threat_time; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_threat_time; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_threat_time ON public.security_events USING btree (threat_detected, event_timestamp DESC) WHERE (threat_detected = true);
 
 
 --
--- Name: idx_security_events_user_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_user_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_user_id ON public.security_events USING btree (user_id) WHERE (user_id IS NOT NULL);
 
 
 --
--- Name: idx_security_events_user_type_time; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_security_events_user_type_time; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_security_events_user_type_time ON public.security_events USING btree (user_id, event_type, event_timestamp DESC) WHERE (user_id IS NOT NULL);
 
 
 --
--- Name: idx_service_architecture_metrics_alert_threshold_breached; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_architecture_metrics_alert_threshold_breached; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_architecture_metrics_alert_threshold_breached ON public.service_architecture_metrics USING btree (alert_threshold_breached) WHERE (alert_threshold_breached = true);
 
 
 --
--- Name: idx_service_architecture_metrics_availability_percent; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_architecture_metrics_availability_percent; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_architecture_metrics_availability_percent ON public.service_architecture_metrics USING btree (availability_percent);
 
 
 --
--- Name: idx_service_architecture_metrics_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_architecture_metrics_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_architecture_metrics_campaign_id ON public.service_architecture_metrics USING btree (campaign_id) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_service_architecture_metrics_env_health; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_architecture_metrics_env_health; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_architecture_metrics_env_health ON public.service_architecture_metrics USING btree (environment, health_score DESC, measurement_timestamp DESC);
 
 
 --
--- Name: idx_service_architecture_metrics_environment; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_architecture_metrics_environment; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_architecture_metrics_environment ON public.service_architecture_metrics USING btree (environment);
 
 
 --
--- Name: idx_service_architecture_metrics_health_score; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_architecture_metrics_health_score; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_architecture_metrics_health_score ON public.service_architecture_metrics USING btree (health_score);
 
 
 --
--- Name: idx_service_architecture_metrics_measurement_timestamp; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_architecture_metrics_measurement_timestamp; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_architecture_metrics_measurement_timestamp ON public.service_architecture_metrics USING btree (measurement_timestamp);
 
 
 --
--- Name: idx_service_architecture_metrics_service_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_architecture_metrics_service_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_architecture_metrics_service_name ON public.service_architecture_metrics USING btree (service_name);
 
 
 --
--- Name: idx_service_architecture_metrics_service_time; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_architecture_metrics_service_time; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_architecture_metrics_service_time ON public.service_architecture_metrics USING btree (service_name, measurement_timestamp DESC);
 
 
 --
--- Name: idx_service_architecture_metrics_service_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_architecture_metrics_service_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_architecture_metrics_service_type ON public.service_architecture_metrics USING btree (service_type);
 
 
 --
--- Name: idx_service_capacity_metrics_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_capacity_metrics_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_capacity_metrics_campaign_id ON public.service_capacity_metrics USING btree (campaign_id) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_service_capacity_metrics_capacity_alert_triggered; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_capacity_metrics_capacity_alert_triggered; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_capacity_metrics_capacity_alert_triggered ON public.service_capacity_metrics USING btree (capacity_alert_triggered) WHERE (capacity_alert_triggered = true);
 
 
 --
--- Name: idx_service_capacity_metrics_environment; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_capacity_metrics_environment; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_capacity_metrics_environment ON public.service_capacity_metrics USING btree (environment);
 
 
 --
--- Name: idx_service_capacity_metrics_high_utilization; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_capacity_metrics_high_utilization; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_capacity_metrics_high_utilization ON public.service_capacity_metrics USING btree (request_capacity_utilization_percent DESC, memory_capacity_utilization_percent DESC) WHERE ((request_capacity_utilization_percent > (80)::numeric) OR (memory_capacity_utilization_percent > (80)::numeric));
 
 
 --
--- Name: idx_service_capacity_metrics_measurement_timestamp; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_capacity_metrics_measurement_timestamp; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_capacity_metrics_measurement_timestamp ON public.service_capacity_metrics USING btree (measurement_timestamp);
 
 
 --
--- Name: idx_service_capacity_metrics_performance_degraded; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_capacity_metrics_performance_degraded; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_capacity_metrics_performance_degraded ON public.service_capacity_metrics USING btree (performance_degraded) WHERE (performance_degraded = true);
 
 
 --
--- Name: idx_service_capacity_metrics_scale_up_triggered; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_capacity_metrics_scale_up_triggered; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_capacity_metrics_scale_up_triggered ON public.service_capacity_metrics USING btree (scale_up_triggered) WHERE (scale_up_triggered = true);
 
 
 --
--- Name: idx_service_capacity_metrics_service_name; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_capacity_metrics_service_name; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_capacity_metrics_service_name ON public.service_capacity_metrics USING btree (service_name);
 
 
 --
--- Name: idx_service_capacity_metrics_service_time; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_capacity_metrics_service_time; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_capacity_metrics_service_time ON public.service_capacity_metrics USING btree (service_name, measurement_timestamp DESC);
 
 
 --
--- Name: idx_service_capacity_metrics_service_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_capacity_metrics_service_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_capacity_metrics_service_type ON public.service_capacity_metrics USING btree (service_type);
 
 
 --
--- Name: idx_service_dependencies_active; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_contracts_name_version; Type: INDEX; Schema: public; Owner: domainflow
+--
+
+CREATE INDEX idx_service_contracts_name_version ON public.service_contracts USING btree (service_name, version);
+
+
+--
+-- Name: idx_service_dependencies_active; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_dependencies_active ON public.service_dependencies USING btree (active) WHERE (active = true);
 
 
 --
--- Name: idx_service_dependencies_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_dependencies_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_dependencies_campaign_id ON public.service_dependencies USING btree (campaign_id) WHERE (campaign_id IS NOT NULL);
 
 
 --
--- Name: idx_service_dependencies_critical_unhealthy; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_dependencies_critical_unhealthy; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_dependencies_critical_unhealthy ON public.service_dependencies USING btree (is_critical, health_status) WHERE ((is_critical = true) AND ((health_status)::text <> 'healthy'::text));
 
 
 --
--- Name: idx_service_dependencies_dependency_type; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_dependencies_dependency_type; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_dependencies_dependency_type ON public.service_dependencies USING btree (dependency_type);
 
 
 --
--- Name: idx_service_dependencies_environment; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_dependencies_environment; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_dependencies_environment ON public.service_dependencies USING btree (environment);
 
 
 --
--- Name: idx_service_dependencies_health_status; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_dependencies_health_status; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_dependencies_health_status ON public.service_dependencies USING btree (health_status);
 
 
 --
--- Name: idx_service_dependencies_is_critical; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_dependencies_is_critical; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_dependencies_is_critical ON public.service_dependencies USING btree (is_critical) WHERE (is_critical = true);
 
 
 --
--- Name: idx_service_dependencies_source_service; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_dependencies_source_service; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_dependencies_source_service ON public.service_dependencies USING btree (source_service);
 
 
 --
--- Name: idx_service_dependencies_source_target; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_dependencies_source_target; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_dependencies_source_target ON public.service_dependencies USING btree (source_service, target_service, active) WHERE (active = true);
 
 
 --
--- Name: idx_service_dependencies_target_service; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_service_dependencies_target_service; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_service_dependencies_target_service ON public.service_dependencies USING btree (target_service);
 
 
 --
--- Name: idx_system_health_monitoring; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_system_health_monitoring; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_system_health_monitoring ON public.resource_utilization_metrics USING btree (service_name, recorded_at DESC);
 
 
 --
--- Name: idx_user_activity_analytics; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_user_activity_analytics; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_user_activity_analytics ON public.audit_logs USING btree (user_id, "timestamp") INCLUDE (action, entity_type) WHERE (user_id IS NOT NULL);
 
 
 --
--- Name: idx_user_campaigns_join; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_user_campaigns_join; Type: INDEX; Schema: public; Owner: domainflow
 --
 
 CREATE INDEX idx_user_campaigns_join ON public.lead_generation_campaigns USING btree (user_id) INCLUDE (id, name, phase_status, created_at, current_phase);
 
 
 --
--- Name: cache_entries trigger_cache_lifecycle; Type: TRIGGER; Schema: public; Owner: -
+-- Name: idx_worker_coordination_campaign_id; Type: INDEX; Schema: public; Owner: domainflow
+--
+
+CREATE INDEX idx_worker_coordination_campaign_id ON public.worker_coordination USING btree (campaign_id);
+
+
+--
+-- Name: idx_worker_coordination_status; Type: INDEX; Schema: public; Owner: domainflow
+--
+
+CREATE INDEX idx_worker_coordination_status ON public.worker_coordination USING btree (status);
+
+
+--
+-- Name: idx_worker_coordination_worker_id; Type: INDEX; Schema: public; Owner: domainflow
+--
+
+CREATE INDEX idx_worker_coordination_worker_id ON public.worker_coordination USING btree (worker_id);
+
+
+--
+-- Name: keyword_rules sync_keyword_rules_to_jsonb; Type: TRIGGER; Schema: public; Owner: domainflow
+--
+
+CREATE TRIGGER sync_keyword_rules_to_jsonb AFTER INSERT OR DELETE OR UPDATE ON public.keyword_rules FOR EACH ROW EXECUTE FUNCTION public.update_keyword_set_rules_jsonb();
+
+
+--
+-- Name: TRIGGER sync_keyword_rules_to_jsonb ON keyword_rules; Type: COMMENT; Schema: public; Owner: domainflow
+--
+
+COMMENT ON TRIGGER sync_keyword_rules_to_jsonb ON public.keyword_rules IS 'Maintains hybrid storage: relational keyword_rules for management, JSONB for Phase 3 HTTP scanning performance';
+
+
+--
+-- Name: cache_entries trigger_cache_lifecycle; Type: TRIGGER; Schema: public; Owner: domainflow
 --
 
 CREATE TRIGGER trigger_cache_lifecycle BEFORE INSERT OR UPDATE ON public.cache_entries FOR EACH ROW EXECUTE FUNCTION public.trigger_cache_entry_lifecycle();
 
 
 --
--- Name: lead_generation_campaigns trigger_campaign_transitions; Type: TRIGGER; Schema: public; Owner: -
+-- Name: lead_generation_campaigns trigger_campaign_transitions; Type: TRIGGER; Schema: public; Owner: domainflow
 --
 
 CREATE TRIGGER trigger_campaign_transitions BEFORE UPDATE ON public.lead_generation_campaigns FOR EACH ROW EXECUTE FUNCTION public.trigger_campaign_state_transition();
 
 
 --
--- Name: generated_domains trigger_domain_validation; Type: TRIGGER; Schema: public; Owner: -
+-- Name: generated_domains trigger_domain_validation; Type: TRIGGER; Schema: public; Owner: domainflow
 --
 
 CREATE TRIGGER trigger_domain_validation AFTER UPDATE ON public.generated_domains FOR EACH ROW EXECUTE FUNCTION public.trigger_domain_validation_update();
 
 
 --
--- Name: campaign_jobs trigger_job_status; Type: TRIGGER; Schema: public; Owner: -
+-- Name: campaign_jobs trigger_job_status; Type: TRIGGER; Schema: public; Owner: domainflow
 --
 
 CREATE TRIGGER trigger_job_status BEFORE UPDATE ON public.campaign_jobs FOR EACH ROW EXECUTE FUNCTION public.trigger_job_status_update();
 
 
 --
--- Name: proxy_pool_memberships trigger_proxy_membership_consistency; Type: TRIGGER; Schema: public; Owner: -
+-- Name: proxy_pool_memberships trigger_proxy_membership_consistency; Type: TRIGGER; Schema: public; Owner: domainflow
 --
 
 CREATE TRIGGER trigger_proxy_membership_consistency BEFORE INSERT OR UPDATE ON public.proxy_pool_memberships FOR EACH ROW EXECUTE FUNCTION public.trigger_proxy_pool_consistency();
 
 
 --
--- Name: lead_generation_campaigns trigger_timestamp_campaigns; Type: TRIGGER; Schema: public; Owner: -
+-- Name: lead_generation_campaigns trigger_timestamp_campaigns; Type: TRIGGER; Schema: public; Owner: domainflow
 --
 
 CREATE TRIGGER trigger_timestamp_campaigns BEFORE UPDATE ON public.lead_generation_campaigns FOR EACH ROW EXECUTE FUNCTION public.trigger_update_timestamp();
 
 
 --
--- Name: generated_domains trigger_timestamp_domains; Type: TRIGGER; Schema: public; Owner: -
+-- Name: generated_domains trigger_timestamp_domains; Type: TRIGGER; Schema: public; Owner: domainflow
 --
 
 CREATE TRIGGER trigger_timestamp_domains BEFORE UPDATE ON public.generated_domains FOR EACH ROW EXECUTE FUNCTION public.trigger_update_timestamp();
 
 
 --
--- Name: campaign_jobs trigger_timestamp_jobs; Type: TRIGGER; Schema: public; Owner: -
+-- Name: campaign_jobs trigger_timestamp_jobs; Type: TRIGGER; Schema: public; Owner: domainflow
 --
 
 CREATE TRIGGER trigger_timestamp_jobs BEFORE UPDATE ON public.campaign_jobs FOR EACH ROW EXECUTE FUNCTION public.trigger_update_timestamp();
 
 
 --
--- Name: password_reset_tokens password_reset_tokens_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
+-- Name: password_reset_tokens password_reset_tokens_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: domainflow
 --
 
 ALTER TABLE ONLY auth.password_reset_tokens
@@ -8248,7 +8668,7 @@ ALTER TABLE ONLY auth.password_reset_tokens
 
 
 --
--- Name: sessions sessions_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: -
+-- Name: sessions sessions_user_id_fkey; Type: FK CONSTRAINT; Schema: auth; Owner: domainflow
 --
 
 ALTER TABLE ONLY auth.sessions
@@ -8256,7 +8676,7 @@ ALTER TABLE ONLY auth.sessions
 
 
 --
--- Name: architecture_refactor_log architecture_refactor_log_approved_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: architecture_refactor_log architecture_refactor_log_approved_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.architecture_refactor_log
@@ -8264,7 +8684,7 @@ ALTER TABLE ONLY public.architecture_refactor_log
 
 
 --
--- Name: architecture_refactor_log architecture_refactor_log_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: architecture_refactor_log architecture_refactor_log_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.architecture_refactor_log
@@ -8272,7 +8692,7 @@ ALTER TABLE ONLY public.architecture_refactor_log
 
 
 --
--- Name: architecture_refactor_log architecture_refactor_log_initiated_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: architecture_refactor_log architecture_refactor_log_initiated_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.architecture_refactor_log
@@ -8280,7 +8700,7 @@ ALTER TABLE ONLY public.architecture_refactor_log
 
 
 --
--- Name: audit_logs audit_logs_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: audit_logs audit_logs_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.audit_logs
@@ -8288,7 +8708,7 @@ ALTER TABLE ONLY public.audit_logs
 
 
 --
--- Name: audit_logs audit_logs_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: audit_logs audit_logs_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.audit_logs
@@ -8296,7 +8716,7 @@ ALTER TABLE ONLY public.audit_logs
 
 
 --
--- Name: audit_logs audit_logs_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: audit_logs audit_logs_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.audit_logs
@@ -8304,7 +8724,7 @@ ALTER TABLE ONLY public.audit_logs
 
 
 --
--- Name: auth_audit_logs auth_audit_logs_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: auth_audit_logs auth_audit_logs_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.auth_audit_logs
@@ -8312,7 +8732,7 @@ ALTER TABLE ONLY public.auth_audit_logs
 
 
 --
--- Name: auth_audit_logs auth_audit_logs_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: auth_audit_logs auth_audit_logs_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.auth_audit_logs
@@ -8320,7 +8740,7 @@ ALTER TABLE ONLY public.auth_audit_logs
 
 
 --
--- Name: authorization_decisions authorization_decisions_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: authorization_decisions authorization_decisions_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.authorization_decisions
@@ -8328,7 +8748,7 @@ ALTER TABLE ONLY public.authorization_decisions
 
 
 --
--- Name: authorization_decisions authorization_decisions_reviewed_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: authorization_decisions authorization_decisions_reviewed_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.authorization_decisions
@@ -8336,7 +8756,7 @@ ALTER TABLE ONLY public.authorization_decisions
 
 
 --
--- Name: authorization_decisions authorization_decisions_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: authorization_decisions authorization_decisions_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.authorization_decisions
@@ -8344,7 +8764,7 @@ ALTER TABLE ONLY public.authorization_decisions
 
 
 --
--- Name: authorization_decisions authorization_decisions_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: authorization_decisions authorization_decisions_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.authorization_decisions
@@ -8352,7 +8772,7 @@ ALTER TABLE ONLY public.authorization_decisions
 
 
 --
--- Name: cache_configurations cache_configurations_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_configurations cache_configurations_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_configurations
@@ -8360,7 +8780,7 @@ ALTER TABLE ONLY public.cache_configurations
 
 
 --
--- Name: cache_entries cache_entries_cache_configuration_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_entries cache_entries_cache_configuration_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_entries
@@ -8368,7 +8788,7 @@ ALTER TABLE ONLY public.cache_entries
 
 
 --
--- Name: cache_entries cache_entries_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_entries cache_entries_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_entries
@@ -8376,7 +8796,7 @@ ALTER TABLE ONLY public.cache_entries
 
 
 --
--- Name: cache_entries cache_entries_locked_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_entries cache_entries_locked_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_entries
@@ -8384,7 +8804,7 @@ ALTER TABLE ONLY public.cache_entries
 
 
 --
--- Name: cache_entries cache_entries_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_entries cache_entries_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_entries
@@ -8392,7 +8812,7 @@ ALTER TABLE ONLY public.cache_entries
 
 
 --
--- Name: cache_entries cache_entries_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_entries cache_entries_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_entries
@@ -8400,7 +8820,7 @@ ALTER TABLE ONLY public.cache_entries
 
 
 --
--- Name: cache_invalidation_log cache_invalidation_log_cache_configuration_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_invalidation_log cache_invalidation_log_cache_configuration_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_invalidation_log
@@ -8408,7 +8828,7 @@ ALTER TABLE ONLY public.cache_invalidation_log
 
 
 --
--- Name: cache_invalidation_log cache_invalidation_log_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_invalidation_log cache_invalidation_log_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_invalidation_log
@@ -8416,7 +8836,7 @@ ALTER TABLE ONLY public.cache_invalidation_log
 
 
 --
--- Name: cache_invalidation_log cache_invalidation_log_triggered_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_invalidation_log cache_invalidation_log_triggered_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_invalidation_log
@@ -8424,7 +8844,7 @@ ALTER TABLE ONLY public.cache_invalidation_log
 
 
 --
--- Name: cache_invalidations cache_invalidations_cache_configuration_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_invalidations cache_invalidations_cache_configuration_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_invalidations
@@ -8432,7 +8852,7 @@ ALTER TABLE ONLY public.cache_invalidations
 
 
 --
--- Name: cache_invalidations cache_invalidations_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_invalidations cache_invalidations_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_invalidations
@@ -8440,7 +8860,7 @@ ALTER TABLE ONLY public.cache_invalidations
 
 
 --
--- Name: cache_invalidations cache_invalidations_depends_on_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_invalidations cache_invalidations_depends_on_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_invalidations
@@ -8448,7 +8868,7 @@ ALTER TABLE ONLY public.cache_invalidations
 
 
 --
--- Name: cache_invalidations cache_invalidations_requested_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_invalidations cache_invalidations_requested_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_invalidations
@@ -8456,7 +8876,7 @@ ALTER TABLE ONLY public.cache_invalidations
 
 
 --
--- Name: cache_metrics cache_metrics_cache_configuration_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: cache_metrics cache_metrics_cache_configuration_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.cache_metrics
@@ -8464,7 +8884,7 @@ ALTER TABLE ONLY public.cache_metrics
 
 
 --
--- Name: campaign_access_grants campaign_access_grants_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_access_grants campaign_access_grants_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_access_grants
@@ -8472,7 +8892,7 @@ ALTER TABLE ONLY public.campaign_access_grants
 
 
 --
--- Name: campaign_access_grants campaign_access_grants_granted_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_access_grants campaign_access_grants_granted_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_access_grants
@@ -8480,7 +8900,7 @@ ALTER TABLE ONLY public.campaign_access_grants
 
 
 --
--- Name: campaign_access_grants campaign_access_grants_inherited_from_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_access_grants campaign_access_grants_inherited_from_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_access_grants
@@ -8488,7 +8908,7 @@ ALTER TABLE ONLY public.campaign_access_grants
 
 
 --
--- Name: campaign_access_grants campaign_access_grants_revoked_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_access_grants campaign_access_grants_revoked_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_access_grants
@@ -8496,7 +8916,7 @@ ALTER TABLE ONLY public.campaign_access_grants
 
 
 --
--- Name: campaign_access_grants campaign_access_grants_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_access_grants campaign_access_grants_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_access_grants
@@ -8504,7 +8924,7 @@ ALTER TABLE ONLY public.campaign_access_grants
 
 
 --
--- Name: campaign_jobs campaign_jobs_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_jobs campaign_jobs_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_jobs
@@ -8512,7 +8932,7 @@ ALTER TABLE ONLY public.campaign_jobs
 
 
 --
--- Name: campaign_phases campaign_phases_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_phases campaign_phases_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_phases
@@ -8520,7 +8940,7 @@ ALTER TABLE ONLY public.campaign_phases
 
 
 --
--- Name: campaign_state_events campaign_state_events_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_state_events campaign_state_events_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_state_events
@@ -8528,7 +8948,7 @@ ALTER TABLE ONLY public.campaign_state_events
 
 
 --
--- Name: campaign_state_snapshots campaign_state_snapshots_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_state_snapshots campaign_state_snapshots_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_state_snapshots
@@ -8536,7 +8956,7 @@ ALTER TABLE ONLY public.campaign_state_snapshots
 
 
 --
--- Name: campaign_state_transitions campaign_state_transitions_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_state_transitions campaign_state_transitions_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_state_transitions
@@ -8544,7 +8964,7 @@ ALTER TABLE ONLY public.campaign_state_transitions
 
 
 --
--- Name: campaign_state_transitions campaign_state_transitions_state_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: campaign_state_transitions campaign_state_transitions_state_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.campaign_state_transitions
@@ -8552,7 +8972,7 @@ ALTER TABLE ONLY public.campaign_state_transitions
 
 
 --
--- Name: communication_patterns communication_patterns_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: communication_patterns communication_patterns_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.communication_patterns
@@ -8560,7 +8980,7 @@ ALTER TABLE ONLY public.communication_patterns
 
 
 --
--- Name: config_locks config_locks_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: config_locks config_locks_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.config_locks
@@ -8568,7 +8988,7 @@ ALTER TABLE ONLY public.config_locks
 
 
 --
--- Name: config_locks config_locks_locked_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: config_locks config_locks_locked_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.config_locks
@@ -8576,7 +8996,7 @@ ALTER TABLE ONLY public.config_locks
 
 
 --
--- Name: config_locks config_locks_parent_lock_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: config_locks config_locks_parent_lock_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.config_locks
@@ -8584,7 +9004,7 @@ ALTER TABLE ONLY public.config_locks
 
 
 --
--- Name: config_locks config_locks_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: config_locks config_locks_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.config_locks
@@ -8592,7 +9012,7 @@ ALTER TABLE ONLY public.config_locks
 
 
 --
--- Name: config_versions config_versions_approved_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: config_versions config_versions_approved_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.config_versions
@@ -8600,7 +9020,7 @@ ALTER TABLE ONLY public.config_versions
 
 
 --
--- Name: config_versions config_versions_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: config_versions config_versions_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.config_versions
@@ -8608,7 +9028,7 @@ ALTER TABLE ONLY public.config_versions
 
 
 --
--- Name: config_versions config_versions_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: config_versions config_versions_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.config_versions
@@ -8616,7 +9036,7 @@ ALTER TABLE ONLY public.config_versions
 
 
 --
--- Name: config_versions config_versions_deployed_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: config_versions config_versions_deployed_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.config_versions
@@ -8624,7 +9044,7 @@ ALTER TABLE ONLY public.config_versions
 
 
 --
--- Name: dns_validation_results dns_validation_results_dns_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: dns_validation_results dns_validation_results_dns_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.dns_validation_results
@@ -8632,7 +9052,7 @@ ALTER TABLE ONLY public.dns_validation_results
 
 
 --
--- Name: dns_validation_results dns_validation_results_generated_domain_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: dns_validation_results dns_validation_results_generated_domain_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.dns_validation_results
@@ -8640,7 +9060,7 @@ ALTER TABLE ONLY public.dns_validation_results
 
 
 --
--- Name: domain_generation_campaign_params domain_generation_campaign_params_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: domain_generation_campaign_params domain_generation_campaign_params_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.domain_generation_campaign_params
@@ -8648,7 +9068,7 @@ ALTER TABLE ONLY public.domain_generation_campaign_params
 
 
 --
--- Name: event_projections event_projections_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: event_projections event_projections_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.event_projections
@@ -8656,7 +9076,7 @@ ALTER TABLE ONLY public.event_projections
 
 
 --
--- Name: event_projections event_projections_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: event_projections event_projections_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.event_projections
@@ -8664,7 +9084,7 @@ ALTER TABLE ONLY public.event_projections
 
 
 --
--- Name: event_projections event_projections_last_processed_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: event_projections event_projections_last_processed_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.event_projections
@@ -8672,7 +9092,7 @@ ALTER TABLE ONLY public.event_projections
 
 
 --
--- Name: event_store event_store_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: event_store event_store_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.event_store
@@ -8680,7 +9100,7 @@ ALTER TABLE ONLY public.event_store
 
 
 --
--- Name: event_store event_store_parent_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: event_store event_store_parent_event_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.event_store
@@ -8688,7 +9108,7 @@ ALTER TABLE ONLY public.event_store
 
 
 --
--- Name: event_store event_store_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: event_store event_store_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.event_store
@@ -8696,7 +9116,7 @@ ALTER TABLE ONLY public.event_store
 
 
 --
--- Name: event_store event_store_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: event_store event_store_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.event_store
@@ -8704,7 +9124,7 @@ ALTER TABLE ONLY public.event_store
 
 
 --
--- Name: dns_validation_results fk_dns_validation_results_persona_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: dns_validation_results fk_dns_validation_results_persona_id; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.dns_validation_results
@@ -8712,7 +9132,7 @@ ALTER TABLE ONLY public.dns_validation_results
 
 
 --
--- Name: http_keyword_results fk_http_keyword_results_campaign_proper; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: http_keyword_results fk_http_keyword_results_campaign_proper; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.http_keyword_results
@@ -8720,7 +9140,7 @@ ALTER TABLE ONLY public.http_keyword_results
 
 
 --
--- Name: http_keyword_results fk_http_keyword_results_persona_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: http_keyword_results fk_http_keyword_results_persona_id; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.http_keyword_results
@@ -8728,7 +9148,7 @@ ALTER TABLE ONLY public.http_keyword_results
 
 
 --
--- Name: http_keyword_results fk_http_keyword_results_proxy_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: http_keyword_results fk_http_keyword_results_proxy_id; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.http_keyword_results
@@ -8736,7 +9156,7 @@ ALTER TABLE ONLY public.http_keyword_results
 
 
 --
--- Name: lead_generation_campaigns fk_lead_generation_campaigns_current_phase_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: lead_generation_campaigns fk_lead_generation_campaigns_current_phase_id; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.lead_generation_campaigns
@@ -8744,7 +9164,7 @@ ALTER TABLE ONLY public.lead_generation_campaigns
 
 
 --
--- Name: generated_domains generated_domains_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: generated_domains generated_domains_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.generated_domains
@@ -8752,14 +9172,14 @@ ALTER TABLE ONLY public.generated_domains
 
 
 --
--- Name: CONSTRAINT generated_domains_campaign_id_fkey ON generated_domains; Type: COMMENT; Schema: public; Owner: -
+-- Name: CONSTRAINT generated_domains_campaign_id_fkey ON generated_domains; Type: COMMENT; Schema: public; Owner: domainflow
 --
 
 COMMENT ON CONSTRAINT generated_domains_campaign_id_fkey ON public.generated_domains IS 'Ensures all domains belong to valid campaigns';
 
 
 --
--- Name: http_keyword_results http_keyword_results_dns_result_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: http_keyword_results http_keyword_results_dns_result_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.http_keyword_results
@@ -8767,7 +9187,7 @@ ALTER TABLE ONLY public.http_keyword_results
 
 
 --
--- Name: http_keyword_results http_keyword_results_http_keyword_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: http_keyword_results http_keyword_results_http_keyword_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.http_keyword_results
@@ -8775,7 +9195,7 @@ ALTER TABLE ONLY public.http_keyword_results
 
 
 --
--- Name: keyword_rules keyword_rules_keyword_set_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: keyword_rules keyword_rules_keyword_set_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.keyword_rules
@@ -8783,7 +9203,7 @@ ALTER TABLE ONLY public.keyword_rules
 
 
 --
--- Name: lead_generation_campaigns lead_generation_campaigns_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: lead_generation_campaigns lead_generation_campaigns_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.lead_generation_campaigns
@@ -8791,7 +9211,7 @@ ALTER TABLE ONLY public.lead_generation_campaigns
 
 
 --
--- Name: pagination_performance_metrics pagination_performance_metrics_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: pagination_performance_metrics pagination_performance_metrics_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.pagination_performance_metrics
@@ -8799,7 +9219,7 @@ ALTER TABLE ONLY public.pagination_performance_metrics
 
 
 --
--- Name: pagination_performance_metrics pagination_performance_metrics_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: pagination_performance_metrics pagination_performance_metrics_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.pagination_performance_metrics
@@ -8807,7 +9227,7 @@ ALTER TABLE ONLY public.pagination_performance_metrics
 
 
 --
--- Name: proxy_pool_memberships proxy_pool_memberships_pool_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: proxy_pool_memberships proxy_pool_memberships_pool_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.proxy_pool_memberships
@@ -8815,7 +9235,7 @@ ALTER TABLE ONLY public.proxy_pool_memberships
 
 
 --
--- Name: proxy_pool_memberships proxy_pool_memberships_proxy_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: proxy_pool_memberships proxy_pool_memberships_proxy_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.proxy_pool_memberships
@@ -8823,7 +9243,7 @@ ALTER TABLE ONLY public.proxy_pool_memberships
 
 
 --
--- Name: query_performance_metrics query_performance_metrics_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: query_performance_metrics query_performance_metrics_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.query_performance_metrics
@@ -8831,7 +9251,7 @@ ALTER TABLE ONLY public.query_performance_metrics
 
 
 --
--- Name: query_performance_metrics query_performance_metrics_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: query_performance_metrics query_performance_metrics_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.query_performance_metrics
@@ -8839,7 +9259,7 @@ ALTER TABLE ONLY public.query_performance_metrics
 
 
 --
--- Name: resource_utilization_metrics resource_utilization_metrics_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: resource_utilization_metrics resource_utilization_metrics_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.resource_utilization_metrics
@@ -8847,7 +9267,7 @@ ALTER TABLE ONLY public.resource_utilization_metrics
 
 
 --
--- Name: security_events security_events_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: security_events security_events_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.security_events
@@ -8855,7 +9275,7 @@ ALTER TABLE ONLY public.security_events
 
 
 --
--- Name: security_events security_events_resolved_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: security_events security_events_resolved_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.security_events
@@ -8863,7 +9283,7 @@ ALTER TABLE ONLY public.security_events
 
 
 --
--- Name: security_events security_events_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: security_events security_events_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.security_events
@@ -8871,7 +9291,7 @@ ALTER TABLE ONLY public.security_events
 
 
 --
--- Name: security_events security_events_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: security_events security_events_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.security_events
@@ -8879,7 +9299,7 @@ ALTER TABLE ONLY public.security_events
 
 
 --
--- Name: service_architecture_metrics service_architecture_metrics_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: service_architecture_metrics service_architecture_metrics_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.service_architecture_metrics
@@ -8887,7 +9307,7 @@ ALTER TABLE ONLY public.service_architecture_metrics
 
 
 --
--- Name: service_capacity_metrics service_capacity_metrics_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: service_capacity_metrics service_capacity_metrics_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.service_capacity_metrics
@@ -8895,7 +9315,7 @@ ALTER TABLE ONLY public.service_capacity_metrics
 
 
 --
--- Name: service_dependencies service_dependencies_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+-- Name: service_dependencies service_dependencies_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: domainflow
 --
 
 ALTER TABLE ONLY public.service_dependencies

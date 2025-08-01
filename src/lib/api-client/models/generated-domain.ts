@@ -75,7 +75,7 @@ export interface GeneratedDomain {
      * @type {string}
      * @memberof GeneratedDomain
      */
-    'httpStatusCode'?: string;
+    'httpStatusCode'?: number;
     /**
      * 
      * @type {string}
@@ -99,7 +99,7 @@ export interface GeneratedDomain {
      * @type {string}
      * @memberof GeneratedDomain
      */
-    'leadScore'?: string;
+    'leadScore'?: number;
     /**
      * 
      * @type {string}
@@ -111,7 +111,7 @@ export interface GeneratedDomain {
      * @type {number}
      * @memberof GeneratedDomain
      */
-    'offsetIndex'?: number;
+    'offsetIndex': number;
     /**
      * 
      * @type {string}

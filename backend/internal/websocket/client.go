@@ -497,52 +497,6 @@ func CreateProxyStatusMessage(proxyID, status string, campaignID string) WebSock
 	}
 }
 
-// CreateDomainGenerationMessage creates a message for domain generation progress
-func CreateDomainGenerationMessage(campaignID string, domainsGenerated int64, totalDomains int64) WebSocketMessage {
-	progress := 0.0
-	if totalDomains > 0 {
-		progress = float64(domainsGenerated) / float64(totalDomains) * 100
-	}
-
-	return WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		Type:           "domain_generation_progress",
-		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
-		CampaignID:     campaignID,
-		Data: map[string]interface{}{
-			"domainsGenerated": domainsGenerated,
-			"totalDomains":     totalDomains,
-			"progress":         progress,
-			"status":           "generating",
-			"phase":            "domain_generation",
-		},
-	}
-}
-
-// CreateValidationProgressMessage creates a message for validation progress
-func CreateValidationProgressMessage(campaignID string, validationsProcessed int64, totalValidations int64, validationType string) WebSocketMessage {
-	progress := 0.0
-	if totalValidations > 0 {
-		progress = float64(validationsProcessed) / float64(totalValidations) * 100
-	}
-
-	return WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		Type:           "validation_progress",
-		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
-		CampaignID:     campaignID,
-		Data: map[string]interface{}{
-			"validationsProcessed": validationsProcessed,
-			"totalValidations":     totalValidations,
-			"progress":             progress,
-			"validationType":       validationType,
-			"phase":                validationType + "_validation",
-		},
-	}
-}
-
 // CreateSystemNotificationMessage creates a system-wide notification message
 func CreateSystemNotificationMessage(message string, level string) WebSocketMessage {
 	return WebSocketMessage{
@@ -558,60 +512,6 @@ func CreateSystemNotificationMessage(message string, level string) WebSocketMess
 }
 
 // Enhanced message creation functions for standardized WebSocket communication
-
-// CreateDomainGeneratedMessage creates a message for individual domain generation
-func CreateDomainGeneratedMessage(campaignID, domainID, domain string, offset, batchSize int) WebSocketMessage {
-	return WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		Type:           "domain_generated",
-		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
-		CampaignID:     campaignID,
-		Data: map[string]interface{}{
-			"domainId":  domainID,
-			"domain":    domain,
-			"offset":    offset,
-			"batchSize": batchSize,
-		},
-	}
-}
-
-// CreateDNSValidationResultMessage creates a DNS validation result message
-func CreateDNSValidationResultMessage(campaignID, domainID, domain, validationStatus string, attempts int, dnsRecords map[string]interface{}) WebSocketMessage {
-	return WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		Type:           "dns_validation_result",
-		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
-		CampaignID:     campaignID,
-		Data: map[string]interface{}{
-			"domainId":         domainID,
-			"domain":           domain,
-			"validationStatus": validationStatus, // resolved, unresolved, error, timeout
-			"dnsRecords":       dnsRecords,
-			"attempts":         attempts,
-		},
-	}
-}
-
-// CreateHTTPValidationResultMessage creates an HTTP validation result message
-func CreateHTTPValidationResultMessage(campaignID, domainID, domain, validationStatus string, statusCode int, keywordsFound []string, responseTime float64) WebSocketMessage {
-	return WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		Type:           "http_validation_result",
-		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
-		CampaignID:     campaignID,
-		Data: map[string]interface{}{
-			"domainId":         domainID,
-			"domain":           domain,
-			"validationStatus": validationStatus, // success, failed, timeout, error
-			"statusCode":       statusCode,
-			"keywordsFound":    keywordsFound,
-			"responseTime":     responseTime,
-		},
-	}
-}
 
 // CreateCampaignPhaseCompleteMessage creates a campaign phase completion message
 func CreateCampaignPhaseCompleteMessage(campaignID, phase string, completedItems, failedItems int, nextPhase string) WebSocketMessage {
@@ -720,7 +620,7 @@ func BroadcastCampaignProgress(campaignID string, progress float64, status strin
 		}
 		message := CreateCampaignProgressMessageV2(payload)
 
-		log.Printf("📤 [WEBSOCKET_BROADCAST_DEBUG] Broadcasting standardized campaign.progress message")
+		log.Printf("📤 [WEBSOCKET_BROADCAST_DEBUG] Broadcasting message with type: %s", message.Type)
 
 		// Convert to JSON for broadcasting
 		messageBytes, err := json.Marshal(message)
@@ -730,7 +630,7 @@ func BroadcastCampaignProgress(campaignID string, progress float64, status strin
 		}
 
 		broadcaster.BroadcastMessage(messageBytes)
-		log.Printf("✅ [WEBSOCKET_BROADCAST_DEBUG] Standardized campaign.progress message sent successfully")
+		log.Printf("✅ [WEBSOCKET_BROADCAST_DEBUG] Message sent successfully with type: %s", message.Type)
 	} else {
 		log.Printf("❌ [WEBSOCKET_BROADCAST_DEBUG] ERROR: No broadcaster available for campaign progress")
 	}
@@ -771,10 +671,8 @@ func BroadcastDomainGeneration(campaignID string, domainsGenerated int64, totalD
 		campaignID, domainsGenerated, totalDomains)
 
 	if broadcaster := GetBroadcaster(); broadcaster != nil {
-		message := CreateDomainGenerationMessage(campaignID, domainsGenerated, totalDomains)
-		log.Printf("📤 [WEBSOCKET_BROADCAST_DEBUG] Broadcasting domain generation progress message")
-		broadcaster.BroadcastToCampaign(campaignID, message)
-		log.Printf("✅ [WEBSOCKET_BROADCAST_DEBUG] Domain generation progress message sent successfully")
+		// Removed: message := CreateDomainGenerationMessage(campaignID, domainsGenerated, totalDomains)
+		log.Printf("Not broadcasting generated domains for campaign %s via websocket to reduce traffic", campaignID)
 	} else {
 		log.Printf("❌ [WEBSOCKET_BROADCAST_DEBUG] ERROR: No broadcaster available for domain generation")
 	}
@@ -997,72 +895,37 @@ func BroadcastKeywordSetListUpdate(action string, keywordSetID string, keywordSe
 	}
 }
 
-// BroadcastDashboardActivity broadcasts dashboard activity updates for real-time activity feed
+// BroadcastDashboardActivity - DEPRECATED: Dashboard activity now served via REST APIs only
+// Domain-level activity updates are no longer streamed via WebSocket
 func BroadcastDashboardActivity(campaignID string, domainName string, activity string, status string, phase string) {
-	log.Printf("[DIAGNOSTIC] BroadcastDashboardActivity called: campaignID=%s, domain=%s, activity=%s", campaignID, domainName, activity)
-
-	message := WebSocketMessage{
-		Type:    "dashboard_activity",
-		Message: "Dashboard activity updated",
-		Data: map[string]interface{}{
-			"campaignId": campaignID,
-			"domain":     domainName,
-			"activity":   activity,
-			"status":     status,
-			"phase":      phase,
-			"timestamp":  time.Now().Format(time.RFC3339),
-		},
-	}
-
-	broadcaster := GetBroadcaster()
-	if broadcaster != nil {
-		// Broadcast to all clients (dashboard updates are global)
-		broadcaster.BroadcastToCampaign("", message)
-	}
+	log.Printf("[DEPRECATED] BroadcastDashboardActivity disabled: campaignID=%s, domain=%s, activity=%s", campaignID, domainName, activity)
+	log.Printf("[REFACTOR] Domain activity data should be fetched via REST API polling or bulk data endpoints")
+	// Dashboard activity broadcasting disabled - use REST APIs for domain data fetching
 }
 
-// BroadcastDomainGenerated broadcasts when a domain is generated for dashboard activity
+// REFACTORED: Domain data broadcasting removed - use REST APIs for domain data
+// These functions are deprecated and should be removed after migration to REST-only domain data
+
+// BroadcastDomainGenerated - DEPRECATED: Domain data now served via REST APIs only
+// This function is retained for backwards compatibility during migration but will be removed
 func BroadcastDomainGenerated(campaignID string, domainName string, domainCount int) {
-	log.Printf("[DIAGNOSTIC] BroadcastDomainGenerated called: campaignID=%s, domain=%s", campaignID, domainName)
-	BroadcastDashboardActivity(campaignID, domainName, "Domain Generated", "generating", "DomainGeneration")
+	log.Printf("[DEPRECATED] BroadcastDomainGenerated called but disabled: campaignID=%s, domain=%s", campaignID, domainName)
+	log.Printf("[REFACTOR] Domain data should be fetched via REST API /campaigns/{id}/domains or bulk enriched data endpoint")
+	// Domain broadcasting disabled - use REST APIs for domain data fetching
 }
 
-// BroadcastDNSValidationResult broadcasts DNS validation results for dashboard activity
+// BroadcastDNSValidationResult - DEPRECATED: DNS validation results now served via REST APIs only
 func BroadcastDNSValidationResult(campaignID string, domainName string, validationStatus string) {
-	log.Printf("[DIAGNOSTIC] BroadcastDNSValidationResult called: campaignID=%s, domain=%s, status=%s", campaignID, domainName, validationStatus)
-	status := "validated"
-	if validationStatus != "valid" && validationStatus != "success" {
-		status = "not_validated"
-	}
-	BroadcastDashboardActivity(campaignID, domainName, "DNS Validation", status, "DNSValidation")
+	log.Printf("[DEPRECATED] BroadcastDNSValidationResult called but disabled: campaignID=%s, domain=%s, status=%s", campaignID, domainName, validationStatus)
+	log.Printf("[REFACTOR] DNS validation data should be fetched via REST API /campaigns/{id}/domains or bulk enriched data endpoint")
+	// DNS validation broadcasting disabled - use REST APIs for domain data fetching
 }
 
-// BroadcastHTTPValidationResult broadcasts HTTP validation results for dashboard activity
+// BroadcastHTTPValidationResult - DEPRECATED: HTTP validation results now served via REST APIs only
 func BroadcastHTTPValidationResult(campaignID string, domainName string, validationStatus string, leadScore int) {
-	log.Printf("[DIAGNOSTIC] BroadcastHTTPValidationResult called: campaignID=%s, domain=%s, status=%s", campaignID, domainName, validationStatus)
-	status := "scanned"
-	if validationStatus != "valid" && validationStatus != "success" {
-		status = "not_validated"
-	}
-
-	message := WebSocketMessage{
-		Type:    "dashboard_activity",
-		Message: "HTTP validation and lead scoring completed",
-		Data: map[string]interface{}{
-			"campaignId": campaignID,
-			"domain":     domainName,
-			"activity":   "HTTP Validation & Lead Scan",
-			"status":     status,
-			"phase":      "HTTPValidation",
-			"leadScore":  leadScore,
-			"timestamp":  time.Now().Format(time.RFC3339),
-		},
-	}
-
-	broadcaster := GetBroadcaster()
-	if broadcaster != nil {
-		broadcaster.BroadcastToCampaign("", message)
-	}
+	log.Printf("[DEPRECATED] BroadcastHTTPValidationResult called but disabled: campaignID=%s, domain=%s, status=%s", campaignID, domainName, validationStatus)
+	log.Printf("[REFACTOR] HTTP validation data should be fetched via REST API /campaigns/{id}/domains or bulk enriched data endpoint")
+	// HTTP validation broadcasting disabled - use REST APIs for domain data fetching
 }
 
 // CreateCampaignListUpdateMessage creates a campaign list update message
@@ -1091,10 +954,8 @@ func BroadcastValidationProgress(campaignID string, validationsProcessed int64, 
 		campaignID, validationsProcessed, totalValidations, validationType)
 
 	if broadcaster := GetBroadcaster(); broadcaster != nil {
-		message := CreateValidationProgressMessage(campaignID, validationsProcessed, totalValidations, validationType)
-		log.Printf("📤 [WEBSOCKET_BROADCAST_DEBUG] Broadcasting validation progress message: %+v", message)
-		broadcaster.BroadcastToCampaign(campaignID, message)
-		log.Printf("✅ [WEBSOCKET_BROADCAST_DEBUG] Validation progress message sent successfully")
+		// Removed: message := CreateValidationProgressMessage(campaignID, validationsProcessed, totalValidations, validationType)
+		log.Printf("Not broadcasting validation progress for campaign %s via websocket to reduce traffic", campaignID)
 	} else {
 		log.Printf("❌ [WEBSOCKET_BROADCAST_DEBUG] ERROR: No broadcaster available for validation progress")
 	}

@@ -29,7 +29,7 @@ const convertToComponentProxy = (frontendProxy: FrontendProxy): Proxy => ({
   ...frontendProxy,
   failureCount: frontendProxy.failureCount?.toString(),
   successCount: frontendProxy.successCount?.toString(),
-  latencyMs: frontendProxy.latencyMs?.toString(),
+  latencyMs: frontendProxy.latencyMs, // Keep as number now that type is fixed
   port: frontendProxy.port?.toString(),
   protocol: frontendProxy.protocol as "http" | "https" | "socks5" | "socks4" | undefined,
   status: frontendProxy.status as "Active" | "Disabled" | "Testing" | "Failed" | undefined,
@@ -239,7 +239,7 @@ function ProxiesPageContent() {
       const response = await updateProxy(proxy.id, payload);
       if (response.success && response.data) {
         toast({ title: `Proxy ${newStatus === 'Active' ? 'Enabled' : 'Disabled'}`, description: `Proxy ${proxy.address} is now ${newStatus.toLowerCase()}.`});
-        setProxies(prev => prev.map(p => p.id === proxy.id ? response.data! : p));
+        setProxies(prev => prev.map(p => p.id === proxy.id ? response.data! as Proxy : p));
       } else {
         toast({ title: "Error Updating Proxy Status", description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Failed to update proxy status.", variant: "destructive" });
       }

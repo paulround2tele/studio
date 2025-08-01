@@ -1,12 +1,8 @@
 package websocket
 
 import (
-	"crypto/sha256"
 	"encoding/json"
-	"fmt"
 	"log"
-	"math/rand"
-	"sync/atomic"
 	"time"
 )
 
@@ -36,42 +32,6 @@ type CampaignStatusPayload struct {
 	CurrentPhase string `json:"currentPhase,omitempty"`
 	Message      string `json:"message,omitempty"`
 	ErrorCode    string `json:"errorCode,omitempty"`
-}
-
-// DomainGenerationPayload represents domain generation events
-type DomainGenerationPayload struct {
-	CampaignID     string `json:"campaignId"`
-	DomainID       string `json:"domainId"`
-	Domain         string `json:"domain"`
-	Offset         int64  `json:"offset"`
-	BatchSize      int    `json:"batchSize"`
-	TotalGenerated int64  `json:"totalGenerated"`
-}
-
-// DNSValidationPayload represents DNS validation results
-type DNSValidationPayload struct {
-	CampaignID       string                 `json:"campaignId"`
-	DomainID         string                 `json:"domainId"`
-	Domain           string                 `json:"domain"`
-	ValidationStatus string                 `json:"validationStatus"`
-	DNSRecords       map[string]interface{} `json:"dnsRecords,omitempty"`
-	Attempts         int                    `json:"attempts"`
-	ProcessingTime   int64                  `json:"processingTime"` // milliseconds
-	TotalValidated   int64                  `json:"totalValidated"`
-}
-
-// HTTPValidationPayload represents HTTP validation results
-type HTTPValidationPayload struct {
-	CampaignID       string                 `json:"campaignId"`
-	DomainID         string                 `json:"domainId"`
-	Domain           string                 `json:"domain"`
-	ValidationStatus string                 `json:"validationStatus"`
-	HTTPStatus       int                    `json:"httpStatus,omitempty"`
-	Keywords         []string               `json:"keywords,omitempty"`
-	Content          string                 `json:"content,omitempty"`
-	Headers          map[string]interface{} `json:"headers,omitempty"`
-	ProcessingTime   int64                  `json:"processingTime"` // milliseconds
-	TotalValidated   int64                  `json:"totalValidated"`
 }
 
 // SystemNotificationPayload represents system-wide notifications
@@ -115,7 +75,7 @@ func CreateCampaignListUpdateMessageV2(payload CampaignListUpdatePayload) Standa
 func CreateCampaignProgressMessageV2(payload CampaignProgressPayload) StandardizedWebSocketMessage {
 	data, _ := json.Marshal(payload)
 	return StandardizedWebSocketMessage{
-		Type:      "campaign.progress",
+		Type:      "campaign_progress", // Fixed: Use underscore to match frontend expectations
 		Timestamp: time.Now(),
 		Data:      data,
 	}
@@ -125,37 +85,7 @@ func CreateCampaignProgressMessageV2(payload CampaignProgressPayload) Standardiz
 func CreateCampaignStatusMessageV2(payload CampaignStatusPayload) StandardizedWebSocketMessage {
 	data, _ := json.Marshal(payload)
 	return StandardizedWebSocketMessage{
-		Type:      "campaign.status",
-		Timestamp: time.Now(),
-		Data:      data,
-	}
-}
-
-// CreateDomainGenerationMessageV2 creates a standardized domain generation message
-func CreateDomainGenerationMessageV2(payload DomainGenerationPayload) StandardizedWebSocketMessage {
-	data, _ := json.Marshal(payload)
-	return StandardizedWebSocketMessage{
-		Type:      "domain.generated",
-		Timestamp: time.Now(),
-		Data:      data,
-	}
-}
-
-// CreateDNSValidationMessageV2 creates a standardized DNS validation message
-func CreateDNSValidationMessageV2(payload DNSValidationPayload) StandardizedWebSocketMessage {
-	data, _ := json.Marshal(payload)
-	return StandardizedWebSocketMessage{
-		Type:      "dns.validation.result",
-		Timestamp: time.Now(),
-		Data:      data,
-	}
-}
-
-// CreateHTTPValidationMessageV2 creates a standardized HTTP validation message
-func CreateHTTPValidationMessageV2(payload HTTPValidationPayload) StandardizedWebSocketMessage {
-	data, _ := json.Marshal(payload)
-	return StandardizedWebSocketMessage{
-		Type:      "http.validation.result",
+		Type:      "campaign_status", // Fixed: Use underscore to match frontend expectations
 		Timestamp: time.Now(),
 		Data:      data,
 	}
@@ -253,62 +183,6 @@ type WebSocketEventSequence struct {
 	EventHash       string `json:"eventHash"`      // Hash for deduplication
 	PreviousEventID string `json:"previousEventId,omitempty"`
 	CheckpointData  bool   `json:"checkpointData"` // Whether this event includes full state
-}
-
-// Enhanced message structure with sequence tracking
-type SequencedWebSocketMessage struct {
-	StandardizedWebSocketMessage
-	Sequence WebSocketEventSequence `json:"sequence"`
-}
-
-// CreateSequencedMessage wraps a standard message with sequence information
-func CreateSequencedMessage(campaignID string, message StandardizedWebSocketMessage, isCheckpoint bool) SequencedWebSocketMessage {
-	eventID := generateEventID()
-	sequenceNum := atomic.AddInt64(&globalSequenceCounter, 1)
-
-	sequence := WebSocketEventSequence{
-		CampaignID:     campaignID,
-		EventID:        eventID,
-		SequenceNumber: sequenceNum,
-		EventHash:      generateEventHash(message),
-		CheckpointData: isCheckpoint,
-	}
-
-	return SequencedWebSocketMessage{
-		StandardizedWebSocketMessage: message,
-		Sequence:                     sequence,
-	}
-}
-
-// generateEventID creates a unique event identifier
-func generateEventID() string {
-	return fmt.Sprintf("evt_%d_%s", time.Now().UnixNano(), randomString(8))
-}
-
-// generateEventHash creates a hash for event deduplication
-func generateEventHash(message StandardizedWebSocketMessage) string {
-	data, _ := json.Marshal(message)
-	hash := sha256.Sum256(data)
-	return fmt.Sprintf("%x", hash)[:16]
-}
-
-// randomString generates a cryptographically secure random string of specified length
-func randomString(length int) string {
-	const charset = "abcdefghijklmnopqrstuvwxyz0123456789"
-	b := make([]byte, length)
-	randBytes := make([]byte, length)
-	_, err := rand.Read(randBytes)
-	if err != nil {
-		// Fallback to timestamp-based randomness if crypto/rand fails
-		for i := range b {
-			b[i] = charset[time.Now().UnixNano()%int64(len(charset))]
-		}
-		return string(b)
-	}
-	for i := range b {
-		b[i] = charset[int(randBytes[i])%len(charset)]
-	}
-	return string(b)
 }
 
 // BroadcastStandardizedMessage broadcasts a standardized message to campaign subscribers

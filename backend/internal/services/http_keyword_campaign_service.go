@@ -818,13 +818,19 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 	}
 
 	if campaign.PhaseStatus != nil && *campaign.PhaseStatus == models.PhaseStatusNotStarted {
-		status := models.PhaseStatusInProgress
-		campaign.PhaseStatus = &status
+		// Use phase-first approach: Update HTTP validation phase to 'in_progress'
+		// The database trigger will automatically sync the campaign table
+		err := s.campaignStore.UpdatePhaseStatus(ctx, querier, campaignID, models.PhaseTypeHTTPKeywordValidation, models.PhaseStatusInProgress)
+		if err != nil {
+			opErr = fmt.Errorf("failed to mark HTTP validation phase as running for campaign %s: %w", campaignID, err)
+			return false, 0, opErr
+		}
+
+		// Update started_at timestamp directly on campaign (this doesn't conflict with trigger)
 		now := time.Now().UTC()
 		campaign.StartedAt = &now
 		if errUpdateCamp := s.campaignStore.UpdateCampaign(ctx, querier, campaign); errUpdateCamp != nil {
-			opErr = fmt.Errorf("failed to mark campaign %s as running: %w", campaignID, errUpdateCamp)
-			return false, 0, opErr
+			log.Printf("WARNING: Failed to update started_at for campaign %s: %v", campaignID, errUpdateCamp)
 		}
 	}
 
@@ -881,30 +887,38 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 
 	if *campaign.TotalItems > 0 && *campaign.ProcessedItems >= *campaign.TotalItems {
 		log.Printf("ProcessHTTPKeywordCampaignBatch: Campaign %s already processed all %d items. Marking complete and transitioning to analysis phase.", campaignID, *campaign.TotalItems)
-		status := models.PhaseStatusCompleted
-		campaign.PhaseStatus = &status
+
+		// Use phase-first approach: Complete HTTP validation phase
+		// The database trigger will automatically sync the campaign table
+		err := s.campaignStore.CompletePhase(ctx, querier, campaignID, models.PhaseTypeHTTPKeywordValidation)
+		if err != nil {
+			opErr = fmt.Errorf("failed to complete HTTP validation phase for campaign %s: %w", campaignID, err)
+			return false, 0, opErr
+		}
+
+		// Update progress and completion timestamp directly on campaign (doesn't conflict with trigger)
 		campaign.ProgressPercentage = models.Float64Ptr(100.0)
 		now := time.Now().UTC()
 		campaign.CompletedAt = &now
-
-		// AUTOMATIC PHASE TRANSITION: Set currentPhase to analysis
-		analysisPhase := models.PhaseTypeAnalysis
-		campaign.CurrentPhase = &analysisPhase
 
 		opErr = s.campaignStore.UpdateCampaign(ctx, querier, campaign)
 		return true, 0, opErr
 	}
 	if *campaign.TotalItems == 0 {
 		log.Printf("ProcessHTTPKeywordCampaignBatch: Campaign %s has 0 TotalItems. Marking complete and transitioning to analysis phase.", campaignID)
-		status := models.PhaseStatusCompleted
-		campaign.PhaseStatus = &status
+
+		// Use phase-first approach: Complete HTTP validation phase
+		// The database trigger will automatically sync the campaign table
+		err := s.campaignStore.CompletePhase(ctx, querier, campaignID, models.PhaseTypeHTTPKeywordValidation)
+		if err != nil {
+			opErr = fmt.Errorf("failed to complete HTTP validation phase for campaign %s: %w", campaignID, err)
+			return false, 0, opErr
+		}
+
+		// Update progress and completion timestamp directly on campaign (doesn't conflict with trigger)
 		campaign.ProgressPercentage = models.Float64Ptr(100.0)
 		now := time.Now().UTC()
 		campaign.CompletedAt = &now
-
-		// AUTOMATIC PHASE TRANSITION: Set currentPhase to analysis
-		analysisPhase := models.PhaseTypeAnalysis
-		campaign.CurrentPhase = &analysisPhase
 
 		opErr = s.campaignStore.UpdateCampaign(ctx, querier, campaign)
 		return true, 0, opErr
@@ -941,15 +955,18 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 		}
 
 		if *campaign.TotalItems > 0 && *campaign.ProcessedItems >= *campaign.TotalItems {
-			status := models.PhaseStatusCompleted
-			campaign.PhaseStatus = &status
+			// Use phase-first approach: Complete HTTP validation phase
+			// The database trigger will automatically sync the campaign table
+			err := s.campaignStore.CompletePhase(ctx, querier, campaignID, models.PhaseTypeHTTPKeywordValidation)
+			if err != nil {
+				opErr = fmt.Errorf("failed to complete HTTP validation phase for campaign %s: %w", campaignID, err)
+				return false, 0, opErr
+			}
+
+			// Update progress and completion timestamp directly on campaign (doesn't conflict with trigger)
 			campaign.ProgressPercentage = models.Float64Ptr(100.0)
 			now := time.Now().UTC()
 			campaign.CompletedAt = &now
-
-			// AUTOMATIC PHASE TRANSITION: Set currentPhase to analysis
-			analysisPhase := models.PhaseTypeAnalysis
-			campaign.CurrentPhase = &analysisPhase
 
 			log.Printf("ProcessHTTPKeywordCampaignBatch: All items processed for HTTP campaign %s. Marking complete and transitioning to analysis phase.", campaignID)
 			done = true
@@ -1209,9 +1226,6 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 		}
 
 		dbResults = append(dbResults, dbRes)
-
-		// CRITICAL FIX: Broadcast individual HTTP validation results via WebSocket
-		s.streamHTTPResultWithFallback(batchCtx, campaignID.String(), dnsRecord.DomainName, dbRes)
 	}
 
 	if batchProcessingContextErr != nil {
@@ -1379,51 +1393,4 @@ func (s *httpKeywordCampaignServiceImpl) ProcessHTTPKeywordCampaignBatch(ctx con
 	log.Printf("ProcessHTTPKeywordCampaignBatch: Finished batch for campaign %s. Processed: %d, DoneForJob: %t. LastDomainCursor: %s. CampaignProcessed: %d/%d, Final opErr: %v",
 		campaignID, processedInThisBatch, done, lastDomainCursor, processedItemsVal, totalItemsVal, opErr)
 	return done, processedInThisBatch, opErr
-}
-
-// streamHTTPResultWithFallback attempts to stream HTTP validation results with fallback mechanisms
-// This mirrors the DNS validation pattern to provide real-time domain status updates
-func (s *httpKeywordCampaignServiceImpl) streamHTTPResultWithFallback(ctx context.Context, campaignID string, domainName string, result *models.HTTPKeywordResult) error {
-	// Create HTTP validation payload for WebSocket broadcasting
-	payload := websocket.HTTPValidationPayload{
-		CampaignID:       campaignID,
-		DomainID:         result.ID.String(),
-		Domain:           domainName,
-		ValidationStatus: result.ValidationStatus,
-		ProcessingTime:   0, // Could add timing if needed
-		TotalValidated:   0, // Could add count if needed
-	}
-
-	// Add HTTP status if available
-	if result.HTTPStatusCode != nil {
-		payload.HTTPStatus = int(*result.HTTPStatusCode)
-	}
-
-	// Add found keywords if available
-	if result.FoundKeywordsFromSets != nil {
-		// Parse the JSON to extract keywords
-		// This is a simplified approach - could be enhanced
-		payload.Keywords = []string{} // Placeholder
-	}
-
-	// Primary attempt: Use WebSocket broadcaster
-	broadcaster := websocket.GetBroadcaster()
-	if broadcaster != nil {
-		// Create and broadcast message directly
-		message := websocket.WebSocketMessage{
-			ID:         uuid.New().String(),
-			Timestamp:  time.Now().Format(time.RFC3339),
-			Type:       "http.validation.result",
-			CampaignID: campaignID,
-			Data:       payload,
-		}
-
-		// Broadcast message
-		broadcaster.BroadcastToCampaign(campaignID, message)
-		log.Printf("✅ [HTTP_STREAMING_SUCCESS] WebSocket broadcast successful for campaign %s, domain %s, type: %s", campaignID, domainName, message.Type)
-		return nil
-	} else {
-		log.Printf("⚠️ [HTTP_STREAMING_WARNING] No WebSocket broadcaster available for campaign %s, domain %s", campaignID, domainName)
-		return fmt.Errorf("no WebSocket broadcaster available")
-	}
 }

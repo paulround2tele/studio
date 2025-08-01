@@ -349,7 +349,7 @@ func (s *campaignStorePostgres) UpdateCampaignStatus(ctx context.Context, exec s
 }
 
 func (s *campaignStorePostgres) UpdateCampaignProgress(ctx context.Context, exec store.Querier, id uuid.UUID, processedItems, totalItems int64, progressPercentage float64) error {
-	// First, update the progress and set status to 'running' if it's not already completed or failed
+	// First, update the progress and set status to 'in_progress' if it's not already completed or failed
 	query := `UPDATE lead_generation_campaigns
 		SET processed_items = $1,
 			total_items = $2, 
@@ -375,6 +375,24 @@ func (s *campaignStorePostgres) UpdateCampaignProgress(ctx context.Context, exec
 	}
 
 	return nil
+}
+
+func (s *campaignStorePostgres) UpdateCampaignPhaseFields(ctx context.Context, exec store.Querier, id uuid.UUID, currentPhase *models.PhaseTypeEnum, phaseStatus *models.PhaseStatusEnum) error {
+	// Use the store's database connection if no executor is provided
+	if exec == nil {
+		exec = s.db
+	}
+
+	query := `UPDATE lead_generation_campaigns SET current_phase = $1, phase_status = $2, updated_at = NOW() WHERE id = $3`
+	result, err := exec.ExecContext(ctx, query, currentPhase, phaseStatus, id)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err == nil && rowsAffected == 0 {
+		return store.ErrNotFound
+	}
+	return err
 }
 
 // --- Domain Generation Campaign Params --- //
@@ -1686,6 +1704,252 @@ func (s *campaignStorePostgres) UpdateDomainsBulkHTTPStatus(ctx context.Context,
 
 	rowsAffected, _ := result.RowsAffected()
 	log.Printf("Bulk updated HTTP status for %d domains", rowsAffected)
+	return nil
+}
+
+// --- Campaign Phase Management --- //
+
+func (s *campaignStorePostgres) CreateCampaignPhases(ctx context.Context, exec store.Querier, campaignID uuid.UUID) error {
+	// Create the four standard phases for lead generation campaigns
+	phases := []struct {
+		phaseType models.PhaseTypeEnum
+		order     int
+	}{
+		{models.PhaseTypeDomainGeneration, 1},
+		{models.PhaseTypeDNSValidation, 2},
+		{models.PhaseTypeHTTPKeywordValidation, 3},
+		{models.PhaseTypeAnalysis, 4},
+	}
+
+	now := time.Now()
+	query := `
+		INSERT INTO campaign_phases (
+			id, campaign_id, phase_type, phase_order, status, progress_percentage,
+			started_at, completed_at, error_message, created_at, updated_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
+
+	for _, phase := range phases {
+		phaseID := uuid.New()
+		_, err := exec.ExecContext(ctx, query,
+			phaseID,
+			campaignID,
+			phase.phaseType,
+			phase.order,
+			models.PhaseStatusNotStarted,
+			0.0,
+			nil, // started_at
+			nil, // completed_at
+			nil, // error_message
+			now,
+			now,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to create campaign phase %s: %w", phase.phaseType, err)
+		}
+	}
+
+	log.Printf("Created standard campaign phases for campaign %s", campaignID)
+	return nil
+}
+
+func (s *campaignStorePostgres) GetCampaignPhases(ctx context.Context, exec store.Querier, campaignID uuid.UUID) ([]*models.CampaignPhase, error) {
+	query := `
+		SELECT id, campaign_id, phase_type, phase_order, status, progress_percentage,
+		       started_at, completed_at, error_message, created_at, updated_at
+		FROM campaign_phases
+		WHERE campaign_id = $1
+		ORDER BY phase_order ASC`
+
+	var phases []*models.CampaignPhase
+	err := exec.SelectContext(ctx, &phases, query, campaignID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query campaign phases: %w", err)
+	}
+
+	return phases, nil
+}
+
+func (s *campaignStorePostgres) GetCampaignPhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) (*models.CampaignPhase, error) {
+	query := `
+		SELECT id, campaign_id, phase_type, phase_order, status, progress_percentage,
+		       started_at, completed_at, error_message, created_at, updated_at
+		FROM campaign_phases
+		WHERE campaign_id = $1 AND phase_type = $2`
+
+	phase := &models.CampaignPhase{}
+	err := exec.GetContext(ctx, phase, query, campaignID, phaseType)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("phase %s not found for campaign %s", phaseType, campaignID)
+		}
+		return nil, fmt.Errorf("failed to get campaign phase: %w", err)
+	}
+
+	return phase, nil
+}
+
+func (s *campaignStorePostgres) UpdatePhaseStatus(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, status models.PhaseStatusEnum) error {
+	now := time.Now()
+	query := `
+		UPDATE campaign_phases 
+		SET status = $1,
+		    updated_at = $2
+		WHERE campaign_id = $3 AND phase_type = $4`
+
+	result, err := exec.ExecContext(ctx, query, status, now, campaignID, phaseType)
+	if err != nil {
+		return fmt.Errorf("failed to update status for phase %s in campaign %s: %w", phaseType, campaignID, err)
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("no phase %s found for campaign %s", phaseType, campaignID)
+	}
+
+	log.Printf("Updated phase %s status to %s for campaign %s", phaseType, status, campaignID)
+	return nil
+}
+
+func (s *campaignStorePostgres) UpdatePhaseProgress(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, progress float64, totalItems, processedItems, successfulItems, failedItems *int64) error {
+	now := time.Now()
+	query := `
+		UPDATE campaign_phases 
+		SET progress_percentage = $1,
+		    total_items = $2,
+		    processed_items = $3,
+		    successful_items = $4,
+		    failed_items = $5,
+		    updated_at = $6
+		WHERE campaign_id = $7 AND phase_type = $8`
+
+	result, err := exec.ExecContext(ctx, query, progress, totalItems, processedItems, successfulItems, failedItems, now, campaignID, phaseType)
+	if err != nil {
+		return fmt.Errorf("failed to update progress for phase %s in campaign %s: %w", phaseType, campaignID, err)
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("no phase %s found for campaign %s", phaseType, campaignID)
+	}
+
+	log.Printf("Updated phase %s progress to %.1f%% for campaign %s", phaseType, progress, campaignID)
+	return nil
+}
+
+func (s *campaignStorePostgres) UpdatePhaseConfiguration(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, config json.RawMessage) error {
+	now := time.Now()
+	query := `
+		UPDATE campaign_phases 
+		SET configuration = $1,
+		    updated_at = $2
+		WHERE campaign_id = $3 AND phase_type = $4`
+
+	result, err := exec.ExecContext(ctx, query, config, now, campaignID, phaseType)
+	if err != nil {
+		return fmt.Errorf("failed to update configuration for phase %s in campaign %s: %w", phaseType, campaignID, err)
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("no phase %s found for campaign %s", phaseType, campaignID)
+	}
+
+	log.Printf("Updated phase %s configuration for campaign %s", phaseType, campaignID)
+	return nil
+}
+
+func (s *campaignStorePostgres) CompletePhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error {
+	now := time.Now()
+	query := `
+		UPDATE campaign_phases 
+		SET status = 'completed',
+		    progress_percentage = 100.0,
+		    completed_at = $1,
+		    updated_at = $1
+		WHERE campaign_id = $2 AND phase_type = $3 AND status != 'completed'`
+
+	result, err := exec.ExecContext(ctx, query, now, campaignID, phaseType)
+	if err != nil {
+		return fmt.Errorf("failed to complete phase %s for campaign %s: %w", phaseType, campaignID, err)
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		log.Printf("No phase %s found to complete for campaign %s (may already be completed)", phaseType, campaignID)
+	} else {
+		log.Printf("Completed phase %s for campaign %s", phaseType, campaignID)
+	}
+
+	return nil
+}
+
+func (s *campaignStorePostgres) StartPhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error {
+	now := time.Now()
+	query := `
+		UPDATE campaign_phases 
+		SET status = 'in_progress',
+		    started_at = $1,
+		    updated_at = $1
+		WHERE campaign_id = $2 AND phase_type = $3 AND status = 'not_started'`
+
+	result, err := exec.ExecContext(ctx, query, now, campaignID, phaseType)
+	if err != nil {
+		return fmt.Errorf("failed to start phase %s for campaign %s: %w", phaseType, campaignID, err)
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		log.Printf("No phase %s found to start for campaign %s (may already be started)", phaseType, campaignID)
+	} else {
+		log.Printf("Started phase %s for campaign %s", phaseType, campaignID)
+	}
+
+	return nil
+}
+
+func (s *campaignStorePostgres) PausePhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error {
+	now := time.Now()
+	query := `
+		UPDATE campaign_phases 
+		SET status = 'paused',
+		    updated_at = $1
+		WHERE campaign_id = $2 AND phase_type = $3 AND status = 'in_progress'`
+
+	result, err := exec.ExecContext(ctx, query, now, campaignID, phaseType)
+	if err != nil {
+		return fmt.Errorf("failed to pause phase %s for campaign %s: %w", phaseType, campaignID, err)
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		log.Printf("No in_progress phase %s found to pause for campaign %s", phaseType, campaignID)
+	} else {
+		log.Printf("Paused phase %s for campaign %s", phaseType, campaignID)
+	}
+
+	return nil
+}
+
+func (s *campaignStorePostgres) FailPhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, errorMessage string) error {
+	now := time.Now()
+	query := `
+		UPDATE campaign_phases 
+		SET status = 'failed',
+		    error_message = $1,
+		    updated_at = $2
+		WHERE campaign_id = $3 AND phase_type = $4`
+
+	result, err := exec.ExecContext(ctx, query, errorMessage, now, campaignID, phaseType)
+	if err != nil {
+		return fmt.Errorf("failed to fail phase %s for campaign %s: %w", phaseType, campaignID, err)
+	}
+
+	rowsAffected, _ := result.RowsAffected()
+	if rowsAffected == 0 {
+		return fmt.Errorf("no phase %s found for campaign %s", phaseType, campaignID)
+	}
+
+	log.Printf("Failed phase %s for campaign %s: %s", phaseType, campaignID, errorMessage)
 	return nil
 }
 

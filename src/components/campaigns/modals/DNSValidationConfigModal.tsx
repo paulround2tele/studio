@@ -15,22 +15,18 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 
 // Import types and services - using the EXACT same pattern as campaign form
 import type { components } from '@/lib/api-client/types';
+import { PersonaResponse } from '@/lib/api-client/models/persona-response';
+import { Proxy } from '@/lib/api-client/models/proxy';
 import { getPersonas } from '@/lib/services/personaService';
+import { getProxies } from '@/lib/services/proxyService.production';
 import { campaignsApi } from '@/lib/api-client/client';
 import type { DNSValidationConfig } from '@/lib/api-client/models/dnsvalidation-config';
 import type { PhaseConfigureRequest } from '@/lib/api-client/models/phase-configure-request';
 // PhaseConfigureRequestPhaseTypeEnum removed - using direct string literals now
 
-// Response types from OpenAPI - using exact same types as campaign form
-type PersonaBase = components['schemas']['PersonaResponse'];
-
-interface PersonaResponse extends PersonaBase {
-  status?: "Active" | "Disabled" | "Testing" | "Failed";
-  tags?: string[];
-}
-
 interface DNSValidationFormValues {
   personaIds: string[];
+  proxyIds?: string[]; // Optional proxy selection
   name: string;
 }
 
@@ -52,7 +48,8 @@ export default function DNSValidationConfigModal({
   const { toast } = useToast();
   
   // Data state - following campaign form pattern
-  const [dnsPersonas, setDnsPersonas] = useState<PersonaResponse[]>([]);
+  const [dnsPersonas, setDnsPersonas] = useState<any[]>([]);
+  const [proxies, setProxies] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [configuring, setConfiguring] = useState(false);
 
@@ -60,34 +57,51 @@ export default function DNSValidationConfigModal({
   const form = useForm<DNSValidationFormValues>({
     defaultValues: {
       personaIds: [],
+      proxyIds: [],
       name: `DNS Validation - ${new Date().toLocaleDateString()}`,
     }
   });
 
   const watchedPersonaIds = form.watch('personaIds');
+  const watchedProxyIds = form.watch('proxyIds') || [];
 
-  // Load DNS personas on mount - using exact same pattern as campaign form
+    // Load DNS personas and proxies on mount - using exact same pattern as campaign form
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoadingData(true);
-        const response = await getPersonas('dns');
         
-        // FIXED: Response already properly handled by personaService using extractResponseData
-        const personas = response.success ? (response.data || []) : [];
+        // Load personas and proxies in parallel
+        const [personasResponse, proxiesResponse] = await Promise.all([
+          getPersonas('dns'),
+          getProxies()
+        ]);
         
-        // Filter for DNS personas only (already filtered by type, but add safety checks)
-        const dnsOnly = personas.filter(p =>
-          p.personaType === 'dns' &&
-          p.isEnabled
+        // Extract data from API responses - same pattern as personas page
+        const personas = (personasResponse.success && personasResponse.data) 
+          ? Array.isArray(personasResponse.data) ? personasResponse.data : [] 
+          : [];
+        const proxies = (proxiesResponse.success && proxiesResponse.data) 
+          ? Array.isArray(proxiesResponse.data) ? proxiesResponse.data : [] 
+          : [];
+        
+        // Filter for active DNS personas only
+        const dnsPersonas = personas.filter((persona: any) => 
+          persona.personaType === 'dns' && persona.isEnabled === true
         );
         
-        setDnsPersonas(dnsOnly);
+        // Filter for active proxies only  
+        const activeProxies = proxies.filter((proxy: any) => 
+          proxy.isEnabled === true
+        );
+        
+        setDnsPersonas(dnsPersonas);
+        setProxies(activeProxies);
       } catch (error) {
-        console.error('Failed to load DNS personas:', error);
+        console.error('Failed to load DNS personas and proxies:', error);
         toast({
-          title: "Error loading personas",
-          description: "Failed to load DNS personas. Please try again.",
+          title: "Failed to load configuration data",
+          description: "Could not load DNS personas and proxies. Please try again.",
           variant: "destructive",
         });
       } finally {
@@ -112,6 +126,16 @@ export default function DNSValidationConfigModal({
         description: `You can select up to ${MAX_PERSONAS_SELECTED} DNS personas.`,
         variant: "destructive",
       });
+    }
+  };
+
+  const handleProxyToggle = (proxyId: string) => {
+    const currentProxyIds = form.getValues('proxyIds') || [];
+    if (currentProxyIds.includes(proxyId)) {
+      form.setValue('proxyIds', currentProxyIds.filter(id => id !== proxyId));
+    } else {
+      // No limit on proxy selection since it's optional
+      form.setValue('proxyIds', [...currentProxyIds, proxyId]);
     }
   };
 
@@ -217,7 +241,7 @@ export default function DNSValidationConfigModal({
                             <div>
                               <div className="font-medium">{persona.name}</div>
                               <div className="text-sm text-muted-foreground">
-                                Status: {persona.status} • Technical parameters auto-configured
+                                Status: {persona.isEnabled ? 'Active' : 'Disabled'} • Technical parameters auto-configured
                               </div>
                             </div>
                             {watchedPersonaIds.includes(persona.id || '') && (
@@ -237,6 +261,75 @@ export default function DNSValidationConfigModal({
                               <X
                                 className="h-3 w-3 cursor-pointer"
                                 onClick={() => handlePersonaToggle(personaId)}
+                              />
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Proxy Selection - Optional */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Proxy Selection (Optional)</CardTitle>
+                <div className="text-sm text-muted-foreground">
+                  Optionally select proxies for DNS validation requests. Proxies help vary request sources and improve reliability.
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {loadingData ? (
+                  <div className="text-center py-4">Loading proxies...</div>
+                ) : proxies.length === 0 ? (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      No active proxies available. DNS validation will proceed without proxy usage.
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <>
+                    <div className="text-sm text-muted-foreground">
+                      Select proxies to use for DNS validation (optional, can select multiple):
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                      {proxies.map((proxy) => (
+                        <div
+                          key={proxy.id}
+                          className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                            watchedProxyIds.includes(proxy.id || '')
+                              ? 'border-primary bg-primary/5'
+                              : 'border-border hover:border-primary/50'
+                          }`}
+                          onClick={() => handleProxyToggle(proxy.id || '')}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="font-medium">{proxy.name}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {proxy.protocol?.toUpperCase()} • {proxy.address} • {proxy.isEnabled ? 'Active' : 'Disabled'}
+                              </div>
+                            </div>
+                            {watchedProxyIds.includes(proxy.id || '') && (
+                              <Badge variant="default">Selected</Badge>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {watchedProxyIds.length > 0 && (
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        {watchedProxyIds.map((proxyId) => {
+                          const proxy = proxies.find(p => p.id === proxyId);
+                          return (
+                            <Badge key={proxyId} variant="secondary" className="flex items-center gap-1">
+                              {proxy?.name}
+                              <X
+                                className="h-3 w-3 cursor-pointer"
+                                onClick={() => handleProxyToggle(proxyId)}
                               />
                             </Badge>
                           );

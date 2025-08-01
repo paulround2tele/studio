@@ -189,17 +189,29 @@ func (css *CampaignStateService) calculateOverallProgress(campaign *models.LeadG
 		if stateData.DomainsGenerated > 0 {
 			stateData.Progress = (float64(stateData.DNSValidated) / float64(stateData.DomainsGenerated)) * 100.0
 		}
+		// Check if DNS validation is complete - same logic as domain generation
+		if stateData.PhaseStatus == "completed" {
+			stateData.Progress = 100.0
+		}
 
 	case "http_keyword_validation":
 		stateData.ProcessedItems = stateData.HTTPValidated
 		if stateData.DNSValidated > 0 {
 			stateData.Progress = (float64(stateData.HTTPValidated) / float64(stateData.DNSValidated)) * 100.0
 		}
+		// Check if HTTP validation is complete
+		if stateData.PhaseStatus == "completed" {
+			stateData.Progress = 100.0
+		}
 
 	case "analysis":
 		stateData.ProcessedItems = stateData.LeadsGenerated
 		if stateData.HTTPValidated > 0 {
 			stateData.Progress = (float64(stateData.LeadsGenerated) / float64(stateData.HTTPValidated)) * 100.0
+		}
+		// Check if analysis is complete
+		if stateData.PhaseStatus == "completed" {
+			stateData.Progress = 100.0
 		}
 	}
 

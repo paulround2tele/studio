@@ -106,27 +106,18 @@ export default function CampaignDetailsPage() {
         icon={Briefcase}
       />
 
-      {/* Campaign Header Section */}
+      {/* Main Campaign Card - Unified Header & Key Metrics */}
       <CampaignHeader
         campaign={typedCampaign}
         onRefresh={refetch}
-      />
-
-      {/* Campaign Statistics */}
-      <CampaignMetrics
-        campaign={typedCampaign}
         totalDomains={totalDomainCount}
       />
 
-      {/* Campaign Progress */}
-      <CampaignProgress
-        campaign={typedCampaign}
-      />
-
-      {/* Phase Dashboard - Phase-centric configuration and management */}
+      {/* Phase Management Dashboard */}
       <PhaseDashboard
         campaignId={campaignId}
         campaign={typedCampaign}
+        totalDomains={totalDomainCount}
         onCampaignUpdate={refetch}
       />
 

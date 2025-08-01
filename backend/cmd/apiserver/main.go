@@ -251,6 +251,16 @@ func main() {
 	domainGenerationService := services.NewDomainGenerationService(db, campaignStore, campaignJobStore, auditLogStore, nil)
 	log.Println("DomainGenerationService initialized with global offset tracking.")
 
+	// Initialize DNS and HTTP Campaign Services for service layer architecture
+	dnsValidationService := services.NewDNSCampaignService(db, campaignStore, personaStore, auditLogStore, campaignJobStore, appConfig)
+	log.Println("DNSCampaignService initialized for service layer.")
+
+	httpValidationService := services.NewHTTPKeywordCampaignService(
+		db, campaignStore, personaStore, proxyStore, keywordStore, auditLogStore, campaignJobStore,
+		httpValSvc, kwordScannerSvc, proxyMgr, appConfig,
+	)
+	log.Println("HTTPKeywordCampaignService initialized for service layer.")
+
 	// Phase 2.5 & 3.9: Initialize Phase Execution Service with direct engine integration
 	// AsyncManager is nil since we eliminated CampaignOrchestratorService
 	var asyncManager *communication.AsyncPatternManager = nil
@@ -272,8 +282,8 @@ func main() {
 		kwordScannerSvc,
 		// Legacy service dependencies (Phase 2.5: eliminated)
 		domainGenerationService, // Use shared service with global offset tracking
-		nil,                     // dnsValidationService eliminated
-		nil,                     // httpValidationService eliminated
+		dnsValidationService,    // DNS campaign service for service layer architecture
+		httpValidationService,   // HTTP keyword campaign service for service layer architecture
 	)
 	log.Println("PhaseExecutionService initialized - Phase 2.5 & 3.9 direct engine integration complete.")
 
@@ -650,20 +660,15 @@ func main() {
 		// Test endpoint for campaign-specific WebSocket messages
 		apiV2.GET("/test-campaign-ws/:campaignId", func(c *gin.Context) {
 			campaignID := c.Param("campaignId")
-			messageType := c.DefaultQuery("type", "domain_generated")
+			messageType := c.DefaultQuery("type", "campaign_progress") // Default to campaign_progress
 			requestID := uuid.New().String()
 
 			if b := websocket.GetBroadcaster(); b != nil {
 				var message websocket.WebSocketMessage
 
 				switch messageType {
-				case "domain_generated":
-					message = websocket.CreateDomainGeneratedMessage(campaignID, "test-domain-id", "test.example.com", 1, 1)
 				case "campaign_progress":
 					message = websocket.CreateCampaignProgressMessage(campaignID, 50.0, "running", "domain_generation")
-				case "dns_validation":
-					dnsRecords := map[string]interface{}{"A": []string{"1.2.3.4"}}
-					message = websocket.CreateDNSValidationResultMessage(campaignID, "test-domain-id", "test.example.com", "resolved", 1, dnsRecords)
 				default:
 					response := struct {
 						Success   bool        `json:"success"`

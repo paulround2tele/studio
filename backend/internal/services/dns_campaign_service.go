@@ -592,14 +592,25 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 	}
 
 	if campaign.PhaseStatus == nil || *campaign.PhaseStatus == models.PhaseStatusNotStarted {
-		status := models.PhaseStatusInProgress
-		campaign.PhaseStatus = &status
+		// Use phase-first approach: Update DNS validation phase to 'in_progress'
+		// The database trigger will automatically sync the campaign table
+		err := s.campaignStore.UpdatePhaseStatus(ctx, querier, campaignID, models.PhaseTypeDNSValidation, models.PhaseStatusInProgress)
+		if err != nil {
+			opErr = fmt.Errorf("failed to mark DNS validation phase as running for campaign %s: %w", campaignID, err)
+			return false, 0, opErr
+		}
+
+		// Also update started_at timestamp directly on campaign (this doesn't conflict with trigger)
 		now := time.Now().UTC()
 		campaign.StartedAt = &now
 		if errUpdateCamp := s.campaignStore.UpdateCampaign(ctx, querier, campaign); errUpdateCamp != nil {
-			opErr = fmt.Errorf("failed to mark campaign %s as running: %w", campaignID, errUpdateCamp)
-			return false, 0, opErr
+			log.Printf("WARNING: Failed to update started_at for campaign %s: %v", campaignID, errUpdateCamp)
 		}
+
+		// 🚨 CRITICAL FIX: Add missing WebSocket broadcast when DNS validation starts
+		websocket.BroadcastCampaignProgress(campaignID.String(), 0.0, "in_progress", "dns_validation", 0, 0)
+		log.Printf("ProcessDNSValidationCampaignBatch: Broadcasted DNS validation start for campaign %s", campaignID)
+
 		originalStatusStr := "unknown"
 		if originalStatus != nil {
 			originalStatusStr = string(*originalStatus)
@@ -623,11 +634,39 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 		return false, 0, opErr
 	}
 
-	// Parse domains from JSONB
+	// Parse domains from JSONB - handle both direct array and nested structure
 	var domains []models.GeneratedDomain
-	if err := json.Unmarshal(*domainsData, &domains); err != nil {
+
+	// First, try to unmarshal as raw JSON to check the structure
+	var rawData interface{}
+	if err := json.Unmarshal(*domainsData, &rawData); err != nil {
 		opErr = fmt.Errorf("failed to parse domains data for campaign %s: %w", campaignID, err)
 		return false, 0, opErr
+	}
+
+	// Check if it's a map (nested structure from domain generation service)
+	if dataMap, ok := rawData.(map[string]interface{}); ok {
+		// Handle nested structure: {"domains": [...], "total_count": N, ...}
+		if domainsArray, exists := dataMap["domains"]; exists {
+			domainsBytes, err := json.Marshal(domainsArray)
+			if err != nil {
+				opErr = fmt.Errorf("failed to marshal domains array for campaign %s: %w", campaignID, err)
+				return false, 0, opErr
+			}
+			if err := json.Unmarshal(domainsBytes, &domains); err != nil {
+				opErr = fmt.Errorf("failed to parse nested domains data for campaign %s: %w", campaignID, err)
+				return false, 0, opErr
+			}
+		} else {
+			opErr = fmt.Errorf("domains data for campaign %s does not contain 'domains' field", campaignID)
+			return false, 0, opErr
+		}
+	} else {
+		// Handle direct array structure: [...]
+		if err := json.Unmarshal(*domainsData, &domains); err != nil {
+			opErr = fmt.Errorf("failed to parse domains data for campaign %s: %w", campaignID, err)
+			return false, 0, opErr
+		}
 	}
 
 	// Set total items based on domains data
@@ -735,8 +774,15 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 		} // Should be set
 
 		if *campaign.ProcessedItems >= *campaign.TotalItems && *campaign.TotalItems > 0 {
-			status := models.PhaseStatusCompleted
-			campaign.PhaseStatus = &status
+			// Use phase-first approach: Complete DNS validation phase
+			// The database trigger will automatically sync the campaign table
+			err := s.campaignStore.CompletePhase(ctx, querier, campaignID, models.PhaseTypeDNSValidation)
+			if err != nil {
+				opErr = fmt.Errorf("failed to complete DNS validation phase for campaign %s: %w", campaignID, err)
+				return false, 0, opErr
+			}
+
+			// Update progress and completion timestamp directly on campaign (doesn't conflict with trigger)
 			campaign.ProgressPercentage = models.Float64Ptr(100.0)
 			now := time.Now().UTC()
 			campaign.CompletedAt = &now
@@ -748,8 +794,15 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 			log.Printf("ProcessDNSValidationCampaignBatch: All domains processed for campaign %s. Marking complete and transitioning to http_keyword_validation phase.", campaignID)
 			done = true
 		} else if *campaign.TotalItems == 0 {
-			status := models.PhaseStatusCompleted
-			campaign.PhaseStatus = &status
+			// Use phase-first approach: Complete DNS validation phase
+			// The database trigger will automatically sync the campaign table
+			err := s.campaignStore.CompletePhase(ctx, querier, campaignID, models.PhaseTypeDNSValidation)
+			if err != nil {
+				opErr = fmt.Errorf("failed to complete DNS validation phase for campaign %s: %w", campaignID, err)
+				return false, 0, opErr
+			}
+
+			// Update progress and completion timestamp directly on campaign (doesn't conflict with trigger)
 			campaign.ProgressPercentage = models.Float64Ptr(100.0)
 			now := time.Now().UTC()
 			campaign.CompletedAt = &now
@@ -883,41 +936,6 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 			dbRes.DNSRecords = models.JSONRawMessagePtr(json.RawMessage(errorBytes))
 		}
 
-		// Stream individual DNS validation result
-		log.Printf("🔴 [DNS_STREAMING_DEBUG] Streaming DNS result for domain %s, status: %s, campaign: %s",
-			bulkResult.Domain, bulkResult.Status, campaignID)
-
-		// Prepare DNS records map for message payload
-		dnsRecordsMap := make(map[string]interface{})
-		if len(bulkResult.IPs) > 0 {
-			dnsRecordsMap["ips"] = bulkResult.IPs
-		}
-		if bulkResult.Error != "" {
-			dnsRecordsMap["error"] = bulkResult.Error
-		}
-
-		// Create consolidated message using standardized format
-		payload := websocket.DNSValidationPayload{
-			CampaignID:       campaignID.String(),
-			DomainID:         dbRes.ID.String(),
-			Domain:           bulkResult.Domain,
-			ValidationStatus: bulkResult.Status,
-			DNSRecords:       dnsRecordsMap,
-			Attempts:         1,
-			ProcessingTime:   0,
-			TotalValidated:   0,
-		}
-
-		// ENHANCED: Try WebSocket broadcast with fallback mechanism
-		if err := s.streamDNSResultWithFallback(ctx, campaignID.String(), payload); err != nil {
-			log.Printf("❌ [DNS_STREAMING_ERROR] Failed to stream DNS result for domain %s, campaign %s: %v",
-				bulkResult.Domain, campaignID, err)
-			// Continue execution - streaming failure should not break the validation process
-		} else {
-			log.Printf("✅ [DNS_STREAMING_SUCCESS] Successfully streamed DNS result: domain=%s, status=%s, campaign=%s",
-				bulkResult.Domain, bulkResult.Status, campaignID)
-		}
-
 		dbResults = append(dbResults, dbRes)
 	}
 
@@ -976,7 +994,16 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 		if campaign.ProcessedItems == nil {
 			campaign.ProcessedItems = models.Int64Ptr(0)
 		}
-		*campaign.ProcessedItems += int64(processedInThisBatch)
+
+		// Safely increment processed items, ensuring we don't exceed total_items
+		newProcessedItems := *campaign.ProcessedItems + int64(processedInThisBatch)
+		if campaign.TotalItems != nil && newProcessedItems > *campaign.TotalItems {
+			log.Printf("WARNING: ProcessedItems would exceed TotalItems (%d + %d > %d), capping at TotalItems",
+				*campaign.ProcessedItems, processedInThisBatch, *campaign.TotalItems)
+			campaign.ProcessedItems = campaign.TotalItems
+		} else {
+			*campaign.ProcessedItems = newProcessedItems
+		}
 	}
 
 	if campaign.TotalItems == nil {
@@ -1015,20 +1042,26 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 	// Determine 'done' status and auto-transition to HTTP validation phase
 	if *campaign.ProcessedItems >= *campaign.TotalItems && *campaign.TotalItems > 0 {
 		// DNS validation phase is complete - transition to HTTP validation
-		httpPhase := models.PhaseTypeHTTPKeywordValidation
-		pendingStatus := models.PhaseStatusNotStarted
-		campaign.CurrentPhase = &httpPhase
-		campaign.PhaseStatus = &pendingStatus
+		// Use phase-first approach: Complete DNS phase and start HTTP phase
+		err := s.campaignStore.CompletePhase(ctx, querier, campaignID, models.PhaseTypeDNSValidation)
+		if err != nil {
+			opErr = fmt.Errorf("failed to complete DNS validation phase for campaign %s: %w", campaignID, err)
+			return false, processedInThisBatch, opErr
+		}
+
 		// CRITICAL FIX: Maintain cumulative progress at 66% instead of resetting to 0%
 		campaign.ProgressPercentage = models.Float64Ptr(dnsPhaseEndProgress)
 		done = true
 		log.Printf("[PHASE-TRANSITION] Campaign %s completed DNS validation, transitioning to HTTP validation at %.1f%% progress", campaignID, dnsPhaseEndProgress)
 	} else if *campaign.TotalItems == 0 {
 		// DNS validation phase is complete - transition to HTTP validation
-		httpPhase := models.PhaseTypeHTTPKeywordValidation
-		pendingStatus := models.PhaseStatusNotStarted
-		campaign.CurrentPhase = &httpPhase
-		campaign.PhaseStatus = &pendingStatus
+		// Use phase-first approach: Complete DNS phase and start HTTP phase
+		err := s.campaignStore.CompletePhase(ctx, querier, campaignID, models.PhaseTypeDNSValidation)
+		if err != nil {
+			opErr = fmt.Errorf("failed to complete DNS validation phase for campaign %s: %w", campaignID, err)
+			return false, processedInThisBatch, opErr
+		}
+
 		// CRITICAL FIX: Maintain cumulative progress at 66% instead of resetting to 0%
 		campaign.ProgressPercentage = models.Float64Ptr(dnsPhaseEndProgress)
 		done = true
@@ -1037,12 +1070,31 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 		done = false
 	}
 
-	if errUpdateCamp := s.campaignStore.UpdateCampaign(ctx, querier, campaign); errUpdateCamp != nil {
-		currentErr := fmt.Errorf("failed to update campaign %s status/progress: %w", campaignID, errUpdateCamp)
+	// Update only non-conflicting campaign fields (progress, processed items, etc.)
+	// DO NOT update phase status or current_phase here - those are managed by phase-first approach
+
+	// Validate values before update to prevent constraint violations
+	processedVal := int64(0)
+	totalVal := int64(0)
+	if campaign.ProcessedItems != nil {
+		processedVal = *campaign.ProcessedItems
+	}
+	if campaign.TotalItems != nil {
+		totalVal = *campaign.TotalItems
+	}
+
+	if processedVal > totalVal && totalVal > 0 {
+		log.Printf("ERROR: ProcessedItems (%d) > TotalItems (%d), fixing before update", processedVal, totalVal)
+		campaign.ProcessedItems = campaign.TotalItems
+		processedVal = totalVal
+	}
+
+	if errUpdateCamp := s.campaignStore.UpdateCampaignProgress(ctx, querier, campaignID, processedVal, totalVal, *campaign.ProgressPercentage); errUpdateCamp != nil {
+		currentErr := fmt.Errorf("failed to update campaign %s progress: %w", campaignID, errUpdateCamp)
 		if opErr == nil {
 			opErr = currentErr
 		} else {
-			log.Printf("ProcessDNSValidationCampaignBatch: Also failed to update campaign %s status/progress: %v (original opErr: %v)", campaignID, currentErr, opErr)
+			log.Printf("ProcessDNSValidationCampaignBatch: Also failed to update campaign %s progress: %v (original opErr: %v)", campaignID, currentErr, opErr)
 		}
 		// If opErr was from context cancellation or result saving, this return includes processed count.
 		// If opErr is newly set here, processedInThisBatch might be from a successful save.
@@ -1077,46 +1129,6 @@ func (s *dnsCampaignServiceImpl) ProcessDNSValidationCampaignBatch(ctx context.C
 	log.Printf("ProcessDNSValidationCampaignBatch: Finished batch for campaign %s. ProcessedInBatch: %d, DoneForJob: %t, CampaignProcessed: %d/%d, Final opErr: %v",
 		campaignID, processedInThisBatch, done, processedItemsVal, totalItemsVal, opErr)
 	return done, processedInThisBatch, opErr
-}
-
-// streamDNSResultWithFallback attempts to stream DNS validation results with fallback mechanisms
-func (s *dnsCampaignServiceImpl) streamDNSResultWithFallback(ctx context.Context, campaignID string, payload websocket.DNSValidationPayload) error {
-	// Primary attempt: Use WebSocket broadcaster
-	broadcaster := websocket.GetBroadcaster()
-	if broadcaster != nil {
-		// Create and broadcast message directly
-		message := websocket.WebSocketMessage{
-			ID:         uuid.New().String(),
-			Timestamp:  time.Now().Format(time.RFC3339),
-			Type:       "dns.validation.result",
-			CampaignID: campaignID,
-			Data:       payload,
-		}
-
-		// Broadcast message
-		broadcaster.BroadcastToCampaign(campaignID, message)
-		log.Printf("✅ [DNS_STREAMING_SUCCESS] WebSocket broadcast successful for campaign %s, type: %s", campaignID, message.Type)
-		return nil
-	} else {
-		log.Printf("⚠️ [DNS_STREAMING_WARNING] No WebSocket broadcaster available for campaign %s", campaignID)
-	}
-
-	// Fallback 1: Log detailed result for debugging/monitoring
-	log.Printf("📊 [DNS_STREAMING_FALLBACK] DNS result logged: campaign=%s, domain=%s, status=%s, attempts=%d",
-		campaignID, payload.Domain, payload.ValidationStatus, payload.Attempts)
-
-	// Fallback 2: Store result summary for later retrieval (optional)
-	// This could be enhanced to store in a separate streaming_failures table
-	// for systems that need to replay missed messages
-
-	// Return success - streaming failure should not break the validation process
-	return nil
-	// Fallback 2: Store result summary for later retrieval (optional)
-	// This could be enhanced to store in a separate streaming_failures table
-	// for systems that need to replay missed messages
-
-	// Return success - streaming failure should not break the validation process
-	return nil
 }
 
 // atomicPhaseTransition performs atomic campaign phase transition with event broadcasting

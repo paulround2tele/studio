@@ -7,6 +7,7 @@ All URIs are relative to *http://localhost*
 |[**configurePhaseStandalone**](#configurephasestandalone) | **POST** /campaigns/{campaignId}/phases/{phase}/configure | Configure campaign phase (standalone)|
 |[**createLeadGenerationCampaign**](#createleadgenerationcampaign) | **POST** /campaigns/lead-generation | Create lead generation campaign|
 |[**getBulkEnrichedCampaignData**](#getbulkenrichedcampaigndata) | **POST** /campaigns/bulk/enriched-data | Get bulk enriched campaign data|
+|[**getCampaignDomainsStatus**](#getcampaigndomainsstatus) | **GET** /campaigns/{campaignId}/domains/status | Get campaign domain status summary|
 |[**getCampaignProgressStandalone**](#getcampaignprogressstandalone) | **GET** /campaigns/{campaignId}/progress | Get campaign progress (standalone)|
 |[**getCampaignsStandalone**](#getcampaignsstandalone) | **GET** /campaigns | List campaigns (standalone)|
 |[**getPatternOffset**](#getpatternoffset) | **POST** /campaigns/domain-generation/pattern-offset | Get domain generation pattern offset|
@@ -169,6 +170,59 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getCampaignDomainsStatus**
+> APIResponse getCampaignDomainsStatus()
+
+Retrieve domain status summary and counts for a campaign
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; //Campaign ID (UUID) (default to undefined)
+
+const { status, data } = await apiInstance.getCampaignDomainsStatus(
+    campaignId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
+
+
+### Return type
+
+**APIResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
  - **Accept**: application/json
 
 

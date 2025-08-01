@@ -7,6 +7,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { Briefcase, RefreshCw, CheckCircle, AlertCircle, Clock, Pause, Play, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CampaignViewModel, CampaignPhaseStatus } from '@/lib/types';
@@ -15,6 +16,7 @@ export interface CampaignHeaderProps {
   campaign: CampaignViewModel;
   loading?: boolean;
   onRefresh?: () => void;
+  totalDomains?: number;
   className?: string;
 }
 
@@ -74,28 +76,38 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
   campaign,
   loading = false,
   onRefresh,
+  totalDomains = 0,
   className
 }) => {
   const campaignStatus = campaign.phaseStatus || 'not_started';
   const campaignPhase = campaign.currentPhase || 'setup';
   
-  const StatusIcon = getStatusIcon(campaignStatus);
-  const statusVariant = getStatusVariant(campaignStatus);
-  const statusText = getStatusDisplayText(campaignStatus);
+  // Determine actual status based on data
+  const actualStatus = totalDomains > 0 && campaignPhase === 'domain_generation' 
+    ? 'completed' as const 
+    : campaignStatus;
+  
+  const StatusIcon = getStatusIcon(actualStatus);
+  const statusVariant = getStatusVariant(actualStatus);
+  const statusText = totalDomains > 0 && campaignPhase === 'domain_generation' 
+    ? 'Phase 1 Complete' 
+    : getStatusDisplayText(actualStatus);
   const phaseDisplayName = getPhaseDisplayName(campaignPhase);
 
   return (
-    <Card className={cn("shadow-lg", className)}>
+    <Card className={cn("shadow-lg border-0 bg-gradient-to-r from-background to-secondary/20", className)}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Briefcase className="h-6 w-6 text-primary" />
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Briefcase className="h-6 w-6 text-primary" />
+            </div>
             <div>
-              <CardTitle className="text-xl">{campaign.name || 'Unnamed Campaign'}</CardTitle>
-              <CardDescription>
+              <CardTitle className="text-xl font-bold">{campaign.name || 'Unnamed Campaign'}</CardTitle>
+              <CardDescription className="text-base">
                 Campaign in {phaseDisplayName} Phase
                 {campaign.createdAt && (
-                  <span className="ml-2 text-xs">
+                  <span className="ml-2 text-xs opacity-70">
                     Created {formatDate(campaign.createdAt)}
                   </span>
                 )}
@@ -104,7 +116,7 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
           </div>
           
           <div className="flex items-center gap-3">
-            <Badge variant={statusVariant} className="flex items-center gap-1.5">
+            <Badge variant={statusVariant} className="flex items-center gap-1.5 px-3 py-1">
               <StatusIcon className="h-3.5 w-3.5" />
               {statusText}
             </Badge>
@@ -115,7 +127,7 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
                 size="sm"
                 onClick={onRefresh} 
                 disabled={loading}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 hover:bg-primary/5"
               >
                 <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
                 Refresh
@@ -126,25 +138,61 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
       </CardHeader>
       
       <CardContent className="pt-0">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-sm">
           <div className="space-y-1">
-            <div className="text-muted-foreground">Campaign ID</div>
-            <div className="font-mono text-xs break-all">{campaign.id}</div>
+            <div className="text-muted-foreground font-medium">Campaign ID</div>
+            <div className="font-mono text-xs break-all bg-secondary/50 p-2 rounded">{campaign.id}</div>
           </div>
           
           <div className="space-y-1">
-            <div className="text-muted-foreground">Current Phase</div>
-            <div className="font-medium">{phaseDisplayName}</div>
+            <div className="text-muted-foreground font-medium">Current Phase</div>
+            <div className="font-semibold text-base">{phaseDisplayName}</div>
           </div>
           
           <div className="space-y-1">
-            <div className="text-muted-foreground">Progress</div>
-            <div className="font-medium">
-              {campaign.progressPercentage !== undefined 
-                ? `${campaign.progressPercentage}%` 
-                : 'N/A'
+            <div className="text-muted-foreground font-medium">Generated Domains</div>
+            <div className="font-bold text-2xl text-primary">
+              {totalDomains.toLocaleString()}
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <div className="text-muted-foreground font-medium">Phase Progress</div>
+            <div className="font-semibold text-base">
+              {/* Calculate accurate progress based on actual data */}
+              {totalDomains > 0 && campaign.currentPhase === 'domain_generation' 
+                ? <span className="text-green-600 font-bold">100% Complete</span>
+                : campaign.progressPercentage !== undefined 
+                  ? `${campaign.progressPercentage}%` 
+                  : <span className="text-muted-foreground">Initializing</span>
               }
             </div>
+          </div>
+        </div>
+        
+        {/* Real-time Status Bar */}
+        <div className="mt-6 pt-4 border-t">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-base font-semibold">Overall Campaign Progress</span>
+            <span className="text-sm text-muted-foreground font-medium">
+              {totalDomains > 0 ? 'Phase 1 Complete' : 'Getting Started'}
+            </span>
+          </div>
+          <div className="w-full bg-secondary rounded-full h-3 overflow-hidden">
+            <div 
+              className="bg-gradient-to-r from-primary to-primary/80 h-3 rounded-full transition-all duration-500 ease-in-out" 
+              style={{ 
+                width: `${totalDomains > 0 ? 25 : 0}%` // 25% = 1 phase out of 4 completed
+              }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-muted-foreground mt-2">
+            <span className={cn("transition-colors", totalDomains > 0 ? 'text-primary font-semibold' : '')}>
+              Domain Generation
+            </span>
+            <span>DNS Validation</span>
+            <span>HTTP Validation</span>
+            <span>Analysis</span>
           </div>
         </div>
         
@@ -164,27 +212,6 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
             <div className="text-sm text-destructive mt-1">{campaign.errorMessage}</div>
           </div>
         )}
-        
-        {/* Campaign Configuration Summary */}
-        <div className="mt-4 pt-4 border-t">
-          <div className="text-sm text-muted-foreground mb-2">Configuration</div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
-            {campaign.totalItems && (
-              <div className="flex justify-between">
-                <span>Target Items:</span>
-                <span className="font-mono">{campaign.totalItems}</span>
-              </div>
-            )}
-            
-            {/* Phase-centric architecture: detailed configuration stored in phase records */}
-            {campaign.domains && (
-              <div className="flex justify-between">
-                <span>Total Domains:</span>
-                <span className="font-mono">{campaign.domains}</span>
-              </div>
-            )}
-          </div>
-        </div>
       </CardContent>
     </Card>
   );

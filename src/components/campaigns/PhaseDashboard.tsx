@@ -43,6 +43,7 @@ interface PhaseStatus {
 interface PhaseDashboardProps {
   campaignId: string;
   campaign?: CampaignViewModel;
+  totalDomains?: number;
   onCampaignUpdate?: () => void;
 }
 
@@ -74,7 +75,7 @@ const PHASES = [
   }
 ];
 
-export default function PhaseDashboard({ campaignId, campaign, onCampaignUpdate }: PhaseDashboardProps) {
+export default function PhaseDashboard({ campaignId, campaign, totalDomains = 0, onCampaignUpdate }: PhaseDashboardProps) {
   const { toast } = useToast();
   
   // Modal states
@@ -124,25 +125,43 @@ export default function PhaseDashboard({ campaignId, campaign, onCampaignUpdate 
       }
     };
 
+    // Handle campaign progress updates for real-time phase status updates
+    const handleCampaignProgress = (message: any) => {
+      if (message.data?.campaignId === campaignId || message.data?.campaign_id === campaignId) {
+        console.log(`Campaign progress update: phase=${message.data.currentPhase}, status=${message.data.phaseStatus}, progress=${message.data.progressPercent}`);
+        
+        // Refresh phase statuses when progress updates come in
+        loadPhaseStatuses();
+        onCampaignUpdate?.();
+      }
+    };
+
     // 🚀 WEBSOCKET PUSH MODEL: Specialized phase management handlers
     // Campaign progress now handled at data layer, keep phase-specific handlers
     const wsHandlers = createValidatedWebSocketHandlers({
       onPhaseStateChanged: handlePhaseStateChanged,
       onPhaseConfigurationRequired: handlePhaseConfigurationRequired,
-      // Removed onCampaignProgress and onCampaignStatus - now handled at data layer
+      onCampaignProgress: handleCampaignProgress, // Added back for real-time phase updates
+      // Removed onCampaignStatus - now handled at data layer
     });
 
     // 🚀 FIXED: Use correct WebSocket service with proper backend protocol
     const unsubscribeFromWebSocket = websocketService.connect(`campaign-${campaignId}`, {
       onMessage: (message: any) => {
         if (message && typeof message === 'object' && message.type) {
-          // Route phase-specific messages only
+          console.log(`🔍 [PhaseDashboard] Received WebSocket message type: ${message.type}`, message);
+          
+          // Route phase-specific messages
           if (message.type === 'phase.state.changed') {
             handlePhaseStateChanged(message as PhaseStateChangedMessage);
           } else if (message.type === 'phase.configuration.required') {
             handlePhaseConfigurationRequired(message as PhaseConfigurationRequiredMessage);
+          } else if (message.type === 'campaign_progress') {
+            // Handle campaign progress messages for real-time updates
+            handleCampaignProgress(message);
+          } else {
+            console.log(`🔍 [PhaseDashboard] Unhandled message type: ${message.type}`);
           }
-          // 🚀 WEBSOCKET PUSH MODEL: campaign_progress and campaign_status now handled at data layer
         }
       },
       onOpen: () => {
@@ -150,6 +169,7 @@ export default function PhaseDashboard({ campaignId, campaign, onCampaignUpdate 
       },
       onError: (error) => {
         console.error(`❌ [PhaseDashboard] WebSocket error for campaign ${campaignId}:`, error);
+        console.log('❌ [PhaseDashboard]  trying to display generated domains and phases data as table', campaign);
       },
       onClose: () => {
         console.log(`🔌 [PhaseDashboard] Disconnected from WebSocket for campaign ${campaignId}`);
@@ -158,25 +178,41 @@ export default function PhaseDashboard({ campaignId, campaign, onCampaignUpdate 
 
     // Cleanup function
     return unsubscribeFromWebSocket;
-  }, [campaignId, campaign, toast, onCampaignUpdate]);
+  }, [campaignId]); // 🚨 CRITICAL FIX: Remove campaign from dependencies to prevent WebSocket reconnection on updates
 
   // Helper functions to determine phase completion based on available data
   const isPhaseCompleted = (phaseKey: string): boolean => {
-    if (!campaign?.phases) return false;
+    if (!campaign) return false;
     
-    const phase = campaign.phases.find(p => p.phaseType === phaseKey);
-    if (!phase) return false;
+    // For domain generation phase, check if domains were generated
+    if (phaseKey === 'domain_generation' && totalDomains && totalDomains > 0) {
+      return true;
+    }
     
-    // A phase is completed if it has successful items or is marked as completed
-    return !!(phase.status === 'completed' || (phase.successfulItems && phase.successfulItems > 0));
+    // Check campaign phases data
+    if (campaign.phases) {
+      const phase = campaign.phases.find(p => p.phaseType === phaseKey);
+      if (phase) {
+        return !!(phase.status === 'completed' || (phase.successfulItems && phase.successfulItems > 0));
+      }
+    }
+    
+    return false;
   };
 
   const getCompletedPhaseCount = (): number => {
-    if (!campaign?.phases) return 0;
+    if (!campaign) return 0;
     
-    return campaign.phases.filter(phase =>
-      phase.status === 'completed' || (phase.successfulItems && phase.successfulItems > 0)
-    ).length;
+    let completed = 0;
+    const phaseOrder = ['domain_generation', 'dns_validation', 'http_keyword_validation', 'analysis'];
+    
+    for (const phaseKey of phaseOrder) {
+      if (isPhaseCompleted(phaseKey)) {
+        completed++;
+      }
+    }
+    
+    return completed;
   };
 
   const loadPhaseStatuses = async () => {
@@ -195,14 +231,18 @@ export default function PhaseDashboard({ campaignId, campaign, onCampaignUpdate 
         const previousPhaseType = i > 0 ? phaseOrder[i - 1]! : null;
         const previousPhaseComplete = i === 0 || Boolean(previousPhaseType && isPhaseCompleted(previousPhaseType));
         
-        // Determine phase status
-        let phaseStatus: 'pending' | 'ready' | 'running' | 'completed' | 'failed' = 'pending';
+        // Determine phase status more accurately
+        let phaseStatus: 'pending' | 'ready' | 'configured' | 'running' | 'completed' | 'failed' = 'pending';
         let progress = 0;
         let canConfigure = false;
         let canStart = false;
         let configurationRequired = phaseType !== 'domain_generation'; // Domain gen configured at creation
         
-        if (phaseData) {
+        // Check if this phase is completed based on actual data
+        if (isPhaseCompleted(phaseType)) {
+          phaseStatus = 'completed';
+          progress = 100;
+        } else if (phaseData) {
           // Use backend phase data if available
           switch (phaseData.status) {
             case 'completed':
@@ -211,15 +251,21 @@ export default function PhaseDashboard({ campaignId, campaign, onCampaignUpdate 
               break;
             case 'in_progress':
               phaseStatus = 'running';
-              progress = 50; // Use fallback since progress property doesn't exist
+              progress = phaseData.progressPercentage || 50; // Use actual progress or fallback
               break;
             case 'failed':
               phaseStatus = 'failed';
-              progress = 0; // Use fallback since progress property doesn't exist
+              progress = 0;
               break;
             case 'ready':
-            case 'configured':
               phaseStatus = 'ready';
+              canConfigure = configurationRequired;
+              canStart = !configurationRequired;
+              progress = 0;
+              break;
+            case 'configured':
+              phaseStatus = 'configured';
+              canStart = true;
               progress = 0;
               break;
             default:
@@ -227,16 +273,40 @@ export default function PhaseDashboard({ campaignId, campaign, onCampaignUpdate 
               progress = 0;
           }
         } else {
-          // FIXED: Use real progress data from campaign phases or backend-driven data
+          // No phase data available, determine from campaign state and prerequisites
           if (campaign?.currentPhase === phaseType) {
-            phaseStatus = 'running';
-            // Use real progress data from the campaign or phase-specific progress
-            // Use campaign overall progress since phase progress property doesn't exist
-            progress = campaign?.overallProgress ?? 0;
+            // CRITICAL FIX: Check campaign.phaseStatus to determine if this phase is actually running
+            const campaignPhaseStatus = campaign?.phaseStatus;
+            
+            if (campaignPhaseStatus === 'failed') {
+              phaseStatus = 'failed';
+              progress = 0;
+              canStart = true; // Allow retry
+            } else if (campaignPhaseStatus === 'ready') {
+              phaseStatus = 'ready';
+              canConfigure = configurationRequired;
+              canStart = !configurationRequired;
+              progress = 0;
+            } else if (campaignPhaseStatus === 'in_progress') {
+              phaseStatus = 'running';
+              progress = campaign?.overallProgress ?? 0;
+            } else {
+              // For domain generation, if domains exist, it should be completed
+              if (phaseType === 'domain_generation' && totalDomains && totalDomains > 0) {
+                phaseStatus = 'completed';
+                progress = 100;
+              } else {
+                phaseStatus = 'running';
+                progress = campaign?.overallProgress ?? 0;
+              }
+            }
           } else if (previousPhaseComplete) {
             phaseStatus = 'ready';
+            canConfigure = configurationRequired;
+            canStart = !configurationRequired;
             progress = 0;
           } else {
+            phaseStatus = 'pending';
             progress = 0;
           }
         }
@@ -321,6 +391,11 @@ export default function PhaseDashboard({ campaignId, campaign, onCampaignUpdate 
         description: "Please ensure the campaign is properly configured before starting.",
         variant: "destructive",
       });
+      
+      // CRITICAL FIX: Refresh phase statuses after error to reflect any backend state changes
+      // This ensures the UI shows the correct retry state even if backend reset the phase status
+      loadPhaseStatuses();
+      onCampaignUpdate?.();
     } finally {
       setStartingPhase(null);
     }
@@ -428,39 +503,29 @@ export default function PhaseDashboard({ campaignId, campaign, onCampaignUpdate 
 
   return (
     <div className="space-y-6">
-      {/* Overall Progress */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Info className="h-5 w-5" />
-            Campaign Progress
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Overall Progress</span>
-              <span className="text-sm text-muted-foreground">
-                {getCompletedPhaseCount()} of 4 phases completed
-              </span>
-            </div>
-            <Progress value={(getCompletedPhaseCount() / 4) * 100} />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* User-Driven Phase Lifecycle Info */}
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          <strong>User-Driven Phase Lifecycle:</strong> Configure and start each phase when you're ready. 
-          Each phase must be completed before the next one becomes available.
-        </AlertDescription>
-      </Alert>
-
-      {/* Phase Cards */}
+      {/* Phase Cards - Progressive Display */}
       <div className="grid gap-4">
-        {PHASES.map((phase, index) => {
+        {PHASES.filter((phase, index) => {
+          const status = phaseStatuses[phase.key];
+          if (!status) return false;
+
+          // Hide completed domain generation phase since progress is shown in header
+          if (phase.key === 'domain_generation' && status.status === 'completed') {
+            return false;
+          }
+
+          // Show phases progressively based on campaign state
+          // Always show domain generation (first phase) if not completed
+          if (index === 0) return true;
+
+          // Show subsequent phases only if previous phase is completed or if current phase is active
+          const previousPhase = PHASES[index - 1];
+          const previousStatus = previousPhase ? phaseStatuses[previousPhase.key] : null;
+          
+          return previousStatus?.status === 'completed' || 
+                 status.status === 'running' || 
+                 status.status === 'completed';
+        }).map((phase, index) => {
           const status = phaseStatuses[phase.key];
           if (!status) return null;
 

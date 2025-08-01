@@ -59,32 +59,33 @@ export function adaptWebSocketMessageToLegacy(message: WebSocketMessage): Campai
         timestamp: convertTimestamp(message.timestamp),
       };
 
+    // DEPRECATED: Domain data message types - use REST APIs for domain data instead
     case 'domain_generated':
-      const domain = message.data && typeof message.data === 'object' && 'domain' in message.data 
-        ? String((message.data as Record<string, unknown>).domain) 
-        : 'unknown';
+      console.warn('[DEPRECATED] domain_generated message received. Use REST API /campaigns/{id}/domains instead.');
       return {
-        type: 'domain_generated',
+        type: 'progress', // Convert to generic progress message
         campaignId: extractCampaignIdFromData(message.data),
         data: {
-          domains: [domain],
+          progress: 0,
+          phase: 'domain_generation',
+          status: 'running',
         },
-        message: `Domain generated: ${domain}`,
+        message: 'Domain generation in progress - fetch latest data via REST API',
         timestamp: convertTimestamp(message.timestamp),
       };
 
     case 'dns_validation_result':
     case 'http_validation_result':
-      const validationDomain = message.data && typeof message.data === 'object' && 'domain' in message.data 
-        ? String((message.data as Record<string, unknown>).domain) 
-        : 'unknown';
+      console.warn(`[DEPRECATED] ${message.type} message received. Use REST API /campaigns/{id}/domains for validation status.`);
       return {
-        type: 'validation_complete',
+        type: 'progress', // Convert to generic progress message
         campaignId: extractCampaignIdFromData(message.data),
         data: {
-          validationResults: [message.data],
+          progress: 0,
+          phase: 'validation',
+          status: 'running',
         },
-        message: `Validation complete for ${validationDomain}`,
+        message: 'Validation in progress - fetch latest data via REST API',
         timestamp: convertTimestamp(message.timestamp),
       };
 

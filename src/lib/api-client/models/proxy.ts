@@ -123,7 +123,7 @@ export interface Proxy {
      * @type {string}
      * @memberof Proxy
      */
-    'latencyMs'?: string;
+    'latencyMs'?: number;
     /**
      * 
      * @type {string}
