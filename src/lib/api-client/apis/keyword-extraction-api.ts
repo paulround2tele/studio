@@ -26,7 +26,7 @@ import type { BatchKeywordExtractionRequest } from '../models';
 // @ts-ignore
 import type { BatchKeywordExtractionResponse } from '../models';
 // @ts-ignore
-import type { CreateLeadGenerationCampaign200Response } from '../models';
+import type { BulkAnalyzeDomains200Response } from '../models';
 // @ts-ignore
 import type { ErrorResponse } from '../models';
 /**
@@ -158,7 +158,7 @@ export const KeywordExtractionApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async streamExtractKeywords(url: string, keywordSetId: string, httpPersonaId?: string, dnsPersonaId?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLeadGenerationCampaign200Response>> {
+        async streamExtractKeywords(url: string, keywordSetId: string, httpPersonaId?: string, dnsPersonaId?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkAnalyzeDomains200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.streamExtractKeywords(url, keywordSetId, httpPersonaId, dnsPersonaId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KeywordExtractionApi.streamExtractKeywords']?.[localVarOperationServerIndex]?.url;
@@ -194,7 +194,7 @@ export const KeywordExtractionApiFactory = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        streamExtractKeywords(url: string, keywordSetId: string, httpPersonaId?: string, dnsPersonaId?: string, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response> {
+        streamExtractKeywords(url: string, keywordSetId: string, httpPersonaId?: string, dnsPersonaId?: string, options?: RawAxiosRequestConfig): AxiosPromise<BulkAnalyzeDomains200Response> {
             return localVarFp.streamExtractKeywords(url, keywordSetId, httpPersonaId, dnsPersonaId, options).then((request) => request(axios, basePath));
         },
     };
@@ -227,7 +227,7 @@ export interface KeywordExtractionApiInterface {
      * @throws {RequiredError}
      * @memberof KeywordExtractionApiInterface
      */
-    streamExtractKeywords(url: string, keywordSetId: string, httpPersonaId?: string, dnsPersonaId?: string, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response>;
+    streamExtractKeywords(url: string, keywordSetId: string, httpPersonaId?: string, dnsPersonaId?: string, options?: RawAxiosRequestConfig): AxiosPromise<BulkAnalyzeDomains200Response>;
 
 }
 

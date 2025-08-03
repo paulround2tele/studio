@@ -1,11 +1,11 @@
-package api
+package models
 
 import (
 	"github.com/google/uuid"
 )
 
 // ===============================================================================
-// BULK DOMAIN GENERATION OPERATIONS - Missing from your pathetic architecture
+// BULK DOMAIN GENERATION OPERATIONS - Enterprise domain generation at scale
 // ===============================================================================
 
 // BulkDomainGenerationRequest - Generate domains across multiple campaigns
@@ -47,7 +47,7 @@ type DomainGenerationResult struct {
 }
 
 // ===============================================================================
-// BULK VALIDATION OPERATIONS - Your stealth integration is worthless without this
+// BULK VALIDATION OPERATIONS - Stealth-aware validation at enterprise scale
 // ===============================================================================
 
 // BulkDNSValidationRequest - DNS validation across campaigns/domains
@@ -84,7 +84,7 @@ type HTTPValidationOperation struct {
 	MaxDomains    int           `json:"maxDomains,omitempty" validate:"omitempty,gt=0,lte=50000"`
 }
 
-// StealthValidationConfig - Your precious stealth mode configuration
+// StealthValidationConfig - Stealth mode configuration for detection avoidance
 type StealthValidationConfig struct {
 	Enabled             bool    `json:"enabled"`
 	RandomizationLevel  string  `json:"randomizationLevel" validate:"omitempty,oneof=low medium high extreme"`
@@ -376,4 +376,36 @@ type ResourceLimits struct {
 	MaxDiskIO        int64   `json:"maxDiskIO,omitempty" validate:"omitempty,gt=0"`
 	MaxNetworkIO     int64   `json:"maxNetworkIO,omitempty" validate:"omitempty,gt=0"`
 	MaxConcurrent    int     `json:"maxConcurrent" validate:"omitempty,gt=0,lte=1000"`
+}
+
+// BulkResourceResponse - Response from resource allocation
+type BulkResourceResponse struct {
+	Operations     map[string]ResourceAllocationResult `json:"operations"`
+	TotalAllocated ResourceUtilizationMetrics          `json:"totalAllocated"`
+	SuccessfulOps  int                                 `json:"successfulOps"`
+	FailedOps      int                                 `json:"failedOps"`
+	AllocationID   string                              `json:"allocationId"`
+	ExpirationTime string                              `json:"expirationTime"`
+	ProcessingTime int64                               `json:"processingTimeMs"`
+}
+
+// ResourceAllocationResult - Result for single resource allocation
+type ResourceAllocationResult struct {
+	CampaignID         uuid.UUID         `json:"campaignId"`
+	Type               string            `json:"type"`
+	AllocatedResources RequiredResources `json:"allocatedResources"`
+	Success            bool              `json:"success"`
+	Error              string            `json:"error,omitempty"`
+	AllocationTime     string            `json:"allocationTime"`
+	ExpirationTime     string            `json:"expirationTime"`
+}
+
+// BulkMetadata - Metadata for bulk operations
+type BulkMetadata struct {
+	RequestID     string                 `json:"requestId"`
+	UserID        *uuid.UUID             `json:"userId,omitempty"`
+	Timestamp     string                 `json:"timestamp"`
+	Version       string                 `json:"version"`
+	ExecutionNode string                 `json:"executionNode,omitempty"`
+	Debug         map[string]interface{} `json:"debug,omitempty"`
 }

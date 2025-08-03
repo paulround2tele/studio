@@ -22,6 +22,8 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
+import type { BulkAnalyzeDomains200Response } from '../models';
+// @ts-ignore
 import type { BulkDeleteProxiesRequest } from '../models';
 // @ts-ignore
 import type { BulkHealthCheckResponse } from '../models';
@@ -33,8 +35,6 @@ import type { BulkProxyTestResponse } from '../models';
 import type { BulkTestProxiesRequest } from '../models';
 // @ts-ignore
 import type { BulkUpdateProxiesRequest } from '../models';
-// @ts-ignore
-import type { CreateLeadGenerationCampaign200Response } from '../models';
 // @ts-ignore
 import type { CreateProxyRequest } from '../models';
 // @ts-ignore
@@ -481,7 +481,7 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async addProxy(createProxyRequest: CreateProxyRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLeadGenerationCampaign200Response>> {
+        async addProxy(createProxyRequest: CreateProxyRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkAnalyzeDomains200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.addProxy(createProxyRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.addProxy']?.[localVarOperationServerIndex]?.url;
@@ -533,7 +533,7 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async deleteProxy(proxyId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLeadGenerationCampaign200Response>> {
+        async deleteProxy(proxyId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkAnalyzeDomains200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.deleteProxy(proxyId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.deleteProxy']?.[localVarOperationServerIndex]?.url;
@@ -588,7 +588,7 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async listProxies(limit?: number, offset?: number, protocol?: string, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLeadGenerationCampaign200Response>> {
+        async listProxies(limit?: number, offset?: number, protocol?: string, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkAnalyzeDomains200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.listProxies(limit, offset, protocol, isEnabled, isHealthy, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.listProxies']?.[localVarOperationServerIndex]?.url;
@@ -638,7 +638,7 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        addProxy(createProxyRequest: CreateProxyRequest, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response> {
+        addProxy(createProxyRequest: CreateProxyRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkAnalyzeDomains200Response> {
             return localVarFp.addProxy(createProxyRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -678,7 +678,7 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        deleteProxy(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response> {
+        deleteProxy(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<BulkAnalyzeDomains200Response> {
             return localVarFp.deleteProxy(proxyId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -721,7 +721,7 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listProxies(limit?: number, offset?: number, protocol?: string, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response> {
+        listProxies(limit?: number, offset?: number, protocol?: string, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<BulkAnalyzeDomains200Response> {
             return localVarFp.listProxies(limit, offset, protocol, isEnabled, isHealthy, options).then((request) => request(axios, basePath));
         },
         /**
@@ -762,7 +762,7 @@ export interface ProxiesApiInterface {
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    addProxy(createProxyRequest: CreateProxyRequest, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response>;
+    addProxy(createProxyRequest: CreateProxyRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkAnalyzeDomains200Response>;
 
     /**
      * Delete multiple proxy configurations simultaneously
@@ -802,7 +802,7 @@ export interface ProxiesApiInterface {
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    deleteProxy(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response>;
+    deleteProxy(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<BulkAnalyzeDomains200Response>;
 
     /**
      * Force health checks on all registered proxies
@@ -845,7 +845,7 @@ export interface ProxiesApiInterface {
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    listProxies(limit?: number, offset?: number, protocol?: string, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response>;
+    listProxies(limit?: number, offset?: number, protocol?: string, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<BulkAnalyzeDomains200Response>;
 
     /**
      * Test a proxy configuration to verify it works correctly

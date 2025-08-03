@@ -13,7 +13,7 @@ All URIs are relative to *http://localhost*
 |[**updateKeywordSet**](#updatekeywordset) | **PUT** /keywords/sets/{setId} | Update keyword set|
 
 # **createKeywordSet**
-> CreateLeadGenerationCampaign200Response createKeywordSet(createKeywordSetRequest)
+> BulkAnalyzeDomains200Response createKeywordSet(createKeywordSetRequest)
 
 Create a new keyword set with optional rules
 
@@ -45,7 +45,7 @@ const { status, data } = await apiInstance.createKeywordSet(
 
 ### Return type
 
-**CreateLeadGenerationCampaign200Response**
+**BulkAnalyzeDomains200Response**
 
 ### Authorization
 
@@ -226,7 +226,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **listKeywordSets**
-> CreateLeadGenerationCampaign200Response listKeywordSets()
+> BulkAnalyzeDomains200Response listKeywordSets()
 
 Retrieve a list of keyword sets with optional filtering
 
@@ -266,7 +266,7 @@ const { status, data } = await apiInstance.listKeywordSets(
 
 ### Return type
 
-**CreateLeadGenerationCampaign200Response**
+**BulkAnalyzeDomains200Response**
 
 ### Authorization
 

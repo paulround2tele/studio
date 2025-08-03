@@ -14,16 +14,23 @@
 
 
 
+export * from './apis/analytics-api';
 export * from './apis/authentication-api';
+export * from './apis/bulk-operations-api';
 export * from './apis/campaigns-api';
 export * from './apis/database-api';
+export * from './apis/domains-api';
 export * from './apis/feature-flags-api';
 export * from './apis/health-api';
 export * from './apis/keyword-extraction-api';
 export * from './apis/keyword-sets-api';
+export * from './apis/management-api';
+export * from './apis/monitoring-api';
 export * from './apis/personas-api';
 export * from './apis/proxies-api';
 export * from './apis/proxy-pools-api';
+export * from './apis/resources-api';
 export * from './apis/server-settings-api';
+export * from './apis/validation-api';
 export * from './apis/websocket-api';
 

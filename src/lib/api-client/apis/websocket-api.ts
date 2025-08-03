@@ -22,7 +22,7 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
-import type { CreateLeadGenerationCampaign200Response } from '../models';
+import type { BulkAnalyzeDomains200Response } from '../models';
 // @ts-ignore
 import type { ErrorResponse } from '../models';
 /**
@@ -82,7 +82,7 @@ export const WebsocketApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async handleConnections(domainflowSession?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLeadGenerationCampaign200Response>> {
+        async handleConnections(domainflowSession?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkAnalyzeDomains200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.handleConnections(domainflowSession, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['WebsocketApi.handleConnections']?.[localVarOperationServerIndex]?.url;
@@ -105,7 +105,7 @@ export const WebsocketApiFactory = function (configuration?: Configuration, base
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        handleConnections(domainflowSession?: string, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response> {
+        handleConnections(domainflowSession?: string, options?: RawAxiosRequestConfig): AxiosPromise<BulkAnalyzeDomains200Response> {
             return localVarFp.handleConnections(domainflowSession, options).then((request) => request(axios, basePath));
         },
     };
@@ -125,7 +125,7 @@ export interface WebsocketApiInterface {
      * @throws {RequiredError}
      * @memberof WebsocketApiInterface
      */
-    handleConnections(domainflowSession?: string, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response>;
+    handleConnections(domainflowSession?: string, options?: RawAxiosRequestConfig): AxiosPromise<BulkAnalyzeDomains200Response>;
 
 }
 

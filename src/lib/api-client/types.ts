@@ -304,6 +304,106 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/campaigns/bulk/analytics/analyze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Analyze domains in bulk with enterprise intelligence
+         * @description Perform comprehensive analytics across multiple campaigns with advanced metrics and aggregation
+         */
+        post: operations["bulkAnalyzeDomains"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/bulk/campaigns/operate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Manage bulk campaign operations
+         * @description Perform bulk operations on multiple campaigns (start, stop, pause, resume, delete, configure)
+         */
+        post: operations["bulkCampaignOperations"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/bulk/domains/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate domains in bulk using orchestrator
+         * @description Generate large batches of domains with stealth-aware configuration and resource management
+         */
+        post: operations["bulkGenerateDomains"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/bulk/domains/validate-dns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate domains using bulk DNS validation with stealth
+         * @description Perform bulk DNS validation with stealth detection avoidance and resource optimization
+         */
+        post: operations["bulkValidateDNS"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/bulk/domains/validate-http": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate domains using bulk HTTP validation with stealth
+         * @description Perform bulk HTTP validation with keyword extraction, stealth detection avoidance, and resource optimization
+         */
+        post: operations["bulkValidateHTTP"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/campaigns/bulk/enriched-data": {
         parameters: {
             query?: never;
@@ -318,6 +418,106 @@ export interface paths {
          * @description Retrieve bulk enriched data across multiple campaigns for enterprise-scale processing
          */
         post: operations["getBulkEnrichedCampaignData"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/bulk/operations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List bulk operations with filtering
+         * @description Get a list of bulk operations with optional filtering by status, type, and time range
+         */
+        get: operations["listBulkOperations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/bulk/operations/{operationId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel bulk operations
+         * @description Cancel running bulk operations and release allocated resources
+         */
+        post: operations["cancelBulkOperation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/bulk/operations/{operationId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get bulk operation status by ID
+         * @description Get detailed status of a specific bulk operation including progress and results
+         */
+        get: operations["getBulkOperationStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/bulk/resources/allocate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Allocate bulk resources for enterprise operations
+         * @description Allocate compute, network, and storage resources for bulk campaign operations with priority scheduling
+         */
+        post: operations["allocateBulkResources"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/bulk/resources/status/{allocationId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get bulk resource allocation status
+         * @description Get current status and utilization of allocated bulk resources
+         */
+        get: operations["getBulkResourceStatus"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1198,6 +1398,15 @@ export interface components {
             /** Format: int32 */
             weight?: number;
         };
+        AggregatedAnalytics: {
+            overallSuccessRate?: number;
+            resourceUtilization?: components["schemas"]["ResourceUtilizationMetrics"];
+            topPerformingPhases?: components["schemas"]["PhasePerformance"][];
+            topPerformingTlds?: components["schemas"]["TLDPerformance"][];
+            totalCampaigns?: number;
+            totalDomains?: number;
+            totalLeads?: number;
+        };
         AnalysisConfig: {
             /** @enum {string} */
             analysisType: "basic" | "comprehensive" | "custom";
@@ -1354,12 +1563,63 @@ export interface components {
         BatchKeywordExtractionResponse: {
             results?: components["schemas"]["KeywordExtractionAPIResult"][];
         };
+        BulkAnalyticsAPIHandler: Record<string, never>;
+        BulkAnalyticsRequest: {
+            campaignIds?: string[];
+            filters?: {
+                [key: string]: Record<string, never>;
+            };
+            /** @enum {string} */
+            granularity?: "hour" | "day" | "week" | "month";
+            groupBy?: string[];
+            metrics: string[];
+            timeRange?: components["schemas"]["TimeRangeFilter"];
+        };
+        BulkAnalyticsResponse: {
+            aggregatedData?: components["schemas"]["AggregatedAnalytics"];
+            campaignMetrics?: {
+                [key: string]: components["schemas"]["CampaignAnalytics"];
+            };
+            /** Format: int32 */
+            dataPoints?: number;
+            metadata?: components["schemas"]["BulkMetadata"];
+            /** Format: int64 */
+            processingTimeMs?: number;
+        };
         BulkCampaignDeleteResponse: {
             deletedCampaigns?: string[];
             /** Format: int32 */
             deletedCount?: number;
             message?: string;
             success?: boolean;
+        };
+        BulkCampaignOperationRequest: {
+            campaignIds: string[];
+            config?: {
+                [key: string]: Record<string, never>;
+            };
+            force?: boolean;
+            /** @enum {string} */
+            operation: "start" | "stop" | "pause" | "resume" | "delete" | "configure";
+        };
+        BulkCampaignOperationResponse: {
+            /** Format: int32 */
+            failedOps?: number;
+            operation?: string;
+            operationId?: components["schemas"]["UUID"];
+            /** Format: int64 */
+            processingTimeMs?: number;
+            results?: {
+                [key: string]: components["schemas"]["CampaignOperationResult"];
+            };
+            /** Format: int32 */
+            successfulOps?: number;
+        };
+        BulkDNSValidationRequest: {
+            /** Format: int32 */
+            batchSize?: number;
+            operations: components["schemas"]["DNSValidationOperation"][];
+            stealth?: components["schemas"]["StealthValidationConfig"];
         };
         BulkDatabaseQueryRequest: {
             /** Format: int32 */
@@ -1406,6 +1666,30 @@ export interface components {
             /** Format: int32 */
             total_requested?: number;
         };
+        BulkDomainGenerationRequest: {
+            /** Format: int32 */
+            batchSize?: number;
+            operations: components["schemas"]["DomainGenerationOperation"][];
+            parallel?: boolean;
+        };
+        BulkDomainGenerationResponse: {
+            /** Format: int32 */
+            failedOps?: number;
+            operationId?: components["schemas"]["UUID"];
+            operations?: {
+                [key: string]: components["schemas"]["DomainGenerationResult"];
+            };
+            /** Format: int64 */
+            processingTimeMs?: number;
+            status?: string;
+            /** Format: int32 */
+            successfulOps?: number;
+            /** Format: int64 */
+            totalGenerated?: number;
+            /** Format: int64 */
+            totalRequested?: number;
+        };
+        BulkDomainsAPIHandler: Record<string, never>;
         BulkDomainsRequest: {
             campaignIds: string[];
             /** Format: int32 */
@@ -1435,6 +1719,14 @@ export interface components {
             metadata?: components["schemas"]["BulkMetadata"];
             /** Format: int32 */
             totalCount?: number;
+        };
+        BulkHTTPValidationRequest: {
+            /** Format: int32 */
+            batchSize?: number;
+            /** Format: int32 */
+            concurrent?: number;
+            operations: components["schemas"]["HTTPValidationOperation"][];
+            stealth?: components["schemas"]["StealthValidationConfig"];
         };
         BulkHealthCheckResponse: {
             /** Format: int32 */
@@ -1476,13 +1768,78 @@ export interface components {
             totalCount?: number;
         };
         BulkMetadata: {
-            failedCampaigns?: string[];
+            debug?: {
+                [key: string]: Record<string, never>;
+            };
+            executionNode?: string;
+            requestId?: components["schemas"]["UUID"];
+            /** Format: date-time */
+            timestamp?: string;
+            userId?: components["schemas"]["UUID"];
+            version?: string;
+        };
+        BulkOperationListRequest: {
+            /** Format: date-time */
+            endTime?: string;
             /** Format: int32 */
-            processedCampaigns?: number;
+            limit?: number;
+            /** Format: int32 */
+            offset?: number;
+            /** Format: date-time */
+            startTime?: string;
+            status?: string[];
+            type?: string[];
+            userId?: components["schemas"]["UUID"];
+        };
+        BulkOperationListResponse: {
+            metadata?: components["schemas"]["BulkMetadata"];
+            operations?: components["schemas"]["BulkOperationStatus"][];
+            /** Format: int32 */
+            totalCount?: number;
+        };
+        BulkOperationStatus: {
+            /** Format: int64 */
+            durationMs?: number;
+            /** Format: date-time */
+            endTime?: string;
+            error?: string;
+            metadata?: {
+                [key: string]: Record<string, never>;
+            };
+            operationId?: components["schemas"]["UUID"];
+            progress?: components["schemas"]["OperationProgress"];
+            results?: {
+                [key: string]: Record<string, never>;
+            };
+            /** Format: date-time */
+            startTime?: string;
+            status?: string;
+            type?: string;
+        };
+        BulkOperationStatusResponse: {
+            /** Format: date-time */
+            completedAt?: string;
+            /** Format: int32 */
+            completedOps?: number;
+            errorMessage?: string;
+            /** Format: int64 */
+            estimatedTimeMs?: number;
+            /** Format: int32 */
+            failedOps?: number;
+            operationId?: components["schemas"]["UUID"];
             /** Format: int64 */
             processingTimeMs?: number;
+            /** Format: double */
+            progress?: number;
+            results?: {
+                [key: string]: Record<string, never>;
+            };
+            /** Format: date-time */
+            startedAt?: string;
+            status?: string;
             /** Format: int32 */
-            skippedCampaigns?: number;
+            totalOperations?: number;
+            type?: string;
         };
         BulkProxyError: {
             error?: string;
@@ -1519,6 +1876,72 @@ export interface components {
             /** Format: int64 */
             totalRowsReturned?: number;
         };
+        BulkResourceAllocationResponse: {
+            /** Format: int32 */
+            allocatedCpu?: number;
+            /** Format: int32 */
+            allocatedMemory?: number;
+            /** Format: int32 */
+            allocatedPersonas?: number;
+            /** Format: int32 */
+            allocatedProxies?: number;
+            allocationId?: components["schemas"]["UUID"];
+            /** Format: int64 */
+            estimatedDurationMs?: number;
+            priority?: string;
+            /** Format: date-time */
+            scheduledTime?: string;
+            status?: string;
+        };
+        BulkResourceRequest: {
+            /** Format: int64 */
+            maxDuration?: number;
+            operations: components["schemas"]["ResourceOperation"][];
+            /** @enum {string} */
+            priority?: "low" | "normal" | "high" | "critical";
+            resourceLimits?: components["schemas"]["ResourceLimits"];
+            /** Format: date-time */
+            scheduledTime?: string;
+        };
+        BulkResourceResponse: {
+            allocationId?: components["schemas"]["UUID"];
+            /** Format: date-time */
+            expirationTime?: string;
+            /** Format: int32 */
+            failedOps?: number;
+            operations?: {
+                [key: string]: components["schemas"]["ResourceAllocationResult"];
+            };
+            /** Format: int64 */
+            processingTimeMs?: number;
+            /** Format: int32 */
+            successfulOps?: number;
+            totalAllocated?: components["schemas"]["ResourceUtilizationMetrics"];
+        };
+        BulkResourceStatusResponse: {
+            /** Format: int32 */
+            activeOperations?: number;
+            /** Format: int32 */
+            availablePersonas?: number;
+            /** Format: int32 */
+            availableProxies?: number;
+            /** Format: double */
+            cpuUsage?: number;
+            /** Format: int32 */
+            maxConcurrent?: number;
+            /** Format: double */
+            memoryUsage?: number;
+            /** Format: double */
+            networkUsage?: number;
+            /** Format: int32 */
+            queuedOperations?: number;
+            resourceLimits?: {
+                maxCpu?: number;
+                maxMemory?: number;
+                maxNetwork?: number;
+            };
+        };
+        BulkResourcesAPIHandler: Record<string, never>;
         BulkStatsMetadata: {
             failedItems?: string[];
             /** Format: int32 */
@@ -1536,6 +1959,43 @@ export interface components {
         BulkUpdateProxiesRequest: {
             proxyIds: string[];
             updates: components["schemas"]["UpdateProxyRequest"];
+        };
+        BulkValidationAPIHandler: Record<string, never>;
+        BulkValidationDomainResult: {
+            content?: string;
+            dnsResolved?: boolean;
+            domainName?: string;
+            error?: string;
+            httpAccessible?: boolean;
+            keywords?: string[];
+            metadata?: {
+                [key: string]: Record<string, never>;
+            };
+            /** Format: int64 */
+            responseTimeMs?: number;
+            status?: string;
+            /** Format: int32 */
+            statusCode?: number;
+        };
+        BulkValidationResponse: {
+            /** Format: int32 */
+            failedOps?: number;
+            operationId?: components["schemas"]["UUID"];
+            operations?: {
+                [key: string]: components["schemas"]["ValidationOperationResult"];
+            };
+            /** Format: int64 */
+            processingTimeMs?: number;
+            status?: string;
+            stealthMetrics?: components["schemas"]["StealthOperationMetrics"];
+            /** Format: int32 */
+            successfulOps?: number;
+            /** Format: int64 */
+            totalFailed?: number;
+            /** Format: int64 */
+            totalProcessed?: number;
+            /** Format: int64 */
+            totalSuccessful?: number;
         };
         CacheConfiguration: {
             cacheName?: string;
@@ -1726,6 +2186,25 @@ export interface components {
             message?: string;
             success?: boolean;
         };
+        CampaignAnalytics: {
+            /** Format: int64 */
+            avgResponseTimeMs?: number;
+            campaignId?: components["schemas"]["UUID"];
+            /** Format: double */
+            costPerLead?: number;
+            /** Format: int64 */
+            domainsGenerated?: number;
+            /** Format: int64 */
+            domainsValidated?: number;
+            /** Format: int64 */
+            leadsGenerated?: number;
+            phaseBreakdown?: {
+                [key: string]: components["schemas"]["PhaseMetrics"];
+            };
+            /** Format: double */
+            successRate?: number;
+            timeSeriesData?: components["schemas"]["TimeSeriesPoint"][];
+        };
         CampaignData: {
             /** Format: date-time */
             createdAt?: string;
@@ -1787,6 +2266,15 @@ export interface components {
             campaignId?: components["schemas"]["UUID"];
             message?: string;
             status?: string;
+            success?: boolean;
+        };
+        CampaignOperationResult: {
+            campaignId?: components["schemas"]["UUID"];
+            /** Format: int64 */
+            durationMs?: number;
+            error?: string;
+            newState?: string;
+            previousState?: string;
             success?: boolean;
         };
         CampaignParamsData: {
@@ -2188,31 +2676,11 @@ export interface components {
             };
             useSystemResolvers?: boolean;
         };
-        DNSPerformanceMetrics: {
-            /** Format: int64 */
-            AverageResponseTimeMs?: number;
-            /** Format: int64 */
-            CacheHits?: number;
-            /** Format: int64 */
-            CacheMisses?: number;
-            /** Format: int64 */
-            TotalDNSCalls?: number;
-            /** Format: int32 */
-            UniqueConfigurations?: number;
-            /** Format: int64 */
-            ValidationErrors?: number;
-        };
         DNSPersona: {
             config?: components["schemas"]["DNSValidatorConfigJSON"];
             description?: string;
             id?: string;
             name?: string;
-        };
-        DNSPersonaGroup: {
-            ConfigFingerprint?: string;
-            DNSConfig?: components["schemas"]["DNSConfigDetails"];
-            Personas?: components["schemas"]["Persona"][];
-            Validator?: components["schemas"]["UUID"];
         };
         DNSPhaseConfigRequest: {
             name?: string;
@@ -2246,6 +2714,15 @@ export interface components {
         DNSValidationConfig: {
             name?: string;
             personaIds: string[];
+        };
+        DNSValidationOperation: {
+            campaignId: components["schemas"]["UUID"];
+            domainFilter?: components["schemas"]["DomainFilter"];
+            /** Format: int32 */
+            maxDomains?: number;
+            personaIds: string[];
+            /** Format: int32 */
+            retryAttempts?: number;
         };
         DNSValidationParams: {
             /** Format: int32 */
@@ -2459,6 +2936,15 @@ export interface components {
             Domains?: string[];
         };
         DomainDNSStatusEnum: string;
+        DomainFilter: {
+            excludeList?: string[];
+            maxLength?: number;
+            minLength?: number;
+            onlyFailed?: boolean;
+            pattern?: string;
+            status?: string[];
+            tlds?: string[];
+        };
         DomainGenerationCampaignParams: {
             characterSet: string;
             constantString?: string;
@@ -2477,6 +2963,14 @@ export interface components {
             updatedAt?: string;
             /** Format: int32 */
             variableLength?: number;
+        };
+        DomainGenerationOperation: {
+            campaignId: components["schemas"]["UUID"];
+            config: Record<string, never>;
+            /** Format: int32 */
+            maxDomains?: number;
+            /** Format: int64 */
+            startFrom?: number;
         };
         DomainGenerationParams: {
             characterSet: string;
@@ -2532,6 +3026,19 @@ export interface components {
             successfulCount?: number;
             /** Format: int32 */
             totalDomains?: number;
+        };
+        DomainGenerationResult: {
+            campaignId?: components["schemas"]["UUID"];
+            /** Format: int32 */
+            domainsGenerated?: number;
+            /** Format: int64 */
+            durationMs?: number;
+            /** Format: int64 */
+            endOffset?: number;
+            error?: string;
+            /** Format: int64 */
+            startOffset?: number;
+            success?: boolean;
         };
         DomainGenerationService: Record<string, never>;
         DomainGenerationStats: {
@@ -2621,7 +3128,7 @@ export interface components {
         };
         ErrorInfo: {
             /** @enum {string} */
-            code?: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_ERROR" | "RATE_LIMIT_EXCEEDED" | "REQUEST_TIMEOUT" | "INTERNAL_SERVER_ERROR" | "DATABASE_ERROR" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "CAMPAIGN_IN_PROGRESS" | "QUOTA_EXCEEDED" | "INVALID_STATE";
+            code?: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_ERROR" | "REQUIRED_FIELD" | "RATE_LIMIT_EXCEEDED" | "REQUEST_TIMEOUT" | "NOT_IMPLEMENTED" | "INTERNAL_SERVER_ERROR" | "DATABASE_ERROR" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "CAMPAIGN_IN_PROGRESS" | "QUOTA_EXCEEDED" | "INVALID_STATE";
             details?: components["schemas"]["ErrorDetail"][];
             message?: string;
             path?: string;
@@ -2860,22 +3367,6 @@ export interface components {
             keywords: string[];
             personaIds?: string[];
         };
-        HTTPPerformanceMetrics: {
-            /** Format: int32 */
-            ActiveConnections?: number;
-            /** Format: int64 */
-            AverageResponseTimeMs?: number;
-            /** Format: int64 */
-            ConnectionPoolHits?: number;
-            /** Format: int64 */
-            ConnectionPoolMisses?: number;
-            /** Format: int64 */
-            TotalHTTPRequests?: number;
-            /** Format: int32 */
-            UniqueConfigurations?: number;
-            /** Format: int64 */
-            ValidationErrors?: number;
-        };
         HTTPPersona: {
             /** @description Validation Rules */
             allowedStatusCodes?: number[];
@@ -2926,12 +3417,6 @@ export interface components {
             viewportWidth?: number;
             waitDelaySeconds?: string;
         };
-        HTTPPersonaGroup: {
-            ConfigFingerprint?: string;
-            HTTPClient?: string;
-            HTTPConfig?: components["schemas"]["HTTPConfigDetails"];
-            Personas?: components["schemas"]["Persona"][];
-        };
         HTTPPhaseConfigRequest: {
             adHocKeywords?: string[];
             keywords?: string[];
@@ -2948,6 +3433,15 @@ export interface components {
             adHocKeywords?: string[];
             keywordSetIds?: string[];
             name?: string;
+            personaIds: string[];
+        };
+        HTTPValidationOperation: {
+            campaignId: components["schemas"]["UUID"];
+            domainFilter?: components["schemas"]["DomainFilter"];
+            keywordSetIds?: string[];
+            keywords?: string[];
+            /** Format: int32 */
+            maxDomains?: number;
             personaIds: string[];
         };
         HTTPValidationPhaseConfig: {
@@ -3393,6 +3887,32 @@ export interface components {
             offset?: number;
             pattern?: string;
         };
+        OperationCancellationResponse: {
+            /** Format: date-time */
+            cancellationTime?: string;
+            message?: string;
+            operationId?: components["schemas"]["UUID"];
+            partialResults?: boolean;
+            resourcesFreed?: boolean;
+            status?: string;
+        };
+        OperationProgress: {
+            currentPhase?: string;
+            /** Format: int64 */
+            estimatedTimeMs?: number;
+            /** Format: int64 */
+            failedItems?: number;
+            /** Format: double */
+            percentage?: number;
+            /** Format: int64 */
+            processedItems?: number;
+            /** Format: int64 */
+            remainingItems?: number;
+            /** Format: int64 */
+            successfulItems?: number;
+            /** Format: int64 */
+            totalItems?: number;
+        };
         OptimizationConfig: {
             enabled?: boolean;
             feature_flags?: components["schemas"]["FeatureFlagConfig"];
@@ -3414,14 +3934,6 @@ export interface components {
             featureFlagConfig?: string;
             optimizationLevel?: components["schemas"]["OptimizationLevel"];
             phaseConfig?: components["schemas"]["PhaseConfig"];
-        };
-        OptimizedHTTPClient: {
-            Client?: string;
-            ConfigFingerprint?: string;
-            /** Format: date-time */
-            CreatedAt?: string;
-            /** Format: int64 */
-            UsageCount?: number;
         };
         PageInfo: {
             /** Format: int32 */
@@ -3629,7 +4141,28 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
-        PhaseExecutionService: Record<string, never>;
+        PhaseMetrics: {
+            /** Format: int64 */
+            avgDurationMs?: number;
+            /** Format: int64 */
+            failureCount?: number;
+            /** Format: int64 */
+            itemsProcessed?: number;
+            phase?: string;
+            /** Format: int64 */
+            successCount?: number;
+            /** Format: double */
+            successRate?: number;
+            /** Format: int64 */
+            totalDurationMs?: number;
+        };
+        PhasePerformance: {
+            avgDurationMs?: number;
+            campaigns?: number;
+            items?: number;
+            phase?: string;
+            successRate?: number;
+        };
         PhaseProgress: {
             campaignId?: components["schemas"]["UUID"];
             errorMessage?: string;
@@ -4028,6 +4561,14 @@ export interface components {
             };
             writeTimeout?: string;
         };
+        RequiredResources: {
+            cpuCores?: number;
+            memoryMB?: number;
+            networkMbps?: number;
+            personas?: number;
+            proxies?: number;
+            storageMB?: number;
+        };
         ResolvedConfig: {
             data?: {
                 [key: string]: Record<string, never>;
@@ -4035,7 +4576,36 @@ export interface components {
             environment?: string;
             service_name?: string;
         };
+        ResourceAllocationResult: {
+            allocatedResources?: components["schemas"]["RequiredResources"];
+            /** Format: date-time */
+            allocationTime?: string;
+            campaignId?: components["schemas"]["UUID"];
+            error?: string;
+            /** Format: date-time */
+            expirationTime?: string;
+            success?: boolean;
+            type?: string;
+        };
+        ResourceLimits: {
+            maxConcurrent?: number;
+            maxCpuPercent?: number;
+            maxDiskIO?: number;
+            maxMemoryPercent?: number;
+            maxNetworkIO?: number;
+        };
         ResourceLockManager: Record<string, never>;
+        ResourceOperation: {
+            campaignId: components["schemas"]["UUID"];
+            config?: {
+                [key: string]: Record<string, never>;
+            };
+            /** @enum {string} */
+            priority?: "low" | "normal" | "high" | "critical";
+            resources?: components["schemas"]["RequiredResources"];
+            /** @enum {string} */
+            type: "domain_generation" | "dns_validation" | "http_validation" | "analytics";
+        };
         ResourceUtilizationMetric: {
             bottleneckDetected?: boolean;
             campaignId?: components["schemas"]["UUID"];
@@ -4055,6 +4625,18 @@ export interface components {
             serviceName?: string;
             /** Format: double */
             utilizationPct?: number;
+        };
+        ResourceUtilizationMetrics: {
+            /** Format: double */
+            cpuUsage?: number;
+            /** Format: int64 */
+            databaseQueries?: number;
+            /** Format: double */
+            memoryUsage?: number;
+            /** Format: int64 */
+            networkIO?: number;
+            /** Format: int64 */
+            proxyRequests?: number;
         };
         RuleLoaderService: Record<string, never>;
         RuleQueryFilter: {
@@ -4305,6 +4887,7 @@ export interface components {
             /** Format: date-time */
             timestamp?: string;
         };
+        StealthCompatibleService: Record<string, never>;
         StealthConfig: {
             /** @description BatchRandomization randomizes order within validation batches */
             batchRandomization?: boolean;
@@ -4345,7 +4928,36 @@ export interface components {
             /** Format: double */
             validationCoverage?: number;
         };
+        StealthOperationMetrics: {
+            /** Format: int64 */
+            avgRequestSpacing?: number;
+            /** Format: double */
+            detectionScore?: number;
+            /** Format: int32 */
+            patternBreaks?: number;
+            /** Format: int32 */
+            proxyRotations?: number;
+            /** Format: int32 */
+            randomizationEvents?: number;
+            /** Format: int32 */
+            temporalJitterEvents?: number;
+            /** Format: int32 */
+            userAgentRotations?: number;
+        };
         StealthStrategy: string;
+        StealthValidationConfig: {
+            /** Format: double */
+            detectionThreshold?: number;
+            enabled?: boolean;
+            patternAvoidance?: boolean;
+            proxyRotationForced?: boolean;
+            /** @enum {string} */
+            randomizationLevel?: "low" | "medium" | "high" | "extreme";
+            /** Format: int32 */
+            requestSpacing?: number;
+            temporalJitter?: boolean;
+            userAgentRotation?: boolean;
+        };
         StreamingResponseHandler: Record<string, never>;
         SuccessMessageResponse: {
             message?: string;
@@ -4362,6 +4974,13 @@ export interface components {
             numCPU?: number;
             /** Format: int32 */
             numGoroutine?: number;
+        };
+        TLDPerformance: {
+            domains?: number;
+            leads?: number;
+            rank?: number;
+            successRate?: number;
+            tld?: string;
         };
         TLSClientHello: {
             cipherSuites?: string[];
@@ -4397,9 +5016,22 @@ export interface components {
         TemplateManager: Record<string, never>;
         TestResultResponse: {
             message?: string;
-            status?: string;
             success?: boolean;
-            testId?: components["schemas"]["UUID"];
+        };
+        TimeRangeFilter: {
+            /** Format: date-time */
+            endTime: string;
+            /** Format: date-time */
+            startTime: string;
+            /** Format: date-time */
+            timezone?: string;
+        };
+        TimeSeriesPoint: {
+            /** Format: date-time */
+            timestamp?: string;
+            values?: {
+                [key: string]: Record<string, never>;
+            };
         };
         /**
          * Format: uuid
@@ -4524,6 +5156,21 @@ export interface components {
             campaignId?: components["schemas"]["UUID"];
             jobId?: components["schemas"]["UUID"];
             message?: string;
+            success?: boolean;
+            validationType?: components["schemas"]["UUID"];
+        };
+        ValidationOperationResult: {
+            campaignId?: components["schemas"]["UUID"];
+            /** Format: int32 */
+            domainsFailed?: number;
+            /** Format: int32 */
+            domainsProcessed?: number;
+            /** Format: int32 */
+            domainsSuccessful?: number;
+            /** Format: int64 */
+            durationMs?: number;
+            error?: string;
+            results?: components["schemas"]["BulkValidationDomainResult"][];
             success?: boolean;
             validationType?: components["schemas"]["UUID"];
         };
@@ -5215,6 +5862,241 @@ export interface operations {
             };
         };
     };
+    bulkAnalyzeDomains: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkAnalyticsRequest"];
+            };
+        };
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    bulkCampaignOperations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkCampaignOperationRequest"];
+            };
+        };
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    bulkGenerateDomains: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkDomainGenerationRequest"];
+            };
+        };
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    bulkValidateDNS: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkDNSValidationRequest"];
+            };
+        };
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    bulkValidateHTTP: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkHTTPValidationRequest"];
+            };
+        };
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     getBulkEnrichedCampaignData: {
         parameters: {
             query?: never;
@@ -5235,6 +6117,223 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["APIResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    listBulkOperations: {
+        parameters: {
+            query?: {
+                /** @description Filter by operation status */
+                status?: string;
+                /** @description Filter by operation type */
+                type?: string;
+                /** @description Number of operations to return (max 1000) */
+                limit?: number;
+                /** @description Number of operations to skip */
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkOperationListResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    cancelBulkOperation: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Bulk operation ID to cancel */
+                operationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OperationCancellationResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getBulkOperationStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Bulk operation ID */
+                operationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkOperationStatus"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    allocateBulkResources: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkResourceRequest"];
+            };
+        };
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getBulkResourceStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Resource allocation ID */
+                allocationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResourceStatusResponse"];
                 };
             };
             /** @description Bad Request */

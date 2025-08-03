@@ -24,9 +24,11 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 // @ts-ignore
 import type { APIResponse } from '../models';
 // @ts-ignore
-import type { BulkEnrichedDataRequest } from '../models';
+import type { BulkAnalyzeDomains200Response } from '../models';
 // @ts-ignore
-import type { CreateLeadGenerationCampaign200Response } from '../models';
+import type { BulkCampaignOperationRequest } from '../models';
+// @ts-ignore
+import type { BulkEnrichedDataRequest } from '../models';
 // @ts-ignore
 import type { CreateLeadGenerationCampaignRequest } from '../models';
 // @ts-ignore
@@ -43,6 +45,42 @@ import type { PhaseConfigureRequest } from '../models';
  */
 export const CampaignsApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
+        /**
+         * Perform bulk operations on multiple campaigns (start, stop, pause, resume, delete, configure)
+         * @summary Manage bulk campaign operations
+         * @param {BulkCampaignOperationRequest} bulkCampaignOperationRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bulkCampaignOperations: async (bulkCampaignOperationRequest: BulkCampaignOperationRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'bulkCampaignOperationRequest' is not null or undefined
+            assertParamExists('bulkCampaignOperations', 'bulkCampaignOperationRequest', bulkCampaignOperationRequest)
+            const localVarPath = `/campaigns/bulk/campaigns/operate`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(bulkCampaignOperationRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
         /**
          * Configure a specific phase for a campaign using standalone services
          * @summary Configure campaign phase (standalone)
@@ -380,6 +418,19 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
     const localVarAxiosParamCreator = CampaignsApiAxiosParamCreator(configuration)
     return {
         /**
+         * Perform bulk operations on multiple campaigns (start, stop, pause, resume, delete, configure)
+         * @summary Manage bulk campaign operations
+         * @param {BulkCampaignOperationRequest} bulkCampaignOperationRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async bulkCampaignOperations(bulkCampaignOperationRequest: BulkCampaignOperationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkAnalyzeDomains200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkCampaignOperations(bulkCampaignOperationRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.bulkCampaignOperations']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
          * Configure a specific phase for a campaign using standalone services
          * @summary Configure campaign phase (standalone)
          * @param {string} campaignId Campaign ID (UUID)
@@ -401,7 +452,7 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createLeadGenerationCampaign(createLeadGenerationCampaignRequest: CreateLeadGenerationCampaignRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLeadGenerationCampaign200Response>> {
+        async createLeadGenerationCampaign(createLeadGenerationCampaignRequest: CreateLeadGenerationCampaignRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkAnalyzeDomains200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.createLeadGenerationCampaign(createLeadGenerationCampaignRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.createLeadGenerationCampaign']?.[localVarOperationServerIndex]?.url;
@@ -510,6 +561,16 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
     const localVarFp = CampaignsApiFp(configuration)
     return {
         /**
+         * Perform bulk operations on multiple campaigns (start, stop, pause, resume, delete, configure)
+         * @summary Manage bulk campaign operations
+         * @param {BulkCampaignOperationRequest} bulkCampaignOperationRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        bulkCampaignOperations(bulkCampaignOperationRequest: BulkCampaignOperationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkAnalyzeDomains200Response> {
+            return localVarFp.bulkCampaignOperations(bulkCampaignOperationRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
          * Configure a specific phase for a campaign using standalone services
          * @summary Configure campaign phase (standalone)
          * @param {string} campaignId Campaign ID (UUID)
@@ -528,7 +589,7 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createLeadGenerationCampaign(createLeadGenerationCampaignRequest: CreateLeadGenerationCampaignRequest, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response> {
+        createLeadGenerationCampaign(createLeadGenerationCampaignRequest: CreateLeadGenerationCampaignRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkAnalyzeDomains200Response> {
             return localVarFp.createLeadGenerationCampaign(createLeadGenerationCampaignRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -612,6 +673,16 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
  */
 export interface CampaignsApiInterface {
     /**
+     * Perform bulk operations on multiple campaigns (start, stop, pause, resume, delete, configure)
+     * @summary Manage bulk campaign operations
+     * @param {BulkCampaignOperationRequest} bulkCampaignOperationRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    bulkCampaignOperations(bulkCampaignOperationRequest: BulkCampaignOperationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkAnalyzeDomains200Response>;
+
+    /**
      * Configure a specific phase for a campaign using standalone services
      * @summary Configure campaign phase (standalone)
      * @param {string} campaignId Campaign ID (UUID)
@@ -631,7 +702,7 @@ export interface CampaignsApiInterface {
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    createLeadGenerationCampaign(createLeadGenerationCampaignRequest: CreateLeadGenerationCampaignRequest, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response>;
+    createLeadGenerationCampaign(createLeadGenerationCampaignRequest: CreateLeadGenerationCampaignRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkAnalyzeDomains200Response>;
 
     /**
      * Retrieve bulk enriched data across multiple campaigns for enterprise-scale processing
@@ -713,6 +784,18 @@ export interface CampaignsApiInterface {
  * @extends {BaseAPI}
  */
 export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
+    /**
+     * Perform bulk operations on multiple campaigns (start, stop, pause, resume, delete, configure)
+     * @summary Manage bulk campaign operations
+     * @param {BulkCampaignOperationRequest} bulkCampaignOperationRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public bulkCampaignOperations(bulkCampaignOperationRequest: BulkCampaignOperationRequest, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).bulkCampaignOperations(bulkCampaignOperationRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
     /**
      * Configure a specific phase for a campaign using standalone services
      * @summary Configure campaign phase (standalone)

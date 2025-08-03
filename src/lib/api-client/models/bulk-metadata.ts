@@ -1,4 +1,6 @@
 /* tslint:disable */
+
+import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -22,27 +24,39 @@
 export interface BulkMetadata {
     /**
      * 
-     * @type {Array<string>}
+     * @type {{ [key: string]: object; }}
      * @memberof BulkMetadata
      */
-    'failedCampaigns'?: Array<string>;
+    'debug'?: { [key: string]: object; };
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof BulkMetadata
      */
-    'processedCampaigns'?: number;
+    'executionNode'?: string;
+    /**
+     * Unique identifier (UUID v4)
+     * @type {string}
+     * @memberof BulkMetadata
+     */
+    'requestId'?: UUID;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof BulkMetadata
      */
-    'processingTimeMs'?: number;
+    'timestamp'?: string;
+    /**
+     * Unique identifier (UUID v4)
+     * @type {string}
+     * @memberof BulkMetadata
+     */
+    'userId'?: UUID;
     /**
      * 
-     * @type {number}
+     * @type {string}
      * @memberof BulkMetadata
      */
-    'skippedCampaigns'?: number;
+    'version'?: string;
 }
 

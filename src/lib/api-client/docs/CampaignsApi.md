@@ -4,6 +4,7 @@ All URIs are relative to *http://localhost*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
+|[**bulkCampaignOperations**](#bulkcampaignoperations) | **POST** /campaigns/bulk/campaigns/operate | Manage bulk campaign operations|
 |[**configurePhaseStandalone**](#configurephasestandalone) | **POST** /campaigns/{campaignId}/phases/{phase}/configure | Configure campaign phase (standalone)|
 |[**createLeadGenerationCampaign**](#createleadgenerationcampaign) | **POST** /campaigns/lead-generation | Create lead generation campaign|
 |[**getBulkEnrichedCampaignData**](#getbulkenrichedcampaigndata) | **POST** /campaigns/bulk/enriched-data | Get bulk enriched campaign data|
@@ -13,6 +14,60 @@ All URIs are relative to *http://localhost*
 |[**getPatternOffset**](#getpatternoffset) | **POST** /campaigns/domain-generation/pattern-offset | Get domain generation pattern offset|
 |[**getPhaseStatusStandalone**](#getphasestatusstandalone) | **GET** /campaigns/{campaignId}/phases/{phase}/status | Get phase status (standalone)|
 |[**startPhaseStandalone**](#startphasestandalone) | **POST** /campaigns/{campaignId}/phases/{phase}/start | Start campaign phase (standalone)|
+
+# **bulkCampaignOperations**
+> BulkAnalyzeDomains200Response bulkCampaignOperations(bulkCampaignOperationRequest)
+
+Perform bulk operations on multiple campaigns (start, stop, pause, resume, delete, configure)
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration,
+    BulkCampaignOperationRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let bulkCampaignOperationRequest: BulkCampaignOperationRequest; //
+
+const { status, data } = await apiInstance.bulkCampaignOperations(
+    bulkCampaignOperationRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **bulkCampaignOperationRequest** | **BulkCampaignOperationRequest**|  | |
+
+
+### Return type
+
+**BulkAnalyzeDomains200Response**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Operation successful |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **configurePhaseStandalone**
 > APIResponse configurePhaseStandalone(phaseConfigureRequest)
@@ -75,7 +130,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **createLeadGenerationCampaign**
-> CreateLeadGenerationCampaign200Response createLeadGenerationCampaign(createLeadGenerationCampaignRequest)
+> BulkAnalyzeDomains200Response createLeadGenerationCampaign(createLeadGenerationCampaignRequest)
 
 Create a new lead generation campaign with domain generation configuration
 
@@ -107,7 +162,7 @@ const { status, data } = await apiInstance.createLeadGenerationCampaign(
 
 ### Return type
 
-**CreateLeadGenerationCampaign200Response**
+**BulkAnalyzeDomains200Response**
 
 ### Authorization
 

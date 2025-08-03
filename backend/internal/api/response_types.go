@@ -16,6 +16,7 @@ const (
 	ErrorCodeNotFound          ErrorCode = "NOT_FOUND"
 	ErrorCodeConflict          ErrorCode = "CONFLICT"
 	ErrorCodeValidation        ErrorCode = "VALIDATION_ERROR"
+	ErrorCodeRequired          ErrorCode = "REQUIRED_FIELD"
 	ErrorCodeRateLimitExceeded ErrorCode = "RATE_LIMIT_EXCEEDED"
 	ErrorCodeRequestTimeout    ErrorCode = "REQUEST_TIMEOUT"
 	ErrorCodeNotImplemented    ErrorCode = "NOT_IMPLEMENTED"

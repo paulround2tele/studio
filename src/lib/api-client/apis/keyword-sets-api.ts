@@ -24,9 +24,9 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 // @ts-ignore
 import type { APIResponse } from '../models';
 // @ts-ignore
-import type { CreateKeywordSetRequest } from '../models';
+import type { BulkAnalyzeDomains200Response } from '../models';
 // @ts-ignore
-import type { CreateLeadGenerationCampaign200Response } from '../models';
+import type { CreateKeywordSetRequest } from '../models';
 // @ts-ignore
 import type { ErrorResponse } from '../models';
 // @ts-ignore
@@ -351,7 +351,7 @@ export const KeywordSetsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async createKeywordSet(createKeywordSetRequest: CreateKeywordSetRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLeadGenerationCampaign200Response>> {
+        async createKeywordSet(createKeywordSetRequest: CreateKeywordSetRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkAnalyzeDomains200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.createKeywordSet(createKeywordSetRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KeywordSetsApi.createKeywordSet']?.[localVarOperationServerIndex]?.url;
@@ -406,7 +406,7 @@ export const KeywordSetsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async listKeywordSets(limit?: number, offset?: number, includeRules?: boolean, isEnabled?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CreateLeadGenerationCampaign200Response>> {
+        async listKeywordSets(limit?: number, offset?: number, includeRules?: boolean, isEnabled?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkAnalyzeDomains200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.listKeywordSets(limit, offset, includeRules, isEnabled, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KeywordSetsApi.listKeywordSets']?.[localVarOperationServerIndex]?.url;
@@ -462,7 +462,7 @@ export const KeywordSetsApiFactory = function (configuration?: Configuration, ba
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        createKeywordSet(createKeywordSetRequest: CreateKeywordSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response> {
+        createKeywordSet(createKeywordSetRequest: CreateKeywordSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkAnalyzeDomains200Response> {
             return localVarFp.createKeywordSet(createKeywordSetRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -505,7 +505,7 @@ export const KeywordSetsApiFactory = function (configuration?: Configuration, ba
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listKeywordSets(limit?: number, offset?: number, includeRules?: boolean, isEnabled?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response> {
+        listKeywordSets(limit?: number, offset?: number, includeRules?: boolean, isEnabled?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<BulkAnalyzeDomains200Response> {
             return localVarFp.listKeywordSets(limit, offset, includeRules, isEnabled, options).then((request) => request(axios, basePath));
         },
         /**
@@ -552,7 +552,7 @@ export interface KeywordSetsApiInterface {
      * @throws {RequiredError}
      * @memberof KeywordSetsApiInterface
      */
-    createKeywordSet(createKeywordSetRequest: CreateKeywordSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response>;
+    createKeywordSet(createKeywordSetRequest: CreateKeywordSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkAnalyzeDomains200Response>;
 
     /**
      * Delete a keyword set by ID
@@ -595,7 +595,7 @@ export interface KeywordSetsApiInterface {
      * @throws {RequiredError}
      * @memberof KeywordSetsApiInterface
      */
-    listKeywordSets(limit?: number, offset?: number, includeRules?: boolean, isEnabled?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<CreateLeadGenerationCampaign200Response>;
+    listKeywordSets(limit?: number, offset?: number, includeRules?: boolean, isEnabled?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<BulkAnalyzeDomains200Response>;
 
     /**
      * Advanced querying for keyword rule management across sets with multiple filter options

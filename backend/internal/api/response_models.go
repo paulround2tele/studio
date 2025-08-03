@@ -51,8 +51,6 @@ type HealthCheckResponse struct {
 type TestResultResponse struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
-	TestID  string `json:"testId,omitempty"`
-	Status  string `json:"status,omitempty"`
 }
 
 // DetailedTestResultResponse represents detailed test results with metrics

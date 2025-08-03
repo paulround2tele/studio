@@ -1,6 +1,4 @@
 /* tslint:disable */
-
-import type { UUID } from '../uuid-types';
 /* eslint-disable */
 /**
  * Studio API
@@ -30,21 +28,9 @@ export interface TestResultResponse {
     'message'?: string;
     /**
      * 
-     * @type {string}
-     * @memberof TestResultResponse
-     */
-    'status'?: string;
-    /**
-     * 
      * @type {boolean}
      * @memberof TestResultResponse
      */
     'success'?: boolean;
-    /**
-     * Unique identifier (UUID v4)
-     * @type {string}
-     * @memberof TestResultResponse
-     */
-    'testId'?: UUID;
 }
 

@@ -419,9 +419,12 @@ func main() {
 		db)
 	log.Println("CampaignOrchestratorAPIHandler initialized with Phase 4 orchestrator.")
 
-	// Initialize enterprise-scale bulk operations handler
+	// Initialize enterprise-scale bulk operations handlers (properly separated)
 	bulkDomainsAPIHandler := api.NewBulkDomainsAPIHandler(campaignOrchestrator)
-	log.Println("BulkDomainsAPIHandler initialized for enterprise bulk operations.")
+	bulkValidationAPIHandler := api.NewBulkValidationAPIHandler(campaignOrchestrator)
+	bulkAnalyticsAPIHandler := api.NewBulkAnalyticsAPIHandler(campaignOrchestrator)
+	bulkResourcesAPIHandler := api.NewBulkResourcesAPIHandler(campaignOrchestrator)
+	log.Println("All bulk operation handlers initialized with separated architecture.")
 
 	webSocketAPIHandler := api.NewWebSocketHandler(wsBroadcaster, sessionService)
 	log.Println("WebSocketAPIHandler initialized.")
@@ -827,7 +830,7 @@ func main() {
 
 	// V2 Bulk Operations routes (enterprise-scale operations)
 	bulkRoutesGroup := newCampaignRoutesGroup.Group("/bulk")
-	registerBulkOperationRoutes(bulkRoutesGroup, bulkDomainsAPIHandler)
+	registerBulkOperationRoutes(bulkRoutesGroup, bulkDomainsAPIHandler, bulkValidationAPIHandler, bulkAnalyticsAPIHandler, bulkResourcesAPIHandler)
 	log.Println("Registered enterprise bulk operation routes under /api/v2/campaigns/bulk.")
 
 	// Generate OpenAPI specification using TRUE automatic reflection from real server routes
@@ -885,23 +888,33 @@ func main() {
 	log.Println("Server and workers exited gracefully.")
 }
 
-// registerBulkOperationRoutes registers all bulk operation routes for enterprise-scale operations
-func registerBulkOperationRoutes(group *gin.RouterGroup, handler *api.BulkDomainsAPIHandler) {
+// registerBulkOperationRoutes registers all bulk operation routes for enterprise-scale operations with proper separation
+func registerBulkOperationRoutes(
+	group *gin.RouterGroup,
+	domainsHandler *api.BulkDomainsAPIHandler,
+	validationHandler *api.BulkValidationAPIHandler,
+	analyticsHandler *api.BulkAnalyticsAPIHandler,
+	resourcesHandler *api.BulkResourcesAPIHandler,
+) {
 	// Bulk domain operations
-	group.POST("/domains/generate", handler.BulkGenerateDomains)
-	group.POST("/domains/validate-dns", handler.BulkValidateDNS)
-	group.POST("/domains/validate-http", handler.BulkValidateHTTP)
-	group.POST("/domains/analyze", handler.BulkAnalyzeDomains)
+	group.POST("/domains/generate", domainsHandler.BulkGenerateDomains)
+
+	// Bulk validation operations
+	group.POST("/domains/validate-dns", validationHandler.BulkValidateDNS)
+	group.POST("/domains/validate-http", validationHandler.BulkValidateHTTP)
+
+	// Bulk analytics operations
+	group.POST("/domains/analyze", analyticsHandler.BulkAnalyzeDomains)
 
 	// Bulk campaign lifecycle operations
-	group.POST("/campaigns/operate", handler.BulkCampaignOperations)
+	group.POST("/campaigns/operate", analyticsHandler.BulkCampaignOperations)
 
-	// Bulk operation monitoring
-	group.GET("/operations/:operationId/status", handler.GetBulkOperationStatus)
-	group.GET("/operations", handler.ListBulkOperations)
-	group.POST("/operations/:operationId/cancel", handler.CancelBulkOperation)
+	// Bulk operation monitoring and management
+	group.GET("/operations/:operationId/status", resourcesHandler.GetBulkOperationStatus)
+	group.GET("/operations", resourcesHandler.ListBulkOperations)
+	group.POST("/operations/:operationId/cancel", resourcesHandler.CancelBulkOperation)
 
 	// Resource management
-	group.POST("/resources/allocate", handler.AllocateBulkResources)
-	group.GET("/resources/status", handler.GetBulkResourceStatus)
+	group.POST("/resources/allocate", resourcesHandler.AllocateBulkResources)
+	group.GET("/resources/status/:allocationId", resourcesHandler.GetBulkResourceStatus)
 }
