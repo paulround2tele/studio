@@ -32,47 +32,8 @@ export default function KeywordSetsPage() {
   useEffect(() => {
     loadSets();
     
-    let wsCleanup: (() => void) | null = null;
-
-    const connectWebSocket = async () => {
-      try {
-        // Use singleton SessionWebSocketClient instead of conflicting elastic service
-        const { sessionWebSocketClient } = await import('@/lib/websocket/client');
-        
-        console.log('[KeywordSetsPage] Connecting to WebSocket for keyword set updates...');
-        
-        // Connect using proper singleton pattern
-        sessionWebSocketClient.connect();
-        
-        // Subscribe to messages for keyword-sets
-        const unsubscribe = sessionWebSocketClient.on('message', (message: any) => {
-          console.log('[KeywordSetsPage] WebSocket message received:', message);
-          
-          // Route keyword set-specific messages
-          if (message.type === 'keyword_set_list_update') {
-              console.log('[KeywordSetsPage] Keyword set list update detected, refreshing data...');
-              // Refresh the data without loading spinner
-              loadSets();
-            }
-        });
-        
-        // Set cleanup function
-        wsCleanup = unsubscribe;
-        
-      } catch (error) {
-        console.error('[KeywordSetsPage] Failed to connect WebSocket:', error);
-      }
-    };
-
-    // Connect WebSocket for real-time updates
-    connectWebSocket();
-    
-    return () => {
-      // Cleanup WebSocket connection
-      if (wsCleanup) {
-        wsCleanup();
-      }
-    };
+    // TODO: Replace with Server-Sent Events (SSE) for real-time updates
+    // WebSocket infrastructure removed during RTK consolidation
   }, [loadSets]);
 
   return (

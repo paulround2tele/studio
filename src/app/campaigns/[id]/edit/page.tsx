@@ -4,7 +4,7 @@
 import CampaignFormV2 from '@/components/campaigns/CampaignFormV2';
 import PageHeader from '@/components/shared/PageHeader';
 import type { components } from '@/lib/api-client/types';
-import { useSingleCampaign } from '@/providers/CampaignDataProvider';
+import { useGetCampaignsStandaloneQuery } from '@/store/api/campaignApi';
 
 type CampaignDetailsResponse = components['schemas']['CampaignDetailsResponse'];
 import { FilePenLine, AlertCircle } from 'lucide-react';
@@ -19,8 +19,12 @@ function EditCampaignPageContent() {
 
   const campaignId = params.id as string;
   
-  // ENTERPRISE FIX: Use global provider for single bulk call across entire app
-  const { campaign: campaignData, loading, error } = useSingleCampaign(campaignId);
+  // RTK Query: Use centralized campaigns query and find specific campaign
+  const { data: campaignsResponse, isLoading: loading, error } = useGetCampaignsStandaloneQuery();
+  
+  // Extract campaigns from RTK Query response 
+  const campaigns = Array.isArray(campaignsResponse) ? campaignsResponse : [];
+  const campaignData = campaigns.find((c: any) => c.id === campaignId);
 
   if (loading) {
     return (
@@ -41,7 +45,15 @@ function EditCampaignPageContent() {
     return (
        <div className="text-center py-10">
         <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
-        <PageHeader title="Error Loading Campaign" description={error || "Campaign data could not be loaded or found."} icon={FilePenLine} />
+        <PageHeader 
+          title="Error Loading Campaign" 
+          description={
+            typeof error === 'string' 
+              ? error 
+              : "Campaign data could not be loaded or found."
+          } 
+          icon={FilePenLine} 
+        />
         <Button onClick={() => router.push('/campaigns')} className="mt-6">Back to Campaigns</Button>
       </div>
     );

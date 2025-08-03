@@ -9,7 +9,7 @@ import { CAMPAIGN_PHASES_ORDERED } from '@/lib/constants';
 import { ScrollArea } from '../ui/scroll-area';
 import { ExternalLink, Activity } from 'lucide-react';
 import Link from 'next/link';
-import { useCampaignsList } from '@/providers/CampaignDataProvider';
+import { useRTKCampaignsList } from '@/providers/RTKCampaignDataProvider';
 import { StatusBadge } from '@/components/shared/StatusBadge';
 import { LeadScoreDisplay } from '@/components/shared/LeadScoreDisplay';
 
@@ -78,8 +78,8 @@ const getSimilarityBadgeVariant = (score: number | undefined) => {
 };
 
 export default function LatestActivityTable() {
-  // SINGLE GLOBAL PROVIDER: No more individual bulk calls!
-  const { campaigns: enrichedCampaigns, loading } = useCampaignsList();
+  // RTK Query: Use centralized campaign data
+  const { campaigns: enrichedCampaigns, loading } = useRTKCampaignsList();
 
   // Process campaigns into activity data
   const allActivityData = useMemo(() => {

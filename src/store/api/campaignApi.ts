@@ -4,7 +4,11 @@ import type {
   CreateLeadGenerationCampaignRequest,
   PhaseConfigureRequest,
   APIResponse,
-  CreateLeadGenerationCampaign200Response
+  LeadGenerationCampaignResponse,
+  BulkEnrichedDataRequest,
+  BulkEnrichedDataResponse,
+  PatternOffsetRequest,
+  PatternOffsetResponse
 } from '@/lib/api-client/models';
 import type { CampaignCurrentPhaseEnum } from '@/lib/api-client/models/campaign';
 
@@ -19,12 +23,17 @@ export const campaignApi = createApi({
   }),
   tagTypes: ['Campaign', 'CampaignPhases', 'CampaignStatus'],
   endpoints: (builder) => ({
-    // Create new campaign using generated client
-    createCampaign: builder.mutation<CreateLeadGenerationCampaign200Response, CreateLeadGenerationCampaignRequest>({
+    // Create new campaign using generated client - respects backend APIResponse wrapper
+    createCampaign: builder.mutation<LeadGenerationCampaignResponse, CreateLeadGenerationCampaignRequest>({
       queryFn: async (campaign) => {
         try {
           const response = await campaignsApiClient.createLeadGenerationCampaign(campaign);
-          return { data: response.data };
+          const apiResponse = response.data as APIResponse;
+          if (apiResponse.success && apiResponse.data) {
+            return { data: apiResponse.data as LeadGenerationCampaignResponse };
+          } else {
+            return { error: { status: 500, data: apiResponse.error?.message || 'Campaign creation failed' } };
+          }
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
@@ -32,7 +41,7 @@ export const campaignApi = createApi({
       invalidatesTags: ['Campaign'],
     }),
     
-    // Configure phase using generated client
+    // Configure phase using generated client - respects backend APIResponse wrapper
     configurePhaseStandalone: builder.mutation<APIResponse, { 
       campaignId: string; 
       phase: CampaignCurrentPhaseEnum; 
@@ -41,7 +50,12 @@ export const campaignApi = createApi({
       queryFn: async ({ campaignId, phase, config }) => {
         try {
           const response = await campaignsApiClient.configurePhaseStandalone(campaignId, phase, config);
-          return { data: response.data };
+          const apiResponse = response.data as APIResponse;
+          if (apiResponse.success) {
+            return { data: apiResponse };
+          } else {
+            return { error: { status: 500, data: apiResponse.error?.message || 'Phase configuration failed' } };
+          }
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
@@ -52,7 +66,7 @@ export const campaignApi = createApi({
       ],
     }),
     
-    // Start phase using generated client
+        // Start phase using generated client - respects backend APIResponse wrapper
     startPhaseStandalone: builder.mutation<APIResponse, { 
       campaignId: string; 
       phase: CampaignCurrentPhaseEnum; 
@@ -60,44 +74,33 @@ export const campaignApi = createApi({
       queryFn: async ({ campaignId, phase }) => {
         try {
           const response = await campaignsApiClient.startPhaseStandalone(campaignId, phase);
-          return { data: response.data };
+          const apiResponse = response.data as APIResponse;
+          if (apiResponse.success) {
+            return { data: apiResponse };
+          } else {
+            return { error: { status: 500, data: apiResponse.error?.message || 'Phase start failed' } };
+          }
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
       },
       invalidatesTags: (result, error, { campaignId }) => [
         { type: 'Campaign', id: campaignId },
-        { type: 'CampaignPhases', id: campaignId },
-        { type: 'CampaignStatus', id: campaignId },
+        'CampaignPhases',
       ],
     }),
     
-    // Update campaign using generated client (placeholder - needs proper backend endpoint)
-    updateCampaign: builder.mutation<APIResponse, { 
-      campaignId: string; 
-      updates: any; 
-    }>({
-      queryFn: async ({ campaignId, updates }) => {
-        try {
-          // This is a placeholder since there's no updateCampaign endpoint in the generated API
-          // TODO: Add proper update endpoint to backend API
-          console.warn('updateCampaign not implemented in backend API yet');
-          return { data: { success: true, message: 'Update not implemented' } };
-        } catch (error: any) {
-          return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
-        }
-      },
-      invalidatesTags: (result, error, { campaignId }) => [
-        { type: 'Campaign', id: campaignId },
-      ],
-    }),
-    
-    // Get campaign progress using generated client
+    // Get campaign progress using generated client - respects backend APIResponse wrapper
     getCampaignProgressStandalone: builder.query<APIResponse, string>({
       queryFn: async (campaignId) => {
         try {
           const response = await campaignsApiClient.getCampaignProgressStandalone(campaignId);
-          return { data: response.data };
+          const apiResponse = response.data as APIResponse;
+          if (apiResponse.success) {
+            return { data: apiResponse };
+          } else {
+            return { error: { status: 500, data: apiResponse.error?.message || 'Failed to get campaign progress' } };
+          }
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
@@ -107,7 +110,7 @@ export const campaignApi = createApi({
       ],
     }),
     
-    // Get phase status using generated client
+    // Get phase status using generated client - respects backend APIResponse wrapper
     getPhaseStatusStandalone: builder.query<APIResponse, { 
       campaignId: string; 
       phase: CampaignCurrentPhaseEnum; 
@@ -115,7 +118,12 @@ export const campaignApi = createApi({
       queryFn: async ({ campaignId, phase }) => {
         try {
           const response = await campaignsApiClient.getPhaseStatusStandalone(campaignId, phase);
-          return { data: response.data };
+          const apiResponse = response.data as APIResponse;
+          if (apiResponse.success) {
+            return { data: apiResponse };
+          } else {
+            return { error: { status: 500, data: apiResponse.error?.message || 'Failed to get phase status' } };
+          }
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
@@ -125,17 +133,62 @@ export const campaignApi = createApi({
       ],
     }),
     
-    // Get all campaigns using generated client
+    // Get all campaigns using generated client - respects backend APIResponse wrapper
     getCampaignsStandalone: builder.query<APIResponse, void>({
       queryFn: async () => {
         try {
           const response = await campaignsApiClient.getCampaignsStandalone();
-          return { data: response.data };
+          const apiResponse = response.data as APIResponse;
+          if (apiResponse.success) {
+            return { data: apiResponse };
+          } else {
+            return { error: { status: 500, data: apiResponse.error?.message || 'Failed to get campaigns' } };
+          }
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
       },
       providesTags: ['Campaign'],
+    }),
+
+    // Bulk enriched campaign data - respects backend APIResponse wrapper
+    getBulkEnrichedCampaignData: builder.query<BulkEnrichedDataResponse, BulkEnrichedDataRequest>({
+      queryFn: async (request) => {
+        try {
+          const response = await campaignsApiClient.getBulkEnrichedCampaignData(request);
+          // Backend returns: { success: true, data: BulkEnrichedDataResponse, requestId: "..." }
+          const apiResponse = response.data as APIResponse;
+          if (apiResponse.success && apiResponse.data) {
+            return { data: apiResponse.data as BulkEnrichedDataResponse };
+          } else {
+            return { error: { status: 500, data: apiResponse.error?.message || 'Unknown error' } };
+          }
+        } catch (error: any) {
+          return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
+        }
+      },
+      providesTags: (result, error, { campaignIds }) => [
+        'Campaign',
+        ...(campaignIds || []).map(id => ({ type: 'Campaign' as const, id }))
+      ],
+    }),
+
+    // Pattern offset calculation - respects backend APIResponse wrapper
+    getPatternOffset: builder.query<PatternOffsetResponse, PatternOffsetRequest>({
+      queryFn: async (request) => {
+        try {
+          const response = await campaignsApiClient.getPatternOffset(request);
+          // Backend returns: { success: true, data: PatternOffsetResponse, requestId: "..." }
+          const apiResponse = response.data as APIResponse;
+          if (apiResponse.success && apiResponse.data) {
+            return { data: apiResponse.data as PatternOffsetResponse };
+          } else {
+            return { error: { status: 500, data: apiResponse.error?.message || 'Unknown error' } };
+          }
+        } catch (error: any) {
+          return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
+        }
+      },
     }),
   }),
 });
@@ -147,4 +200,6 @@ export const {
   useGetCampaignProgressStandaloneQuery,
   useGetPhaseStatusStandaloneQuery,
   useGetCampaignsStandaloneQuery,
+  useGetBulkEnrichedCampaignDataQuery,
+  useGetPatternOffsetQuery,
 } = campaignApi;

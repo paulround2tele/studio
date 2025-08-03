@@ -279,42 +279,6 @@ func main() {
 
 	// Initialize DNS and HTTP Campaign Services for service layer architecture
 	// PHASE 4.4: Legacy validation services REMOVED - replaced by domain services in orchestrator
-	/*
-		dnsValidationService := services.NewDNSCampaignService(db, campaignStore, personaStore, auditLogStore, campaignJobStore, appConfig)
-		log.Println("DNSCampaignService initialized for service layer.")
-
-		httpValidationService := services.NewHTTPKeywordCampaignService(
-			db, campaignStore, personaStore, auditLogStore, campaignJobStore, appConfig,
-		)
-		log.Println("HTTPKeywordCampaignService initialized for service layer.")
-	*/ // Phase 2.5 & 3.9: Initialize Phase Execution Service with direct engine integration
-	// PHASE 4.4: Legacy components REMOVED
-	// var asyncManager *communication.AsyncPatternManager = nil
-
-	// PHASE 4.4: Legacy PhaseExecutionService REMOVED - replaced by CampaignOrchestrator
-	/*
-		leadGenerationCampaignSvc := services.NewPhaseExecutionService(
-			db,
-			campaignStore,
-			personaStore,
-			keywordStore,
-			auditLogStore,
-			campaignJobStore,
-			wsBroadcaster,
-			asyncManager,
-			// Direct engine dependencies
-			nil, // domainGenerator will be created per-campaign
-			dnsValSvc,
-			httpValSvc,
-			contentFetcherSvc,
-			kwordScannerSvc,
-			// Legacy service dependencies (Phase 2.5: eliminated)
-			domainGenerationService, // Use shared service with global offset tracking
-			dnsValidationService,    // DNS campaign service for service layer architecture
-			httpValidationService,   // HTTP keyword campaign service for service layer architecture
-		)
-		log.Println("PhaseExecutionService initialized - Phase 2.5 & 3.9 direct engine integration complete.")
-	*/
 
 	// Phase 4: Initialize NEW Domain Services (orchestrate existing engines)
 	// Create simple logger for domain services
@@ -372,8 +336,7 @@ func main() {
 	)
 	log.Println("Phase 4 CampaignOrchestrator initialized - ready to replace legacy services.")
 
-	// TODO: Phase 4.2 - Replace API handler to use campaignOrchestrator instead of leadGenerationCampaignSvc
-	_ = campaignOrchestrator // Prevent unused variable error until Phase 4.2
+	// Phase 4 CampaignOrchestrator now fully integrated with API handlers
 
 	// Async pattern manager removed - no longer needed after CampaignOrchestratorService elimination
 

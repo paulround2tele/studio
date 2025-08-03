@@ -27,7 +27,6 @@ import AnalysisConfigModal from './modals/AnalysisConfigModal';
 import { campaignsApi } from '@/lib/api-client/client';
 import type { CampaignViewModel } from '@/lib/types';
 import type { PhaseStartRequest } from '@/lib/api-client/models/phase-start-request';
-import { subscribeToWebSocketTopic, unsubscribeFromWebSocketTopic, sessionWebSocketClient } from '@/lib/websocket/client';
 
 interface PhaseStatus {
   phase: string;
@@ -405,40 +404,9 @@ export default function PhaseDashboard({ campaignId, campaign, totalDomains = 0,
     loadPhaseStatuses();
   }, [campaignId]);
 
-  // Separate useEffect for WebSocket subscription to avoid re-subscription on state changes
-  useEffect(() => {
-    // Subscribe to WebSocket updates for this campaign using the correct format
-    const campaignTopic = `campaign-${campaignId}`; // Backend expects "campaign-{campaignId}" format
-    subscribeToWebSocketTopic(campaignTopic);
-    
-    // Listen for WebSocket messages
-    const handleWebSocketMessage = (data: any) => {
-      try {
-        const message = typeof data === 'string' ? JSON.parse(data) : data;
-        
-        // Handle phase transitions and progress updates
-        if (message.type === 'phase_transition' || message.type === 'campaign_progress') {
-          if (message.campaignId === campaignId) {
-            console.log(`📡 [PhaseDashboard] Received ${message.type} for campaign ${campaignId}:`, message);
-            // Refresh phase statuses to reflect the backend changes
-            loadPhaseStatuses();
-            // Trigger parent component refresh
-            onCampaignUpdate?.();
-          }
-        }
-      } catch (error) {
-        console.error('Error handling WebSocket message:', error, data);
-      }
-    };
-    
-    const unsubscribeWebSocket = sessionWebSocketClient.on('message', handleWebSocketMessage);
-    
-    // Cleanup only on unmount or campaign change
-    return () => {
-      unsubscribeFromWebSocketTopic(campaignTopic);
-      unsubscribeWebSocket();
-    };
-  }, [campaignId]); // Only re-subscribe when campaignId actually changes
+  // TODO: Replace with Server-Sent Events (SSE) for real-time updates
+  // WebSocket infrastructure removed during RTK consolidation
+  // Phase status will be updated via RTK Query polling until SSE is implemented
 
   if (loading) {
     return (

@@ -6,8 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, AlertCircle, RefreshCw, Loader2, Shield, Wifi, Database, Key } from 'lucide-react';
-// THIN CLIENT: Removed AuthContext - backend handles auth
-import { sessionWebSocketClient } from '@/lib/websocket/client';
 import { cn } from '@/lib/utils';
 import healthService from '@/lib/services/healthService';
 import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
@@ -229,39 +227,24 @@ export default function ProductionReadinessCheck() {
       });
     }
 
-    // 3. WebSocket Connection Status Check (Updated for SessionWebSocketClient)
+    // 3. Real-time Communication Status Check (WebSocket removed during RTK consolidation)
     try {
-      logWithTimestamp('log', '🔌 Checking WebSocket connection status...');
+      logWithTimestamp('log', '🔌 Real-time communication check (WebSocket disabled during RTK consolidation)...');
       
-      // Check singleton SessionWebSocketClient connection status
-      const isConnected = sessionWebSocketClient.isConnected();
-      
-      if (isConnected) {
-        logWithTimestamp('log', '✅ WebSocket connectivity check PASSED - singleton connection active');
-        results.push({
-          name: 'WebSocket Connection',
-          status: 'passed',
-          message: 'Real-time updates available',
-          details: 'SessionWebSocketClient is connected and operational',
-          icon: <Wifi className="h-4 w-4" />
-        });
-      } else {
-        logWithTimestamp('warn', '⚠️ WebSocket connectivity check - singleton connection not active');
-        results.push({
-          name: 'WebSocket Connection',
-          status: 'warning',
-          message: 'WebSocket connections not active',
-          details: 'Real-time updates may not be available. This is normal if no pages requiring live updates are open.',
-          icon: <Wifi className="h-4 w-4" />
-        });
-      }
-    } catch (error) {
-      logWithTimestamp('error', '🔥 WebSocket status check EXCEPTION:', error);
       results.push({
-        name: 'WebSocket Connection',
+        name: 'Real-time Updates',
         status: 'warning',
-        message: 'WebSocket status check failed',
-        details: `Exception during status check: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        message: 'WebSocket removed - SSE implementation pending',
+        details: 'Real-time updates will be restored with Server-Sent Events',
+        icon: <Wifi className="h-4 w-4" />
+      });
+    } catch (error) {
+      logWithTimestamp('error', '❌ Real-time communication check failed:', serializeError(error));
+      results.push({
+        name: 'Real-time Updates',
+        status: 'Failed',
+        message: 'Real-time communication unavailable',
+        details: 'Real-time updates temporarily disabled during RTK consolidation',
         icon: <Wifi className="h-4 w-4" />
       });
     }

@@ -18,8 +18,8 @@ import { CampaignMetrics } from '@/components/campaigns/CampaignStatistics';
 import DomainStreamingTable from '@/components/campaigns/DomainStreamingTable';
 import PhaseDashboard from '@/components/campaigns/PhaseDashboard';
 
-// Backend-driven data fetching (no stores)
-import { useBackendDrivenCampaignData } from '@/hooks/useBackendDrivenCampaignData';
+// RTK Query data fetching
+import { useGetCampaignsStandaloneQuery } from '@/store/api/campaignApi';
 import useCampaignOperations from '@/hooks/useCampaignOperations';
 
 // Types
@@ -33,20 +33,21 @@ export default function CampaignDetailsPage() {
   const params = useParams();
   const campaignId = params.id as string;
 
-  // 🚀 BACKEND-DRIVEN: All data comes directly from API, no frontend store
-  const {
-    campaign,
-    generatedDomains,
-    dnsCampaignItems,
-    httpCampaignItems,
-    totalDomainCount,
-    loading,
-    error,
-    refetch
-  } = useBackendDrivenCampaignData(campaignId);
+  // RTK Query: Get campaign data from centralized store
+  const { data: campaignsResponse, isLoading: loading, error, refetch } = useGetCampaignsStandaloneQuery();
+  
+  // Extract campaigns and find specific campaign
+  const campaigns = Array.isArray(campaignsResponse) ? campaignsResponse : [];
+  const campaign = campaigns.find((c: any) => c.id === campaignId);
 
   // Explicit type annotation to ensure proper transformation
   const typedCampaign = campaign as import('@/lib/types').CampaignViewModel | null;
+
+  // Extract domain-related data from campaign (RTK Query consolidation)
+  const generatedDomains = campaign?.domains || [];
+  const dnsCampaignItems = generatedDomains.filter((d: any) => d.dns_status === 'ok');
+  const httpCampaignItems = generatedDomains.filter((d: any) => d.http_status === 'ok');
+  const totalDomainCount = generatedDomains.length;
 
   // Simple state for UI-only concerns (no business data)
   const [filters, setFilters] = useState<any>({});
@@ -77,7 +78,11 @@ export default function CampaignDetailsPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center gap-2 text-red-600 mb-4">
           <AlertCircle className="h-5 w-5" />
-          <span>Error loading campaign: {error}</span>
+          <span>Error loading campaign: {
+            typeof error === 'string' 
+              ? error 
+              : 'An error occurred while loading campaign data'
+          }</span>
         </div>
         <Button onClick={refetch} variant="outline">
           Try Again

@@ -7,7 +7,7 @@ import { GlobalLoadingIndicator } from '@/components/ui/global-loading';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { ReduxProvider } from '@/components/providers/ReduxProvider';
-import { CampaignDataProvider } from '@/providers/CampaignDataProvider';
+import { RTKCampaignDataProvider } from '@/providers/RTKCampaignDataProvider';
 import { NoSSR } from '@/components/providers/NoSSR';
 
 export const metadata: Metadata = {
@@ -31,12 +31,12 @@ export default function RootLayout({
           <ReduxProvider>
             <ThemeProvider defaultTheme="dark" storageKey="domainflow-theme">
               <AuthProvider>
-                <CampaignDataProvider>
+                <RTKCampaignDataProvider>
                   <GlobalLoadingIndicator />
                   <AdvancedConditionalLayout>
                     {children}
                   </AdvancedConditionalLayout>
-                </CampaignDataProvider>
+                </RTKCampaignDataProvider>
               </AuthProvider>
             </ThemeProvider>
           </ReduxProvider>

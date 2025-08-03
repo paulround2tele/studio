@@ -113,51 +113,8 @@ function ProxiesPageContent() {
   useEffect(() => {
     fetchProxiesData();
     
-    let wsCleanup: (() => void) | null = null;
-
-    const connectWebSocket = async () => {
-      try {
-        // Use singleton SessionWebSocketClient for real-time updates
-        const { sessionWebSocketClient } = await import('@/lib/websocket/client');
-        
-        console.log('[ProxiesPage] Connecting to WebSocket for proxy updates...');
-        
-        // Subscribe to proxy updates via SessionWebSocketClient
-        const handleMessage = (data: any) => {
-          console.log('[ProxiesPage] WebSocket message received:', data);
-          
-          // Route proxy-specific messages
-          if (data.type === 'proxy_list_update' && data.data !== undefined) {
-            handleProxyListUpdate({ data: data.data });
-          } else if (data.type === 'proxy_status_update' && data.data !== undefined) {
-            handleProxyStatusUpdate({ data: data.data as { proxyId: string; status: string; health: string } });
-          }
-        };
-        
-        // Subscribe to messages
-        const unsubscribe = sessionWebSocketClient.on('message', handleMessage);
-        
-        // Setup cleanup function
-        wsCleanup = () => {
-          unsubscribe();
-          console.log('[ProxiesPage] WebSocket subscription cleaned up');
-        };
-        
-        console.log('[ProxiesPage] WebSocket connected for proxy push updates');
-        
-      } catch (error) {
-        console.error('[ProxiesPage] Failed to connect WebSocket:', error);
-      }
-    };
-
-    connectWebSocket();
-
-    return () => {
-      if (wsCleanup) {
-        console.log('[ProxiesPage] Cleaning up WebSocket connection');
-        wsCleanup();
-      }
-    };
+    // TODO: Replace with Server-Sent Events (SSE) for real-time updates
+    // WebSocket infrastructure removed during RTK consolidation
   }, [fetchProxiesData, handleProxyListUpdate, handleProxyStatusUpdate]);
 
   const handleAddProxy = () => {

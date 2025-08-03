@@ -168,52 +168,8 @@ function PersonasPageContent() {
   useEffect(() => {
     fetchPersonasData(activeTab);
     
-    let wsCleanup: (() => void) | null = null;
-
-    const connectWebSocket = async () => {
-      try {
-        // Use singleton SessionWebSocketClient for real-time updates
-        const { sessionWebSocketClient } = await import('@/lib/websocket/client');
-        
-        console.log('[PersonasPage] Connecting to WebSocket for persona updates...');
-        
-        // Subscribe to persona updates via SessionWebSocketClient
-        const handleMessage = (data: any) => {
-          console.log('[PersonasPage] WebSocket message received:', data);
-          
-          // Route persona-specific messages
-          if (data.type === 'persona_list_update') {
-            console.log('[PersonasPage] Persona list update detected, refreshing data...');
-            // Refresh the current tab's data without loading spinner
-            fetchPersonasData(activeTab, false);
-          }
-        };
-        
-        // Subscribe to messages
-        const unsubscribe = sessionWebSocketClient.on('message', handleMessage);
-        
-        // Setup cleanup function
-        wsCleanup = () => {
-          unsubscribe();
-          console.log('[PersonasPage] WebSocket subscription cleaned up');
-        };
-        
-        console.log('[PersonasPage] WebSocket connected for persona push updates');
-        
-      } catch (error) {
-        console.error('[PersonasPage] Failed to connect WebSocket:', error);
-      }
-    };
-
-    // Connect WebSocket for real-time updates
-    connectWebSocket();
-    
-    return () => {
-      // Cleanup WebSocket connection
-      if (wsCleanup) {
-        wsCleanup();
-      }
-    };
+    // TODO: Replace with Server-Sent Events (SSE) for real-time updates
+    // WebSocket infrastructure removed during RTK consolidation
   }, [activeTab, fetchPersonasData]);
 
   const handleDeletePersona = async (personaId: string, personaType: 'http' | 'dns') => {

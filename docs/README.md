@@ -92,6 +92,9 @@ WebSocket Updates ← Progress Tracking ← Batch Processing ← Data Pipeline
 - **[USER_GUIDE.md](USER_GUIDE.md)** - End-user documentation and tutorials
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Common issues and solutions
 
+### Architecture & API Documentation
+- **[API_ARCHITECTURE.md](API_ARCHITECTURE.md)** - RTK Query implementation and unified API patterns
+
 ### Security & Operations
 - **[API_AUTHENTICATION.md](API_AUTHENTICATION.md)** - Session-based authentication system
 - **[SECURITY.md](SECURITY.md)** - Security guidelines and best practices

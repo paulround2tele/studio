@@ -8,9 +8,10 @@ A sophisticated full-stack application for intelligent domain generation, valida
 - **Framework**: Next.js 15 with App Router
 - **Language**: TypeScript with strict type safety
 - **UI Framework**: Tailwind CSS + shadcn/ui components
-- **State Management**: Zustand stores with real-time synchronization
-- **API Client**: Auto-generated from OpenAPI specification
+- **State Management**: Redux Toolkit (RTK) with RTK Query for API state
+- **API Client**: Auto-generated from OpenAPI specification with RTK Query integration
 - **Real-time**: WebSocket integration for live campaign updates
+- **Architecture**: Unified RTK Query pattern with centralized API state management
 
 ### Backend (Go + PostgreSQL)
 - **Language**: Go with Gin web framework
@@ -84,7 +85,8 @@ getCampaignLeads(campaign): CampaignLead[]
 - **TypeScript**: Static type checking
 - **Tailwind CSS**: Utility-first CSS framework
 - **shadcn/ui**: Modern React component library
-- **Zustand**: Lightweight state management
+- **Redux Toolkit (RTK)**: Predictable state container with RTK Query
+- **RTK Query**: Data fetching and caching solution
 - **React Hook Form**: Form validation and management
 - **Zod**: Runtime type validation
 - **Lucide React**: Icon library
@@ -197,7 +199,13 @@ domainflow-studio/
 │   │   ├── lib/                # Utilities and configurations
 │   │   │   ├── api-client/     # Auto-generated API client
 │   │   │   ├── services/       # Business logic services
-│   │   │   ├── stores/         # Zustand state stores
+│   │   │   └── utils/          # Helper functions
+│   │   ├── store/              # Redux Toolkit store configuration
+│   │   │   ├── api/            # RTK Query API endpoints
+│   │   │   ├── slices/         # Redux slices for app state
+│   │   │   └── index.ts        # Store configuration
+│   │   ├── providers/          # React context providers
+│   │   └── types/              # TypeScript type definitions
 │   │   │   └── utils/          # Helper functions
 │   │   └── types/              # TypeScript type definitions
 │   ├── public/                 # Static assets
@@ -220,6 +228,104 @@ domainflow-studio/
 ```
 
 ## 🔌 API Documentation
+
+### RTK Query Architecture
+
+The frontend uses **Redux Toolkit Query (RTK Query)** for unified API state management, providing:
+
+- **Centralized API State**: All server data managed through RTK Query
+- **Automatic Caching**: Intelligent request deduplication and caching
+- **Background Refetching**: Automatic data synchronization
+- **Optimistic Updates**: Immediate UI updates with automatic rollback on errors
+- **Unified Error Handling**: Consistent error states across all API calls
+
+#### Unified API Response Structure
+
+All backend endpoints return a standardized `APIResponse` wrapper:
+
+```typescript
+interface APIResponse<T = any> {
+  success: boolean;
+  data: T;
+  error?: ErrorInfo;
+  requestId: string;
+}
+```
+
+**RTK Query Integration Example:**
+```typescript
+// RTK Query endpoint with APIResponse handling
+getCampaignsStandalone: builder.query<Campaign[], void>({
+  queryFn: async () => {
+    const response = await fetch('/api/v2/campaigns/standalone');
+    const apiResponse = response.data as APIResponse;
+    
+    if (apiResponse.success && apiResponse.data) {
+      return { data: apiResponse.data };
+    }
+    
+    return { 
+      error: apiResponse.error || { message: 'Failed to fetch campaigns' }
+    };
+  },
+  providesTags: ['Campaign']
+})
+```
+
+#### API Store Structure
+
+```typescript
+// Store configuration with RTK Query APIs
+src/store/
+├── api/
+│   ├── campaignApi.ts        # Campaign CRUD operations
+│   ├── bulkOperationsApi.ts  # Bulk operation endpoints
+│   └── baseApi.ts           # Base API configuration
+├── slices/
+│   ├── campaignSlice.ts      # Campaign UI state
+│   ├── bulkOperationsSlice.ts # Bulk operations tracking
+│   └── authSlice.ts         # Authentication state
+└── index.ts                 # Store configuration
+```
+
+#### RTK Query Hooks Pattern
+
+```typescript
+// Component usage with RTK Query hooks
+const CampaignsList = () => {
+  const { 
+    data: campaigns, 
+    isLoading, 
+    error, 
+    refetch 
+  } = useGetCampaignsStandaloneQuery();
+
+  const [startCampaign] = useStartCampaignMutation();
+
+  const handleStart = async (campaignId: string) => {
+    try {
+      await startCampaign({ campaignId }).unwrap();
+      // Automatic cache invalidation triggers refetch
+    } catch (error) {
+      // Unified error handling through RTK Query
+    }
+  };
+
+  return (
+    <div>
+      {isLoading && <LoadingSpinner />}
+      {error && <ErrorDisplay error={error} />}
+      {campaigns?.map(campaign => (
+        <CampaignCard 
+          key={campaign.id} 
+          campaign={campaign}
+          onStart={() => handleStart(campaign.id)}
+        />
+      ))}
+    </div>
+  );
+};
+```
 
 ### Core Endpoints
 
@@ -363,15 +469,24 @@ go test ./...
 
 ### Type Safety
 - Always regenerate API client after backend schema changes
-- Use helper functions for domain data access to maintain backward compatibility
+- Use RTK Query hooks for all API interactions to maintain cache consistency
 - Implement proper error boundaries for React components
 - Validate WebSocket message types with Zod schemas
+- Ensure all API endpoints respect the unified `APIResponse` wrapper structure
+
+### RTK Query Best Practices
+- Use `providesTags` and `invalidatesTags` for automatic cache management
+- Implement optimistic updates for better user experience
+- Leverage RTK Query's automatic request deduplication
+- Use `queryFn` for complex API response transformations
+- Implement proper error handling with unified error states
 
 ### Real-time Features
 - Use WebSocket connections for campaign progress updates
 - Implement proper connection retry logic
-- Handle connection state in Zustand stores
+- Handle connection state in Redux slices alongside RTK Query cache
 - Debounce frequent updates to prevent UI thrashing
+- Integrate WebSocket updates with RTK Query cache invalidation
 
 ## 🚨 Common Issues
 
@@ -397,7 +512,9 @@ go test ./...
 - Use React.memo for expensive components
 - Implement virtual scrolling for large domain lists
 - Debounce search and filter operations
-- Use Zustand persist for state caching
+- Leverage RTK Query's built-in caching and request deduplication
+- Use RTK Query's `keepUnusedDataFor` option for optimal cache retention
+- Implement proper loading states with RTK Query's `isLoading` and `isFetching` flags
 
 ### Backend
 - Database connection pooling
@@ -443,6 +560,14 @@ For support and questions, please refer to the project documentation or create a
   - Integrated critical stealth detection avoidance capabilities with validation phases
   - Designed orchestrator pattern coordinating DNS/HTTP validation engines
   - Preserved business-critical global offset tracking while enabling stealth randomization
+
+### Frontend State Management Consolidation
+- **Bertram Gilfoyle** - RTK Query Implementation & API Architecture Unification
+  - Eliminated 3 competing frontend patterns (RTK Query, Direct API, Hook Abstractions)
+  - Implemented unified `APIResponse` wrapper compliance across all frontend endpoints
+  - Consolidated campaign and bulk operations state management into centralized RTK Query APIs
+  - Designed enterprise-scale bulk operation request structures matching backend contracts
+  - Established type-safe API client integration with automatic cache invalidation patterns
 
 ---
 

@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger } from '@/components/ui/sidebar';
 import { Home, Target, Users, Settings, Zap, Database, LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { WebSocketProvider } from '@/providers/WebSocketProvider';
 import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
 
 interface AppLayoutProps {
@@ -117,23 +116,21 @@ const AppLayout = memo(({ children }: AppLayoutProps) => {
   }
 
   return (
-    <WebSocketProvider>
-      <SidebarProvider>
-        <div className="flex h-screen">
-          <AppSidebar />
-          
-          {/* Main content area with optimized structure */}
-          <main className="flex-1 flex flex-col">
-            <div className="p-4 border-b">
-              <SidebarTrigger className="lg:hidden" />
-            </div>
-            <div className="flex-1 p-6">
-              {children}
-            </div>
-          </main>
-        </div>
-      </SidebarProvider>
-    </WebSocketProvider>
+    <SidebarProvider>
+      <div className="flex h-screen">
+        <AppSidebar />
+        
+        {/* Main content area with optimized structure */}
+        <main className="flex-1 flex flex-col">
+          <div className="p-4 border-b">
+            <SidebarTrigger className="lg:hidden" />
+          </div>
+          <div className="flex-1 p-6">
+            {children}
+          </div>
+        </main>
+      </div>
+    </SidebarProvider>
   );
 });
 

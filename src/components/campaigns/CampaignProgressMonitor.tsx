@@ -1,325 +1,162 @@
 "use client";
 
-import React, { useEffect, useState, useRef, useCallback, memo, useMemo } from 'react';
+import React, { memo, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { AlertCircle, CheckCircle, Clock, Pause, Wifi, WifiOff } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-// THIN CLIENT: Removed AuthContext - backend handles auth
-import { sessionWebSocketClient } from '@/lib/websocket/client';
+import { AlertCircle, CheckCircle, Clock, Pause } from 'lucide-react';
 import type { CampaignViewModel, CampaignPhase, CampaignPhaseStatus } from '@/lib/types';
-import type { WebSocketMessage } from '@/lib/websocket/client';
 import { normalizeStatus, getStatusColor } from '@/lib/utils/statusMapping';
 
 interface CampaignProgressMonitorProps {
-campaign: CampaignViewModel;
+  campaign: CampaignViewModel;
   onCampaignUpdate?: (updatedCampaign: Partial<CampaignViewModel>) => void;
   onDomainReceived?: (domain: string) => void;
 }
 
-interface ConnectionHealth {
-isConnected: boolean;
-lastHeartbeat: Date | null;
+interface ProgressInfo {
+  phase: CampaignPhase;
+  status: CampaignPhaseStatus;
+  progress: number;
+  normalizedStatus: string;
+  statusColor: string;
+  icon: React.ReactNode;
 }
 
-// Memoized status icon component for better performance
-const StatusIcon = memo(({ status }: { status: CampaignPhaseStatus }) => {
-  switch (status) {
-    case 'in_progress': return <Clock className="h-4 w-4" />;
-    case 'completed': return <CheckCircle className="h-4 w-4" />;
-    case 'failed': return <AlertCircle className="h-4 w-4" />;
-    case 'paused': return <Pause className="h-4 w-4" />;
-    case 'not_started': return <Clock className="h-4 w-4" />;
-    default: return <Clock className="h-4 w-4" />;
-  }
-});
-
-StatusIcon.displayName = 'StatusIcon';
-
-// Memoized connection status badge for better performance
-const ConnectionBadge = memo(({ isConnected }: { isConnected: boolean }) => {
-  if (isConnected) {
-    return (
-      <Badge variant="outline" className="text-green-600 border-green-600">
-        <Wifi className="h-3 w-3 mr-1" />
-        Connected
-      </Badge>
-    );
-  }
-  return (
-    <Badge variant="outline" className="text-red-600 border-red-600">
-      <WifiOff className="h-3 w-3 mr-1" />
-      Disconnected
-    </Badge>
-  );
-});
-
-ConnectionBadge.displayName = 'ConnectionBadge';
-
-// Memoized main component for optimal performance
+/**
+ * Campaign Progress Monitor Component
+ * 
+ * Displays campaign progress and phase information.
+ * TODO: Implement Server-Sent Events (SSE) for real-time updates when WebSocket replacement is ready.
+ */
 const CampaignProgressMonitor = memo(({
   campaign,
   onCampaignUpdate,
   onDomainReceived
-}: CampaignProgressMonitorProps) => {
-  // THIN CLIENT: Removed useAuth - backend handles authentication
-  const user = null; // Backend provides user data when needed
-  const { toast } = useToast();
-  const cleanupRef = useRef<(() => void) | null>(null);
+}: CampaignProgressMonitorProps): React.ReactElement => {
   
-  const [connectionHealth, setConnectionHealth] = useState<ConnectionHealth>({
-isConnected: false,
-    lastHeartbeat: null
-  });
-
-  const [realtimeData, setRealtimeData] = useState({
-domainsGenerated: 0,
-    currentProgress: campaign.overallProgress ?? campaign.progressPercentage ?? 0,
-    currentStatus: normalizeStatus(campaign.phaseStatus),
-    currentPhase: campaign.currentPhase || 'Pending'  as any,
-lastActivity: new Date(),
-    errors: [] as string[]
-  });
-
-  // Memoize connection condition to prevent unnecessary effect triggers
-  const shouldConnect = useMemo(() => {
-    return campaign.currentPhase !== undefined &&
-           campaign.phaseStatus === 'in_progress';
-  }, [campaign.currentPhase, campaign.phaseStatus]);
-
-  // Memoize campaign key properties to prevent unnecessary effect triggers
+  // Campaign key for tracking
   const campaignKey = useMemo(() => ({
-id: campaign.id,
-    currentPhase: campaign.currentPhase  as any,
-phaseStatus: campaign.phaseStatus  as any,
-status: campaign.phaseStatus
-  }), [campaign.id, campaign.currentPhase, campaign.phaseStatus, campaign.phaseStatus]);
+    id: campaign?.id || '',
+    currentPhase: campaign?.currentPhase || 'domain_generation',
+    status: campaign?.phaseStatus || 'pending'
+  }), [campaign?.id, campaign?.currentPhase, campaign?.phaseStatus]);
 
-  // Optimized WebSocket message handler - REFACTORED: Domain data handlers removed
-  const handleWebSocketMessage = useCallback((message: WebSocketMessage & { campaignId?: string; message?: string }) => {
-    setConnectionHealth(prev => ({ ...prev, lastHeartbeat: new Date() }));
+  // Progress calculation logic
+  const progressInfo = useMemo((): ProgressInfo => {
+    const phase = campaignKey.currentPhase as CampaignPhase;
+    const status = campaignKey.status as CampaignPhaseStatus;
+    const progress = campaign?.progressPercentage || 0;
     
-    console.log(`[CampaignProgressMonitor] Received WebSocket message:`, message);
-
-    switch (message.type) {
-      case 'subscription_confirmed':
-        const campaignId = (message as unknown as { campaignId?: string }).campaignId;
-        console.log(`[DEBUG] Campaign subscription confirmed for ${campaignId}`);
-        toast({
-title: "Campaign Subscription Active",
-          description: `Now monitoring campaign ${campaignKey.id} for real-time updates.`
-        });
-        break;
-
-      // REMOVED: Domain data handlers - use REST API polling for domain data
-      // case 'domain_generated': Use polling or bulk endpoints for domain data
-      
-      case 'progress':
-        const progressData = message.data as { progress?: number };
-        if (progressData && typeof progressData.progress === 'number') {
-          setRealtimeData(prev => ({
-            ...prev,
-            currentProgress: progressData.progress!,
-            lastActivity: new Date()
-          }));
-          onCampaignUpdate?.({ overallProgress: progressData.progress });
-        }
-        break;
-
-      case 'phase_complete':
-        const phaseData = message.data as { phase?: string; status?: string; progress?: number };
-        if (phaseData && phaseData.phase && phaseData.status) {
-          setRealtimeData(prev => ({
-            ...prev,
-            currentPhase: phaseData.phase as CampaignPhase  as any,
-currentStatus: normalizeStatus(phaseData.status),
-            currentProgress: phaseData.progress || 100,
-            lastActivity: new Date()
-          }));
-          onCampaignUpdate?.({
-            currentPhase: phaseData.phase as CampaignPhase as any,
-            phaseStatus: phaseData.status === 'completed' ? 'completed' : normalizeStatus(phaseData.status),
-            overallProgress: phaseData.progress || 100
-          });
-          toast({
-title: "Phase Completed",
-            description: `${phaseData.phase} phase has completed successfully.`
-          });
-        }
-        break;
-
-      case 'campaign_progress':
-        const campaignProgressData = message.data as { progress?: number; phase?: string; status?: string };
-        if (campaignProgressData && typeof campaignProgressData.progress === 'number') {
-          setRealtimeData(prev => ({
-            ...prev,
-            currentProgress: campaignProgressData.progress || prev.currentProgress,
-            currentPhase: (campaignProgressData.phase as CampaignPhase) || prev.currentPhase  as any,
-currentStatus: campaignProgressData.status ? normalizeStatus(campaignProgressData.status) : prev.currentStatus,
-            lastActivity: new Date()
-          }));
-          onCampaignUpdate?.({
-overallProgress: campaignProgressData.progress,
-            currentPhase: campaignProgressData.phase as CampaignPhase  as any,
-phaseStatus: campaignProgressData.status as any
-          });
-        }
-        break;
-
-      case 'campaign_status':
-        const statusData = message.data as { campaignId?: string; status?: string };
-        if (statusData && statusData.status) {
-          setRealtimeData(prev => ({
-            ...prev,
-            currentStatus: normalizeStatus(statusData.status),
-            lastActivity: new Date()
-          }));
-          onCampaignUpdate?.({
-phaseStatus: normalizeStatus(statusData.status)
-          });
-        }
-        break;
-
-      case 'error':
-        const errorData = message.data as { error?: string };
-        const errorMsg = errorData?.error || (message as unknown as { message?: string }).message || 'Unknown error occurred';
-        setRealtimeData(prev => ({
-          ...prev,
-          errors: [...prev.errors.slice(-4), String(errorMsg)], // Keep last 5 errors,
-lastActivity: new Date()
-        }));
-        toast({
-title: "Campaign Error",
-          description: String(errorMsg),
-          variant: "destructive"
-        });
-        break;
-default:
-        console.log('Unknown WebSocket message type:', message.type);
-    }
-  }, [campaignKey.id, toast, onDomainReceived, onCampaignUpdate]);
-
-  // 🚀 WEBSOCKET PUSH MODEL: WebSocket now handled at data layer (useBulkCampaignData)
-  // Component receives real-time updates via props instead of direct WebSocket connection
-  useEffect(() => {
-    console.log(`[CampaignProgressMonitor] 🚀 Using data layer WebSocket, campaign ${campaignKey.id} - phase: ${campaignKey.currentPhase}, status: ${campaignKey.status}`);
+    const normalizedStatus = normalizeStatus(status);
+    const statusColor = getStatusColor(normalizedStatus);
     
-    // Set connection health based on campaign data being received
-    if (campaignKey.id && campaign) {
-      setConnectionHealth({ isConnected: true, lastHeartbeat: new Date() });
+    // Status icons
+    let icon: React.ReactNode;
+    switch (normalizedStatus) {
+      case 'completed':
+        icon = <CheckCircle className="h-4 w-4" />;
+        break;
+      case 'failed':
+        icon = <AlertCircle className="h-4 w-4" />;
+        break;
+      case 'in_progress':
+        icon = <Clock className="h-4 w-4" />;
+        break;
+      case 'paused':
+        icon = <Pause className="h-4 w-4" />;
+        break;
+      default:
+        icon = <Clock className="h-4 w-4" />;
     }
 
-    return () => {
-      console.log(`[CampaignProgressMonitor] 🚀 Cleanup for campaign ${campaignKey.id}`);
-      // No WebSocket cleanup needed - handled by data layer
+    return {
+      phase,
+      status,
+      progress,
+      normalizedStatus,
+      statusColor,
+      icon
     };
-  }, [campaignKey.id, campaignKey.currentPhase, campaignKey.phaseStatus, campaignKey.status, campaign]);
+  }, [campaignKey.currentPhase, campaignKey.status, campaign?.progressPercentage]);
 
-  // Optimized campaign state sync effect with memoized dependencies
-  useEffect(() => {
-    console.log(`[CampaignProgressMonitor] Campaign prop changed for ${campaignKey.id}:`, {
-progress: campaign.overallProgress ?? campaign.progressPercentage ?? 0,
-      status: campaign.phaseStatus,
-      currentPhase: campaign.currentPhase as any
-    });
-    setRealtimeData(prev => ({
-      ...prev,
-      currentProgress: campaign.overallProgress ?? campaign.progressPercentage ?? 0,
-      currentStatus: normalizeStatus(campaign.phaseStatus),
-      currentPhase: campaign.currentPhase || 'Pending' as any
-    }));
-  }, [campaignKey.id, campaign.overallProgress, campaign.progressPercentage, campaign.phaseStatus, campaign.currentPhase]);
-
-  // Memoize status color computation
-  const statusColor = useMemo(() => getStatusColor(realtimeData.currentStatus), [realtimeData.currentStatus]);
-
-  // Memoize last activity time formatting to prevent re-computation
-  const formattedLastActivity = useMemo(() => {
-    return realtimeData.lastActivity.toLocaleTimeString();
-  }, [realtimeData.lastActivity]);
-
-  // Memoize heartbeat time formatting
-  const formattedHeartbeat = useMemo(() => {
-    return connectionHealth.lastHeartbeat?.toLocaleTimeString();
-  }, [connectionHealth.lastHeartbeat]);
-
-  // Remove the local getStatusColor function since we're importing it from utils
+  // Phase display names
+  const getPhaseDisplayName = (phase: CampaignPhase): string => {
+    switch (phase) {
+      case 'domain_generation':
+        return 'Domain Generation';
+      case 'dns_validation':
+        return 'DNS Validation';
+      case 'http_keyword_validation':
+        return 'HTTP Validation';
+      case 'analysis':
+        return 'Analysis';
+      default:
+        return phase;
+    }
+  };
 
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">Real-time Progress Monitor</CardTitle>
+        <CardTitle className="flex items-center justify-between text-lg">
+          Campaign Progress
           <div className="flex items-center gap-2">
-            <ConnectionBadge isConnected={connectionHealth.isConnected} />
+            {/* Connection status indicator - shows polling mode during RTK consolidation */}
+            <div className="w-2 h-2 rounded-full bg-blue-500" />
+            <span className="text-xs text-muted-foreground">
+              Polling
+            </span>
           </div>
-        </div>
+        </CardTitle>
       </CardHeader>
-      
       <CardContent className="space-y-4">
-        {/* Current Status */}
+        {/* Current Phase */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className={`w-3 h-3 rounded-full ${statusColor}`} />
-            <span className="font-medium">{realtimeData.currentPhase}</span>
-            <StatusIcon status={realtimeData.currentStatus} />
+            {progressInfo.icon}
+            <span className="font-medium">
+              {getPhaseDisplayName(progressInfo.phase)}
+            </span>
           </div>
-          <Badge variant="secondary">
-            {realtimeData.currentStatus}
+          <Badge 
+            variant={progressInfo.statusColor as any}
+            className="text-xs"
+          >
+            {progressInfo.normalizedStatus}
           </Badge>
         </div>
 
         {/* Progress Bar */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span>Progress</span>
-            <span>{realtimeData.currentProgress}%</span>
+            <span className="text-muted-foreground">Progress</span>
+            <span className="font-medium">{progressInfo.progress.toFixed(1)}%</span>
           </div>
-          <Progress value={realtimeData.currentProgress} className="h-2" />
+          <Progress 
+            value={progressInfo.progress} 
+            className="h-2"
+          />
         </div>
 
-        {/* Real-time Stats */}
-        {realtimeData.currentPhase === 'domain_generation' && (
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Domains Generated:</span>
-              <div className="font-mono font-medium">{realtimeData.domainsGenerated}</div>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Last Activity:</span>
-              <div className="font-mono text-xs">
-                {formattedLastActivity}
-              </div>
-            </div>
+        {/* Campaign Details */}
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <span className="text-muted-foreground">Campaign ID</span>
+            <p className="font-mono text-xs">{campaignKey.id.slice(-8)}</p>
           </div>
-        )}
+          <div>
+            <span className="text-muted-foreground">Status</span>
+            <p className="font-medium">{progressInfo.status}</p>
+          </div>
+        </div>
 
-        {/* Connection Health */}
-        {connectionHealth.lastHeartbeat && (
-          <div className="text-xs text-muted-foreground">
-            Last heartbeat: {formattedHeartbeat}
-          </div>
-        )}
-
-        {/* Recent Errors */}
-        {realtimeData.errors.length > 0 && (
-          <div className="space-y-1">
-            <span className="text-sm font-medium text-red-600">Recent Errors:</span>
-            {realtimeData.errors.slice(-3).map((error, index) => (
-              <div key={index} className="text-xs text-red-600 bg-red-50 p-2 rounded">
-                {error}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Connection Status Message */}
-        {!shouldConnect && (
-          <div className="text-sm text-muted-foreground text-center py-2">
-            Real-time monitoring is available when campaign is actively running.
-          </div>
-        )}
+        {/* Real-time Notice */}
+        <div className="text-xs text-muted-foreground border-t pt-3">
+          📡 Real-time updates via Server-Sent Events coming soon.
+          <br />
+          Currently using periodic refresh for progress updates.
+        </div>
       </CardContent>
     </Card>
   );

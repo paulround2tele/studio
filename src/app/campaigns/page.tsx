@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, RefreshCw, Activity, Database, Globe, BarChart3 } from "lucide-react";
-import { useCampaignsList } from "@/providers/CampaignDataProvider";
+import { useRTKCampaignsList } from "@/providers/RTKCampaignDataProvider";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
@@ -47,28 +47,28 @@ export default function CampaignsPage() {
   const { toast } = useToast();
   const router = useRouter();
   
-  // SINGLE GLOBAL PROVIDER: No more multiple bulk calls!
-  const { campaigns: enrichedCampaigns, loading, error, refetch } = useCampaignsList();
+  // RTK CONSOLIDATION: Use new RTK provider instead of legacy hook
+  const { campaigns: enrichedCampaigns, loading, error, refetch } = useRTKCampaignsList();
 
   // Transform enriched campaigns to legacy format for compatibility
   const campaigns = useMemo(() => {
-    return enrichedCampaigns.map(campaign => {
+    return enrichedCampaigns.map((campaign: any) => {
       // Now properly handle GeneratedDomain[] array instead of string[]
       const domains = campaign.domains || [];
       const leads = campaign.leads || [];
       
       // Calculate DNS validation stats from rich domain objects
-      const dnsValidatedCount = domains.filter(domain =>
+      const dnsValidatedCount = domains.filter((domain: any) =>
         domain && typeof domain === 'object' && domain.dnsStatus === 'ok'
       ).length;
       
       // Calculate HTTP validation stats
-      const httpValidatedCount = domains.filter(domain =>
+      const httpValidatedCount = domains.filter((domain: any) =>
         domain && typeof domain === 'object' && domain.httpStatus === 'ok'
       ).length;
       
       // Calculate lead generation stats
-      const leadsFoundCount = domains.filter(domain =>
+      const leadsFoundCount = domains.filter((domain: any) =>
         domain && typeof domain === 'object' && domain.leadStatus === 'match'
       ).length;
 
@@ -208,7 +208,7 @@ export default function CampaignsPage() {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {campaigns.map((campaign) => (
+          {campaigns.map((campaign: any) => (
             <Card key={campaign.campaignId} className="hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-center justify-between">
