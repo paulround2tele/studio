@@ -26,6 +26,9 @@ type CampaignOrchestrator struct {
 	httpValidationSvc   domainservices.HTTPValidationService
 	analysisSvc         domainservices.AnalysisService
 
+	// Real-time communication
+	sseService *services.SSEService
+
 	// Execution tracking
 	mu                 sync.RWMutex
 	campaignExecutions map[uuid.UUID]*CampaignExecution
@@ -50,6 +53,7 @@ func NewCampaignOrchestrator(
 	dnsValidationSvc domainservices.DNSValidationService,
 	httpValidationSvc domainservices.HTTPValidationService,
 	analysisSvc domainservices.AnalysisService,
+	sseService *services.SSEService,
 ) *CampaignOrchestrator {
 	return &CampaignOrchestrator{
 		store:               store,
@@ -58,6 +62,7 @@ func NewCampaignOrchestrator(
 		dnsValidationSvc:    dnsValidationSvc,
 		httpValidationSvc:   httpValidationSvc,
 		analysisSvc:         analysisSvc,
+		sseService:          sseService,
 		campaignExecutions:  make(map[uuid.UUID]*CampaignExecution),
 	}
 }
@@ -108,6 +113,23 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 		"phase":       phase,
 	})
 
+	// Get campaign to extract user ID for SSE - use DB from deps
+	querier, ok := o.deps.DB.(store.Querier)
+	if !ok {
+		return fmt.Errorf("invalid database interface in dependencies")
+	}
+
+	campaign, err := o.store.GetCampaignByID(ctx, querier, campaignID)
+	if err != nil {
+		return fmt.Errorf("failed to get campaign for SSE broadcasting: %w", err)
+	}
+
+	// Broadcast phase started event
+	if o.sseService != nil && campaign.UserID != nil {
+		phaseStartedEvent := services.CreatePhaseStartedEvent(campaignID, *campaign.UserID, phase)
+		o.sseService.BroadcastToCampaign(campaignID, phaseStartedEvent)
+	}
+
 	// Get the appropriate domain service for the phase
 	service, err := o.getPhaseService(phase)
 	if err != nil {
@@ -117,6 +139,11 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 	// Start phase execution
 	progressCh, err := service.Execute(ctx, campaignID)
 	if err != nil {
+		// Broadcast phase failed event
+		if o.sseService != nil && campaign.UserID != nil {
+			phaseFailedEvent := services.CreatePhaseFailedEvent(campaignID, *campaign.UserID, phase, err.Error())
+			o.sseService.BroadcastToCampaign(campaignID, phaseFailedEvent)
+		}
 		return fmt.Errorf("failed to start phase %s: %w", phase, err)
 	}
 
@@ -287,6 +314,17 @@ func (o *CampaignOrchestrator) monitorPhaseProgress(ctx context.Context, campaig
 		})
 	}()
 
+	// Get campaign user ID for SSE broadcasting (cache it to avoid repeated DB calls)
+	var userID *uuid.UUID
+	if o.sseService != nil {
+		querier, ok := o.deps.DB.(store.Querier)
+		if ok {
+			if campaign, err := o.store.GetCampaignByID(ctx, querier, campaignID); err == nil && campaign.UserID != nil {
+				userID = campaign.UserID
+			}
+		}
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -300,6 +338,21 @@ func (o *CampaignOrchestrator) monitorPhaseProgress(ctx context.Context, campaig
 
 			// Update campaign execution with progress
 			o.updateCampaignProgress(campaignID, phase, progress)
+
+			// Broadcast progress update via SSE
+			if o.sseService != nil && userID != nil {
+				progressData := map[string]interface{}{
+					"current_phase":   string(phase),
+					"progress_pct":    progress.ProgressPct,
+					"items_processed": progress.ItemsProcessed,
+					"items_total":     progress.ItemsTotal,
+					"status":          string(progress.Status),
+					"message":         progress.Message,
+					"timestamp":       progress.Timestamp,
+				}
+				progressEvent := services.CreateCampaignProgressEvent(campaignID, *userID, progressData)
+				o.sseService.BroadcastToCampaign(campaignID, progressEvent)
+			}
 
 			// Log progress
 			o.deps.Logger.Debug(ctx, "Phase progress update", map[string]interface{}{

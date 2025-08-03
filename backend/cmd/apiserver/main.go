@@ -323,7 +323,13 @@ func main() {
 	stealthAwareHttpValidationSvc.EnableStealthMode(defaultStealthConfig)
 
 	log.Println("Phase 4 Domain Services initialized - standard services with stealth-aware validation wrappers.")
-	log.Println("Stealth mode enabled for DNS and HTTP validation - detection avoidance active.") // Create new CampaignOrchestrator using domain services
+	log.Println("Stealth mode enabled for DNS and HTTP validation - detection avoidance active.")
+
+	// Initialize SSE service for real-time communication
+	sseService := services.NewSSEService()
+	log.Println("SSE service initialized for real-time campaign progress broadcasting.")
+
+	// Create new CampaignOrchestrator using domain services
 	// Domain generation: standard service (needs global offset)
 	// Validation services: stealth-aware services for detection avoidance
 	campaignOrchestrator := application.NewCampaignOrchestrator(
@@ -333,8 +339,9 @@ func main() {
 		stealthAwareDnsValidationSvc,  // Stealth-aware DNS validation
 		stealthAwareHttpValidationSvc, // Stealth-aware HTTP validation
 		newAnalysisSvc,                // Analysis service (TODO: consider stealth for content extraction)
+		sseService,                    // SSE service for real-time updates
 	)
-	log.Println("Phase 4 CampaignOrchestrator initialized - ready to replace legacy services.")
+	log.Println("Phase 4 CampaignOrchestrator initialized with SSE broadcasting - ready to replace legacy services.")
 
 	// Phase 4 CampaignOrchestrator now fully integrated with API handlers
 
@@ -790,6 +797,12 @@ func main() {
 	newCampaignRoutesGroup := campaignApiV2.Group("/campaigns")
 	campaignOrchestratorAPIHandler.RegisterCampaignOrchestrationRoutes(newCampaignRoutesGroup, authMiddleware)
 	log.Println("Registered new campaign orchestration routes under /api/v2/campaigns.")
+
+	// V2 SSE routes for real-time campaign updates
+	sseHandler := api.NewSSEHandler(sseService)
+	sseRoutesGroup := campaignApiV2.Group("/sse")
+	sseHandler.RegisterSSERoutes(sseRoutesGroup, authMiddleware)
+	log.Println("Registered SSE routes for real-time campaign updates under /api/v2/sse.")
 
 	// V2 Bulk Operations routes (enterprise-scale operations)
 	bulkRoutesGroup := newCampaignRoutesGroup.Group("/bulk")
