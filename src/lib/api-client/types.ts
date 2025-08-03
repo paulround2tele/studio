@@ -1782,6 +1782,7 @@ export interface components {
             updatedAt?: string;
         };
         CampaignJobStatusEnum: string;
+        CampaignModeEnum: string;
         CampaignOperationResponse: {
             campaignId?: components["schemas"]["UUID"];
             message?: string;
@@ -1859,6 +1860,21 @@ export interface components {
             /** Format: date-time */
             queuedAt?: string;
         };
+        CampaignState: {
+            campaignId?: components["schemas"]["UUID"];
+            configuration?: Record<string, never>;
+            /** Format: date-time */
+            createdAt?: string;
+            /** @enum {string} */
+            currentState?: "draft" | "running" | "paused" | "completed" | "failed" | "cancelled" | "archived";
+            /** @enum {string} */
+            mode?: "full_sequence" | "step_by_step";
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: int32 */
+            version?: number;
+        };
+        CampaignStateEnum: string;
         CampaignStateEvent: {
             campaignId?: components["schemas"]["UUID"];
             correlationId?: components["schemas"]["UUID"];
@@ -1908,6 +1924,9 @@ export interface components {
             transitionMetadata?: Record<string, never>;
             triggeredBy?: string;
             validationErrors?: Record<string, never>;
+        };
+        CampaignStateWithExecution: {
+            phaseExecutions?: components["schemas"]["PhaseExecution"][];
         };
         CampaignTransactionOptions: {
             CampaignID?: components["schemas"]["UUID"];
@@ -2652,6 +2671,7 @@ export interface components {
             /** Format: int64 */
             streamPosition?: number;
         };
+        ExecutionStatusEnum: string;
         ExtractedContentAnalysis: {
             advancedKeywords?: string[];
             categories?: string[];
@@ -3203,6 +3223,12 @@ export interface components {
             progressPercentage?: number;
             /** Format: date-time */
             startedAt?: string;
+            stateData?: Record<string, never>;
+            /**
+             * Format: int32
+             * @description State management fields (new in refactor)
+             */
+            stateVersion?: number;
             /** Format: int64 */
             successfulItems?: number;
             /** Format: int64 */
@@ -3560,6 +3586,49 @@ export interface components {
             /** @enum {string} */
             phaseType: "dns_validation" | "http_keyword_validation" | "analysis";
         };
+        PhaseExecution: {
+            campaignId?: components["schemas"]["UUID"];
+            /** Format: date-time */
+            completedAt?: string;
+            /** @description Data storage */
+            configuration?: Record<string, never>;
+            /**
+             * Format: date-time
+             * @description Metadata
+             */
+            createdAt?: string;
+            errorDetails?: Record<string, never>;
+            /** Format: date-time */
+            failedAt?: string;
+            /** Format: int64 */
+            failedItems?: number;
+            id?: components["schemas"]["UUID"];
+            metrics?: Record<string, never>;
+            /** Format: date-time */
+            pausedAt?: string;
+            /** @enum {string} */
+            phaseType?: "domain_generation" | "dns_validation" | "http_keyword_validation" | "analysis";
+            /** Format: int64 */
+            processedItems?: number;
+            /**
+             * Format: double
+             * @description Progress tracking
+             */
+            progressPercentage?: number;
+            /**
+             * Format: date-time
+             * @description Execution timing
+             */
+            startedAt?: string;
+            /** @enum {string} */
+            status?: "not_started" | "ready" | "configured" | "in_progress" | "paused" | "completed" | "failed";
+            /** Format: int64 */
+            successfulItems?: number;
+            /** Format: int64 */
+            totalItems?: number;
+            /** Format: date-time */
+            updatedAt?: string;
+        };
         PhaseExecutionService: Record<string, never>;
         PhaseProgress: {
             campaignId?: components["schemas"]["UUID"];
@@ -3620,6 +3689,7 @@ export interface components {
             /** Format: int64 */
             totalResults?: number;
         };
+        PhaseStatusDerivationService: Record<string, never>;
         PhaseStatusEnum: string;
         PhaseTypeEnum: string;
         PingResponse: {
@@ -4229,7 +4299,6 @@ export interface components {
             session_duration?: string;
             session_id_length?: number;
         };
-        StateMachineHook: Record<string, never>;
         Status: {
             message?: string;
             status?: string;
@@ -4332,7 +4401,6 @@ export interface components {
             success?: boolean;
             testId?: components["schemas"]["UUID"];
         };
-        TransitionManager: Record<string, never>;
         /**
          * Format: uuid
          * @description Unique identifier (UUID v4)
@@ -4474,6 +4542,7 @@ export interface components {
             error?: string;
             message?: string;
         };
+        WorkerCompatibleService: Record<string, never>;
         WorkerConfig: {
             batchSize?: number;
             dnsSubtaskConcurrency?: number;

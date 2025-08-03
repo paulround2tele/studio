@@ -6,6 +6,7 @@ import AdvancedConditionalLayout from '@/components/layout/AdvancedConditionalLa
 import { GlobalLoadingIndicator } from '@/components/ui/global-loading';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { AuthProvider } from '@/components/providers/AuthProvider';
+import { ReduxProvider } from '@/components/providers/ReduxProvider';
 import { CampaignDataProvider } from '@/providers/CampaignDataProvider';
 import { NoSSR } from '@/components/providers/NoSSR';
 
@@ -27,16 +28,18 @@ export default function RootLayout({
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           </div>
         }>
-          <ThemeProvider defaultTheme="dark" storageKey="domainflow-theme">
-            <AuthProvider>
-              <CampaignDataProvider>
-                <GlobalLoadingIndicator />
-                <AdvancedConditionalLayout>
-                  {children}
-                </AdvancedConditionalLayout>
-              </CampaignDataProvider>
-            </AuthProvider>
-          </ThemeProvider>
+          <ReduxProvider>
+            <ThemeProvider defaultTheme="dark" storageKey="domainflow-theme">
+              <AuthProvider>
+                <CampaignDataProvider>
+                  <GlobalLoadingIndicator />
+                  <AdvancedConditionalLayout>
+                    {children}
+                  </AdvancedConditionalLayout>
+                </CampaignDataProvider>
+              </AuthProvider>
+            </ThemeProvider>
+          </ReduxProvider>
         </NoSSR>
       </body>
     </html>

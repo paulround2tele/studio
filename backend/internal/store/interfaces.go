@@ -99,6 +99,23 @@ type CampaignStore interface {
 	GetDomainsData(ctx context.Context, exec Querier, campaignID uuid.UUID) (interface{}, error)
 	AppendDomainsData(ctx context.Context, exec Querier, campaignID uuid.UUID, newDomains interface{}) error
 
+	// Phase 2: New state management methods
+	// Campaign state operations
+	CreateCampaignState(ctx context.Context, exec Querier, state *models.CampaignState) error
+	GetCampaignState(ctx context.Context, exec Querier, campaignID uuid.UUID) (*models.CampaignState, error)
+	UpdateCampaignState(ctx context.Context, exec Querier, state *models.CampaignState) error
+	DeleteCampaignState(ctx context.Context, exec Querier, campaignID uuid.UUID) error
+
+	// Phase execution operations
+	CreatePhaseExecution(ctx context.Context, exec Querier, execution *models.PhaseExecution) error
+	GetPhaseExecution(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) (*models.PhaseExecution, error)
+	GetPhaseExecutionsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID) ([]*models.PhaseExecution, error)
+	UpdatePhaseExecution(ctx context.Context, exec Querier, execution *models.PhaseExecution) error
+	DeletePhaseExecution(ctx context.Context, exec Querier, id uuid.UUID) error
+
+	// Combined operations
+	GetCampaignStateWithExecutions(ctx context.Context, exec Querier, campaignID uuid.UUID) (*models.CampaignStateWithExecution, error)
+
 	UpdateDNSResults(ctx context.Context, exec Querier, campaignID uuid.UUID, dnsResults interface{}) error
 	GetDNSResults(ctx context.Context, exec Querier, campaignID uuid.UUID) (interface{}, error)
 

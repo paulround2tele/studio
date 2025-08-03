@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, memo, useMemo, useCallback } from 'react';
+import React, { memo, useMemo, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import { SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarTrigger } from '@/components/ui/sidebar';
 import { Home, Target, Users, Settings, Zap, Database, LogOut } from 'lucide-react';
 import Link from 'next/link';
-import { websocketService } from '@/lib/services/websocketService.simple';
+import { WebSocketProvider } from '@/providers/WebSocketProvider';
 import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
 
 interface AppLayoutProps {
@@ -14,101 +14,87 @@ interface AppLayoutProps {
 
 // Navigation menu items
 const navigationItems = [
-  {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: Home
-  },
-  {
-    title: "Campaigns",
-    url: "/campaigns",
-    icon: Target
-  },
-  {
-    title: "Personas",
-    url: "/personas",
-    icon: Users
-  },
-  {
-    title: "Proxies",
-    url: "/proxies",
-    icon: Zap
-  },
-  {
-    title: "Keywords",
-    url: "/keywords",
-    icon: Database
-  },
-  {
-    title: "Settings",
-    url: "/settings",
-    icon: Settings
-  }
+  { label: 'Dashboard', href: '/dashboard', icon: Home },
+  { label: 'Campaigns', href: '/campaigns', icon: Target },
+  { label: 'Personas', href: '/personas', icon: Users },
+  { label: 'Keyword Sets', href: '/keyword-sets', icon: Settings },
+  { label: 'Proxies', href: '/proxies', icon: Zap },
 ];
 
-// THIN CLIENT: Pure UI component with real user authentication state
-const AppSidebar = memo(() => {
-  const { logout, user, isAuthenticated } = useCachedAuth();
-  
-  // Backend handles all auth - just render navigation
-  const filteredItems = useMemo(() => {
-    return navigationItems;
-  }, []);
+const otherItems = [
+  { label: 'Database', href: '/dbgui', icon: Database, external: true },
+];
 
-  // Use the hook's logout function for proper session cleanup
+const AppSidebar = memo(() => {
+  const { logout } = useCachedAuth();
+  const pathname = usePathname();
+
   const handleLogout = useCallback(() => {
     logout();
   }, [logout]);
 
-  // Debug user data
-  console.log('[AppSidebar] Current user data:', { user, isAuthenticated });
+  const isActive = useCallback((href: string) => {
+    if (href === '/dashboard') return pathname === '/dashboard' || pathname === '/';
+    return pathname?.startsWith(href) || false;
+  }, [pathname]);
+
+  const sidebarItems = useMemo(() => (
+    <>
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {navigationItems.map((item) => (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton asChild isActive={isActive(item.href)}>
+                  <Link href={item.href}>
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+
+      <SidebarGroup>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {otherItems.map((item) => (
+              <SidebarMenuItem key={item.href}>
+                <SidebarMenuButton asChild>
+                  <Link href={item.href}>
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </>
+  ), [isActive]);
 
   return (
     <Sidebar>
-      <SidebarHeader className="p-4">
-        <div className="flex items-center gap-2">
-          <Zap className="w-6 h-6 text-primary" />
+      <SidebarHeader>
+        <div className="p-4">
           <h2 className="text-lg font-semibold">DomainFlow</h2>
         </div>
       </SidebarHeader>
-      
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {filteredItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <Link href={item.url} className="flex items-center gap-3">
-                      <item.icon className="w-4 h-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {sidebarItems}
       </SidebarContent>
-      
-      <SidebarFooter className="p-4 border-t">
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="text-sm font-medium">
-              {user?.email || 'Unknown User'}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {isAuthenticated ? 'Authenticated' : 'Not Authenticated'}
-            </span>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="p-2 rounded-md hover:bg-accent"
-            title="Logout"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleLogout}>
+              <LogOut />
+              <span>Logout</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );
@@ -116,50 +102,38 @@ const AppSidebar = memo(() => {
 
 AppSidebar.displayName = 'AppSidebar';
 
-// Memoized main layout component for optimal performance
 const AppLayout = memo(({ children }: AppLayoutProps) => {
   const pathname = usePathname();
 
-
-  // Optimized WebSocket cleanup with proper lifecycle management
-  useEffect(() => {
-    // Cleanup function for WebSocket services
-    return () => {
-      console.log('[AppLayout] Cleaning up global WebSocket services');
-      try {
-        websocketService.disconnectAll();
-      } catch (error) {
-        console.error('[AppLayout] Error during WebSocket cleanup:', error);
-      }
-    };
-  }, []);
+  // No WebSocket cleanup needed - handled by WebSocketProvider
+  // Removed elasticWebSocketService.disconnectAll() as part of TASK-WS-004
 
   // SECURITY: Isolated routes that should bypass the main app layout
   const isolatedRoutes = ['/dbgui'];
   const isIsolatedRoute = isolatedRoutes.some(route => pathname?.startsWith(route));
 
-  // If this is an isolated route (like dbgui), render children directly without any app layout
   if (isIsolatedRoute) {
-    console.log('[AppLayout] 🔒 SECURITY: Isolated route detected, bypassing main app layout:', pathname);
     return <>{children}</>;
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background flex" suppressHydrationWarning>
-        <AppSidebar />
-        
-        {/* Main content area with optimized structure */}
-        <main className="flex-1 flex flex-col">
-          <div className="p-4 border-b">
-            <SidebarTrigger className="lg:hidden" />
-          </div>
-          <div className="flex-1 p-6">
-            {children}
-          </div>
-        </main>
-      </div>
-    </SidebarProvider>
+    <WebSocketProvider>
+      <SidebarProvider>
+        <div className="flex h-screen">
+          <AppSidebar />
+          
+          {/* Main content area with optimized structure */}
+          <main className="flex-1 flex flex-col">
+            <div className="p-4 border-b">
+              <SidebarTrigger className="lg:hidden" />
+            </div>
+            <div className="flex-1 p-6">
+              {children}
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
+    </WebSocketProvider>
   );
 });
 

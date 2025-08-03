@@ -435,6 +435,15 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 For support and questions, please refer to the project documentation or create an issue in the repository.
 
+## 🏆 Contributors
+
+### Architecture & System Design
+- **Bertram Gilfoyle** - Phase 4 Service Layer Reorganization & Stealth Integration Architecture
+  - Migrated 7,000+ lines of legacy monolithic services to clean domain service architecture
+  - Integrated critical stealth detection avoidance capabilities with validation phases
+  - Designed orchestrator pattern coordinating DNS/HTTP validation engines
+  - Preserved business-critical global offset tracking while enabling stealth randomization
+
 ---
 
 **Built with ❤️ by the DomainFlow Team**

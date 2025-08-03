@@ -42,8 +42,17 @@ const getApiBaseUrl = async (): Promise<string> => {
 
 export interface WebSocketMessage {
   type: string;
-  payload: Record<string, unknown>;
+  data?: Record<string, unknown>; // FIXED: Backend expects 'data', not 'payload'
+  payload?: Record<string, unknown>; // Keep for backward compatibility
   timestamp?: string;
+  // Backend message fields
+  id?: string;
+  campaignId?: string;
+  phase?: string;
+  status?: string;
+  progress?: number;
+  message?: string;
+  errorMessage?: string;
 }
 
 export interface WebSocketConfig {
@@ -51,9 +60,7 @@ export interface WebSocketConfig {
   protocols?: string[];
   maxReconnectAttempts?: number;
   reconnectDelay?: number;
-  pingInterval?: number;
   enableAutoReconnect?: boolean;
-  enableSessionValidation?: boolean;
   onSessionExpired?: () => void;
 }
 
@@ -76,28 +83,16 @@ class SessionWebSocketClient {
   private sessionConfig = getWebSocketSessionConfig();
   private performanceConfig = getWebSocketPerformanceConfig();
   
-  // Connection state
+  // Connection state (simplified)
   private isConnecting = false;
-  private isAuthenticated = false;
   private reconnectAttempts = 0;
   private maxReconnectAttempts: number;
   private reconnectTimer: NodeJS.Timeout | null = null;
-  private pingTimer: NodeJS.Timeout | null = null;
-  private sessionValidationTimer: NodeJS.Timeout | null = null;
+  private lastReconnectTime = 0; // For connection debouncing
   
   // Event handling
   private eventHandlers: Map<WebSocketEventType, Set<WebSocketEventHandler>> = new Map();
   private messageQueue: WebSocketMessage[] = [];
-  
-  // Session management
-  private lastSessionValidation = 0;
-  private sessionValidationInterval: number;
-  
-  // Data integrity and sequence tracking
-  private lastSequenceNumbers: Map<string, number> = new Map(); // campaignId -> last sequence
-  private eventHistory: Map<string, Set<string>> = new Map(); // campaignId -> Set of eventHashes
-  private pendingRecovery: Set<string> = new Set(); // campaignIds pending recovery
-  private maxEventHistorySize = 1000;
 
   static getInstance(): SessionWebSocketClient {
     if (!SessionWebSocketClient.instance) {
@@ -108,16 +103,13 @@ class SessionWebSocketClient {
 
   constructor(config: WebSocketConfig = {}) {
     this.config = {
-      maxReconnectAttempts: webSocketReconnectionConfig.maxAttempts,
-      reconnectDelay: webSocketReconnectionConfig.baseDelay,
-      pingInterval: 30000, // 30 seconds
+      maxReconnectAttempts: 3, // Reduced from 10
+      reconnectDelay: 30000, // Fixed 30s minimum between reconnects (no exponential backoff)
       enableAutoReconnect: true,
-      enableSessionValidation: true,
       ...config
     };
     
-    this.maxReconnectAttempts = this.config.maxReconnectAttempts || 10;
-    this.sessionValidationInterval = this.sessionConfig.sessionValidationInterval;
+    this.maxReconnectAttempts = this.config.maxReconnectAttempts || 3;
     
     // Initialize event handler sets
     this.initializeEventHandlers();
@@ -162,19 +154,22 @@ class SessionWebSocketClient {
     }
   }
 
-  // Connection management
+  // Simplified connection management - no thrashing, no complex session validation
   async connect(): Promise<void> {
     if (this.isConnecting || this.isConnected()) {
       return;
     }
 
-    try {
-      // Check session validity before connecting
-      if (!this.validateSessionForConnection()) {
-        throw new Error('No valid session for WebSocket connection');
-      }
+    // Connection debouncing - minimum 30s between reconnect attempts
+    const now = Date.now();
+    if (this.lastReconnectTime > 0 && (now - this.lastReconnectTime) < 30000) {
+      console.log('WebSocket connection debounced - too soon since last attempt');
+      return;
+    }
 
+    try {
       this.isConnecting = true;
+      this.lastReconnectTime = now;
       
       // Get WebSocket URL
       const wsUrl = await this.getWebSocketUrl();
@@ -183,7 +178,7 @@ class SessionWebSocketClient {
       // Create WebSocket connection
       this.ws = new WebSocket(wsUrl, this.config.protocols);
       
-      // Setup event handlers
+      // Setup simple event handlers
       this.setupWebSocketHandlers();
       
     } catch (error) {
@@ -191,7 +186,7 @@ class SessionWebSocketClient {
       console.error('WebSocket connection failed:', error);
       this.emit('error', error);
       
-      if (this.config.enableAutoReconnect) {
+      if (this.config.enableAutoReconnect && this.reconnectAttempts < this.maxReconnectAttempts) {
         this.scheduleReconnect();
       }
     }
@@ -204,32 +199,24 @@ class SessionWebSocketClient {
 
     const baseUrl = await getApiBaseUrl();
     const wsProtocol = baseUrl.startsWith('https://') ? 'wss://' : 'ws://';
-    const host = baseUrl.replace(/^https?:\/\//, '');
     
-    return `${wsProtocol}${host}/ws`;
-  }
-
-  private validateSessionForConnection(): boolean {
-    // Check if session cookie exists - session authentication is handled by cookies
-    return webSocketAuthUtils.isSessionValidForWebSocket();
+    // Extract just the host:port part, removing any existing path
+    const urlParts = baseUrl.replace(/^https?:\/\//, '').split('/');
+    const host = urlParts[0]; // Just hostname:port
+    
+    // CRITICAL FIX: Use correct backend WebSocket endpoint /api/v2/ws
+    return `${wsProtocol}${host}/api/v2/ws`;
   }
 
   private setupWebSocketHandlers(): void {
     if (!this.ws) return;
 
     this.ws.onopen = (event) => {
-      console.log('WebSocket connected');
+      console.log('WebSocket connected successfully');
       this.isConnecting = false;
-      this.isAuthenticated = true;
       this.reconnectAttempts = 0;
       
-      // Start session validation
-      this.startSessionValidation();
-      
-      // Start ping/pong mechanism
-      this.startPing();
-      
-      // Process queued messages
+      // Process any queued messages
       this.processMessageQueue();
       
       this.emit('open', event);
@@ -237,13 +224,11 @@ class SessionWebSocketClient {
 
     this.ws.onclose = (event) => {
       console.log('WebSocket disconnected', event.code, event.reason);
-      this.isAuthenticated = false;
-      this.stopTimers();
       
       this.emit('close', event);
       
-      // Auto-reconnect if enabled and not a normal closure
-      if (this.config.enableAutoReconnect && event.code !== 1000) {
+      // Simple auto-reconnect for unexpected closures only
+      if (this.config.enableAutoReconnect && event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
         this.scheduleReconnect();
       }
     };
@@ -255,98 +240,114 @@ class SessionWebSocketClient {
 
     this.ws.onmessage = (event) => {
       try {
-        const message: WebSocketMessage = JSON.parse(event.data);
+        console.log('Raw WebSocket message received:', event.data);
         
-        // Handle session expiration messages
-        if (message.type === 'session_expired') {
-          this.handleSessionExpired();
+        // Handle different data types
+        let rawData = event.data;
+        if (rawData instanceof Blob) {
+          // Handle blob data
+          rawData.text().then(text => {
+            this.parseAndEmitMessage(text);
+          }).catch(error => {
+            console.error('Error reading blob data:', error);
+          });
           return;
         }
         
-        // Process message with data integrity checks
-        this.processMessageWithIntegrity(message);
-        
-        this.emit('message', message);
+        this.parseAndEmitMessage(rawData);
       } catch (error) {
-        console.error('Error parsing WebSocket message:', error);
+        console.error('Error handling WebSocket message:', error);
+        this.emit('message', { error: 'handler_failed', raw: event.data });
       }
     };
   }
-
-  private startSessionValidation(): void {
-    if (!this.config.enableSessionValidation) return;
-    
-    this.sessionValidationTimer = setInterval(() => {
-      this.validateSession();
-    }, this.sessionValidationInterval);
-  }
-
-  private async validateSession(): Promise<void> {
+  
+  private parseAndEmitMessage(rawData: string): void {
     try {
-      // For session-based auth, validation is handled by the server via cookies
-      // We just check if the websocket connection is still valid
-      if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-        this.handleSessionExpired();
+      // Trim whitespace and check for empty data
+      const cleanData = rawData.trim();
+      if (!cleanData) {
+        console.warn('Empty WebSocket message received');
         return;
       }
       
-      this.lastSessionValidation = Date.now();
+      // Try to parse as JSON
+      const data = JSON.parse(cleanData);
+      console.log('Parsed WebSocket message:', data);
+      this.emit('message', data);
     } catch (error) {
-      console.error('Session validation failed:', error);
-      this.handleSessionExpired();
-    }
-  }
-
-  private handleSessionExpired(): void {
-    console.warn('WebSocket session expired');
-    this.isAuthenticated = false;
-    
-    // Close connection
-    if (this.ws) {
-      this.ws.close(1000, 'Session expired');
-    }
-    
-    // Clear timers
-    this.stopTimers();
-    
-    // Emit session expired event
-    this.emit('sessionExpired');
-    
-    // Redirect to login if handler provided
-    if (this.config.onSessionExpired) {
-      this.config.onSessionExpired();
-    } else if (typeof window !== 'undefined') {
-      window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`;
-    }
-  }
-
-  private startPing(): void {
-    if (!this.config.pingInterval) return;
-    
-    this.pingTimer = setInterval(() => {
-      if (this.isConnected()) {
-        this.send({
-          type: 'ping',
-          payload: { timestamp: Date.now() }
-        });
+      console.error('Error parsing WebSocket message:', error);
+      console.error('Raw message data:', rawData);
+      console.error('Data type:', typeof rawData);
+      console.error('Data length:', rawData?.length);
+      
+      // Log first 200 characters for debugging
+      if (rawData && rawData.length > 200) {
+        console.error('First 200 chars:', rawData.substring(0, 200));
+        console.error('Last 200 chars:', rawData.substring(rawData.length - 200));
       }
-    }, this.config.pingInterval);
+      
+      // Check if it might be multiple JSON objects concatenated
+      if (rawData && (rawData.includes('}{') || rawData.split('\n').length > 1)) {
+        console.log('Concatenated or multi-line JSON detected, splitting and parsing...');
+        // Try to split and parse individual messages
+        this.handleConcatenatedJSON(rawData);
+        return; // Don't continue with normal parsing
+      } else {
+        // Emit error for debugging
+        this.emit('message', { error: 'parse_failed', raw: rawData });
+      }
+    }
   }
-
-  private stopTimers(): void {
-    if (this.pingTimer) {
-      clearInterval(this.pingTimer);
-      this.pingTimer = null;
-    }
-    
-    if (this.sessionValidationTimer) {
-      clearInterval(this.sessionValidationTimer);
-      this.sessionValidationTimer = null;
-    }
-    
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = null;
+  
+  private handleConcatenatedJSON(rawData: string): void {
+    try {
+      console.log('Splitting concatenated JSON, original length:', rawData.length);
+      
+      // First try splitting by newlines for line-separated JSON
+      let messages: string[] = [];
+      if (rawData.includes('\n')) {
+        messages = rawData.split('\n').filter(line => line.trim() !== '');
+        console.log('Split by newlines into', messages.length, 'messages');
+      } else {
+        // Fall back to splitting on }{ pattern and reconstructing valid JSON objects
+        const parts = rawData.split('}{');
+        console.log('Split by }{ into', parts.length, 'parts');
+        
+        if (parts.length > 1) {
+          for (let i = 0; i < parts.length; i++) {
+            let part = parts[i];
+            if (!part || part.trim() === '') continue; // Skip empty parts
+            
+            // Reconstruct the JSON object
+            if (i > 0) part = '{' + part;           // Add opening brace for middle/end parts
+            if (i < parts.length - 1) part = part + '}'; // Add closing brace for start/middle parts
+            
+            messages.push(part);
+          }
+        } else {
+          messages = [rawData]; // Single message
+        }
+      }
+      
+      // Parse each message individually
+      for (let i = 0; i < messages.length; i++) {
+        const message = messages[i]?.trim();
+        if (!message) continue;
+        
+        console.log(`Processing message ${i + 1}/${messages.length}:`, message.substring(0, 100) + '...');
+          
+        try {
+          const data = JSON.parse(message);
+          console.log('✅ Successfully parsed message:', data.type);
+          this.emit('message', data);
+        } catch (partError) {
+          console.error(`❌ Error parsing message ${i + 1}:`, partError);
+          console.error('Failed message content:', message);
+        }
+      }
+    } catch (error) {
+      console.error('Error handling concatenated JSON:', error);
     }
   }
 
@@ -356,7 +357,8 @@ class SessionWebSocketClient {
       return;
     }
 
-    const delay = this.calculateReconnectDelay();
+    // Simple fixed delay - no exponential backoff complexity
+    const delay = this.config.reconnectDelay || 30000; // Fixed 30s delay
     console.log(`Scheduling WebSocket reconnection in ${delay}ms (attempt ${this.reconnectAttempts + 1})`);
     
     this.emit('reconnecting', { 
@@ -375,25 +377,10 @@ class SessionWebSocketClient {
     }, delay);
   }
 
-  private calculateReconnectDelay(): number {
-    const baseDelay = this.config.reconnectDelay || webSocketReconnectionConfig.baseDelay;
-    const maxDelay = webSocketReconnectionConfig.maxDelay;
-    const jitterFactor = webSocketReconnectionConfig.jitterFactor;
-    
-    // Exponential backoff with jitter
-    const exponentialDelay = Math.min(
-      baseDelay * Math.pow(2, this.reconnectAttempts),
-      maxDelay
-    );
-    
-    const jitter = exponentialDelay * jitterFactor * Math.random();
-    return exponentialDelay + jitter;
-  }
-
-  // Message handling
+  // Simplified message handling - no authentication checks
   send(message: WebSocketMessage): void {
-    if (!this.isConnected() || !this.isAuthenticated) {
-      console.warn('WebSocket not connected or not authenticated, queueing message');
+    if (!this.isConnected()) {
+      console.warn('WebSocket not connected, queueing message');
       this.queueMessage(message);
       return;
     }
@@ -412,8 +399,8 @@ class SessionWebSocketClient {
   }
 
   private queueMessage(message: WebSocketMessage): void {
-    // Limit queue size to prevent memory issues
-    if (this.messageQueue.length >= this.performanceConfig.maxMessageBufferSize) {
+    // Simple queue size limit
+    if (this.messageQueue.length >= 100) {
       this.messageQueue.shift(); // Remove oldest message
     }
     
@@ -421,7 +408,7 @@ class SessionWebSocketClient {
   }
 
   private processMessageQueue(): void {
-    while (this.messageQueue.length > 0 && this.isConnected() && this.isAuthenticated) {
+    while (this.messageQueue.length > 0 && this.isConnected()) {
       const message = this.messageQueue.shift();
       if (message) {
         this.send(message);
@@ -433,15 +420,25 @@ class SessionWebSocketClient {
   subscribe(topic: string): void {
     this.send({
       type: 'subscribe',
-      payload: { topic }
+      data: { channels: [topic] }  // Backend expects 'channels' array, not 'topic'
     });
   }
 
   unsubscribe(topic: string): void {
-    this.send({
-      type: 'unsubscribe',
-      payload: { topic }
-    });
+    // Check if it's a campaign topic and use the appropriate message format
+    if (topic.startsWith('campaign-')) {
+      const campaignId = topic.replace('campaign-', '');
+      this.send({
+        type: 'unsubscribe_campaign',
+        campaignId: campaignId
+      });
+    } else {
+      // For other topics, try the channels format (though backend may not support it)
+      this.send({
+        type: 'unsubscribe', 
+        data: { channels: [topic] }
+      });
+    }
   }
 
   // Connection state
@@ -450,125 +447,31 @@ class SessionWebSocketClient {
   }
 
   getConnectionState(): 'connecting' | 'open' | 'closing' | 'closed' {
-    if (!this.ws) return 'closed' as any;
+    if (!this.ws) return 'closed';
     switch (this.ws.readyState) {
-      case WebSocket.CONNECTING: return 'connecting' as any;
-      case WebSocket.OPEN: return 'open' as any;
-      case WebSocket.CLOSING: return 'closing' as any;
-      case WebSocket.CLOSED: return 'closed' as any;
-      default: return 'closed' as any;
+      case WebSocket.CONNECTING: return 'connecting';
+      case WebSocket.OPEN: return 'open';
+      case WebSocket.CLOSING: return 'closing';
+      case WebSocket.CLOSED: return 'closed';
+      default: return 'closed';
     }
   }
 
-  // Cleanup
+  // Simple cleanup
   disconnect(): void {
     this.config.enableAutoReconnect = false;
-    this.stopTimers();
+    
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
     
     if (this.ws) {
       this.ws.close(1000, 'Client disconnect');
       this.ws = null;
     }
     
-    this.isAuthenticated = false;
     this.messageQueue = [];
-  }
-
-  // Data integrity processing
-  private processMessageWithIntegrity(message: WebSocketMessage): void {
-    // Check if message has sequence information
-    const messageData = message.payload as any;
-    if (messageData && messageData.sequence) {
-      const sequence = messageData.sequence;
-      const campaignId = sequence.campaignId;
-      
-      // Validate sequence order
-      const lastSequence = this.lastSequenceNumbers.get(campaignId) || 0;
-      if (sequence.sequenceNumber <= lastSequence) {
-        console.warn(`[DATA INTEGRITY] Out-of-order message detected for campaign ${campaignId}: ${sequence.sequenceNumber} <= ${lastSequence}`);
-        return; // Skip out-of-order messages
-      }
-      
-      // Check for duplicate events
-      let eventHistory = this.eventHistory.get(campaignId);
-      if (!eventHistory) {
-        eventHistory = new Set();
-        this.eventHistory.set(campaignId, eventHistory);
-      }
-      
-      if (eventHistory.has(sequence.eventHash)) {
-        console.warn(`[DATA INTEGRITY] Duplicate event detected and skipped: ${sequence.eventId}`);
-        return; // Skip duplicate events
-      }
-      
-      // Record event
-      eventHistory.add(sequence.eventHash);
-      this.lastSequenceNumbers.set(campaignId, sequence.sequenceNumber);
-      
-      // Prune old events to prevent memory leaks
-      if (eventHistory.size > this.maxEventHistorySize) {
-        const eventsArray = Array.from(eventHistory);
-        eventHistory.clear();
-        eventsArray.slice(-this.maxEventHistorySize / 2).forEach(hash => eventHistory!.add(hash));
-      }
-      
-      console.log(`[DATA INTEGRITY] Message processed: campaign=${campaignId}, seq=${sequence.sequenceNumber}, event=${sequence.eventId}`);
-    }
-  }
-
-  // Request event recovery for a campaign
-  requestEventRecovery(campaignId: string): void {
-    if (this.pendingRecovery.has(campaignId)) {
-      console.log(`[DATA RECOVERY] Recovery already pending for campaign ${campaignId}`);
-      return;
-    }
-    
-    const lastSequence = this.lastSequenceNumbers.get(campaignId) || 0;
-    this.pendingRecovery.add(campaignId);
-    
-    this.send({
-      type: 'request_event_recovery',
-      payload: {
-        campaignId,
-        lastSequenceNumber: lastSequence
-      }
-    });
-    
-    console.log(`[DATA RECOVERY] Requested event recovery for campaign ${campaignId} from sequence ${lastSequence}`);
-    
-    // Clear pending status after timeout
-    setTimeout(() => {
-      this.pendingRecovery.delete(campaignId);
-    }, 30000); // 30 second timeout
-  }
-
-  // Clear data integrity tracking for a campaign
-  clearCampaignTracking(campaignId: string): void {
-    this.lastSequenceNumbers.delete(campaignId);
-    this.eventHistory.delete(campaignId);
-    this.pendingRecovery.delete(campaignId);
-    console.log(`[DATA INTEGRITY] Cleared tracking for campaign ${campaignId}`);
-  }
-
-  // Statistics
-  getStats(): {
-    isConnected: boolean;
-    isAuthenticated: boolean;
-    reconnectAttempts: number;
-    queuedMessages: number;
-    lastSessionValidation: number;
-    trackedCampaigns: string[];
-    eventHistorySize: number;
-  } {
-    return {
-      isConnected: this.isConnected(),
-      isAuthenticated: this.isAuthenticated,
-      reconnectAttempts: this.reconnectAttempts,
-      queuedMessages: this.messageQueue.length,
-      lastSessionValidation: this.lastSessionValidation,
-      trackedCampaigns: Array.from(this.lastSequenceNumbers.keys()),
-      eventHistorySize: Array.from(this.eventHistory.values()).reduce((total, set) => total + set.size, 0),
-    };
   }
 }
 

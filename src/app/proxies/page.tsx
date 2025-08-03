@@ -117,33 +117,31 @@ function ProxiesPageContent() {
 
     const connectWebSocket = async () => {
       try {
-        // Import the WebSocket service dynamically to avoid SSR issues
-        const { websocketService } = await import('@/lib/services/websocketService.simple');
+        // Use singleton SessionWebSocketClient for real-time updates
+        const { sessionWebSocketClient } = await import('@/lib/websocket/client');
         
         console.log('[ProxiesPage] Connecting to WebSocket for proxy updates...');
         
-        // Connect to WebSocket for proxy updates using the correct method
-        wsCleanup = websocketService.connect('proxies', {
-          onMessage: (standardMessage: { type: string; data?: unknown }) => {
-            console.log('[ProxiesPage] WebSocket message received:', standardMessage);
-            
-            // Route proxy-specific messages
-            if (standardMessage.type === 'proxy_list_update' && standardMessage.data !== undefined) {
-              handleProxyListUpdate({ data: standardMessage.data });
-            } else if (standardMessage.type === 'proxy_status_update' && standardMessage.data !== undefined) {
-              handleProxyStatusUpdate({ data: standardMessage.data as { proxyId: string; status: string; health: string } });
-            }
-          },
-          onConnect: () => {
-            console.log('[ProxiesPage] WebSocket connected for proxy push updates');
-          },
-          onError: (error: Error | Event) => {
-            console.error('[ProxiesPage] WebSocket error:', error);
-          },
-          onDisconnect: () => {
-            console.log('[ProxiesPage] WebSocket disconnected');
+        // Subscribe to proxy updates via SessionWebSocketClient
+        const handleMessage = (data: any) => {
+          console.log('[ProxiesPage] WebSocket message received:', data);
+          
+          // Route proxy-specific messages
+          if (data.type === 'proxy_list_update' && data.data !== undefined) {
+            handleProxyListUpdate({ data: data.data });
+          } else if (data.type === 'proxy_status_update' && data.data !== undefined) {
+            handleProxyStatusUpdate({ data: data.data as { proxyId: string; status: string; health: string } });
           }
-        });
+        };
+        
+        // Subscribe to messages
+        const unsubscribe = sessionWebSocketClient.on('message', handleMessage);
+        
+        // Setup cleanup function
+        wsCleanup = () => {
+          unsubscribe();
+          console.log('[ProxiesPage] WebSocket subscription cleaned up');
+        };
         
         console.log('[ProxiesPage] WebSocket connected for proxy push updates');
         

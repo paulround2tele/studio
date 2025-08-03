@@ -33,12 +33,15 @@ import (
 
 	api_pkg "github.com/fntelecomllc/studio/backend/api"
 	"github.com/fntelecomllc/studio/backend/internal/api"
+	"github.com/fntelecomllc/studio/backend/internal/application"
 	"github.com/fntelecomllc/studio/backend/internal/cache"
 	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/contentfetcher"
 	"github.com/fntelecomllc/studio/backend/internal/dnsvalidator"
+	domainservices "github.com/fntelecomllc/studio/backend/internal/domain/services"
 	"github.com/fntelecomllc/studio/backend/internal/httpvalidator"
-	"github.com/fntelecomllc/studio/backend/internal/keywordscanner"
+
+	// "github.com/fntelecomllc/studio/backend/internal/keywordscanner"  // PHASE 4.4: Wrapped by domain services
 	"github.com/fntelecomllc/studio/backend/internal/middleware"
 	"github.com/fntelecomllc/studio/backend/internal/proxymanager"
 	"github.com/fntelecomllc/studio/backend/internal/services"
@@ -46,7 +49,8 @@ import (
 	pg_store "github.com/fntelecomllc/studio/backend/internal/store/postgres"
 	"github.com/fntelecomllc/studio/backend/internal/websocket"
 	"github.com/fntelecomllc/studio/backend/pkg/architecture"
-	"github.com/fntelecomllc/studio/backend/pkg/communication"
+
+	// "github.com/fntelecomllc/studio/backend/pkg/communication"  // PHASE 4.4: No longer needed
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -54,6 +58,25 @@ import (
 	_ "github.com/lib/pq"
 	"gopkg.in/yaml.v3"
 )
+
+// SimpleLogger implements the Logger interface for domain services
+type SimpleLogger struct{}
+
+func (l *SimpleLogger) Debug(ctx context.Context, msg string, fields map[string]interface{}) {
+	log.Printf("[DEBUG] %s %v", msg, fields)
+}
+
+func (l *SimpleLogger) Info(ctx context.Context, msg string, fields map[string]interface{}) {
+	log.Printf("[INFO] %s %v", msg, fields)
+}
+
+func (l *SimpleLogger) Warn(ctx context.Context, msg string, fields map[string]interface{}) {
+	log.Printf("[WARN] %s %v", msg, fields)
+}
+
+func (l *SimpleLogger) Error(ctx context.Context, msg string, err error, fields map[string]interface{}) {
+	log.Printf("[ERROR] %s: %v %v", msg, err, fields)
+}
 
 const (
 	dbTypePostgres    = "postgres"
@@ -218,8 +241,11 @@ func main() {
 	httpValSvc := httpvalidator.NewHTTPValidator(appConfig)
 	log.Println("HTTPValidator engine initialized.")
 
-	kwordScannerSvc := keywordscanner.NewService(keywordStore)
-	log.Println("KeywordScanner engine initialized.")
+	// PHASE 4.4: Legacy engine services REMOVED - now wrapped by domain services
+	/*
+		kwordScannerSvc := keywordscanner.NewService(keywordStore)
+		log.Println("KeywordScanner engine initialized.")
+	*/
 
 	// Initialize additional engines required for direct integration
 	dnsValSvc := dnsvalidator.New(appConfig.DNSValidator)
@@ -252,40 +278,102 @@ func main() {
 	log.Println("DomainGenerationService initialized with global offset tracking.")
 
 	// Initialize DNS and HTTP Campaign Services for service layer architecture
-	dnsValidationService := services.NewDNSCampaignService(db, campaignStore, personaStore, auditLogStore, campaignJobStore, appConfig)
-	log.Println("DNSCampaignService initialized for service layer.")
+	// PHASE 4.4: Legacy validation services REMOVED - replaced by domain services in orchestrator
+	/*
+		dnsValidationService := services.NewDNSCampaignService(db, campaignStore, personaStore, auditLogStore, campaignJobStore, appConfig)
+		log.Println("DNSCampaignService initialized for service layer.")
 
-	httpValidationService := services.NewHTTPKeywordCampaignService(
-		db, campaignStore, personaStore, proxyStore, keywordStore, auditLogStore, campaignJobStore,
-		httpValSvc, kwordScannerSvc, proxyMgr, appConfig,
-	)
-	log.Println("HTTPKeywordCampaignService initialized for service layer.")
+		httpValidationService := services.NewHTTPKeywordCampaignService(
+			db, campaignStore, personaStore, auditLogStore, campaignJobStore, appConfig,
+		)
+		log.Println("HTTPKeywordCampaignService initialized for service layer.")
+	*/ // Phase 2.5 & 3.9: Initialize Phase Execution Service with direct engine integration
+	// PHASE 4.4: Legacy components REMOVED
+	// var asyncManager *communication.AsyncPatternManager = nil
 
-	// Phase 2.5 & 3.9: Initialize Phase Execution Service with direct engine integration
-	// AsyncManager is nil since we eliminated CampaignOrchestratorService
-	var asyncManager *communication.AsyncPatternManager = nil
+	// PHASE 4.4: Legacy PhaseExecutionService REMOVED - replaced by CampaignOrchestrator
+	/*
+		leadGenerationCampaignSvc := services.NewPhaseExecutionService(
+			db,
+			campaignStore,
+			personaStore,
+			keywordStore,
+			auditLogStore,
+			campaignJobStore,
+			wsBroadcaster,
+			asyncManager,
+			// Direct engine dependencies
+			nil, // domainGenerator will be created per-campaign
+			dnsValSvc,
+			httpValSvc,
+			contentFetcherSvc,
+			kwordScannerSvc,
+			// Legacy service dependencies (Phase 2.5: eliminated)
+			domainGenerationService, // Use shared service with global offset tracking
+			dnsValidationService,    // DNS campaign service for service layer architecture
+			httpValidationService,   // HTTP keyword campaign service for service layer architecture
+		)
+		log.Println("PhaseExecutionService initialized - Phase 2.5 & 3.9 direct engine integration complete.")
+	*/
 
-	leadGenerationCampaignSvc := services.NewPhaseExecutionService(
+	// Phase 4: Initialize NEW Domain Services (orchestrate existing engines)
+	// Create simple logger for domain services
+	simpleLogger := &SimpleLogger{}
+
+	domainServiceDeps := domainservices.Dependencies{
+		EventBus: nil, // TODO: Implement EventBus if needed
+		Logger:   simpleLogger,
+	}
+
+	// Create domain generation service (NO stealth - needs global offset tracking)
+	newDomainGenerationSvc := domainservices.NewDomainGenerationService(campaignStore, domainServiceDeps)
+
+	// Create standard validation services
+	standardDnsValidationSvc := domainservices.NewDNSValidationService(dnsValSvc, campaignStore, domainServiceDeps)
+	standardHttpValidationSvc := domainservices.NewHTTPValidationService(campaignStore, domainServiceDeps, httpValSvc)
+	newAnalysisSvc := domainservices.NewAnalysisService(campaignStore, domainServiceDeps, contentFetcherSvc)
+
+	// Initialize stealth integration service
+	stealthIntegration := services.NewStealthIntegrationService(
 		db,
 		campaignStore,
-		personaStore,
-		keywordStore,
-		auditLogStore,
-		campaignJobStore,
-		wsBroadcaster,
-		asyncManager,
-		// Direct engine dependencies
-		nil, // domainGenerator will be created per-campaign
-		dnsValSvc,
-		httpValSvc,
-		contentFetcherSvc,
-		kwordScannerSvc,
-		// Legacy service dependencies (Phase 2.5: eliminated)
-		domainGenerationService, // Use shared service with global offset tracking
-		dnsValidationService,    // DNS campaign service for service layer architecture
-		httpValidationService,   // HTTP keyword campaign service for service layer architecture
+		nil, // Legacy DNS service interface - not needed for new architecture
+		nil, // Legacy HTTP service interface - not needed for new architecture
 	)
-	log.Println("PhaseExecutionService initialized - Phase 2.5 & 3.9 direct engine integration complete.")
+
+	// Create stealth-aware validation services (wrapping standard services)
+	stealthAwareDnsValidationSvc := domainservices.NewStealthAwareDNSValidationService(
+		standardDnsValidationSvc,
+		stealthIntegration,
+	)
+
+	stealthAwareHttpValidationSvc := domainservices.NewStealthAwareHTTPValidationService(
+		standardHttpValidationSvc,
+		stealthIntegration,
+	)
+
+	// Enable stealth mode by default for validation services
+	// This provides domain randomization and temporal jitter to avoid detection
+	defaultStealthConfig := services.DefaultStealthConfig()
+	stealthAwareDnsValidationSvc.EnableStealthMode(defaultStealthConfig)
+	stealthAwareHttpValidationSvc.EnableStealthMode(defaultStealthConfig)
+
+	log.Println("Phase 4 Domain Services initialized - standard services with stealth-aware validation wrappers.")
+	log.Println("Stealth mode enabled for DNS and HTTP validation - detection avoidance active.") // Create new CampaignOrchestrator using domain services
+	// Domain generation: standard service (needs global offset)
+	// Validation services: stealth-aware services for detection avoidance
+	campaignOrchestrator := application.NewCampaignOrchestrator(
+		campaignStore,
+		domainServiceDeps,
+		newDomainGenerationSvc,        // NO stealth - maintains global offset
+		stealthAwareDnsValidationSvc,  // Stealth-aware DNS validation
+		stealthAwareHttpValidationSvc, // Stealth-aware HTTP validation
+		newAnalysisSvc,                // Analysis service (TODO: consider stealth for content extraction)
+	)
+	log.Println("Phase 4 CampaignOrchestrator initialized - ready to replace legacy services.")
+
+	// TODO: Phase 4.2 - Replace API handler to use campaignOrchestrator instead of leadGenerationCampaignSvc
+	_ = campaignOrchestrator // Prevent unused variable error until Phase 4.2
 
 	// Async pattern manager removed - no longer needed after CampaignOrchestratorService elimination
 
@@ -302,12 +390,12 @@ func main() {
 	}
 	workerService := services.NewCampaignWorkerService(
 		campaignJobStore,
-		leadGenerationCampaignSvc,
+		campaignOrchestrator, // NEW: Use Phase 4 orchestrator instead of legacy service
 		serverInstanceID,
 		appConfig,
 		db,
 	)
-	log.Println("CampaignWorkerService initialized.")
+	log.Println("CampaignWorkerService initialized with Phase 4 orchestrator.")
 
 	apiHandler := api.NewAPIHandler(
 		appConfig,
@@ -324,12 +412,12 @@ func main() {
 	log.Println("Main APIHandler initialized.")
 
 	campaignOrchestratorAPIHandler := api.NewCampaignOrchestratorAPIHandler(
-		leadGenerationCampaignSvc,
+		campaignOrchestrator, // NEW: Use Phase 4 orchestrator instead of legacy service
 		domainGenerationService,
 		campaignStore,
 		wsBroadcaster,
 		db)
-	log.Println("CampaignOrchestratorAPIHandler initialized with standalone services support.")
+	log.Println("CampaignOrchestratorAPIHandler initialized with Phase 4 orchestrator.")
 
 	webSocketAPIHandler := api.NewWebSocketHandler(wsBroadcaster, sessionService)
 	log.Println("WebSocketAPIHandler initialized.")

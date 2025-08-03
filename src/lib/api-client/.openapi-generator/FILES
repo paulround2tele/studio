@@ -78,9 +78,11 @@ docs/CampaignParamsData.md
 docs/CampaignPhase.md
 docs/CampaignProgressResponse.md
 docs/CampaignStartResponse.md
+docs/CampaignState.md
 docs/CampaignStateEvent.md
 docs/CampaignStateSnapshot.md
 docs/CampaignStateTransition.md
+docs/CampaignStateWithExecution.md
 docs/CampaignTransactionOptions.md
 docs/CampaignsApi.md
 docs/ChangePasswordRequest.md
@@ -225,6 +227,7 @@ docs/PersonaTestResultData.md
 docs/PersonasApi.md
 docs/PhaseConfig.md
 docs/PhaseConfigureRequest.md
+docs/PhaseExecution.md
 docs/PhaseProgress.md
 docs/PhaseProgressResponse.md
 docs/PhaseStartRequest.md
@@ -377,6 +380,8 @@ models/campaign-start-response.ts
 models/campaign-state-event.ts
 models/campaign-state-snapshot.ts
 models/campaign-state-transition.ts
+models/campaign-state-with-execution.ts
+models/campaign-state.ts
 models/campaign-transaction-options.ts
 models/change-password-request.ts
 models/communication-pattern.ts
@@ -515,6 +520,7 @@ models/persona-test-result-data.ts
 models/persona.ts
 models/phase-config.ts
 models/phase-configure-request.ts
+models/phase-execution.ts
 models/phase-progress-response.ts
 models/phase-progress.ts
 models/phase-start-request.ts

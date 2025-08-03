@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/fntelecomllc/studio/backend/internal/application"
 	"github.com/fntelecomllc/studio/backend/internal/domainexpert"
 	"github.com/fntelecomllc/studio/backend/internal/middleware"
 	"github.com/fntelecomllc/studio/backend/internal/models"
@@ -20,22 +21,22 @@ import (
 
 // CampaignOrchestratorAPIHandler holds dependencies for campaign orchestration API endpoints.
 type CampaignOrchestratorAPIHandler struct {
-	phaseExecutionService   services.PhaseExecutionService   // Universal phase execution service
-	domainGenerationService services.DomainGenerationService // Domain generation service for offset queries
-	campaignStore           store.CampaignStore              // Direct access needed for pattern offset queries
-	broadcaster             websocket.Broadcaster            // WebSocket broadcaster for real-time updates
-	db                      store.Querier                    // Database connection for store operations
+	orchestrator            *application.CampaignOrchestrator // NEW: Domain-driven orchestrator (Phase 4)
+	domainGenerationService services.DomainGenerationService  // Legacy: Keep for backward compatibility during transition
+	campaignStore           store.CampaignStore               // Direct access needed for pattern offset queries
+	broadcaster             websocket.Broadcaster             // WebSocket broadcaster for real-time updates
+	db                      store.Querier                     // Database connection for store operations
 }
 
 // NewCampaignOrchestratorAPIHandler creates a new handler for campaign orchestration.
 func NewCampaignOrchestratorAPIHandler(
-	phaseExecutionService services.PhaseExecutionService,
+	orchestrator *application.CampaignOrchestrator,
 	domainGenerationService services.DomainGenerationService,
 	campaignStore store.CampaignStore,
 	broadcaster websocket.Broadcaster,
 	db store.Querier) *CampaignOrchestratorAPIHandler {
 	return &CampaignOrchestratorAPIHandler{
-		phaseExecutionService:   phaseExecutionService,
+		orchestrator:            orchestrator,
 		domainGenerationService: domainGenerationService,
 		campaignStore:           campaignStore,
 		broadcaster:             broadcaster,
@@ -88,6 +89,32 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 	// Campaign domains endpoint - standalone service
 	group.GET("/:campaignId/domains/status", h.getCampaignDomainsStatus)
 
+	// --- DIRECT DOMAIN OPERATIONS THROUGH ORCHESTRATOR ---
+	// Single campaign domain operations
+	group.POST("/:campaignId/domains/generate", h.generateDomains)
+	group.POST("/:campaignId/domains/validate-dns", h.validateDomainsDNS)
+	group.POST("/:campaignId/domains/validate-http", h.validateDomainsHTTP)
+	group.GET("/:campaignId/domains/validation-status", h.getValidationStatus)
+
+	// --- BULK OPERATIONS FOR ENTERPRISE SCALE ---
+	// Bulk domain generation
+	group.POST("/bulk/domains/generate", h.bulkGenerateDomains)
+	group.POST("/bulk/domains/validate-dns", h.bulkValidateDNS)
+	group.POST("/bulk/domains/validate-http", h.bulkValidateHTTP)
+
+	// Bulk campaign operations
+	group.POST("/bulk/campaigns/operate", h.bulkCampaignOperations)
+	group.POST("/bulk/analytics", h.bulkAnalytics)
+
+	// Bulk operation monitoring
+	group.GET("/bulk/operations/:operationId/status", h.getBulkOperationStatus)
+	group.GET("/bulk/operations", h.listBulkOperations)
+	group.POST("/bulk/operations/:operationId/cancel", h.cancelBulkOperation)
+
+	// Resource management
+	group.POST("/bulk/resources/allocate", h.allocateBulkResources)
+	group.GET("/bulk/resources/status", h.getBulkResourceStatus)
+
 	// --- B2B BULK APIS FOR LARGE-SCALE OPERATIONS ---
 	// Bulk enriched data endpoint for processing millions of domains
 	group.POST("/bulk/enriched-data", h.getBulkEnrichedCampaignData)
@@ -129,10 +156,29 @@ func (h *CampaignOrchestratorAPIHandler) createLeadGenerationCampaign(c *gin.Con
 	// Set UserID from authenticated context (frontend doesn't send this)
 	req.UserID = userID.(uuid.UUID)
 
-	// Create campaign using the standalone lead generation service
-	log.Printf("Creating lead generation campaign using standalone service: %s", req.Name)
+	// Create campaign using the new orchestrator approach
+	log.Printf("Creating lead generation campaign: %s", req.Name)
 
-	campaign, err := h.phaseExecutionService.CreateCampaign(c.Request.Context(), req)
+	// Create basic campaign record
+	campaignID := uuid.New()
+	now := time.Now()
+
+	// Set enum values correctly
+	currentPhase := models.PhaseTypeDomainGeneration
+	phaseStatus := models.PhaseStatusNotStarted
+
+	campaign := &models.LeadGenerationCampaign{
+		ID:           campaignID,
+		UserID:       &req.UserID, // Fix: pointer to UUID
+		Name:         req.Name,
+		CurrentPhase: &currentPhase,
+		PhaseStatus:  &phaseStatus,
+		CreatedAt:    now,
+		UpdatedAt:    now,
+	}
+
+	// Store the campaign
+	err := h.campaignStore.CreateCampaign(c.Request.Context(), h.db, campaign)
 	if err != nil {
 		log.Printf("Failed to create lead generation campaign: %v", err)
 		respondWithDetailedErrorGin(c, http.StatusInternalServerError, ErrorCodeInternalServer,
@@ -212,10 +258,13 @@ func (h *CampaignOrchestratorAPIHandler) configurePhaseStandalone(c *gin.Context
 		return
 	}
 
-	log.Printf("Configuring phase %s for campaign %s using standalone services", phase, campaignID)
+	log.Printf("Configuring phase %s for campaign %s using new orchestrator", phase, campaignID)
 
-	// Use the lead generation service to configure phases - this method needs to be implemented
-	err = h.phaseExecutionService.ConfigurePhase(c.Request.Context(), campaignID, phase, req.Config)
+	// Convert string phase to enum
+	phaseEnum := models.PhaseTypeEnum(phase)
+
+	// Use the new orchestrator to configure phases
+	err = h.orchestrator.ConfigurePhase(c.Request.Context(), campaignID, phaseEnum, req.Config)
 
 	if err != nil {
 		log.Printf("Error configuring phase %s for campaign %s: %v", phase, campaignID, err)
@@ -267,11 +316,10 @@ func (h *CampaignOrchestratorAPIHandler) startPhaseStandalone(c *gin.Context) {
 		return
 	}
 
-	log.Printf("Starting phase %s for campaign %s using standalone services", phase, campaignID)
+	log.Printf("Starting phase %s for campaign %s using new orchestrator", phase, campaignID)
 
-	// Use the lead generation service to start phases
-	// Phase 4.11: User-controlled phase execution with dual-mode support
-	err = h.phaseExecutionService.StartPhase(c.Request.Context(), campaignID, phase)
+	// Use the orchestrator's string-based StartPhase method
+	err = h.orchestrator.StartPhase(c.Request.Context(), campaignID, phase)
 
 	if err != nil {
 		log.Printf("Error starting phase %s for campaign %s: %v", phase, campaignID, err)
@@ -608,21 +656,21 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignsStandalone(c *gin.Context) 
 			phasesData := make([]map[string]interface{}, len(phases))
 			for i, phase := range phases {
 				phasesData[i] = map[string]interface{}{
-					"id":                phase.ID.String(),
-					"campaignId":        phase.CampaignID.String(),
-					"phaseType":         string(phase.PhaseType),
-					"phaseOrder":        phase.PhaseOrder,
-					"status":            string(phase.Status),
+					"id":                 phase.ID.String(),
+					"campaignId":         phase.CampaignID.String(),
+					"phaseType":          string(phase.PhaseType),
+					"phaseOrder":         phase.PhaseOrder,
+					"status":             string(phase.Status),
 					"progressPercentage": phase.ProgressPercentage,
-					"startedAt":         phase.StartedAt,
-					"completedAt":       phase.CompletedAt,
-					"errorMessage":      phase.ErrorMessage,
-					"totalItems":        phase.TotalItems,
-					"processedItems":    phase.ProcessedItems,
-					"successfulItems":   phase.SuccessfulItems,
-					"failedItems":       phase.FailedItems,
-					"createdAt":         phase.CreatedAt.Format(time.RFC3339),
-					"updatedAt":         phase.UpdatedAt.Format(time.RFC3339),
+					"startedAt":          phase.StartedAt,
+					"completedAt":        phase.CompletedAt,
+					"errorMessage":       phase.ErrorMessage,
+					"totalItems":         phase.TotalItems,
+					"processedItems":     phase.ProcessedItems,
+					"successfulItems":    phase.SuccessfulItems,
+					"failedItems":        phase.FailedItems,
+					"createdAt":          phase.CreatedAt.Format(time.RFC3339),
+					"updatedAt":          phase.UpdatedAt.Format(time.RFC3339),
 				}
 			}
 			campaignData["phases"] = phasesData

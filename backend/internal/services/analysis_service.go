@@ -195,7 +195,13 @@ func (s *analysisServiceImpl) ProcessAnalysisCampaignBatch(ctx context.Context, 
 	}
 
 	// Broadcast analysis completion via WebSocket
-	websocket.BroadcastCampaignProgress(campaignID.String(), 100.0, "completed", "analysis", 0, 0)
+	// Optional non-blocking websocket notification for completion
+	go func() {
+		if broadcaster := websocket.GetBroadcaster(); broadcaster != nil {
+			message := websocket.CreateCampaignProgressMessage(campaignID.String(), 100.0, "completed", "analysis")
+			broadcaster.BroadcastToCampaign(campaignID.String(), message)
+		}
+	}()
 
 	log.Printf("ProcessAnalysisCampaignBatch: Campaign %s analysis phase completed successfully", campaignID)
 

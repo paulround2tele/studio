@@ -8,7 +8,6 @@ import (
 	"log"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/models"
@@ -35,23 +34,18 @@ var (
 	space   = []byte{' '}
 )
 
-// Global sequence counter for message ordering
-var globalSequenceCounter int64
-
 // WebSocketMessage represents a structured message for campaign-specific routing
-// Phase 2.2: Added ID and SequenceNumber for message ordering
 type WebSocketMessage struct {
-	ID             string      `json:"id"`
-	Timestamp      string      `json:"timestamp"`
-	Type           string      `json:"type"`
-	SequenceNumber int64       `json:"sequenceNumber"`
-	Data           interface{} `json:"data,omitempty"`
-	Message        string      `json:"message,omitempty"`
-	CampaignID     string      `json:"campaignId,omitempty"`
-	Phase          string      `json:"phase,omitempty"`
-	Status         string      `json:"status,omitempty"`
-	Progress       float64     `json:"progress,omitempty"`
-	ErrorMessage   string      `json:"error,omitempty"`
+	ID           string      `json:"id"`
+	Timestamp    string      `json:"timestamp"`
+	Type         string      `json:"type"`
+	Data         interface{} `json:"data,omitempty"`
+	Message      string      `json:"message,omitempty"`
+	CampaignID   string      `json:"campaignId,omitempty"`
+	Phase        string      `json:"phase,omitempty"`
+	Status       string      `json:"status,omitempty"`
+	Progress     float64     `json:"progress,omitempty"`
+	ErrorMessage string      `json:"error,omitempty"`
 
 	// Real-time update specific fields
 	ProxyID                string `json:"proxyId,omitempty"`
@@ -65,10 +59,9 @@ type WebSocketMessage struct {
 
 // ClientMessage represents messages received from the client
 type ClientMessage struct {
-	Type               string      `json:"type"`
-	CampaignID         string      `json:"campaignId,omitempty"`
-	LastSequenceNumber int64       `json:"lastSequenceNumber,omitempty"`
-	Data               interface{} `json:"data,omitempty"`
+	Type       string      `json:"type"`
+	CampaignID string      `json:"campaignId,omitempty"`
+	Data       interface{} `json:"data,omitempty"`
 }
 
 // Client is a middleman between the websocket connection and the hub.
@@ -84,9 +77,6 @@ type Client struct {
 	// Campaign subscriptions for this client
 	campaignSubscriptions map[string]bool
 	subscriptionMutex     sync.RWMutex
-
-	// Sequence tracking per subscription
-	sequenceNumbers map[string]int64
 
 	// Security context for authentication and authorization
 	securityContext *models.SecurityContext
@@ -200,9 +190,8 @@ func (c *Client) handleMessage(message []byte) {
 
 	switch clientMsg.Type {
 	case "connection_init":
-		// Handle connection initialization with last sequence number
-		log.Printf("Client %s initialized connection with last sequence: %d",
-			c.conn.RemoteAddr().String(), clientMsg.LastSequenceNumber)
+		// Handle connection initialization
+		log.Printf("Client %s initialized connection", c.conn.RemoteAddr().String())
 
 		// Send acknowledgment
 		response := c.createMessage("connection_ack", nil)
@@ -211,9 +200,8 @@ func (c *Client) handleMessage(message []byte) {
 			userId = c.securityContext.UserID.String()
 		}
 		response.Data = map[string]interface{}{
-			"connectionId":       uuid.New().String(),
-			"userId":             userId,
-			"lastSequenceNumber": clientMsg.LastSequenceNumber,
+			"connectionId": uuid.New().String(),
+			"userId":       userId,
 		}
 		c.sendMessage(response)
 
@@ -274,33 +262,30 @@ func (c *Client) handleMessage(message []byte) {
 		if clientMsg.CampaignID != "" {
 			c.subscriptionMutex.Lock()
 			c.campaignSubscriptions[clientMsg.CampaignID] = true
-			// Track last sequence number for this subscription
-			if clientMsg.LastSequenceNumber > 0 {
-				c.sequenceNumbers[clientMsg.CampaignID] = clientMsg.LastSequenceNumber
-			}
 			c.subscriptionMutex.Unlock()
 
-			log.Printf("Client %s subscribed to campaign %s with last sequence: %d",
-				c.conn.RemoteAddr().String(), clientMsg.CampaignID, clientMsg.LastSequenceNumber)
+			log.Printf("Client %s subscribed to campaign %s",
+				c.conn.RemoteAddr().String(), clientMsg.CampaignID)
 
 			// Send confirmation
 			response := c.createMessage("subscription_confirmed", &clientMsg.CampaignID)
 			response.Message = "Successfully subscribed to campaign updates"
 			response.Data = map[string]interface{}{
-				"lastSequenceNumber": clientMsg.LastSequenceNumber,
+				"status": "subscribed",
 			}
 			c.sendMessage(response)
 
 			// 🚀 BACKEND STATE SYNC FIX: Send current campaign state immediately
 			// This prevents the race condition where frontend connects after generation completes
 			go c.sendCurrentCampaignState(clientMsg.CampaignID)
+		} else {
+			log.Printf("Campaign ID is empty for subscribe_campaign message")
 		}
 
 	case "unsubscribe_campaign":
 		if clientMsg.CampaignID != "" {
 			c.subscriptionMutex.Lock()
 			delete(c.campaignSubscriptions, clientMsg.CampaignID)
-			delete(c.sequenceNumbers, clientMsg.CampaignID)
 			c.subscriptionMutex.Unlock()
 
 			log.Printf("Client %s unsubscribed from campaign %s",
@@ -317,13 +302,12 @@ func (c *Client) handleMessage(message []byte) {
 	}
 }
 
-// createMessage creates a new WebSocket message with proper ID, timestamp, and sequence number
+// createMessage creates a new WebSocket message with proper ID and timestamp
 func (c *Client) createMessage(msgType string, campaignID *string) WebSocketMessage {
 	msg := WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		Type:           msgType,
-		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
+		ID:        uuid.New().String(),
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		Type:      msgType,
 	}
 
 	if campaignID != nil {
@@ -341,9 +325,6 @@ func (c *Client) sendMessage(msg WebSocketMessage) {
 	}
 	if msg.Timestamp == "" {
 		msg.Timestamp = time.Now().UTC().Format(time.RFC3339)
-	}
-	if msg.SequenceNumber == 0 {
-		msg.SequenceNumber = atomic.AddInt64(&globalSequenceCounter, 1)
 	}
 
 	data, err := json.Marshal(msg)
@@ -374,13 +355,6 @@ func (c *Client) IsSubscribedToCampaign(campaignID string) bool {
 	return c.campaignSubscriptions[campaignID] || c.campaignSubscriptions["*"]
 }
 
-// GetLastSequenceNumber returns the last sequence number for a campaign subscription
-func (c *Client) GetLastSequenceNumber(campaignID string) int64 {
-	c.subscriptionMutex.RLock()
-	defer c.subscriptionMutex.RUnlock()
-	return c.sequenceNumbers[campaignID]
-}
-
 // sendCurrentCampaignState fetches and sends current campaign state to client on subscription
 // This prevents race condition where frontend connects after campaign generation completes
 func (c *Client) sendCurrentCampaignState(campaignID string) {
@@ -399,7 +373,6 @@ func NewClient(hub Broadcaster, conn *websocket.Conn) *Client {
 		conn:                  conn,
 		send:                  make(chan []byte, 256), // Buffered channel for outbound messages
 		campaignSubscriptions: make(map[string]bool),
-		sequenceNumbers:       make(map[string]int64),
 	}
 
 	log.Printf("[WebSocket] Registering client %s with hub", conn.RemoteAddr().String())
@@ -426,7 +399,6 @@ func NewClientWithSecurity(hub Broadcaster, conn *websocket.Conn, securityContex
 		conn:                  conn,
 		send:                  make(chan []byte, 256), // Buffered channel for outbound messages
 		campaignSubscriptions: make(map[string]bool),
-		sequenceNumbers:       make(map[string]int64),
 		securityContext:       securityContext,
 	}
 
@@ -449,11 +421,10 @@ func (c *Client) GetSecurityContext() *models.SecurityContext {
 // CreatePhaseTransitionMessage creates a standardized phase transition message
 func CreatePhaseTransitionMessage(campaignID string, previousPhase string, currentPhase string, progress float64) WebSocketMessage {
 	return WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		Type:           "phase_transition",
-		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
-		CampaignID:     campaignID,
+		ID:         uuid.New().String(),
+		Timestamp:  time.Now().UTC().Format(time.RFC3339),
+		Type:       "phase_transition",
+		CampaignID: campaignID,
 		Data: map[string]interface{}{
 			"previousPhase":      previousPhase,
 			"currentPhase":       currentPhase,
@@ -467,11 +438,10 @@ func CreatePhaseTransitionMessage(campaignID string, previousPhase string, curre
 // CreateCampaignProgressMessage creates a standardized campaign progress message
 func CreateCampaignProgressMessage(campaignID string, progress float64, status string, phase string) WebSocketMessage {
 	return WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		Type:           "campaign_progress",
-		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
-		CampaignID:     campaignID,
+		ID:         uuid.New().String(),
+		Timestamp:  time.Now().UTC().Format(time.RFC3339),
+		Type:       "campaign_progress",
+		CampaignID: campaignID,
 		Data: map[string]interface{}{
 			"progressPercentage": progress,
 			"phaseStatus":        status,
@@ -485,11 +455,10 @@ func CreateCampaignProgressMessage(campaignID string, progress float64, status s
 // CreateProxyStatusMessage creates a standardized proxy status update message
 func CreateProxyStatusMessage(proxyID, status string, campaignID string) WebSocketMessage {
 	return WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		Type:           "proxy_status_update",
-		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
-		CampaignID:     campaignID,
+		ID:         uuid.New().String(),
+		Timestamp:  time.Now().UTC().Format(time.RFC3339),
+		Type:       "proxy_status_update",
+		CampaignID: campaignID,
 		Data: map[string]interface{}{
 			"proxyId": proxyID,
 			"status":  status,
@@ -500,10 +469,9 @@ func CreateProxyStatusMessage(proxyID, status string, campaignID string) WebSock
 // CreateSystemNotificationMessage creates a system-wide notification message
 func CreateSystemNotificationMessage(message string, level string) WebSocketMessage {
 	return WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		Type:           "system_notification",
-		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
+		ID:        uuid.New().String(),
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		Type:      "system_notification",
 		Data: map[string]interface{}{
 			"level":   level, // info, warning, error, success
 			"message": message,
@@ -516,11 +484,10 @@ func CreateSystemNotificationMessage(message string, level string) WebSocketMess
 // CreateCampaignPhaseCompleteMessage creates a campaign phase completion message
 func CreateCampaignPhaseCompleteMessage(campaignID, phase string, completedItems, failedItems int, nextPhase string) WebSocketMessage {
 	return WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		Type:           "campaign_phase_complete",
-		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
-		CampaignID:     campaignID,
+		ID:         uuid.New().String(),
+		Timestamp:  time.Now().UTC().Format(time.RFC3339),
+		Type:       "campaign_phase_complete",
+		CampaignID: campaignID,
 		Data: map[string]interface{}{
 			"phase":          phase, // domain_generation, dns_validation, http_keyword_validation
 			"completedItems": completedItems,
@@ -533,11 +500,10 @@ func CreateCampaignPhaseCompleteMessage(campaignID, phase string, completedItems
 // CreateCampaignCompleteMessage creates a campaign completion message
 func CreateCampaignCompleteMessage(campaignID, finalStatus string, totalProcessed, totalSuccessful, totalFailed int, duration float64) WebSocketMessage {
 	return WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		Type:           "campaign_complete",
-		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
-		CampaignID:     campaignID,
+		ID:         uuid.New().String(),
+		Timestamp:  time.Now().UTC().Format(time.RFC3339),
+		Type:       "campaign_complete",
+		CampaignID: campaignID,
 		Data: map[string]interface{}{
 			"finalStatus":     finalStatus, // completed, failed, cancelled
 			"totalProcessed":  totalProcessed,
@@ -551,11 +517,10 @@ func CreateCampaignCompleteMessage(campaignID, finalStatus string, totalProcesse
 // CreateCampaignErrorMessage creates a campaign error message
 func CreateCampaignErrorMessage(campaignID, errorCode, errorMessage, phase string, retryable bool) WebSocketMessage {
 	return WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		Type:           "campaign_error",
-		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
-		CampaignID:     campaignID,
+		ID:         uuid.New().String(),
+		Timestamp:  time.Now().UTC().Format(time.RFC3339),
+		Type:       "campaign_error",
+		CampaignID: campaignID,
 		Data: map[string]interface{}{
 			"errorCode":    errorCode,
 			"errorMessage": errorMessage,
@@ -577,26 +542,24 @@ func CreateUserNotificationMessage(userID, level, title, message, actionURL stri
 	}
 
 	return WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		Type:           "user_notification",
-		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
-		Data:           data,
+		ID:        uuid.New().String(),
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		Type:      "user_notification",
+		Data:      data,
 		// Note: userID would typically be included in routing logic, not in the message itself
 	}
 }
 
-// CreateConnectionAckMessage creates a connection acknowledgment message
-func CreateConnectionAckMessage(connectionID, userID string, lastSequenceNumber int64) WebSocketMessage {
+// CreateConnectionAckMessage creates a simple connection acknowledgment message
+func CreateConnectionAckMessage(connectionID, userID string) WebSocketMessage {
 	return WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		Type:           "connection_ack",
-		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
+		ID:        uuid.New().String(),
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		Type:      "connection_ack",
 		Data: map[string]interface{}{
-			"connectionId":       connectionID,
-			"userId":             userID,
-			"lastSequenceNumber": lastSequenceNumber,
+			"connectionId": connectionID,
+			"userId":       userID,
+			"status":       "connected",
 		},
 	}
 }
@@ -665,18 +628,7 @@ func BroadcastPhaseTransition(campaignID string, previousPhase string, currentPh
 	}
 }
 
-// BroadcastDomainGeneration broadcasts domain generation progress
-func BroadcastDomainGeneration(campaignID string, domainsGenerated int64, totalDomains int64) {
-	log.Printf("🔵 [WEBSOCKET_BROADCAST_DEBUG] BroadcastDomainGeneration called: campaignID=%s, generated=%d, total=%d",
-		campaignID, domainsGenerated, totalDomains)
-
-	if broadcaster := GetBroadcaster(); broadcaster != nil {
-		// Removed: message := CreateDomainGenerationMessage(campaignID, domainsGenerated, totalDomains)
-		log.Printf("Not broadcasting generated domains for campaign %s via websocket to reduce traffic", campaignID)
-	} else {
-		log.Printf("❌ [WEBSOCKET_BROADCAST_DEBUG] ERROR: No broadcaster available for domain generation")
-	}
-}
+// TASK-WS-002: Domain generation progress use REST API polling instead
 
 // BroadcastCampaignListUpdate broadcasts campaign list changes to eliminate polling
 func BroadcastCampaignListUpdate(action string, campaignID string, campaignData interface{}) {
@@ -903,30 +855,8 @@ func BroadcastDashboardActivity(campaignID string, domainName string, activity s
 	// Dashboard activity broadcasting disabled - use REST APIs for domain data fetching
 }
 
-// REFACTORED: Domain data broadcasting removed - use REST APIs for domain data
-// These functions are deprecated and should be removed after migration to REST-only domain data
-
-// BroadcastDomainGenerated - DEPRECATED: Domain data now served via REST APIs only
-// This function is retained for backwards compatibility during migration but will be removed
-func BroadcastDomainGenerated(campaignID string, domainName string, domainCount int) {
-	log.Printf("[DEPRECATED] BroadcastDomainGenerated called but disabled: campaignID=%s, domain=%s", campaignID, domainName)
-	log.Printf("[REFACTOR] Domain data should be fetched via REST API /campaigns/{id}/domains or bulk enriched data endpoint")
-	// Domain broadcasting disabled - use REST APIs for domain data fetching
-}
-
-// BroadcastDNSValidationResult - DEPRECATED: DNS validation results now served via REST APIs only
-func BroadcastDNSValidationResult(campaignID string, domainName string, validationStatus string) {
-	log.Printf("[DEPRECATED] BroadcastDNSValidationResult called but disabled: campaignID=%s, domain=%s, status=%s", campaignID, domainName, validationStatus)
-	log.Printf("[REFACTOR] DNS validation data should be fetched via REST API /campaigns/{id}/domains or bulk enriched data endpoint")
-	// DNS validation broadcasting disabled - use REST APIs for domain data fetching
-}
-
-// BroadcastHTTPValidationResult - DEPRECATED: HTTP validation results now served via REST APIs only
-func BroadcastHTTPValidationResult(campaignID string, domainName string, validationStatus string, leadScore int) {
-	log.Printf("[DEPRECATED] BroadcastHTTPValidationResult called but disabled: campaignID=%s, domain=%s, status=%s", campaignID, domainName, validationStatus)
-	log.Printf("[REFACTOR] HTTP validation data should be fetched via REST API /campaigns/{id}/domains or bulk enriched data endpoint")
-	// HTTP validation broadcasting disabled - use REST APIs for domain data fetching
-}
+// TASK-WS-002 COMPLETED: Heavy domain data streaming functions removed
+// Use REST APIs for domain data: GET /campaigns/{id}/domains
 
 // CreateCampaignListUpdateMessage creates a campaign list update message
 func CreateCampaignListUpdateMessage(action string, campaignID string, campaignData interface{}) WebSocketMessage {
@@ -940,11 +870,10 @@ func CreateCampaignListUpdateMessage(action string, campaignID string, campaignD
 	}
 
 	return WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		Type:           "campaign_list_update",
-		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
-		Data:           data,
+		ID:        uuid.New().String(),
+		Timestamp: time.Now().UTC().Format(time.RFC3339),
+		Type:      "campaign_list_update",
+		Data:      data,
 	}
 }
 
@@ -994,12 +923,11 @@ func BroadcastCurrentCampaignState(campaignID string) {
 		log.Printf("⚠️ [STATE_SYNC] Campaign state service not initialized, sending basic sync message for campaign %s", campaignID)
 		// Fallback to basic message if service not available
 		message := WebSocketMessage{
-			ID:             uuid.New().String(),
-			Timestamp:      time.Now().UTC().Format(time.RFC3339),
-			Type:           "campaign.state.sync",
-			SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
-			CampaignID:     campaignID,
-			Message:        "State sync requested - service unavailable",
+			ID:         uuid.New().String(),
+			Timestamp:  time.Now().UTC().Format(time.RFC3339),
+			Type:       "campaign.state.sync",
+			CampaignID: campaignID,
+			Message:    "State sync requested - service unavailable",
 		}
 		broadcaster.BroadcastToCampaign(campaignID, message)
 		return
@@ -1012,12 +940,11 @@ func BroadcastCurrentCampaignState(campaignID string) {
 		log.Printf("❌ [STATE_SYNC] Failed to fetch campaign state for %s: %v", campaignID, err)
 		// Send error state sync message
 		message := WebSocketMessage{
-			ID:             uuid.New().String(),
-			Timestamp:      time.Now().UTC().Format(time.RFC3339),
-			Type:           "campaign.state.sync.error",
-			SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
-			CampaignID:     campaignID,
-			Message:        fmt.Sprintf("Failed to fetch campaign state: %v", err),
+			ID:         uuid.New().String(),
+			Timestamp:  time.Now().UTC().Format(time.RFC3339),
+			Type:       "campaign.state.sync.error",
+			CampaignID: campaignID,
+			Message:    fmt.Sprintf("Failed to fetch campaign state: %v", err),
 		}
 		broadcaster.BroadcastToCampaign(campaignID, message)
 		return
@@ -1025,12 +952,11 @@ func BroadcastCurrentCampaignState(campaignID string) {
 
 	// Send comprehensive campaign progress message with enhanced data
 	progressMessage := WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		Type:           "campaign.progress",
-		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
-		CampaignID:     campaignID,
-		Message:        fmt.Sprintf("Campaign progress: %.1f%% complete", stateData.Progress),
+		ID:         uuid.New().String(),
+		Timestamp:  time.Now().UTC().Format(time.RFC3339),
+		Type:       "campaign.progress",
+		CampaignID: campaignID,
+		Message:    fmt.Sprintf("Campaign progress: %.1f%% complete", stateData.Progress),
 		Data: map[string]interface{}{
 			"progress":         stateData.Progress,
 			"status":           stateData.PhaseStatus,
@@ -1051,12 +977,11 @@ func BroadcastCurrentCampaignState(campaignID string) {
 
 	// Also send a specific state sync confirmation message
 	syncMessage := WebSocketMessage{
-		ID:             uuid.New().String(),
-		Timestamp:      time.Now().UTC().Format(time.RFC3339),
-		Type:           "campaign.state.sync.complete",
-		SequenceNumber: atomic.AddInt64(&globalSequenceCounter, 1),
-		CampaignID:     campaignID,
-		Message:        fmt.Sprintf("State sync complete: %.1f%% progress in %s phase", stateData.Progress, stateData.CurrentPhase),
+		ID:         uuid.New().String(),
+		Timestamp:  time.Now().UTC().Format(time.RFC3339),
+		Type:       "campaign.state.sync.complete",
+		CampaignID: campaignID,
+		Message:    fmt.Sprintf("State sync complete: %.1f%% progress in %s phase", stateData.Progress, stateData.CurrentPhase),
 		Data: map[string]interface{}{
 			"stateData": stateData,
 		},

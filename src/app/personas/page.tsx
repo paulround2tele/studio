@@ -172,33 +172,33 @@ function PersonasPageContent() {
 
     const connectWebSocket = async () => {
       try {
-        // Import the WebSocket service dynamically to avoid SSR issues
-        const { websocketService } = await import('@/lib/services/websocketService.simple');
+        // Use singleton SessionWebSocketClient for real-time updates
+        const { sessionWebSocketClient } = await import('@/lib/websocket/client');
         
         console.log('[PersonasPage] Connecting to WebSocket for persona updates...');
         
-        // Connect to WebSocket for persona updates
-        wsCleanup = websocketService.connect('personas', {
-          onMessage: (message) => {
-            console.log('[PersonasPage] WebSocket message received:', message);
-            
-            // Route persona-specific messages
-            if (message.type === 'persona_list_update') {
-              console.log('[PersonasPage] Persona list update detected, refreshing data...');
-              // Refresh the current tab's data without loading spinner
-              fetchPersonasData(activeTab, false);
-            }
-          },
-          onConnect: () => {
-            console.log('[PersonasPage] WebSocket connected for persona push updates');
-          },
-          onError: (error) => {
-            console.error('[PersonasPage] WebSocket error:', error);
-          },
-          onDisconnect: () => {
-            console.log('[PersonasPage] WebSocket disconnected');
+        // Subscribe to persona updates via SessionWebSocketClient
+        const handleMessage = (data: any) => {
+          console.log('[PersonasPage] WebSocket message received:', data);
+          
+          // Route persona-specific messages
+          if (data.type === 'persona_list_update') {
+            console.log('[PersonasPage] Persona list update detected, refreshing data...');
+            // Refresh the current tab's data without loading spinner
+            fetchPersonasData(activeTab, false);
           }
-        });
+        };
+        
+        // Subscribe to messages
+        const unsubscribe = sessionWebSocketClient.on('message', handleMessage);
+        
+        // Setup cleanup function
+        wsCleanup = () => {
+          unsubscribe();
+          console.log('[PersonasPage] WebSocket subscription cleaned up');
+        };
+        
+        console.log('[PersonasPage] WebSocket connected for persona push updates');
         
       } catch (error) {
         console.error('[PersonasPage] Failed to connect WebSocket:', error);

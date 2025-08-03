@@ -36,33 +36,28 @@ export default function KeywordSetsPage() {
 
     const connectWebSocket = async () => {
       try {
-        // Import the WebSocket service dynamically to avoid SSR issues
-        const { websocketService } = await import('@/lib/services/websocketService.simple');
+        // Use singleton SessionWebSocketClient instead of conflicting elastic service
+        const { sessionWebSocketClient } = await import('@/lib/websocket/client');
         
         console.log('[KeywordSetsPage] Connecting to WebSocket for keyword set updates...');
         
-        // Connect to WebSocket for keyword set updates
-        wsCleanup = websocketService.connect('keyword-sets', {
-          onMessage: (message) => {
-            console.log('[KeywordSetsPage] WebSocket message received:', message);
-            
-            // Route keyword set-specific messages
-            if (message.type === 'keyword_set_list_update') {
+        // Connect using proper singleton pattern
+        sessionWebSocketClient.connect();
+        
+        // Subscribe to messages for keyword-sets
+        const unsubscribe = sessionWebSocketClient.on('message', (message: any) => {
+          console.log('[KeywordSetsPage] WebSocket message received:', message);
+          
+          // Route keyword set-specific messages
+          if (message.type === 'keyword_set_list_update') {
               console.log('[KeywordSetsPage] Keyword set list update detected, refreshing data...');
               // Refresh the data without loading spinner
               loadSets();
             }
-          },
-          onConnect: () => {
-            console.log('[KeywordSetsPage] WebSocket connected for keyword set push updates');
-          },
-          onError: (error) => {
-            console.error('[KeywordSetsPage] WebSocket error:', error);
-          },
-          onDisconnect: () => {
-            console.log('[KeywordSetsPage] WebSocket disconnected');
-          }
         });
+        
+        // Set cleanup function
+        wsCleanup = unsubscribe;
         
       } catch (error) {
         console.error('[KeywordSetsPage] Failed to connect WebSocket:', error);

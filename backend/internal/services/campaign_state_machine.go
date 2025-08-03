@@ -7,26 +7,27 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/models"
 )
 
-// CampaignStateMachine manages valid state transitions for campaigns
+// DEPRECATED: Legacy CampaignStateMachine for backward compatibility
+// Use state.CampaignStateMachine for new implementations
 type CampaignStateMachine struct {
 	transitions map[models.PhaseStatusEnum][]models.PhaseStatusEnum
 	mu          sync.RWMutex
 }
 
-// NewCampaignStateMachine creates a new state machine with valid transitions
+// DEPRECATED: Use state.NewCampaignStateMachine() instead
 func NewCampaignStateMachine() *CampaignStateMachine {
 	return &CampaignStateMachine{
 		transitions: map[models.PhaseStatusEnum][]models.PhaseStatusEnum{
 			models.PhaseStatusNotStarted: {models.PhaseStatusInProgress, models.PhaseStatusFailed},
 			models.PhaseStatusInProgress: {models.PhaseStatusPaused, models.PhaseStatusCompleted, models.PhaseStatusFailed},
 			models.PhaseStatusPaused:     {models.PhaseStatusInProgress},
-			models.PhaseStatusCompleted:  {},                             // Terminal state
-			models.PhaseStatusFailed:     {models.PhaseStatusNotStarted}, // Allow retry
+			models.PhaseStatusCompleted:  {models.PhaseStatusInProgress},                               // Allow restart
+			models.PhaseStatusFailed:     {models.PhaseStatusNotStarted, models.PhaseStatusInProgress}, // Allow retry
 		},
 	}
 }
 
-// CanTransition checks if a transition from current to target status is valid
+// DEPRECATED: Use state.CampaignStateMachine.CanTransition() instead
 func (sm *CampaignStateMachine) CanTransition(current, target models.PhaseStatusEnum) bool {
 	sm.mu.RLock()
 	defer sm.mu.RUnlock()
@@ -44,7 +45,7 @@ func (sm *CampaignStateMachine) CanTransition(current, target models.PhaseStatus
 	return false
 }
 
-// ValidateTransition returns an error if the transition is invalid
+// DEPRECATED: Use state.CampaignStateMachine.ValidateTransition() instead
 func (sm *CampaignStateMachine) ValidateTransition(current, target models.PhaseStatusEnum) error {
 	if !sm.CanTransition(current, target) {
 		return fmt.Errorf("invalid state transition from %s to %s", current, target)
@@ -52,7 +53,7 @@ func (sm *CampaignStateMachine) ValidateTransition(current, target models.PhaseS
 	return nil
 }
 
-// GetValidTransitions returns all valid transitions from the current status
+// DEPRECATED: Use state.CampaignStateMachine.GetValidTransitions() instead
 func (sm *CampaignStateMachine) GetValidTransitions(current models.PhaseStatusEnum) []models.PhaseStatusEnum {
 	sm.mu.RLock()
 	defer sm.mu.RUnlock()
@@ -66,7 +67,7 @@ func (sm *CampaignStateMachine) GetValidTransitions(current models.PhaseStatusEn
 	return []models.PhaseStatusEnum{}
 }
 
-// IsTerminalState checks if a status is a terminal state (no further transitions)
+// DEPRECATED: Use state.CampaignStateMachine.IsTerminalState() instead
 func (sm *CampaignStateMachine) IsTerminalState(status models.PhaseStatusEnum) bool {
 	sm.mu.RLock()
 	defer sm.mu.RUnlock()
@@ -75,75 +76,79 @@ func (sm *CampaignStateMachine) IsTerminalState(status models.PhaseStatusEnum) b
 	return exists && len(transitions) == 0
 }
 
-// StateMachineHook represents a function to be called on state transitions
-type StateMachineHook func(campaignID string, from, to models.PhaseStatusEnum) error
+// ============================================================================
+// NEW STATE MANAGEMENT SYSTEM - DISABLED DUE TO MISSING DEPENDENCIES
+// ============================================================================
 
-// TransitionWithHooks performs a state transition with pre and post hooks
-type TransitionManager struct {
-	stateMachine *CampaignStateMachine
-	preHooks     []StateMachineHook
-	postHooks    []StateMachineHook
-	mu           sync.Mutex
+// DEPRECATED: CampaignStateManager coordinators are replaced by domain services
+// This code is disabled due to missing modes package implementation
+// Use the new domain services in internal/domain/services/ instead
+
+/*
+// CampaignStateManager coordinates state machine and campaign modes
+type CampaignStateManager struct {
+	stateMachine *state.CampaignStateMachine
+	modeFactory  interface{} // Placeholder for missing modes.ModeFactory
 }
 
-// NewTransitionManager creates a new transition manager
-func NewTransitionManager(sm *CampaignStateMachine) *TransitionManager {
-	return &TransitionManager{
-		stateMachine: sm,
-		preHooks:     []StateMachineHook{},
-		postHooks:    []StateMachineHook{},
+// NewCampaignStateManager creates a new state manager with proper architecture
+func NewCampaignStateManager() *CampaignStateManager {
+	return &CampaignStateManager{
+		stateMachine: state.NewCampaignStateMachine(),
+		modeFactory:  nil, // Disabled - missing modes package
 	}
 }
 
-// AddPreHook adds a hook to be called before a transition
-func (tm *TransitionManager) AddPreHook(hook StateMachineHook) {
-	tm.mu.Lock()
-	defer tm.mu.Unlock()
-	tm.preHooks = append(tm.preHooks, hook)
+// TransitionCampaignState performs a campaign state transition with mode validation
+func (csm *CampaignStateManager) TransitionCampaignState(
+	ctx context.Context,
+	campaign *models.LeadGenerationCampaign,
+	targetState state.CampaignState,
+	context state.TransitionContext,
+) (*state.TransitionResult, error) {
+	return nil, fmt.Errorf("DEPRECATED: use domain services instead")
 }
 
-// AddPostHook adds a hook to be called after a transition
-func (tm *TransitionManager) AddPostHook(hook StateMachineHook) {
-	tm.mu.Lock()
-	defer tm.mu.Unlock()
-	tm.postHooks = append(tm.postHooks, hook)
+// TransitionPhase performs a phase transition with mode validation
+func (csm *CampaignStateManager) TransitionPhase(
+	ctx context.Context,
+	campaign *models.LeadGenerationCampaign,
+	targetPhase models.PhaseTypeEnum,
+) error {
+	return fmt.Errorf("DEPRECATED: use domain services instead")
 }
 
-// ExecuteTransition performs a state transition with all hooks
-func (tm *TransitionManager) ExecuteTransition(campaignID string, from, to models.PhaseStatusEnum) error {
-	// Validate transition
-	if err := tm.stateMachine.ValidateTransition(from, to); err != nil {
-		return err
-	}
-
-	// Execute pre-hooks
-	tm.mu.Lock()
-	preHooks := make([]StateMachineHook, len(tm.preHooks))
-	copy(preHooks, tm.preHooks)
-	tm.mu.Unlock()
-
-	for _, hook := range preHooks {
-		if err := hook(campaignID, from, to); err != nil {
-			return fmt.Errorf("pre-hook failed: %w", err)
-		}
-	}
-
-	// State transition would happen here in the actual implementation
-	// This is where you would update the database
-
-	// Execute post-hooks
-	tm.mu.Lock()
-	postHooks := make([]StateMachineHook, len(tm.postHooks))
-	copy(postHooks, tm.postHooks)
-	tm.mu.Unlock()
-
-	for _, hook := range postHooks {
-		if err := hook(campaignID, from, to); err != nil {
-			// Log error but don't fail the transition
-			// Post-hooks should not affect the transition outcome
-			fmt.Printf("post-hook error (non-fatal): %v\n", err)
-		}
-	}
-
-	return nil
+// GetCampaignConfiguration returns configuration for a campaign based on its mode
+func (csm *CampaignStateManager) GetCampaignConfiguration(
+	ctx context.Context,
+	campaign *models.LeadGenerationCampaign,
+) (interface{}, error) {
+	return nil, fmt.Errorf("DEPRECATED: use domain services instead")
 }
+
+// mapCampaignStatusToState converts legacy business status to new state enum
+func (csm *CampaignStateManager) mapCampaignStatusToState(businessStatus *string) state.CampaignState {
+	if businessStatus == nil {
+		return state.StateDraft
+	}
+
+	switch *businessStatus {
+	case "draft":
+		return state.StateDraft
+	case "running":
+		return state.StateRunning
+	case "paused":
+		return state.StatePaused
+	case "completed":
+		return state.StateCompleted
+	case "failed":
+		return state.StateFailed
+	case "cancelled":
+		return state.StateCancelled
+	case "archived":
+		return state.StateArchived
+	default:
+		return state.StateDraft
+	}
+}
+*/

@@ -338,6 +338,10 @@ type LeadGenerationCampaign struct {
 	// Content analysis data (from analysis phase)
 	ExtractedContent *[]ExtractedContentItem `json:"extractedContent,omitempty"`
 	LeadItems        *[]LeadItem             `json:"leadItems,omitempty"`
+
+	// State management fields (new in refactor)
+	StateVersion *int32           `db:"state_version" json:"stateVersion,omitempty"`
+	StateData    *json.RawMessage `db:"state_data" json:"stateData,omitempty"`
 }
 
 // ======================================================================

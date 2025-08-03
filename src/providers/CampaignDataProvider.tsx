@@ -7,7 +7,9 @@ import type { GeneratedDomain } from '@/lib/api-client/models/generated-domain';
 import type { LeadItem } from '@/lib/api-client/models/lead-item';
 import { validateBulkEnrichedDataRequest } from '@/lib/utils/uuidValidation';
 import { assertBulkEnrichedDataResponse, assertCampaignIdsResponse, LocalEnrichedCampaignData } from '@/lib/utils/typeGuards';
-import { sessionWebSocketClient } from '@/lib/websocket/client';
+// DEPRECATED: WebSocket client replaced with Server-Sent Events
+// TODO: Replace with EventSource implementation in Phase 5
+// import { sessionWebSocketClient } from '@/lib/websocket/client';
 
 interface CampaignDataContextType {
   campaigns: Map<string, LocalEnrichedCampaignData>;
@@ -109,9 +111,11 @@ export function CampaignDataProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  // WebSocket event handlers for real-time campaign list updates
+  // PHASE 5: Real-time updates will be handled by Server-Sent Events (SSE)
+  // WebSocket legacy system is being phased out
   const handleCampaignListUpdate = useCallback((data: any) => {
-    console.log('[CampaignDataProvider] WebSocket campaign list update received:', data);
+    console.warn('[CampaignDataProvider] WebSocket updates deprecated - migrating to SSE in Phase 5');
+    // Legacy handler - will be replaced with EventSource in Phase 5
     
     // Handle different types of campaign list updates
     const { action, campaignId, campaignData } = data;
@@ -153,6 +157,11 @@ export function CampaignDataProvider({ children }: { children: React.ReactNode }
     // Initial data fetch
     fetchAllCampaigns();
     
+    // 🚀 DISABLED: WebSocket subscription temporarily disabled to prevent conflicts
+    // The PhaseDashboard component handles WebSocket connections for individual campaigns
+    console.log('[CampaignDataProvider] WebSocket subscription disabled - handled by individual components');
+    
+    /* COMMENTED OUT TO PREVENT WEBSOCKET CONFLICTS:
     // 🚀 PURE WEBSOCKET MODEL: Subscribe to campaign list updates - NO MORE POLLING!
     console.log('[CampaignDataProvider] Setting up WebSocket subscription for campaign list updates');
     
@@ -181,6 +190,7 @@ export function CampaignDataProvider({ children }: { children: React.ReactNode }
       console.log('[CampaignDataProvider] Cleaning up WebSocket subscriptions');
       unsubscribeFromMessages();
     };
+    */
   }, [fetchAllCampaigns, handleCampaignListUpdate]);
 
   const getCampaign = useCallback((campaignId: string): LocalEnrichedCampaignData | undefined => {

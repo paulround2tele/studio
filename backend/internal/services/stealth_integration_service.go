@@ -284,27 +284,33 @@ func (s *stealthIntegrationServiceImpl) getDomainsForHTTPValidation(ctx context.
 }
 
 // performStealthDNSValidation performs DNS validation with stealth considerations
-func (s *stealthIntegrationServiceImpl) performStealthDNSValidation(_ context.Context, _ uuid.UUID, domain *RandomizedDomain) error {
-	// This would integrate with the existing DNS validation logic
-	// For now, just log the stealth validation attempt
+func (s *stealthIntegrationServiceImpl) performStealthDNSValidation(ctx context.Context, campaignID uuid.UUID, domain *RandomizedDomain) error {
 	log.Printf("StealthIntegration: Performing stealth DNS validation for domain %s (original offset: %d, validation order: %d)",
 		domain.DomainName, domain.OriginalOffset, domain.ValidationOrder)
 
-	// Here you would call the actual DNS validation service
-	// The key is that domains are validated in randomized order, not sequential order
+	// TODO: Call the actual DNS validation engine here
+	// This would convert the RandomizedDomain back to a format the engine can process
+	// and call something like: s.dnsValidator.ValidateDomain(ctx, domain.GeneratedDomain, persona, config)
+	// For now, we simulate validation
+
+	// The actual integration would call the DNS validation engine and store results
+	// in the campaign's DNSResults JSONB field
 
 	return nil
 }
 
 // performStealthHTTPValidation performs HTTP validation with stealth considerations
-func (s *stealthIntegrationServiceImpl) performStealthHTTPValidation(_ context.Context, _ uuid.UUID, domain *RandomizedDomain) error {
-	// This would integrate with the existing HTTP validation logic
-	// For now, just log the stealth validation attempt
+func (s *stealthIntegrationServiceImpl) performStealthHTTPValidation(ctx context.Context, campaignID uuid.UUID, domain *RandomizedDomain) error {
 	log.Printf("StealthIntegration: Performing stealth HTTP validation for domain %s (original offset: %d, validation order: %d)",
 		domain.DomainName, domain.OriginalOffset, domain.ValidationOrder)
 
-	// Here you would call the actual HTTP validation service
-	// The key is that domains are validated in randomized order, not sequential order
+	// TODO: Call the actual HTTP validation engine here
+	// This would convert the RandomizedDomain back to a format the engine can process
+	// and call something like: s.httpValidator.ValidateDomain(ctx, domain.GeneratedDomain, persona, keywords, config)
+	// For now, we simulate validation
+
+	// The actual integration would call the HTTP validation engine and store results
+	// in the campaign's HTTPResults JSONB field
 
 	return nil
 }

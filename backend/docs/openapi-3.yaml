@@ -1151,6 +1151,8 @@ components:
             type: object
         CampaignJobStatusEnum:
             type: string
+        CampaignModeEnum:
+            type: string
         CampaignOperationResponse:
             properties:
                 campaignId:
@@ -1274,6 +1276,39 @@ components:
                     format: date-time
                     type: string
             type: object
+        CampaignState:
+            properties:
+                campaignId:
+                    $ref: '#/components/schemas/UUID'
+                configuration:
+                    type: object
+                createdAt:
+                    format: date-time
+                    type: string
+                currentState:
+                    enum:
+                        - draft
+                        - running
+                        - paused
+                        - completed
+                        - failed
+                        - cancelled
+                        - archived
+                    type: string
+                mode:
+                    enum:
+                        - full_sequence
+                        - step_by_step
+                    type: string
+                updatedAt:
+                    format: date-time
+                    type: string
+                version:
+                    format: int32
+                    type: integer
+            type: object
+        CampaignStateEnum:
+            type: string
         CampaignStateEvent:
             properties:
                 campaignId:
@@ -1363,6 +1398,13 @@ components:
                     type: string
                 validationErrors:
                     type: object
+            type: object
+        CampaignStateWithExecution:
+            properties:
+                phaseExecutions:
+                    items:
+                        $ref: '#/components/schemas/PhaseExecution'
+                    type: array
             type: object
         CampaignTransactionOptions:
             properties:
@@ -1858,27 +1900,6 @@ components:
                 useSystemResolvers:
                     type: boolean
             type: object
-        DNSPerformanceMetrics:
-            properties:
-                AverageResponseTimeMs:
-                    format: int64
-                    type: integer
-                CacheHits:
-                    format: int64
-                    type: integer
-                CacheMisses:
-                    format: int64
-                    type: integer
-                TotalDNSCalls:
-                    format: int64
-                    type: integer
-                UniqueConfigurations:
-                    format: int32
-                    type: integer
-                ValidationErrors:
-                    format: int64
-                    type: integer
-            type: object
         DNSPersona:
             properties:
                 config:
@@ -1889,19 +1910,6 @@ components:
                     type: string
                 name:
                     type: string
-            type: object
-        DNSPersonaGroup:
-            properties:
-                ConfigFingerprint:
-                    type: string
-                DNSConfig:
-                    $ref: '#/components/schemas/DNSConfigDetails'
-                Personas:
-                    items:
-                        $ref: '#/components/schemas/Persona'
-                    type: array
-                Validator:
-                    $ref: '#/components/schemas/UUID'
             type: object
         DNSPhaseConfigRequest:
             properties:
@@ -2802,6 +2810,8 @@ components:
                     format: int64
                     type: integer
             type: object
+        ExecutionStatusEnum:
+            type: string
         ExtractedContentAnalysis:
             properties:
                 advancedKeywords:
@@ -3216,30 +3226,6 @@ components:
                 - keywords
                 - adHocKeywords
             type: object
-        HTTPPerformanceMetrics:
-            properties:
-                ActiveConnections:
-                    format: int32
-                    type: integer
-                AverageResponseTimeMs:
-                    format: int64
-                    type: integer
-                ConnectionPoolHits:
-                    format: int64
-                    type: integer
-                ConnectionPoolMisses:
-                    format: int64
-                    type: integer
-                TotalHTTPRequests:
-                    format: int64
-                    type: integer
-                UniqueConfigurations:
-                    format: int32
-                    type: integer
-                ValidationErrors:
-                    format: int64
-                    type: integer
-            type: object
         HTTPPersona:
             properties:
                 allowedStatusCodes:
@@ -3335,19 +3321,6 @@ components:
                     type: integer
                 waitDelaySeconds:
                     type: string
-            type: object
-        HTTPPersonaGroup:
-            properties:
-                ConfigFingerprint:
-                    type: string
-                HTTPClient:
-                    type: string
-                HTTPConfig:
-                    $ref: '#/components/schemas/HTTPConfigDetails'
-                Personas:
-                    items:
-                        $ref: '#/components/schemas/Persona'
-                    type: array
             type: object
         HTTPPhaseConfigRequest:
             properties:
@@ -3911,6 +3884,12 @@ components:
                 startedAt:
                     format: date-time
                     type: string
+                stateData:
+                    type: object
+                stateVersion:
+                    description: State management fields (new in refactor)
+                    format: int32
+                    type: integer
                 successfulItems:
                     format: int64
                     type: integer
@@ -4239,19 +4218,6 @@ components:
                 phaseConfig:
                     $ref: '#/components/schemas/PhaseConfig'
             type: object
-        OptimizedHTTPClient:
-            properties:
-                Client:
-                    type: string
-                ConfigFingerprint:
-                    type: string
-                CreatedAt:
-                    format: date-time
-                    type: string
-                UsageCount:
-                    format: int64
-                    type: integer
-            type: object
         PageInfo:
             properties:
                 count:
@@ -4548,7 +4514,72 @@ components:
                 - phaseType
                 - config
             type: object
-        PhaseExecutionService:
+        PhaseExecution:
+            properties:
+                campaignId:
+                    $ref: '#/components/schemas/UUID'
+                completedAt:
+                    format: date-time
+                    type: string
+                configuration:
+                    description: Data storage
+                    type: object
+                createdAt:
+                    description: Metadata
+                    format: date-time
+                    type: string
+                errorDetails:
+                    type: object
+                failedAt:
+                    format: date-time
+                    type: string
+                failedItems:
+                    format: int64
+                    type: integer
+                id:
+                    $ref: '#/components/schemas/UUID'
+                metrics:
+                    type: object
+                pausedAt:
+                    format: date-time
+                    type: string
+                phaseType:
+                    enum:
+                        - domain_generation
+                        - dns_validation
+                        - http_keyword_validation
+                        - analysis
+                    type: string
+                processedItems:
+                    format: int64
+                    type: integer
+                progressPercentage:
+                    description: Progress tracking
+                    format: double
+                    type: number
+                startedAt:
+                    description: Execution timing
+                    format: date-time
+                    type: string
+                status:
+                    enum:
+                        - not_started
+                        - ready
+                        - configured
+                        - in_progress
+                        - paused
+                        - completed
+                        - failed
+                    type: string
+                successfulItems:
+                    format: int64
+                    type: integer
+                totalItems:
+                    format: int64
+                    type: integer
+                updatedAt:
+                    format: date-time
+                    type: string
             type: object
         PhaseProgress:
             properties:
@@ -5720,8 +5751,6 @@ components:
                 session_id_length:
                     type: integer
             type: object
-        StateMachineHook:
-            type: object
         Status:
             properties:
                 message:
@@ -5731,6 +5760,8 @@ components:
                 timestamp:
                     format: date-time
                     type: string
+            type: object
+        StealthCompatibleService:
             type: object
         StealthConfig:
             properties:
@@ -5897,8 +5928,6 @@ components:
                     type: boolean
                 testId:
                     $ref: '#/components/schemas/UUID'
-            type: object
-        TransitionManager:
             type: object
         UUID:
             description: Unique identifier (UUID v4)
@@ -6157,6 +6186,8 @@ components:
                 message:
                     type: string
             type: object
+        WorkerCompatibleService:
+            type: object
         WorkerConfig:
             properties:
                 batchSize:
@@ -6208,15 +6239,9 @@ components:
             type: object
         campaignWorkerServiceImpl:
             type: object
-        dnsCampaignServiceImpl:
-            type: object
         domainGenerationServiceImpl:
             type: object
         domainStealthServiceImpl:
-            type: object
-        httpKeywordCampaignServiceImpl:
-            type: object
-        phaseExecutionService:
             type: object
         stealthIntegrationServiceImpl:
             type: object

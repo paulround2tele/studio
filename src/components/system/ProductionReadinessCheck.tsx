@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, AlertCircle, RefreshCw, Loader2, Shield, Wifi, Database, Key } from 'lucide-react';
 // THIN CLIENT: Removed AuthContext - backend handles auth
-import { websocketService } from '@/lib/services/websocketService.simple';
+import { sessionWebSocketClient } from '@/lib/websocket/client';
 import { cn } from '@/lib/utils';
 import healthService from '@/lib/services/healthService';
 import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
@@ -229,25 +229,24 @@ export default function ProductionReadinessCheck() {
       });
     }
 
-    // 3. WebSocket Connection Status Check (Fixed - no longer creates test connections)
+    // 3. WebSocket Connection Status Check (Updated for SessionWebSocketClient)
     try {
       logWithTimestamp('log', '🔌 Checking WebSocket connection status...');
       
-      // Check existing persistent connection status instead of creating test connection
-      const connectionStatus = websocketService.getConnectionStatus();
-      const hasActiveConnections = Object.values(connectionStatus).some(Boolean);
+      // Check singleton SessionWebSocketClient connection status
+      const isConnected = sessionWebSocketClient.isConnected();
       
-      if (hasActiveConnections) {
-        logWithTimestamp('log', '✅ WebSocket connectivity check PASSED - active persistent connections found');
+      if (isConnected) {
+        logWithTimestamp('log', '✅ WebSocket connectivity check PASSED - singleton connection active');
         results.push({
           name: 'WebSocket Connection',
           status: 'passed',
           message: 'Real-time updates available',
-          details: 'Persistent WebSocket connections are active and operational',
+          details: 'SessionWebSocketClient is connected and operational',
           icon: <Wifi className="h-4 w-4" />
         });
       } else {
-        logWithTimestamp('warn', '⚠️ WebSocket connectivity check - no active persistent connections');
+        logWithTimestamp('warn', '⚠️ WebSocket connectivity check - singleton connection not active');
         results.push({
           name: 'WebSocket Connection',
           status: 'warning',

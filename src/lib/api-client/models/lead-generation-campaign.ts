@@ -243,6 +243,18 @@ export interface LeadGenerationCampaign {
     'startedAt'?: string;
     /**
      * 
+     * @type {object}
+     * @memberof LeadGenerationCampaign
+     */
+    'stateData'?: object;
+    /**
+     * State management fields (new in refactor)
+     * @type {number}
+     * @memberof LeadGenerationCampaign
+     */
+    'stateVersion'?: number;
+    /**
+     * 
      * @type {number}
      * @memberof LeadGenerationCampaign
      */

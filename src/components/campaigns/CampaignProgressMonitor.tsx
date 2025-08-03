@@ -7,11 +7,10 @@ import { Progress } from '@/components/ui/progress';
 import { AlertCircle, CheckCircle, Clock, Pause, Wifi, WifiOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 // THIN CLIENT: Removed AuthContext - backend handles auth
-import { websocketService } from '@/lib/services/websocketService.simple';
+import { sessionWebSocketClient } from '@/lib/websocket/client';
 import type { CampaignViewModel, CampaignPhase, CampaignPhaseStatus } from '@/lib/types';
-import type { WebSocketMessage } from '@/lib/services/websocketService.simple';
+import type { WebSocketMessage } from '@/lib/websocket/client';
 import { normalizeStatus, getStatusColor } from '@/lib/utils/statusMapping';
-import { adaptWebSocketMessage } from '@/lib/utils/websocketMessageAdapter';
 
 interface CampaignProgressMonitorProps {
 campaign: CampaignViewModel;

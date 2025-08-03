@@ -2612,6 +2612,37 @@ ul.nav-tabs {
     }
   }
 };
+    defs["CampaignState"] = {
+  "type" : "object",
+  "properties" : {
+    "campaignId" : {
+      "$ref" : "#/components/schemas/UUID"
+    },
+    "configuration" : {
+      "type" : "object"
+    },
+    "createdAt" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "currentState" : {
+      "type" : "string",
+      "enum" : [ "draft", "running", "paused", "completed", "failed", "cancelled", "archived" ]
+    },
+    "mode" : {
+      "type" : "string",
+      "enum" : [ "full_sequence", "step_by_step" ]
+    },
+    "updatedAt" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "version" : {
+      "type" : "integer",
+      "format" : "int32"
+    }
+  }
+};
     defs["CampaignStateEvent"] = {
   "type" : "object",
   "properties" : {
@@ -2739,6 +2770,17 @@ ul.nav-tabs {
     },
     "validationErrors" : {
       "type" : "object"
+    }
+  }
+};
+    defs["CampaignStateWithExecution"] = {
+  "type" : "object",
+  "properties" : {
+    "phaseExecutions" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/components/schemas/PhaseExecution"
+      }
     }
   }
 };
@@ -6154,6 +6196,14 @@ ul.nav-tabs {
       "type" : "string",
       "format" : "date-time"
     },
+    "stateData" : {
+      "type" : "object"
+    },
+    "stateVersion" : {
+      "type" : "integer",
+      "description" : "State management fields (new in refactor)",
+      "format" : "int32"
+    },
     "successfulItems" : {
       "type" : "integer",
       "format" : "int64"
@@ -7004,6 +7054,82 @@ ul.nav-tabs {
     "phaseType" : {
       "type" : "string",
       "enum" : [ "dns_validation", "http_keyword_validation", "analysis" ]
+    }
+  }
+};
+    defs["PhaseExecution"] = {
+  "type" : "object",
+  "properties" : {
+    "campaignId" : {
+      "$ref" : "#/components/schemas/UUID"
+    },
+    "completedAt" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "configuration" : {
+      "type" : "object",
+      "description" : "Data storage"
+    },
+    "createdAt" : {
+      "type" : "string",
+      "description" : "Metadata",
+      "format" : "date-time"
+    },
+    "errorDetails" : {
+      "type" : "object"
+    },
+    "failedAt" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "failedItems" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "id" : {
+      "$ref" : "#/components/schemas/UUID"
+    },
+    "metrics" : {
+      "type" : "object"
+    },
+    "pausedAt" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "phaseType" : {
+      "type" : "string",
+      "enum" : [ "domain_generation", "dns_validation", "http_keyword_validation", "analysis" ]
+    },
+    "processedItems" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "progressPercentage" : {
+      "type" : "number",
+      "description" : "Progress tracking",
+      "format" : "double"
+    },
+    "startedAt" : {
+      "type" : "string",
+      "description" : "Execution timing",
+      "format" : "date-time"
+    },
+    "status" : {
+      "type" : "string",
+      "enum" : [ "not_started", "ready", "configured", "in_progress", "paused", "completed", "failed" ]
+    },
+    "successfulItems" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "totalItems" : {
+      "type" : "integer",
+      "format" : "int64"
+    },
+    "updatedAt" : {
+      "type" : "string",
+      "format" : "date-time"
     }
   }
 };
@@ -9342,6 +9468,12 @@ ul.nav-tabs {
         defs["CampaignJobStatusEnum"] = {
   "type" : "string"
 };
+        defs["CampaignModeEnum"] = {
+  "type" : "string"
+};
+        defs["CampaignStateEnum"] = {
+  "type" : "string"
+};
         defs["DNSValidationStatusEnum"] = {
   "type" : "string"
 };
@@ -9358,6 +9490,9 @@ ul.nav-tabs {
   "type" : "string"
 };
         defs["ErrorCode"] = {
+  "type" : "string"
+};
+        defs["ExecutionStatusEnum"] = {
   "type" : "string"
 };
         defs["FallbackPolicy"] = {

@@ -6,9 +6,6 @@ import (
 
 	"github.com/fntelecomllc/studio/backend/internal/cache"
 	"github.com/fntelecomllc/studio/backend/internal/config"
-	"github.com/fntelecomllc/studio/backend/internal/httpvalidator"
-	"github.com/fntelecomllc/studio/backend/internal/keywordscanner"
-	"github.com/fntelecomllc/studio/backend/internal/proxymanager"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/jmoiron/sqlx"
 )
@@ -49,7 +46,9 @@ type ServiceConfiguration struct {
 	AppConfig        *config.AppConfig
 }
 
+// PHASE 4.5: Legacy service factory methods commented out - replaced by orchestrator pattern
 // CreateOptimizedDNSCampaignService creates a DNS campaign service with appropriate optimizations
+/*
 func (sf *ServiceFactory) CreateOptimizedDNSCampaignService(
 	serviceConfig ServiceConfiguration,
 	identifier string,
@@ -103,8 +102,11 @@ func (sf *ServiceFactory) CreateOptimizedDNSCampaignService(
 
 	return service, nil
 }
+*/
 
+// PHASE 4.5: Legacy service factory methods commented out - replaced by orchestrator pattern
 // CreateOptimizedHTTPCampaignService creates an HTTP campaign service with appropriate optimizations
+/*
 func (sf *ServiceFactory) CreateOptimizedHTTPCampaignService(
 	serviceConfig ServiceConfiguration,
 	identifier string,
@@ -171,6 +173,7 @@ func (sf *ServiceFactory) CreateOptimizedHTTPCampaignService(
 
 	return service, nil
 }
+*/
 
 // CreateOptimizedDomainGenerationService creates a domain generation service with appropriate optimizations
 func (sf *ServiceFactory) CreateOptimizedDomainGenerationService(
@@ -379,6 +382,8 @@ func (sf *ServiceFactory) GetFeatureFlagService() *FeatureFlagService {
 }
 
 // CreateFallbackService creates a non-optimized service for fallback scenarios
+// PHASE 4.5: Legacy service factory methods commented out - replaced by orchestrator pattern
+/*
 func (sf *ServiceFactory) CreateFallbackService(serviceType string, serviceConfig ServiceConfiguration) (interface{}, error) {
 	switch serviceType {
 	case "dns_campaign":
@@ -394,3 +399,4 @@ func (sf *ServiceFactory) CreateFallbackService(serviceType string, serviceConfi
 		return nil, fmt.Errorf("unknown service type: %s", serviceType)
 	}
 }
+*/

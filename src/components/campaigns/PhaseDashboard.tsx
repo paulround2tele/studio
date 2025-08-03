@@ -2,9 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { websocketService } from '@/lib/services/websocketService.simple';
-import { createValidatedWebSocketHandlers } from '@/lib/websocket/message-handlers';
-import type { PhaseStateChangedMessage, PhaseConfigurationRequiredMessage } from '@/lib/websocket/message-handlers';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +27,7 @@ import AnalysisConfigModal from './modals/AnalysisConfigModal';
 import { campaignsApi } from '@/lib/api-client/client';
 import type { CampaignViewModel } from '@/lib/types';
 import type { PhaseStartRequest } from '@/lib/api-client/models/phase-start-request';
+import { subscribeToWebSocketTopic, unsubscribeFromWebSocketTopic, sessionWebSocketClient } from '@/lib/websocket/client';
 
 interface PhaseStatus {
   phase: string;
@@ -88,97 +86,8 @@ export default function PhaseDashboard({ campaignId, campaign, totalDomains = 0,
   const [loading, setLoading] = useState(true);
   const [startingPhase, setStartingPhase] = useState<string | null>(null);
 
-  // Load phase status information and setup WebSocket handlers
-  useEffect(() => {
-    loadPhaseStatuses();
-
-    // Setup WebSocket handlers for real-time phase updates
-    const handlePhaseStateChanged = (message: PhaseStateChangedMessage) => {
-      if (message.data.campaign_id === campaignId) {
-        console.log(`Phase state changed: ${message.data.phase} from ${message.data.old_state} to ${message.data.new_state}`);
-        
-        // Refresh phase statuses when backend notifies of state changes
-        loadPhaseStatuses();
-        onCampaignUpdate?.();
-        
-        // Show user-friendly notification
-        toast({
-          title: "Phase Update",
-          description: `${PHASES.find(p => p.key === message.data.phase)?.name || message.data.phase} is now ${message.data.new_state}`,
-        });
-      }
-    };
-
-    const handlePhaseConfigurationRequired = (message: PhaseConfigurationRequiredMessage) => {
-      if (message.data.campaign_id === campaignId) {
-        console.log(`Phase configuration required: ${message.data.phase} - ${message.data.message}`);
-        
-        // Refresh phase statuses
-        loadPhaseStatuses();
-        
-        // Show configuration reminder to user
-        toast({
-          title: "Configuration Required",
-          description: message.data.message,
-          variant: "default",
-        });
-      }
-    };
-
-    // Handle campaign progress updates for real-time phase status updates
-    const handleCampaignProgress = (message: any) => {
-      if (message.data?.campaignId === campaignId || message.data?.campaign_id === campaignId) {
-        console.log(`Campaign progress update: phase=${message.data.currentPhase}, status=${message.data.phaseStatus}, progress=${message.data.progressPercent}`);
-        
-        // Refresh phase statuses when progress updates come in
-        loadPhaseStatuses();
-        onCampaignUpdate?.();
-      }
-    };
-
-    // 🚀 WEBSOCKET PUSH MODEL: Specialized phase management handlers
-    // Campaign progress now handled at data layer, keep phase-specific handlers
-    const wsHandlers = createValidatedWebSocketHandlers({
-      onPhaseStateChanged: handlePhaseStateChanged,
-      onPhaseConfigurationRequired: handlePhaseConfigurationRequired,
-      onCampaignProgress: handleCampaignProgress, // Added back for real-time phase updates
-      // Removed onCampaignStatus - now handled at data layer
-    });
-
-    // 🚀 FIXED: Use correct WebSocket service with proper backend protocol
-    const unsubscribeFromWebSocket = websocketService.connect(`campaign-${campaignId}`, {
-      onMessage: (message: any) => {
-        if (message && typeof message === 'object' && message.type) {
-          console.log(`🔍 [PhaseDashboard] Received WebSocket message type: ${message.type}`, message);
-          
-          // Route phase-specific messages
-          if (message.type === 'phase.state.changed') {
-            handlePhaseStateChanged(message as PhaseStateChangedMessage);
-          } else if (message.type === 'phase.configuration.required') {
-            handlePhaseConfigurationRequired(message as PhaseConfigurationRequiredMessage);
-          } else if (message.type === 'campaign_progress') {
-            // Handle campaign progress messages for real-time updates
-            handleCampaignProgress(message);
-          } else {
-            console.log(`🔍 [PhaseDashboard] Unhandled message type: ${message.type}`);
-          }
-        }
-      },
-      onOpen: () => {
-        console.log(`✅ [PhaseDashboard] Connected to WebSocket for campaign ${campaignId}`);
-      },
-      onError: (error) => {
-        console.error(`❌ [PhaseDashboard] WebSocket error for campaign ${campaignId}:`, error);
-        console.log('❌ [PhaseDashboard]  trying to display generated domains and phases data as table', campaign);
-      },
-      onClose: () => {
-        console.log(`🔌 [PhaseDashboard] Disconnected from WebSocket for campaign ${campaignId}`);
-      }
-    });
-
-    // Cleanup function
-    return unsubscribeFromWebSocket;
-  }, [campaignId]); // 🚨 CRITICAL FIX: Remove campaign from dependencies to prevent WebSocket reconnection on updates
+  // ✅ TASK-WS-006: Removed blocking WebSocket dependencies - Phase execution is now autonomous
+  // Phase transitions no longer depend on WebSocket confirmation
 
   // Helper functions to determine phase completion based on available data
   const isPhaseCompleted = (phaseKey: string): boolean => {
@@ -327,16 +236,19 @@ export default function PhaseDashboard({ campaignId, campaign, totalDomains = 0,
         } else {
           // Step-by-Step Mode: Runtime configure → start workflow
           if (phaseType === 'dns_validation') {
-            canConfigure = previousPhaseComplete && (phaseStatus === 'pending' || phaseStatus === 'ready');
-            canStart = previousPhaseComplete && phaseStatus === 'ready';
+            // CRITICAL FIX: Allow re-running DNS validation even if completed
+            canConfigure = previousPhaseComplete && (phaseStatus === 'pending' || phaseStatus === 'ready' || phaseStatus === 'completed');
+            canStart = previousPhaseComplete && (phaseStatus === 'ready' || phaseStatus === 'completed');
             configurationRequired = true; // Choose DNS personas at runtime
           } else if (phaseType === 'http_keyword_validation') {
-            canConfigure = previousPhaseComplete && (phaseStatus === 'pending' || phaseStatus === 'ready');
-            canStart = previousPhaseComplete && phaseStatus === 'ready';
+            // CRITICAL FIX: Allow re-running HTTP validation even if completed  
+            canConfigure = previousPhaseComplete && (phaseStatus === 'pending' || phaseStatus === 'ready' || phaseStatus === 'completed');
+            canStart = previousPhaseComplete && (phaseStatus === 'ready' || phaseStatus === 'completed');
             configurationRequired = true; // Choose HTTP personas + keywords at runtime
           } else if (phaseType === 'analysis') {
-            canConfigure = previousPhaseComplete && (phaseStatus === 'pending' || phaseStatus === 'ready');
-            canStart = previousPhaseComplete && phaseStatus === 'ready';
+            // CRITICAL FIX: Allow re-running analysis even if completed
+            canConfigure = previousPhaseComplete && (phaseStatus === 'pending' || phaseStatus === 'ready' || phaseStatus === 'completed');
+            canStart = previousPhaseComplete && (phaseStatus === 'ready' || phaseStatus === 'completed');
             configurationRequired = false; // Minimal config at runtime
           } else {
             // Fallback for any other phases
@@ -487,6 +399,46 @@ export default function PhaseDashboard({ campaignId, campaign, totalDomains = 0,
 
     return actions;
   };
+
+  // Load phase statuses when component mounts or campaign changes
+  useEffect(() => {
+    loadPhaseStatuses();
+  }, [campaignId]);
+
+  // Separate useEffect for WebSocket subscription to avoid re-subscription on state changes
+  useEffect(() => {
+    // Subscribe to WebSocket updates for this campaign using the correct format
+    const campaignTopic = `campaign-${campaignId}`; // Backend expects "campaign-{campaignId}" format
+    subscribeToWebSocketTopic(campaignTopic);
+    
+    // Listen for WebSocket messages
+    const handleWebSocketMessage = (data: any) => {
+      try {
+        const message = typeof data === 'string' ? JSON.parse(data) : data;
+        
+        // Handle phase transitions and progress updates
+        if (message.type === 'phase_transition' || message.type === 'campaign_progress') {
+          if (message.campaignId === campaignId) {
+            console.log(`📡 [PhaseDashboard] Received ${message.type} for campaign ${campaignId}:`, message);
+            // Refresh phase statuses to reflect the backend changes
+            loadPhaseStatuses();
+            // Trigger parent component refresh
+            onCampaignUpdate?.();
+          }
+        }
+      } catch (error) {
+        console.error('Error handling WebSocket message:', error, data);
+      }
+    };
+    
+    const unsubscribeWebSocket = sessionWebSocketClient.on('message', handleWebSocketMessage);
+    
+    // Cleanup only on unmount or campaign change
+    return () => {
+      unsubscribeFromWebSocketTopic(campaignTopic);
+      unsubscribeWebSocket();
+    };
+  }, [campaignId]); // Only re-subscribe when campaignId actually changes
 
   if (loading) {
     return (

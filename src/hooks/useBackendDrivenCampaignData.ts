@@ -7,9 +7,9 @@ import { useSingleCampaignData } from '@/hooks/useBulkCampaignData';
 import type { UUID } from '@/lib/api-client/uuid-types';
 import {
   WebSocketMessageTypes,
-  type PhaseTransitionMessage,
-  routeWebSocketMessage,
-  type WebSocketHandlers
+  type WebSocketMessage,
+  type PhaseTransitionData,
+  processWebSocketMessage
 } from '@/lib/websocket/message-handlers';
 import type {
   CampaignViewModel,
@@ -120,23 +120,26 @@ export function useBackendDrivenCampaignData(campaignId: string): BackendDrivenC
   }, [enrichedCampaign, loading, error, refetch, campaignId]);
 }
 
-// Legacy WebSocket integration for real-time updates
-export function useWebSocketIntegration(campaignId: string, handlers: Partial<WebSocketHandlers>) {
+// Simplified WebSocket integration for real-time updates
+export function useWebSocketIntegration(campaignId: string, handlers: {
+  onPhaseTransition?: (message: WebSocketMessage) => void;
+  onCampaignProgress?: (message: WebSocketMessage) => void;
+}) {
   const { toast } = useToast();
 
-  // WebSocket message routing for real-time updates
-  const routeMessage = (message: any) => {
-    const messageType = message.type || message.messageType;
+  // WebSocket message routing for real-time updates - simplified
+  const routeMessage = (message: WebSocketMessage) => {
+    const messageType = message.type;
     
     switch (messageType) {
       case WebSocketMessageTypes.PHASE_TRANSITION:
-        if (handlers.onPhaseTransition && message.data?.campaignId === campaignId) {
-          handlers.onPhaseTransition(message as PhaseTransitionMessage);
+        if (handlers.onPhaseTransition && (message.data as any)?.campaignId === campaignId) {
+          handlers.onPhaseTransition(message);
         }
         break;
       
       case WebSocketMessageTypes.CAMPAIGN_PROGRESS:
-        if (handlers.onCampaignProgress && message.data?.campaignId === campaignId) {
+        if (handlers.onCampaignProgress && (message.data as any)?.campaignId === campaignId) {
           handlers.onCampaignProgress(message);
         }
         break;

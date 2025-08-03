@@ -564,15 +564,22 @@ func (s *campaignStorePostgres) CreateDNSValidationResults(ctx context.Context, 
 		switch result.ValidationStatus {
 		case "resolved":
 			dnsStatus = models.DomainDNSStatusOK
-			// Extract IP from DNS records if available
+			// Extract actual IP from DNS records if available
 			if result.DNSRecords != nil {
-				// Simple extraction - in real implementation, parse JSON properly
-				dnsIP = new(string)
-				*dnsIP = "resolved" // Placeholder - would extract actual IP
+				var ips []string
+				if err := json.Unmarshal(*result.DNSRecords, &ips); err == nil && len(ips) > 0 {
+					dnsIP = &ips[0] // Use first IP address
+				}
 			}
-		case "unresolved", "timeout":
+		case "unresolved":
+			dnsStatus = models.DomainDNSStatusError
+		case "timeout":
+			dnsStatus = models.DomainDNSStatusTimeout
+		case "error":
 			dnsStatus = models.DomainDNSStatusError
 		default:
+			// Only truly unknown statuses should remain pending
+			log.Printf("WARNING [CreateDNSValidationResults]: Unknown validation status '%s' for domain %s, setting to pending", result.ValidationStatus, result.DomainName)
 			dnsStatus = models.DomainDNSStatusPending
 		}
 
@@ -582,7 +589,8 @@ func (s *campaignStorePostgres) CreateDNSValidationResults(ctx context.Context, 
 			return err
 		}
 
-		log.Printf("DEBUG [CreateDNSValidationResults]: Updated domain DNS status to '%s' for %s", dnsStatus, result.DomainName)
+		log.Printf("DEBUG [CreateDNSValidationResults]: Domain %s validation result: status='%s' → dns_status='%s'",
+			result.DomainName, result.ValidationStatus, dnsStatus)
 	}
 	return nil
 }
@@ -1951,6 +1959,58 @@ func (s *campaignStorePostgres) FailPhase(ctx context.Context, exec store.Querie
 
 	log.Printf("Failed phase %s for campaign %s: %s", phaseType, campaignID, errorMessage)
 	return nil
+}
+
+// Campaign state operations - TODO: Implement proper functionality
+func (s *campaignStorePostgres) CreateCampaignState(ctx context.Context, exec store.Querier, state *models.CampaignState) error {
+	// TODO: Implement campaign state creation
+	return fmt.Errorf("CreateCampaignState not yet implemented")
+}
+
+func (s *campaignStorePostgres) GetCampaignState(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*models.CampaignState, error) {
+	// TODO: Implement campaign state retrieval
+	return nil, fmt.Errorf("GetCampaignState not yet implemented")
+}
+
+func (s *campaignStorePostgres) UpdateCampaignState(ctx context.Context, exec store.Querier, state *models.CampaignState) error {
+	// TODO: Implement campaign state update
+	return fmt.Errorf("UpdateCampaignState not yet implemented")
+}
+
+func (s *campaignStorePostgres) DeleteCampaignState(ctx context.Context, exec store.Querier, campaignID uuid.UUID) error {
+	// TODO: Implement campaign state deletion
+	return fmt.Errorf("DeleteCampaignState not yet implemented")
+}
+
+// Phase execution operations - TODO: Implement proper functionality
+func (s *campaignStorePostgres) CreatePhaseExecution(ctx context.Context, exec store.Querier, execution *models.PhaseExecution) error {
+	// TODO: Implement phase execution creation
+	return fmt.Errorf("CreatePhaseExecution not yet implemented")
+}
+
+func (s *campaignStorePostgres) GetPhaseExecution(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) (*models.PhaseExecution, error) {
+	// TODO: Implement phase execution retrieval
+	return nil, fmt.Errorf("GetPhaseExecution not yet implemented")
+}
+
+func (s *campaignStorePostgres) GetPhaseExecutionsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID) ([]*models.PhaseExecution, error) {
+	// TODO: Implement phase executions retrieval
+	return nil, fmt.Errorf("GetPhaseExecutionsByCampaign not yet implemented")
+}
+
+func (s *campaignStorePostgres) UpdatePhaseExecution(ctx context.Context, exec store.Querier, execution *models.PhaseExecution) error {
+	// TODO: Implement phase execution update
+	return fmt.Errorf("UpdatePhaseExecution not yet implemented")
+}
+
+func (s *campaignStorePostgres) DeletePhaseExecution(ctx context.Context, exec store.Querier, id uuid.UUID) error {
+	// TODO: Implement phase execution deletion
+	return fmt.Errorf("DeletePhaseExecution not yet implemented")
+}
+
+func (s *campaignStorePostgres) GetCampaignStateWithExecutions(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*models.CampaignStateWithExecution, error) {
+	// TODO: Implement combined campaign state and executions retrieval
+	return nil, fmt.Errorf("GetCampaignStateWithExecutions not yet implemented")
 }
 
 var _ store.CampaignStore = (*campaignStorePostgres)(nil)

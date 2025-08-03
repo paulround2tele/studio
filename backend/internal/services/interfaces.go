@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/models"
-	"github.com/fntelecomllc/studio/backend/internal/store" // Added for store.ListCampaignsFilter
 	"github.com/google/uuid"
 )
 
@@ -250,28 +249,6 @@ type LeadGenerationProgress struct {
 	OverallProgress float64                  `json:"overall_progress"`
 }
 
-// DNSCampaignService defines the interface for DNS validation campaign logic.
-type DNSCampaignService interface {
-	// GetCampaignDetails retrieves the base campaign and its specific DNS validation parameters.
-	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, *models.DNSValidationCampaignParams, error)
-	ProcessDNSValidationCampaignBatch(ctx context.Context, campaignID uuid.UUID) (done bool, processedCount int, err error)
-
-	// Phase transition methods for single-campaign architecture
-	ConfigureDNSValidationPhase(ctx context.Context, campaignID uuid.UUID, req models.DNSPhaseConfigRequest) error
-	TransitionToHTTPValidationPhase(ctx context.Context, campaignID uuid.UUID) error
-}
-
-// HTTPKeywordCampaignService defines the interface for HTTP & Keyword validation campaign logic.
-type HTTPKeywordCampaignService interface {
-	// GetCampaignDetails retrieves the base campaign and its specific HTTP & Keyword validation parameters.
-	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, *models.HTTPKeywordCampaignParams, error)
-	ProcessHTTPKeywordCampaignBatch(ctx context.Context, campaignID uuid.UUID) (done bool, processedCount int, err error)
-
-	// Phase transition methods for single-campaign architecture
-	ConfigureHTTPValidationPhase(ctx context.Context, campaignID uuid.UUID, req models.HTTPPhaseConfigRequest) error
-	TransitionToAnalysisPhase(ctx context.Context, campaignID uuid.UUID) error
-}
-
 // AnalysisService defines the interface for content analysis and lead extraction from HTTP results.
 type AnalysisService interface {
 	// ProcessAnalysisCampaignBatch performs content analysis on HTTP results and stores analysis results
@@ -283,51 +260,33 @@ type CampaignWorkerService interface {
 	StartWorkers(ctx context.Context, numWorkers int)
 }
 
-// PhaseExecutionService defines the universal interface for campaign lifecycle management and phase execution.
-// This service replaces both LeadGenerationCampaignService and CampaignOrchestratorService for simplified architecture.
-type PhaseExecutionService interface {
-	// Campaign lifecycle operations
-	CreateCampaign(ctx context.Context, req CreateLeadGenerationCampaignRequest) (*models.LeadGenerationCampaign, error)
-	StartCampaign(ctx context.Context, campaignID uuid.UUID) error
-	PauseCampaign(ctx context.Context, campaignID uuid.UUID) error
-	ResumeCampaign(ctx context.Context, campaignID uuid.UUID) error
-	CancelCampaign(ctx context.Context, campaignID uuid.UUID) error
-
-	// Campaign CRUD operations
-	GetCampaign(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, error)
-	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, interface{}, error)
-	UpdateCampaign(ctx context.Context, campaignID uuid.UUID, req UpdateCampaignRequest) (*models.LeadGenerationCampaign, error)
-	DeleteCampaign(ctx context.Context, campaignID uuid.UUID) error
-	BulkDeleteCampaigns(ctx context.Context, campaignIDs []uuid.UUID) (*BulkDeleteResult, error)
-
-	// Campaign listing and status
-	ListCampaigns(ctx context.Context, filter store.ListCampaignsFilter) ([]models.LeadGenerationCampaign, int64, error)
-	GetCampaignStatus(ctx context.Context, campaignID uuid.UUID) (models.PhaseStatusEnum, *float64, error)
-	SetCampaignErrorStatus(ctx context.Context, campaignID uuid.UUID, errorMessage string) error
-	SetCampaignStatus(ctx context.Context, campaignID uuid.UUID, status models.PhaseStatusEnum) error
-
-	// Phase execution - Phase 4.11: User-controlled phase management (JobTypeEnum routing eliminated)
+// WorkerCompatibleService defines the minimal interface needed by the worker service
+// This allows CampaignOrchestrator to be used with the worker
+type WorkerCompatibleService interface {
 	StartPhase(ctx context.Context, campaignID uuid.UUID, phaseType string) error
-	ConfigurePhase(ctx context.Context, campaignID uuid.UUID, phaseType string, config interface{}) error
-	TransitionToNextPhase(ctx context.Context, campaignID uuid.UUID) error
-
-	// Campaign progress and results
-	GetCampaignProgress(ctx context.Context, campaignID uuid.UUID) (*LeadGenerationProgress, error)
-	GetGeneratedDomainsForCampaign(ctx context.Context, campaignID uuid.UUID, limit int, cursor int64) (*GeneratedDomainsResponse, error)
-	GetDNSValidationResultsForCampaign(ctx context.Context, campaignID uuid.UUID, limit int, cursor string, filter store.ListValidationResultsFilter) (*DNSValidationResultsResponse, error)
-	GetHTTPKeywordResultsForCampaign(ctx context.Context, campaignID uuid.UUID, limit int, cursor string, filter store.ListValidationResultsFilter) (*HTTPKeywordResultsResponse, error)
-
-	// Phase configuration methods
-	ConfigureDNSValidationPhase(ctx context.Context, campaignID uuid.UUID, req models.DNSPhaseConfigRequest) (*models.LeadGenerationCampaign, error)
-	ConfigureHTTPValidationPhase(ctx context.Context, campaignID uuid.UUID, req models.HTTPPhaseConfigRequest) (*models.LeadGenerationCampaign, error)
-
-	// Phase restart methods
-	RestartDNSValidationPhase(ctx context.Context, campaignID uuid.UUID, req *DNSValidationRequest) (*models.LeadGenerationCampaign, error)
-	RestartHTTPValidationPhase(ctx context.Context, campaignID uuid.UUID, req *HTTPKeywordValidationRequest) (*models.LeadGenerationCampaign, error)
-
-	// Campaign completion and dependency management
+	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, interface{}, error)
+	SetCampaignStatus(ctx context.Context, campaignID uuid.UUID, status models.PhaseStatusEnum) error
+	SetCampaignErrorStatus(ctx context.Context, campaignID uuid.UUID, errorMessage string) error
 	HandleCampaignCompletion(ctx context.Context, campaignID uuid.UUID) error
-	GetCampaignDependencies(ctx context.Context, campaignID uuid.UUID) (*CampaignDependencyInfo, error)
+}
+
+// Legacy interfaces kept for stealth integration compatibility only
+// TODO: Refactor stealth integration to use orchestrator pattern
+type DNSCampaignService interface {
+	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, *models.DNSValidationCampaignParams, error)
+	ProcessDNSValidationCampaignBatch(ctx context.Context, campaignID uuid.UUID) (done bool, processedCount int, err error)
+}
+
+type HTTPKeywordCampaignService interface {
+	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, *models.HTTPKeywordCampaignParams, error)
+	ProcessHTTPKeywordCampaignBatch(ctx context.Context, campaignID uuid.UUID) (done bool, processedCount int, err error)
+}
+
+// StealthCompatibleService provides stealth-aware validation methods for orchestrator
+type StealthCompatibleService interface {
+	ProcessDNSValidationWithStealth(ctx context.Context, campaignID uuid.UUID, domains []*RandomizedDomain) (done bool, processedCount int, err error)
+	ProcessHTTPValidationWithStealth(ctx context.Context, campaignID uuid.UUID, domains []*RandomizedDomain) (done bool, processedCount int, err error)
+	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, interface{}, error)
 }
 
 // PhaseConfig contains configuration for any phase type in a lead generation campaign

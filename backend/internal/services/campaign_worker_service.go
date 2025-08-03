@@ -29,7 +29,7 @@ const (
 
 type campaignWorkerServiceImpl struct {
 	jobStore              store.CampaignJobStore
-	phaseExecutionService PhaseExecutionService
+	phaseService          WorkerCompatibleService // NEW: Use interface instead of concrete type
 	workerID              string
 	appConfig             *config.AppConfig
 	db                    *sqlx.DB
@@ -40,7 +40,7 @@ type campaignWorkerServiceImpl struct {
 // NewCampaignWorkerService creates a new CampaignWorkerService.
 func NewCampaignWorkerService(
 	js store.CampaignJobStore,
-	phaseExecutionService PhaseExecutionService,
+	phaseService WorkerCompatibleService, // NEW: Accept interface instead of concrete type
 	serverInstanceID string,
 	appCfg *config.AppConfig,
 	db *sqlx.DB,
@@ -64,7 +64,7 @@ func NewCampaignWorkerService(
 
 	return &campaignWorkerServiceImpl{
 		jobStore:              js,
-		phaseExecutionService: phaseExecutionService,
+		phaseService:          phaseService, // NEW: Use interface field
 		workerID:              workerID,
 		appConfig:             appCfg,
 		db:                    db,
@@ -162,14 +162,14 @@ func (s *campaignWorkerServiceImpl) processJob(ctx context.Context, job *models.
 	defer cancelJobCtx()
 
 	// Unified phase processing using PhaseExecutionService - NO ROUTING NEEDED!
-	if s.phaseExecutionService == nil {
+	if s.phaseService == nil {
 		processErr = fmt.Errorf("phase execution service is nil")
 	} else {
 		// Phase 4.11: Autonomous phase execution - completely eliminates JobTypeEnum routing!
 		// PhaseExecutionService automatically determines the correct phase based on campaign state
 		// For worker service, determine phase from job type (maintaining dual-mode compatibility)
 		phaseType := string(job.JobType) // JobType maps to phase type
-		processErr = s.phaseExecutionService.StartPhase(jobCtx, job.CampaignID, phaseType)
+		processErr = s.phaseService.StartPhase(jobCtx, job.CampaignID, phaseType)
 		// Set default values since StartPhase doesn't return batch info
 		if processErr == nil {
 			batchDone = false  // Assume more work remains
@@ -196,25 +196,25 @@ func (s *campaignWorkerServiceImpl) processJob(ctx context.Context, job *models.
 			log.Printf("Worker [%s]: Job %s failed after %d attempts. Last error: %s", workerName, job.ID, job.Attempts, processErr.Error())
 
 			// Update campaign status - check current status to determine appropriate action
-			if s.phaseExecutionService != nil {
+			if s.phaseService != nil {
 				errMsg := fmt.Sprintf("Job %s failed after max retries: %v", job.ID, processErr)
 
 				log.Printf("Worker [%s]: Job %s failed after %d attempts, determining appropriate campaign %s status",
 					workerName, job.ID, job.Attempts, job.CampaignID)
 
 				// Get current campaign to check its status
-				if currentCampaign, _, err := s.phaseExecutionService.GetCampaignDetails(jobCtx, job.CampaignID); err != nil {
+				if currentCampaign, _, err := s.phaseService.GetCampaignDetails(jobCtx, job.CampaignID); err != nil {
 					log.Printf("Worker [%s]: Failed to get campaign %s to check status: %v", workerName, job.CampaignID, err)
 				} else if currentCampaign.PhaseStatus != nil && *currentCampaign.PhaseStatus == models.PhaseStatusNotStarted {
 					// Campaign is still pending, should be cancelled (not failed)
-					if err := s.phaseExecutionService.SetCampaignStatus(jobCtx, job.CampaignID, models.PhaseStatusFailed); err != nil {
+					if err := s.phaseService.SetCampaignStatus(jobCtx, job.CampaignID, models.PhaseStatusFailed); err != nil {
 						log.Printf("Worker [%s]: Failed to set campaign %s to failed: %v", workerName, job.CampaignID, err)
 					} else {
 						log.Printf("Worker [%s]: Successfully set pending campaign %s to failed status", workerName, job.CampaignID)
 					}
 				} else {
 					// Campaign is running or in other state, can be set to failed
-					if err := s.phaseExecutionService.SetCampaignErrorStatus(jobCtx, job.CampaignID, errMsg); err != nil {
+					if err := s.phaseService.SetCampaignErrorStatus(jobCtx, job.CampaignID, errMsg); err != nil {
 						log.Printf("Worker [%s]: Failed to set campaign %s error status: %v", workerName, job.CampaignID, err)
 					} else {
 						log.Printf("Worker [%s]: Successfully set campaign %s to failed status", workerName, job.CampaignID)
@@ -307,7 +307,7 @@ func (s *campaignWorkerServiceImpl) processJob(ctx context.Context, job *models.
 				if activeJobsCount == 0 {
 					log.Printf("Worker [%s]: No other active jobs found for campaign %s, campaign may be complete", workerName, job.CampaignID)
 					log.Printf("[DEBUG] Worker [%s]: Calling HandleCampaignCompletion for campaign %s - this will auto-chain campaigns!", workerName, job.CampaignID)
-					if err := s.phaseExecutionService.HandleCampaignCompletion(jobCtx, job.CampaignID); err != nil {
+					if err := s.phaseService.HandleCampaignCompletion(jobCtx, job.CampaignID); err != nil {
 						log.Printf("Worker [%s]: Error handling completion for campaign %s: %v", workerName, job.CampaignID, err)
 					}
 				} else {

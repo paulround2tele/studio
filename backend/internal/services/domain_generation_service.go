@@ -933,8 +933,13 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		}
 		log.Printf("ProcessGenerationCampaignBatch: Campaign %s marked as InProgress (was %s).", campaignID, originalStatus)
 
-		// Broadcast campaign status change via WebSocket
-		websocket.BroadcastCampaignProgress(campaignID.String(), 0.0, "in_progress", "domain_generation", 0, 0)
+		// Optional non-blocking websocket notification after completion
+		go func() {
+			if broadcaster := websocket.GetBroadcaster(); broadcaster != nil {
+				message := websocket.CreateCampaignProgressMessage(campaignID.String(), 0.0, "in_progress", "domain_generation")
+				broadcaster.BroadcastToCampaign(campaignID.String(), message)
+			}
+		}()
 	} else if campaign.PhaseStatus != nil && *campaign.PhaseStatus != models.PhaseStatusInProgress {
 		// If it's some other non-runnable, non-terminal state (e.g., Paused)
 		log.Printf("ProcessGenerationCampaignBatch: Campaign %s is not in a runnable state (status: %s). Skipping job.", campaignID, *campaign.PhaseStatus)
@@ -1217,12 +1222,16 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 			campaign.CompletedAt = &now
 			opErr = s.campaignStore.UpdateCampaign(ctx, querier, campaign)
 
-			// 🚨 CRITICAL FIX: Add missing WebSocket broadcast for early completion
+			// Optional non-blocking websocket notification after completion
 			if opErr == nil {
-				targetItems := int64(genParams.NumDomainsToGenerate)
-				websocket.BroadcastCampaignProgress(campaignID.String(), 100.0, "completed", "domain_generation", processedItems, targetItems)
-				log.Printf("ProcessGenerationCampaignBatch: Campaign %s early completion broadcasted via WebSocket. Processed: %d, Target: %d",
-					campaignID, processedItems, targetItems)
+				go func() {
+					if broadcaster := websocket.GetBroadcaster(); broadcaster != nil {
+						message := websocket.CreateCampaignProgressMessage(campaignID.String(), 100.0, "completed", "domain_generation")
+						broadcaster.BroadcastToCampaign(campaignID.String(), message)
+					}
+				}()
+				log.Printf("ProcessGenerationCampaignBatch: Campaign %s early completion notification sent. Processed: %d",
+					campaignID, processedItems)
 			}
 		}
 		return done, 0, opErr
@@ -1570,28 +1579,18 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		campaign.TotalItems = models.Int64Ptr(targetItems)
 		campaign.CompletedAt = &nowTime
 
-		// 🚀 PHASE-AWARE TRANSITION: Only auto-transition if Full Sequence Mode is enabled
-		launchSequence := false
-		if campaign.Metadata != nil {
-			var metadata map[string]interface{}
-			if err := json.Unmarshal(*campaign.Metadata, &metadata); err == nil {
-				if seq, ok := metadata["launch_sequence"].(bool); ok {
-					launchSequence = seq
-				}
-			}
+		// 🚀 PHASE-AWARE TRANSITION: Always auto-transition to DNS validation when domain generation completes
+		// Domain generation should always flow to DNS validation automatically
+		nextPhase := models.PhaseTypeDNSValidation
+		nextPhaseStatus := models.PhaseStatusReady
+		err := s.campaignStore.UpdateCampaignPhaseFields(ctx, querier, campaignID, &nextPhase, &nextPhaseStatus)
+		if err != nil {
+			log.Printf("WARNING: Failed to transition campaign %s from domain_generation to dns_validation: %v", campaignID, err)
+			// Don't fail the entire operation, but transition should work
+		} else {
+			log.Printf("[PHASE-TRANSITION] Domain generation complete - transitioned campaign %s to dns_validation phase", campaignID)
 		}
 
-		if launchSequence {
-			// Full Sequence Mode: Automatically transition to DNS validation phase
-			dnsValidationPhase := models.PhaseTypeDNSValidation
-			campaign.CurrentPhase = &dnsValidationPhase
-			log.Printf("Domain generation complete for campaign %s - Full Sequence Mode enabled, automatically transitioning to dns_validation", campaignID)
-		} else {
-			// Individual Phase Mode: Stay in domain generation phase (completed)
-			completedStatus := models.PhaseStatusEnum("completed")
-			campaign.PhaseStatus = &completedStatus
-			log.Printf("Domain generation complete for campaign %s - Individual Phase Mode, staying in generation phase for manual configuration", campaignID)
-		}
 		done = true
 
 		if errUpdateCampaign := s.campaignStore.UpdateCampaign(ctx, querier, campaign); errUpdateCampaign != nil {
@@ -1603,8 +1602,13 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		log.Printf("ProcessGenerationCampaignBatch: Campaign %s completed. Processed: %d. Target: %d. Global Offset: %d. Total Possible: %d",
 			campaignID, newProcessedItems, genParams.NumDomainsToGenerate, genParams.CurrentOffset, genParams.TotalPossibleCombinations)
 
-		// Broadcast campaign completion via WebSocket
-		websocket.BroadcastCampaignProgress(campaignID.String(), 100.0, "completed", "domain_generation", newProcessedItems, targetItems)
+		// Optional non-blocking websocket notification after completion
+		go func() {
+			if broadcaster := websocket.GetBroadcaster(); broadcaster != nil {
+				message := websocket.CreateCampaignProgressMessage(campaignID.String(), 100.0, "completed", "domain_generation")
+				broadcaster.BroadcastToCampaign(campaignID.String(), message)
+			}
+		}()
 
 		// Domain generation complete - campaign stays in generation phase until user manually configures next phase
 		log.Printf("ProcessGenerationCampaignBatch: Campaign %s generation phase complete. Waiting for user to configure DNS validation phase.", campaignID)
@@ -1627,8 +1631,13 @@ func (s *domainGenerationServiceImpl) ProcessGenerationCampaignBatch(ctx context
 		log.Printf("ProcessGenerationCampaignBatch: Campaign %s progress updated. Processed: %d/%d (%.2f%%)",
 			campaignID, newProcessedItems, targetItems, progressPercentage)
 
-		// Broadcast campaign progress update via WebSocket
-		websocket.BroadcastCampaignProgress(campaignID.String(), progressPercentage, "running", "domain_generation", newProcessedItems, targetItems)
+		// Optional non-blocking websocket notification for progress
+		go func() {
+			if broadcaster := websocket.GetBroadcaster(); broadcaster != nil {
+				message := websocket.CreateCampaignProgressMessage(campaignID.String(), progressPercentage, "running", "domain_generation")
+				broadcaster.BroadcastToCampaign(campaignID.String(), message)
+			}
+		}()
 	}
 
 	finalProcessedItems := int64(0)
@@ -2172,11 +2181,16 @@ func (s *domainGenerationServiceImpl) GenerateDomains(ctx context.Context, req G
 			return fmt.Errorf("failed to update domains_data JSONB: %w", err)
 		}
 
-		// Real-time WebSocket streaming with sophisticated broadcasting
+		// Optional non-blocking websocket notification for progress
 		progress := float64(totalGenerated) / float64(targetDomains) * 100
 
-		// Campaign progress broadcasting
-		websocket.BroadcastCampaignProgress(req.CampaignID.String(), progress, "running", "domain_generation", totalGenerated, targetDomains)
+		// Campaign progress notification (non-blocking)
+		go func() {
+			if broadcaster := websocket.GetBroadcaster(); broadcaster != nil {
+				message := websocket.CreateCampaignProgressMessage(req.CampaignID.String(), progress, "running", "domain_generation")
+				broadcaster.BroadcastToCampaign(req.CampaignID.String(), message)
+			}
+		}()
 
 		startOffset = nextOffset
 		log.Printf("GenerateDomains: Batch completed. Generated %d domains. Total: %d/%d (%.2f%%)",
@@ -2208,7 +2222,13 @@ func (s *domainGenerationServiceImpl) GenerateDomains(ctx context.Context, req G
 	}
 
 	// Final completion broadcast
-	websocket.BroadcastCampaignProgress(req.CampaignID.String(), 100.0, "completed", "domain_generation", totalGenerated, targetDomains)
+	// Optional non-blocking websocket notification for completion
+	go func() {
+		if broadcaster := websocket.GetBroadcaster(); broadcaster != nil {
+			message := websocket.CreateCampaignProgressMessage(req.CampaignID.String(), 100.0, "completed", "domain_generation")
+			broadcaster.BroadcastToCampaign(req.CampaignID.String(), message)
+		}
+	}()
 
 	log.Printf("GenerateDomains: Successfully completed standalone domain generation for campaign %s. Generated %d domains.", req.CampaignID, totalGenerated)
 	return nil
@@ -2354,8 +2374,13 @@ func (s *domainGenerationServiceImpl) PauseGeneration(ctx context.Context, campa
 		return fmt.Errorf("failed to update pause status: %w", err)
 	}
 
-	// WebSocket notification
-	websocket.BroadcastCampaignProgress(campaignID.String(), 0.0, "paused", "domain_generation", 0, 0)
+	// Optional non-blocking websocket notification
+	go func() {
+		if broadcaster := websocket.GetBroadcaster(); broadcaster != nil {
+			message := websocket.CreateCampaignProgressMessage(campaignID.String(), 0.0, "paused", "domain_generation")
+			broadcaster.BroadcastToCampaign(campaignID.String(), message)
+		}
+	}()
 
 	return nil
 }
@@ -2381,8 +2406,13 @@ func (s *domainGenerationServiceImpl) ResumeGeneration(ctx context.Context, camp
 		return fmt.Errorf("failed to update resume status: %w", err)
 	}
 
-	// WebSocket notification
-	websocket.BroadcastCampaignProgress(campaignID.String(), 0.0, "running", "domain_generation", 0, 0)
+	// Optional non-blocking websocket notification
+	go func() {
+		if broadcaster := websocket.GetBroadcaster(); broadcaster != nil {
+			message := websocket.CreateCampaignProgressMessage(campaignID.String(), 0.0, "running", "domain_generation")
+			broadcaster.BroadcastToCampaign(campaignID.String(), message)
+		}
+	}()
 
 	return nil
 }
@@ -2408,8 +2438,13 @@ func (s *domainGenerationServiceImpl) CancelGeneration(ctx context.Context, camp
 		return fmt.Errorf("failed to update cancel status: %w", err)
 	}
 
-	// WebSocket notification
-	websocket.BroadcastCampaignProgress(campaignID.String(), 0.0, "cancelled", "domain_generation", 0, 0)
+	// Optional non-blocking websocket notification
+	go func() {
+		if broadcaster := websocket.GetBroadcaster(); broadcaster != nil {
+			message := websocket.CreateCampaignProgressMessage(campaignID.String(), 0.0, "cancelled", "domain_generation")
+			broadcaster.BroadcastToCampaign(campaignID.String(), message)
+		}
+	}()
 
 	return nil
 }
