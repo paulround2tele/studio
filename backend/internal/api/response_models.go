@@ -700,3 +700,64 @@ type PhaseStartRequest struct {
 // ======================================================================
 
 // Removed duplicate type definitions - using the versions defined earlier in the file
+
+// ======================================================================
+// BULK OPERATIONS RESPONSE MODELS - Enterprise-scale API responses
+// ======================================================================
+
+// BulkOperationStatusResponse represents the current status of a bulk operation
+type BulkOperationStatusResponse struct {
+	OperationID     string                 `json:"operationId"`
+	Type            string                 `json:"type"`                  // "domain_generation", "dns_validation", "http_validation", "analytics"
+	Status          string                 `json:"status"`                // "queued", "running", "completed", "failed", "cancelled"
+	Progress        float64                `json:"progress"`              // 0.0 to 100.0
+	StartedAt       string                 `json:"startedAt"`             // ISO 8601
+	CompletedAt     *string                `json:"completedAt,omitempty"` // ISO 8601
+	EstimatedTime   *int64                 `json:"estimatedTimeMs,omitempty"`
+	ProcessingTime  int64                  `json:"processingTimeMs"`
+	TotalOperations int                    `json:"totalOperations"`
+	CompletedOps    int                    `json:"completedOps"`
+	FailedOps       int                    `json:"failedOps"`
+	Results         map[string]interface{} `json:"results,omitempty"`
+	ErrorMessage    *string                `json:"errorMessage,omitempty"`
+}
+
+// BulkResourceStatusResponse represents current resource utilization
+type BulkResourceStatusResponse struct {
+	CPUUsage          float64 `json:"cpuUsage"`     // Percentage 0-100
+	MemoryUsage       float64 `json:"memoryUsage"`  // Percentage 0-100
+	NetworkUsage      float64 `json:"networkUsage"` // Percentage 0-100
+	ActiveOperations  int     `json:"activeOperations"`
+	QueuedOperations  int     `json:"queuedOperations"`
+	AvailableProxies  int     `json:"availableProxies"`
+	AvailablePersonas int     `json:"availablePersonas"`
+	MaxConcurrent     int     `json:"maxConcurrent"`
+	ResourceLimits    struct {
+		MaxCPU     float64 `json:"maxCpu"`
+		MaxMemory  float64 `json:"maxMemory"`
+		MaxNetwork float64 `json:"maxNetwork"`
+	} `json:"resourceLimits"`
+}
+
+// BulkResourceAllocationResponse represents resource allocation results
+type BulkResourceAllocationResponse struct {
+	AllocationID      string  `json:"allocationId"`
+	Status            string  `json:"status"` // "allocated", "queued", "failed"
+	AllocatedCPU      int     `json:"allocatedCpu"`
+	AllocatedMemory   int     `json:"allocatedMemory"`
+	AllocatedProxies  int     `json:"allocatedProxies"`
+	AllocatedPersonas int     `json:"allocatedPersonas"`
+	ScheduledTime     *string `json:"scheduledTime,omitempty"` // ISO 8601
+	Priority          string  `json:"priority"`
+	EstimatedDuration int64   `json:"estimatedDurationMs"`
+}
+
+// OperationCancellationResponse represents bulk operation cancellation results
+type OperationCancellationResponse struct {
+	OperationID      string `json:"operationId"`
+	Status           string `json:"status"` // "cancelled", "cancelling", "cannot_cancel"
+	Message          string `json:"message"`
+	ResourcesFreed   bool   `json:"resourcesFreed"`
+	PartialResults   bool   `json:"partialResults"`
+	CancellationTime string `json:"cancellationTime"` // ISO 8601
+}

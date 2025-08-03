@@ -419,6 +419,10 @@ func main() {
 		db)
 	log.Println("CampaignOrchestratorAPIHandler initialized with Phase 4 orchestrator.")
 
+	// Initialize enterprise-scale bulk operations handler
+	bulkDomainsAPIHandler := api.NewBulkDomainsAPIHandler(campaignOrchestrator)
+	log.Println("BulkDomainsAPIHandler initialized for enterprise bulk operations.")
+
 	webSocketAPIHandler := api.NewWebSocketHandler(wsBroadcaster, sessionService)
 	log.Println("WebSocketAPIHandler initialized.")
 
@@ -821,6 +825,11 @@ func main() {
 	campaignOrchestratorAPIHandler.RegisterCampaignOrchestrationRoutes(newCampaignRoutesGroup, authMiddleware)
 	log.Println("Registered new campaign orchestration routes under /api/v2/campaigns.")
 
+	// V2 Bulk Operations routes (enterprise-scale operations)
+	bulkRoutesGroup := newCampaignRoutesGroup.Group("/bulk")
+	registerBulkOperationRoutes(bulkRoutesGroup, bulkDomainsAPIHandler)
+	log.Println("Registered enterprise bulk operation routes under /api/v2/campaigns/bulk.")
+
 	// Generate OpenAPI specification using TRUE automatic reflection from real server routes
 	log.Println("Generating OpenAPI specification using automatic reflection...")
 	spec := api_pkg.GenerateOpenAPISpecWithEngine(router)
@@ -874,4 +883,25 @@ func main() {
 	}
 
 	log.Println("Server and workers exited gracefully.")
+}
+
+// registerBulkOperationRoutes registers all bulk operation routes for enterprise-scale operations
+func registerBulkOperationRoutes(group *gin.RouterGroup, handler *api.BulkDomainsAPIHandler) {
+	// Bulk domain operations
+	group.POST("/domains/generate", handler.BulkGenerateDomains)
+	group.POST("/domains/validate-dns", handler.BulkValidateDNS)
+	group.POST("/domains/validate-http", handler.BulkValidateHTTP)
+	group.POST("/domains/analyze", handler.BulkAnalyzeDomains)
+
+	// Bulk campaign lifecycle operations
+	group.POST("/campaigns/operate", handler.BulkCampaignOperations)
+
+	// Bulk operation monitoring
+	group.GET("/operations/:operationId/status", handler.GetBulkOperationStatus)
+	group.GET("/operations", handler.ListBulkOperations)
+	group.POST("/operations/:operationId/cancel", handler.CancelBulkOperation)
+
+	// Resource management
+	group.POST("/resources/allocate", handler.AllocateBulkResources)
+	group.GET("/resources/status", handler.GetBulkResourceStatus)
 }

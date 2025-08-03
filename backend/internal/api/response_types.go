@@ -18,6 +18,7 @@ const (
 	ErrorCodeValidation        ErrorCode = "VALIDATION_ERROR"
 	ErrorCodeRateLimitExceeded ErrorCode = "RATE_LIMIT_EXCEEDED"
 	ErrorCodeRequestTimeout    ErrorCode = "REQUEST_TIMEOUT"
+	ErrorCodeNotImplemented    ErrorCode = "NOT_IMPLEMENTED"
 
 	// Server errors (5xx)
 	ErrorCodeInternalServer     ErrorCode = "INTERNAL_SERVER_ERROR"

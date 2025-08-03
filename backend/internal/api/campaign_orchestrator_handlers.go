@@ -89,31 +89,15 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 	// Campaign domains endpoint - standalone service
 	group.GET("/:campaignId/domains/status", h.getCampaignDomainsStatus)
 
-	// --- DIRECT DOMAIN OPERATIONS THROUGH ORCHESTRATOR ---
-	// Single campaign domain operations
-	group.POST("/:campaignId/domains/generate", h.generateDomains)
-	group.POST("/:campaignId/domains/validate-dns", h.validateDomainsDNS)
-	group.POST("/:campaignId/domains/validate-http", h.validateDomainsHTTP)
-	group.GET("/:campaignId/domains/validation-status", h.getValidationStatus)
+	// --- SINGLE CAMPAIGN DOMAIN OPERATIONS (TODO: Implement) ---
+	// These are placeholders for direct orchestrator integration
+	// group.POST("/:campaignId/domains/generate", h.generateDomains)
+	// group.POST("/:campaignId/domains/validate-dns", h.validateDomainsDNS)
+	// group.POST("/:campaignId/domains/validate-http", h.validateDomainsHTTP)
+	// group.GET("/:campaignId/domains/validation-status", h.getValidationStatus)
 
-	// --- BULK OPERATIONS FOR ENTERPRISE SCALE ---
-	// Bulk domain generation
-	group.POST("/bulk/domains/generate", h.bulkGenerateDomains)
-	group.POST("/bulk/domains/validate-dns", h.bulkValidateDNS)
-	group.POST("/bulk/domains/validate-http", h.bulkValidateHTTP)
-
-	// Bulk campaign operations
-	group.POST("/bulk/campaigns/operate", h.bulkCampaignOperations)
-	group.POST("/bulk/analytics", h.bulkAnalytics)
-
-	// Bulk operation monitoring
-	group.GET("/bulk/operations/:operationId/status", h.getBulkOperationStatus)
-	group.GET("/bulk/operations", h.listBulkOperations)
-	group.POST("/bulk/operations/:operationId/cancel", h.cancelBulkOperation)
-
-	// Resource management
-	group.POST("/bulk/resources/allocate", h.allocateBulkResources)
-	group.GET("/bulk/resources/status", h.getBulkResourceStatus)
+	// NOTE: Bulk operations are now handled by BulkDomainsAPIHandler
+	// Register bulk routes separately using NewBulkDomainsAPIHandler
 
 	// --- B2B BULK APIS FOR LARGE-SCALE OPERATIONS ---
 	// Bulk enriched data endpoint for processing millions of domains

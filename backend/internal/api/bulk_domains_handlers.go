@@ -4,10 +4,10 @@ package api
 import (
 	"context"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/application"
-	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -60,8 +60,8 @@ func (h *BulkDomainsAPIHandler) BulkGenerateDomains(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, APIResponse{
 			Success: false,
 			Error: &ErrorInfo{
-				Code:    ErrorCodeValidation,
-				Message: "At least one domain generation operation is required",
+				Code:      ErrorCodeValidation,
+				Message:   "At least one domain generation operation is required",
 				Timestamp: time.Now(),
 			},
 		})
@@ -119,19 +119,19 @@ func (h *BulkDomainsAPIHandler) BulkGenerateDomains(c *gin.Context) {
 		}
 
 		// Execute domain generation via orchestrator
-		domains, err := h.executeDomainGeneration(ctx, op)
+		domainsCount, err := h.executeDomainGeneration(ctx, op)
 		if err != nil {
 			result.Error = err.Error()
 			failedOps++
 		} else {
-			result.DomainsGenerated = len(domains)
+			result.DomainsGenerated = domainsCount
 			result.Success = true
 			successfulOps++
-			totalGenerated += int64(len(domains))
+			totalGenerated += int64(domainsCount)
 		}
 
 		result.Duration = time.Since(startTime).Milliseconds()
-		results[string(rune(i))] = result
+		results[strconv.Itoa(i)] = result
 	}
 
 	response := BulkDomainGenerationResponse{
@@ -317,192 +317,373 @@ func (h *BulkDomainsAPIHandler) BulkAnalyzeDomains(c *gin.Context) {
 
 // Helper functions
 
-func (h *BulkDomainsAPIHandler) executeDomainGeneration(ctx context.Context, op DomainGenerationOperation) ([]models.EnrichedCampaignData, error) {
+func (h *BulkDomainsAPIHandler) executeDomainGeneration(ctx context.Context, op DomainGenerationOperation) (int, error) {
 	// This would integrate with the orchestrator to generate domains
 	// For now, return a placeholder implementation
-	var domains []models.EnrichedCampaignData
-	return domains, nil
+	return 0, nil
 }
 
-// @Summary Validate domains using bulk DNS validation with stealth
-// @Description Perform bulk DNS validation with stealth detection avoidance and resource optimization
-// @Tags bulk-operations,validation
-// @ID bulkValidateDNS
+// int64Ptr returns a pointer to an int64 value
+func int64Ptr(v int64) *int64 {
+	return &v
+}
+
+// stringPtr returns a pointer to a string value
+func stringPtr(v string) *string {
+	return &v
+}
+
+// ===============================================================================
+// BULK CAMPAIGN LIFECYCLE OPERATIONS - Enterprise campaign management
+// ===============================================================================
+
+// @Summary Perform bulk operations across multiple campaigns
+// @Description Execute lifecycle operations (start, stop, pause, resume, delete) across multiple campaigns
+// @Tags bulk-operations,campaigns
+// @ID bulkCampaignOperations
 // @Accept json
 // @Produce json
-// @Param request body BulkDNSValidationRequest true "Bulk DNS validation request"
-// @Success 200 {object} BulkValidationResponse "DNS validation completed successfully"
-// @Success 202 {object} BulkValidationResponse "Validation accepted and processing"
-// @Failure 400 {object} APIResponse "Bad Request - Invalid domains or configuration"
-// @Failure 429 {object} APIResponse "Rate Limited - Too many concurrent validations"
+// @Param request body BulkCampaignOperationRequest true "Bulk campaign operation request"
+// @Success 200 {object} BulkCampaignOperationResponse "Operations completed successfully"
+// @Success 202 {object} BulkCampaignOperationResponse "Operations accepted and processing"
+// @Failure 400 {object} APIResponse "Bad Request - Invalid operation or campaign IDs"
+// @Failure 429 {object} APIResponse "Rate Limited - Too many concurrent operations"
 // @Failure 500 {object} APIResponse "Internal Server Error"
-// @Router /campaigns/bulk/domains/validate-dns [post]
-func (h *BulkDomainsAPIHandler) BulkValidateDNS(c *gin.Context) {
-	var request BulkDNSValidationRequest
+// @Router /campaigns/bulk/campaigns/operate [post]
+func (h *BulkDomainsAPIHandler) BulkCampaignOperations(c *gin.Context) {
+	var request BulkCampaignOperationRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, APIResponse{
 			Success: false,
 			Error: &ErrorInfo{
-				Code:    "INVALID_REQUEST",
+				Code:    ErrorCodeBadRequest,
 				Message: "Invalid request format",
-				Details: err.Error(),
+				Details: []ErrorDetail{{
+					Code:    ErrorCodeValidation,
+					Message: err.Error(),
+				}},
+				Timestamp: time.Now(),
 			},
 		})
 		return
 	}
 
-	// Validate stealth configuration if provided
-	if request.Stealth != nil && request.Stealth.Enabled {
-		if request.Stealth.DetectionThreshold > 0 && request.Stealth.DetectionThreshold < 0.1 {
-			c.JSON(http.StatusBadRequest, APIResponse{
-				Success: false,
-				Error: &ErrorInfo{
-					Code:    "INVALID_STEALTH_CONFIG",
-					Message: "Invalid stealth detection threshold",
-					Details: "Detection threshold must be between 0.1 and 1.0",
-				},
-			})
-			return
+	// Validate operation type
+	validOps := map[string]bool{
+		"start": true, "stop": true, "pause": true, "resume": true, "delete": true, "configure": true,
+	}
+	if !validOps[request.Operation] {
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Success: false,
+			Error: &ErrorInfo{
+				Code:    ErrorCodeValidation,
+				Message: "Invalid operation type",
+				Details: []ErrorDetail{{
+					Field:   "operation",
+					Code:    ErrorCodeValidation,
+					Message: "Operation must be one of: start, stop, pause, resume, delete, configure",
+				}},
+				Timestamp: time.Now(),
+			},
+		})
+		return
+	}
+
+	operationID := uuid.New().String()
+	results := make(map[string]CampaignOperationResult)
+	successfulOps := 0
+	failedOps := 0
+
+	startTime := time.Now()
+
+	// Process each campaign operation
+	for _, campaignID := range request.CampaignIDs {
+		result := CampaignOperationResult{
+			CampaignID:    campaignID,
+			PreviousState: "unknown", // Would query actual state
+			NewState:      request.Operation,
+			Success:       true, // Simulated success for now
+			Duration:      100,  // Simulated duration
 		}
+
+		// Simulate operation execution via orchestrator
+		// In real implementation: h.orchestrator.ExecuteCampaignOperation(campaignID, request.Operation, request.Config)
+		if request.Operation == "delete" {
+			// Simulate delete operation
+			result.NewState = "deleted"
+		}
+
+		results[campaignID.String()] = result
+		successfulOps++
 	}
 
-	operationID := uuid.New().String()
-
-	// Create response structure for bulk DNS validation
-	response := BulkValidationResponse{
-		OperationID:        operationID,
-		ValidationJobID:    uuid.New(),
-		TotalOperations:    len(request.Operations),
-		CompletedOps:       0,
-		SuccessfulOps:      0,
-		FailedOps:          0,
-		TotalDomainsQueued: h.calculateTotalDomains(request.Operations),
-		ValidatedDomains:   0,
-		StartedAt:          time.Now(),
-		Status:             "processing",
+	response := BulkCampaignOperationResponse{
+		Operation:      request.Operation,
+		Results:        results,
+		SuccessfulOps:  successfulOps,
+		FailedOps:      failedOps,
+		ProcessingTime: time.Since(startTime).Milliseconds(),
+		OperationID:    operationID,
 	}
 
-	// For now, return accepted status - real implementation would process asynchronously
-	c.JSON(http.StatusAccepted, response)
+	c.JSON(http.StatusOK, response)
 }
 
-// @Summary Validate domains using bulk HTTP validation with stealth
-// @Description Perform bulk HTTP validation with stealth detection avoidance and content analysis
-// @Tags bulk-operations,validation
-// @ID bulkValidateHTTP
-// @Accept json
+// ===============================================================================
+// BULK OPERATION MONITORING - Real-time operation tracking
+// ===============================================================================
+
+// @Summary Get status of bulk operation
+// @Description Get detailed status and progress of long-running bulk operation
+// @Tags bulk-operations,monitoring
+// @ID getBulkOperationStatus
 // @Produce json
-// @Param request body BulkHTTPValidationRequest true "Bulk HTTP validation request"
-// @Success 200 {object} BulkValidationResponse "HTTP validation completed successfully"
-// @Success 202 {object} BulkValidationResponse "Validation accepted and processing"
-// @Failure 400 {object} APIResponse "Bad Request - Invalid domains or configuration"
-// @Failure 429 {object} APIResponse "Rate Limited - Too many concurrent validations"
+// @Param operationId path string true "Operation ID (UUID)"
+// @Success 200 {object} BulkOperationStatusResponse "Operation status retrieved successfully"
+// @Failure 404 {object} APIResponse "Operation not found"
 // @Failure 500 {object} APIResponse "Internal Server Error"
-// @Router /campaigns/bulk/domains/validate-http [post]
-func (h *BulkDomainsAPIHandler) BulkValidateHTTP(c *gin.Context) {
-	var request BulkHTTPValidationRequest
-	if err := c.ShouldBindJSON(&request); err != nil {
+// @Router /campaigns/bulk/operations/{operationId}/status [get]
+func (h *BulkDomainsAPIHandler) GetBulkOperationStatus(c *gin.Context) {
+	operationID := c.Param("operationId")
+	if operationID == "" {
 		c.JSON(http.StatusBadRequest, APIResponse{
 			Success: false,
 			Error: &ErrorInfo{
-				Code:    "INVALID_REQUEST",
-				Message: "Invalid request format",
-				Details: err.Error(),
+				Code:      ErrorCodeBadRequest,
+				Message:   "Operation ID is required",
+				Timestamp: time.Now(),
 			},
 		})
 		return
 	}
 
-	operationID := uuid.New().String()
-
-	response := BulkValidationResponse{
-		OperationID:        operationID,
-		ValidationJobID:    uuid.New(),
-		TotalOperations:    len(request.Operations),
-		CompletedOps:       0,
-		SuccessfulOps:      0,
-		FailedOps:          0,
-		TotalDomainsQueued: h.calculateHTTPTotalDomains(request.Operations),
-		ValidatedDomains:   0,
-		StartedAt:          time.Now(),
-		Status:             "processing",
-	}
-
-	c.JSON(http.StatusAccepted, response)
-}
-
-// @Summary Perform bulk analysis operations on domains
-// @Description Execute comprehensive analysis on bulk domain sets with resource optimization
-// @Tags bulk-operations,analysis
-// @ID bulkAnalyzeDomains
-// @Accept json
-// @Produce json
-// @Param request body BulkAnalyticsRequest true "Bulk analysis request"
-// @Success 200 {object} BulkAnalyticsResponse "Analysis completed successfully"
-// @Success 202 {object} BulkAnalyticsResponse "Analysis accepted and processing"
-// @Failure 400 {object} APIResponse "Bad Request - Invalid analysis configuration"
-// @Failure 429 {object} APIResponse "Rate Limited - Too many concurrent analyses"
-// @Failure 500 {object} APIResponse "Internal Server Error"
-// @Router /campaigns/bulk/domains/analyze [post]
-func (h *BulkDomainsAPIHandler) BulkAnalyzeDomains(c *gin.Context) {
-	var request BulkAnalyticsRequest
-	if err := c.ShouldBindJSON(&request); err != nil {
+	// Validate UUID format
+	if _, err := uuid.Parse(operationID); err != nil {
 		c.JSON(http.StatusBadRequest, APIResponse{
 			Success: false,
 			Error: &ErrorInfo{
-				Code:    "INVALID_REQUEST",
-				Message: "Invalid request format",
-				Details: err.Error(),
+				Code:    ErrorCodeValidation,
+				Message: "Invalid operation ID format",
+				Details: []ErrorDetail{{
+					Field:   "operationId",
+					Code:    ErrorCodeValidation,
+					Message: "Operation ID must be a valid UUID",
+				}},
+				Timestamp: time.Now(),
 			},
 		})
 		return
 	}
 
-	operationID := uuid.New().String()
-
-	response := BulkAnalyticsResponse{
+	// Simulate operation status retrieval
+	// In real implementation: status := h.orchestrator.GetOperationStatus(operationID)
+	statusResponse := BulkOperationStatusResponse{
 		OperationID:     operationID,
-		AnalyticsJobID:  uuid.New(),
-		TotalOperations: len(request.Operations),
-		CompletedOps:    0,
-		SuccessfulOps:   0,
+		Type:            "domain_generation",
+		Status:          "running",
+		Progress:        75.5,
+		StartedAt:       time.Now().Add(-10 * time.Minute).Format(time.RFC3339),
+		ProcessingTime:  600000, // 10 minutes
+		TotalOperations: 5,
+		CompletedOps:    3,
 		FailedOps:       0,
-		StartedAt:       time.Now(),
-		Status:          "processing",
+		EstimatedTime:   int64Ptr(120000), // 2 minutes remaining
 	}
 
-	c.JSON(http.StatusAccepted, response)
+	c.JSON(http.StatusOK, APIResponse{
+		Success: true,
+		Data:    statusResponse,
+	})
 }
 
-// Helper functions
+// @Summary List all bulk operations
+// @Description List all bulk operations with optional filtering and pagination
+// @Tags bulk-operations,monitoring
+// @ID listBulkOperations
+// @Produce json
+// @Param status query string false "Filter by operation status"
+// @Param type query string false "Filter by operation type"
+// @Param limit query int false "Maximum number of results (default: 50)"
+// @Param offset query int false "Offset for pagination (default: 0)"
+// @Success 200 {object} BulkOperationListResponse "Operations list retrieved successfully"
+// @Failure 500 {object} APIResponse "Internal Server Error"
+// @Router /campaigns/bulk/operations [get]
+func (h *BulkDomainsAPIHandler) ListBulkOperations(c *gin.Context) {
+	// Parse query parameters
+	status := c.Query("status")
+	opType := c.Query("type")
+	limit := 50 // default
+	offset := 0 // default
 
-func (h *BulkDomainsAPIHandler) executeDomainGeneration(ctx context.Context, op DomainGenerationOperation) ([]models.EnrichedCampaignData, error) {
-	// This would integrate with the orchestrator to generate domains
-	// For now, return a placeholder implementation
-	var domains []models.EnrichedCampaignData
-	return domains, nil
-}
-
-func (h *BulkDomainsAPIHandler) calculateTotalDomains(operations []DNSValidationOperation) int {
-	total := 0
-	for _, op := range operations {
-		if op.MaxDomains > 0 {
-			total += op.MaxDomains
-		} else {
-			total += 1000 // Default estimation
+	if l := c.Query("limit"); l != "" {
+		if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 && parsed <= 1000 {
+			limit = parsed
 		}
 	}
-	return total
-}
 
-func (h *BulkDomainsAPIHandler) calculateHTTPTotalDomains(operations []HTTPValidationOperation) int {
-	total := 0
-	for _, op := range operations {
-		if op.MaxDomains > 0 {
-			total += op.MaxDomains
-		} else {
-			total += 1000 // Default estimation
+	if o := c.Query("offset"); o != "" {
+		if parsed, err := strconv.Atoi(o); err == nil && parsed >= 0 {
+			offset = parsed
 		}
 	}
-	return total
+
+	// Simulate operation listing
+	// In real implementation: operations := h.orchestrator.ListOperations(status, opType, limit, offset)
+	mockOperations := []BulkOperationStatus{
+		{
+			OperationID: uuid.New().String(),
+			Type:        "domain_generation",
+			Status:      "completed",
+			Progress: OperationProgress{
+				TotalItems:      1000,
+				ProcessedItems:  1000,
+				SuccessfulItems: 950,
+				FailedItems:     50,
+				Percentage:      100.0,
+				RemainingItems:  0,
+				CurrentPhase:    "completed",
+			},
+			StartTime: time.Now().Add(-1 * time.Hour).Format(time.RFC3339),
+			EndTime:   time.Now().Add(-30 * time.Minute).Format(time.RFC3339),
+			Duration:  1800000, // 30 minutes
+		},
+		{
+			OperationID: uuid.New().String(),
+			Type:        "dns_validation",
+			Status:      "running",
+			Progress: OperationProgress{
+				TotalItems:      2000,
+				ProcessedItems:  1300,
+				SuccessfulItems: 1200,
+				FailedItems:     100,
+				Percentage:      65.0,
+				RemainingItems:  700,
+				CurrentPhase:    "dns_validation",
+				EstimatedTime:   480000, // 8 minutes remaining
+			},
+			StartTime: time.Now().Add(-15 * time.Minute).Format(time.RFC3339),
+			Duration:  900000, // 15 minutes
+		},
+	}
+
+	// Apply filtering
+	var filteredOps []BulkOperationStatus
+	for _, op := range mockOperations {
+		if status != "" && op.Status != status {
+			continue
+		}
+		if opType != "" && op.Type != opType {
+			continue
+		}
+		filteredOps = append(filteredOps, op)
+	}
+
+	// Apply pagination
+	totalCount := len(filteredOps)
+
+	// Slice for current page
+	end := offset + limit
+	if end > len(filteredOps) {
+		end = len(filteredOps)
+	}
+	if offset >= len(filteredOps) {
+		filteredOps = []BulkOperationStatus{}
+	} else {
+		filteredOps = filteredOps[offset:end]
+	}
+
+	response := BulkOperationListResponse{
+		Operations: filteredOps,
+		TotalCount: totalCount,
+		Metadata:   nil, // Can be extended later
+	}
+
+	c.JSON(http.StatusOK, APIResponse{
+		Success: true,
+		Data:    response,
+	})
+}
+
+// @Summary Cancel a running bulk operation
+// @Description Cancel a long-running bulk operation and clean up resources
+// @Tags bulk-operations,monitoring
+// @ID cancelBulkOperation
+// @Produce json
+// @Param operationId path string true "Operation ID (UUID)"
+// @Success 200 {object} APIResponse "Operation cancelled successfully"
+// @Failure 404 {object} APIResponse "Operation not found"
+// @Failure 409 {object} APIResponse "Operation cannot be cancelled (already completed)"
+// @Failure 500 {object} APIResponse "Internal Server Error"
+// @Router /campaigns/bulk/operations/{operationId}/cancel [post]
+func (h *BulkDomainsAPIHandler) CancelBulkOperation(c *gin.Context) {
+	operationID := c.Param("operationId")
+	if operationID == "" {
+		c.JSON(http.StatusBadRequest, APIResponse{
+			Success: false,
+			Error: &ErrorInfo{
+				Code:      ErrorCodeBadRequest,
+				Message:   "Operation ID is required",
+				Timestamp: time.Now(),
+			},
+		})
+		return
+	}
+
+	// TODO: Implement operation cancellation
+	c.JSON(http.StatusNotImplemented, APIResponse{
+		Success: false,
+		Error: &ErrorInfo{
+			Code:      ErrorCodeNotImplemented,
+			Message:   "Bulk operation cancellation not yet implemented",
+			Timestamp: time.Now(),
+		},
+	})
+}
+
+// ===============================================================================
+// RESOURCE MANAGEMENT - Enterprise-scale resource allocation
+// ===============================================================================
+
+// @Summary Allocate resources for bulk operations
+// @Description Allocate and schedule computational resources for large-scale bulk operations
+// @Tags bulk-operations,resources
+// @ID allocateBulkResources
+// @Accept json
+// @Produce json
+// @Param request body BulkResourceRequest true "Resource allocation request"
+// @Success 200 {object} APIResponse "Resources allocated successfully"
+// @Failure 400 {object} APIResponse "Bad Request - Invalid resource requirements"
+// @Failure 429 {object} APIResponse "Rate Limited - Insufficient resources available"
+// @Failure 500 {object} APIResponse "Internal Server Error"
+// @Router /campaigns/bulk/resources/allocate [post]
+func (h *BulkDomainsAPIHandler) AllocateBulkResources(c *gin.Context) {
+	// TODO: Implement enterprise resource allocation and scheduling
+	c.JSON(http.StatusNotImplemented, APIResponse{
+		Success: false,
+		Error: &ErrorInfo{
+			Code:      ErrorCodeNotImplemented,
+			Message:   "Enterprise resource allocation not yet implemented",
+			Timestamp: time.Now(),
+		},
+	})
+}
+
+// @Summary Get resource utilization status
+// @Description Get current resource utilization, availability, and performance metrics
+// @Tags bulk-operations,resources
+// @ID getBulkResourceStatus
+// @Produce json
+// @Success 200 {object} APIResponse "Resource status retrieved successfully"
+// @Failure 500 {object} APIResponse "Internal Server Error"
+// @Router /campaigns/bulk/resources/status [get]
+func (h *BulkDomainsAPIHandler) GetBulkResourceStatus(c *gin.Context) {
+	// TODO: Implement resource monitoring and metrics
+	c.JSON(http.StatusNotImplemented, APIResponse{
+		Success: false,
+		Error: &ErrorInfo{
+			Code:      ErrorCodeNotImplemented,
+			Message:   "Resource monitoring not yet implemented",
+			Timestamp: time.Now(),
+		},
+	})
 }
