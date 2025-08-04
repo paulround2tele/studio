@@ -87,25 +87,71 @@ func (h *BulkValidationAPIHandler) BulkValidateDNS(c *gin.Context) {
 	for _, op := range request.Operations {
 		operationKey := uuid.New().String()
 
-		// Execute DNS validation through orchestrator (placeholder implementation)
-		domainsProcessed := 100 // Mock value
-		domainsSuccessful := 85 // Mock value
-		domainsFailed := 15     // Mock value
+		// Execute DNS validation through orchestrator with real implementation
+		// Note: op.CampaignID is already a uuid.UUID, no parsing needed
+		campaignID := op.CampaignID
 
+		// Configure DNS validation phase if not already configured
+		dnsConfig := map[string]interface{}{
+			"stealth_enabled": request.Stealth != nil && request.Stealth.Enabled,
+			"batch_size":      100, // Default batch size for bulk operations
+		}
+
+		// Apply stealth configuration if provided
+		if request.Stealth != nil && request.Stealth.Enabled {
+			dnsConfig["detection_threshold"] = request.Stealth.DetectionThreshold
+			dnsConfig["temporal_jitter"] = request.Stealth.TemporalJitter
+		}
+
+		// Configure the DNS validation phase
+		configErr := h.orchestrator.ConfigurePhase(c.Request.Context(), campaignID, models.PhaseTypeDNSValidation, dnsConfig)
+		if configErr != nil {
+			result := models.ValidationOperationResult{
+				CampaignID:        campaignID,
+				ValidationType:    "dns",
+				DomainsProcessed:  0,
+				DomainsSuccessful: 0,
+				DomainsFailed:     0,
+				Success:           false,
+				Error:             configErr.Error(),
+				Duration:          time.Since(startTime).Milliseconds(),
+			}
+			results[operationKey] = result
+			failedOps++
+			continue
+		}
+
+		// Start DNS validation phase
+		startErr := h.orchestrator.StartPhase(c.Request.Context(), campaignID, "dns_validation")
+		if startErr != nil {
+			result := models.ValidationOperationResult{
+				CampaignID:        campaignID,
+				ValidationType:    "dns",
+				DomainsProcessed:  0,
+				DomainsSuccessful: 0,
+				DomainsFailed:     0,
+				Success:           false,
+				Error:             startErr.Error(),
+				Duration:          time.Since(startTime).Milliseconds(),
+			}
+			results[operationKey] = result
+			failedOps++
+			continue
+		}
+
+		// For now, return immediate status (async processing via SSE will provide real-time updates)
 		result := models.ValidationOperationResult{
-			CampaignID:        op.CampaignID,
+			CampaignID:        campaignID,
 			ValidationType:    "dns",
-			DomainsProcessed:  domainsProcessed,
-			DomainsSuccessful: domainsSuccessful,
-			DomainsFailed:     domainsFailed,
+			DomainsProcessed:  0, // Will be updated via SSE
+			DomainsSuccessful: 0, // Will be updated via SSE
+			DomainsFailed:     0, // Will be updated via SSE
 			Success:           true,
 			Duration:          time.Since(startTime).Milliseconds(),
 		}
 
 		results[operationKey] = result
-		totalProcessed += int64(domainsProcessed)
-		totalSuccessful += int64(domainsSuccessful)
-		totalFailed += int64(domainsFailed)
+		// Note: totalProcessed will be updated via SSE events
 		successfulOps++
 	}
 
@@ -196,30 +242,76 @@ func (h *BulkValidationAPIHandler) BulkValidateHTTP(c *gin.Context) {
 	results := make(map[string]models.ValidationOperationResult)
 	var totalProcessed, totalSuccessful, totalFailed int64
 	successfulOps := 0
+	failedOps := 0
 
 	// Process each HTTP validation operation
 	for _, op := range request.Operations {
 		operationKey := uuid.New().String()
 
-		// Execute HTTP validation through orchestrator (placeholder implementation)
-		domainsProcessed := 75  // Mock value
-		domainsSuccessful := 60 // Mock value
-		domainsFailed := 15     // Mock value
+		// Apply stealth configuration if provided
+		httpConfig := map[string]interface{}{
+			"stealth_enabled":  request.Stealth != nil && request.Stealth.Enabled,
+			"batch_size":       100, // Default batch size for bulk operations
+			"status_codes":     []int{200, 301, 302},
+			"timeout":          30,
+			"follow_redirects": true,
+			"user_agents":      []string{"Mozilla/5.0", "Googlebot/2.1"},
+		}
 
+		if request.Stealth != nil && request.Stealth.Enabled {
+			httpConfig["detection_threshold"] = request.Stealth.DetectionThreshold
+			httpConfig["temporal_jitter"] = request.Stealth.TemporalJitter
+		}
+
+		// Configure the HTTP validation phase
+		configErr := h.orchestrator.ConfigurePhase(c.Request.Context(), op.CampaignID, models.PhaseTypeHTTPKeywordValidation, httpConfig)
+		if configErr != nil {
+			result := models.ValidationOperationResult{
+				CampaignID:        op.CampaignID,
+				ValidationType:    "http",
+				DomainsProcessed:  0,
+				DomainsSuccessful: 0,
+				DomainsFailed:     0,
+				Success:           false,
+				Error:             configErr.Error(),
+				Duration:          time.Since(startTime).Milliseconds(),
+			}
+			results[operationKey] = result
+			failedOps++
+			continue
+		}
+
+		// Start HTTP validation phase
+		startErr := h.orchestrator.StartPhase(c.Request.Context(), op.CampaignID, "http_validation")
+		if startErr != nil {
+			result := models.ValidationOperationResult{
+				CampaignID:        op.CampaignID,
+				ValidationType:    "http",
+				DomainsProcessed:  0,
+				DomainsSuccessful: 0,
+				DomainsFailed:     0,
+				Success:           false,
+				Error:             startErr.Error(),
+				Duration:          time.Since(startTime).Milliseconds(),
+			}
+			results[operationKey] = result
+			failedOps++
+			continue
+		}
+
+		// For now, return immediate status (async processing via SSE will provide real-time updates)
 		result := models.ValidationOperationResult{
 			CampaignID:        op.CampaignID,
 			ValidationType:    "http",
-			DomainsProcessed:  domainsProcessed,
-			DomainsSuccessful: domainsSuccessful,
-			DomainsFailed:     domainsFailed,
+			DomainsProcessed:  0, // Will be updated via SSE
+			DomainsSuccessful: 0, // Will be updated via SSE
+			DomainsFailed:     0, // Will be updated via SSE
 			Success:           true,
 			Duration:          time.Since(startTime).Milliseconds(),
 		}
 
 		results[operationKey] = result
-		totalProcessed += int64(domainsProcessed)
-		totalSuccessful += int64(domainsSuccessful)
-		totalFailed += int64(domainsFailed)
+		// Note: totalProcessed will be updated via SSE events
 		successfulOps++
 	}
 

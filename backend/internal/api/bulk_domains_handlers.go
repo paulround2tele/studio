@@ -3,6 +3,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -148,19 +149,41 @@ func (h *BulkDomainsAPIHandler) BulkGenerateDomains(c *gin.Context) {
 
 // executeDomainGeneration executes domain generation for a single campaign
 func (h *BulkDomainsAPIHandler) executeDomainGeneration(ctx context.Context, op models.DomainGenerationOperation) (int, error) {
-	// Use the orchestrator's domain generation service
-	// This is a placeholder implementation - in reality, you'd call the actual domain generation
-	// service through the orchestrator with proper configuration
-
-	// Simulate domain generation based on MaxDomains
-	if op.MaxDomains > 0 && op.MaxDomains <= 1000000 {
-		// Return the requested number (up to reasonable limits)
-		if op.MaxDomains > 10000 {
-			return 10000, nil // Cap at 10k for safety
-		}
-		return op.MaxDomains, nil
+	// Configure domain generation phase
+	domainConfig := map[string]interface{}{
+		"max_domains":    op.MaxDomains,
+		"start_from":     op.StartFrom,
+		"batch_size":     1000, // Process domains in batches of 1k
+		"quality_filter": true,
 	}
 
-	// Default generation count
-	return 1000, nil
+	// Merge the operation config if provided
+	if op.Config != nil {
+		// Config contains DomainGenerationPhaseConfig
+		domainConfig["operation_config"] = op.Config
+	}
+
+	// Configure the domain generation phase
+	configErr := h.orchestrator.ConfigurePhase(ctx, op.CampaignID, models.PhaseTypeDomainGeneration, domainConfig)
+	if configErr != nil {
+		return 0, fmt.Errorf("failed to configure domain generation: %w", configErr)
+	}
+
+	// Start domain generation phase
+	startErr := h.orchestrator.StartPhase(ctx, op.CampaignID, "domain_generation")
+	if startErr != nil {
+		return 0, fmt.Errorf("failed to start domain generation: %w", startErr)
+	}
+
+	// For bulk operations, return expected count (actual count will be updated via SSE)
+	// This provides immediate feedback while the orchestrator processes asynchronously
+	expectedDomains := op.MaxDomains
+	if expectedDomains > 10000 {
+		expectedDomains = 10000 // Cap at 10k for safety in bulk operations
+	}
+	if expectedDomains <= 0 {
+		expectedDomains = 1000 // Default generation count
+	}
+
+	return expectedDomains, nil
 }
