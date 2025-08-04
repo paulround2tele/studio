@@ -9,6 +9,7 @@ import (
 
 	"github.com/fntelecomllc/studio/backend/internal/application"
 	"github.com/fntelecomllc/studio/backend/internal/models"
+	"github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -16,12 +17,14 @@ import (
 // BulkDomainsAPIHandler handles enterprise-scale bulk domain operations
 type BulkDomainsAPIHandler struct {
 	orchestrator *application.CampaignOrchestrator
+	sseService   *services.SSEService
 }
 
 // NewBulkDomainsAPIHandler creates a new bulk domains API handler
-func NewBulkDomainsAPIHandler(orchestrator *application.CampaignOrchestrator) *BulkDomainsAPIHandler {
+func NewBulkDomainsAPIHandler(orchestrator *application.CampaignOrchestrator, sseService *services.SSEService) *BulkDomainsAPIHandler {
 	return &BulkDomainsAPIHandler{
 		orchestrator: orchestrator,
+		sseService:   sseService,
 	}
 }
 
@@ -88,6 +91,21 @@ func (h *BulkDomainsAPIHandler) BulkGenerateDomains(c *gin.Context) {
 		operationKey := uuid.New().String()
 		totalRequested += int64(op.MaxDomains)
 
+		// Broadcast domain generation start event via SSE
+		h.sseService.BroadcastEvent(services.SSEEvent{
+			ID:    uuid.New().String(),
+			Event: services.SSEEventPhaseStarted,
+			Data: map[string]interface{}{
+				"phase":       "domain_generation",
+				"campaign_id": op.CampaignID.String(),
+				"operation":   "bulk_generation",
+				"max_domains": op.MaxDomains,
+				"start_from":  op.StartFrom,
+			},
+			Timestamp:  time.Now(),
+			CampaignID: &op.CampaignID,
+		})
+
 		// Execute domain generation through orchestrator
 		domainsGenerated, err := h.executeDomainGeneration(c.Request.Context(), op)
 
@@ -99,6 +117,20 @@ func (h *BulkDomainsAPIHandler) BulkGenerateDomains(c *gin.Context) {
 			Success:          err == nil,
 			Duration:         time.Since(startTime).Milliseconds(),
 		}
+
+		// Broadcast domain generation progress update via SSE
+		h.sseService.BroadcastEvent(services.SSEEvent{
+			ID:    uuid.New().String(),
+			Event: services.SSEEventDomainGenerated,
+			Data: map[string]interface{}{
+				"campaign_id":       op.CampaignID.String(),
+				"domains_generated": domainsGenerated,
+				"operation":         "bulk_generation",
+				"success":           err == nil,
+			},
+			Timestamp:  time.Now(),
+			CampaignID: &op.CampaignID,
+		})
 
 		if err != nil {
 			result.Error = err.Error()

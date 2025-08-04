@@ -390,11 +390,11 @@ func main() {
 	log.Println("CampaignOrchestratorAPIHandler initialized with Phase 4 orchestrator.")
 
 	// Initialize enterprise-scale bulk operations handlers (properly separated)
-	bulkDomainsAPIHandler := api.NewBulkDomainsAPIHandler(campaignOrchestrator)
-	bulkValidationAPIHandler := api.NewBulkValidationAPIHandler(campaignOrchestrator)
+	bulkDomainsAPIHandler := api.NewBulkDomainsAPIHandler(campaignOrchestrator, sseService)
+	bulkValidationAPIHandler := api.NewBulkValidationAPIHandler(campaignOrchestrator, sseService)
 	bulkAnalyticsAPIHandler := api.NewBulkAnalyticsAPIHandler(campaignOrchestrator)
 	bulkResourcesAPIHandler := api.NewBulkResourcesAPIHandler(campaignOrchestrator)
-	log.Println("All bulk operation handlers initialized with separated architecture.")
+	log.Println("Bulk domains and validation handlers initialized with SSE integration for real-time updates.")
 
 	webSocketAPIHandler := api.NewWebSocketHandler(wsBroadcaster, sessionService)
 	log.Println("WebSocketAPIHandler initialized.")

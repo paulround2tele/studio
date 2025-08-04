@@ -7,6 +7,7 @@ import (
 
 	"github.com/fntelecomllc/studio/backend/internal/application"
 	"github.com/fntelecomllc/studio/backend/internal/models"
+	"github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -14,12 +15,14 @@ import (
 // BulkValidationAPIHandler handles enterprise-scale bulk validation operations
 type BulkValidationAPIHandler struct {
 	orchestrator *application.CampaignOrchestrator
+	sseService   *services.SSEService
 }
 
 // NewBulkValidationAPIHandler creates a new bulk validation API handler
-func NewBulkValidationAPIHandler(orchestrator *application.CampaignOrchestrator) *BulkValidationAPIHandler {
+func NewBulkValidationAPIHandler(orchestrator *application.CampaignOrchestrator, sseService *services.SSEService) *BulkValidationAPIHandler {
 	return &BulkValidationAPIHandler{
 		orchestrator: orchestrator,
+		sseService:   sseService,
 	}
 }
 
@@ -103,6 +106,20 @@ func (h *BulkValidationAPIHandler) BulkValidateDNS(c *gin.Context) {
 			dnsConfig["temporal_jitter"] = request.Stealth.TemporalJitter
 		}
 
+		// Broadcast phase start event via SSE
+		h.sseService.BroadcastEvent(services.SSEEvent{
+			ID:    uuid.New().String(),
+			Event: services.SSEEventPhaseStarted,
+			Data: map[string]interface{}{
+				"phase":       "dns_validation",
+				"campaign_id": campaignID.String(),
+				"operation":   "bulk_validation",
+				"config":      dnsConfig,
+			},
+			Timestamp:  time.Now(),
+			CampaignID: &campaignID,
+		})
+
 		// Configure the DNS validation phase
 		configErr := h.orchestrator.ConfigurePhase(c.Request.Context(), campaignID, models.PhaseTypeDNSValidation, dnsConfig)
 		if configErr != nil {
@@ -149,6 +166,22 @@ func (h *BulkValidationAPIHandler) BulkValidateDNS(c *gin.Context) {
 			Success:           true,
 			Duration:          time.Since(startTime).Milliseconds(),
 		}
+
+		// Broadcast campaign progress update via SSE
+		h.sseService.BroadcastEvent(services.SSEEvent{
+			ID:    uuid.New().String(),
+			Event: services.SSEEventCampaignProgress,
+			Data: map[string]interface{}{
+				"campaign_id":       campaignID.String(),
+				"phase":             "dns_validation",
+				"operation":         "bulk_validation",
+				"status":            "started",
+				"domains_processed": 0,
+				"progress_percent":  0,
+			},
+			Timestamp:  time.Now(),
+			CampaignID: &campaignID,
+		})
 
 		results[operationKey] = result
 		// Note: totalProcessed will be updated via SSE events
@@ -263,6 +296,20 @@ func (h *BulkValidationAPIHandler) BulkValidateHTTP(c *gin.Context) {
 			httpConfig["temporal_jitter"] = request.Stealth.TemporalJitter
 		}
 
+		// Broadcast HTTP validation start event via SSE
+		h.sseService.BroadcastEvent(services.SSEEvent{
+			ID:    uuid.New().String(),
+			Event: services.SSEEventPhaseStarted,
+			Data: map[string]interface{}{
+				"phase":       "http_validation",
+				"campaign_id": op.CampaignID.String(),
+				"operation":   "bulk_validation",
+				"config":      httpConfig,
+			},
+			Timestamp:  time.Now(),
+			CampaignID: &op.CampaignID,
+		})
+
 		// Configure the HTTP validation phase
 		configErr := h.orchestrator.ConfigurePhase(c.Request.Context(), op.CampaignID, models.PhaseTypeHTTPKeywordValidation, httpConfig)
 		if configErr != nil {
@@ -309,6 +356,22 @@ func (h *BulkValidationAPIHandler) BulkValidateHTTP(c *gin.Context) {
 			Success:           true,
 			Duration:          time.Since(startTime).Milliseconds(),
 		}
+
+		// Broadcast HTTP validation progress update via SSE
+		h.sseService.BroadcastEvent(services.SSEEvent{
+			ID:    uuid.New().String(),
+			Event: services.SSEEventCampaignProgress,
+			Data: map[string]interface{}{
+				"campaign_id":       op.CampaignID.String(),
+				"phase":             "http_validation",
+				"operation":         "bulk_validation",
+				"status":            "started",
+				"domains_processed": 0,
+				"progress_percent":  0,
+			},
+			Timestamp:  time.Now(),
+			CampaignID: &op.CampaignID,
+		})
 
 		results[operationKey] = result
 		// Note: totalProcessed will be updated via SSE events
