@@ -229,68 +229,62 @@ CREATE TABLE phase_executions (
 - ✅ Enterprise stealth configuration options
 - ✅ Complete test coverage for bulk validation
 
-#### **Week 2: Analytics & Resource Management Enhancement**
-**Focus**: Complete analytics and resource management features
+#### **Week 2: Resource Monitoring & Performance Tracking** (REVISED - NO ENTERPRISE FLUFF)
+**Focus**: Monitor what's happening, prevent crashes, don't waste resources
 
-**Phase 2.1**: 📊 ANALYTICS - Complete Analytics Implementation
-- Enhance bulk analytics reporting capabilities
-- Add advanced metrics and KPI calculations
-- Implement data export and visualization APIs
-- Add performance benchmarking for bulk operations
+**Phase 2.1**: 📊 RESOURCE MONITORING - Know What's Running
+- Track CPU, memory, disk usage per campaign
+- Simple alerts when things get too high  
+- Basic resource usage history for troubleshooting
 
-**Phase 2.2**: 🏗️ RESOURCES - Enterprise Resource Management
-- Complete resource allocation algorithms
-- Add dynamic resource scaling based on load
-- Implement resource optimization strategies
-- Add resource monitoring and alerting
+**Phase 2.2**: 🛡️ CAMPAIGN LIMITS - Prevent Runaway Processes
+- Set max resources per campaign (prevent crashes)
+- Kill campaigns that exceed limits
+- Queue management when resources are tight
 
 **Week 2 Deliverables**:
-- ✅ Advanced analytics dashboard data
-- ✅ Dynamic resource allocation system
-- ✅ Performance optimization algorithms
-- ✅ Resource monitoring and alerting
+- ✅ Resource monitoring for campaigns
+- ✅ Campaign resource limits and enforcement
+- ✅ Performance tracking (response times, throughput)
+- ✅ Cleanup service for finished campaigns
 
-#### **Week 3: Frontend Bulk Operations Dashboard**
-**Focus**: Enterprise frontend interface for bulk operations
+#### **Week 3: Simple Performance Tracking & Resource Cleanup**
+**Focus**: Track performance and clean up after yourself
 
-**Phase 3.1**: 🎨 DASHBOARD - Modern Bulk Operations UI
-- Enhance existing BulkOperationsDashboard.tsx
-- Add real-time SSE integration to frontend
-- Implement bulk operation creation wizards
-- Add progress monitoring and cancellation controls
+**Phase 3.1**: 📈 PERFORMANCE TRACKING - See What's Slow
+- Track how long campaigns take
+- Identify slow operations and bottlenecks
+- Basic performance trends (not "predictive analytics")
 
-**Phase 3.2**: 📱 MOBILE - Responsive Design and Mobile Support
-- Mobile-responsive bulk operations interface
-- Touch-friendly bulk operation controls
-- Offline capability for bulk operation monitoring
-- Progressive Web App features
+**Phase 3.2**: 🧹 RESOURCE CLEANUP - Don't Leave Garbage Around
+- Clean up temp files and processes when campaigns finish
+- Release resources properly
+- Prevent resource leaks and memory bloat
 
 **Week 3 Deliverables**:
-- ✅ Enterprise bulk operations dashboard
-- ✅ Real-time progress monitoring UI
-- ✅ Mobile-responsive design
-- ✅ PWA capabilities
+- ✅ Performance tracking dashboard (simple, not enterprise theater)
+- ✅ Resource cleanup automation
+- ✅ Memory leak prevention
+- ✅ Temp file management
 
-#### **Week 4: Performance Testing & Enterprise Validation**
-**Focus**: Enterprise-scale validation and optimization
+#### **Week 4: Frontend Improvements & System Stability**
+**Focus**: Make the UI actually useful for monitoring your system
 
-**Phase 4.1**: 🚀 PERFORMANCE - Load Testing
-- Test 10,000+ domain bulk operations
-- Validate SSE performance under load
-- Test resource allocation at enterprise scale
-- Benchmark stealth effectiveness
+**Phase 4.1**: 🎨 MONITORING UI - See What's Actually Happening
+- Resource usage dashboard for your campaigns
+- Performance metrics display
+- Simple alerts and notifications
 
-**Phase 4.2**: 🔍 VALIDATION - Enterprise Readiness
-- Security audit for bulk operations
-- API documentation and client generation
-- Integration testing with enterprise workflows
-- Production deployment validation
+**Phase 4.2**: � SYSTEM STABILITY - Make It Not Break
+- Better error handling and recovery
+- System health checks that matter
+- Automatic restarts for failed components
 
 **Week 4 Deliverables**:
-- ✅ Enterprise-scale performance validation
-- ✅ Security audit completion
-- ✅ Production deployment readiness
-- ✅ Complete API documentation
+- ✅ Resource monitoring UI that's actually useful
+- ✅ Performance dashboard for troubleshooting
+- ✅ System stability improvements
+- ✅ Error handling that works
 
 ### 📋 **DETAILED WEEK 1 EXECUTION PLAN**
 
@@ -476,698 +470,129 @@ h.sseService.BroadcastEvent(services.SSEEvent{
 
 ---
 
-## 🎨 Phase 5: Frontend State Management Overhaul (Weeks 7-8) - ARCHITECTURE ANALYSIS COMPLETE
+## 🎨 Phase 5: Frontend State Management Simplification (Weeks 5-6) - PRACTICAL APPROACH
 
-### 📊 ARCHITECTURE ANALYSIS RESULTS
+### 📊 Frontend Cleanup Strategy
 
-#### ✅ Current Frontend State (What EXISTS)
-1. **Redux Store Architecture** ✅ ALREADY IMPLEMENTED
-   - `/src/store/index.ts`: RTK store with campaignApi + bulkOperationsApi
-   - `/src/store/api/campaignApi.ts`: RTK Query wrapper for campaigns (151 lines)
-   - `/src/store/api/bulkOperationsApi.ts`: RTK Query wrapper for bulk ops (206 lines) 
-   - `/src/store/slices/bulkOperationsSlice.ts`: Complete state management (422 lines)
+**Current State**: RTK Query architecture with some legacy cruft  
+**Target State**: Clean, simple state management without over-engineering
 
-2. **Bulk Operations Components** ✅ ALREADY IMPLEMENTED
-   - `/src/components/BulkOperationsDashboard.tsx`: Enterprise dashboard component
-   - `/src/components/proxies/BulkOperations.tsx`: Proxy bulk operations component
-   - Connected to separated backend handlers properly
+### 5.1 Remove Unnecessary Complexity
 
-3. **Data Fetching Patterns** ✅ ENTERPRISE-GRADE
-   - `useBulkCampaignData` hook: WebSocket + polling hybrid (288 lines)
-   - Backend-driven architecture: No client-side stores, pure API-driven
-   - Real-time updates via WebSocket broadcaster
+**Current Problem**: Multiple patterns doing the same thing
+**Solution**: Pick one pattern and stick with it
 
-#### ⚠️ ARCHITECTURAL CONFLICTS DETECTED
-1. **DUAL PATTERNS** - RTK Query vs Direct API Calls
-   - **Modern RTK Pattern**: `campaignApi` + `bulkOperationsApi` (store-based)
-   - **Legacy Hook Pattern**: `useBulkCampaignData` (direct API calls)
-   - **Backend-Driven Pattern**: Components calling APIs directly
+#### Frontend Simplification:
+- Keep RTK Query for server state (it works)
+- Remove redundant hooks and direct API calls
+- Simplify component state management
+- Get rid of unnecessary abstractions
 
-2. **Data Provider Confusion**
-   - `CampaignDataProvider.tsx`: Legacy provider using direct API calls
-   - `ModernCampaignDataProvider.tsx`: Uses RTK Query `useGetCampaignsStandaloneQuery`
-   - Components use both patterns inconsistently
+#### Files to Clean Up:
+- Remove duplicate data providers
+- Consolidate API calling patterns
+- Simplify component props and state
 
-3. **API Client Inconsistency**
-   - Some components: RTK Query hooks (`useConfigurePhaseStandaloneMutation`)
-   - Some components: Direct API calls (`campaignsApi.startPhaseStandalone`) 
-   - Some components: Hook abstractions (`useBulkCampaignData`)
+### 5.2 UI Improvements That Matter
 
-### 🎯 ARCHITECTURAL DECISION REQUIRED
+**Focus**: Make the interface actually usable for daily work
 
-#### Option 1: CONSOLIDATE TO RTK PATTERN (Recommended)
-- **Eliminate**: `useBulkCampaignData` hook and direct API calls
-- **Standardize**: All components use RTK Query hooks only
-- **Modernize**: Convert legacy providers to RTK-based
-- **Benefit**: Consistent caching, error handling, loading states
+#### Practical UI Enhancements:
+- Better campaign status visibility
+- Clearer error messages and handling
+- Simple bulk operations interface
+- Resource usage indicators
 
-#### Option 2: CONSOLIDATE TO BACKEND-DRIVEN PATTERN
-- **Eliminate**: RTK store and bulkOperationsApi
-- **Standardize**: All components use hooks calling APIs directly
-- **Modernize**: Enhance `useBulkCampaignData` for all operations
-- **Benefit**: Simpler architecture, no Redux complexity
-
-#### Option 3: HYBRID ARCHITECTURE (Current State)
-- **Keep**: Both patterns for different use cases
-- **Document**: Clear usage guidelines for each pattern
-- **Risk**: Continued complexity and inconsistency
-
-### 📋 PROPOSED EXECUTION PLAN
-
-#### Step 1: Architecture Unification Decision
-- **STOP IMPLEMENTATION** - Architecture analysis complete
-- **CHOOSE CONSOLIDATION STRATEGY** before proceeding
-- **UPDATE PLAN** with chosen architectural direction
-
-#### Step 2: Legacy Pattern Elimination (If RTK Chosen)
-- Convert `CampaignDataProvider.tsx` to RTK Query
-- Update all direct API calls to use RTK Query hooks
-- Remove redundant bulk operation components
-
-#### Step 3: Bulk Operations Enhancement
-- Extend existing `BulkOperationsDashboard.tsx` with new operations
-- Add real-time WebSocket integration to RTK Query
-- Implement proper error handling and retry logic
-
-### ✅ ARCHITECTURAL DECISION MADE: RTK CONSOLIDATION
-
-**CHOSEN STRATEGY**: RTK Query consolidation - eliminate hooks and direct API calls  
-**EXECUTION PLAN UPDATED**: Phase 5 implementation ready to proceed
-
-#### RTK Consolidation Execution Plan:
-
-##### Step 1: Legacy Hook Elimination ❌ REMOVE
-- **DELETE**: `/src/hooks/useBulkCampaignData.ts` (288 lines of legacy)
-- **DELETE**: Direct API calls in components (`campaignsApi.startPhaseStandalone`)
-- **REPLACE**: All hook usage with RTK Query equivalents
-
-##### Step 2: Data Provider Modernization 🔄 CONVERT
-- **CONVERT**: `CampaignDataProvider.tsx` → RTK Query-based
-- **DELETE**: `ModernCampaignDataProvider.tsx` (redundant with RTK)
-- **STANDARDIZE**: All components use RTK Query hooks
-
-##### Step 3: Bulk Operations Enhancement 🚀 ENHANCE
-- **EXTEND**: Existing `BulkOperationsDashboard.tsx` with all 10 operations
-- **INTEGRATE**: Real-time WebSocket updates with RTK Query
-- **IMPLEMENT**: Proper error handling, caching, and retry logic
-
-##### Step 4: Component Cleanup 🧹 STANDARDIZE
-- **UPDATE**: All campaign components to use RTK Query only
-- **REMOVE**: Custom loading states (use RTK Query's)
-- **IMPLEMENT**: Consistent error handling across all components
-
-### 🎯 IMMEDIATE EXECUTION: Phase 5 RTK Consolidation
-
-### 5.1 Replace StateManager with Redux Toolkit
-
-**Current Problem**: Custom state manager with cross-tab sync chaos
-**Solution**: Standard Redux Toolkit with RTK Query
-
-#### Frontend Changes:
-- Remove `/src/lib/state/stateManager.ts` entirely
-- Implement Redux store with campaign slice
-- Use RTK Query for server state management
-- Remove all custom caching logic
-
-#### Files to Create:
-- `/src/store/index.ts` (Redux store configuration)
-- `/src/store/slices/campaignSlice.ts`
-- `/src/store/api/campaignApi.ts` (RTK Query)
-
-#### Files to Modify:
-- All components using StateManager → Convert to Redux hooks
-- Remove WebSocket state sync → Use RTK Query polling
-
-### 5.2 Component Architecture Simplification
-
-**Current Problem**: 900-line PhaseConfiguration component doing everything
-**Solution**: Single responsibility components with proper separation
-
-#### Component Refactor:
+#### Component Updates:
 ```
 src/components/campaigns/
-├── CampaignDashboard.tsx (main container)
-├── PhaseProgression.tsx (phase flow visualization)
-├── PhaseCard.tsx (individual phase status)
-├── configuration/
-│   ├── DomainGenerationConfig.tsx
-│   ├── DNSValidationConfig.tsx
-│   ├── HTTPValidationConfig.tsx
-│   └── AnalysisConfig.tsx
-└── controls/
-    ├── PhaseTransitionButton.tsx
-    └── CampaignModeToggle.tsx
+├── CampaignDashboard.tsx (clean, simple)
+├── PhaseProgress.tsx (just show what's happening)
+├── BulkOperations.tsx (basic bulk interface)
+└── ResourceMonitor.tsx (simple resource display)
 ```
-
-### 5.3 Bulk Operations Frontend Integration
-
-**New Frontend Architecture**: Enterprise bulk operations management interface
-
-#### Bulk Operations Components:
-```
-src/components/campaigns/bulk/
-├── BulkOperationsDashboard.tsx (Main bulk operations interface)
-├── BulkDomainGeneration.tsx (Bulk domain generation interface)
-├── BulkValidationManager.tsx (Bulk validation operations)
-├── BulkAnalyticsReports.tsx (Bulk analytics and reporting)
-├── ResourceMonitoring.tsx (Resource utilization monitoring)
-└── BulkOperationProgress.tsx (Real-time bulk operation progress)
-```
-
-#### API Client Integration:
-- **Auto-generated Clients**: Leverage existing OpenAPI generation for bulk operation clients
-- **Type Safety**: Full TypeScript type safety for all bulk operations
-- **Real-time Updates**: WebSocket integration for bulk operation progress monitoring
-
-#### Files to Create:
-- `/src/components/campaigns/bulk/` (Complete bulk operations component suite)
-- `/src/store/slices/bulkOperationsSlice.ts` (Bulk operations state management)
-- `/src/store/api/bulkOperationsApi.ts` (RTK Query for bulk operations)
-
-#### Files to Modify:
-- Regenerate API client after bulk operations implementation
-- Update navigation to include bulk operations section
-- Integrate bulk operations with existing campaign management workflow
-
-#### Files to Refactor:
-- `/src/components/campaigns/PhaseConfiguration.tsx` → Split into multiple components
-- `/src/components/campaigns/PhaseDashboard.tsx` → Simplify to use Redux state
-- `/src/components/campaigns/CampaignControls.tsx` → Remove state management logic
 
 ---
 
-## 🔧 Phase 4: Service Layer Reorganization (Weeks 7-8) - **✅ ACTIVE**
+## 📡 **Phase 6: Real-Time Updates (Week 7)** - KEEP IT SIMPLE
 
-### 4.1 Current State Analysis (COMPLETED)
+### 6.1 SSE Implementation (Not WebSocket Overkill)
 
-#### Legacy Services Currently In Use:
-1. **`leadGenerationCampaignSvc`** (implements `PhaseExecutionService`) - 1938 lines
-2. **`domainGenerationService`** (implements `DomainGenerationService`) - 2590 lines  
-3. **`dnsValidationService`** (implements `DNSCampaignService`) - 1212 lines
-4. **`httpValidationService`** (implements `HTTPKeywordCampaignService`) - 1414 lines
+**Goal**: See campaign progress in real-time without refreshing
 
-#### New Phase 4 Domain Services (✅ COMPLETED but NOT USED):
-1. **Domain Generation Service** - `/backend/internal/domain/services/domain_generation.go`
-2. **DNS Validation Service** - `/backend/internal/domain/services/dns_validation.go`
-3. **HTTP Validation Service** - `/backend/internal/domain/services/http_validation.go`
-4. **Analysis Service** - `/backend/internal/domain/services/analysis.go`
-5. **CampaignOrchestrator** - `/backend/internal/application/orchestrator.go`
+#### Simple SSE Features:
+- Campaign progress updates
+- Phase transition notifications  
+- Basic error alerts
+- Resource usage warnings
 
-#### Current API Handler Dependencies:
-- `CampaignOrchestratorAPIHandler` uses:
-  - `services.PhaseExecutionService` (legacy 1938-line service)
-  - `services.DomainGenerationService` (legacy 2590-line service)
+#### What We're NOT Building:
+- ❌ "Enterprise event distribution" 
+- ❌ "Multi-instance Redis clustering"
+- ❌ "Event replay and recovery systems"
+- ❌ "Real-time analytics dashboards"
 
-#### The Problem:
-The new domain services and orchestrator exist but are **completely unused**. The API handlers still depend on legacy services.
+### 6.2 Frontend Real-Time Integration
 
-### 4.2 EXACT Implementation Plan
+**Simple Integration**: EventSource + basic UI updates
 
-#### Phase 4.1: Wire New Domain Services in main.go (✅ COMPLETED)
-1. **Instantiate new domain services** in main.go alongside legacy ones ✅ 
-2. **Create CampaignOrchestrator** with new domain services ✅
-3. **Keep legacy services** temporarily for comparison ✅
-
-#### Phase 4.2: Replace API Handler Dependencies (✅ COMPLETED) 
-1. **Update `CampaignOrchestratorAPIHandler`** struct to use `*application.CampaignOrchestrator` ✅
-2. **Update constructor** to accept orchestrator instead of legacy services ✅
-3. **Update method calls** in handlers to use orchestrator methods ✅
-
-#### Phase 4.3: Test and Validate (✅ COMPLETED)
-1. **Ensure all API endpoints work** with new orchestrator ✅
-2. **Verify OpenAPI/Swagger generation** still works ✅
-3. **Run integration tests** ✅
-
-#### Phase 4.4: Remove Legacy Services ✅ COMPLETED
-1. **Added WorkerCompatibleService interface** - Bridge between old and new architectures ✅
-2. **Extended CampaignOrchestrator** with missing methods ✅:
-   - `GetCampaignDetails()`, `SetCampaignStatus()`, `SetCampaignErrorStatus()`, `HandleCampaignCompletion()`
-3. **Updated worker service** - Now uses interface instead of concrete PhaseExecutionService ✅
-4. **Wired orchestrator to worker** - CampaignWorkerService uses campaignOrchestrator ✅  
-5. **Commented out legacy services** - PhaseExecutionService, DNSCampaignService, HTTPKeywordCampaignService ✅
-6. **Cleaned up imports** - Removed unused legacy imports ✅
-7. **Verified server startup** - New log: "CampaignWorkerService initialized with Phase 4 orchestrator" ✅
-
-**Legacy Code Eliminated**: ~5064 lines of monolithic service code
-
-#### Phase 4.5: Final Validation ✅ COMPLETED
-
-**Status**: ✅ COMPLETED
-**Completion**: 100%
-
-**Objectives**:
-- Clean up legacy interface definitions
-- Integrate stealth system with new orchestrator pattern
-- Verify stealth functionality remains intact
-
-**Implementation Details**:
-
-1. **Interface Cleanup**: ✅ COMPLETED
-   - Removed bloated PhaseExecutionService interface (40+ methods)
-   - Cleaned up DNSCampaignService and HTTPKeywordCampaignService legacy interfaces
-   - Preserved WorkerCompatibleService for worker compatibility
-   - Added minimal legacy interfaces for stealth integration compatibility
-
-2. **Stealth Integration Analysis**: ✅ COMPLETED
-   - **Critical Discovery**: Stealth integration is essential infrastructure, not throwaway code
-   - **Purpose**: Provides domain randomization, temporal jittering, validation pattern obfuscation
-   - **Function**: Prevents detection during DNS/HTTP validation campaigns
-   - **Architecture**: Works as decorator around validation engines
-
-3. **Stealth-Aware Services**: ✅ COMPLETED
-   - Created `StealthAwareDNSValidationService` - wraps DNS validation with stealth
-   - Created `StealthAwareHTTPValidationService` - wraps HTTP validation with stealth  
-   - **Design Pattern**: Decorator pattern extending domain services
-   - **Integration Points**: Intercepts domain lists, applies randomization, calls engines
-
-4. **Stealth Flow Architecture**: ✅ DESIGNED
-   ```
-   Domain Generation → Stealth Randomization → DNS Validation (stealth order)
-                                           → HTTP Validation (stealth order)
-                                           → Analysis
-   ```
-
-**Key Architectural Insights**:
-- **Stealth ≠ Legacy**: Stealth is sophisticated security infrastructure, not monolithic service code
-- **Stealth as Extension**: Implemented as wrapper/decorator, not replacement of domain services
-- **Engine Coordination**: Stealth coordinates with DNS/HTTP engines while preserving their expert functionality
-- **Detection Avoidance**: Critical for campaign success - without stealth, validation phases become useless
-
-**Files Created**:
-- `/backend/internal/domain/services/stealth_aware_dns_validation.go` - Stealth-aware DNS service
-- `/backend/internal/domain/services/stealth_aware_http_validation.go` - Stealth-aware HTTP service
-
-**Files Modified**:
-- `/backend/internal/services/interfaces.go` - Cleaned legacy interfaces, added stealth compatibility
-- `/backend/internal/services/stealth_integration_service.go` - Updated for domain service integration
-
-**Legacy Code Status**:
-- **Eliminated**: ~7000 lines of monolithic service code
-- **Preserved**: Critical stealth infrastructure for detection avoidance
-- **Modernized**: Stealth now integrates cleanly with domain service architecture
-
-### 4.3 Migration Benefits
-
-This approach:
-- ✅ **No bridge pattern complexity**
-- ✅ **Direct replacement** of dependencies  
-- ✅ **Gradual migration** with rollback capability
-- ✅ **Preserves API contracts** (Swagger unchanged)
-- ✅ **Eliminates 7000+ lines** of legacy code
-
-### 4.4 Respect Existing Engine Architecture
-
-**Key Principle**: Engines are expert systems - wrap them, don't replace them
-
-#### Existing Engines (PRESERVE):
-- **`dnsvalidator.DNSValidator`** - DNS resolution with DoH support
-- **`httpvalidator.HTTPValidator`** - HTTP validation with stealth
-- **`domainexpert.DomainGenerator`** - Pattern-based domain generation  
-- **`keywordextractor`** - HTML content keyword extraction
-- **`contentfetcher.ContentFetcher`** - Proxy-aware content fetching
-- **`keywordscanner.Service`** - Keyword scanning workflows
-
-#### Domain Service Pattern (✅ IMPLEMENTED):
-```go
-type DomainGenerationService interface {
-    Configure(ctx context.Context, campaignID uuid.UUID, config interface{}) error
-    Execute(ctx context.Context, campaignID uuid.UUID) (<-chan PhaseProgress, error)
-    GetStatus(ctx context.Context, campaignID uuid.UUID) (*PhaseStatus, error)
-    Cancel(ctx context.Context, campaignID uuid.UUID) error
-    Validate(ctx context.Context, config interface{}) error
-    GetPhaseType() models.PhaseTypeEnum
-}
-
-type domainGenerationService struct {
-    // Orchestrate existing engines
-    domainGenerator *domainexpert.DomainGenerator  // ✅ IMPLEMENTED
-    store          store.CampaignStore
-    deps           Dependencies
-}
-```
-
-### 4.5 Files Status
-
-#### ✅ COMPLETED Files:
-- `/backend/internal/domain/services/interfaces.go` - Clean PhaseService interface contracts
-- `/backend/internal/domain/services/domain_generation.go` - Orchestrates domainexpert.DomainGenerator
-- `/backend/internal/domain/services/dns_validation.go` - Orchestrates dnsvalidator.DNSValidator  
-- `/backend/internal/domain/services/http_validation.go` - Orchestrates httpvalidator.HTTPValidator
-- `/backend/internal/domain/services/analysis.go` - Orchestrates contentfetcher + keywordextractor
-- `/backend/internal/application/orchestrator.go` - Coordinates all domain services
-
-#### 🔄 FILES TO MODIFY:
-- `/backend/cmd/apiserver/main.go` - Add new service instantiation
-- `/backend/internal/api/campaign_orchestrator_handlers.go` - Replace dependencies
-- Legacy service files - TO BE DELETED after migration
+#### Implementation:
+- Connect to campaign events
+- Update progress bars in real-time
+- Show notifications for phase changes
+- Handle connection drops gracefully
 
 ---
 
-## 📡 **Phase 6: Server-Sent Events Implementation (Week 9)** - PROFESSIONAL ARCHITECTURE
+## 📊 Phase 7: Basic Monitoring (Week 8)
 
-> **Legacy WebSocket Infrastructure Status**: ✅ ELIMINATED  
-> **RTK Query Consolidation Status**: ✅ COMPLETE  
-> **Ready for SSE Implementation**: ✅ YES
+### 7.1 Essential Monitoring Only
 
-### 📋 SSE Implementation Strategy Overview
+**Goal**: Know when something's broken, not build NASA mission control
 
-**Current State**: Clean RTK Query architecture with polling-based updates  
-**Target State**: Enterprise-grade Server-Sent Events with automatic fallback  
-**Integration**: Seamless RTK Query integration with real-time event streaming
+#### Monitoring That Matters:
+- Campaign success/failure rates
+- Resource usage trends
+- System error rates
+- Performance bottlenecks
 
----
+#### What We're NOT Building:
+- ❌ "Prometheus metrics with 50+ dimensions"
+- ❌ "OpenTelemetry distributed tracing"
+- ❌ "Enterprise observability platforms"
+- ❌ "Custom alerting rule engines"
 
-### 6.1 Backend SSE Infrastructure
+### 7.2 Simple Health Checks
 
-**Architecture**: Redis-backed event distribution with multi-instance support
-
-#### Core SSE Components:
-
-##### 6.1.1 Event Streaming Server
-```go
-// /backend/internal/sse/server.go
-type SSEServer struct {
-    redis       *redis.Client
-    connections map[string]*Connection
-    broadcaster chan Event
-    mutex       sync.RWMutex
-}
-
-// Enterprise-grade connection management
-type Connection struct {
-    ID          string
-    UserID      string
-    CampaignIDs []string
-    Channel     chan Event
-    LastPing    time.Time
-    Context     context.Context
-    Cancel      context.CancelFunc
-}
-```
-
-##### 6.1.2 Campaign Event Types
-```go
-// /backend/internal/sse/events.go
-type CampaignEvent struct {
-    Type        EventType       `json:"type"`
-    CampaignID  string         `json:"campaignId"`
-    Data        interface{}    `json:"data"`
-    Timestamp   time.Time      `json:"timestamp"`
-    EventID     string         `json:"id"`
-}
-
-const (
-    EventCampaignProgress     EventType = "campaign_progress"
-    EventPhaseTransition      EventType = "phase_transition"
-    EventDomainGenerated      EventType = "domain_generated"
-    EventValidationComplete   EventType = "validation_complete"
-    EventBulkOperationUpdate  EventType = "bulk_operation_update"
-    EventSystemAlert          EventType = "system_alert"
-)
-```
-
-##### 6.1.3 API Endpoints
-```go
-// /backend/internal/api/sse_handlers.go
-// @Summary Campaign event stream
-// @Description Server-Sent Events stream for real-time campaign updates
-// @Tags real-time
-// @ID getCampaignEventStream
-// @Produce text/event-stream
-// @Param id path string true "Campaign ID"
-// @Router /campaigns/{id}/events [get]
-GET /api/campaigns/{id}/events          // Single campaign events
-GET /api/campaigns/events               // Multi-campaign events (user-scoped)
-GET /api/bulk-operations/{id}/events    // Bulk operation events
-```
-
-#### Implementation Files:
-
-##### Backend Core:
-- `/backend/internal/sse/server.go` → SSE server with Redis broadcasting
-- `/backend/internal/sse/events.go` → Event type definitions and serialization
-- `/backend/internal/sse/handlers.go` → HTTP handlers for SSE endpoints
-- `/backend/internal/sse/redis_broadcaster.go` → Redis pub/sub for multi-instance
-- `/backend/internal/sse/connection_manager.go` → Connection lifecycle management
-
-##### Integration Points:
-- `/backend/internal/services/campaign_orchestrator.go` → Emit campaign events
-- `/backend/internal/services/bulk_operations_service.go` → Emit bulk operation events
-- `/backend/cmd/apiserver/main.go` → Register SSE routes
+**Basic Health Monitoring**:
+- Database connectivity
+- Campaign service status
+- Basic performance metrics
+- Simple error logging
 
 ---
 
-### 6.2 Frontend SSE Integration with RTK Query
+## 🏁 REVISED EXECUTION PRIORITY
 
-**Architecture**: EventSource integration with RTK Query cache invalidation
+### Weeks 2-4: Resource Management & Monitoring
+**Focus**: Monitor your system, prevent crashes, track performance
+**No Enterprise Fluff**: Just practical monitoring and resource management
 
-#### 6.2.1 SSE Manager Service
-```typescript
-// /src/lib/sse/SSEManager.ts
-class SSEManager {
-  private connections: Map<string, EventSource> = new Map();
-  private dispatch: AppDispatch;
-  private reconnectDelay = 1000;
-  private maxReconnectAttempts = 5;
+### Weeks 5-6: Frontend Cleanup  
+**Focus**: Simplify UI, remove redundant code, make it actually usable
+**No Mobile/PWA Theater**: Just clean, functional interface
 
-  // Enterprise connection management
-  createCampaignStream(campaignId: string): EventSource
-  createBulkOperationStream(operationId: string): EventSource
-  handleReconnection(url: string, attempts: number): void
-  invalidateRTKCache(eventType: string, data: any): void
-}
-```
+### Week 7: Real-Time Updates
+**Focus**: See what's happening without refreshing
+**No Enterprise Event Architecture**: Just basic SSE for progress updates
 
-#### 6.2.2 RTK Query SSE Integration
-```typescript
-// /src/store/api/campaignApi.ts - Enhanced with SSE
-const campaignApi = createApi({
-  // ... existing RTK Query setup
-  
-  endpoints: (builder) => ({
-    // Existing endpoints...
-    
-    // SSE-enhanced queries with real-time updates
-    getCampaignWithSSE: builder.query<Campaign, string>({
-      query: (id) => `campaigns/${id}`,
-      async onCacheEntryAdded(arg, { updateCachedData, cacheDataLoaded }) {
-        // Start SSE connection when cache entry is added
-        const sse = new EventSource(`/api/campaigns/${arg}/events`);
-        
-        sse.addEventListener('campaign_progress', (event) => {
-          const data = JSON.parse(event.data);
-          updateCachedData((draft) => {
-            draft.progressPercentage = data.progress;
-            draft.phaseStatus = data.status;
-          });
-        });
-        
-        sse.addEventListener('phase_transition', (event) => {
-          const data = JSON.parse(event.data);
-          updateCachedData((draft) => {
-            draft.currentPhase = data.phase;
-            draft.phaseStatus = data.status;
-          });
-        });
-      }
-    })
-  })
-});
-```
+### Week 8: Basic Monitoring
+**Focus**: Know when things break
+**No Observability Platform**: Just essential monitoring that helps you debug
 
-#### 6.2.3 React Components Integration
-```typescript
-// /src/components/campaigns/CampaignProgressMonitor.tsx - Enhanced
-const CampaignProgressMonitor = ({ campaignId }: Props) => {
-  // Use SSE-enhanced RTK Query hook
-  const { data: campaign, isLoading } = useGetCampaignWithSSEQuery(campaignId);
-  
-  // Connection status from SSE manager
-  const connectionStatus = useSSEConnectionStatus(campaignId);
-  
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          {/* Real-time connection indicator */}
-          <div className={`w-2 h-2 rounded-full ${
-            connectionStatus.connected ? 'bg-green-500' : 'bg-red-500'
-          }`} />
-          <span className="text-xs">
-            {connectionStatus.connected ? 'Live Updates' : 'Reconnecting...'}
-          </span>
-        </div>
-      </CardHeader>
-      {/* Rest of component using real-time data */}
-    </Card>
-  );
-};
-```
-
-#### Implementation Files:
-
-##### Frontend Core:
-- `/src/lib/sse/SSEManager.ts` → Connection management and retry logic
-- `/src/lib/sse/eventTypes.ts` → TypeScript event type definitions
-- `/src/hooks/useSSEConnection.ts` → React hook for SSE connections
-- `/src/hooks/useSSEConnectionStatus.ts` → Connection status monitoring
-
-##### RTK Query Integration:
-- `/src/store/api/campaignApi.ts` → Enhanced with SSE cache invalidation
-- `/src/store/api/bulkOperationsApi.ts` → Enhanced with SSE updates
-- `/src/store/middleware/sseMiddleware.ts` → RTK middleware for SSE events
-
-##### Component Updates:
-- `/src/components/campaigns/CampaignProgressMonitor.tsx` → Real-time progress display
-- `/src/components/BulkOperationsDashboard.tsx` → Real-time bulk operation updates
-- `/src/components/campaigns/PhaseDashboard.tsx` → Live phase transition updates
-
----
-
-### 6.3 Production-Grade Features
-
-#### 6.3.1 Connection Management
-- **Automatic Reconnection**: Exponential backoff with max attempts
-- **Connection Pooling**: Efficient resource usage for multiple campaigns
-- **Graceful Degradation**: Automatic fallback to polling when SSE fails
-- **Memory Management**: Proper cleanup of event listeners and connections
-
-#### 6.3.2 Event Delivery Guarantees
-- **Redis Persistence**: Event buffering during disconnections
-- **Event Ordering**: Guaranteed order with sequence numbers
-- **Duplicate Detection**: Client-side deduplication with event IDs
-- **Error Recovery**: Automatic replay of missed events
-
-#### 6.3.3 Performance Optimizations
-- **Event Batching**: Multiple updates in single event for efficiency
-- **Connection Sharing**: Multiple components sharing single SSE connection
-- **Selective Subscriptions**: Only subscribe to relevant event types
-- **Resource Monitoring**: Connection and memory usage tracking
-
----
-
-### 6.4 Migration Strategy
-
-#### Phase 6.1: Backend SSE Infrastructure (Days 1-2)
-1. **Implement SSE Server**: Core server with Redis broadcasting
-2. **Create Event Handlers**: Campaign and bulk operation event emission
-3. **Add API Endpoints**: SSE HTTP handlers with proper CORS
-4. **Test Event Delivery**: Unit and integration tests for event system
-
-#### Phase 6.2: Frontend Integration (Days 3-4)
-1. **SSE Manager Implementation**: Connection management service
-2. **RTK Query Enhancement**: Cache invalidation with SSE events
-3. **Component Updates**: Real-time UI updates with connection status
-4. **Error Handling**: Automatic reconnection and fallback logic
-
-#### Phase 6.3: Production Hardening (Day 5)
-1. **Load Testing**: SSE performance under enterprise load
-2. **Connection Monitoring**: Metrics and alerting for SSE health
-3. **Documentation**: API documentation and integration guides
-4. **Deployment**: Blue-green deployment with SSE validation
-
----
-
-### ✅ **EXECUTION READINESS CHECKLIST**
-
-#### Prerequisites COMPLETE:
-- [x] WebSocket infrastructure eliminated
-- [x] RTK Query architecture consolidated  
-- [x] TypeScript compilation clean
-- [x] Legacy code patterns removed
-
-#### Implementation Ready:
-- [ ] Backend SSE server implementation
-- [ ] Redis event broadcasting setup
-- [ ] Frontend SSE manager service
-- [ ] RTK Query SSE integration
-- [ ] Component real-time updates
-- [ ] Production monitoring and alerting
-
-**Estimated Implementation Time**: 5 days  
-**Risk Level**: Low (building on solid RTK Query foundation)  
-**Dependencies**: Redis setup, CORS configuration
-
----
-
-## 📊 Phase 7: Monitoring and Observability (Week 10)
-
-### 7.1 Add Comprehensive Metrics
-
-**Current Problem**: No visibility into phase transition performance
-**Solution**: Prometheus metrics and OpenTelemetry tracing
-
-#### Metrics to Add:
-- Phase transition duration by type
-- Success/failure rates by campaign mode
-- Configuration validation errors
-- Database transaction conflicts
-- SSE connection metrics and event delivery rates
-
-#### Files to Create:
-- `/backend/internal/metrics/campaign_metrics.go`
-- `/backend/internal/metrics/sse_metrics.go`
-- `/backend/internal/tracing/campaign_tracing.go`
-
-### 7.2 Health Checks and Alerts
-
-**Current Problem**: No early warning for system issues
-**Solution**: Comprehensive health checks for all subsystems
-
-#### Health Checks:
-- Database connection and migration status
-- Redis connectivity for events
-- SSE connection health and throughput
-- Campaign orchestrator performance
-
----
-
-## 🎯 **NEXT STEPS: SSE IMPLEMENTATION EXECUTION**
-
-### **IMMEDIATE ACTION PLAN**
-
-Now that the legacy cleanup is complete and we have a clean RTK Query foundation, we're ready to implement enterprise-grade Server-Sent Events. Here's the execution sequence:
-
-#### **Day 1-2: Backend SSE Infrastructure**
-1. **Redis Setup**: Configure Redis for event broadcasting
-2. **SSE Server**: Implement core SSE server with connection management
-3. **Event System**: Create campaign and bulk operation event emission
-4. **API Integration**: Add SSE endpoints with proper authentication
-
-#### **Day 3-4: Frontend SSE Integration**  
-1. **SSE Manager**: Implement connection management with automatic reconnection
-2. **RTK Enhancement**: Integrate SSE with RTK Query cache invalidation
-3. **Component Updates**: Add real-time updates to campaign progress monitor
-4. **Error Handling**: Implement graceful degradation and fallback to polling
-
-#### **Day 5: Production Hardening**
-1. **Testing**: Load testing and connection stress testing
-2. **Monitoring**: Add SSE metrics and alerting
-3. **Documentation**: Complete API documentation and integration guides
-4. **Deployment**: Blue-green deployment with SSE validation
-
-### **SUCCESS CRITERIA**
-
-- ✅ **Real-time Updates**: Campaign progress updates within 100ms
-- ✅ **Connection Reliability**: 99.9% uptime with automatic reconnection  
-- ✅ **Performance**: Support 1000+ concurrent SSE connections
-- ✅ **Fallback**: Graceful degradation to polling when SSE unavailable
-- ✅ **Integration**: Seamless RTK Query cache updates from SSE events
-
-### **POST-IMPLEMENTATION VALIDATION**
-
-After SSE implementation:
-1. **Performance Testing**: Validate real-time update latency
-2. **Load Testing**: Stress test with multiple concurrent campaigns  
-3. **Integration Testing**: Verify RTK Query cache invalidation
-4. **User Acceptance**: Validate UI responsiveness improvements
-5. **Production Monitoring**: Deploy with comprehensive metrics
-
----
-
-**ARCHITECTURE STATUS**: ✅ READY FOR SSE IMPLEMENTATION  
-**FOUNDATION**: Clean RTK Query architecture with zero technical debt  
-**NEXT PHASE**: Server-Sent Events implementation for enterprise real-time updates
+### Weeks 9-10: Testing & Documentation
+**Focus**: Make sure it works and document how to use it
+**No Enterprise Validation Theater**: Just functional testing and useful docs
 
 ### 7.1 Add Comprehensive Metrics
 
@@ -1197,183 +622,100 @@ After SSE implementation:
 
 ---
 
-## 🚀 IMPLEMENTATION GUIDELINES
+## 🚀 REVISED IMPLEMENTATION GUIDELINES (NO ENTERPRISE THEATER)
 
-### OpenAPI Generation Strategy for Bulk Operations
+### Resource Management Strategy
 
-#### 1. Annotation-First Approach
-- **Comprehensive Swagger Annotations**: All bulk operations must have complete @Summary, @Description, @Tags, etc.
-- **Schema Documentation**: Detailed documentation for all bulk request/response models
-- **Error Handling**: Standardized error responses for bulk operations
-- **Security Annotations**: Proper authentication requirements for enterprise endpoints
+#### 1. Simple Monitoring
+- **Basic Resource Tracking**: CPU, memory, disk per campaign
+- **Simple Alerts**: When resources get too high
+- **Performance History**: Basic trends for troubleshooting
 
-#### 2. Reflection Engine Enhancement
-- **Bulk Pattern Detection**: Extend reflection engine to detect bulk operation patterns
-- **Template Generation**: Automatic generation of bulk operation boilerplate
-- **Schema Validation**: Ensure all bulk schemas conform to enterprise standards
-- **Route Discovery**: Automatic discovery of bulk operation routes
+#### 2. Campaign Limits
+- **Resource Limits**: Prevent runaway campaigns
+- **Cleanup Automation**: Clean up when campaigns finish
+- **Queue Management**: Handle resource constraints
 
-#### 3. Client Generation Automation
-- **CI/CD Integration**: Automatic client regeneration on bulk operation changes
-- **Type Safety**: Full TypeScript type safety for all bulk operations
-- **Version Management**: Proper versioning for bulk operation API changes
-- **Documentation Generation**: Automatic generation of interactive API documentation
+#### 3. Performance Tracking
+- **Response Time Monitoring**: Track slow operations
+- **Throughput Metrics**: Basic performance indicators
+- **Error Rate Tracking**: Know when things break
 
 ### Migration Strategy
-1. **Feature Flags**: Use feature flags to switch between old and new implementations
-2. **Parallel Running**: Run both systems side-by-side during transition
-3. **Gradual Rollout**: Start with new campaigns, migrate existing ones
-4. **Rollback Plan**: Keep old code until new system is proven stable
+1. **Incremental Changes**: Small, testable improvements
+2. **Feature Toggles**: Easy rollback if something breaks
+3. **Basic Testing**: Unit tests and integration tests that matter
+4. **Simple Documentation**: How to use and troubleshoot
 
-### Testing Requirements
-- **Unit Tests**: 90%+ coverage for state machine and phase executors
-- **Integration Tests**: Full campaign lifecycle testing
-- **Load Tests**: Performance testing with concurrent campaigns
-- **E2E Tests**: Frontend integration with new backend
-- **Bulk Operations Testing**: Enterprise-scale performance testing for bulk operations
+### Testing Requirements (Realistic)
+- **Unit Tests**: For critical business logic
+- **Integration Tests**: For important workflows
+- **Manual Testing**: For UI and user workflows
+- **Load Tests**: Basic performance validation
 
 ### Documentation Updates
-- API documentation for new endpoints
-- State transition diagrams
-- Configuration reference for both modes
-- Bulk operations API reference and examples
-- OpenAPI generation workflow documentation
+- API documentation for new features
+- Configuration guides
+- Troubleshooting guides
+- Simple deployment instructions
 
 ---
 
-## 🏁 EXECUTION PRIORITY
+## 🏁 PRACTICAL EXECUTION PRIORITY
 
-### Phase 4: IMMEDIATE (Current Week)
+### Week 2: Resource Management (Current)
 **Status**: Ready for implementation
-**Focus**: Bulk Operations API Architecture
+**Focus**: Monitor resources, prevent crashes, track performance
 **Deliverables**: 
-- Complete bulk operations handlers
-- OpenAPI annotations for all bulk endpoints
-- Orchestrator API exposure
-- Client regeneration
+- Resource monitoring that helps you debug
+- Campaign limits that prevent crashes
+- Performance tracking for troubleshooting
 
-### Phase 5: Next Week
-**Focus**: Frontend bulk operations integration
-**Dependencies**: Phase 4 completion
+### Weeks 3-4: UI Improvements
+**Focus**: Make the interface actually usable
+**Dependencies**: Resource monitoring complete
 
-### Phase 6-7: Following Weeks  
-**Focus**: Real-time communication and monitoring
-**Dependencies**: Bulk operations stabilization
+### Weeks 5-7: Real-Time Updates & Cleanup
+**Focus**: See what's happening without refreshing, clean up code
+**Dependencies**: Basic monitoring in place
 
-**CRITICAL**: Phase 4 bulk operations architecture is the foundation for the "BEAST" system - prioritize this above all other refactoring work.
-- Troubleshooting guide for common issues
+### Week 8: Testing & Documentation
+**Focus**: Make sure it works and document it
+**Dependencies**: Core features complete
+
+**CRITICAL**: Focus on practical features that help you manage your campaigns and troubleshoot issues - not enterprise theater that looks impressive in demos but doesn't solve real problems.
+---
+
+## ⚠️ Risk Mitigation (Realistic)
+
+### Things That Could Break
+1. **Resource Monitoring**: If monitoring uses too many resources itself
+2. **Campaign Limits**: If limits are too restrictive and kill valid campaigns
+3. **UI Changes**: If simplification breaks existing workflows
+4. **Performance Changes**: If optimizations actually make things slower
+
+### Simple Rollback Procedures
+- Feature flags to disable new monitoring
+- Database rollback scripts (if needed)
+- Keep old UI components until new ones work
+- Performance baseline tests
 
 ---
 
-## ⚠️ Risk Mitigation
+## 📈 Success Metrics (Practical)
 
-### High Risk Areas
-1. **Database Migration**: Test thoroughly in staging environment
-2. **State Transition Logic**: Potential data loss during migration
-3. **Frontend State Management**: User session interruption
-4. **Real-Time Events**: Connection handling edge cases
+### What Actually Matters
+- **System Stability**: Fewer crashed campaigns
+- **Performance**: Faster response times where it matters
+- **Usability**: Less time spent debugging resource issues
+- **Reliability**: Campaigns complete successfully more often
 
-### Rollback Procedures
-- Database rollback scripts for each migration
-- Feature flag configuration to revert to old system
-- Cache invalidation procedures
-- User notification for system maintenance
-
----
-
-## 📈 Success Metrics
-
-### Performance Improvements
-- **Phase Transition Time**: Target 50% reduction
-- **Database Load**: Target 70% reduction in trigger-related queries
-- **Frontend Responsiveness**: Target 90% reduction in state sync delays
-- **Error Rate**: Target 95% reduction in race conditions
-
-### Operational Improvements
-- **Debugging Time**: Centralized logging and tracing
-- **System Reliability**: Proper error handling and recovery
-- **Feature Development**: Simplified component architecture
-
-## 🎉 PHASE 4 MIGRATION COMPLETED SUCCESSFULLY
-
-**Completion Date**: August 3, 2025  
-**Total Duration**: Phase 4 implementation completed in single session  
-**Legacy Code Eliminated**: 7,171 lines of monolithic service code  
-
-### 🚀 Key Achievements
-
-1. **✅ Service Layer Reorganization Complete**
-   - Replaced 7,000+ line monolithic services with focused domain services
-   - Orchestrator pattern successfully coordinating domain services
-   - Clean separation of concerns with engine orchestration
-
-2. **✅ Stealth Integration Architecture**  
-   - Critical security feature fully integrated with new architecture
-   - Stealth-aware DNS and HTTP validation services implemented
-   - Domain generation preserved sequential processing for global offset tracking
-   - Detection avoidance capabilities now embedded in validation phases
-
-3. **✅ System Stability Validated**
-   - Complete build system working
-   - Server startup successful with no errors
-   - Worker service operational with stealth-aware orchestrator
-   - API contracts preserved (OpenAPI generation successful)
-
-### 🏗️ Architecture Transformation
-
-**BEFORE (Legacy)**:
-```
-LeadGenerationCampaignService (1938 lines)
-├── DNSCampaignService (1212 lines)  
-├── HTTPKeywordCampaignService (1414 lines)
-├── DomainGenerationService (2590 lines)
-└── PhaseExecutionService (massive monolith)
-```
-
-**AFTER (Phase 4)**:
-```
-CampaignOrchestrator
-├── DomainGenerationService (orchestrates domainexpert engine)
-├── StealthAwareDNSValidationService → DNSValidationService (orchestrates dnsvalidator)
-├── StealthAwareHTTPValidationService → HTTPValidationService (orchestrates httpvalidator)  
-└── AnalysisService (orchestrates contentfetcher + keywordextractor)
-```
-
-### 🛡️ Stealth Integration Success
-
-- **DNS Validation**: Domain randomization, temporal jitter, detection pattern avoidance
-- **HTTP Validation**: Request randomization, stealth delays, pattern obfuscation  
-- **Domain Generation**: Preserved sequential processing (critical for global offset tracking)
-- **Configurable**: Stealth mode can be enabled/disabled per service or campaign
-
-### 📊 Impact Metrics
-
-- **Code Reduction**: 7,171 lines of legacy code eliminated
-- **Architecture Improvement**: Monolithic → Domain-driven design
-- **Security Enhancement**: Stealth detection avoidance integrated
-- **Maintainability**: Clean service boundaries with engine orchestration
-- **API Stability**: No breaking changes to existing API contracts
+### How You'll Know It's Working
+- **Fewer Support Issues**: Less time troubleshooting resource problems
+- **Better Visibility**: You can see what's happening when things go wrong
+- **Easier Debugging**: Performance data helps identify bottlenecks
+- **Stable Operations**: Campaigns don't run out of memory or crash the system
 
 ---
 
-## 👥 Team Assignments
-
-### Backend Team (Weeks 1-8)
-- **Senior Dev**: State machine implementation and database migration
-- **Mid-Level Dev**: Service layer refactoring and phase executors
-- **Junior Dev**: Testing and documentation
-
-### Frontend Team (Weeks 5-9)
-- **Senior Dev**: Redux architecture and component refactoring
-- **Mid-Level Dev**: RTK Query integration and SSE implementation
-- **Junior Dev**: Component testing and styling
-
-### DevOps Team (Weeks 9-10)
-- **Senior DevOps**: Monitoring setup and deployment pipeline
-- **Junior DevOps**: Health checks and alerting configuration
-
----
-
-*This plan assumes your team can follow instructions without accidentally deleting production data. If that's too optimistic, add another 2 weeks for recovery time.*
-
-**Note**: Each phase should include code review, testing, and documentation before moving to the next phase. No shortcuts, no "we'll fix it later" - do it right the first time.
+*This plan focuses on practical improvements that will help you manage your system better, not enterprise features that look good in presentations but don't solve real problems.*
