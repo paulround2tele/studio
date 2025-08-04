@@ -61,6 +61,37 @@ components:
             required:
                 - proxyId
             type: object
+        AdvancedStealthPolicy:
+            properties:
+                adaptiveThrottling:
+                    type: boolean
+                cooldownPeriods:
+                    items:
+                        format: int32
+                        type: integer
+                    type: array
+                geographicDistribution:
+                    type: boolean
+                humanBehaviorPatterns:
+                    items:
+                        type: string
+                    type: array
+                maxConcurrentRequests:
+                    format: int32
+                    type: integer
+                profile:
+                    enum:
+                        - conservative
+                        - moderate
+                        - aggressive
+                        - extreme_stealth
+                    type: string
+                requestBurstLimit:
+                    format: int32
+                    type: integer
+                timeZoneSimulation:
+                    type: boolean
+            type: object
         AggregatedAnalytics:
             properties:
                 overallSuccessRate:
@@ -387,6 +418,31 @@ components:
                     items:
                         $ref: '#/components/schemas/KeywordExtractionAPIResult'
                     type: array
+            type: object
+        BehavioralMimicryConfig:
+            properties:
+                browserBehavior:
+                    type: boolean
+                enabled:
+                    type: boolean
+                idlePeriods:
+                    items:
+                        format: int32
+                        type: integer
+                    type: array
+                randomMouseMovement:
+                    type: boolean
+                scrollingBehavior:
+                    type: boolean
+                searchPatterns:
+                    type: boolean
+                sessionDuration:
+                    format: int32
+                    type: integer
+                socialMediaPatterns:
+                    type: boolean
+                typingDelays:
+                    type: boolean
             type: object
         BulkAnalyticsAPIHandler:
             type: object
@@ -2850,6 +2906,33 @@ components:
                 testId:
                     $ref: '#/components/schemas/UUID'
             type: object
+        DetectionEvasionConfig:
+            properties:
+                antiAnalysisFeatures:
+                    items:
+                        type: string
+                    type: array
+                captchaBypass:
+                    type: boolean
+                enabled:
+                    type: boolean
+                fingerprintRandomization:
+                    type: boolean
+                honeypotDetection:
+                    type: boolean
+                httpHeaderRandomization:
+                    type: boolean
+                payloadObfuscation:
+                    type: boolean
+                rateLimitEvasion:
+                    type: boolean
+                requestOrderRandomization:
+                    type: boolean
+                timingAttackPrevention:
+                    type: boolean
+                tlsFingerprintRotation:
+                    type: boolean
+            type: object
         DnsPersonaConfig:
             properties:
                 concurrentQueriesPerDomain:
@@ -3223,6 +3306,29 @@ components:
                     items:
                         $ref: '#/components/schemas/LeadItem'
                     type: array
+            type: object
+        EnterpriseProxyStrategy:
+            properties:
+                backupProxyPools:
+                    items:
+                        type: string
+                    type: array
+                failoverThreshold:
+                    type: number
+                geoTargeting:
+                    type: boolean
+                healthCheckInterval:
+                    type: integer
+                proxyPools:
+                    items:
+                        type: string
+                    type: array
+                proxyQualityFiltering:
+                    type: boolean
+                proxyRotationRate:
+                    type: string
+                strategy:
+                    type: string
             type: object
         EnvAuthConfig:
             properties:
@@ -6168,6 +6274,60 @@ components:
                 totalRules:
                     type: integer
             type: object
+        SSEClient:
+            properties:
+                CampaignID:
+                    $ref: '#/components/schemas/UUID'
+                Cancel:
+                    type: string
+                Context:
+                    type: string
+                Flusher:
+                    type: string
+                ID:
+                    $ref: '#/components/schemas/UUID'
+                LastSeen:
+                    format: date-time
+                    type: string
+                ResponseWriter:
+                    type: string
+                UserID:
+                    $ref: '#/components/schemas/UUID'
+            type: object
+        SSEEvent:
+            properties:
+                campaign_id:
+                    $ref: '#/components/schemas/UUID'
+                data:
+                    additionalProperties:
+                        type: object
+                    type: object
+                event:
+                    enum:
+                        - campaign_progress
+                        - phase_started
+                        - phase_completed
+                        - phase_failed
+                        - domain_generated
+                        - domain_validated
+                        - analysis_completed
+                        - keep_alive
+                        - error
+                    type: string
+                id:
+                    $ref: '#/components/schemas/UUID'
+                timestamp:
+                    format: date-time
+                    type: string
+                user_id:
+                    $ref: '#/components/schemas/UUID'
+            type: object
+        SSEEventType:
+            type: string
+        SSEHandler:
+            type: object
+        SSEService:
+            type: object
         SafetyValidationError:
             properties:
                 Impact:
@@ -6652,6 +6812,12 @@ components:
             type: string
         StealthValidationConfig:
             properties:
+                advancedPolicy:
+                    $ref: '#/components/schemas/AdvancedStealthPolicy'
+                behavioralMimicry:
+                    $ref: '#/components/schemas/BehavioralMimicryConfig'
+                detectionEvasion:
+                    $ref: '#/components/schemas/DetectionEvasionConfig'
                 detectionThreshold:
                     format: double
                     type: number
@@ -6661,6 +6827,8 @@ components:
                     type: boolean
                 proxyRotationForced:
                     type: boolean
+                proxyStrategy:
+                    $ref: '#/components/schemas/EnterpriseProxyStrategy'
                 randomizationLevel:
                     enum:
                         - low
@@ -7146,6 +7314,16 @@ components:
                     format: int64
                     type: integer
             type: object
+        analysisServiceImpl:
+            type: object
+        campaignWorkerServiceImpl:
+            type: object
+        domainGenerationServiceImpl:
+            type: object
+        domainStealthServiceImpl:
+            type: object
+        stealthIntegrationServiceImpl:
+            type: object
     securitySchemes:
         bearerAuth:
             bearerFormat: JWT
@@ -7176,12 +7354,6 @@ paths:
                   required: true
                   schema:
                     type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/BulkDatabaseQueryRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -7201,8 +7373,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Execute bulk database queries
             tags:
                 - database
@@ -7217,12 +7391,6 @@ paths:
                   required: true
                   schema:
                     type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/BulkDatabaseStatsRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -7242,8 +7410,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get bulk database statistics
             tags:
                 - database
@@ -7306,8 +7476,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Query keyword rules with advanced filtering
             tags:
                 - keyword-sets
@@ -7341,8 +7513,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get keyword set with high-performance rules loading
             tags:
                 - keyword-sets
@@ -7350,12 +7524,6 @@ paths:
         post:
             description: Change password for the currently authenticated user
             operationId: changePassword
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/ChangePasswordRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -7375,6 +7543,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             summary: Change user password
             tags:
                 - authentication
@@ -7382,12 +7552,6 @@ paths:
         post:
             description: Authenticate user credentials and create session
             operationId: login
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/LoginRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -7407,6 +7571,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             summary: User login
             tags:
                 - authentication
@@ -7433,6 +7599,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             summary: User logout
             tags:
                 - authentication
@@ -7459,6 +7627,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             summary: Get current user
             tags:
                 - authentication
@@ -7485,6 +7655,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             summary: Refresh user session
             tags:
                 - authentication
@@ -7511,8 +7683,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: List campaigns (standalone)
             tags:
                 - campaigns
@@ -7546,8 +7720,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get campaign domain status summary
             tags:
                 - campaigns
@@ -7568,12 +7744,6 @@ paths:
                   required: true
                   schema:
                     type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/PhaseConfigureRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -7593,8 +7763,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Configure campaign phase (standalone)
             tags:
                 - campaigns
@@ -7634,8 +7806,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Start campaign phase (standalone)
             tags:
                 - campaigns
@@ -7675,8 +7849,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get phase status (standalone)
             tags:
                 - campaigns
@@ -7710,8 +7886,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get campaign progress (standalone)
             tags:
                 - campaigns
@@ -7719,12 +7897,6 @@ paths:
         post:
             description: Perform comprehensive analytics across multiple campaigns with advanced metrics and aggregation
             operationId: bulkAnalyzeDomains
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/BulkAnalyticsRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -7750,8 +7922,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Analyze domains in bulk with enterprise intelligence
             tags:
                 - bulk-operations
@@ -7760,12 +7934,6 @@ paths:
         post:
             description: Perform bulk operations on multiple campaigns (start, stop, pause, resume, delete, configure)
             operationId: bulkCampaignOperations
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/BulkCampaignOperationRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -7791,8 +7959,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Manage bulk campaign operations
             tags:
                 - bulk-operations
@@ -7801,12 +7971,6 @@ paths:
         post:
             description: Generate large batches of domains with stealth-aware configuration and resource management
             operationId: bulkGenerateDomains
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/BulkDomainGenerationRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -7832,8 +7996,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Generate domains in bulk using orchestrator
             tags:
                 - bulk-operations
@@ -7842,12 +8008,6 @@ paths:
         post:
             description: Perform bulk DNS validation with stealth detection avoidance and resource optimization
             operationId: bulkValidateDNS
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/BulkDNSValidationRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -7873,8 +8033,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Validate domains using bulk DNS validation with stealth
             tags:
                 - bulk-operations
@@ -7883,12 +8045,6 @@ paths:
         post:
             description: Perform bulk HTTP validation with keyword extraction, stealth detection avoidance, and resource optimization
             operationId: bulkValidateHTTP
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/BulkHTTPValidationRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -7914,8 +8070,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Validate domains using bulk HTTP validation with stealth
             tags:
                 - bulk-operations
@@ -7924,12 +8082,6 @@ paths:
         post:
             description: Retrieve bulk enriched data across multiple campaigns for enterprise-scale processing
             operationId: getBulkEnrichedCampaignData
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/BulkEnrichedDataRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -7949,8 +8101,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get bulk enriched campaign data
             tags:
                 - campaigns
@@ -7998,8 +8152,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: List bulk operations with filtering
             tags:
                 - bulk-operations
@@ -8034,8 +8190,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Cancel bulk operations
             tags:
                 - bulk-operations
@@ -8070,8 +8228,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get bulk operation status by ID
             tags:
                 - bulk-operations
@@ -8080,12 +8240,6 @@ paths:
         post:
             description: Allocate compute, network, and storage resources for bulk campaign operations with priority scheduling
             operationId: allocateBulkResources
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/BulkResourceRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -8111,8 +8265,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Allocate bulk resources for enterprise operations
             tags:
                 - bulk-operations
@@ -8147,8 +8303,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get bulk resource allocation status
             tags:
                 - bulk-operations
@@ -8157,12 +8315,6 @@ paths:
         post:
             description: Get the current offset for domain generation patterns
             operationId: getPatternOffset
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/PatternOffsetRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -8182,8 +8334,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get domain generation pattern offset
             tags:
                 - campaigns
@@ -8191,12 +8345,6 @@ paths:
         post:
             description: Create a new lead generation campaign with domain generation configuration
             operationId: createLeadGenerationCampaign
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/CreateLeadGenerationCampaignRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -8222,8 +8370,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Create lead generation campaign
             tags:
                 - campaigns
@@ -8250,20 +8400,16 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get feature flags
             tags:
                 - feature-flags
         put:
             description: Update feature flag settings
             operationId: updateFeatureFlags
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/FeatureFlags'
-                required: true
             responses:
                 "200":
                     content:
@@ -8283,8 +8429,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Update feature flags
             tags:
                 - feature-flags
@@ -8311,8 +8459,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Health check
             tags:
                 - health
@@ -8339,8 +8489,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Liveness check
             tags:
                 - health
@@ -8367,8 +8519,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Readiness check
             tags:
                 - health
@@ -8376,12 +8530,6 @@ paths:
         post:
             description: Extract keywords from multiple URLs using specified keyword sets and personas
             operationId: batchExtractKeywords
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/BatchKeywordExtractionRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -8401,8 +8549,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Batch keyword extraction
             tags:
                 - keyword-extraction
@@ -8458,8 +8608,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Stream keyword extraction
             tags:
                 - keyword-extraction
@@ -8513,20 +8665,16 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: List keyword sets
             tags:
                 - keyword-sets
         post:
             description: Create a new keyword set with optional rules
             operationId: createKeywordSet
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/CreateKeywordSetRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -8552,8 +8700,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Create keyword set
             tags:
                 - keyword-sets
@@ -8587,8 +8737,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Delete keyword set
             tags:
                 - keyword-sets
@@ -8621,8 +8773,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get keyword set
             tags:
                 - keyword-sets
@@ -8636,12 +8790,6 @@ paths:
                   required: true
                   schema:
                     type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/UpdateKeywordSetRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -8661,8 +8809,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Update keyword set
             tags:
                 - keyword-sets
@@ -8716,20 +8866,16 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: List all personas
             tags:
                 - personas
         post:
             description: Create a new persona (DNS or HTTP) with configuration details
             operationId: createPersona
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/CreatePersonaRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -8755,8 +8901,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Create persona
             tags:
                 - personas
@@ -8790,8 +8938,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Delete persona
             tags:
                 - personas
@@ -8824,8 +8974,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get persona by ID
             tags:
                 - personas
@@ -8839,12 +8991,6 @@ paths:
                   required: true
                   schema:
                     type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/UpdatePersonaRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -8864,8 +9010,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Update persona
             tags:
                 - personas
@@ -8899,8 +9047,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Test persona
             tags:
                 - personas
@@ -8934,8 +9084,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get DNS persona by ID
             tags:
                 - personas
@@ -8969,8 +9121,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get HTTP persona by ID
             tags:
                 - personas
@@ -8997,8 +9151,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Ping server
             tags:
                 - health
@@ -9057,20 +9213,16 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: List proxies
             tags:
                 - proxies
         post:
             description: Add a new proxy configuration
             operationId: addProxy
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/CreateProxyRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -9096,8 +9248,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Create proxy
             tags:
                 - proxies
@@ -9137,8 +9291,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Delete proxy
             tags:
                 - proxies
@@ -9152,12 +9308,6 @@ paths:
                   required: true
                   schema:
                     type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/UpdateProxyRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -9177,8 +9327,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Update proxy
             tags:
                 - proxies
@@ -9212,8 +9364,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Force proxy health check
             tags:
                 - proxies
@@ -9247,8 +9401,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Test proxy
             tags:
                 - proxies
@@ -9256,12 +9412,6 @@ paths:
         delete:
             description: Delete multiple proxy configurations simultaneously
             operationId: bulkDeleteProxies
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/BulkDeleteProxiesRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -9281,8 +9431,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Bulk delete proxies
             tags:
                 - proxies
@@ -9290,12 +9442,6 @@ paths:
         post:
             description: Test multiple proxy configurations simultaneously
             operationId: bulkTestProxies
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/BulkTestProxiesRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -9315,8 +9461,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Bulk test proxies
             tags:
                 - proxies
@@ -9324,12 +9472,6 @@ paths:
         put:
             description: Update multiple proxy configurations simultaneously
             operationId: bulkUpdateProxies
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/BulkUpdateProxiesRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -9349,8 +9491,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Bulk update proxies
             tags:
                 - proxies
@@ -9358,12 +9502,6 @@ paths:
         post:
             description: Force health checks on all registered proxies
             operationId: forceCheckAllProxies
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/ProxyHealthCheckRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -9383,8 +9521,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Force health check on all proxies
             tags:
                 - proxies
@@ -9411,8 +9551,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get proxy statuses
             tags:
                 - proxies
@@ -9445,20 +9587,16 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: List proxy pools
             tags:
                 - proxy-pools
         post:
             description: Create a new proxy pool with configuration settings
             operationId: createProxyPool
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/ProxyPoolRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -9484,8 +9622,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Create proxy pool
             tags:
                 - proxy-pools
@@ -9519,8 +9659,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Delete proxy pool
             tags:
                 - proxy-pools
@@ -9534,12 +9676,6 @@ paths:
                   required: true
                   schema:
                     type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/ProxyPoolRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -9559,8 +9695,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Update proxy pool
             tags:
                 - proxy-pools
@@ -9575,12 +9713,6 @@ paths:
                   required: true
                   schema:
                     type: string
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/AddProxyToPoolRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -9606,8 +9738,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Add proxy to pool
             tags:
                 - proxy-pools
@@ -9647,8 +9781,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Remove proxy from pool
             tags:
                 - proxy-pools
@@ -9675,20 +9811,16 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get authentication configuration
             tags:
                 - server-settings
         put:
             description: Update the authentication configuration settings
             operationId: updateAuthConfigGin
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/AuthConfig'
-                required: true
             responses:
                 "200":
                     content:
@@ -9708,8 +9840,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Update authentication configuration
             tags:
                 - server-settings
@@ -9736,20 +9870,16 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get server configuration
             tags:
                 - server-settings
         put:
             description: Update server-wide configuration settings
             operationId: updateServerConfigGin
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/ServerConfigUpdateRequest'
-                required: true
             responses:
                 "200":
                     content:
@@ -9769,8 +9899,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Update server configuration
             tags:
                 - server-settings
@@ -9797,20 +9929,16 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get DNS configuration
             tags:
                 - server-settings
         put:
             description: Update default DNS validator configuration
             operationId: updateDNSConfigGin
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/DNSValidatorConfigJSON'
-                required: true
             responses:
                 "200":
                     content:
@@ -9830,8 +9958,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Update DNS configuration
             tags:
                 - server-settings
@@ -9858,20 +9988,16 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get HTTP configuration
             tags:
                 - server-settings
         put:
             description: Update default HTTP validator configuration
             operationId: updateHTTPConfigGin
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/HTTPValidatorConfigJSON'
-                required: true
             responses:
                 "200":
                     content:
@@ -9891,8 +10017,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Update HTTP configuration
             tags:
                 - server-settings
@@ -9919,20 +10047,16 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get logging configuration
             tags:
                 - server-settings
         put:
             description: Update the logging configuration settings
             operationId: updateLoggingConfigGin
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/LoggingConfig'
-                required: true
             responses:
                 "200":
                     content:
@@ -9952,8 +10076,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Update logging configuration
             tags:
                 - server-settings
@@ -9980,20 +10106,16 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get proxy manager configuration
             tags:
                 - server-settings
         put:
             description: Update the proxy manager configuration settings
             operationId: updateProxyManagerConfigGin
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/ProxyManagerConfig'
-                required: true
             responses:
                 "200":
                     content:
@@ -10013,8 +10135,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Update proxy manager configuration
             tags:
                 - server-settings
@@ -10041,20 +10165,16 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get rate limiter configuration
             tags:
                 - server-settings
         put:
             description: Update the rate limiter configuration settings
             operationId: updateRateLimiterConfigGin
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/RateLimiterConfig'
-                required: true
             responses:
                 "200":
                     content:
@@ -10074,8 +10194,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Update rate limiter configuration
             tags:
                 - server-settings
@@ -10102,20 +10224,16 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Get worker configuration
             tags:
                 - server-settings
         put:
             description: Update the worker configuration settings
             operationId: updateWorkerConfigGin
-            requestBody:
-                content:
-                    application/json:
-                        schema:
-                            $ref: '#/components/schemas/WorkerConfig'
-                required: true
             responses:
                 "200":
                     content:
@@ -10135,11 +10253,122 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: Update worker configuration
             tags:
                 - server-settings
+    /sse/campaigns/{campaignId}/events:
+        get:
+            description: Establish Server-Sent Events connection for real-time updates on a specific campaign
+            operationId: streamCampaignEvents
+            parameters:
+                - description: Campaign ID (UUID)
+                  in: path
+                  name: campaignId
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    data:
+                                        description: Response data
+                                    message:
+                                        description: Success message
+                                        type: string
+                                type: object
+                    description: Operation successful
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad Request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal Server Error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Stream specific campaign events via SSE
+            tags:
+                - sse
+    /sse/events:
+        get:
+            description: Establish Server-Sent Events connection for real-time campaign updates
+            operationId: streamEvents
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                properties:
+                                    data:
+                                        description: Response data
+                                    message:
+                                        description: Success message
+                                        type: string
+                                type: object
+                    description: Operation successful
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad Request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal Server Error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Stream campaign events via SSE
+            tags:
+                - sse
+    /sse/events/stats:
+        get:
+            description: Get statistics about active SSE connections
+            operationId: getSSEStats
+            responses:
+                "200":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/APIResponse'
+                    description: Operation successful
+                "400":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Bad Request
+                "500":
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                    description: Internal Server Error
+                default:
+                    description: ""
+            security:
+                - sessionAuth: []
+            summary: Get SSE connection statistics
+            tags:
+                - sse
     /ws:
         get:
             description: Upgrade HTTP connection to WebSocket for real-time communication
@@ -10175,8 +10404,10 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
+                default:
+                    description: ""
             security:
-                - {}
+                - sessionAuth: []
             summary: WebSocket connection
             tags:
                 - websocket

@@ -84,7 +84,7 @@ type HTTPValidationOperation struct {
 	MaxDomains    int           `json:"maxDomains,omitempty" validate:"omitempty,gt=0,lte=50000"`
 }
 
-// StealthValidationConfig - Stealth mode configuration for detection avoidance
+// StealthValidationConfig - Enterprise stealth mode configuration for detection avoidance
 type StealthValidationConfig struct {
 	Enabled             bool    `json:"enabled"`
 	RandomizationLevel  string  `json:"randomizationLevel" validate:"omitempty,oneof=low medium high extreme"`
@@ -94,6 +94,64 @@ type StealthValidationConfig struct {
 	UserAgentRotation   bool    `json:"userAgentRotation"`
 	ProxyRotationForced bool    `json:"proxyRotationForced"`
 	DetectionThreshold  float64 `json:"detectionThreshold,omitempty" validate:"omitempty,gte=0.1,lte=1.0"`
+
+	// Enterprise-grade enhancements for Day 3
+	AdvancedPolicy    *AdvancedStealthPolicy   `json:"advancedPolicy,omitempty"`
+	BehavioralMimicry *BehavioralMimicryConfig `json:"behavioralMimicry,omitempty"`
+	ProxyStrategy     *EnterpriseProxyStrategy `json:"proxyStrategy,omitempty"`
+	DetectionEvasion  *DetectionEvasionConfig  `json:"detectionEvasion,omitempty"`
+}
+
+// AdvancedStealthPolicy - Enterprise-grade stealth policies
+type AdvancedStealthPolicy struct {
+	Profile                string   `json:"profile" validate:"omitempty,oneof=conservative moderate aggressive extreme_stealth"`
+	MaxConcurrentRequests  int      `json:"maxConcurrentRequests" validate:"omitempty,gte=1,lte=50"`
+	RequestBurstLimit      int      `json:"requestBurstLimit" validate:"omitempty,gte=1,lte=100"`
+	CooldownPeriods        []int    `json:"cooldownPeriods,omitempty" validate:"omitempty,max=10"` // seconds
+	AdaptiveThrottling     bool     `json:"adaptiveThrottling"`
+	GeographicDistribution bool     `json:"geographicDistribution"`
+	TimeZoneSimulation     bool     `json:"timeZoneSimulation"`
+	HumanBehaviorPatterns  []string `json:"humanBehaviorPatterns,omitempty" validate:"omitempty,max=20"`
+}
+
+// BehavioralMimicryConfig - Human-like behavior simulation
+type BehavioralMimicryConfig struct {
+	Enabled             bool  `json:"enabled"`
+	BrowserBehavior     bool  `json:"browserBehavior"`                                                // Simulate real browser behavior
+	SearchPatterns      bool  `json:"searchPatterns"`                                                 // Mimic search engine patterns
+	SocialMediaPatterns bool  `json:"socialMediaPatterns"`                                            // Mimic social media crawling
+	RandomMouseMovement bool  `json:"randomMouseMovement"`                                            // Simulate user interactions
+	TypingDelays        bool  `json:"typingDelays"`                                                   // Human typing speed simulation
+	ScrollingBehavior   bool  `json:"scrollingBehavior"`                                              // Natural scrolling patterns
+	SessionDuration     *int  `json:"sessionDuration,omitempty" validate:"omitempty,gte=60,lte=3600"` // seconds
+	IdlePeriods         []int `json:"idlePeriods,omitempty" validate:"omitempty,max=10"`              // seconds
+}
+
+// EnterpriseProxyStrategy - Advanced proxy management
+type EnterpriseProxyStrategy struct {
+	Strategy              string   `json:"strategy" validate:"omitempty,oneof=round_robin weighted_random geographic intelligent_failover"`
+	ProxyPools            []string `json:"proxyPools,omitempty" validate:"omitempty,max=10"`
+	HealthCheckInterval   int      `json:"healthCheckInterval" validate:"omitempty,gte=30,lte=3600"` // seconds
+	FailoverThreshold     float64  `json:"failoverThreshold" validate:"omitempty,gte=0.1,lte=1.0"`
+	ProxyRotationRate     string   `json:"proxyRotationRate" validate:"omitempty,oneof=per_request per_domain per_batch adaptive"`
+	GeoTargeting          bool     `json:"geoTargeting"`
+	ProxyQualityFiltering bool     `json:"proxyQualityFiltering"`
+	BackupProxyPools      []string `json:"backupProxyPools,omitempty" validate:"omitempty,max=5"`
+}
+
+// DetectionEvasionConfig - Advanced detection avoidance techniques
+type DetectionEvasionConfig struct {
+	Enabled                   bool     `json:"enabled"`
+	FingerprintRandomization  bool     `json:"fingerprintRandomization"`
+	TLSFingerprintRotation    bool     `json:"tlsFingerprintRotation"`
+	HTTPHeaderRandomization   bool     `json:"httpHeaderRandomization"`
+	RequestOrderRandomization bool     `json:"requestOrderRandomization"`
+	PayloadObfuscation        bool     `json:"payloadObfuscation"`
+	TimingAttackPrevention    bool     `json:"timingAttackPrevention"`
+	RateLimitEvasion          bool     `json:"rateLimitEvasion"`
+	HoneypotDetection         bool     `json:"honeypotDetection"`
+	CAPTCHABypass             bool     `json:"captchaBypass"`
+	AntiAnalysisFeatures      []string `json:"antiAnalysisFeatures,omitempty" validate:"omitempty,max=15"`
 }
 
 // DomainFilter - Filter domains for bulk operations

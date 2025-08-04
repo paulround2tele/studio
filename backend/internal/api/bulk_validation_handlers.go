@@ -104,9 +104,18 @@ func (h *BulkValidationAPIHandler) BulkValidateDNS(c *gin.Context) {
 		if request.Stealth != nil && request.Stealth.Enabled {
 			dnsConfig["detection_threshold"] = request.Stealth.DetectionThreshold
 			dnsConfig["temporal_jitter"] = request.Stealth.TemporalJitter
-		}
+			dnsConfig["randomization_level"] = request.Stealth.RandomizationLevel
+			dnsConfig["pattern_avoidance"] = request.Stealth.PatternAvoidance
+			dnsConfig["user_agent_rotation"] = request.Stealth.UserAgentRotation
+			dnsConfig["proxy_rotation_forced"] = request.Stealth.ProxyRotationForced
 
-		// Broadcast phase start event via SSE
+			if request.Stealth.RequestSpacing != nil {
+				dnsConfig["request_spacing"] = *request.Stealth.RequestSpacing
+			}
+
+			// Apply enterprise stealth enhancements for DNS validation
+			h.applyEnterpriseStealthConfig(dnsConfig, request.Stealth)
+		} // Broadcast phase start event via SSE
 		h.sseService.BroadcastEvent(services.SSEEvent{
 			ID:    uuid.New().String(),
 			Event: services.SSEEventPhaseStarted,
@@ -294,6 +303,17 @@ func (h *BulkValidationAPIHandler) BulkValidateHTTP(c *gin.Context) {
 		if request.Stealth != nil && request.Stealth.Enabled {
 			httpConfig["detection_threshold"] = request.Stealth.DetectionThreshold
 			httpConfig["temporal_jitter"] = request.Stealth.TemporalJitter
+			httpConfig["randomization_level"] = request.Stealth.RandomizationLevel
+			httpConfig["pattern_avoidance"] = request.Stealth.PatternAvoidance
+			httpConfig["user_agent_rotation"] = request.Stealth.UserAgentRotation
+			httpConfig["proxy_rotation_forced"] = request.Stealth.ProxyRotationForced
+
+			if request.Stealth.RequestSpacing != nil {
+				httpConfig["request_spacing"] = *request.Stealth.RequestSpacing
+			}
+
+			// Apply enterprise stealth enhancements for HTTP validation
+			h.applyEnterpriseStealthConfig(httpConfig, request.Stealth)
 		}
 
 		// Broadcast HTTP validation start event via SSE
@@ -406,4 +426,78 @@ func (h *BulkValidationAPIHandler) BulkValidateHTTP(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+// applyEnterpriseStealthConfig applies advanced enterprise stealth configuration to operation config
+func (h *BulkValidationAPIHandler) applyEnterpriseStealthConfig(config map[string]interface{}, stealth *models.StealthValidationConfig) {
+	// Enterprise stealth policy processing
+	if stealth.AdvancedPolicy != nil {
+		policy := stealth.AdvancedPolicy
+		config["stealth_profile"] = policy.Profile
+		config["max_concurrent_requests"] = policy.MaxConcurrentRequests
+		config["request_burst_limit"] = policy.RequestBurstLimit
+		config["adaptive_throttling"] = policy.AdaptiveThrottling
+		config["geographic_distribution"] = policy.GeographicDistribution
+		config["timezone_simulation"] = policy.TimeZoneSimulation
+
+		if len(policy.CooldownPeriods) > 0 {
+			config["cooldown_periods"] = policy.CooldownPeriods
+		}
+		if len(policy.HumanBehaviorPatterns) > 0 {
+			config["human_behavior_patterns"] = policy.HumanBehaviorPatterns
+		}
+	}
+
+	// Behavioral mimicry configuration
+	if stealth.BehavioralMimicry != nil && stealth.BehavioralMimicry.Enabled {
+		mimicry := stealth.BehavioralMimicry
+		config["browser_behavior"] = mimicry.BrowserBehavior
+		config["search_patterns"] = mimicry.SearchPatterns
+		config["social_media_patterns"] = mimicry.SocialMediaPatterns
+		config["typing_delays"] = mimicry.TypingDelays
+		config["scrolling_behavior"] = mimicry.ScrollingBehavior
+
+		if mimicry.SessionDuration != nil {
+			config["session_duration"] = *mimicry.SessionDuration
+		}
+		if len(mimicry.IdlePeriods) > 0 {
+			config["idle_periods"] = mimicry.IdlePeriods
+		}
+	}
+
+	// Enterprise proxy strategy
+	if stealth.ProxyStrategy != nil {
+		proxy := stealth.ProxyStrategy
+		config["proxy_strategy"] = proxy.Strategy
+		config["proxy_rotation_rate"] = proxy.ProxyRotationRate
+		config["geo_targeting"] = proxy.GeoTargeting
+		config["proxy_quality_filtering"] = proxy.ProxyQualityFiltering
+		config["failover_threshold"] = proxy.FailoverThreshold
+		config["health_check_interval"] = proxy.HealthCheckInterval
+
+		if len(proxy.ProxyPools) > 0 {
+			config["proxy_pools"] = proxy.ProxyPools
+		}
+		if len(proxy.BackupProxyPools) > 0 {
+			config["backup_proxy_pools"] = proxy.BackupProxyPools
+		}
+	}
+
+	// Detection evasion techniques
+	if stealth.DetectionEvasion != nil && stealth.DetectionEvasion.Enabled {
+		evasion := stealth.DetectionEvasion
+		config["fingerprint_randomization"] = evasion.FingerprintRandomization
+		config["tls_fingerprint_rotation"] = evasion.TLSFingerprintRotation
+		config["http_header_randomization"] = evasion.HTTPHeaderRandomization
+		config["request_order_randomization"] = evasion.RequestOrderRandomization
+		config["payload_obfuscation"] = evasion.PayloadObfuscation
+		config["timing_attack_prevention"] = evasion.TimingAttackPrevention
+		config["rate_limit_evasion"] = evasion.RateLimitEvasion
+		config["honeypot_detection"] = evasion.HoneypotDetection
+		config["captcha_bypass"] = evasion.CAPTCHABypass
+
+		if len(evasion.AntiAnalysisFeatures) > 0 {
+			config["anti_analysis_features"] = evasion.AntiAnalysisFeatures
+		}
+	}
 }
