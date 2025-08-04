@@ -248,24 +248,47 @@ CREATE TABLE phase_executions (
 - ✅ Performance tracking (response times, throughput)
 - ✅ Cleanup service for finished campaigns
 
-#### **Week 3: Simple Performance Tracking & Resource Cleanup**
-**Focus**: Track performance and clean up after yourself
+#### **Week 3: Enhance Existing UI (Not Replace It)**
+**Focus**: Add resource monitoring and performance tracking to your existing dashboard
 
-**Phase 3.1**: 📈 PERFORMANCE TRACKING - See What's Slow
-- Track how long campaigns take
-- Identify slow operations and bottlenecks
-- Basic performance trends (not "predictive analytics")
+**Phase 3.1**: 📈 ENHANCE EXISTING DASHBOARD - Add Resource Monitoring
+- **BulkOperationsDashboard.tsx**: Add resource usage charts and alerts
+- **CampaignStatistics.tsx**: Add performance metrics (response times, throughput)
+- New component: **ResourceMonitor.tsx** - Simple CPU/memory/disk display
+- New component: **PerformanceTracker.tsx** - Response time trends
 
-**Phase 3.2**: 🧹 RESOURCE CLEANUP - Don't Leave Garbage Around
-- Clean up temp files and processes when campaigns finish
-- Release resources properly
-- Prevent resource leaks and memory bloat
+**Phase 3.2**: 🧹 ADD SYSTEM HEALTH MONITORING
+- **SystemHealthCard.tsx**: Simple health status display
+- **AlertsPanel.tsx**: Show resource alerts and warnings  
+- **CleanupStatus.tsx**: Display temp file and resource cleanup status
+- Integrate into existing `/dashboard` page
 
 **Week 3 Deliverables**:
-- ✅ Performance tracking dashboard (simple, not enterprise theater)
-- ✅ Resource cleanup automation
-- ✅ Memory leak prevention
-- ✅ Temp file management
+- ✅ Enhanced BulkOperationsDashboard with resource metrics
+- ✅ Performance tracking in CampaignStatistics
+- ✅ New resource monitoring components
+- ✅ System health status in existing dashboard
+
+#### **Week 4: Backend Resource Management Integration**
+**Focus**: Connect new resource monitoring to backend services
+
+**Phase 4.1**: 🔧 BACKEND RESOURCE SERVICES - Build What's Missing
+- **ResourceMonitoringService**: Track CPU, memory, disk per campaign
+- **PerformanceTracker**: Collect response times and throughput
+- **SystemHealthChecker**: Monitor system status
+- **ResourceCleanupService**: Clean up campaign resources
+
+**Phase 4.2**: 🔗 CONNECT UI TO BACKEND
+- Update RTK Query APIs for resource monitoring
+- Connect ResourceMonitor.tsx to backend metrics
+- Connect PerformanceTracker.tsx to performance data
+- Add real-time updates to existing SSE (if present)
+
+**Week 4 Deliverables**:
+- ✅ Resource monitoring backend services
+- ✅ Performance tracking backend
+- ✅ UI connected to real resource data
+- ✅ Enhanced existing dashboard with real metrics
 
 #### **Week 4: Frontend Improvements & System Stability**
 **Focus**: Make the UI actually useful for monitoring your system
@@ -470,47 +493,70 @@ h.sseService.BroadcastEvent(services.SSEEvent{
 
 ---
 
-## 🎨 Phase 5: Frontend State Management Simplification (Weeks 5-6) - PRACTICAL APPROACH
+## 🎨 Phase 5: Frontend Integration & Enhancement (Weeks 5-6) - ENHANCE EXISTING
 
-### 📊 Frontend Cleanup Strategy
+### 📊 Current UI Analysis (WHAT EXISTS AND WORKS)
 
-**Current State**: RTK Query architecture with some legacy cruft  
-**Target State**: Clean, simple state management without over-engineering
+**Existing UI Assets (DO NOT DELETE):**
+1. **BulkOperationsDashboard.tsx** (387 lines) ✅ ENTERPRISE-GRADE
+   - RTK Query integration with all backend handlers
+   - Resource usage tracking already built-in
+   - Active/recent operations management
 
-### 5.1 Remove Unnecessary Complexity
+2. **CampaignStatistics.tsx** (542 lines) ✅ COMPREHENSIVE METRICS
+   - Real-time metrics with streaming stats
+   - Multiple display variants (enhanced, compact, summary)
+   - Progress tracking and connection status
 
-**Current Problem**: Multiple patterns doing the same thing
-**Solution**: Pick one pattern and stick with it
+3. **CampaignPhaseManager.tsx** (279 lines) ✅ PHASE MANAGEMENT
+   - RTK Query mutations for all phases
+   - Individual configuration components
+   - Form handling and validation
 
-#### Frontend Simplification:
-- Keep RTK Query for server state (it works)
-- Remove redundant hooks and direct API calls
-- Simplify component state management
-- Get rid of unnecessary abstractions
+4. **Dashboard Structure** ✅ WORKING
+   - `/dashboard` - Main overview page
+   - `/campaigns` - Campaign list and management
+   - Individual campaign detail pages
 
-#### Files to Clean Up:
-- Remove duplicate data providers
-- Consolidate API calling patterns
-- Simplify component props and state
+### 5.1 Enhance (Don't Replace) Existing Components
 
-### 5.2 UI Improvements That Matter
+**Enhancement Strategy**: Add resource monitoring to existing UI
 
-**Focus**: Make the interface actually usable for daily work
-
-#### Practical UI Enhancements:
-- Better campaign status visibility
-- Clearer error messages and handling
-- Simple bulk operations interface
-- Resource usage indicators
-
-#### Component Updates:
+#### Week 5 Frontend Enhancements:
 ```
-src/components/campaigns/
-├── CampaignDashboard.tsx (clean, simple)
-├── PhaseProgress.tsx (just show what's happening)
-├── BulkOperations.tsx (basic bulk interface)
-└── ResourceMonitor.tsx (simple resource display)
+ENHANCE /src/components/BulkOperationsDashboard.tsx:
+├── Add ResourceUsageChart component
+├── Add PerformanceMetrics display  
+├── Add SystemHealthIndicator
+└── Keep existing bulk operations functionality
+
+ENHANCE /src/components/campaigns/CampaignStatistics.tsx:
+├── Add resource usage per campaign
+├── Add performance timing metrics
+├── Add cleanup status indicators
+└── Keep existing statistics functionality
+
+ADD /src/components/monitoring/ (NEW):
+├── ResourceMonitor.tsx (simple CPU/memory/disk)
+├── PerformanceTracker.tsx (response times, throughput)
+├── SystemHealthCard.tsx (overall system status)
+└── AlertsPanel.tsx (resource warnings)
 ```
+
+### 5.2 Integrate with Existing Dashboard
+
+**Smart Integration**: Add monitoring to existing pages, don't create new ones
+
+#### Dashboard Integration:
+- **Enhance `/app/dashboard/page.tsx`**: Add ResourceMonitor and SystemHealthCard
+- **Enhance campaign pages**: Add performance metrics to existing views
+- **Enhance BulkOperationsDashboard**: Add resource monitoring sidebar
+
+#### What We're NOT Building:
+- ❌ New dashboard pages (use existing ones)
+- ❌ New routing structure (enhance current routes)
+- ❌ New component library (enhance existing components)
+- ❌ Redux rewrite (use existing RTK Query)
 
 ---
 
