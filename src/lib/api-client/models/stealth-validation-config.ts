@@ -13,6 +13,18 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { AdvancedStealthPolicy } from './advanced-stealth-policy';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { BehavioralMimicryConfig } from './behavioral-mimicry-config';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { DetectionEvasionConfig } from './detection-evasion-config';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { EnterpriseProxyStrategy } from './enterprise-proxy-strategy';
 
 /**
  * 
@@ -20,6 +32,24 @@
  * @interface StealthValidationConfig
  */
 export interface StealthValidationConfig {
+    /**
+     * 
+     * @type {AdvancedStealthPolicy}
+     * @memberof StealthValidationConfig
+     */
+    'advancedPolicy'?: AdvancedStealthPolicy;
+    /**
+     * 
+     * @type {BehavioralMimicryConfig}
+     * @memberof StealthValidationConfig
+     */
+    'behavioralMimicry'?: BehavioralMimicryConfig;
+    /**
+     * 
+     * @type {DetectionEvasionConfig}
+     * @memberof StealthValidationConfig
+     */
+    'detectionEvasion'?: DetectionEvasionConfig;
     /**
      * 
      * @type {number}
@@ -44,6 +74,12 @@ export interface StealthValidationConfig {
      * @memberof StealthValidationConfig
      */
     'proxyRotationForced'?: boolean;
+    /**
+     * 
+     * @type {EnterpriseProxyStrategy}
+     * @memberof StealthValidationConfig
+     */
+    'proxyStrategy'?: EnterpriseProxyStrategy;
     /**
      * 
      * @type {string}

@@ -224,7 +224,12 @@ func (h *BulkValidationAPIHandler) BulkValidateDNS(c *gin.Context) {
 		StealthMetrics:  stealthMetrics,
 	}
 
-	c.JSON(http.StatusOK, response)
+	// Use unified APIResponse envelope for consistency
+	c.JSON(http.StatusOK, APIResponse{
+		Success:   true,
+		Data:      response,
+		RequestID: operationID,
+	})
 }
 
 // @Summary Validate domains using bulk HTTP validation with stealth
@@ -425,7 +430,12 @@ func (h *BulkValidationAPIHandler) BulkValidateHTTP(c *gin.Context) {
 		StealthMetrics:  stealthMetrics,
 	}
 
-	c.JSON(http.StatusOK, response)
+	// Use unified APIResponse envelope for consistency
+	c.JSON(http.StatusOK, APIResponse{
+		Success:   true,
+		Data:      response,
+		RequestID: operationID,
+	})
 }
 
 // applyEnterpriseStealthConfig applies advanced enterprise stealth configuration to operation config

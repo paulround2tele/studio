@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   useBulkGenerateDomainsMutation,
@@ -9,6 +9,13 @@ import {
   useAllocateBulkResourcesMutation,
   useListBulkOperationsQuery
 } from '@/store/api/bulkOperationsApi';
+import { 
+  useGetResourceMetricsQuery,
+  useGetSystemHealthQuery 
+} from '@/store/api/monitoringApi';
+import { useSSE } from '@/hooks/useSSE';
+import ResourceMonitor from '@/components/monitoring/ResourceMonitor';
+import PerformanceTracker from '@/components/monitoring/PerformanceTracker';
 import {
   startTracking,
   updateOperationStatus,
@@ -32,11 +39,13 @@ import type { UUID } from '@/lib/api-client/uuid-types';
 /**
  * Bulk Operations Dashboard Component
  * 
- * Enterprise-grade bulk operations interface matching our separated backend architecture:
+ * Enterprise-grade bulk operations interface with real-time monitoring:
  * - Domain Generation (bulk_domains_handlers.go)
  * - DNS/HTTP Validation (bulk_validation_handlers.go) 
  * - Analytics & Campaigns (bulk_analytics_handlers.go)
  * - Resource Management (bulk_resources_handlers.go)
+ * - Real-time resource monitoring integration
+ * - SSE-powered live updates
  */
 export const BulkOperationsDashboard: React.FC = () => {
   const dispatch = useDispatch();
@@ -60,17 +69,73 @@ export const BulkOperationsDashboard: React.FC = () => {
     limit: 20,
     offset: 0
   });
+
+  // Real-time monitoring data
+  const { data: resourceMetrics } = useGetResourceMetricsQuery();
+  const { data: systemHealth } = useGetSystemHealthQuery();
   
   // Local state for operation configuration
   const [selectedOperationType, setSelectedOperationType] = useState<BulkOperationType>('domain_generation');
   const [isConfiguring, setIsConfiguring] = useState(false);
+  const [realTimeUpdates, setRealTimeUpdates] = useState<any[]>([]);
+
+  // SSE connection for real-time bulk operation updates
+  const { readyState, lastEvent } = useSSE(
+    '/api/v2/monitoring/stream',
+    (event) => {
+      // Handle different types of SSE events
+      switch (event.event) {
+        case 'bulk_operation_started':
+        case 'bulk_operation_progress':
+        case 'bulk_operation_completed':
+        case 'bulk_operation_failed':
+          setRealTimeUpdates(prev => [event, ...prev.slice(0, 9)]); // Keep last 10 updates
+          // Update Redux state if needed
+          if (event.data.operation_id) {
+            dispatch(updateOperationStatus({
+              id: event.data.operation_id,
+              status: event.data.status,
+              progress: event.data.progress || 0,
+              result: event.data.result,
+              error: event.data.error
+            }));
+          }
+          break;
+        case 'resource_update':
+          // Resource updates are handled by ResourceMonitor component
+          break;
+        default:
+          console.log('Unknown SSE event:', event.event);
+      }
+    },
+    {
+      autoReconnect: true,
+      maxReconnectAttempts: 5,
+      reconnectDelay: 3000,
+    }
+  );
+
+  // Check if system can handle new operations based on resource usage
+  const canStartNewOperationSafely = () => {
+    if (!canStartNewOperation) return false;
+    if (!resourceMetrics) return true; // Allow if no metrics available
+    
+    // Don't start new operations if system is under stress
+    return resourceMetrics.cpu_percent < 85 && 
+           resourceMetrics.memory_percent < 85 && 
+           resourceMetrics.disk_percent < 90;
+  };
   
   /**
-   * Execute bulk operation based on type
+   * Execute bulk operation based on type with resource monitoring
    */
   const executeBulkOperation = async (operationType: BulkOperationType, config: any) => {
-    if (!canStartNewOperation) {
-      alert('Maximum concurrent operations reached. Please wait for an operation to complete.');
+    if (!canStartNewOperationSafely()) {
+      alert(
+        !canStartNewOperation 
+          ? 'Maximum concurrent operations reached. Please wait for an operation to complete.'
+          : 'System resources are under stress. Please wait before starting new operations.'
+      );
       return;
     }
     
@@ -217,18 +282,44 @@ export const BulkOperationsDashboard: React.FC = () => {
   };
   
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto space-y-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Bulk Operations Dashboard
         </h1>
         <p className="text-gray-600">
-          Enterprise-scale bulk operations with separated handlers for optimal performance
+          Enterprise-scale bulk operations with real-time monitoring and separated handlers
         </p>
+      </div>
+
+      {/* Real-time Monitoring Section */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <ResourceMonitor variant="compact" />
+        <PerformanceTracker variant="compact" />
+        
+        {/* SSE Connection Status & Real-time Updates */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-semibold mb-2 flex items-center gap-2">
+            Live Updates
+            <div className={`w-2 h-2 rounded-full ${readyState === 1 ? 'bg-green-500' : 'bg-red-500'}`}></div>
+          </h3>
+          <div className="text-sm text-muted-foreground mb-2">
+            {readyState === 1 ? 'Connected' : 'Disconnected'}
+          </div>
+          {realTimeUpdates.length > 0 && (
+            <div className="space-y-1 max-h-20 overflow-y-auto">
+              {realTimeUpdates.slice(0, 3).map((update, index) => (
+                <div key={index} className="text-xs p-1 bg-muted rounded">
+                  {update.event}: {update.data.status || 'update'}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
       
       {/* Resource Usage Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h3 className="text-lg font-semibold mb-2">Active Operations</h3>
           <div className="text-3xl font-bold text-blue-600">
@@ -237,34 +328,31 @@ export const BulkOperationsDashboard: React.FC = () => {
         </div>
         
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-2">Concurrent Operations</h3>
-          <div className="text-3xl font-bold text-green-600">
-            {resourceUsage.concurrentOperations.toFixed(0)}%
+          <h3 className="text-lg font-semibold mb-2">System Status</h3>
+          <div className={`text-3xl font-bold ${canStartNewOperationSafely() ? 'text-green-600' : 'text-red-600'}`}>
+            {canStartNewOperationSafely() ? 'Ready' : 'Busy'}
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-            <div 
-              className="bg-green-600 h-2 rounded-full" 
-              style={{ width: `${Math.min(resourceUsage.concurrentOperations, 100)}%` }}
-            ></div>
+          <div className="text-sm text-muted-foreground mt-1">
+            {resourceMetrics && `CPU: ${resourceMetrics.cpu_percent.toFixed(0)}% | Mem: ${resourceMetrics.memory_percent.toFixed(0)}%`}
           </div>
         </div>
         
         <div className="bg-white p-6 rounded-lg shadow-md">
-          <h3 className="text-lg font-semibold mb-2">Memory Usage</h3>
+          <h3 className="text-lg font-semibold mb-2">Concurrent Operations</h3>
           <div className="text-3xl font-bold text-orange-600">
-            {resourceUsage.memoryUsage.toFixed(0)}%
+            {resourceUsage.concurrentOperations.toFixed(0)}%
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
             <div 
               className="bg-orange-600 h-2 rounded-full" 
-              style={{ width: `${Math.min(resourceUsage.memoryUsage, 100)}%` }}
+              style={{ width: `${Math.min(resourceUsage.concurrentOperations, 100)}%` }}
             ></div>
           </div>
         </div>
       </div>
       
       {/* Operation Launcher */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8">
+      <div className="bg-white p-6 rounded-lg shadow-md">
         <h2 className="text-xl font-semibold mb-4">Launch Bulk Operation</h2>
         
         <div className="flex flex-wrap gap-4 mb-4">

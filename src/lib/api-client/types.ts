@@ -1340,6 +1340,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sse/campaigns/{campaignId}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stream specific campaign events via SSE
+         * @description Establish Server-Sent Events connection for real-time updates on a specific campaign
+         */
+        get: operations["streamCampaignEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sse/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stream campaign events via SSE
+         * @description Establish Server-Sent Events connection for real-time campaign updates
+         */
+        get: operations["streamEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sse/events/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get SSE connection statistics
+         * @description Get statistics about active SSE connections
+         */
+        get: operations["getSSEStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/ws": {
         parameters: {
             query?: never;
@@ -1398,6 +1458,72 @@ export interface components {
             /** Format: int32 */
             weight?: number;
         };
+        AdvancedAnalyticsData: {
+            costEffectiveness?: components["schemas"]["CostEffectivenessData"];
+            operationalEfficiency?: components["schemas"]["OperationalEfficiencyMetrics"];
+            qualityMetrics?: components["schemas"]["QualityAssuranceMetrics"];
+            scalabilityMetrics?: components["schemas"]["ScalabilityAnalyticsData"];
+        };
+        AdvancedBulkAnalyticsAPIHandler: Record<string, never>;
+        AdvancedBulkAnalyticsRequest: {
+            advancedMetrics?: string[];
+            alertThresholds?: components["schemas"]["AnalyticsAlertConfig"];
+            /**
+             * @description Week 2 Advanced Features
+             * @enum {string}
+             */
+            analyticsType: "performance" | "stealth" | "resource" | "comparative" | "predictive";
+            /** @description Inherited from basic analytics */
+            campaignIds?: string[];
+            comparisonBaseline?: components["schemas"]["ComparisonBaseline"];
+            /** @enum {string} */
+            exportFormat?: "json" | "csv" | "excel" | "pdf";
+            filters?: {
+                [key: string]: Record<string, never>;
+            };
+            /** @enum {string} */
+            granularity?: "minute" | "hour" | "day" | "week" | "month" | "quarter" | "year";
+            groupBy?: string[];
+            metrics: string[];
+            /** Format: int32 */
+            predictionHorizon?: number;
+            timeRange?: components["schemas"]["TimeRangeFilter"];
+            visualization?: components["schemas"]["VisualizationConfig"];
+        };
+        AdvancedBulkAnalyticsResponse: {
+            advancedMetrics?: components["schemas"]["AdvancedAnalyticsData"];
+            aggregatedData?: components["schemas"]["AggregatedAnalytics"];
+            alertStatus?: components["schemas"]["AnalyticsAlert"][];
+            /** @description Inherited basic analytics */
+            campaignMetrics?: {
+                [key: string]: components["schemas"]["CampaignAnalytics"];
+            };
+            comparativeData?: components["schemas"]["ComparativeAnalyticsData"];
+            /** Format: int32 */
+            dataPoints?: number;
+            exportInfo?: components["schemas"]["ExportInfo"];
+            metadata?: components["schemas"]["BulkMetadata"];
+            performanceKPIs?: components["schemas"]["PerformanceKPIData"];
+            predictiveInsights?: components["schemas"]["PredictiveAnalyticsData"];
+            /** Format: int64 */
+            processingTimeMs?: number;
+            resourceAnalytics?: components["schemas"]["ResourceAnalyticsData"];
+            stealthAnalytics?: components["schemas"]["StealthAnalyticsData"];
+            visualizationData?: components["schemas"]["VisualizationDataPrep"];
+        };
+        AdvancedStealthPolicy: {
+            adaptiveThrottling?: boolean;
+            cooldownPeriods?: number[];
+            geographicDistribution?: boolean;
+            humanBehaviorPatterns?: string[];
+            /** Format: int32 */
+            maxConcurrentRequests?: number;
+            /** @enum {string} */
+            profile?: "conservative" | "moderate" | "aggressive" | "extreme_stealth";
+            /** Format: int32 */
+            requestBurstLimit?: number;
+            timeZoneSimulation?: boolean;
+        };
         AggregatedAnalytics: {
             overallSuccessRate?: number;
             resourceUtilization?: components["schemas"]["ResourceUtilizationMetrics"];
@@ -1407,6 +1533,14 @@ export interface components {
             totalDomains?: number;
             totalLeads?: number;
         };
+        AlertColorConfiguration: {
+            criticalColor?: string;
+            errorColor?: string;
+            infoColor?: string;
+            successColor?: string;
+            warningColor?: string;
+        };
+        AlertService: Record<string, never>;
         AnalysisConfig: {
             /** @enum {string} */
             analysisType: "basic" | "comprehensive" | "custom";
@@ -1430,6 +1564,102 @@ export interface components {
             urlsWithScreenshots?: number;
             urlsWithoutKeywords?: number;
             urlsWithoutScreenshots?: number;
+        };
+        AnalyticsAPISpec: {
+            description?: string;
+            endpoints?: components["schemas"]["AnalyticsEndpointSpec"][];
+            title?: string;
+            version?: string;
+        };
+        AnalyticsAlert: {
+            alertId?: components["schemas"]["UUID"];
+            /** @enum {string} */
+            alertType?: "threshold" | "anomaly" | "trend" | "prediction" | "quality" | "performance";
+            autoResolve?: boolean;
+            /** Format: double */
+            currentValue?: number;
+            description?: string;
+            escalationRules?: components["schemas"]["EscalationRule"][];
+            /** @enum {string} */
+            estimatedImpact?: "minimal" | "low" | "moderate" | "high" | "severe";
+            metricAffected?: string;
+            /** @enum {string} */
+            priority?: "low" | "medium" | "high" | "urgent";
+            recommendedActions?: string[];
+            /** @enum {string} */
+            severity?: "low" | "medium" | "high" | "critical";
+            /** @enum {string} */
+            status?: "active" | "acknowledged" | "resolved" | "dismissed";
+            /** Format: double */
+            thresholdValue?: number;
+            title?: string;
+            /** Format: date-time */
+            triggeredAt?: string;
+        };
+        AnalyticsAlertConfig: {
+            /** Format: double */
+            errorRateThreshold?: number;
+            /** Format: int64 */
+            performanceThreshold?: number;
+            /** Format: double */
+            resourceUsageThreshold?: number;
+            /** Format: double */
+            stealthScoreThreshold?: number;
+            /** Format: double */
+            successRateThreshold?: number;
+        };
+        AnalyticsEndpointSpec: {
+            description?: string;
+            examples?: components["schemas"]["ExampleSpec"][];
+            method?: string;
+            parameters?: components["schemas"]["ParameterSpec"][];
+            path?: string;
+            requestBody?: components["schemas"]["RequestBodySpec"];
+            responses?: {
+                [key: string]: components["schemas"]["ResponseSpec"];
+            };
+            summary?: string;
+        };
+        AnalyticsEngine: Record<string, never>;
+        AnalyticsResponse: {
+            data?: Record<string, never>;
+            error?: string;
+            requestId?: components["schemas"]["UUID"];
+            success?: boolean;
+            /** Format: date-time */
+            timestamp?: string;
+            version?: string;
+        };
+        AnimationSettings: {
+            animationDuration?: number;
+            animationEasing?: string;
+            enableAnimations?: boolean;
+            hoverEffects?: boolean;
+            loadAnimation?: boolean;
+            reducedMotion?: boolean;
+            transitionAnimation?: boolean;
+        };
+        AnomalyDetectionResults: {
+            alertStatus?: string;
+            anomaliesDetected?: components["schemas"]["DetectedAnomaly"][];
+            anomalyScore?: number;
+            baselineVariability?: number;
+            detectionSensitivity?: number;
+            falsePositiveRate?: number;
+        };
+        AnonymityMetrics: {
+            /** Format: int64 */
+            anonymitySet?: number;
+            /** Format: double */
+            entropyScore?: number;
+            /** Format: double */
+            pseudonymityScore?: number;
+            /** Format: double */
+            trafficAnalysisResistance?: number;
+            /** Format: double */
+            unlinkabilityScore?: number;
+            /** Format: double */
+            unobservabilityScore?: number;
         };
         AppConfig: {
             dnsPersonas?: components["schemas"]["DNSPersona"][];
@@ -1557,11 +1787,101 @@ export interface components {
             securityEventId?: components["schemas"]["UUID"];
             userId?: components["schemas"]["UUID"];
         };
+        AxisConfiguration: {
+            /** Format: date-time */
+            format?: string;
+            gridLines?: boolean;
+            /** Format: double */
+            maxValue?: number;
+            /** Format: double */
+            minValue?: number;
+            /** @enum {string} */
+            scale?: "linear" | "logarithmic" | "time";
+            /** Format: double */
+            tickInterval?: number;
+            title?: string;
+            unit?: string;
+        };
+        BaselineMetrics: {
+            costMetrics?: components["schemas"]["CostBaselineMetrics"];
+            operationalMetrics?: components["schemas"]["OperationalBaselineMetrics"];
+            performanceMetrics?: components["schemas"]["PerformanceBaselineMetrics"];
+            qualityMetrics?: components["schemas"]["QualityBaselineMetrics"];
+            resourceMetrics?: components["schemas"]["ResourceBaselineMetrics"];
+            stealthMetrics?: components["schemas"]["StealthBaselineMetrics"];
+            timePeriod?: components["schemas"]["TimeRangeFilter"];
+        };
         BatchKeywordExtractionRequest: {
             items: components["schemas"]["KeywordExtractionRequestItem"][];
         };
         BatchKeywordExtractionResponse: {
             results?: components["schemas"]["KeywordExtractionAPIResult"][];
+        };
+        BehavioralMimicryConfig: {
+            browserBehavior?: boolean;
+            enabled?: boolean;
+            idlePeriods?: number[];
+            randomMouseMovement?: boolean;
+            scrollingBehavior?: boolean;
+            searchPatterns?: boolean;
+            /** Format: int32 */
+            sessionDuration?: number;
+            socialMediaPatterns?: boolean;
+            typingDelays?: boolean;
+        };
+        BenchmarkComparison: {
+            benchmarkName?: string;
+            benchmarkValue?: number;
+            competitivePosition?: string;
+            currentValue?: number;
+            metricName?: string;
+            percentile?: number;
+            performanceGap?: number;
+        };
+        BenchmarkMetricComparison: {
+            benchmarkValue?: number;
+            competitivePosition?: string;
+            gapToBenchmark?: number;
+            industryAverage?: number;
+            metricName?: string;
+            ourValue?: number;
+            performancePercentile?: number;
+            topQuartileValue?: number;
+        };
+        BottleneckIdentification: {
+            component?: string;
+            description?: string;
+            impact?: number;
+            recommendation?: string;
+            severity?: string;
+        };
+        BudgetAlert: {
+            /** @enum {string} */
+            alertType?: "approaching_limit" | "exceeded_budget" | "unusual_spend" | "trend_change";
+            /** Format: double */
+            currentValue?: number;
+            description?: string;
+            recommendation?: string;
+            /** @enum {string} */
+            severity?: "low" | "medium" | "high" | "critical";
+            /** Format: double */
+            threshold?: number;
+            /** Format: date-time */
+            timestamp?: string;
+        };
+        BudgetUtilizationData: {
+            /** Format: double */
+            burnRate?: number;
+            /** Format: date-time */
+            projectedDepleteDate?: string;
+            /** Format: double */
+            remainingBudget?: number;
+            /** Format: double */
+            totalBudget?: number;
+            /** Format: double */
+            utilizationRate?: number;
+            /** Format: double */
+            utilizedBudget?: number;
         };
         BulkAnalyticsAPIHandler: Record<string, never>;
         BulkAnalyticsRequest: {
@@ -1997,6 +2317,26 @@ export interface components {
             /** Format: int64 */
             totalSuccessful?: number;
         };
+        BusinessKPIs: {
+            /** Format: double */
+            competitiveAdvantage?: number;
+            /** Format: double */
+            conversionRate?: number;
+            /** Format: double */
+            costPerLead?: number;
+            /** Format: double */
+            customerAcquisitionCost?: number;
+            /** Format: double */
+            customerLifetimeValue?: number;
+            /** Format: double */
+            leadGenerationRate?: number;
+            /** Format: double */
+            leadQualityScore?: number;
+            /** Format: double */
+            marketPenetrationRate?: number;
+            /** Format: double */
+            revenuePerOperation?: number;
+        };
         CacheConfiguration: {
             cacheName?: string;
             cacheStatus?: string;
@@ -2428,11 +2768,97 @@ export interface components {
             Timeout?: string;
         };
         CampaignWorkerService: Record<string, never>;
+        CapacityConstraint: {
+            constraintType?: string;
+            description?: string;
+            /** @enum {string} */
+            impactSeverity?: "low" | "medium" | "high" | "critical";
+            /** Format: double */
+            resolutionCost?: number;
+            /** Format: int32 */
+            timeToResolve?: number;
+            workaround?: string;
+        };
+        CapacityForecast: {
+            /** Format: double */
+            confidenceLevel?: number;
+            /** Format: date-time */
+            forecastDate?: string;
+            growthDrivers?: string[];
+            /** Format: double */
+            predictedLoad?: number;
+            requiredCapacity?: components["schemas"]["ResourceCapacitySnapshot"];
+            /** Format: double */
+            seasonalFactors?: number;
+        };
+        CapacityForecastPoint: {
+            /** Format: double */
+            confidenceInterval?: number;
+            /** Format: double */
+            predictedLoad?: number;
+            /** Format: double */
+            recommendedCapacity?: number;
+            /** Format: double */
+            scalingTriggerPoint?: number;
+            /** Format: date-time */
+            timeHorizon?: string;
+        };
+        CapacityInvestment: {
+            alternativeOptions?: string[];
+            businessJustification?: string;
+            expectedROI?: number;
+            investmentType?: string;
+            paybackPeriod?: number;
+            requiredAmount?: number;
+            riskLevel?: string;
+        };
+        CapacityPlanningData: {
+            capacityConstraints?: components["schemas"]["CapacityConstraint"][];
+            currentCapacity?: components["schemas"]["ResourceCapacitySnapshot"];
+            forecastedRequirements?: components["schemas"]["CapacityForecast"][];
+            investmentRequirements?: components["schemas"]["CapacityInvestment"][];
+            scalingRecommendations?: components["schemas"]["CapacityScalingRec"][];
+        };
+        CapacityScalingRec: {
+            businessImpact?: string;
+            /** Format: double */
+            currentCapacity?: number;
+            /** Format: double */
+            estimatedCost?: number;
+            /** @enum {string} */
+            priority?: "low" | "medium" | "high" | "critical";
+            /** Format: double */
+            recommendedCapacity?: number;
+            resourceType?: string;
+            /** Format: date-time */
+            scalingTimeframe?: string;
+        };
         ChangePasswordRequest: {
             /** Format: password */
             currentPassword: string;
             /** Format: password */
             newPassword: string;
+        };
+        ChartDataSet: {
+            chartTitle?: string;
+            /** @enum {string} */
+            chartType?: "line" | "bar" | "pie" | "scatter" | "heatmap" | "radar" | "treemap";
+            dataSeries?: components["schemas"]["DataSeries"][];
+            drillDownData?: components["schemas"]["DrillDownLevel"][];
+            legendConfig?: components["schemas"]["LegendConfiguration"];
+            tooltipConfig?: components["schemas"]["TooltipConfiguration"];
+            xAxisConfig?: components["schemas"]["AxisConfiguration"];
+            yAxisConfig?: components["schemas"]["AxisConfiguration"];
+        };
+        ColorSchemeData: {
+            accentColors?: string[];
+            accessibilityCompliant?: boolean;
+            alertColors?: components["schemas"]["AlertColorConfiguration"];
+            brandCompliant?: boolean;
+            gradientColors?: string[];
+            primaryColors?: string[];
+            schemeName?: string;
+            secondaryColors?: string[];
         };
         CommunicationPattern: {
             /** Format: double */
@@ -2460,6 +2886,70 @@ export interface components {
             throughputRps?: number;
             /** Format: date-time */
             updatedAt?: string;
+        };
+        ComparativeAnalyticsData: {
+            baselineMetrics?: components["schemas"]["BaselineMetrics"];
+            benchmarkComparisons?: components["schemas"]["DetailedBenchmarkComparison"][];
+            /** @enum {string} */
+            comparisonType?: "period" | "historical" | "benchmark" | "competitor";
+            competitiveAnalysis?: components["schemas"]["CompetitiveAnalysis"];
+            currentMetrics?: components["schemas"]["BaselineMetrics"];
+            improvementRecommendations?: components["schemas"]["ImprovementRecommendation"][];
+            performanceComparison?: components["schemas"]["PerformanceComparison"];
+            trendAnalysis?: components["schemas"]["TrendAnalysis"];
+        };
+        ComparisonBaseline: {
+            periodOffset?: number;
+            referencePeriod?: components["schemas"]["TimeRangeFilter"];
+            type: string;
+        };
+        CompetitiveAnalysis: {
+            competitiveStrengths?: components["schemas"]["CompetitiveStrength"][];
+            competitiveWeaknesses?: components["schemas"]["CompetitiveWeakness"][];
+            competitorComparisons?: components["schemas"]["CompetitorComparison"][];
+            marketPosition?: string;
+            marketShare?: number;
+            threatLevel?: string;
+        };
+        CompetitiveStrength: {
+            description?: string;
+            quantitativeAdvantage?: number;
+            strategicValue?: string;
+            strengthArea?: string;
+            strengthLevel?: string;
+            sustainability?: string;
+        };
+        CompetitiveWeakness: {
+            impactOnBusiness?: string;
+            improvementPlan?: string;
+            quantitativeGap?: number;
+            severityLevel?: string;
+            urgencyLevel?: string;
+            weaknessArea?: string;
+        };
+        CompetitorComparison: {
+            competitorName?: string;
+            competitorType?: string;
+            growthRate?: number;
+            marketShare?: number;
+            overallRanking?: string;
+            performanceComparison?: components["schemas"]["CompetitorMetricComparison"][];
+            threatLevel?: string;
+        };
+        CompetitorMetricComparison: {
+            competitiveAdvantage?: string;
+            competitorPerformance?: number;
+            metricName?: string;
+            ourPerformance?: number;
+            performanceGap?: number;
+            strategicImportance?: string;
+        };
+        ComplianceAssessmentData: {
+            /** Format: double */
+            overallComplianceScore?: number;
+            policyCompliance?: components["schemas"]["PolicyComplianceItem"][];
+            regulatoryCompliance?: components["schemas"]["RegulatoryComplianceItem"][];
+            securityCompliance?: components["schemas"]["SecurityComplianceData"];
         };
         ConfigLock: {
             /** Format: date-time */
@@ -2571,6 +3061,96 @@ export interface components {
         CookieHandlingConfig: {
             mode?: string;
         };
+        CostBaselineMetrics: {
+            /** Format: double */
+            costPerOperation?: number;
+            /** Format: double */
+            costPerSuccessfulLead?: number;
+            resourceCostBreakdown?: components["schemas"]["ResourceCostBreakdown"];
+            /** Format: double */
+            roi?: number;
+            /** Format: double */
+            totalCost?: number;
+        };
+        CostEffectivenessData: {
+            budgetUtilization?: components["schemas"]["BudgetUtilizationData"];
+            costOptimizationAreas?: components["schemas"]["CostOptimizationArea"][];
+            /** Format: double */
+            costPerOperation?: number;
+            /** Format: double */
+            costPerSuccessfulLead?: number;
+            costTrendAnalysis?: components["schemas"]["CostTrendPoint"][];
+            roiAnalysis?: components["schemas"]["ROIAnalysisData"];
+        };
+        CostEfficiencyMetrics: {
+            /** @enum {string} */
+            competitiveCostPosition?: "excellent" | "good" | "average" | "poor";
+            /** Format: double */
+            costPerPerformanceUnit?: number;
+            /** Format: double */
+            optimizationPotential?: number;
+            /** Format: double */
+            overallCostEfficiency?: number;
+            /** Format: double */
+            resourceValueRatio?: number;
+            /** Format: double */
+            wasteReductionScore?: number;
+        };
+        CostOptimizationArea: {
+            category?: string;
+            /** Format: double */
+            currentCost?: number;
+            description?: string;
+            /** Format: double */
+            implementationCost?: number;
+            /** Format: double */
+            potentialSavings?: number;
+            /** @enum {string} */
+            riskLevel?: "low" | "medium" | "high";
+            /** Format: double */
+            savingsPercentage?: number;
+            /** Format: int32 */
+            timeToRealization?: number;
+        };
+        CostOptimizationStrategy: {
+            description?: string;
+            /** Format: double */
+            estimatedSavings?: number;
+            /** @enum {string} */
+            implementationEffort?: "low" | "medium" | "high";
+            prerequisites?: string[];
+            /** @enum {string} */
+            riskLevel?: "low" | "medium" | "high";
+            strategyName?: string;
+            /** Format: int32 */
+            timeToImplement?: number;
+        };
+        CostTrendPoint: {
+            /** Format: double */
+            budgetUtilization?: number;
+            /** Format: double */
+            costPerOperation?: number;
+            /** Format: double */
+            efficiencyScore?: number;
+            /** Format: date-time */
+            timestamp?: string;
+            /** Format: double */
+            totalCost?: number;
+        };
+        CountermeasureAnalysis: {
+            /** Format: double */
+            bypassSuccessRate?: number;
+            countermeasureName?: string;
+            /** @enum {string} */
+            deploymentStatus?: "active" | "inactive" | "testing" | "deprecated";
+            /** Format: double */
+            effectivenessRating?: number;
+            maintenanceRequired?: boolean;
+            /** Format: double */
+            resourceUtilization?: number;
+            /** @enum {string} */
+            updateFrequency?: "realtime" | "hourly" | "daily" | "weekly" | "monthly";
+        };
         CreateCampaignRequest: {
             description?: string;
             dnsValidationParams?: components["schemas"]["DNSValidationRequest"];
@@ -2648,6 +3228,16 @@ export interface components {
             lastName: string;
             /** Format: password */
             password: string;
+        };
+        CyclicalPattern: {
+            averageAmplitude?: number;
+            cycleLength?: number;
+            cycleReliability?: number;
+            cycleStrength?: number;
+            /** Format: date-time */
+            lastCycleStart?: string;
+            /** Format: date-time */
+            nextCycleStart?: string;
         };
         DNSCampaignService: Record<string, never>;
         DNSConfigDetails: {
@@ -2819,6 +3409,66 @@ export interface components {
             };
             useSystemResolvers?: boolean;
         };
+        DashboardLayout: {
+            autoRefresh?: boolean;
+            layoutName?: string;
+            layoutType?: string;
+            refreshInterval?: number;
+            responsive?: boolean;
+            sections?: components["schemas"]["DashboardSection"][];
+            shareableLink?: string;
+        };
+        DashboardPosition: {
+            column?: number;
+            row?: number;
+            zIndex?: number;
+        };
+        DashboardSection: {
+            collapsible?: boolean;
+            dataSource?: string;
+            position?: components["schemas"]["DashboardPosition"];
+            /** Format: int32 */
+            refreshRate?: number;
+            sectionId?: components["schemas"]["UUID"];
+            sectionTitle?: string;
+            /** @enum {string} */
+            sectionType?: "chart" | "table" | "metric" | "alert" | "summary";
+            size?: components["schemas"]["DashboardSize"];
+            visible?: boolean;
+        };
+        DashboardSize: {
+            /** Format: int32 */
+            height?: number;
+            /** Format: int32 */
+            minHeight?: number;
+            /** Format: int32 */
+            minWidth?: number;
+            resizable?: boolean;
+            /** Format: int32 */
+            width?: number;
+        };
+        DataPoint: {
+            category?: string;
+            drillDownEnabled?: boolean;
+            formattedValue?: string;
+            label?: string;
+            metadata?: {
+                [key: string]: Record<string, never>;
+            };
+            /** Format: date-time */
+            timestamp?: string;
+            /** Format: double */
+            value?: number;
+        };
+        DataSeries: {
+            aggregation?: string;
+            colorCode?: string;
+            dataPoints?: components["schemas"]["DataPoint"][];
+            lineStyle?: string;
+            markerStyle?: string;
+            seriesName?: string;
+            seriesType?: string;
+        };
         DatabaseConfig: {
             connectionLifetime?: number;
             host?: string;
@@ -2880,6 +3530,19 @@ export interface components {
             message?: string;
             success?: boolean;
         };
+        DetailedBenchmarkComparison: {
+            /** Format: date-time */
+            benchmarkDate?: string;
+            benchmarkName?: string;
+            benchmarkSource?: string;
+            comparisonResults?: components["schemas"]["BenchmarkMetricComparison"][];
+            competitiveAdvantages?: string[];
+            improvementAreas?: string[];
+            /** Format: int32 */
+            overallRanking?: number;
+            /** Format: double */
+            performanceGap?: number;
+        };
         DetailedTestResultResponse: {
             details?: string;
             /** Format: int64 */
@@ -2892,6 +3555,49 @@ export interface components {
             /** Format: int32 */
             successCount?: number;
             testId?: components["schemas"]["UUID"];
+        };
+        DetectedAnomaly: {
+            affectedMetrics?: string[];
+            anomalyType?: string;
+            /** @enum {string} */
+            businessImpact?: "minimal" | "low" | "moderate" | "high" | "severe";
+            /** Format: date-time */
+            detectedAt?: string;
+            /** Format: int64 */
+            duration?: number;
+            /** Format: double */
+            magnitude?: number;
+            potentialCauses?: string[];
+            /** Format: int64 */
+            recoveryTime?: number;
+            /** @enum {string} */
+            severity?: "low" | "medium" | "high" | "critical";
+        };
+        DetectionEvasionConfig: {
+            antiAnalysisFeatures?: string[];
+            captchaBypass?: boolean;
+            enabled?: boolean;
+            fingerprintRandomization?: boolean;
+            honeypotDetection?: boolean;
+            httpHeaderRandomization?: boolean;
+            payloadObfuscation?: boolean;
+            rateLimitEvasion?: boolean;
+            requestOrderRandomization?: boolean;
+            timingAttackPrevention?: boolean;
+            tlsFingerprintRotation?: boolean;
+        };
+        DetectionRiskAnalysis: {
+            /** @enum {string} */
+            currentRiskLevel?: "minimal" | "low" | "medium" | "high" | "critical";
+            lastDetectionIncident?: components["schemas"]["UUID"];
+            mitigationStrategies?: components["schemas"]["MitigationStrategy"][];
+            riskFactors?: components["schemas"]["RiskFactor"][];
+            /** Format: double */
+            riskScore?: number;
+            /** @enum {string} */
+            riskTrendDirection?: "decreasing" | "stable" | "increasing";
+            /** Format: int64 */
+            timeToDetectionEstimate?: number;
         };
         DnsPersonaConfig: {
             /** Format: int32 */
@@ -3069,6 +3775,13 @@ export interface components {
         DomainLeadStatusEnum: string;
         DomainPatternType: string;
         DomainStealthService: Record<string, never>;
+        DrillDownLevel: {
+            availableFields?: string[];
+            dataQuery?: string;
+            groupingField?: string;
+            level?: number;
+            levelName?: string;
+        };
         EncryptionService: Record<string, never>;
         EnhancedServerConfig: {
             auth?: components["schemas"]["EnvAuthConfig"];
@@ -3080,6 +3793,16 @@ export interface components {
             domains?: components["schemas"]["GeneratedDomain"][];
             httpKeywordResults?: Record<string, never>[];
             leads?: components["schemas"]["LeadItem"][];
+        };
+        EnterpriseProxyStrategy: {
+            backupProxyPools?: string[];
+            failoverThreshold?: number;
+            geoTargeting?: boolean;
+            healthCheckInterval?: number;
+            proxyPools?: string[];
+            proxyQualityFiltering?: boolean;
+            proxyRotationRate?: string;
+            strategy?: string;
         };
         EnvAuthConfig: {
             apiKeySalt?: string;
@@ -3135,11 +3858,33 @@ export interface components {
             /** Format: date-time */
             timestamp?: string;
         };
+        ErrorPatternData: {
+            errorType?: string;
+            /** Format: date-time */
+            firstOccurred?: string;
+            /** Format: int64 */
+            frequency?: number;
+            impactScope?: string;
+            /** Format: date-time */
+            lastOccurred?: string;
+            mitigation?: string;
+            /** Format: double */
+            trendSlope?: number;
+        };
         ErrorResponse: {
             /** Format: int32 */
             code?: number;
             message?: string;
             status?: string;
+        };
+        EscalationRule: {
+            additionalRecipients?: string[];
+            escalationActions?: string[];
+            /** Format: int32 */
+            escalationLevel?: number;
+            notificationChannels?: string[];
+            /** Format: int32 */
+            timeThreshold?: number;
         };
         EventProjection: {
             aggregateId?: components["schemas"]["UUID"];
@@ -3178,7 +3923,54 @@ export interface components {
             /** Format: int64 */
             streamPosition?: number;
         };
+        ExampleSpec: {
+            description?: string;
+            name?: string;
+            request?: Record<string, never>;
+            response?: Record<string, never>;
+        };
         ExecutionStatusEnum: string;
+        ExportFormat: {
+            compression?: boolean;
+            customOptions?: {
+                [key: string]: Record<string, never>;
+            };
+            description?: string;
+            formatName?: string;
+            formatType?: string;
+            maxSize?: number;
+            requiresTemplate?: boolean;
+        };
+        ExportInfo: {
+            availableFormats?: components["schemas"]["ExportFormat"][];
+            customTemplates?: components["schemas"]["ExportTemplate"][];
+            /** Format: date-time */
+            expirationTime?: string;
+            /** Format: int64 */
+            exportSize?: number;
+            /** Format: uri */
+            exportUrl?: string;
+            /** Format: int64 */
+            generationTime?: number;
+            scheduledExports?: components["schemas"]["ScheduledExport"][];
+        };
+        ExportService: Record<string, never>;
+        ExportTemplate: {
+            /** Format: date-time */
+            createdAt?: string;
+            /** Format: uuid */
+            createdBy?: string;
+            customBranding?: boolean;
+            /** Format: date-time */
+            format?: string;
+            /** Format: date-time */
+            lastModified?: string;
+            sections?: components["schemas"]["TemplateSection"][];
+            templateId?: components["schemas"]["UUID"];
+            templateName?: string;
+            /** @enum {string} */
+            templateType?: "report" | "dashboard" | "summary" | "executive" | "technical";
+        };
         ExtractedContentAnalysis: {
             advancedKeywords?: string[];
             categories?: string[];
@@ -3209,6 +4001,13 @@ export interface components {
             enableDebugMode?: boolean;
             enableOfflineMode?: boolean;
             enableRealTimeUpdates?: boolean;
+        };
+        FeatureImportance: {
+            businessRelevance?: string;
+            featureName?: string;
+            importanceScore?: number;
+            influenceDirection?: string;
+            statisticalSignificance?: number;
         };
         FingerprintConfig: {
             hash_algorithm?: string;
@@ -3567,9 +4366,71 @@ export interface components {
             /** Format: int32 */
             waitDelaySeconds?: number;
         };
+        ImplementedOptimization: {
+            /** Format: double */
+            actualSavings?: number;
+            description?: string;
+            /** Format: double */
+            expectedSavings?: number;
+            /** Format: date-time */
+            implementationDate?: string;
+            maintenanceRequired?: boolean;
+            optimizationName?: string;
+            /** @enum {string} */
+            performanceImpact?: "positive" | "neutral" | "negative";
+        };
+        ImprovementRecommendation: {
+            /** Format: double */
+            currentGap?: number;
+            dependencies?: string[];
+            description?: string;
+            /** Format: double */
+            estimatedCost?: number;
+            /** Format: double */
+            expectedROI?: number;
+            /** Format: int32 */
+            expectedTimeframe?: number;
+            improvementArea?: string;
+            /** @enum {string} */
+            priority?: "low" | "medium" | "high" | "critical";
+            recommendationType?: string;
+            resourceRequirements?: string[];
+            /** @enum {string} */
+            riskLevel?: "low" | "medium" | "high";
+            successMetrics?: string[];
+            /** Format: double */
+            targetImprovement?: number;
+        };
         InMemorySessionStore: Record<string, never>;
+        InteractiveElement: {
+            configuration?: {
+                [key: string]: Record<string, never>;
+            };
+            elementId?: components["schemas"]["UUID"];
+            /** @enum {string} */
+            elementType?: "filter" | "drill_down" | "zoom" | "pan" | "select" | "highlight";
+            enabled?: boolean;
+            eventTriggers?: string[];
+            targetCharts?: string[];
+        };
         JobBusinessStatusEnum: string;
         JobTypeEnum: string;
+        KPITrendPoint: {
+            /** Format: double */
+            businessScore?: number;
+            /** Format: double */
+            operationalScore?: number;
+            /** Format: double */
+            overallScore?: number;
+            /** Format: double */
+            technicalScore?: number;
+            /** Format: date-time */
+            timestamp?: string;
+            /** @enum {string} */
+            trendDirection?: "improving" | "stable" | "declining";
+            /** Format: double */
+            userExperienceScore?: number;
+        };
         KeywordExtractionAPIResult: {
             dnsPersonaIdUsed?: components["schemas"]["UUID"];
             error?: string;
@@ -3798,6 +4659,30 @@ export interface components {
             /** Format: uri */
             sourceUrl?: string;
         };
+        LegendConfiguration: {
+            enabled?: boolean;
+            interactive?: boolean;
+            /** Format: int32 */
+            maxItems?: number;
+            /** @enum {string} */
+            orientation?: "horizontal" | "vertical";
+            /** @enum {string} */
+            position?: "top" | "bottom" | "left" | "right";
+        };
+        LoadTestingResult: {
+            /** Format: double */
+            errorRate?: number;
+            /** Format: double */
+            loadLevel?: number;
+            /** Format: double */
+            resourceUtilization?: number;
+            /** Format: int64 */
+            responseTime?: number;
+            /** Format: double */
+            stabilityScore?: number;
+            /** Format: double */
+            throughputRate?: number;
+        };
         LoggingConfig: {
             enableFileLogging?: boolean;
             enableJSONFormat?: boolean;
@@ -3874,6 +4759,33 @@ export interface components {
             processing?: components["schemas"]["ProcessingInfo"];
             rateLimit?: components["schemas"]["RateLimitInfo"];
         };
+        MetricComparison: {
+            /** Format: double */
+            absoluteChange?: number;
+            /** Format: double */
+            baselineValue?: number;
+            /** @enum {string} */
+            changeDirection?: "improvement" | "regression" | "stable";
+            /** Format: double */
+            confidenceInterval?: number;
+            /** Format: double */
+            currentValue?: number;
+            metricName?: string;
+            /** Format: double */
+            percentageChange?: number;
+            /** @enum {string} */
+            significanceLevel?: "not_significant" | "low" | "medium" | "high" | "very_high";
+        };
+        MitigationStrategy: {
+            description?: string;
+            effectiveness?: number;
+            implementationCost?: string;
+            isActive?: boolean;
+            resourceRequirement?: string;
+            riskReduction?: number;
+            strategyName?: string;
+        };
+        MonitoringHandlers: Record<string, never>;
         NormalizedDomainGenerationParams: {
             characterSet?: string;
             constantString?: string;
@@ -3913,6 +4825,87 @@ export interface components {
             /** Format: int64 */
             totalItems?: number;
         };
+        OperationalBaselineMetrics: {
+            /** Format: int64 */
+            averageResponseTime?: number;
+            /** Format: double */
+            errorRate?: number;
+            /** Format: int64 */
+            failedOperations?: number;
+            /** Format: int64 */
+            successfulOperations?: number;
+            /** Format: double */
+            throughputRate?: number;
+            /** Format: int64 */
+            totalOperations?: number;
+            /** Format: double */
+            uptimePercentage?: number;
+        };
+        OperationalEfficiencyMetrics: {
+            bottleneckAnalysis?: components["schemas"]["BottleneckIdentification"][];
+            /** Format: double */
+            idleTimePercentage?: number;
+            optimizationOpportunities?: components["schemas"]["OptimizationRecommendation"][];
+            /** Format: double */
+            processingEfficiency?: number;
+            /** Format: double */
+            resourceUtilizationScore?: number;
+            /** Format: double */
+            throughputRate?: number;
+        };
+        OperationalKPIs: {
+            /** Format: int64 */
+            averageProcessingTime?: number;
+            /** Format: int64 */
+            concurrentOperations?: number;
+            /** Format: double */
+            errorRate?: number;
+            /** Format: double */
+            processingEfficiency?: number;
+            /** Format: int64 */
+            queueLength?: number;
+            /** Format: double */
+            resourceUtilization?: number;
+            /** Format: double */
+            successRate?: number;
+            /** Format: double */
+            systemUptime?: number;
+            /** Format: double */
+            throughputRate?: number;
+        };
+        OpportunityPrediction: {
+            opportunityLevel?: string;
+            opportunityType?: string;
+            /** Format: date-time */
+            optimalTiming?: string;
+            potentialBenefit?: number;
+            probability?: number;
+            recommendedActions?: string[];
+            requiredConditions?: string[];
+            resourceRequirements?: string[];
+            successProbability?: number;
+            windowDuration?: number;
+        };
+        OptimalLevels: {
+            cpuTarget?: number;
+            databaseTarget?: number;
+            memoryTarget?: number;
+            networkTarget?: number;
+            proxyTarget?: number;
+            storageTarget?: number;
+        };
+        OptimalResourceLevels: {
+            highVolume?: components["schemas"]["OptimalLevels"];
+            lowLoad?: components["schemas"]["OptimalLevels"];
+            normalOperations?: components["schemas"]["OptimalLevels"];
+            peakLoad?: components["schemas"]["OptimalLevels"];
+        };
+        OptimalScalingPoint: {
+            costEfficiency?: number;
+            expectedPerformance?: number;
+            loadLevel?: number;
+            recommendedCapacity?: number;
+        };
         OptimizationConfig: {
             enabled?: boolean;
             feature_flags?: components["schemas"]["FeatureFlagConfig"];
@@ -3927,6 +4920,14 @@ export interface components {
             externalValidation?: boolean;
             identifier?: components["schemas"]["UUID"];
             serviceOptimization?: boolean;
+        };
+        OptimizationRecommendation: {
+            category?: string;
+            description?: string;
+            expectedImprovement?: number;
+            implementationCost?: string;
+            priority?: string;
+            steps?: string[];
         };
         OptimizationStatus: {
             cacheAvailable?: boolean;
@@ -3963,6 +4964,13 @@ export interface components {
             tableName?: string;
             /** Format: int64 */
             totalRows?: number;
+        };
+        ParameterSpec: {
+            description?: string;
+            in?: string;
+            name?: string;
+            required?: boolean;
+            type?: string;
         };
         PasswordChangeResponse: {
             message?: string;
@@ -4002,12 +5010,69 @@ export interface components {
             /** Format: int32 */
             variableLength?: number;
         };
+        PerformanceBaselineMetrics: {
+            /** Format: int64 */
+            averageLatency?: number;
+            /** Format: double */
+            efficiencyScore?: number;
+            /** Format: int64 */
+            p95Latency?: number;
+            /** Format: int64 */
+            p99Latency?: number;
+            /** Format: double */
+            reliabilityScore?: number;
+            /** Format: double */
+            scalabilityScore?: number;
+            /** Format: double */
+            throughputScore?: number;
+        };
+        PerformanceBottleneck: {
+            bottleneckType?: string;
+            estimatedFix?: string;
+            impactOnPerf?: number;
+            mitigation?: string;
+            resourceThreshold?: number;
+            severity?: string;
+        };
+        PerformanceComparison: {
+            metricComparisons?: components["schemas"]["MetricComparison"][];
+            overallImprovement?: number;
+            regressionAnalysis?: components["schemas"]["RegressionAnalysis"];
+            significantChanges?: components["schemas"]["SignificantChange"][];
+            statisticalSignificance?: components["schemas"]["StatisticalSignificanceData"];
+        };
         PerformanceConfig: {
             batch_size?: number;
             cache_ttl?: components["schemas"]["CacheTTLConfig"];
             dns_timeout?: string;
             http_timeout?: string;
             max_concurrent_requests?: number;
+        };
+        PerformanceForecast: {
+            assumptions?: string[];
+            /** Format: double */
+            confidenceInterval?: number;
+            /** Format: double */
+            currentValue?: number;
+            forecastMethod?: string;
+            /** Format: date-time */
+            forecastTime?: string;
+            influencingFactors?: string[];
+            metricName?: string;
+            /** Format: double */
+            predictedValue?: number;
+            /** Format: double */
+            predictionAccuracy?: number;
+        };
+        PerformanceKPIData: {
+            benchmarkComparisons?: components["schemas"]["BenchmarkComparison"][];
+            businessKPIs?: components["schemas"]["BusinessKPIs"];
+            kpiTrends?: components["schemas"]["KPITrendPoint"][];
+            operationalKPIs?: components["schemas"]["OperationalKPIs"];
+            /** Format: double */
+            overallPerformanceScore?: number;
+            technicalKPIs?: components["schemas"]["TechnicalKPIs"];
+            userExperienceKPIs?: components["schemas"]["UserExperienceKPIs"];
         };
         PerformanceThreshold: {
             /** Format: int32 */
@@ -4230,6 +5295,68 @@ export interface components {
             /** Format: date-time */
             timestamp?: string;
         };
+        PolicyComplianceItem: {
+            /** Format: double */
+            complianceRate?: number;
+            /** Format: date-time */
+            lastAssessed?: string;
+            policyName?: string;
+            /** @enum {string} */
+            severity?: "low" | "medium" | "high" | "critical";
+            /** Format: int64 */
+            violationCount?: number;
+        };
+        PredictiveAnalyticsData: {
+            modelPerformance?: components["schemas"]["PredictiveModelPerformance"];
+            opportunityPredictions?: components["schemas"]["OpportunityPrediction"][];
+            /** Format: double */
+            overallPredictionAccuracy?: number;
+            performanceForecasts?: components["schemas"]["PerformanceForecast"][];
+            /** Format: int32 */
+            predictionHorizon?: number;
+            resourceForecasts?: components["schemas"]["ResourceForecast"][];
+            riskPredictions?: components["schemas"]["RiskPrediction"][];
+            scenarioAnalysis?: components["schemas"]["ScenarioAnalysis"];
+            trendPredictions?: components["schemas"]["TrendPrediction"][];
+        };
+        PredictiveModelPerformance: {
+            featureImportance?: components["schemas"]["FeatureImportance"][];
+            /** Format: date-time */
+            lastModelUpdate?: string;
+            /** Format: double */
+            meanAbsoluteError?: number;
+            /** Format: double */
+            modelAccuracy?: number;
+            /** @enum {string} */
+            modelComplexity?: "simple" | "moderate" | "complex" | "very_complex";
+            /** Format: double */
+            modelF1Score?: number;
+            /** Format: double */
+            modelPrecision?: number;
+            /** Format: double */
+            modelRecall?: number;
+            /** Format: double */
+            modelReliability?: number;
+            /** @enum {string} */
+            overfittingRisk?: "low" | "medium" | "high";
+            /** Format: double */
+            rootMeanSquaredError?: number;
+            /** Format: int64 */
+            trainingDataSize?: number;
+        };
+        PreparationRecommendation: {
+            actionDescription?: string;
+            expectedBenefit?: string;
+            /** @enum {string} */
+            implementationRisk?: "low" | "medium" | "high";
+            /** @enum {string} */
+            priority?: "low" | "medium" | "high" | "critical";
+            recommendationType?: string;
+            resourceRequirements?: string[];
+            targetScenarios?: string[];
+            /** Format: date-time */
+            timeFrame?: string;
+        };
         ProcessingInfo: {
             duration?: string;
             version?: string;
@@ -4389,6 +5516,41 @@ export interface components {
             statusCode?: number;
             success?: boolean;
         };
+        QualityAssuranceMetrics: {
+            complianceScore?: components["schemas"]["ComplianceAssessmentData"];
+            /** Format: double */
+            consistencyIndex?: number;
+            /** Format: double */
+            dataAccuracyScore?: number;
+            errorPatternAnalysis?: components["schemas"]["ErrorPatternData"][];
+            qualityTrends?: components["schemas"]["QualityTrendPoint"][];
+            /** Format: double */
+            validationReliability?: number;
+        };
+        QualityBaselineMetrics: {
+            /** Format: double */
+            dataAccuracy?: number;
+            /** Format: double */
+            dataCompleteness?: number;
+            /** Format: double */
+            dataConsistency?: number;
+            /** Format: double */
+            qualityScore?: number;
+            /** Format: double */
+            validationSuccess?: number;
+        };
+        QualityTrendPoint: {
+            /** Format: double */
+            accuracyScore?: number;
+            /** Format: double */
+            consistencyScore?: number;
+            /** Format: double */
+            reliabilityScore?: number;
+            /** Format: int64 */
+            sampleSize?: number;
+            /** Format: date-time */
+            timestamp?: string;
+        };
         QueryPerformanceMetric: {
             /** Format: int64 */
             bufferHits?: number;
@@ -4454,6 +5616,20 @@ export interface components {
             /** Format: int64 */
             totalQueries?: number;
         };
+        ROIAnalysisData: {
+            /** Format: int32 */
+            breakEvenPoint?: number;
+            /** Format: int32 */
+            paybackPeriod?: number;
+            /** Format: double */
+            profitabilityIndex?: number;
+            /** Format: double */
+            roiPercentage?: number;
+            /** Format: double */
+            totalInvestment?: number;
+            /** Format: double */
+            totalReturn?: number;
+        };
         RandomizedDomain: {
             /** Format: int32 */
             JitterDelay?: number;
@@ -4490,6 +5666,13 @@ export interface components {
         RateLimiterConfig: {
             maxRequests?: number;
             windowSeconds?: number;
+        };
+        RecommendationMonitoring: {
+            keyMetrics?: string[];
+            monitoringPeriod?: number;
+            reviewSchedule?: string;
+            rollbackTriggers?: string[];
+            successCriteria?: string[];
         };
         RecoveryOptions: {
             alternativeMethods?: components["schemas"]["MFAMethod"][];
@@ -4561,6 +5744,31 @@ export interface components {
             };
             writeTimeout?: string;
         };
+        RegressionAnalysis: {
+            correlationCoefficient?: number;
+            forecastAccuracy?: number;
+            rSquaredValue?: number;
+            statisticalSignificance?: number;
+            trendDirection?: string;
+            trendEquation?: string;
+        };
+        RegulatoryComplianceItem: {
+            /** Format: double */
+            complianceRate?: number;
+            /** Format: date-time */
+            lastAudit?: string;
+            /** Format: date-time */
+            nextAuditDue?: string;
+            regulation?: string;
+            /** @enum {string} */
+            riskLevel?: "low" | "medium" | "high" | "critical";
+        };
+        RequestBodySpec: {
+            contentType?: string;
+            description?: string;
+            required?: boolean;
+            schema?: string;
+        };
         RequiredResources: {
             cpuCores?: number;
             memoryMB?: number;
@@ -4576,6 +5784,19 @@ export interface components {
             environment?: string;
             service_name?: string;
         };
+        ResourceAllocationRec: {
+            conditions?: string[];
+            expectedBenefit?: string;
+            /** Format: int32 */
+            implementationTime?: number;
+            monitoring?: components["schemas"]["RecommendationMonitoring"];
+            /** @enum {string} */
+            priority?: "low" | "medium" | "high" | "critical";
+            recommendationType?: string;
+            resourceChanges?: components["schemas"]["ResourceChange"][];
+            /** @enum {string} */
+            riskAssessment?: "low" | "medium" | "high";
+        };
         ResourceAllocationResult: {
             allocatedResources?: components["schemas"]["RequiredResources"];
             /** Format: date-time */
@@ -4586,6 +5807,180 @@ export interface components {
             expirationTime?: string;
             success?: boolean;
             type?: string;
+        };
+        ResourceAnalyticsData: {
+            allocationRecommendations?: components["schemas"]["ResourceAllocationRec"][];
+            capacityPlanningData?: components["schemas"]["CapacityPlanningData"];
+            costAnalysis?: components["schemas"]["ResourceCostAnalysis"];
+            performanceCorrelation?: components["schemas"]["ResourcePerformanceData"];
+            resourceOptimization?: components["schemas"]["ResourceOptimizationData"];
+            resourceUtilizationSummary?: components["schemas"]["ResourceUtilizationSummary"];
+        };
+        ResourceAutomationOpp: {
+            automationType?: string;
+            complexityLevel?: string;
+            description?: string;
+            developmentEffort?: number;
+            expectedBenefit?: string;
+            maintenanceOverhead?: number;
+            roiEstimate?: number;
+            technicalRequirements?: string[];
+        };
+        ResourceBaselineMetrics: {
+            /** Format: double */
+            averageCPUUsage?: number;
+            /** Format: double */
+            averageMemoryUsage?: number;
+            /** Format: double */
+            averageNetworkUsage?: number;
+            /** Format: double */
+            averageStorageUsage?: number;
+            /** Format: double */
+            costEfficiencyScore?: number;
+            /** Format: double */
+            resourceEfficiencyScore?: number;
+        };
+        ResourceBudgetAnalysis: {
+            /** Format: double */
+            allocatedBudget?: number;
+            budgetAlerts?: components["schemas"]["BudgetAlert"][];
+            /** Format: double */
+            budgetUtilization?: number;
+            /** Format: double */
+            burnRate?: number;
+            /** Format: double */
+            forecastedSpend?: number;
+            /** Format: double */
+            remainingBudget?: number;
+            /** Format: double */
+            spentToDate?: number;
+            /** Format: double */
+            varianceFromPlan?: number;
+        };
+        ResourceCapacitySnapshot: {
+            /** Format: int64 */
+            activeProxies?: number;
+            /** Format: int64 */
+            databaseConnections?: number;
+            /** Format: double */
+            networkBandwidthMbps?: number;
+            /** Format: int64 */
+            totalCPUCores?: number;
+            /** Format: double */
+            totalMemoryGB?: number;
+            /** Format: double */
+            totalStorageGB?: number;
+            /** Format: double */
+            utilizationRate?: number;
+        };
+        ResourceChange: {
+            changeType?: string;
+            currentValue?: number;
+            expectedImpact?: string;
+            justification?: string;
+            recommendedValue?: number;
+            resourceType?: string;
+        };
+        ResourceCostAnalysis: {
+            budgetAnalysis?: components["schemas"]["ResourceBudgetAnalysis"];
+            costBreakdown?: components["schemas"]["ResourceCostBreakdown"];
+            costEfficiencyMetrics?: components["schemas"]["CostEfficiencyMetrics"];
+            costOptimization?: components["schemas"]["ResourceCostOptimization"];
+            costTrends?: components["schemas"]["ResourceCostTrendPoint"][];
+            totalCost?: number;
+        };
+        ResourceCostBreakdown: {
+            cpuCosts?: number;
+            databaseCosts?: number;
+            licensingCosts?: number;
+            memoryCosts?: number;
+            networkCosts?: number;
+            operationalCosts?: number;
+            proxyCosts?: number;
+            storageCosts?: number;
+        };
+        ResourceCostOptimization: {
+            /** Format: double */
+            currentMonthlySpend?: number;
+            implementedOptimizations?: components["schemas"]["ImplementedOptimization"][];
+            optimizationStrategies?: components["schemas"]["CostOptimizationStrategy"][];
+            /** Format: double */
+            potentialMonthlySavings?: number;
+            /** Format: double */
+            savingsToDate?: number;
+        };
+        ResourceCostTrendPoint: {
+            /** Format: double */
+            budgetUtilization?: number;
+            /** Format: double */
+            costEfficiency?: number;
+            /** Format: double */
+            costPerOperation?: number;
+            /** Format: date-time */
+            timestamp?: string;
+            /** Format: double */
+            totalCost?: number;
+        };
+        ResourceEfficiencyMetrics: {
+            /** Format: double */
+            costEfficiency?: number;
+            /** Format: double */
+            cpuEfficiency?: number;
+            /** Format: double */
+            memoryEfficiency?: number;
+            /** Format: double */
+            networkEfficiency?: number;
+            /** Format: double */
+            optimizationPotential?: number;
+            /** Format: double */
+            overallEfficiency?: number;
+            /** Format: double */
+            storageEfficiency?: number;
+            /** Format: double */
+            wasteReduction?: number;
+        };
+        ResourceForecast: {
+            /** Format: double */
+            capacityThreshold?: number;
+            /** Format: double */
+            confidenceLevel?: number;
+            /** Format: double */
+            currentUtilization?: number;
+            /** Format: date-time */
+            forecastTime?: string;
+            /** Format: double */
+            predictedUtilization?: number;
+            /** Format: double */
+            predictionError?: number;
+            resourceType?: string;
+            scalingRecommendation?: string;
+        };
+        ResourceGrowthTrendPoint: {
+            /** Format: double */
+            cpuUsageGrowth?: number;
+            /** Format: double */
+            memoryGrowth?: number;
+            /** Format: double */
+            networkGrowth?: number;
+            /** Format: double */
+            storageGrowth?: number;
+            /** Format: date-time */
+            timestamp?: string;
+        };
+        ResourceImprovementOpp: {
+            dependencies?: string[];
+            description?: string;
+            /** Format: double */
+            expectedSavings?: number;
+            /** Format: double */
+            implementationCost?: number;
+            /** Format: int32 */
+            implementationTime?: number;
+            opportunityType?: string;
+            /** @enum {string} */
+            priority?: "low" | "medium" | "high" | "critical";
+            /** @enum {string} */
+            riskLevel?: "low" | "medium" | "high";
         };
         ResourceLimits: {
             maxConcurrent?: number;
@@ -4605,6 +6000,64 @@ export interface components {
             resources?: components["schemas"]["RequiredResources"];
             /** @enum {string} */
             type: "domain_generation" | "dns_validation" | "http_validation" | "analytics";
+        };
+        ResourceOptimizationData: {
+            automationOpportunities?: components["schemas"]["ResourceAutomationOpp"][];
+            efficiencyMetrics?: components["schemas"]["ResourceEfficiencyMetrics"];
+            improvementOpportunities?: components["schemas"]["ResourceImprovementOpp"][];
+            optimizationHistory?: components["schemas"]["ResourceOptimizationEvent"][];
+            /** Format: double */
+            optimizationScore?: number;
+        };
+        ResourceOptimizationEvent: {
+            /** Format: double */
+            costImpact?: number;
+            description?: string;
+            /** Format: double */
+            efficiencyGain?: number;
+            optimizationType?: string;
+            performanceImpact?: string;
+            resourcesAffected?: string[];
+            /** Format: date-time */
+            timestamp?: string;
+        };
+        ResourcePerformanceCorrelation: {
+            correlationCoeff?: number;
+            correlationStrength?: string;
+            description?: string;
+            optimalRange?: components["schemas"]["ResourceRange"];
+            performanceMetric?: string;
+            resourceType?: string;
+        };
+        ResourcePerformanceData: {
+            optimalResourceLevels?: components["schemas"]["OptimalResourceLevels"];
+            performanceBottlenecks?: components["schemas"]["PerformanceBottleneck"][];
+            performanceCorrelations?: components["schemas"]["ResourcePerformanceCorrelation"][];
+            scalingImpactAnalysis?: components["schemas"]["ScalingImpactAnalysis"];
+        };
+        ResourceRange: {
+            maxValue?: number;
+            minValue?: number;
+            optimalValue?: number;
+        };
+        ResourceUsageHistoryPoint: {
+            /** Format: double */
+            cost?: number;
+            /** Format: double */
+            efficiency?: number;
+            /** Format: date-time */
+            timestamp?: string;
+            /** Format: double */
+            usage?: number;
+        };
+        ResourceUtilizationDetail: {
+            averageUsage?: number;
+            bottleneckRisk?: string;
+            currentUsage?: number;
+            efficiencyScore?: number;
+            peakUsage?: number;
+            usageHistory?: components["schemas"]["ResourceUsageHistoryPoint"][];
+            utilizationTrend?: string;
         };
         ResourceUtilizationMetric: {
             bottleneckDetected?: boolean;
@@ -4638,6 +6091,50 @@ export interface components {
             /** Format: int64 */
             proxyRequests?: number;
         };
+        ResourceUtilizationSummary: {
+            cpuUtilization?: components["schemas"]["ResourceUtilizationDetail"];
+            databaseUtilization?: components["schemas"]["ResourceUtilizationDetail"];
+            memoryUtilization?: components["schemas"]["ResourceUtilizationDetail"];
+            networkUtilization?: components["schemas"]["ResourceUtilizationDetail"];
+            proxyUtilization?: components["schemas"]["ResourceUtilizationDetail"];
+            storageUtilization?: components["schemas"]["ResourceUtilizationDetail"];
+        };
+        ResponseSpec: {
+            contentType?: string;
+            description?: string;
+            schema?: string;
+        };
+        ResponsiveSettings: {
+            breakpointLarge?: number;
+            breakpointMedium?: number;
+            breakpointSmall?: number;
+            flexibleLayout?: boolean;
+            mobileOptimized?: boolean;
+            responsiveCharts?: boolean;
+            tabletOptimized?: boolean;
+        };
+        RiskFactor: {
+            detectability?: number;
+            factorName?: string;
+            mitigation?: string;
+            riskContribution?: number;
+            severity?: string;
+            status?: string;
+        };
+        RiskPrediction: {
+            /** Format: date-time */
+            earliestOccurrence?: string;
+            /** Format: date-time */
+            latestOccurrence?: string;
+            mitigationStrategies?: string[];
+            monitoringRecommendations?: string[];
+            potentialImpact?: string;
+            preventiveMeasures?: string[];
+            probability?: number;
+            riskIndicators?: string[];
+            riskLevel?: string;
+            riskType?: string;
+        };
         RuleLoaderService: Record<string, never>;
         RuleQueryFilter: {
             category?: string;
@@ -4659,11 +6156,120 @@ export interface components {
             totalKeywordSets?: number;
             totalRules?: number;
         };
+        SSEClient: {
+            CampaignID?: components["schemas"]["UUID"];
+            Cancel?: string;
+            Context?: string;
+            Flusher?: string;
+            ID?: components["schemas"]["UUID"];
+            /** Format: date-time */
+            LastSeen?: string;
+            ResponseWriter?: string;
+            UserID?: components["schemas"]["UUID"];
+        };
+        SSEEvent: {
+            campaign_id?: components["schemas"]["UUID"];
+            data?: {
+                [key: string]: Record<string, never>;
+            };
+            /** @enum {string} */
+            event?: "campaign_progress" | "phase_started" | "phase_completed" | "phase_failed" | "domain_generated" | "domain_validated" | "analysis_completed" | "keep_alive" | "error";
+            id?: components["schemas"]["UUID"];
+            /** Format: date-time */
+            timestamp?: string;
+            user_id?: components["schemas"]["UUID"];
+        };
+        SSEEventType: string;
+        SSEHandler: Record<string, never>;
+        SSEService: Record<string, never>;
         SafetyValidationError: {
             Impact?: string;
             Operation?: string;
             Remediation?: string;
             Violation?: string;
+        };
+        ScalabilityAnalyticsData: {
+            /** Format: double */
+            currentCapacityUtilization?: number;
+            performanceUnderLoad?: components["schemas"]["LoadTestingResult"][];
+            predictedCapacityNeeds?: components["schemas"]["CapacityForecastPoint"][];
+            resourceGrowthTrends?: components["schemas"]["ResourceGrowthTrendPoint"][];
+            scalingRecommendations?: components["schemas"]["ScalingRecommendation"][];
+        };
+        ScalingImpactAnalysis: {
+            diminishingReturns?: number;
+            linearScalingRange?: components["schemas"]["ResourceRange"];
+            optimalScalingPoints?: components["schemas"]["OptimalScalingPoint"][];
+            scalingEfficiency?: number;
+            scalingRecommendations?: components["schemas"]["ScalingRecommendation"][];
+        };
+        ScalingRecommendation: {
+            component?: string;
+            /** Format: double */
+            currentCapacity?: number;
+            /** Format: double */
+            estimatedCost?: number;
+            expectedBenefit?: string;
+            /** Format: double */
+            recommendedScale?: number;
+            /** Format: date-time */
+            timeFrame?: string;
+        };
+        Scenario: {
+            assumptions?: string[];
+            businessImpact?: string;
+            predictedOutcomes?: components["schemas"]["ScenarioOutcome"][];
+            probability?: number;
+            requiredActions?: string[];
+            riskMitigation?: string[];
+            scenarioName?: string;
+            scenarioType?: string;
+        };
+        ScenarioAnalysis: {
+            baseScenario?: components["schemas"]["Scenario"];
+            customScenarios?: components["schemas"]["Scenario"][];
+            optimisticScenario?: components["schemas"]["Scenario"];
+            pessimisticScenario?: components["schemas"]["Scenario"];
+            recommendedPreparation?: components["schemas"]["PreparationRecommendation"][];
+            scenarioProbabilities?: components["schemas"]["ScenarioProbability"][];
+        };
+        ScenarioOutcome: {
+            /** Format: double */
+            confidenceLevel?: number;
+            impactDescription?: string;
+            metricAffected?: string;
+            outcomeType?: string;
+            /** Format: double */
+            predictedValue?: number;
+            /** Format: double */
+            varianceFromBase?: number;
+        };
+        ScenarioProbability: {
+            influencingFactors?: string[];
+            /** Format: date-time */
+            lastUpdated?: string;
+            monitoringIndicators?: string[];
+            /** Format: double */
+            probability?: number;
+            /** @enum {string} */
+            probabilityTrend?: "increasing" | "stable" | "decreasing";
+            scenarioName?: string;
+        };
+        ScheduledExport: {
+            exportId?: components["schemas"]["UUID"];
+            exportName?: string;
+            /** Format: date-time */
+            format?: string;
+            /** Format: date-time */
+            lastGenerated?: string;
+            /** Format: date-time */
+            nextGeneration?: string;
+            recipients?: string[];
+            /** Format: int32 */
+            retentionDays?: number;
+            schedule?: string;
+            /** @enum {string} */
+            status?: "active" | "paused" | "error";
         };
         SchemaStats: {
             name?: string;
@@ -4673,7 +6279,32 @@ export interface components {
             totalRows?: number;
             totalSize?: string;
         };
+        SeasonalPattern: {
+            /** Format: double */
+            amplitudeVariation?: number;
+            /** Format: date-time */
+            nextPredictedPeak?: string;
+            /** Format: date-time */
+            nextPredictedTrough?: string;
+            /** Format: double */
+            patternStrength?: number;
+            patternType?: string;
+            /** Format: date-time */
+            peakTime?: string;
+            /** Format: date-time */
+            troughTime?: string;
+        };
         SecretManager: Record<string, never>;
+        SecurityComplianceData: {
+            /** Format: double */
+            accessControlCompliance?: number;
+            /** Format: double */
+            auditTrailCompliance?: number;
+            /** Format: double */
+            dataRetentionCompliance?: number;
+            /** Format: double */
+            encryptionCompliance?: number;
+        };
         SecurityContext: {
             /** Format: date-time */
             lastActivity?: string;
@@ -4881,13 +6512,102 @@ export interface components {
             session_duration?: string;
             session_id_length?: number;
         };
+        SetCampaignLimitsRequest: {
+            /** Format: double */
+            maxCpuPercent: number;
+            /** Format: int64 */
+            maxDiskGB: number;
+            /** Format: int32 */
+            maxDurationMins: number;
+            /** Format: int64 */
+            maxMemoryMB: number;
+        };
+        SignificantChange: {
+            changeType?: string;
+            /** Format: double */
+            confidenceLevel?: number;
+            /** Format: date-time */
+            detectedAt?: string;
+            /** Format: double */
+            magnitude?: number;
+            metricAffected?: string;
+            potentialCauses?: string[];
+            recommendedActions?: string[];
+        };
+        StatisticalSignificanceData: {
+            /** Format: double */
+            confidenceLevel?: number;
+            isStatisticallySignificant?: boolean;
+            /** Format: double */
+            marginOfError?: number;
+            /** Format: double */
+            pValue?: number;
+            /** Format: int64 */
+            sampleSize?: number;
+            /** Format: double */
+            standardDeviation?: number;
+        };
         Status: {
             message?: string;
             status?: string;
             /** Format: date-time */
             timestamp?: string;
         };
+        StealthAnalyticsData: {
+            anonymityMetrics?: components["schemas"]["AnonymityMetrics"];
+            complianceWithPolicies?: components["schemas"]["StealthComplianceData"];
+            countermeasureAnalysis?: components["schemas"]["CountermeasureAnalysis"][];
+            detectionRiskAnalysis?: components["schemas"]["DetectionRiskAnalysis"];
+            /** Format: double */
+            overallStealthScore?: number;
+            stealthTechniques?: components["schemas"]["StealthTechniqueMetrics"][];
+            stealthTrendAnalysis?: components["schemas"]["StealthTrendPoint"][];
+        };
+        StealthAuditEntry: {
+            description?: string;
+            justification?: string;
+            operation?: string;
+            /** @enum {string} */
+            riskImpact?: "none" | "minimal" | "moderate" | "significant" | "high";
+            /** Format: date-time */
+            timestamp?: string;
+            userId?: components["schemas"]["UUID"];
+        };
+        StealthBaselineMetrics: {
+            /** Format: double */
+            anonymityScore?: number;
+            /** Format: double */
+            averageStealthScore?: number;
+            /** Format: double */
+            countermeasureEffectiveness?: number;
+            /** Format: int64 */
+            detectionEvents?: number;
+            /** Format: int64 */
+            successfulEvasions?: number;
+        };
         StealthCompatibleService: Record<string, never>;
+        StealthComplianceData: {
+            auditTrail?: components["schemas"]["StealthAuditEntry"][];
+            complianceViolations?: components["schemas"]["StealthComplianceViolation"][];
+            /** Format: double */
+            ethicalGuidelineScore?: number;
+            /** Format: double */
+            legalComplianceScore?: number;
+            /** Format: double */
+            policyComplianceScore?: number;
+        };
+        StealthComplianceViolation: {
+            description?: string;
+            preventiveMeasure?: string;
+            resolution?: string;
+            /** Format: date-time */
+            resolutionTime?: string;
+            /** @enum {string} */
+            severity?: "low" | "medium" | "high" | "critical";
+            /** Format: date-time */
+            timestamp?: string;
+            violationType?: string;
+        };
         StealthConfig: {
             /** @description BatchRandomization randomizes order within validation batches */
             batchRandomization?: boolean;
@@ -4945,12 +6665,45 @@ export interface components {
             userAgentRotations?: number;
         };
         StealthStrategy: string;
+        StealthTechniqueMetrics: {
+            /** Format: double */
+            adaptabilityScore?: number;
+            /** Format: double */
+            configurationScore?: number;
+            /** Format: int64 */
+            detectionEvaded?: number;
+            /** Format: double */
+            effectivenessScore?: number;
+            /** Format: double */
+            resourceCost?: number;
+            /** Format: double */
+            successRate?: number;
+            techniqueName?: string;
+        };
+        StealthTrendPoint: {
+            /** Format: int32 */
+            activeCountermeasures?: number;
+            /** Format: int64 */
+            detectionEvents?: number;
+            /** @enum {string} */
+            riskLevel?: "minimal" | "low" | "medium" | "high" | "critical";
+            /** Format: double */
+            stealthScore?: number;
+            /** Format: int64 */
+            successfulEvasions?: number;
+            /** Format: date-time */
+            timestamp?: string;
+        };
         StealthValidationConfig: {
+            advancedPolicy?: components["schemas"]["AdvancedStealthPolicy"];
+            behavioralMimicry?: components["schemas"]["BehavioralMimicryConfig"];
+            detectionEvasion?: components["schemas"]["DetectionEvasionConfig"];
             /** Format: double */
             detectionThreshold?: number;
             enabled?: boolean;
             patternAvoidance?: boolean;
             proxyRotationForced?: boolean;
+            proxyStrategy?: components["schemas"]["EnterpriseProxyStrategy"];
             /** @enum {string} */
             randomizationLevel?: "low" | "medium" | "high" | "extreme";
             /** Format: int32 */
@@ -5013,7 +6766,40 @@ export interface components {
             schema?: string;
             size?: string;
         };
+        TechnicalKPIs: {
+            /** Format: double */
+            codeQuality?: number;
+            /** Format: double */
+            dataIntegrity?: number;
+            /** Format: double */
+            deploymentSuccess?: number;
+            /** Format: double */
+            infrastructureHealth?: number;
+            /** Format: int64 */
+            meanTimeToRecovery?: number;
+            /** Format: double */
+            scalabilityIndex?: number;
+            /** Format: double */
+            securityScore?: number;
+            /** Format: double */
+            systemReliability?: number;
+            /** Format: double */
+            testCoverage?: number;
+        };
         TemplateManager: Record<string, never>;
+        TemplateSection: {
+            dataSource?: string;
+            formatting?: {
+                [key: string]: Record<string, never>;
+            };
+            /** Format: int32 */
+            position?: number;
+            sectionId?: components["schemas"]["UUID"];
+            sectionTitle?: string;
+            /** @enum {string} */
+            sectionType?: "summary" | "chart" | "table" | "text" | "metrics";
+            visible?: boolean;
+        };
         TestResultResponse: {
             message?: string;
             success?: boolean;
@@ -5032,6 +6818,66 @@ export interface components {
             values?: {
                 [key: string]: Record<string, never>;
             };
+        };
+        TooltipConfiguration: {
+            customFields?: string[];
+            enabled?: boolean;
+            /** Format: date-time */
+            format?: string;
+            interactive?: boolean;
+            showAll?: boolean;
+        };
+        TrendAnalysis: {
+            anomalyDetection?: components["schemas"]["AnomalyDetectionResults"];
+            cyclicalPatterns?: components["schemas"]["CyclicalPattern"][];
+            longTermTrend?: components["schemas"]["TrendDirection"];
+            mediumTermTrend?: components["schemas"]["TrendDirection"];
+            seasonalPatterns?: components["schemas"]["SeasonalPattern"][];
+            shortTermTrend?: components["schemas"]["TrendDirection"];
+            trendBreakpoints?: components["schemas"]["TrendBreakpoint"][];
+        };
+        TrendBreakpoint: {
+            /** Format: date-time */
+            breakpointTime?: string;
+            /** @enum {string} */
+            breakpointType?: "level_shift" | "trend_change" | "variance_change";
+            businessEvents?: string[];
+            /** @enum {string} */
+            newTrend?: "improving" | "stable" | "declining";
+            potentialCauses?: string[];
+            /** @enum {string} */
+            previousTrend?: "improving" | "stable" | "declining";
+            /** Format: double */
+            significanceLevel?: number;
+        };
+        TrendDirection: {
+            /** Format: double */
+            confidence?: number;
+            /** @enum {string} */
+            direction?: "strongly_improving" | "improving" | "stable" | "declining" | "strongly_declining";
+            /** Format: int32 */
+            duration?: number;
+            /** Format: double */
+            rate?: number;
+            /** Format: double */
+            strength?: number;
+        };
+        TrendPrediction: {
+            businessImplications?: string[];
+            /** Format: double */
+            confidenceLevel?: number;
+            /** @enum {string} */
+            currentDirection?: "improving" | "stable" | "declining";
+            influencingFactors?: string[];
+            /** @enum {string} */
+            predictedDirection?: "improving" | "stable" | "declining";
+            /** Format: date-time */
+            trendChangeTime?: string;
+            /** Format: int32 */
+            trendDuration?: number;
+            trendName?: string;
+            /** Format: double */
+            trendStrength?: number;
         };
         /**
          * Format: uuid
@@ -5145,6 +6991,15 @@ export interface components {
             /** Format: date-time */
             updatedAt?: string;
         };
+        UserExperienceKPIs: {
+            featureAdoptionRate?: number;
+            interfaceUsability?: number;
+            supportTicketResolution?: number;
+            systemResponsiveness?: number;
+            userEngagementScore?: number;
+            userRetentionRate?: number;
+            userSatisfactionScore?: number;
+        };
         UserPublicResponse: {
             /** Format: email */
             email?: string;
@@ -5183,6 +7038,23 @@ export interface components {
             validationId?: components["schemas"]["UUID"];
         };
         ValidationStatusEnum: string;
+        VisualizationConfig: {
+            /** @enum {string} */
+            chartTypes?: "line" | "bar" | "pie" | "scatter" | "heatmap" | "radar";
+            /** @enum {string} */
+            colorScheme?: "corporate" | "professional" | "colorful" | "monochrome";
+            interactive?: boolean;
+            realTimeUpdate?: boolean;
+        };
+        VisualizationDataPrep: {
+            animationSettings?: components["schemas"]["AnimationSettings"];
+            chartData?: components["schemas"]["ChartDataSet"][];
+            colorSchemeData?: components["schemas"]["ColorSchemeData"];
+            dashboardLayouts?: components["schemas"]["DashboardLayout"][];
+            exportFormats?: string[];
+            interactiveElements?: components["schemas"]["InteractiveElement"][];
+            responsiveSettings?: components["schemas"]["ResponsiveSettings"];
+        };
         WebSocketErrorResponse: {
             /** Format: int32 */
             code?: number;
@@ -8713,6 +10585,133 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WorkerConfig"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    streamCampaignEvents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Campaign ID (UUID) */
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    streamEvents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data */
+                        data?: unknown;
+                        /** @description Success message */
+                        message?: string;
+                    };
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
+    getSSEStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["APIResponse"];
                 };
             };
             /** @description Bad Request */

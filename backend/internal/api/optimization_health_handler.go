@@ -5,6 +5,7 @@ import (
 
 	"github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // OptimizationHealthHandler handles health checks for optimization components
@@ -72,9 +73,13 @@ func (h *OptimizationHealthHandler) HandleOptimizationMetrics(c *gin.Context) {
 
 	optimizationStatus := h.serviceFactory.GetOptimizationStatus(identifier)
 
-	c.JSON(http.StatusOK, gin.H{
-		"optimization_status": optimizationStatus,
-		"identifier":          identifier,
+	c.JSON(http.StatusOK, APIResponse{
+		Success: true,
+		Data: gin.H{
+			"optimization_status": optimizationStatus,
+			"identifier":          identifier,
+		},
+		RequestID: uuid.NewString(),
 	})
 }
 
@@ -97,10 +102,14 @@ func (h *OptimizationHealthHandler) HandleFeatureFlagStatus(c *gin.Context) {
 
 	config := featureFlagService.GetConfig()
 
-	c.JSON(http.StatusOK, gin.H{
-		"feature_flags":      config,
-		"rollout_enabled":    featureFlagService.IsOptimizationEnabled(),
-		"rollout_percentage": featureFlagService.GetRolloutPercentage(),
+	c.JSON(http.StatusOK, APIResponse{
+		Success: true,
+		Data: gin.H{
+			"feature_flags":      config,
+			"rollout_enabled":    featureFlagService.IsOptimizationEnabled(),
+			"rollout_percentage": featureFlagService.GetRolloutPercentage(),
+		},
+		RequestID: uuid.NewString(),
 	})
 }
 
@@ -118,9 +127,13 @@ func (h *OptimizationHealthHandler) HandleOptimizationTest(c *gin.Context) {
 	shouldUse := h.serviceFactory.ShouldUseOptimization(identifier)
 	optimizationLevel := h.serviceFactory.GetFeatureFlagService().GetOptimizationLevel(identifier)
 
-	c.JSON(http.StatusOK, gin.H{
-		"identifier":              identifier,
-		"should_use_optimization": shouldUse,
-		"optimization_level":      optimizationLevel,
+	c.JSON(http.StatusOK, APIResponse{
+		Success: true,
+		Data: gin.H{
+			"identifier":              identifier,
+			"should_use_optimization": shouldUse,
+			"optimization_level":      optimizationLevel,
+		},
+		RequestID: uuid.NewString(),
 	})
 }

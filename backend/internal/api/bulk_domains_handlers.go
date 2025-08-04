@@ -169,13 +169,25 @@ func (h *BulkDomainsAPIHandler) BulkGenerateDomains(c *gin.Context) {
 		Status:         status,
 	}
 
-	// Return appropriate HTTP status
+	// Return appropriate HTTP status with unified envelope
 	if status == "failed" {
-		c.JSON(http.StatusInternalServerError, response)
+		c.JSON(http.StatusInternalServerError, APIResponse{
+			Success:   false,
+			Data:      response,
+			RequestID: response.OperationID,
+		})
 	} else if status == "partial" {
-		c.JSON(http.StatusPartialContent, response)
+		c.JSON(http.StatusPartialContent, APIResponse{
+			Success:   false,
+			Data:      response,
+			RequestID: response.OperationID,
+		})
 	} else {
-		c.JSON(http.StatusOK, response)
+		c.JSON(http.StatusOK, APIResponse{
+			Success:   true,
+			Data:      response,
+			RequestID: response.OperationID,
+		})
 	}
 }
 

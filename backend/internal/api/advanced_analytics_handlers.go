@@ -117,7 +117,11 @@ func (h *AdvancedBulkAnalyticsAPIHandler) PerformanceKPIAnalysis(c *gin.Context)
 		DataPoints:      len(request.CampaignIDs),
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, APIResponse{
+		Success:   true,
+		Data:      response,
+		RequestID: uuid.NewString(),
+	})
 }
 
 // StealthAnalysis - POST /api/v1/bulk/analytics/stealth
@@ -193,7 +197,11 @@ func (h *AdvancedBulkAnalyticsAPIHandler) ResourceAnalysis(c *gin.Context) {
 		DataPoints:        len(request.CampaignIDs),
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, APIResponse{
+		Success:   true,
+		Data:      response,
+		RequestID: uuid.NewString(),
+	})
 }
 
 // ComparativeAnalysis - POST /api/v1/bulk/analytics/comparative
@@ -235,7 +243,11 @@ func (h *AdvancedBulkAnalyticsAPIHandler) ComparativeAnalysis(c *gin.Context) {
 		DataPoints:      len(request.CampaignIDs),
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, APIResponse{
+		Success:   true,
+		Data:      response,
+		RequestID: uuid.NewString(),
+	})
 }
 
 // PredictiveAnalysis - POST /api/v1/bulk/analytics/predictive
@@ -277,7 +289,11 @@ func (h *AdvancedBulkAnalyticsAPIHandler) PredictiveAnalysis(c *gin.Context) {
 		DataPoints:         len(request.CampaignIDs),
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, APIResponse{
+		Success:   true,
+		Data:      response,
+		RequestID: uuid.NewString(),
+	})
 }
 
 // ExportAnalytics - POST /api/v1/bulk/analytics/export
@@ -325,7 +341,11 @@ func (h *AdvancedBulkAnalyticsAPIHandler) ExportAnalytics(c *gin.Context) {
 	response.ExportInfo = exportInfo
 	response.ProcessingTime = time.Since(startTime).Milliseconds()
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, APIResponse{
+		Success:   true,
+		Data:      response,
+		RequestID: uuid.NewString(),
+	})
 }
 
 // GetVisualizationData - GET /api/v1/bulk/analytics/visualization/{campaignId}

@@ -31,6 +31,7 @@ export * from './apis/proxies-api';
 export * from './apis/proxy-pools-api';
 export * from './apis/resources-api';
 export * from './apis/server-settings-api';
+export * from './apis/sse-api';
 export * from './apis/validation-api';
 export * from './apis/websocket-api';
 

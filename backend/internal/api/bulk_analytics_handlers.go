@@ -198,7 +198,11 @@ func (h *BulkAnalyticsAPIHandler) BulkAnalyzeDomains(c *gin.Context) {
 		Metadata:        metadata,
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, APIResponse{
+		Success:   true,
+		Data:      response,
+		RequestID: uuid.NewString(),
+	})
 }
 
 // @Summary Manage bulk campaign operations
@@ -295,13 +299,25 @@ func (h *BulkAnalyticsAPIHandler) BulkCampaignOperations(c *gin.Context) {
 		OperationID:    operationID,
 	}
 
-	// Return appropriate status based on results
+	// Return appropriate status based on results with unified envelope
 	if failedOps > 0 && successfulOps == 0 {
-		c.JSON(http.StatusConflict, response)
+		c.JSON(http.StatusConflict, APIResponse{
+			Success:   false,
+			Data:      response,
+			RequestID: operationID,
+		})
 	} else if failedOps > 0 {
-		c.JSON(http.StatusPartialContent, response)
+		c.JSON(http.StatusPartialContent, APIResponse{
+			Success:   false,
+			Data:      response,
+			RequestID: operationID,
+		})
 	} else {
-		c.JSON(http.StatusOK, response)
+		c.JSON(http.StatusOK, APIResponse{
+			Success:   true,
+			Data:      response,
+			RequestID: operationID,
+		})
 	}
 }
 

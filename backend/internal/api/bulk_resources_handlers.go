@@ -156,7 +156,11 @@ func (h *BulkResourcesAPIHandler) AllocateBulkResources(c *gin.Context) {
 		ProcessingTime: time.Since(startTime).Milliseconds(),
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, APIResponse{
+		Success:   true,
+		Data:      response,
+		RequestID: uuid.NewString(),
+	})
 }
 
 // @Summary Get bulk resource allocation status
@@ -211,7 +215,11 @@ func (h *BulkResourcesAPIHandler) GetBulkResourceStatus(c *gin.Context) {
 		},
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, APIResponse{
+		Success:   true,
+		Data:      response,
+		RequestID: uuid.NewString(),
+	})
 }
 
 // @Summary Cancel bulk operations
@@ -274,7 +282,11 @@ func (h *BulkResourcesAPIHandler) CancelBulkOperation(c *gin.Context) {
 		CancellationTime: time.Now().Format(time.RFC3339),
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, APIResponse{
+		Success:   true,
+		Data:      response,
+		RequestID: operationID,
+	})
 }
 
 // @Summary Get bulk operation status by ID
@@ -351,7 +363,11 @@ func (h *BulkResourcesAPIHandler) GetBulkOperationStatus(c *gin.Context) {
 		},
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, APIResponse{
+		Success:   true,
+		Data:      response,
+		RequestID: operationID,
+	})
 }
 
 // @Summary List bulk operations with filtering
@@ -494,5 +510,9 @@ func (h *BulkResourcesAPIHandler) ListBulkOperations(c *gin.Context) {
 		Metadata:   metadata,
 	}
 
-	c.JSON(http.StatusOK, response)
+	c.JSON(http.StatusOK, APIResponse{
+		Success:   true,
+		Data:      response,
+		RequestID: uuid.NewString(),
+	})
 }

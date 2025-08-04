@@ -61,6 +61,122 @@ components:
             required:
                 - proxyId
             type: object
+        AdvancedAnalyticsData:
+            properties:
+                costEffectiveness:
+                    $ref: '#/components/schemas/CostEffectivenessData'
+                operationalEfficiency:
+                    $ref: '#/components/schemas/OperationalEfficiencyMetrics'
+                qualityMetrics:
+                    $ref: '#/components/schemas/QualityAssuranceMetrics'
+                scalabilityMetrics:
+                    $ref: '#/components/schemas/ScalabilityAnalyticsData'
+            type: object
+        AdvancedBulkAnalyticsAPIHandler:
+            type: object
+        AdvancedBulkAnalyticsRequest:
+            properties:
+                advancedMetrics:
+                    items:
+                        type: string
+                    type: array
+                alertThresholds:
+                    $ref: '#/components/schemas/AnalyticsAlertConfig'
+                analyticsType:
+                    description: Week 2 Advanced Features
+                    enum:
+                        - performance
+                        - stealth
+                        - resource
+                        - comparative
+                        - predictive
+                    type: string
+                campaignIds:
+                    description: Inherited from basic analytics
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+                comparisonBaseline:
+                    $ref: '#/components/schemas/ComparisonBaseline'
+                exportFormat:
+                    enum:
+                        - json
+                        - csv
+                        - excel
+                        - pdf
+                    type: string
+                filters:
+                    additionalProperties:
+                        type: object
+                    type: object
+                granularity:
+                    enum:
+                        - minute
+                        - hour
+                        - day
+                        - week
+                        - month
+                        - quarter
+                        - year
+                    type: string
+                groupBy:
+                    items:
+                        type: string
+                    type: array
+                metrics:
+                    items:
+                        type: string
+                    type: array
+                predictionHorizon:
+                    format: int32
+                    type: integer
+                timeRange:
+                    $ref: '#/components/schemas/TimeRangeFilter'
+                visualization:
+                    $ref: '#/components/schemas/VisualizationConfig'
+            required:
+                - metrics
+                - analyticsType
+            type: object
+        AdvancedBulkAnalyticsResponse:
+            properties:
+                advancedMetrics:
+                    $ref: '#/components/schemas/AdvancedAnalyticsData'
+                aggregatedData:
+                    $ref: '#/components/schemas/AggregatedAnalytics'
+                alertStatus:
+                    items:
+                        $ref: '#/components/schemas/AnalyticsAlert'
+                    type: array
+                campaignMetrics:
+                    additionalProperties:
+                        $ref: '#/components/schemas/CampaignAnalytics'
+                    description: Inherited basic analytics
+                    type: object
+                comparativeData:
+                    $ref: '#/components/schemas/ComparativeAnalyticsData'
+                dataPoints:
+                    format: int32
+                    type: integer
+                exportInfo:
+                    $ref: '#/components/schemas/ExportInfo'
+                metadata:
+                    $ref: '#/components/schemas/BulkMetadata'
+                performanceKPIs:
+                    $ref: '#/components/schemas/PerformanceKPIData'
+                predictiveInsights:
+                    $ref: '#/components/schemas/PredictiveAnalyticsData'
+                processingTimeMs:
+                    format: int64
+                    type: integer
+                resourceAnalytics:
+                    $ref: '#/components/schemas/ResourceAnalyticsData'
+                stealthAnalytics:
+                    $ref: '#/components/schemas/StealthAnalyticsData'
+                visualizationData:
+                    $ref: '#/components/schemas/VisualizationDataPrep'
+            type: object
         AdvancedStealthPolicy:
             properties:
                 adaptiveThrottling:
@@ -112,6 +228,21 @@ components:
                     type: integer
                 totalLeads:
                     type: integer
+            type: object
+        AlertColorConfiguration:
+            properties:
+                criticalColor:
+                    type: string
+                errorColor:
+                    type: string
+                infoColor:
+                    type: string
+                successColor:
+                    type: string
+                warningColor:
+                    type: string
+            type: object
+        AlertService:
             type: object
         AnalysisConfig:
             properties:
@@ -166,6 +297,203 @@ components:
                     type: integer
                 urlsWithoutScreenshots:
                     type: integer
+            type: object
+        AnalyticsAPISpec:
+            properties:
+                description:
+                    type: string
+                endpoints:
+                    items:
+                        $ref: '#/components/schemas/AnalyticsEndpointSpec'
+                    type: array
+                title:
+                    type: string
+                version:
+                    type: string
+            type: object
+        AnalyticsAlert:
+            properties:
+                alertId:
+                    $ref: '#/components/schemas/UUID'
+                alertType:
+                    enum:
+                        - threshold
+                        - anomaly
+                        - trend
+                        - prediction
+                        - quality
+                        - performance
+                    type: string
+                autoResolve:
+                    type: boolean
+                currentValue:
+                    format: double
+                    type: number
+                description:
+                    type: string
+                escalationRules:
+                    items:
+                        $ref: '#/components/schemas/EscalationRule'
+                    type: array
+                estimatedImpact:
+                    enum:
+                        - minimal
+                        - low
+                        - moderate
+                        - high
+                        - severe
+                    type: string
+                metricAffected:
+                    type: string
+                priority:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                        - urgent
+                    type: string
+                recommendedActions:
+                    items:
+                        type: string
+                    type: array
+                severity:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                        - critical
+                    type: string
+                status:
+                    enum:
+                        - active
+                        - acknowledged
+                        - resolved
+                        - dismissed
+                    type: string
+                thresholdValue:
+                    format: double
+                    type: number
+                title:
+                    type: string
+                triggeredAt:
+                    format: date-time
+                    type: string
+            type: object
+        AnalyticsAlertConfig:
+            properties:
+                errorRateThreshold:
+                    format: double
+                    type: number
+                performanceThreshold:
+                    format: int64
+                    type: integer
+                resourceUsageThreshold:
+                    format: double
+                    type: number
+                stealthScoreThreshold:
+                    format: double
+                    type: number
+                successRateThreshold:
+                    format: double
+                    type: number
+            type: object
+        AnalyticsEndpointSpec:
+            properties:
+                description:
+                    type: string
+                examples:
+                    items:
+                        $ref: '#/components/schemas/ExampleSpec'
+                    type: array
+                method:
+                    type: string
+                parameters:
+                    items:
+                        $ref: '#/components/schemas/ParameterSpec'
+                    type: array
+                path:
+                    type: string
+                requestBody:
+                    $ref: '#/components/schemas/RequestBodySpec'
+                responses:
+                    additionalProperties:
+                        $ref: '#/components/schemas/ResponseSpec'
+                    type: object
+                summary:
+                    type: string
+            type: object
+        AnalyticsEngine:
+            type: object
+        AnalyticsResponse:
+            properties:
+                data:
+                    type: object
+                error:
+                    type: string
+                requestId:
+                    $ref: '#/components/schemas/UUID'
+                success:
+                    type: boolean
+                timestamp:
+                    format: date-time
+                    type: string
+                version:
+                    type: string
+            type: object
+        AnimationSettings:
+            properties:
+                animationDuration:
+                    type: integer
+                animationEasing:
+                    type: string
+                enableAnimations:
+                    type: boolean
+                hoverEffects:
+                    type: boolean
+                loadAnimation:
+                    type: boolean
+                reducedMotion:
+                    type: boolean
+                transitionAnimation:
+                    type: boolean
+            type: object
+        AnomalyDetectionResults:
+            properties:
+                alertStatus:
+                    type: string
+                anomaliesDetected:
+                    items:
+                        $ref: '#/components/schemas/DetectedAnomaly'
+                    type: array
+                anomalyScore:
+                    type: number
+                baselineVariability:
+                    type: number
+                detectionSensitivity:
+                    type: number
+                falsePositiveRate:
+                    type: number
+            type: object
+        AnonymityMetrics:
+            properties:
+                anonymitySet:
+                    format: int64
+                    type: integer
+                entropyScore:
+                    format: double
+                    type: number
+                pseudonymityScore:
+                    format: double
+                    type: number
+                trafficAnalysisResistance:
+                    format: double
+                    type: number
+                unlinkabilityScore:
+                    format: double
+                    type: number
+                unobservabilityScore:
+                    format: double
+                    type: number
             type: object
         AppConfig:
             properties:
@@ -403,6 +731,50 @@ components:
                 userId:
                     $ref: '#/components/schemas/UUID'
             type: object
+        AxisConfiguration:
+            properties:
+                format:
+                    format: date-time
+                    type: string
+                gridLines:
+                    type: boolean
+                maxValue:
+                    format: double
+                    type: number
+                minValue:
+                    format: double
+                    type: number
+                scale:
+                    enum:
+                        - linear
+                        - logarithmic
+                        - time
+                    type: string
+                tickInterval:
+                    format: double
+                    type: number
+                title:
+                    type: string
+                unit:
+                    type: string
+            type: object
+        BaselineMetrics:
+            properties:
+                costMetrics:
+                    $ref: '#/components/schemas/CostBaselineMetrics'
+                operationalMetrics:
+                    $ref: '#/components/schemas/OperationalBaselineMetrics'
+                performanceMetrics:
+                    $ref: '#/components/schemas/PerformanceBaselineMetrics'
+                qualityMetrics:
+                    $ref: '#/components/schemas/QualityBaselineMetrics'
+                resourceMetrics:
+                    $ref: '#/components/schemas/ResourceBaselineMetrics'
+                stealthMetrics:
+                    $ref: '#/components/schemas/StealthBaselineMetrics'
+                timePeriod:
+                    $ref: '#/components/schemas/TimeRangeFilter'
+            type: object
         BatchKeywordExtractionRequest:
             properties:
                 items:
@@ -443,6 +815,106 @@ components:
                     type: boolean
                 typingDelays:
                     type: boolean
+            type: object
+        BenchmarkComparison:
+            properties:
+                benchmarkName:
+                    type: string
+                benchmarkValue:
+                    type: number
+                competitivePosition:
+                    type: string
+                currentValue:
+                    type: number
+                metricName:
+                    type: string
+                percentile:
+                    type: integer
+                performanceGap:
+                    type: number
+            type: object
+        BenchmarkMetricComparison:
+            properties:
+                benchmarkValue:
+                    type: number
+                competitivePosition:
+                    type: string
+                gapToBenchmark:
+                    type: number
+                industryAverage:
+                    type: number
+                metricName:
+                    type: string
+                ourValue:
+                    type: number
+                performancePercentile:
+                    type: integer
+                topQuartileValue:
+                    type: number
+            type: object
+        BottleneckIdentification:
+            properties:
+                component:
+                    type: string
+                description:
+                    type: string
+                impact:
+                    type: number
+                recommendation:
+                    type: string
+                severity:
+                    type: string
+            type: object
+        BudgetAlert:
+            properties:
+                alertType:
+                    enum:
+                        - approaching_limit
+                        - exceeded_budget
+                        - unusual_spend
+                        - trend_change
+                    type: string
+                currentValue:
+                    format: double
+                    type: number
+                description:
+                    type: string
+                recommendation:
+                    type: string
+                severity:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                        - critical
+                    type: string
+                threshold:
+                    format: double
+                    type: number
+                timestamp:
+                    format: date-time
+                    type: string
+            type: object
+        BudgetUtilizationData:
+            properties:
+                burnRate:
+                    format: double
+                    type: number
+                projectedDepleteDate:
+                    format: date-time
+                    type: string
+                remainingBudget:
+                    format: double
+                    type: number
+                totalBudget:
+                    format: double
+                    type: number
+                utilizationRate:
+                    format: double
+                    type: number
+                utilizedBudget:
+                    format: double
+                    type: number
             type: object
         BulkAnalyticsAPIHandler:
             type: object
@@ -1244,6 +1716,36 @@ components:
                     format: int64
                     type: integer
             type: object
+        BusinessKPIs:
+            properties:
+                competitiveAdvantage:
+                    format: double
+                    type: number
+                conversionRate:
+                    format: double
+                    type: number
+                costPerLead:
+                    format: double
+                    type: number
+                customerAcquisitionCost:
+                    format: double
+                    type: number
+                customerLifetimeValue:
+                    format: double
+                    type: number
+                leadGenerationRate:
+                    format: double
+                    type: number
+                leadQualityScore:
+                    format: double
+                    type: number
+                marketPenetrationRate:
+                    format: double
+                    type: number
+                revenuePerOperation:
+                    format: double
+                    type: number
+            type: object
         CacheConfiguration:
             properties:
                 cacheName:
@@ -2002,6 +2504,133 @@ components:
             type: object
         CampaignWorkerService:
             type: object
+        CapacityConstraint:
+            properties:
+                constraintType:
+                    type: string
+                description:
+                    type: string
+                impactSeverity:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                        - critical
+                    type: string
+                resolutionCost:
+                    format: double
+                    type: number
+                timeToResolve:
+                    format: int32
+                    type: integer
+                workaround:
+                    type: string
+            type: object
+        CapacityForecast:
+            properties:
+                confidenceLevel:
+                    format: double
+                    type: number
+                forecastDate:
+                    format: date-time
+                    type: string
+                growthDrivers:
+                    items:
+                        type: string
+                    type: array
+                predictedLoad:
+                    format: double
+                    type: number
+                requiredCapacity:
+                    $ref: '#/components/schemas/ResourceCapacitySnapshot'
+                seasonalFactors:
+                    format: double
+                    type: number
+            type: object
+        CapacityForecastPoint:
+            properties:
+                confidenceInterval:
+                    format: double
+                    type: number
+                predictedLoad:
+                    format: double
+                    type: number
+                recommendedCapacity:
+                    format: double
+                    type: number
+                scalingTriggerPoint:
+                    format: double
+                    type: number
+                timeHorizon:
+                    format: date-time
+                    type: string
+            type: object
+        CapacityInvestment:
+            properties:
+                alternativeOptions:
+                    items:
+                        type: string
+                    type: array
+                businessJustification:
+                    type: string
+                expectedROI:
+                    type: number
+                investmentType:
+                    type: string
+                paybackPeriod:
+                    type: integer
+                requiredAmount:
+                    type: number
+                riskLevel:
+                    type: string
+            type: object
+        CapacityPlanningData:
+            properties:
+                capacityConstraints:
+                    items:
+                        $ref: '#/components/schemas/CapacityConstraint'
+                    type: array
+                currentCapacity:
+                    $ref: '#/components/schemas/ResourceCapacitySnapshot'
+                forecastedRequirements:
+                    items:
+                        $ref: '#/components/schemas/CapacityForecast'
+                    type: array
+                investmentRequirements:
+                    items:
+                        $ref: '#/components/schemas/CapacityInvestment'
+                    type: array
+                scalingRecommendations:
+                    items:
+                        $ref: '#/components/schemas/CapacityScalingRec'
+                    type: array
+            type: object
+        CapacityScalingRec:
+            properties:
+                businessImpact:
+                    type: string
+                currentCapacity:
+                    format: double
+                    type: number
+                estimatedCost:
+                    format: double
+                    type: number
+                priority:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                        - critical
+                    type: string
+                recommendedCapacity:
+                    format: double
+                    type: number
+                resourceType:
+                    type: string
+                scalingTimeframe:
+                    format: date-time
+                    type: string
+            type: object
         ChangePasswordRequest:
             properties:
                 currentPassword:
@@ -2013,6 +2642,64 @@ components:
             required:
                 - currentPassword
                 - newPassword
+            type: object
+        ChartDataSet:
+            properties:
+                chartTitle:
+                    type: string
+                chartType:
+                    enum:
+                        - line
+                        - bar
+                        - pie
+                        - scatter
+                        - heatmap
+                        - radar
+                        - treemap
+                    type: string
+                dataSeries:
+                    items:
+                        $ref: '#/components/schemas/DataSeries'
+                    type: array
+                drillDownData:
+                    items:
+                        $ref: '#/components/schemas/DrillDownLevel'
+                    type: array
+                legendConfig:
+                    $ref: '#/components/schemas/LegendConfiguration'
+                tooltipConfig:
+                    $ref: '#/components/schemas/TooltipConfiguration'
+                xAxisConfig:
+                    $ref: '#/components/schemas/AxisConfiguration'
+                yAxisConfig:
+                    $ref: '#/components/schemas/AxisConfiguration'
+            type: object
+        ColorSchemeData:
+            properties:
+                accentColors:
+                    items:
+                        type: string
+                    type: array
+                accessibilityCompliant:
+                    type: boolean
+                alertColors:
+                    $ref: '#/components/schemas/AlertColorConfiguration'
+                brandCompliant:
+                    type: boolean
+                gradientColors:
+                    items:
+                        type: string
+                    type: array
+                primaryColors:
+                    items:
+                        type: string
+                    type: array
+                schemeName:
+                    type: string
+                secondaryColors:
+                    items:
+                        type: string
+                    type: array
             type: object
         CommunicationPattern:
             properties:
@@ -2056,6 +2743,146 @@ components:
                 updatedAt:
                     format: date-time
                     type: string
+            type: object
+        ComparativeAnalyticsData:
+            properties:
+                baselineMetrics:
+                    $ref: '#/components/schemas/BaselineMetrics'
+                benchmarkComparisons:
+                    items:
+                        $ref: '#/components/schemas/DetailedBenchmarkComparison'
+                    type: array
+                comparisonType:
+                    enum:
+                        - period
+                        - historical
+                        - benchmark
+                        - competitor
+                    type: string
+                competitiveAnalysis:
+                    $ref: '#/components/schemas/CompetitiveAnalysis'
+                currentMetrics:
+                    $ref: '#/components/schemas/BaselineMetrics'
+                improvementRecommendations:
+                    items:
+                        $ref: '#/components/schemas/ImprovementRecommendation'
+                    type: array
+                performanceComparison:
+                    $ref: '#/components/schemas/PerformanceComparison'
+                trendAnalysis:
+                    $ref: '#/components/schemas/TrendAnalysis'
+            type: object
+        ComparisonBaseline:
+            properties:
+                periodOffset:
+                    type: integer
+                referencePeriod:
+                    $ref: '#/components/schemas/TimeRangeFilter'
+                type:
+                    type: string
+            required:
+                - type
+            type: object
+        CompetitiveAnalysis:
+            properties:
+                competitiveStrengths:
+                    items:
+                        $ref: '#/components/schemas/CompetitiveStrength'
+                    type: array
+                competitiveWeaknesses:
+                    items:
+                        $ref: '#/components/schemas/CompetitiveWeakness'
+                    type: array
+                competitorComparisons:
+                    items:
+                        $ref: '#/components/schemas/CompetitorComparison'
+                    type: array
+                marketPosition:
+                    type: string
+                marketShare:
+                    type: number
+                threatLevel:
+                    type: string
+            type: object
+        CompetitiveStrength:
+            properties:
+                description:
+                    type: string
+                quantitativeAdvantage:
+                    type: number
+                strategicValue:
+                    type: string
+                strengthArea:
+                    type: string
+                strengthLevel:
+                    type: string
+                sustainability:
+                    type: string
+            type: object
+        CompetitiveWeakness:
+            properties:
+                impactOnBusiness:
+                    type: string
+                improvementPlan:
+                    type: string
+                quantitativeGap:
+                    type: number
+                severityLevel:
+                    type: string
+                urgencyLevel:
+                    type: string
+                weaknessArea:
+                    type: string
+            type: object
+        CompetitorComparison:
+            properties:
+                competitorName:
+                    type: string
+                competitorType:
+                    type: string
+                growthRate:
+                    type: number
+                marketShare:
+                    type: number
+                overallRanking:
+                    type: string
+                performanceComparison:
+                    items:
+                        $ref: '#/components/schemas/CompetitorMetricComparison'
+                    type: array
+                threatLevel:
+                    type: string
+            type: object
+        CompetitorMetricComparison:
+            properties:
+                competitiveAdvantage:
+                    type: string
+                competitorPerformance:
+                    type: number
+                metricName:
+                    type: string
+                ourPerformance:
+                    type: number
+                performanceGap:
+                    type: number
+                strategicImportance:
+                    type: string
+            type: object
+        ComplianceAssessmentData:
+            properties:
+                overallComplianceScore:
+                    format: double
+                    type: number
+                policyCompliance:
+                    items:
+                        $ref: '#/components/schemas/PolicyComplianceItem'
+                    type: array
+                regulatoryCompliance:
+                    items:
+                        $ref: '#/components/schemas/RegulatoryComplianceItem'
+                    type: array
+                securityCompliance:
+                    $ref: '#/components/schemas/SecurityComplianceData'
             type: object
         ConfigLock:
             properties:
@@ -2247,6 +3074,175 @@ components:
                 mode:
                     type: string
             type: object
+        CostBaselineMetrics:
+            properties:
+                costPerOperation:
+                    format: double
+                    type: number
+                costPerSuccessfulLead:
+                    format: double
+                    type: number
+                resourceCostBreakdown:
+                    $ref: '#/components/schemas/ResourceCostBreakdown'
+                roi:
+                    format: double
+                    type: number
+                totalCost:
+                    format: double
+                    type: number
+            type: object
+        CostEffectivenessData:
+            properties:
+                budgetUtilization:
+                    $ref: '#/components/schemas/BudgetUtilizationData'
+                costOptimizationAreas:
+                    items:
+                        $ref: '#/components/schemas/CostOptimizationArea'
+                    type: array
+                costPerOperation:
+                    format: double
+                    type: number
+                costPerSuccessfulLead:
+                    format: double
+                    type: number
+                costTrendAnalysis:
+                    items:
+                        $ref: '#/components/schemas/CostTrendPoint'
+                    type: array
+                roiAnalysis:
+                    $ref: '#/components/schemas/ROIAnalysisData'
+            type: object
+        CostEfficiencyMetrics:
+            properties:
+                competitiveCostPosition:
+                    enum:
+                        - excellent
+                        - good
+                        - average
+                        - poor
+                    type: string
+                costPerPerformanceUnit:
+                    format: double
+                    type: number
+                optimizationPotential:
+                    format: double
+                    type: number
+                overallCostEfficiency:
+                    format: double
+                    type: number
+                resourceValueRatio:
+                    format: double
+                    type: number
+                wasteReductionScore:
+                    format: double
+                    type: number
+            type: object
+        CostOptimizationArea:
+            properties:
+                category:
+                    type: string
+                currentCost:
+                    format: double
+                    type: number
+                description:
+                    type: string
+                implementationCost:
+                    format: double
+                    type: number
+                potentialSavings:
+                    format: double
+                    type: number
+                riskLevel:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                    type: string
+                savingsPercentage:
+                    format: double
+                    type: number
+                timeToRealization:
+                    format: int32
+                    type: integer
+            type: object
+        CostOptimizationStrategy:
+            properties:
+                description:
+                    type: string
+                estimatedSavings:
+                    format: double
+                    type: number
+                implementationEffort:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                    type: string
+                prerequisites:
+                    items:
+                        type: string
+                    type: array
+                riskLevel:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                    type: string
+                strategyName:
+                    type: string
+                timeToImplement:
+                    format: int32
+                    type: integer
+            type: object
+        CostTrendPoint:
+            properties:
+                budgetUtilization:
+                    format: double
+                    type: number
+                costPerOperation:
+                    format: double
+                    type: number
+                efficiencyScore:
+                    format: double
+                    type: number
+                timestamp:
+                    format: date-time
+                    type: string
+                totalCost:
+                    format: double
+                    type: number
+            type: object
+        CountermeasureAnalysis:
+            properties:
+                bypassSuccessRate:
+                    format: double
+                    type: number
+                countermeasureName:
+                    type: string
+                deploymentStatus:
+                    enum:
+                        - active
+                        - inactive
+                        - testing
+                        - deprecated
+                    type: string
+                effectivenessRating:
+                    format: double
+                    type: number
+                maintenanceRequired:
+                    type: boolean
+                resourceUtilization:
+                    format: double
+                    type: number
+                updateFrequency:
+                    enum:
+                        - realtime
+                        - hourly
+                        - daily
+                        - weekly
+                        - monthly
+                    type: string
+            type: object
         CreateCampaignRequest:
             properties:
                 description:
@@ -2423,6 +3419,23 @@ components:
                 - firstName
                 - lastName
                 - password
+            type: object
+        CyclicalPattern:
+            properties:
+                averageAmplitude:
+                    type: number
+                cycleLength:
+                    type: integer
+                cycleReliability:
+                    type: number
+                cycleStrength:
+                    type: number
+                lastCycleStart:
+                    format: date-time
+                    type: string
+                nextCycleStart:
+                    format: date-time
+                    type: string
             type: object
         DNSCampaignService:
             type: object
@@ -2767,6 +3780,119 @@ components:
                 useSystemResolvers:
                     type: boolean
             type: object
+        DashboardLayout:
+            properties:
+                autoRefresh:
+                    type: boolean
+                layoutName:
+                    type: string
+                layoutType:
+                    type: string
+                refreshInterval:
+                    type: integer
+                responsive:
+                    type: boolean
+                sections:
+                    items:
+                        $ref: '#/components/schemas/DashboardSection'
+                    type: array
+                shareableLink:
+                    type: string
+            type: object
+        DashboardPosition:
+            properties:
+                column:
+                    type: integer
+                row:
+                    type: integer
+                zIndex:
+                    type: integer
+            type: object
+        DashboardSection:
+            properties:
+                collapsible:
+                    type: boolean
+                dataSource:
+                    type: string
+                position:
+                    $ref: '#/components/schemas/DashboardPosition'
+                refreshRate:
+                    format: int32
+                    type: integer
+                sectionId:
+                    $ref: '#/components/schemas/UUID'
+                sectionTitle:
+                    type: string
+                sectionType:
+                    enum:
+                        - chart
+                        - table
+                        - metric
+                        - alert
+                        - summary
+                    type: string
+                size:
+                    $ref: '#/components/schemas/DashboardSize'
+                visible:
+                    type: boolean
+            type: object
+        DashboardSize:
+            properties:
+                height:
+                    format: int32
+                    type: integer
+                minHeight:
+                    format: int32
+                    type: integer
+                minWidth:
+                    format: int32
+                    type: integer
+                resizable:
+                    type: boolean
+                width:
+                    format: int32
+                    type: integer
+            type: object
+        DataPoint:
+            properties:
+                category:
+                    type: string
+                drillDownEnabled:
+                    type: boolean
+                formattedValue:
+                    type: string
+                label:
+                    type: string
+                metadata:
+                    additionalProperties:
+                        type: object
+                    type: object
+                timestamp:
+                    format: date-time
+                    type: string
+                value:
+                    format: double
+                    type: number
+            type: object
+        DataSeries:
+            properties:
+                aggregation:
+                    type: string
+                colorCode:
+                    type: string
+                dataPoints:
+                    items:
+                        $ref: '#/components/schemas/DataPoint'
+                    type: array
+                lineStyle:
+                    type: string
+                markerStyle:
+                    type: string
+                seriesName:
+                    type: string
+                seriesType:
+                    type: string
+            type: object
         DatabaseConfig:
             properties:
                 connectionLifetime:
@@ -2884,6 +4010,34 @@ components:
                 success:
                     type: boolean
             type: object
+        DetailedBenchmarkComparison:
+            properties:
+                benchmarkDate:
+                    format: date-time
+                    type: string
+                benchmarkName:
+                    type: string
+                benchmarkSource:
+                    type: string
+                comparisonResults:
+                    items:
+                        $ref: '#/components/schemas/BenchmarkMetricComparison'
+                    type: array
+                competitiveAdvantages:
+                    items:
+                        type: string
+                    type: array
+                improvementAreas:
+                    items:
+                        type: string
+                    type: array
+                overallRanking:
+                    format: int32
+                    type: integer
+                performanceGap:
+                    format: double
+                    type: number
+            type: object
         DetailedTestResultResponse:
             properties:
                 details:
@@ -2905,6 +4059,46 @@ components:
                     type: integer
                 testId:
                     $ref: '#/components/schemas/UUID'
+            type: object
+        DetectedAnomaly:
+            properties:
+                affectedMetrics:
+                    items:
+                        type: string
+                    type: array
+                anomalyType:
+                    type: string
+                businessImpact:
+                    enum:
+                        - minimal
+                        - low
+                        - moderate
+                        - high
+                        - severe
+                    type: string
+                detectedAt:
+                    format: date-time
+                    type: string
+                duration:
+                    format: int64
+                    type: integer
+                magnitude:
+                    format: double
+                    type: number
+                potentialCauses:
+                    items:
+                        type: string
+                    type: array
+                recoveryTime:
+                    format: int64
+                    type: integer
+                severity:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                        - critical
+                    type: string
             type: object
         DetectionEvasionConfig:
             properties:
@@ -2932,6 +4126,39 @@ components:
                     type: boolean
                 tlsFingerprintRotation:
                     type: boolean
+            type: object
+        DetectionRiskAnalysis:
+            properties:
+                currentRiskLevel:
+                    enum:
+                        - minimal
+                        - low
+                        - medium
+                        - high
+                        - critical
+                    type: string
+                lastDetectionIncident:
+                    $ref: '#/components/schemas/UUID'
+                mitigationStrategies:
+                    items:
+                        $ref: '#/components/schemas/MitigationStrategy'
+                    type: array
+                riskFactors:
+                    items:
+                        $ref: '#/components/schemas/RiskFactor'
+                    type: array
+                riskScore:
+                    format: double
+                    type: number
+                riskTrendDirection:
+                    enum:
+                        - decreasing
+                        - stable
+                        - increasing
+                    type: string
+                timeToDetectionEstimate:
+                    format: int64
+                    type: integer
             type: object
         DnsPersonaConfig:
             properties:
@@ -3277,6 +4504,21 @@ components:
             type: string
         DomainStealthService:
             type: object
+        DrillDownLevel:
+            properties:
+                availableFields:
+                    items:
+                        type: string
+                    type: array
+                dataQuery:
+                    type: string
+                groupingField:
+                    type: string
+                level:
+                    type: integer
+                levelName:
+                    type: string
+            type: object
         EncryptionService:
             type: object
         EnhancedServerConfig:
@@ -3447,6 +4689,27 @@ components:
                     format: date-time
                     type: string
             type: object
+        ErrorPatternData:
+            properties:
+                errorType:
+                    type: string
+                firstOccurred:
+                    format: date-time
+                    type: string
+                frequency:
+                    format: int64
+                    type: integer
+                impactScope:
+                    type: string
+                lastOccurred:
+                    format: date-time
+                    type: string
+                mitigation:
+                    type: string
+                trendSlope:
+                    format: double
+                    type: number
+            type: object
         ErrorResponse:
             properties:
                 code:
@@ -3456,6 +4719,27 @@ components:
                     type: string
                 status:
                     type: string
+            type: object
+        EscalationRule:
+            properties:
+                additionalRecipients:
+                    items:
+                        type: string
+                    type: array
+                escalationActions:
+                    items:
+                        type: string
+                    type: array
+                escalationLevel:
+                    format: int32
+                    type: integer
+                notificationChannels:
+                    items:
+                        type: string
+                    type: array
+                timeThreshold:
+                    format: int32
+                    type: integer
             type: object
         EventProjection:
             properties:
@@ -3518,8 +4802,100 @@ components:
                     format: int64
                     type: integer
             type: object
+        ExampleSpec:
+            properties:
+                description:
+                    type: string
+                name:
+                    type: string
+                request:
+                    type: object
+                response:
+                    type: object
+            type: object
         ExecutionStatusEnum:
             type: string
+        ExportFormat:
+            properties:
+                compression:
+                    type: boolean
+                customOptions:
+                    additionalProperties:
+                        type: object
+                    type: object
+                description:
+                    type: string
+                formatName:
+                    type: string
+                formatType:
+                    type: string
+                maxSize:
+                    type: integer
+                requiresTemplate:
+                    type: boolean
+            type: object
+        ExportInfo:
+            properties:
+                availableFormats:
+                    items:
+                        $ref: '#/components/schemas/ExportFormat'
+                    type: array
+                customTemplates:
+                    items:
+                        $ref: '#/components/schemas/ExportTemplate'
+                    type: array
+                expirationTime:
+                    format: date-time
+                    type: string
+                exportSize:
+                    format: int64
+                    type: integer
+                exportUrl:
+                    format: uri
+                    type: string
+                generationTime:
+                    format: int64
+                    type: integer
+                scheduledExports:
+                    items:
+                        $ref: '#/components/schemas/ScheduledExport'
+                    type: array
+            type: object
+        ExportService:
+            type: object
+        ExportTemplate:
+            properties:
+                createdAt:
+                    format: date-time
+                    type: string
+                createdBy:
+                    format: uuid
+                    type: string
+                customBranding:
+                    type: boolean
+                format:
+                    format: date-time
+                    type: string
+                lastModified:
+                    format: date-time
+                    type: string
+                sections:
+                    items:
+                        $ref: '#/components/schemas/TemplateSection'
+                    type: array
+                templateId:
+                    $ref: '#/components/schemas/UUID'
+                templateName:
+                    type: string
+                templateType:
+                    enum:
+                        - report
+                        - dashboard
+                        - summary
+                        - executive
+                        - technical
+                    type: string
+            type: object
         ExtractedContentAnalysis:
             properties:
                 advancedKeywords:
@@ -3584,6 +4960,19 @@ components:
                     type: boolean
                 enableRealTimeUpdates:
                     type: boolean
+            type: object
+        FeatureImportance:
+            properties:
+                businessRelevance:
+                    type: string
+                featureName:
+                    type: string
+                importanceScore:
+                    type: number
+                influenceDirection:
+                    type: string
+                statisticalSignificance:
+                    type: number
             type: object
         FingerprintConfig:
             properties:
@@ -4350,12 +5739,140 @@ components:
             required:
                 - userAgent
             type: object
+        ImplementedOptimization:
+            properties:
+                actualSavings:
+                    format: double
+                    type: number
+                description:
+                    type: string
+                expectedSavings:
+                    format: double
+                    type: number
+                implementationDate:
+                    format: date-time
+                    type: string
+                maintenanceRequired:
+                    type: boolean
+                optimizationName:
+                    type: string
+                performanceImpact:
+                    enum:
+                        - positive
+                        - neutral
+                        - negative
+                    type: string
+            type: object
+        ImprovementRecommendation:
+            properties:
+                currentGap:
+                    format: double
+                    type: number
+                dependencies:
+                    items:
+                        type: string
+                    type: array
+                description:
+                    type: string
+                estimatedCost:
+                    format: double
+                    type: number
+                expectedROI:
+                    format: double
+                    type: number
+                expectedTimeframe:
+                    format: int32
+                    type: integer
+                improvementArea:
+                    type: string
+                priority:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                        - critical
+                    type: string
+                recommendationType:
+                    type: string
+                resourceRequirements:
+                    items:
+                        type: string
+                    type: array
+                riskLevel:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                    type: string
+                successMetrics:
+                    items:
+                        type: string
+                    type: array
+                targetImprovement:
+                    format: double
+                    type: number
+            type: object
         InMemorySessionStore:
+            type: object
+        InteractiveElement:
+            properties:
+                configuration:
+                    additionalProperties:
+                        type: object
+                    type: object
+                elementId:
+                    $ref: '#/components/schemas/UUID'
+                elementType:
+                    enum:
+                        - filter
+                        - drill_down
+                        - zoom
+                        - pan
+                        - select
+                        - highlight
+                    type: string
+                enabled:
+                    type: boolean
+                eventTriggers:
+                    items:
+                        type: string
+                    type: array
+                targetCharts:
+                    items:
+                        type: string
+                    type: array
             type: object
         JobBusinessStatusEnum:
             type: string
         JobTypeEnum:
             type: string
+        KPITrendPoint:
+            properties:
+                businessScore:
+                    format: double
+                    type: number
+                operationalScore:
+                    format: double
+                    type: number
+                overallScore:
+                    format: double
+                    type: number
+                technicalScore:
+                    format: double
+                    type: number
+                timestamp:
+                    format: date-time
+                    type: string
+                trendDirection:
+                    enum:
+                        - improving
+                        - stable
+                        - declining
+                    type: string
+                userExperienceScore:
+                    format: double
+                    type: number
+            type: object
         KeywordExtractionAPIResult:
             properties:
                 dnsPersonaIdUsed:
@@ -4749,6 +6266,49 @@ components:
             required:
                 - id
             type: object
+        LegendConfiguration:
+            properties:
+                enabled:
+                    type: boolean
+                interactive:
+                    type: boolean
+                maxItems:
+                    format: int32
+                    type: integer
+                orientation:
+                    enum:
+                        - horizontal
+                        - vertical
+                    type: string
+                position:
+                    enum:
+                        - top
+                        - bottom
+                        - left
+                        - right
+                    type: string
+            type: object
+        LoadTestingResult:
+            properties:
+                errorRate:
+                    format: double
+                    type: number
+                loadLevel:
+                    format: double
+                    type: number
+                resourceUtilization:
+                    format: double
+                    type: number
+                responseTime:
+                    format: int64
+                    type: integer
+                stabilityScore:
+                    format: double
+                    type: number
+                throughputRate:
+                    format: double
+                    type: number
+            type: object
         LoggingConfig:
             properties:
                 enableFileLogging:
@@ -4890,6 +6450,59 @@ components:
                 rateLimit:
                     $ref: '#/components/schemas/RateLimitInfo'
             type: object
+        MetricComparison:
+            properties:
+                absoluteChange:
+                    format: double
+                    type: number
+                baselineValue:
+                    format: double
+                    type: number
+                changeDirection:
+                    enum:
+                        - improvement
+                        - regression
+                        - stable
+                    type: string
+                confidenceInterval:
+                    format: double
+                    type: number
+                currentValue:
+                    format: double
+                    type: number
+                metricName:
+                    type: string
+                percentageChange:
+                    format: double
+                    type: number
+                significanceLevel:
+                    enum:
+                        - not_significant
+                        - low
+                        - medium
+                        - high
+                        - very_high
+                    type: string
+            type: object
+        MitigationStrategy:
+            properties:
+                description:
+                    type: string
+                effectiveness:
+                    type: number
+                implementationCost:
+                    type: string
+                isActive:
+                    type: boolean
+                resourceRequirement:
+                    type: string
+                riskReduction:
+                    type: number
+                strategyName:
+                    type: string
+            type: object
+        MonitoringHandlers:
+            type: object
         NormalizedDomainGenerationParams:
             properties:
                 characterSet:
@@ -4954,6 +6567,150 @@ components:
                     format: int64
                     type: integer
             type: object
+        OperationalBaselineMetrics:
+            properties:
+                averageResponseTime:
+                    format: int64
+                    type: integer
+                errorRate:
+                    format: double
+                    type: number
+                failedOperations:
+                    format: int64
+                    type: integer
+                successfulOperations:
+                    format: int64
+                    type: integer
+                throughputRate:
+                    format: double
+                    type: number
+                totalOperations:
+                    format: int64
+                    type: integer
+                uptimePercentage:
+                    format: double
+                    type: number
+            type: object
+        OperationalEfficiencyMetrics:
+            properties:
+                bottleneckAnalysis:
+                    items:
+                        $ref: '#/components/schemas/BottleneckIdentification'
+                    type: array
+                idleTimePercentage:
+                    format: double
+                    type: number
+                optimizationOpportunities:
+                    items:
+                        $ref: '#/components/schemas/OptimizationRecommendation'
+                    type: array
+                processingEfficiency:
+                    format: double
+                    type: number
+                resourceUtilizationScore:
+                    format: double
+                    type: number
+                throughputRate:
+                    format: double
+                    type: number
+            type: object
+        OperationalKPIs:
+            properties:
+                averageProcessingTime:
+                    format: int64
+                    type: integer
+                concurrentOperations:
+                    format: int64
+                    type: integer
+                errorRate:
+                    format: double
+                    type: number
+                processingEfficiency:
+                    format: double
+                    type: number
+                queueLength:
+                    format: int64
+                    type: integer
+                resourceUtilization:
+                    format: double
+                    type: number
+                successRate:
+                    format: double
+                    type: number
+                systemUptime:
+                    format: double
+                    type: number
+                throughputRate:
+                    format: double
+                    type: number
+            type: object
+        OpportunityPrediction:
+            properties:
+                opportunityLevel:
+                    type: string
+                opportunityType:
+                    type: string
+                optimalTiming:
+                    format: date-time
+                    type: string
+                potentialBenefit:
+                    type: number
+                probability:
+                    type: number
+                recommendedActions:
+                    items:
+                        type: string
+                    type: array
+                requiredConditions:
+                    items:
+                        type: string
+                    type: array
+                resourceRequirements:
+                    items:
+                        type: string
+                    type: array
+                successProbability:
+                    type: number
+                windowDuration:
+                    type: integer
+            type: object
+        OptimalLevels:
+            properties:
+                cpuTarget:
+                    type: number
+                databaseTarget:
+                    type: integer
+                memoryTarget:
+                    type: number
+                networkTarget:
+                    type: number
+                proxyTarget:
+                    type: integer
+                storageTarget:
+                    type: number
+            type: object
+        OptimalResourceLevels:
+            properties:
+                highVolume:
+                    $ref: '#/components/schemas/OptimalLevels'
+                lowLoad:
+                    $ref: '#/components/schemas/OptimalLevels'
+                normalOperations:
+                    $ref: '#/components/schemas/OptimalLevels'
+                peakLoad:
+                    $ref: '#/components/schemas/OptimalLevels'
+            type: object
+        OptimalScalingPoint:
+            properties:
+                costEfficiency:
+                    type: number
+                expectedPerformance:
+                    type: number
+                loadLevel:
+                    type: number
+                recommendedCapacity:
+                    type: number
+            type: object
         OptimizationConfig:
             properties:
                 enabled:
@@ -4981,6 +6738,23 @@ components:
                     $ref: '#/components/schemas/UUID'
                 serviceOptimization:
                     type: boolean
+            type: object
+        OptimizationRecommendation:
+            properties:
+                category:
+                    type: string
+                description:
+                    type: string
+                expectedImprovement:
+                    type: number
+                implementationCost:
+                    type: string
+                priority:
+                    type: string
+                steps:
+                    items:
+                        type: string
+                    type: array
             type: object
         OptimizationStatus:
             properties:
@@ -5039,6 +6813,19 @@ components:
                 totalRows:
                     format: int64
                     type: integer
+            type: object
+        ParameterSpec:
+            properties:
+                description:
+                    type: string
+                in:
+                    type: string
+                name:
+                    type: string
+                required:
+                    type: boolean
+                type:
+                    type: string
             type: object
         PasswordChangeResponse:
             properties:
@@ -5113,6 +6900,62 @@ components:
                     format: int32
                     type: integer
             type: object
+        PerformanceBaselineMetrics:
+            properties:
+                averageLatency:
+                    format: int64
+                    type: integer
+                efficiencyScore:
+                    format: double
+                    type: number
+                p95Latency:
+                    format: int64
+                    type: integer
+                p99Latency:
+                    format: int64
+                    type: integer
+                reliabilityScore:
+                    format: double
+                    type: number
+                scalabilityScore:
+                    format: double
+                    type: number
+                throughputScore:
+                    format: double
+                    type: number
+            type: object
+        PerformanceBottleneck:
+            properties:
+                bottleneckType:
+                    type: string
+                estimatedFix:
+                    type: string
+                impactOnPerf:
+                    type: number
+                mitigation:
+                    type: string
+                resourceThreshold:
+                    type: number
+                severity:
+                    type: string
+            type: object
+        PerformanceComparison:
+            properties:
+                metricComparisons:
+                    items:
+                        $ref: '#/components/schemas/MetricComparison'
+                    type: array
+                overallImprovement:
+                    type: number
+                regressionAnalysis:
+                    $ref: '#/components/schemas/RegressionAnalysis'
+                significantChanges:
+                    items:
+                        $ref: '#/components/schemas/SignificantChange'
+                    type: array
+                statisticalSignificance:
+                    $ref: '#/components/schemas/StatisticalSignificanceData'
+            type: object
         PerformanceConfig:
             properties:
                 batch_size:
@@ -5125,6 +6968,58 @@ components:
                     type: string
                 max_concurrent_requests:
                     type: integer
+            type: object
+        PerformanceForecast:
+            properties:
+                assumptions:
+                    items:
+                        type: string
+                    type: array
+                confidenceInterval:
+                    format: double
+                    type: number
+                currentValue:
+                    format: double
+                    type: number
+                forecastMethod:
+                    type: string
+                forecastTime:
+                    format: date-time
+                    type: string
+                influencingFactors:
+                    items:
+                        type: string
+                    type: array
+                metricName:
+                    type: string
+                predictedValue:
+                    format: double
+                    type: number
+                predictionAccuracy:
+                    format: double
+                    type: number
+            type: object
+        PerformanceKPIData:
+            properties:
+                benchmarkComparisons:
+                    items:
+                        $ref: '#/components/schemas/BenchmarkComparison'
+                    type: array
+                businessKPIs:
+                    $ref: '#/components/schemas/BusinessKPIs'
+                kpiTrends:
+                    items:
+                        $ref: '#/components/schemas/KPITrendPoint'
+                    type: array
+                operationalKPIs:
+                    $ref: '#/components/schemas/OperationalKPIs'
+                overallPerformanceScore:
+                    format: double
+                    type: number
+                technicalKPIs:
+                    $ref: '#/components/schemas/TechnicalKPIs'
+                userExperienceKPIs:
+                    $ref: '#/components/schemas/UserExperienceKPIs'
             type: object
         PerformanceThreshold:
             properties:
@@ -5508,6 +7403,140 @@ components:
                     format: date-time
                     type: string
             type: object
+        PolicyComplianceItem:
+            properties:
+                complianceRate:
+                    format: double
+                    type: number
+                lastAssessed:
+                    format: date-time
+                    type: string
+                policyName:
+                    type: string
+                severity:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                        - critical
+                    type: string
+                violationCount:
+                    format: int64
+                    type: integer
+            type: object
+        PredictiveAnalyticsData:
+            properties:
+                modelPerformance:
+                    $ref: '#/components/schemas/PredictiveModelPerformance'
+                opportunityPredictions:
+                    items:
+                        $ref: '#/components/schemas/OpportunityPrediction'
+                    type: array
+                overallPredictionAccuracy:
+                    format: double
+                    type: number
+                performanceForecasts:
+                    items:
+                        $ref: '#/components/schemas/PerformanceForecast'
+                    type: array
+                predictionHorizon:
+                    format: int32
+                    type: integer
+                resourceForecasts:
+                    items:
+                        $ref: '#/components/schemas/ResourceForecast'
+                    type: array
+                riskPredictions:
+                    items:
+                        $ref: '#/components/schemas/RiskPrediction'
+                    type: array
+                scenarioAnalysis:
+                    $ref: '#/components/schemas/ScenarioAnalysis'
+                trendPredictions:
+                    items:
+                        $ref: '#/components/schemas/TrendPrediction'
+                    type: array
+            type: object
+        PredictiveModelPerformance:
+            properties:
+                featureImportance:
+                    items:
+                        $ref: '#/components/schemas/FeatureImportance'
+                    type: array
+                lastModelUpdate:
+                    format: date-time
+                    type: string
+                meanAbsoluteError:
+                    format: double
+                    type: number
+                modelAccuracy:
+                    format: double
+                    type: number
+                modelComplexity:
+                    enum:
+                        - simple
+                        - moderate
+                        - complex
+                        - very_complex
+                    type: string
+                modelF1Score:
+                    format: double
+                    type: number
+                modelPrecision:
+                    format: double
+                    type: number
+                modelRecall:
+                    format: double
+                    type: number
+                modelReliability:
+                    format: double
+                    type: number
+                overfittingRisk:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                    type: string
+                rootMeanSquaredError:
+                    format: double
+                    type: number
+                trainingDataSize:
+                    format: int64
+                    type: integer
+            type: object
+        PreparationRecommendation:
+            properties:
+                actionDescription:
+                    type: string
+                expectedBenefit:
+                    type: string
+                implementationRisk:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                    type: string
+                priority:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                        - critical
+                    type: string
+                recommendationType:
+                    type: string
+                resourceRequirements:
+                    items:
+                        type: string
+                    type: array
+                targetScenarios:
+                    items:
+                        type: string
+                    type: array
+                timeFrame:
+                    format: date-time
+                    type: string
+            type: object
         ProcessingInfo:
             properties:
                 duration:
@@ -5804,6 +7833,64 @@ components:
                 success:
                     type: boolean
             type: object
+        QualityAssuranceMetrics:
+            properties:
+                complianceScore:
+                    $ref: '#/components/schemas/ComplianceAssessmentData'
+                consistencyIndex:
+                    format: double
+                    type: number
+                dataAccuracyScore:
+                    format: double
+                    type: number
+                errorPatternAnalysis:
+                    items:
+                        $ref: '#/components/schemas/ErrorPatternData'
+                    type: array
+                qualityTrends:
+                    items:
+                        $ref: '#/components/schemas/QualityTrendPoint'
+                    type: array
+                validationReliability:
+                    format: double
+                    type: number
+            type: object
+        QualityBaselineMetrics:
+            properties:
+                dataAccuracy:
+                    format: double
+                    type: number
+                dataCompleteness:
+                    format: double
+                    type: number
+                dataConsistency:
+                    format: double
+                    type: number
+                qualityScore:
+                    format: double
+                    type: number
+                validationSuccess:
+                    format: double
+                    type: number
+            type: object
+        QualityTrendPoint:
+            properties:
+                accuracyScore:
+                    format: double
+                    type: number
+                consistencyScore:
+                    format: double
+                    type: number
+                reliabilityScore:
+                    format: double
+                    type: number
+                sampleSize:
+                    format: int64
+                    type: integer
+                timestamp:
+                    format: date-time
+                    type: string
+            type: object
         QueryPerformanceMetric:
             properties:
                 bufferHits:
@@ -5912,6 +7999,27 @@ components:
                     format: int64
                     type: integer
             type: object
+        ROIAnalysisData:
+            properties:
+                breakEvenPoint:
+                    format: int32
+                    type: integer
+                paybackPeriod:
+                    format: int32
+                    type: integer
+                profitabilityIndex:
+                    format: double
+                    type: number
+                roiPercentage:
+                    format: double
+                    type: number
+                totalInvestment:
+                    format: double
+                    type: number
+                totalReturn:
+                    format: double
+                    type: number
+            type: object
         RandomizedDomain:
             properties:
                 JitterDelay:
@@ -5969,6 +8077,25 @@ components:
                     type: integer
                 windowSeconds:
                     type: integer
+            type: object
+        RecommendationMonitoring:
+            properties:
+                keyMetrics:
+                    items:
+                        type: string
+                    type: array
+                monitoringPeriod:
+                    type: integer
+                reviewSchedule:
+                    type: string
+                rollbackTriggers:
+                    items:
+                        type: string
+                    type: array
+                successCriteria:
+                    items:
+                        type: string
+                    type: array
             type: object
         RecoveryOptions:
             properties:
@@ -6096,6 +8223,53 @@ components:
                 writeTimeout:
                     type: string
             type: object
+        RegressionAnalysis:
+            properties:
+                correlationCoefficient:
+                    type: number
+                forecastAccuracy:
+                    type: number
+                rSquaredValue:
+                    type: number
+                statisticalSignificance:
+                    type: number
+                trendDirection:
+                    type: string
+                trendEquation:
+                    type: string
+            type: object
+        RegulatoryComplianceItem:
+            properties:
+                complianceRate:
+                    format: double
+                    type: number
+                lastAudit:
+                    format: date-time
+                    type: string
+                nextAuditDue:
+                    format: date-time
+                    type: string
+                regulation:
+                    type: string
+                riskLevel:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                        - critical
+                    type: string
+            type: object
+        RequestBodySpec:
+            properties:
+                contentType:
+                    type: string
+                description:
+                    type: string
+                required:
+                    type: boolean
+                schema:
+                    type: string
+            type: object
         RequiredResources:
             properties:
                 cpuCores:
@@ -6122,6 +8296,39 @@ components:
                 service_name:
                     type: string
             type: object
+        ResourceAllocationRec:
+            properties:
+                conditions:
+                    items:
+                        type: string
+                    type: array
+                expectedBenefit:
+                    type: string
+                implementationTime:
+                    format: int32
+                    type: integer
+                monitoring:
+                    $ref: '#/components/schemas/RecommendationMonitoring'
+                priority:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                        - critical
+                    type: string
+                recommendationType:
+                    type: string
+                resourceChanges:
+                    items:
+                        $ref: '#/components/schemas/ResourceChange'
+                    type: array
+                riskAssessment:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                    type: string
+            type: object
         ResourceAllocationResult:
             properties:
                 allocatedResources:
@@ -6139,6 +8346,309 @@ components:
                 success:
                     type: boolean
                 type:
+                    type: string
+            type: object
+        ResourceAnalyticsData:
+            properties:
+                allocationRecommendations:
+                    items:
+                        $ref: '#/components/schemas/ResourceAllocationRec'
+                    type: array
+                capacityPlanningData:
+                    $ref: '#/components/schemas/CapacityPlanningData'
+                costAnalysis:
+                    $ref: '#/components/schemas/ResourceCostAnalysis'
+                performanceCorrelation:
+                    $ref: '#/components/schemas/ResourcePerformanceData'
+                resourceOptimization:
+                    $ref: '#/components/schemas/ResourceOptimizationData'
+                resourceUtilizationSummary:
+                    $ref: '#/components/schemas/ResourceUtilizationSummary'
+            type: object
+        ResourceAutomationOpp:
+            properties:
+                automationType:
+                    type: string
+                complexityLevel:
+                    type: string
+                description:
+                    type: string
+                developmentEffort:
+                    type: integer
+                expectedBenefit:
+                    type: string
+                maintenanceOverhead:
+                    type: number
+                roiEstimate:
+                    type: number
+                technicalRequirements:
+                    items:
+                        type: string
+                    type: array
+            type: object
+        ResourceBaselineMetrics:
+            properties:
+                averageCPUUsage:
+                    format: double
+                    type: number
+                averageMemoryUsage:
+                    format: double
+                    type: number
+                averageNetworkUsage:
+                    format: double
+                    type: number
+                averageStorageUsage:
+                    format: double
+                    type: number
+                costEfficiencyScore:
+                    format: double
+                    type: number
+                resourceEfficiencyScore:
+                    format: double
+                    type: number
+            type: object
+        ResourceBudgetAnalysis:
+            properties:
+                allocatedBudget:
+                    format: double
+                    type: number
+                budgetAlerts:
+                    items:
+                        $ref: '#/components/schemas/BudgetAlert'
+                    type: array
+                budgetUtilization:
+                    format: double
+                    type: number
+                burnRate:
+                    format: double
+                    type: number
+                forecastedSpend:
+                    format: double
+                    type: number
+                remainingBudget:
+                    format: double
+                    type: number
+                spentToDate:
+                    format: double
+                    type: number
+                varianceFromPlan:
+                    format: double
+                    type: number
+            type: object
+        ResourceCapacitySnapshot:
+            properties:
+                activeProxies:
+                    format: int64
+                    type: integer
+                databaseConnections:
+                    format: int64
+                    type: integer
+                networkBandwidthMbps:
+                    format: double
+                    type: number
+                totalCPUCores:
+                    format: int64
+                    type: integer
+                totalMemoryGB:
+                    format: double
+                    type: number
+                totalStorageGB:
+                    format: double
+                    type: number
+                utilizationRate:
+                    format: double
+                    type: number
+            type: object
+        ResourceChange:
+            properties:
+                changeType:
+                    type: string
+                currentValue:
+                    type: number
+                expectedImpact:
+                    type: string
+                justification:
+                    type: string
+                recommendedValue:
+                    type: number
+                resourceType:
+                    type: string
+            type: object
+        ResourceCostAnalysis:
+            properties:
+                budgetAnalysis:
+                    $ref: '#/components/schemas/ResourceBudgetAnalysis'
+                costBreakdown:
+                    $ref: '#/components/schemas/ResourceCostBreakdown'
+                costEfficiencyMetrics:
+                    $ref: '#/components/schemas/CostEfficiencyMetrics'
+                costOptimization:
+                    $ref: '#/components/schemas/ResourceCostOptimization'
+                costTrends:
+                    items:
+                        $ref: '#/components/schemas/ResourceCostTrendPoint'
+                    type: array
+                totalCost:
+                    type: number
+            type: object
+        ResourceCostBreakdown:
+            properties:
+                cpuCosts:
+                    type: number
+                databaseCosts:
+                    type: number
+                licensingCosts:
+                    type: number
+                memoryCosts:
+                    type: number
+                networkCosts:
+                    type: number
+                operationalCosts:
+                    type: number
+                proxyCosts:
+                    type: number
+                storageCosts:
+                    type: number
+            type: object
+        ResourceCostOptimization:
+            properties:
+                currentMonthlySpend:
+                    format: double
+                    type: number
+                implementedOptimizations:
+                    items:
+                        $ref: '#/components/schemas/ImplementedOptimization'
+                    type: array
+                optimizationStrategies:
+                    items:
+                        $ref: '#/components/schemas/CostOptimizationStrategy'
+                    type: array
+                potentialMonthlySavings:
+                    format: double
+                    type: number
+                savingsToDate:
+                    format: double
+                    type: number
+            type: object
+        ResourceCostTrendPoint:
+            properties:
+                budgetUtilization:
+                    format: double
+                    type: number
+                costEfficiency:
+                    format: double
+                    type: number
+                costPerOperation:
+                    format: double
+                    type: number
+                timestamp:
+                    format: date-time
+                    type: string
+                totalCost:
+                    format: double
+                    type: number
+            type: object
+        ResourceEfficiencyMetrics:
+            properties:
+                costEfficiency:
+                    format: double
+                    type: number
+                cpuEfficiency:
+                    format: double
+                    type: number
+                memoryEfficiency:
+                    format: double
+                    type: number
+                networkEfficiency:
+                    format: double
+                    type: number
+                optimizationPotential:
+                    format: double
+                    type: number
+                overallEfficiency:
+                    format: double
+                    type: number
+                storageEfficiency:
+                    format: double
+                    type: number
+                wasteReduction:
+                    format: double
+                    type: number
+            type: object
+        ResourceForecast:
+            properties:
+                capacityThreshold:
+                    format: double
+                    type: number
+                confidenceLevel:
+                    format: double
+                    type: number
+                currentUtilization:
+                    format: double
+                    type: number
+                forecastTime:
+                    format: date-time
+                    type: string
+                predictedUtilization:
+                    format: double
+                    type: number
+                predictionError:
+                    format: double
+                    type: number
+                resourceType:
+                    type: string
+                scalingRecommendation:
+                    type: string
+            type: object
+        ResourceGrowthTrendPoint:
+            properties:
+                cpuUsageGrowth:
+                    format: double
+                    type: number
+                memoryGrowth:
+                    format: double
+                    type: number
+                networkGrowth:
+                    format: double
+                    type: number
+                storageGrowth:
+                    format: double
+                    type: number
+                timestamp:
+                    format: date-time
+                    type: string
+            type: object
+        ResourceImprovementOpp:
+            properties:
+                dependencies:
+                    items:
+                        type: string
+                    type: array
+                description:
+                    type: string
+                expectedSavings:
+                    format: double
+                    type: number
+                implementationCost:
+                    format: double
+                    type: number
+                implementationTime:
+                    format: int32
+                    type: integer
+                opportunityType:
+                    type: string
+                priority:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                        - critical
+                    type: string
+                riskLevel:
+                    enum:
+                        - low
+                        - medium
+                        - high
                     type: string
             type: object
         ResourceLimits:
@@ -6183,6 +8693,121 @@ components:
             required:
                 - type
                 - campaignId
+            type: object
+        ResourceOptimizationData:
+            properties:
+                automationOpportunities:
+                    items:
+                        $ref: '#/components/schemas/ResourceAutomationOpp'
+                    type: array
+                efficiencyMetrics:
+                    $ref: '#/components/schemas/ResourceEfficiencyMetrics'
+                improvementOpportunities:
+                    items:
+                        $ref: '#/components/schemas/ResourceImprovementOpp'
+                    type: array
+                optimizationHistory:
+                    items:
+                        $ref: '#/components/schemas/ResourceOptimizationEvent'
+                    type: array
+                optimizationScore:
+                    format: double
+                    type: number
+            type: object
+        ResourceOptimizationEvent:
+            properties:
+                costImpact:
+                    format: double
+                    type: number
+                description:
+                    type: string
+                efficiencyGain:
+                    format: double
+                    type: number
+                optimizationType:
+                    type: string
+                performanceImpact:
+                    type: string
+                resourcesAffected:
+                    items:
+                        type: string
+                    type: array
+                timestamp:
+                    format: date-time
+                    type: string
+            type: object
+        ResourcePerformanceCorrelation:
+            properties:
+                correlationCoeff:
+                    type: number
+                correlationStrength:
+                    type: string
+                description:
+                    type: string
+                optimalRange:
+                    $ref: '#/components/schemas/ResourceRange'
+                performanceMetric:
+                    type: string
+                resourceType:
+                    type: string
+            type: object
+        ResourcePerformanceData:
+            properties:
+                optimalResourceLevels:
+                    $ref: '#/components/schemas/OptimalResourceLevels'
+                performanceBottlenecks:
+                    items:
+                        $ref: '#/components/schemas/PerformanceBottleneck'
+                    type: array
+                performanceCorrelations:
+                    items:
+                        $ref: '#/components/schemas/ResourcePerformanceCorrelation'
+                    type: array
+                scalingImpactAnalysis:
+                    $ref: '#/components/schemas/ScalingImpactAnalysis'
+            type: object
+        ResourceRange:
+            properties:
+                maxValue:
+                    type: number
+                minValue:
+                    type: number
+                optimalValue:
+                    type: number
+            type: object
+        ResourceUsageHistoryPoint:
+            properties:
+                cost:
+                    format: double
+                    type: number
+                efficiency:
+                    format: double
+                    type: number
+                timestamp:
+                    format: date-time
+                    type: string
+                usage:
+                    format: double
+                    type: number
+            type: object
+        ResourceUtilizationDetail:
+            properties:
+                averageUsage:
+                    type: number
+                bottleneckRisk:
+                    type: string
+                currentUsage:
+                    type: number
+                efficiencyScore:
+                    type: number
+                peakUsage:
+                    type: number
+                usageHistory:
+                    items:
+                        $ref: '#/components/schemas/ResourceUsageHistoryPoint'
+                    type: array
+                utilizationTrend:
+                    type: string
             type: object
         ResourceUtilizationMetric:
             properties:
@@ -6235,6 +8860,95 @@ components:
                 proxyRequests:
                     format: int64
                     type: integer
+            type: object
+        ResourceUtilizationSummary:
+            properties:
+                cpuUtilization:
+                    $ref: '#/components/schemas/ResourceUtilizationDetail'
+                databaseUtilization:
+                    $ref: '#/components/schemas/ResourceUtilizationDetail'
+                memoryUtilization:
+                    $ref: '#/components/schemas/ResourceUtilizationDetail'
+                networkUtilization:
+                    $ref: '#/components/schemas/ResourceUtilizationDetail'
+                proxyUtilization:
+                    $ref: '#/components/schemas/ResourceUtilizationDetail'
+                storageUtilization:
+                    $ref: '#/components/schemas/ResourceUtilizationDetail'
+            type: object
+        ResponseSpec:
+            properties:
+                contentType:
+                    type: string
+                description:
+                    type: string
+                schema:
+                    type: string
+            type: object
+        ResponsiveSettings:
+            properties:
+                breakpointLarge:
+                    type: integer
+                breakpointMedium:
+                    type: integer
+                breakpointSmall:
+                    type: integer
+                flexibleLayout:
+                    type: boolean
+                mobileOptimized:
+                    type: boolean
+                responsiveCharts:
+                    type: boolean
+                tabletOptimized:
+                    type: boolean
+            type: object
+        RiskFactor:
+            properties:
+                detectability:
+                    type: number
+                factorName:
+                    type: string
+                mitigation:
+                    type: string
+                riskContribution:
+                    type: number
+                severity:
+                    type: string
+                status:
+                    type: string
+            type: object
+        RiskPrediction:
+            properties:
+                earliestOccurrence:
+                    format: date-time
+                    type: string
+                latestOccurrence:
+                    format: date-time
+                    type: string
+                mitigationStrategies:
+                    items:
+                        type: string
+                    type: array
+                monitoringRecommendations:
+                    items:
+                        type: string
+                    type: array
+                potentialImpact:
+                    type: string
+                preventiveMeasures:
+                    items:
+                        type: string
+                    type: array
+                probability:
+                    type: number
+                riskIndicators:
+                    items:
+                        type: string
+                    type: array
+                riskLevel:
+                    type: string
+                riskType:
+                    type: string
             type: object
         RuleLoaderService:
             type: object
@@ -6339,6 +9053,186 @@ components:
                 Violation:
                     type: string
             type: object
+        ScalabilityAnalyticsData:
+            properties:
+                currentCapacityUtilization:
+                    format: double
+                    type: number
+                performanceUnderLoad:
+                    items:
+                        $ref: '#/components/schemas/LoadTestingResult'
+                    type: array
+                predictedCapacityNeeds:
+                    items:
+                        $ref: '#/components/schemas/CapacityForecastPoint'
+                    type: array
+                resourceGrowthTrends:
+                    items:
+                        $ref: '#/components/schemas/ResourceGrowthTrendPoint'
+                    type: array
+                scalingRecommendations:
+                    items:
+                        $ref: '#/components/schemas/ScalingRecommendation'
+                    type: array
+            type: object
+        ScalingImpactAnalysis:
+            properties:
+                diminishingReturns:
+                    type: number
+                linearScalingRange:
+                    $ref: '#/components/schemas/ResourceRange'
+                optimalScalingPoints:
+                    items:
+                        $ref: '#/components/schemas/OptimalScalingPoint'
+                    type: array
+                scalingEfficiency:
+                    type: number
+                scalingRecommendations:
+                    items:
+                        $ref: '#/components/schemas/ScalingRecommendation'
+                    type: array
+            type: object
+        ScalingRecommendation:
+            properties:
+                component:
+                    type: string
+                currentCapacity:
+                    format: double
+                    type: number
+                estimatedCost:
+                    format: double
+                    type: number
+                expectedBenefit:
+                    type: string
+                recommendedScale:
+                    format: double
+                    type: number
+                timeFrame:
+                    format: date-time
+                    type: string
+            type: object
+        Scenario:
+            properties:
+                assumptions:
+                    items:
+                        type: string
+                    type: array
+                businessImpact:
+                    type: string
+                predictedOutcomes:
+                    items:
+                        $ref: '#/components/schemas/ScenarioOutcome'
+                    type: array
+                probability:
+                    type: number
+                requiredActions:
+                    items:
+                        type: string
+                    type: array
+                riskMitigation:
+                    items:
+                        type: string
+                    type: array
+                scenarioName:
+                    type: string
+                scenarioType:
+                    type: string
+            type: object
+        ScenarioAnalysis:
+            properties:
+                baseScenario:
+                    $ref: '#/components/schemas/Scenario'
+                customScenarios:
+                    items:
+                        $ref: '#/components/schemas/Scenario'
+                    type: array
+                optimisticScenario:
+                    $ref: '#/components/schemas/Scenario'
+                pessimisticScenario:
+                    $ref: '#/components/schemas/Scenario'
+                recommendedPreparation:
+                    items:
+                        $ref: '#/components/schemas/PreparationRecommendation'
+                    type: array
+                scenarioProbabilities:
+                    items:
+                        $ref: '#/components/schemas/ScenarioProbability'
+                    type: array
+            type: object
+        ScenarioOutcome:
+            properties:
+                confidenceLevel:
+                    format: double
+                    type: number
+                impactDescription:
+                    type: string
+                metricAffected:
+                    type: string
+                outcomeType:
+                    type: string
+                predictedValue:
+                    format: double
+                    type: number
+                varianceFromBase:
+                    format: double
+                    type: number
+            type: object
+        ScenarioProbability:
+            properties:
+                influencingFactors:
+                    items:
+                        type: string
+                    type: array
+                lastUpdated:
+                    format: date-time
+                    type: string
+                monitoringIndicators:
+                    items:
+                        type: string
+                    type: array
+                probability:
+                    format: double
+                    type: number
+                probabilityTrend:
+                    enum:
+                        - increasing
+                        - stable
+                        - decreasing
+                    type: string
+                scenarioName:
+                    type: string
+            type: object
+        ScheduledExport:
+            properties:
+                exportId:
+                    $ref: '#/components/schemas/UUID'
+                exportName:
+                    type: string
+                format:
+                    format: date-time
+                    type: string
+                lastGenerated:
+                    format: date-time
+                    type: string
+                nextGeneration:
+                    format: date-time
+                    type: string
+                recipients:
+                    items:
+                        type: string
+                    type: array
+                retentionDays:
+                    format: int32
+                    type: integer
+                schedule:
+                    type: string
+                status:
+                    enum:
+                        - active
+                        - paused
+                        - error
+                    type: string
+            type: object
         SchemaStats:
             properties:
                 name:
@@ -6352,7 +9246,45 @@ components:
                 totalSize:
                     type: string
             type: object
+        SeasonalPattern:
+            properties:
+                amplitudeVariation:
+                    format: double
+                    type: number
+                nextPredictedPeak:
+                    format: date-time
+                    type: string
+                nextPredictedTrough:
+                    format: date-time
+                    type: string
+                patternStrength:
+                    format: double
+                    type: number
+                patternType:
+                    type: string
+                peakTime:
+                    format: date-time
+                    type: string
+                troughTime:
+                    format: date-time
+                    type: string
+            type: object
         SecretManager:
+            type: object
+        SecurityComplianceData:
+            properties:
+                accessControlCompliance:
+                    format: double
+                    type: number
+                auditTrailCompliance:
+                    format: double
+                    type: number
+                dataRetentionCompliance:
+                    format: double
+                    type: number
+                encryptionCompliance:
+                    format: double
+                    type: number
             type: object
         SecurityContext:
             properties:
@@ -6711,6 +9643,72 @@ components:
                 session_id_length:
                     type: integer
             type: object
+        SetCampaignLimitsRequest:
+            properties:
+                maxCpuPercent:
+                    format: double
+                    type: number
+                maxDiskGB:
+                    format: int64
+                    minimum: 0
+                    type: integer
+                maxDurationMins:
+                    format: int32
+                    type: integer
+                maxMemoryMB:
+                    format: int64
+                    minimum: 0
+                    type: integer
+            required:
+                - maxCpuPercent
+                - maxMemoryMB
+                - maxDiskGB
+                - maxDurationMins
+            type: object
+        SignificantChange:
+            properties:
+                changeType:
+                    type: string
+                confidenceLevel:
+                    format: double
+                    type: number
+                detectedAt:
+                    format: date-time
+                    type: string
+                magnitude:
+                    format: double
+                    type: number
+                metricAffected:
+                    type: string
+                potentialCauses:
+                    items:
+                        type: string
+                    type: array
+                recommendedActions:
+                    items:
+                        type: string
+                    type: array
+            type: object
+        StatisticalSignificanceData:
+            properties:
+                confidenceLevel:
+                    format: double
+                    type: number
+                isStatisticallySignificant:
+                    type: boolean
+                marginOfError:
+                    format: double
+                    type: number
+                pValue:
+                    format: double
+                    type: number
+                sampleSize:
+                    format: int64
+                    type: integer
+                standardDeviation:
+                    format: double
+                    type: number
+            type: object
         Status:
             properties:
                 message:
@@ -6721,7 +9719,115 @@ components:
                     format: date-time
                     type: string
             type: object
+        StealthAnalyticsData:
+            properties:
+                anonymityMetrics:
+                    $ref: '#/components/schemas/AnonymityMetrics'
+                complianceWithPolicies:
+                    $ref: '#/components/schemas/StealthComplianceData'
+                countermeasureAnalysis:
+                    items:
+                        $ref: '#/components/schemas/CountermeasureAnalysis'
+                    type: array
+                detectionRiskAnalysis:
+                    $ref: '#/components/schemas/DetectionRiskAnalysis'
+                overallStealthScore:
+                    format: double
+                    type: number
+                stealthTechniques:
+                    items:
+                        $ref: '#/components/schemas/StealthTechniqueMetrics'
+                    type: array
+                stealthTrendAnalysis:
+                    items:
+                        $ref: '#/components/schemas/StealthTrendPoint'
+                    type: array
+            type: object
+        StealthAuditEntry:
+            properties:
+                description:
+                    type: string
+                justification:
+                    type: string
+                operation:
+                    type: string
+                riskImpact:
+                    enum:
+                        - none
+                        - minimal
+                        - moderate
+                        - significant
+                        - high
+                    type: string
+                timestamp:
+                    format: date-time
+                    type: string
+                userId:
+                    $ref: '#/components/schemas/UUID'
+            type: object
+        StealthBaselineMetrics:
+            properties:
+                anonymityScore:
+                    format: double
+                    type: number
+                averageStealthScore:
+                    format: double
+                    type: number
+                countermeasureEffectiveness:
+                    format: double
+                    type: number
+                detectionEvents:
+                    format: int64
+                    type: integer
+                successfulEvasions:
+                    format: int64
+                    type: integer
+            type: object
         StealthCompatibleService:
+            type: object
+        StealthComplianceData:
+            properties:
+                auditTrail:
+                    items:
+                        $ref: '#/components/schemas/StealthAuditEntry'
+                    type: array
+                complianceViolations:
+                    items:
+                        $ref: '#/components/schemas/StealthComplianceViolation'
+                    type: array
+                ethicalGuidelineScore:
+                    format: double
+                    type: number
+                legalComplianceScore:
+                    format: double
+                    type: number
+                policyComplianceScore:
+                    format: double
+                    type: number
+            type: object
+        StealthComplianceViolation:
+            properties:
+                description:
+                    type: string
+                preventiveMeasure:
+                    type: string
+                resolution:
+                    type: string
+                resolutionTime:
+                    format: date-time
+                    type: string
+                severity:
+                    enum:
+                        - low
+                        - medium
+                        - high
+                        - critical
+                    type: string
+                timestamp:
+                    format: date-time
+                    type: string
+                violationType:
+                    type: string
             type: object
         StealthConfig:
             properties:
@@ -6810,6 +9916,55 @@ components:
             type: object
         StealthStrategy:
             type: string
+        StealthTechniqueMetrics:
+            properties:
+                adaptabilityScore:
+                    format: double
+                    type: number
+                configurationScore:
+                    format: double
+                    type: number
+                detectionEvaded:
+                    format: int64
+                    type: integer
+                effectivenessScore:
+                    format: double
+                    type: number
+                resourceCost:
+                    format: double
+                    type: number
+                successRate:
+                    format: double
+                    type: number
+                techniqueName:
+                    type: string
+            type: object
+        StealthTrendPoint:
+            properties:
+                activeCountermeasures:
+                    format: int32
+                    type: integer
+                detectionEvents:
+                    format: int64
+                    type: integer
+                riskLevel:
+                    enum:
+                        - minimal
+                        - low
+                        - medium
+                        - high
+                        - critical
+                    type: string
+                stealthScore:
+                    format: double
+                    type: number
+                successfulEvasions:
+                    format: int64
+                    type: integer
+                timestamp:
+                    format: date-time
+                    type: string
+            type: object
         StealthValidationConfig:
             properties:
                 advancedPolicy:
@@ -6947,7 +10102,63 @@ components:
                 size:
                     type: string
             type: object
+        TechnicalKPIs:
+            properties:
+                codeQuality:
+                    format: double
+                    type: number
+                dataIntegrity:
+                    format: double
+                    type: number
+                deploymentSuccess:
+                    format: double
+                    type: number
+                infrastructureHealth:
+                    format: double
+                    type: number
+                meanTimeToRecovery:
+                    format: int64
+                    type: integer
+                scalabilityIndex:
+                    format: double
+                    type: number
+                securityScore:
+                    format: double
+                    type: number
+                systemReliability:
+                    format: double
+                    type: number
+                testCoverage:
+                    format: double
+                    type: number
+            type: object
         TemplateManager:
+            type: object
+        TemplateSection:
+            properties:
+                dataSource:
+                    type: string
+                formatting:
+                    additionalProperties:
+                        type: object
+                    type: object
+                position:
+                    format: int32
+                    type: integer
+                sectionId:
+                    $ref: '#/components/schemas/UUID'
+                sectionTitle:
+                    type: string
+                sectionType:
+                    enum:
+                        - summary
+                        - chart
+                        - table
+                        - text
+                        - metrics
+                    type: string
+                visible:
+                    type: boolean
             type: object
         TestResultResponse:
             properties:
@@ -6980,6 +10191,140 @@ components:
                     additionalProperties:
                         type: object
                     type: object
+            type: object
+        TooltipConfiguration:
+            properties:
+                customFields:
+                    items:
+                        type: string
+                    type: array
+                enabled:
+                    type: boolean
+                format:
+                    format: date-time
+                    type: string
+                interactive:
+                    type: boolean
+                showAll:
+                    type: boolean
+            type: object
+        TrendAnalysis:
+            properties:
+                anomalyDetection:
+                    $ref: '#/components/schemas/AnomalyDetectionResults'
+                cyclicalPatterns:
+                    items:
+                        $ref: '#/components/schemas/CyclicalPattern'
+                    type: array
+                longTermTrend:
+                    $ref: '#/components/schemas/TrendDirection'
+                mediumTermTrend:
+                    $ref: '#/components/schemas/TrendDirection'
+                seasonalPatterns:
+                    items:
+                        $ref: '#/components/schemas/SeasonalPattern'
+                    type: array
+                shortTermTrend:
+                    $ref: '#/components/schemas/TrendDirection'
+                trendBreakpoints:
+                    items:
+                        $ref: '#/components/schemas/TrendBreakpoint'
+                    type: array
+            type: object
+        TrendBreakpoint:
+            properties:
+                breakpointTime:
+                    format: date-time
+                    type: string
+                breakpointType:
+                    enum:
+                        - level_shift
+                        - trend_change
+                        - variance_change
+                    type: string
+                businessEvents:
+                    items:
+                        type: string
+                    type: array
+                newTrend:
+                    enum:
+                        - improving
+                        - stable
+                        - declining
+                    type: string
+                potentialCauses:
+                    items:
+                        type: string
+                    type: array
+                previousTrend:
+                    enum:
+                        - improving
+                        - stable
+                        - declining
+                    type: string
+                significanceLevel:
+                    format: double
+                    type: number
+            type: object
+        TrendDirection:
+            properties:
+                confidence:
+                    format: double
+                    type: number
+                direction:
+                    enum:
+                        - strongly_improving
+                        - improving
+                        - stable
+                        - declining
+                        - strongly_declining
+                    type: string
+                duration:
+                    format: int32
+                    type: integer
+                rate:
+                    format: double
+                    type: number
+                strength:
+                    format: double
+                    type: number
+            type: object
+        TrendPrediction:
+            properties:
+                businessImplications:
+                    items:
+                        type: string
+                    type: array
+                confidenceLevel:
+                    format: double
+                    type: number
+                currentDirection:
+                    enum:
+                        - improving
+                        - stable
+                        - declining
+                    type: string
+                influencingFactors:
+                    items:
+                        type: string
+                    type: array
+                predictedDirection:
+                    enum:
+                        - improving
+                        - stable
+                        - declining
+                    type: string
+                trendChangeTime:
+                    format: date-time
+                    type: string
+                trendDuration:
+                    format: int32
+                    type: integer
+                trendName:
+                    type: string
+                trendStrength:
+                    format: double
+                    type: number
             type: object
         UUID:
             description: Unique identifier (UUID v4)
@@ -7187,6 +10532,23 @@ components:
                     format: date-time
                     type: string
             type: object
+        UserExperienceKPIs:
+            properties:
+                featureAdoptionRate:
+                    type: number
+                interfaceUsability:
+                    type: number
+                supportTicketResolution:
+                    type: integer
+                systemResponsiveness:
+                    type: number
+                userEngagementScore:
+                    type: number
+                userRetentionRate:
+                    type: number
+                userSatisfactionScore:
+                    type: number
+            type: object
         UserPublicResponse:
             properties:
                 email:
@@ -7255,6 +10617,56 @@ components:
             type: object
         ValidationStatusEnum:
             type: string
+        VisualizationConfig:
+            properties:
+                chartTypes:
+                    enum:
+                        - line
+                        - bar
+                        - pie
+                        - scatter
+                        - heatmap
+                        - radar
+                    items:
+                        type: string
+                    type: string
+                colorScheme:
+                    enum:
+                        - corporate
+                        - professional
+                        - colorful
+                        - monochrome
+                    type: string
+                interactive:
+                    type: boolean
+                realTimeUpdate:
+                    type: boolean
+            type: object
+        VisualizationDataPrep:
+            properties:
+                animationSettings:
+                    $ref: '#/components/schemas/AnimationSettings'
+                chartData:
+                    items:
+                        $ref: '#/components/schemas/ChartDataSet'
+                    type: array
+                colorSchemeData:
+                    $ref: '#/components/schemas/ColorSchemeData'
+                dashboardLayouts:
+                    items:
+                        $ref: '#/components/schemas/DashboardLayout'
+                    type: array
+                exportFormats:
+                    items:
+                        type: string
+                    type: array
+                interactiveElements:
+                    items:
+                        $ref: '#/components/schemas/InteractiveElement'
+                    type: array
+                responsiveSettings:
+                    $ref: '#/components/schemas/ResponsiveSettings'
+            type: object
         WebSocketErrorResponse:
             properties:
                 code:
@@ -7314,16 +10726,6 @@ components:
                     format: int64
                     type: integer
             type: object
-        analysisServiceImpl:
-            type: object
-        campaignWorkerServiceImpl:
-            type: object
-        domainGenerationServiceImpl:
-            type: object
-        domainStealthServiceImpl:
-            type: object
-        stealthIntegrationServiceImpl:
-            type: object
     securitySchemes:
         bearerAuth:
             bearerFormat: JWT
@@ -7354,6 +10756,12 @@ paths:
                   required: true
                   schema:
                     type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BulkDatabaseQueryRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -7373,10 +10781,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Execute bulk database queries
             tags:
                 - database
@@ -7391,6 +10797,12 @@ paths:
                   required: true
                   schema:
                     type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BulkDatabaseStatsRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -7410,10 +10822,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get bulk database statistics
             tags:
                 - database
@@ -7476,10 +10886,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Query keyword rules with advanced filtering
             tags:
                 - keyword-sets
@@ -7513,10 +10921,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get keyword set with high-performance rules loading
             tags:
                 - keyword-sets
@@ -7524,6 +10930,12 @@ paths:
         post:
             description: Change password for the currently authenticated user
             operationId: changePassword
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ChangePasswordRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -7543,8 +10955,6 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             summary: Change user password
             tags:
                 - authentication
@@ -7552,6 +10962,12 @@ paths:
         post:
             description: Authenticate user credentials and create session
             operationId: login
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/LoginRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -7571,8 +10987,6 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             summary: User login
             tags:
                 - authentication
@@ -7599,8 +11013,6 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             summary: User logout
             tags:
                 - authentication
@@ -7627,8 +11039,6 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             summary: Get current user
             tags:
                 - authentication
@@ -7655,8 +11065,6 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             summary: Refresh user session
             tags:
                 - authentication
@@ -7683,10 +11091,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: List campaigns (standalone)
             tags:
                 - campaigns
@@ -7720,10 +11126,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get campaign domain status summary
             tags:
                 - campaigns
@@ -7744,6 +11148,12 @@ paths:
                   required: true
                   schema:
                     type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/PhaseConfigureRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -7763,10 +11173,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Configure campaign phase (standalone)
             tags:
                 - campaigns
@@ -7806,10 +11214,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Start campaign phase (standalone)
             tags:
                 - campaigns
@@ -7849,10 +11255,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get phase status (standalone)
             tags:
                 - campaigns
@@ -7886,10 +11290,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get campaign progress (standalone)
             tags:
                 - campaigns
@@ -7897,6 +11299,12 @@ paths:
         post:
             description: Perform comprehensive analytics across multiple campaigns with advanced metrics and aggregation
             operationId: bulkAnalyzeDomains
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BulkAnalyticsRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -7922,10 +11330,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Analyze domains in bulk with enterprise intelligence
             tags:
                 - bulk-operations
@@ -7934,6 +11340,12 @@ paths:
         post:
             description: Perform bulk operations on multiple campaigns (start, stop, pause, resume, delete, configure)
             operationId: bulkCampaignOperations
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BulkCampaignOperationRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -7959,10 +11371,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Manage bulk campaign operations
             tags:
                 - bulk-operations
@@ -7971,6 +11381,12 @@ paths:
         post:
             description: Generate large batches of domains with stealth-aware configuration and resource management
             operationId: bulkGenerateDomains
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BulkDomainGenerationRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -7996,10 +11412,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Generate domains in bulk using orchestrator
             tags:
                 - bulk-operations
@@ -8008,6 +11422,12 @@ paths:
         post:
             description: Perform bulk DNS validation with stealth detection avoidance and resource optimization
             operationId: bulkValidateDNS
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BulkDNSValidationRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -8033,10 +11453,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Validate domains using bulk DNS validation with stealth
             tags:
                 - bulk-operations
@@ -8045,6 +11463,12 @@ paths:
         post:
             description: Perform bulk HTTP validation with keyword extraction, stealth detection avoidance, and resource optimization
             operationId: bulkValidateHTTP
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BulkHTTPValidationRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -8070,10 +11494,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Validate domains using bulk HTTP validation with stealth
             tags:
                 - bulk-operations
@@ -8082,6 +11504,12 @@ paths:
         post:
             description: Retrieve bulk enriched data across multiple campaigns for enterprise-scale processing
             operationId: getBulkEnrichedCampaignData
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BulkEnrichedDataRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -8101,10 +11529,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get bulk enriched campaign data
             tags:
                 - campaigns
@@ -8152,10 +11578,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: List bulk operations with filtering
             tags:
                 - bulk-operations
@@ -8190,10 +11614,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Cancel bulk operations
             tags:
                 - bulk-operations
@@ -8228,10 +11650,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get bulk operation status by ID
             tags:
                 - bulk-operations
@@ -8240,6 +11660,12 @@ paths:
         post:
             description: Allocate compute, network, and storage resources for bulk campaign operations with priority scheduling
             operationId: allocateBulkResources
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BulkResourceRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -8265,10 +11691,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Allocate bulk resources for enterprise operations
             tags:
                 - bulk-operations
@@ -8303,10 +11727,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get bulk resource allocation status
             tags:
                 - bulk-operations
@@ -8315,6 +11737,12 @@ paths:
         post:
             description: Get the current offset for domain generation patterns
             operationId: getPatternOffset
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/PatternOffsetRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -8334,10 +11762,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get domain generation pattern offset
             tags:
                 - campaigns
@@ -8345,6 +11771,12 @@ paths:
         post:
             description: Create a new lead generation campaign with domain generation configuration
             operationId: createLeadGenerationCampaign
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateLeadGenerationCampaignRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -8370,10 +11802,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Create lead generation campaign
             tags:
                 - campaigns
@@ -8400,16 +11830,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get feature flags
             tags:
                 - feature-flags
         put:
             description: Update feature flag settings
             operationId: updateFeatureFlags
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/FeatureFlags'
+                required: true
             responses:
                 "200":
                     content:
@@ -8429,10 +11863,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update feature flags
             tags:
                 - feature-flags
@@ -8459,10 +11891,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Health check
             tags:
                 - health
@@ -8489,10 +11919,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Liveness check
             tags:
                 - health
@@ -8519,10 +11947,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Readiness check
             tags:
                 - health
@@ -8530,6 +11956,12 @@ paths:
         post:
             description: Extract keywords from multiple URLs using specified keyword sets and personas
             operationId: batchExtractKeywords
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BatchKeywordExtractionRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -8549,10 +11981,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Batch keyword extraction
             tags:
                 - keyword-extraction
@@ -8608,10 +12038,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Stream keyword extraction
             tags:
                 - keyword-extraction
@@ -8665,16 +12093,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: List keyword sets
             tags:
                 - keyword-sets
         post:
             description: Create a new keyword set with optional rules
             operationId: createKeywordSet
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateKeywordSetRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -8700,10 +12132,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Create keyword set
             tags:
                 - keyword-sets
@@ -8737,10 +12167,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Delete keyword set
             tags:
                 - keyword-sets
@@ -8773,10 +12201,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get keyword set
             tags:
                 - keyword-sets
@@ -8790,6 +12216,12 @@ paths:
                   required: true
                   schema:
                     type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateKeywordSetRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -8809,10 +12241,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update keyword set
             tags:
                 - keyword-sets
@@ -8866,16 +12296,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: List all personas
             tags:
                 - personas
         post:
             description: Create a new persona (DNS or HTTP) with configuration details
             operationId: createPersona
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreatePersonaRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -8901,10 +12335,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Create persona
             tags:
                 - personas
@@ -8938,10 +12370,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Delete persona
             tags:
                 - personas
@@ -8974,10 +12404,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get persona by ID
             tags:
                 - personas
@@ -8991,6 +12419,12 @@ paths:
                   required: true
                   schema:
                     type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdatePersonaRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -9010,10 +12444,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update persona
             tags:
                 - personas
@@ -9047,10 +12479,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Test persona
             tags:
                 - personas
@@ -9084,10 +12514,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get DNS persona by ID
             tags:
                 - personas
@@ -9121,10 +12549,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get HTTP persona by ID
             tags:
                 - personas
@@ -9151,10 +12577,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Ping server
             tags:
                 - health
@@ -9213,16 +12637,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: List proxies
             tags:
                 - proxies
         post:
             description: Add a new proxy configuration
             operationId: addProxy
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/CreateProxyRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -9248,10 +12676,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Create proxy
             tags:
                 - proxies
@@ -9291,10 +12717,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Delete proxy
             tags:
                 - proxies
@@ -9308,6 +12732,12 @@ paths:
                   required: true
                   schema:
                     type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/UpdateProxyRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -9327,10 +12757,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update proxy
             tags:
                 - proxies
@@ -9364,10 +12792,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Force proxy health check
             tags:
                 - proxies
@@ -9401,10 +12827,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Test proxy
             tags:
                 - proxies
@@ -9412,6 +12836,12 @@ paths:
         delete:
             description: Delete multiple proxy configurations simultaneously
             operationId: bulkDeleteProxies
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BulkDeleteProxiesRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -9431,10 +12861,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Bulk delete proxies
             tags:
                 - proxies
@@ -9442,6 +12870,12 @@ paths:
         post:
             description: Test multiple proxy configurations simultaneously
             operationId: bulkTestProxies
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BulkTestProxiesRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -9461,10 +12895,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Bulk test proxies
             tags:
                 - proxies
@@ -9472,6 +12904,12 @@ paths:
         put:
             description: Update multiple proxy configurations simultaneously
             operationId: bulkUpdateProxies
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/BulkUpdateProxiesRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -9491,10 +12929,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Bulk update proxies
             tags:
                 - proxies
@@ -9502,6 +12938,12 @@ paths:
         post:
             description: Force health checks on all registered proxies
             operationId: forceCheckAllProxies
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ProxyHealthCheckRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -9521,10 +12963,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Force health check on all proxies
             tags:
                 - proxies
@@ -9551,10 +12991,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get proxy statuses
             tags:
                 - proxies
@@ -9587,16 +13025,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: List proxy pools
             tags:
                 - proxy-pools
         post:
             description: Create a new proxy pool with configuration settings
             operationId: createProxyPool
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ProxyPoolRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -9622,10 +13064,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Create proxy pool
             tags:
                 - proxy-pools
@@ -9659,10 +13099,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Delete proxy pool
             tags:
                 - proxy-pools
@@ -9676,6 +13114,12 @@ paths:
                   required: true
                   schema:
                     type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ProxyPoolRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -9695,10 +13139,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update proxy pool
             tags:
                 - proxy-pools
@@ -9713,6 +13155,12 @@ paths:
                   required: true
                   schema:
                     type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/AddProxyToPoolRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -9738,10 +13186,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Add proxy to pool
             tags:
                 - proxy-pools
@@ -9781,10 +13227,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Remove proxy from pool
             tags:
                 - proxy-pools
@@ -9811,16 +13255,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get authentication configuration
             tags:
                 - server-settings
         put:
             description: Update the authentication configuration settings
             operationId: updateAuthConfigGin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/AuthConfig'
+                required: true
             responses:
                 "200":
                     content:
@@ -9840,10 +13288,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update authentication configuration
             tags:
                 - server-settings
@@ -9870,16 +13316,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get server configuration
             tags:
                 - server-settings
         put:
             description: Update server-wide configuration settings
             operationId: updateServerConfigGin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ServerConfigUpdateRequest'
+                required: true
             responses:
                 "200":
                     content:
@@ -9899,10 +13349,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update server configuration
             tags:
                 - server-settings
@@ -9929,16 +13377,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get DNS configuration
             tags:
                 - server-settings
         put:
             description: Update default DNS validator configuration
             operationId: updateDNSConfigGin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/DNSValidatorConfigJSON'
+                required: true
             responses:
                 "200":
                     content:
@@ -9958,10 +13410,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update DNS configuration
             tags:
                 - server-settings
@@ -9988,16 +13438,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get HTTP configuration
             tags:
                 - server-settings
         put:
             description: Update default HTTP validator configuration
             operationId: updateHTTPConfigGin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/HTTPValidatorConfigJSON'
+                required: true
             responses:
                 "200":
                     content:
@@ -10017,10 +13471,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update HTTP configuration
             tags:
                 - server-settings
@@ -10047,16 +13499,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get logging configuration
             tags:
                 - server-settings
         put:
             description: Update the logging configuration settings
             operationId: updateLoggingConfigGin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/LoggingConfig'
+                required: true
             responses:
                 "200":
                     content:
@@ -10076,10 +13532,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update logging configuration
             tags:
                 - server-settings
@@ -10106,16 +13560,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get proxy manager configuration
             tags:
                 - server-settings
         put:
             description: Update the proxy manager configuration settings
             operationId: updateProxyManagerConfigGin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/ProxyManagerConfig'
+                required: true
             responses:
                 "200":
                     content:
@@ -10135,10 +13593,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update proxy manager configuration
             tags:
                 - server-settings
@@ -10165,16 +13621,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get rate limiter configuration
             tags:
                 - server-settings
         put:
             description: Update the rate limiter configuration settings
             operationId: updateRateLimiterConfigGin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/RateLimiterConfig'
+                required: true
             responses:
                 "200":
                     content:
@@ -10194,10 +13654,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update rate limiter configuration
             tags:
                 - server-settings
@@ -10224,16 +13682,20 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get worker configuration
             tags:
                 - server-settings
         put:
             description: Update the worker configuration settings
             operationId: updateWorkerConfigGin
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/WorkerConfig'
+                required: true
             responses:
                 "200":
                     content:
@@ -10253,10 +13715,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Update worker configuration
             tags:
                 - server-settings
@@ -10296,10 +13756,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Stream specific campaign events via SSE
             tags:
                 - sse
@@ -10332,10 +13790,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Stream campaign events via SSE
             tags:
                 - sse
@@ -10362,10 +13818,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: Get SSE connection statistics
             tags:
                 - sse
@@ -10404,10 +13858,8 @@ paths:
                             schema:
                                 $ref: '#/components/schemas/ErrorResponse'
                     description: Internal Server Error
-                default:
-                    description: ""
             security:
-                - sessionAuth: []
+                - {}
             summary: WebSocket connection
             tags:
                 - websocket
