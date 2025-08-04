@@ -43,6 +43,7 @@ import (
 
 	// "github.com/fntelecomllc/studio/backend/internal/keywordscanner"  // PHASE 4.4: Wrapped by domain services
 	"github.com/fntelecomllc/studio/backend/internal/middleware"
+	"github.com/fntelecomllc/studio/backend/internal/monitoring"
 	"github.com/fntelecomllc/studio/backend/internal/proxymanager"
 	"github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/fntelecomllc/studio/backend/internal/store"
@@ -343,6 +344,30 @@ func main() {
 	)
 	log.Println("Phase 4 CampaignOrchestrator initialized with SSE broadcasting - ready to replace legacy services.")
 
+	// Week 2 Day 3: Initialize Monitoring Service for real-time dashboard integration
+	log.Println("Initializing monitoring service...")
+	monitoringConfig := monitoring.DefaultMonitoringConfig()
+	monitoringService := monitoring.NewMonitoringService(monitoringConfig)
+
+	// Add default alert handler (log alerts)
+	monitoringService.AddAlertHandler(monitoring.DefaultLogAlertHandler)
+
+	// Week 2 Day 4: Initialize cleanup service
+	log.Println("Initializing cleanup service...")
+	cleanupConfig := monitoring.DefaultCleanupConfig()
+	cleanupService := monitoring.NewCleanupService(monitoringService.ResourceMonitor, monitoringService, cleanupConfig)
+
+	// Start monitoring service (will use context from below)
+	defer func() {
+		if monitoringService.IsRunning() {
+			monitoringService.Stop()
+		}
+		if cleanupService.IsRunning() {
+			cleanupService.Stop()
+		}
+	}()
+	log.Println("✓ Monitoring and cleanup services initialized")
+
 	// Phase 4 CampaignOrchestrator now fully integrated with API handlers
 
 	// Async pattern manager removed - no longer needed after CampaignOrchestratorService elimination
@@ -395,6 +420,10 @@ func main() {
 	bulkAnalyticsAPIHandler := api.NewBulkAnalyticsAPIHandler(campaignOrchestrator)
 	bulkResourcesAPIHandler := api.NewBulkResourcesAPIHandler(campaignOrchestrator)
 	log.Println("Bulk domains and validation handlers initialized with SSE integration for real-time updates.")
+
+	// Week 2 Day 3: Initialize Monitoring API Handler
+	monitoringAPIHandler := api.NewMonitoringHandlers(monitoringService, cleanupService)
+	log.Println("✓ Monitoring API handler initialized for real-time dashboard integration.")
 
 	webSocketAPIHandler := api.NewWebSocketHandler(wsBroadcaster, sessionService)
 	log.Println("WebSocketAPIHandler initialized.")
@@ -502,6 +531,25 @@ func main() {
 
 	appCtx, appCancel := context.WithCancel(context.Background())
 	defer appCancel()
+
+	// Week 2 Day 3: Start monitoring service with proper context
+	if err := monitoringService.Start(appCtx, monitoringConfig); err != nil {
+		log.Printf("Warning: Failed to start monitoring service: %v", err)
+	} else {
+		log.Println("✓ Monitoring service started successfully")
+	}
+
+	// Week 2 Day 4: Start cleanup service
+	if err := cleanupService.Start(appCtx); err != nil {
+		log.Printf("Warning: Failed to start cleanup service: %v", err)
+	} else {
+		log.Println("✓ Cleanup service started successfully")
+	}
+
+	// Week 2 Day 3: Set up global monitoring integration for easy campaign tracking
+	campaignMonitoringIntegration := monitoring.NewCampaignMonitoringIntegration(monitoringService)
+	monitoring.SetGlobalMonitoringIntegration(campaignMonitoringIntegration)
+	log.Println("✓ Global monitoring integration configured for campaigns")
 
 	numWorkers := appConfig.Worker.NumWorkers
 	if numWorkers <= 0 {
@@ -803,6 +851,11 @@ func main() {
 	sseRoutesGroup := campaignApiV2.Group("/sse")
 	sseHandler.RegisterSSERoutes(sseRoutesGroup, authMiddleware)
 	log.Println("Registered SSE routes for real-time campaign updates under /api/v2/sse.")
+
+	// Week 2 Day 3: Monitoring routes for real-time dashboard integration
+	monitoringRoutesGroup := campaignApiV2.Group("/monitoring")
+	monitoringAPIHandler.RegisterMonitoringRoutes(monitoringRoutesGroup)
+	log.Println("✓ Registered monitoring routes for real-time dashboard under /api/v2/monitoring.")
 
 	// V2 Bulk Operations routes (enterprise-scale operations)
 	bulkRoutesGroup := newCampaignRoutesGroup.Group("/bulk")
