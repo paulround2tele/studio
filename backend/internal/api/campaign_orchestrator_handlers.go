@@ -89,14 +89,7 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 	// Campaign domains endpoint - standalone service
 	group.GET("/:campaignId/domains/status", h.getCampaignDomainsStatus)
 
-	// --- SINGLE CAMPAIGN DOMAIN OPERATIONS (TODO: Implement) ---
-	// These are placeholders for direct orchestrator integration
-	// group.POST("/:campaignId/domains/generate", h.generateDomains)
-	// group.POST("/:campaignId/domains/validate-dns", h.validateDomainsDNS)
-	// group.POST("/:campaignId/domains/validate-http", h.validateDomainsHTTP)
-	// group.GET("/:campaignId/domains/validation-status", h.getValidationStatus)
-
-	// NOTE: Bulk operations are now handled by BulkDomainsAPIHandler
+	// NOTE: Domain operations are handled by BulkDomainsAPIHandler
 	// Register bulk routes separately using NewBulkDomainsAPIHandler
 
 	// --- B2B BULK APIS FOR LARGE-SCALE OPERATIONS ---

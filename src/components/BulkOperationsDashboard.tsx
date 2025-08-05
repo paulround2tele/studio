@@ -5,7 +5,6 @@ import {
   useBulkValidateDNSMutation,
   useBulkValidateHTTPMutation,
   useBulkAnalyzeDomainsMutation,
-  useBulkCampaignOperationsMutation,
   useAllocateBulkResourcesMutation,
   useListBulkOperationsQuery
 } from '@/store/api/bulkOperationsApi';
@@ -31,7 +30,6 @@ import type {
   BulkDNSValidationRequest,
   BulkHTTPValidationRequest,
   BulkAnalyticsRequest,
-  BulkCampaignOperationRequest,
   BulkResourceRequest
 } from '@/lib/api-client/models';
 import type { UUID } from '@/lib/api-client/uuid-types';
@@ -61,7 +59,6 @@ export const BulkOperationsDashboard: React.FC = () => {
   const [bulkValidateDNS] = useBulkValidateDNSMutation();
   const [bulkValidateHTTP] = useBulkValidateHTTPMutation();
   const [bulkAnalyzeDomains] = useBulkAnalyzeDomainsMutation();
-  const [bulkCampaignOperations] = useBulkCampaignOperationsMutation();
   const [allocateBulkResources] = useAllocateBulkResourcesMutation();
   
   // Query for operation list
@@ -168,10 +165,6 @@ export const BulkOperationsDashboard: React.FC = () => {
           result = await bulkAnalyzeDomains(config as BulkAnalyticsRequest).unwrap();
           break;
           
-        case 'campaign_operations':
-          result = await bulkCampaignOperations(config as BulkCampaignOperationRequest).unwrap();
-          break;
-          
         case 'resource_allocation':
           result = await allocateBulkResources(config as BulkResourceRequest).unwrap();
           break;
@@ -254,13 +247,6 @@ export const BulkOperationsDashboard: React.FC = () => {
             timezone: 'UTC'
           }
         } as BulkAnalyticsRequest;
-        
-      case 'campaign_operations':
-        return {
-          operation: 'start',
-          campaignIds: ['campaign-1', 'campaign-2'],
-          batchSize: 10
-        } as BulkCampaignOperationRequest;
         
       case 'resource_allocation':
         return {
@@ -356,7 +342,7 @@ export const BulkOperationsDashboard: React.FC = () => {
         <h2 className="text-xl font-semibold mb-4">Launch Bulk Operation</h2>
         
         <div className="flex flex-wrap gap-4 mb-4">
-          {(['domain_generation', 'dns_validation', 'http_validation', 'analytics', 'campaign_operations', 'resource_allocation'] as BulkOperationType[]).map((type) => (
+          {(['domain_generation', 'dns_validation', 'http_validation', 'analytics', 'resource_allocation'] as BulkOperationType[]).map((type) => (
             <button
               key={type}
               onClick={() => setSelectedOperationType(type)}

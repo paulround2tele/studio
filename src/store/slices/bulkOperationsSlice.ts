@@ -10,7 +10,6 @@ export type BulkOperationType =
   | 'dns_validation' 
   | 'http_validation'
   | 'analytics'
-  | 'campaign_operations'
   | 'resource_allocation';
 
 export type BulkOperationState = 'idle' | 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
@@ -23,7 +22,7 @@ export interface TrackedBulkOperation {
   progress?: number;
   startTime: string;
   endTime?: string;
-  result?: BulkAnalyzeDomains200Response;
+  result?: any; // Generic result type to handle different operation response types
   error?: string;
   metadata?: Record<string, any>;
 }
@@ -141,7 +140,7 @@ const bulkOperationsSlice = createSlice({
       id: string;
       status: BulkOperationState;
       progress?: number;
-      result?: BulkAnalyzeDomains200Response;
+      result?: any; // Generic result type to handle different operation response types
       error?: string;
     }>) => {
       const { id, status, progress, result, error } = action.payload;

@@ -72,7 +72,7 @@ export const PerformanceTracker: React.FC<PerformanceTrackerProps> = ({
       if (!acc[metric.operation_type]) {
         acc[metric.operation_type] = [];
       }
-      acc[metric.operation_type].push(metric);
+      acc[metric.operation_type]!.push(metric);
       return acc;
     }, {} as Record<string, PerformanceMetrics[]>);
   }, [performanceData]);

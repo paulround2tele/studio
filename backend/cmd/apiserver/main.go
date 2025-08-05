@@ -935,9 +935,6 @@ func registerBulkOperationRoutes(
 	// Bulk analytics operations
 	group.POST("/domains/analyze", analyticsHandler.BulkAnalyzeDomains)
 
-	// Bulk campaign lifecycle operations
-	group.POST("/campaigns/operate", analyticsHandler.BulkCampaignOperations)
-
 	// Bulk operation monitoring and management
 	group.GET("/operations/:operationId/status", resourcesHandler.GetBulkOperationStatus)
 	group.GET("/operations", resourcesHandler.ListBulkOperations)

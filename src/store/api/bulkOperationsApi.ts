@@ -5,13 +5,15 @@ import type {
   BulkDNSValidationRequest,
   BulkHTTPValidationRequest,
   BulkAnalyticsRequest,
-  BulkCampaignOperationRequest,
   BulkResourceRequest,
   BulkAnalyzeDomains200Response,
   BulkOperationStatus,
   BulkOperationListResponse,
   OperationCancellationResponse,
-  BulkResourceStatusResponse
+  BulkResourceStatusResponse,
+  APIResponse,
+  BulkValidationResponse,
+  BulkDomainGenerationResponse
 } from '@/lib/api-client/models';
 
 // Create instance of the generated API client for bulk operations
@@ -27,7 +29,6 @@ export const bulkOperationsApi = createApi({
     'BulkDomains', 
     'BulkValidation', 
     'BulkAnalytics', 
-    'BulkCampaigns',
     'BulkResources',
     'BulkOperationStatus'
   ],
@@ -35,11 +36,22 @@ export const bulkOperationsApi = createApi({
     
     // ================ BULK DOMAINS OPERATIONS ================
     // Domain generation bulk operations
-    bulkGenerateDomains: builder.mutation<BulkAnalyzeDomains200Response, BulkDomainGenerationRequest>({
+    bulkGenerateDomains: builder.mutation<BulkDomainGenerationResponse, BulkDomainGenerationRequest>({
       queryFn: async (request) => {
         try {
           const response = await bulkOperationsApiClient.bulkGenerateDomains(request);
-          return { data: response.data };
+          const apiResponse = response.data as APIResponse;
+          
+          if (apiResponse.success && apiResponse.data) {
+            return { data: apiResponse.data as BulkDomainGenerationResponse };
+          } else {
+            return { 
+              error: { 
+                status: 500, 
+                data: apiResponse.error?.message || 'Bulk domain generation failed' 
+              } 
+            };
+          }
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
@@ -49,11 +61,22 @@ export const bulkOperationsApi = createApi({
 
     // ================ BULK VALIDATION OPERATIONS ================
     // DNS validation bulk operations  
-    bulkValidateDNS: builder.mutation<BulkAnalyzeDomains200Response, BulkDNSValidationRequest>({
+    bulkValidateDNS: builder.mutation<BulkValidationResponse, BulkDNSValidationRequest>({
       queryFn: async (request) => {
         try {
           const response = await bulkOperationsApiClient.bulkValidateDNS(request);
-          return { data: response.data };
+          const apiResponse = response.data as APIResponse;
+          
+          if (apiResponse.success && apiResponse.data) {
+            return { data: apiResponse.data as BulkValidationResponse };
+          } else {
+            return { 
+              error: { 
+                status: 500, 
+                data: apiResponse.error?.message || 'Bulk DNS validation failed' 
+              } 
+            };
+          }
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
@@ -62,11 +85,22 @@ export const bulkOperationsApi = createApi({
     }),
 
     // HTTP validation bulk operations
-    bulkValidateHTTP: builder.mutation<BulkAnalyzeDomains200Response, BulkHTTPValidationRequest>({
+    bulkValidateHTTP: builder.mutation<BulkValidationResponse, BulkHTTPValidationRequest>({
       queryFn: async (request) => {
         try {
           const response = await bulkOperationsApiClient.bulkValidateHTTP(request);
-          return { data: response.data };
+          const apiResponse = response.data as APIResponse;
+          
+          if (apiResponse.success && apiResponse.data) {
+            return { data: apiResponse.data as BulkValidationResponse };
+          } else {
+            return { 
+              error: { 
+                status: 500, 
+                data: apiResponse.error?.message || 'Bulk HTTP validation failed' 
+              } 
+            };
+          }
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
@@ -80,25 +114,23 @@ export const bulkOperationsApi = createApi({
       queryFn: async (request) => {
         try {
           const response = await bulkOperationsApiClient.bulkAnalyzeDomains(request);
-          return { data: response.data };
+          const apiResponse = response.data as APIResponse;
+          
+          if (apiResponse.success && apiResponse.data) {
+            return { data: apiResponse.data as BulkAnalyzeDomains200Response };
+          } else {
+            return { 
+              error: { 
+                status: 500, 
+                data: apiResponse.error?.message || 'Bulk domain analysis failed' 
+              } 
+            };
+          }
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
       },
       invalidatesTags: ['BulkAnalytics', 'BulkOperationStatus'],
-    }),
-
-    // Campaign bulk operations
-    bulkCampaignOperations: builder.mutation<BulkAnalyzeDomains200Response, BulkCampaignOperationRequest>({
-      queryFn: async (request) => {
-        try {
-          const response = await bulkOperationsApiClient.bulkCampaignOperations(request);
-          return { data: response.data };
-        } catch (error: any) {
-          return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
-        }
-      },
-      invalidatesTags: ['BulkCampaigns', 'BulkOperationStatus'],
     }),
 
     // ================ BULK RESOURCES OPERATIONS ================
@@ -194,7 +226,6 @@ export const {
   
   // Analytics operations
   useBulkAnalyzeDomainsMutation,
-  useBulkCampaignOperationsMutation,
   
   // Resource operations
   useAllocateBulkResourcesMutation,

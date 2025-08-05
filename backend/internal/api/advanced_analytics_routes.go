@@ -16,21 +16,14 @@ import (
 // ===============================================================================
 
 // SetupAdvancedAnalyticsRoutes - Set up advanced analytics routes
-// Unlike the amateur routing you probably had before
+// Streamlined analytics routing - no micro-service explosion
 func SetupAdvancedAnalyticsRoutes(router *gin.RouterGroup, handler *AdvancedBulkAnalyticsAPIHandler) {
 	analyticsGroup := router.Group("/bulk/analytics")
 	{
-		// Advanced bulk analytics endpoint
+		// Advanced bulk analytics endpoint (consolidated functionality)
 		analyticsGroup.POST("/advanced", handler.AdvancedBulkAnalyze)
 
-		// Specialized analytics endpoints
-		analyticsGroup.POST("/kpi", handler.PerformanceKPIAnalysis)
-		analyticsGroup.POST("/stealth", handler.StealthAnalysis)
-		analyticsGroup.POST("/resources", handler.ResourceAnalysis)
-		analyticsGroup.POST("/comparative", handler.ComparativeAnalysis)
-		analyticsGroup.POST("/predictive", handler.PredictiveAnalysis)
-
-		// Export and visualization endpoints
+		// Export and visualization endpoints (essential data access)
 		analyticsGroup.POST("/export", handler.ExportAnalytics)
 		analyticsGroup.GET("/visualization/:campaignId", handler.GetVisualizationData)
 
