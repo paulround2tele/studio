@@ -24,14 +24,14 @@ type CreatePersonaRequest struct {
 	Name          string                 `json:"name" validate:"required,min=1,max=255"`
 	PersonaType   models.PersonaTypeEnum `json:"personaType" validate:"required,oneof=dns http"`
 	Description   string                 `json:"description,omitempty"`
-	ConfigDetails interface{}            `json:"configDetails" validate:"required" swaggertype:"object" example:"{}"` // Accept structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig
+	ConfigDetails interface{}            `json:"configDetails" validate:"required" swaggertype:"object"` // Accept structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig
 	IsEnabled     *bool                  `json:"isEnabled,omitempty"`
 }
 
 type UpdatePersonaRequest struct {
 	Name          *string     `json:"name,omitempty" validate:"omitempty,min=1,max=255"`
 	Description   *string     `json:"description,omitempty"`
-	ConfigDetails interface{} `json:"configDetails,omitempty" swaggertype:"object" example:"{}"` // Accept structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig
+	ConfigDetails interface{} `json:"configDetails,omitempty" swaggertype:"object"` // Accept structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig
 	IsEnabled     *bool       `json:"isEnabled,omitempty"`
 }
 

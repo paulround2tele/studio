@@ -14,7 +14,7 @@ import (
 // @Tags feature-flags
 // @ID getFeatureFlags
 // @Produce json
-// @Success 200 {object} FeatureFlags "Feature flags settings"
+// @Success 200 {object} config.FeatureFlags "Feature flags settings"
 // @Router /feature-flags [get]
 func (h *APIHandler) GetFeatureFlagsGin(c *gin.Context) {
 	h.configMutex.RLock()
@@ -30,8 +30,8 @@ func (h *APIHandler) GetFeatureFlagsGin(c *gin.Context) {
 // @ID updateFeatureFlags
 // @Accept json
 // @Produce json
-// @Param request body FeatureFlags true "Feature flags settings"
-// @Success 200 {object} FeatureFlags "Updated feature flags"
+// @Param request body config.FeatureFlags true "Feature flags settings"
+// @Success 200 {object} config.FeatureFlags "Updated feature flags"
 // @Failure 400 {object} map[string]string "Invalid request body"
 // @Failure 500 {object} map[string]string "Failed to save feature flags"
 // @Router /feature-flags [put]

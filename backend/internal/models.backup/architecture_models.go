@@ -55,7 +55,7 @@ type ServiceDependency struct {
 	SourceService     string         `db:"source_service" json:"sourceService"`
 	TargetService     string         `db:"target_service" json:"targetService"`
 	DependencyType    string         `db:"dependency_type" json:"dependencyType"`
-	InterfaceContract sql.NullString `db:"interface_contract" json:"interfaceContract,omitempty" swaggertype:"string"`
+	InterfaceContract sql.NullString `db:"interface_contract" json:"interfaceContract,omitempty"`
 	ReliabilityScore  float64        `db:"reliability_score" json:"reliabilityScore"`
 	LatencyP95        float64        `db:"latency_p95" json:"latencyP95"`
 	FailureCount      int            `db:"failure_count" json:"failureCount"`
@@ -68,12 +68,12 @@ type ArchitectureRefactorLog struct {
 	ID                  int64          `db:"id" json:"id"`
 	ServiceName         string         `db:"service_name" json:"serviceName"`
 	RefactorType        string         `db:"refactor_type" json:"refactorType"`
-	BeforePattern       sql.NullString `db:"before_pattern" json:"beforePattern,omitempty" swaggertype:"string"`
-	AfterPattern        sql.NullString `db:"after_pattern" json:"afterPattern,omitempty" swaggertype:"string"`
+	BeforePattern       sql.NullString `db:"before_pattern" json:"beforePattern,omitempty"`
+	AfterPattern        sql.NullString `db:"after_pattern" json:"afterPattern,omitempty"`
 	ComplexityReduction int            `db:"complexity_reduction" json:"complexityReduction"`
 	PerformanceImpact   float64        `db:"performance_impact" json:"performanceImpact"`
-	RollbackPlan        sql.NullString `db:"rollback_plan" json:"rollbackPlan,omitempty" swaggertype:"string"`
-	ImplementedBy       sql.NullString `db:"implemented_by" json:"implementedBy,omitempty" swaggertype:"string"`
+	RollbackPlan        sql.NullString `db:"rollback_plan" json:"rollbackPlan,omitempty"`
+	ImplementedBy       sql.NullString `db:"implemented_by" json:"implementedBy,omitempty"`
 	ImplementedAt       time.Time      `db:"implemented_at" json:"implementedAt"`
 }
 
@@ -141,9 +141,9 @@ type CampaignStateEvent struct {
 	ID               uuid.UUID       `db:"id" json:"id"`
 	CampaignID       uuid.UUID       `db:"campaign_id" json:"campaignId"`
 	EventType        string          `db:"event_type" json:"eventType"`
-	SourceState      sql.NullString  `db:"source_state" json:"sourceState,omitempty" swaggertype:"string"`
-	TargetState      sql.NullString  `db:"target_state" json:"targetState,omitempty" swaggertype:"string"`
-	Reason           sql.NullString  `db:"reason" json:"reason,omitempty" swaggertype:"string"`
+	SourceState      sql.NullString  `db:"source_state" json:"sourceState,omitempty"`
+	TargetState      sql.NullString  `db:"target_state" json:"targetState,omitempty"`
+	Reason           sql.NullString  `db:"reason" json:"reason,omitempty"`
 	TriggeredBy      string          `db:"triggered_by" json:"triggeredBy"`
 	EventData        json.RawMessage `db:"event_data" json:"eventData"`
 	OperationContext json.RawMessage `db:"operation_context" json:"operationContext"`
@@ -151,7 +151,7 @@ type CampaignStateEvent struct {
 	OccurredAt       time.Time       `db:"occurred_at" json:"occurredAt"`
 	PersistedAt      time.Time       `db:"persisted_at" json:"persistedAt"`
 	ProcessingStatus string          `db:"processing_status" json:"processingStatus"`
-	ProcessingError  sql.NullString  `db:"processing_error" json:"processingError,omitempty" swaggertype:"string"`
+	ProcessingError  sql.NullString  `db:"processing_error" json:"processingError,omitempty"`
 	CorrelationID    uuid.NullUUID   `db:"correlation_id" json:"correlationId,omitempty"`
 }
 

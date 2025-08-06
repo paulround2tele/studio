@@ -132,7 +132,7 @@ func (h *APIHandler) ListProxiesGin(c *gin.Context) {
 // @Tags proxies
 // @Accept json
 // @Produce json
-// @Param request body models.models.CreateProxyRequest true "Proxy creation request"
+// @Param request body models.CreateProxyRequest true "Proxy creation request"
 // @Success 201 {object} models.Proxy "Created proxy"
 // @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
 // @Failure 409 {object} map[string]string "Proxy with address already exists"
@@ -262,7 +262,7 @@ func (h *APIHandler) AddProxyGin(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param proxyId path string true "Proxy ID"
-// @Param request body models.models.UpdateProxyRequest true "Proxy update request"
+// @Param request body models.UpdateProxyRequest true "Proxy update request"
 // @Success 200 {object} models.Proxy "Updated proxy"
 // @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
 // @Failure 404 {object} map[string]string "Proxy not found"

@@ -1,0 +1,24 @@
+# Swaggo Configuration
+# Professional OpenAPI generation - no more custom reflection disasters
+
+# General settings
+generalInfo:
+  title: "Campaign Management API"
+  description: "Professional API with proper type safety"
+  version: "2.0.0"
+  host: "localhost:8080"
+  basePath: "/api/v1"
+
+# Output settings
+output:
+  dir: "./docs"
+  fileName: "swagger"
+
+# Parse settings
+parseInternal: true
+parseDependency: true
+parseVendor: false
+
+# Model settings
+markdownFiles:
+  - "README.md"

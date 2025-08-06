@@ -44,7 +44,7 @@ func NewAuthHandler(sessionService *services.SessionService, sessionConfig *conf
 // @ID loginUser
 // @Accept json
 // @Produce json
-// @Param request body models.models.LoginRequest true "Login credentials"
+// @Param request body models.LoginRequest true "Login credentials"
 // @Success 200 {object} LoginSuccessResponse "Login successful with user and session info"
 // @Failure 400 {object} StandardErrorResponse "Invalid request format"
 // @Failure 401 {object} StandardErrorResponse "Invalid credentials"
@@ -271,7 +271,7 @@ func (h *AuthHandler) Me(c *gin.Context) {
 // @ID changePassword
 // @Accept json
 // @Produce json
-// @Param request body models.models.ChangePasswordRequest true "Password change request"
+// @Param request body models.ChangePasswordRequest true "Password change request"
 // @Success 200 {object} PasswordChangeResponse "Password changed successfully"
 // @Failure 400 {object} StandardErrorResponse "Invalid request format"
 // @Failure 401 {object} StandardErrorResponse "Authentication required"

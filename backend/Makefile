@@ -56,11 +56,12 @@ generate-mocks:
 	@echo "Generating mocks..."
 	go generate ./...
 
-# Generate OpenAPI specification
+# Generate OpenAPI specification with swaggo
 openapi:
-	@echo "Generating OpenAPI 3.0.3 specification..."
-	go run cmd/generate-openapi/main.go -output docs/openapi-3.yaml -format yaml
-	@echo "OpenAPI specification generated: backend/docs/openapi-3.yaml"
+	@echo "Generating OpenAPI 3.0.3 specification with swaggo..."
+	export PATH=$$PATH:/home/vboxuser/go/bin && swag init -g cmd/apiserver/main.go --output docs --outputTypes yaml,json
+	@echo "OpenAPI specification generated: backend/docs/swagger.yaml and swagger.json"
+	@echo "✅ Professional OpenAPI generation complete with proper type safety!"
 
 # Default target
 .DEFAULT_GOAL := help

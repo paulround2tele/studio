@@ -42,24 +42,27 @@ type ErrorDetail struct {
 }
 
 // APIResponse represents the unified response format for all API endpoints
+// @Description Standard API response envelope used by all endpoints
 type APIResponse struct {
-	Success   bool        `json:"success"`            // Indicates if the request was successful
-	Data      interface{} `json:"data,omitempty"`     // Response data (only present on success)
-	Error     *ErrorInfo  `json:"error,omitempty"`    // Error information (only present on failure)
-	Metadata  *Metadata   `json:"metadata,omitempty"` // Optional metadata
-	RequestID string      `json:"requestId"`          // Unique request identifier for tracing
+	Success   bool        `json:"success" example:"true"`                   // Indicates if the request was successful
+	Data      interface{} `json:"data,omitempty" swaggertype:"object"`      // Response data (only present on success)
+	Error     *ErrorInfo  `json:"error,omitempty"`                          // Error information (only present on failure)
+	Metadata  *Metadata   `json:"metadata,omitempty"`                       // Optional metadata
+	RequestID string      `json:"requestId" example:"req_1234567890abcdef"` // Unique request identifier for tracing
 }
 
 // ErrorInfo contains comprehensive error information
+// @Description Detailed error information structure
 type ErrorInfo struct {
-	Code      ErrorCode     `json:"code"`              // Primary error code
-	Message   string        `json:"message"`           // Primary error message
-	Details   []ErrorDetail `json:"details,omitempty"` // Detailed error information
-	Timestamp time.Time     `json:"timestamp"`         // When the error occurred
-	Path      string        `json:"path,omitempty"`    // API path that generated the error
+	Code      ErrorCode     `json:"code" example:"VALIDATION_ERROR"`                     // Primary error code
+	Message   string        `json:"message" example:"Invalid input parameters"`          // Primary error message
+	Details   []ErrorDetail `json:"details,omitempty"`                                   // Detailed error information
+	Timestamp time.Time     `json:"timestamp" example:"2023-01-01T12:00:00Z"`            // When the error occurred
+	Path      string        `json:"path,omitempty" example:"/api/v2/campaigns/validate"` // API path that generated the error
 }
 
 // Metadata contains optional response metadata
+// @Description Optional metadata attached to API responses
 type Metadata struct {
 	Page       *PageInfo              `json:"page,omitempty"`       // Pagination info
 	RateLimit  *RateLimitInfo         `json:"rateLimit,omitempty"`  // Rate limiting info

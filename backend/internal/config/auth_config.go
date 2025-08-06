@@ -10,21 +10,21 @@ type AuthConfig struct {
 	PasswordMinLength int    `json:"passwordMinLength" mapstructure:"password_min_length"`
 
 	// Session configuration
-	SessionDuration     time.Duration `json:"sessionDuration" mapstructure:"session_duration"`
-	SessionIdleTimeout  time.Duration `json:"sessionIdleTimeout" mapstructure:"session_idle_timeout"`
+	SessionDuration     time.Duration `json:"sessionDuration" mapstructure:"session_duration" swaggertype:"string"`
+	SessionIdleTimeout  time.Duration `json:"sessionIdleTimeout" mapstructure:"session_idle_timeout" swaggertype:"string"`
 	SessionCookieName   string        `json:"sessionCookieName" mapstructure:"session_cookie_name"`
 	SessionCookieDomain string        `json:"sessionCookieDomain" mapstructure:"session_cookie_domain"`
 	SessionCookieSecure bool          `json:"sessionCookieSecure" mapstructure:"session_cookie_secure"`
 
 	// Token configuration
-	ResetTokenExpiry time.Duration `json:"resetTokenExpiry" mapstructure:"reset_token_expiry"`
+	ResetTokenExpiry time.Duration `json:"resetTokenExpiry" mapstructure:"reset_token_expiry" swaggertype:"string"`
 
 	// Account lockout
 	MaxFailedAttempts   int           `json:"maxFailedAttempts" mapstructure:"max_failed_attempts"`
-	AccountLockDuration time.Duration `json:"accountLockDuration" mapstructure:"account_lock_duration"`
+	AccountLockDuration time.Duration `json:"accountLockDuration" mapstructure:"account_lock_duration" swaggertype:"string"`
 
 	// Rate limiting
-	RateLimitWindow          time.Duration `json:"rateLimitWindow" mapstructure:"rate_limit_window"`
+	RateLimitWindow          time.Duration `json:"rateLimitWindow" mapstructure:"rate_limit_window" swaggertype:"string"`
 	MaxLoginAttempts         int           `json:"maxLoginAttempts" mapstructure:"max_login_attempts"`
 	MaxPasswordResetAttempts int           `json:"maxPasswordResetAttempts" mapstructure:"max_password_reset_attempts"`
 
