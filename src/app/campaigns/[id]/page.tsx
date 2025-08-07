@@ -23,11 +23,12 @@ import { useGetCampaignsStandaloneQuery } from '@/store/api/campaignApi';
 import useCampaignOperations from '@/hooks/useCampaignOperations';
 
 // Types
-import type { LeadGenerationCampaign } from '@/lib/api-client/models';
-import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
+// TODO: Fix this when proper campaign detail types are available
+// import type { LeadGenerationCampaign } from '@/lib/api-client/models';
+import { CampaignsApi, StartPhaseStandalonePhaseEnum } from '@/lib/api-client/apis/campaigns-api';
 import { convertCampaignToLeadGeneration } from '@/lib/utils/typeGuards';
 
-type CampaignPhase = LeadGenerationCampaign['currentPhase'];
+// type CampaignPhase = LeadGenerationCampaign['currentPhase'];
 
 export default function CampaignDetailsPage() {
   const params = useParams();
@@ -129,7 +130,9 @@ export default function CampaignDetailsPage() {
       {/* Campaign Controls */}
       <CampaignControls
         campaign={convertCampaignToLeadGeneration(typedCampaign)}
-        onStartPhase={async (phaseType: string) => { await campaignsApi.startPhaseStandalone(campaignId, phaseType); }}
+        onStartPhase={async (phaseType: string) => { 
+          await campaignsApi.startPhaseStandalone(campaignId, phaseType as StartPhaseStandalonePhaseEnum); 
+        }}
         onPausePhase={async (phaseType: string) => {
           // Note: Pause/Resume/Cancel not available in standalone services - use startPhaseStandalone for control
           console.log('Pause not implemented for standalone services');

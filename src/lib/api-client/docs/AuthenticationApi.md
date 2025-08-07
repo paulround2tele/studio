@@ -1,17 +1,17 @@
 # AuthenticationApi
 
-All URIs are relative to *http://localhost*
+All URIs are relative to */api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
 |[**changePassword**](#changepassword) | **POST** /auth/change-password | Change user password|
 |[**getCurrentUser**](#getcurrentuser) | **GET** /auth/me | Get current user|
-|[**login**](#login) | **POST** /auth/login | User login|
-|[**logout**](#logout) | **POST** /auth/logout | User logout|
+|[**loginUser**](#loginuser) | **POST** /auth/login | User login|
+|[**logoutUser**](#logoutuser) | **POST** /auth/logout | User logout|
 |[**refreshSession**](#refreshsession) | **POST** /auth/refresh | Refresh user session|
 
 # **changePassword**
-> PasswordChangeResponse changePassword(changePasswordRequest)
+> ApiPasswordChangeResponse changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest)
 
 Change password for the currently authenticated user
 
@@ -21,16 +21,16 @@ Change password for the currently authenticated user
 import {
     AuthenticationApi,
     Configuration,
-    ChangePasswordRequest
+    GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new AuthenticationApi(configuration);
 
-let changePasswordRequest: ChangePasswordRequest; //
+let githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest: GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest; //Password change request
 
 const { status, data } = await apiInstance.changePassword(
-    changePasswordRequest
+    githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest
 );
 ```
 
@@ -38,12 +38,12 @@ const { status, data } = await apiInstance.changePassword(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **changePasswordRequest** | **ChangePasswordRequest**|  | |
+| **githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest** | **GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest**| Password change request | |
 
 
 ### Return type
 
-**PasswordChangeResponse**
+**ApiPasswordChangeResponse**
 
 ### Authorization
 
@@ -58,14 +58,15 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Password changed successfully |  -  |
+|**400** | Invalid request format |  -  |
+|**401** | Authentication required |  -  |
+|**501** | Not implemented |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getCurrentUser**
-> User getCurrentUser()
+> GithubComFntelecomllcStudioBackendInternalModelsUser getCurrentUser()
 
 Get information about the currently authenticated user
 
@@ -89,7 +90,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**User**
+**GithubComFntelecomllcStudioBackendInternalModelsUser**
 
 ### Authorization
 
@@ -104,14 +105,15 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Current user information |  -  |
+|**401** | Authentication required |  -  |
+|**404** | User not found |  -  |
+|**500** | Internal server error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **login**
-> LoginSuccessResponse login(loginRequest)
+# **loginUser**
+> ApiLoginSuccessResponse loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest)
 
 Authenticate user credentials and create session
 
@@ -121,16 +123,16 @@ Authenticate user credentials and create session
 import {
     AuthenticationApi,
     Configuration,
-    LoginRequest
+    GithubComFntelecomllcStudioBackendInternalModelsLoginRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new AuthenticationApi(configuration);
 
-let loginRequest: LoginRequest; //
+let githubComFntelecomllcStudioBackendInternalModelsLoginRequest: GithubComFntelecomllcStudioBackendInternalModelsLoginRequest; //Login credentials
 
-const { status, data } = await apiInstance.login(
-    loginRequest
+const { status, data } = await apiInstance.loginUser(
+    githubComFntelecomllcStudioBackendInternalModelsLoginRequest
 );
 ```
 
@@ -138,12 +140,12 @@ const { status, data } = await apiInstance.login(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **loginRequest** | **LoginRequest**|  | |
+| **githubComFntelecomllcStudioBackendInternalModelsLoginRequest** | **GithubComFntelecomllcStudioBackendInternalModelsLoginRequest**| Login credentials | |
 
 
 ### Return type
 
-**LoginSuccessResponse**
+**ApiLoginSuccessResponse**
 
 ### Authorization
 
@@ -158,14 +160,17 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Login successful with user and session info |  -  |
+|**400** | Invalid request format |  -  |
+|**401** | Invalid credentials |  -  |
+|**403** | Account inactive |  -  |
+|**423** | Account locked |  -  |
+|**500** | Internal server error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **logout**
-> SuccessMessageResponse logout()
+# **logoutUser**
+> ApiSuccessMessageResponse logoutUser()
 
 Invalidate current user session and clear cookies
 
@@ -180,7 +185,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new AuthenticationApi(configuration);
 
-const { status, data } = await apiInstance.logout();
+const { status, data } = await apiInstance.logoutUser();
 ```
 
 ### Parameters
@@ -189,7 +194,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**SuccessMessageResponse**
+**ApiSuccessMessageResponse**
 
 ### Authorization
 
@@ -204,14 +209,12 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Logout successful |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **refreshSession**
-> SessionRefreshResponse refreshSession()
+> ApiSessionRefreshResponse refreshSession()
 
 Extend the current session expiry time
 
@@ -235,7 +238,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**SessionRefreshResponse**
+**ApiSessionRefreshResponse**
 
 ### Authorization
 
@@ -250,9 +253,9 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Session refreshed with new expiry |  -  |
+|**401** | Invalid or expired session |  -  |
+|**500** | Failed to refresh session |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

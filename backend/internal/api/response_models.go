@@ -384,9 +384,48 @@ type CampaignData struct {
 	// @Example "in_progress"
 	PhaseStatus *models.PhaseStatusEnum `json:"phaseStatus,omitempty" enums:"not_started,ready,configured,in_progress,paused,completed,failed"`
 
-	// @Description Overall progress percentage (0-100)
-	// @Example 75.5
-	Progress map[string]interface{} `json:"progress,omitempty" description:"Phase-specific progress information"`
+	// @Description Phase-specific progress information
+	Progress PhaseProgressData `json:"progress,omitempty" description:"Phase-specific progress information"`
+}
+
+// PhaseProgressData represents progress information for different phase types
+type PhaseProgressData struct {
+	// Common fields for all phases
+	Percentage     float64 `json:"percentage" example:"75.5" description:"Progress percentage (0-100)"`
+	ProcessedItems int64   `json:"processedItems" example:"750" description:"Number of items processed"`
+	TotalItems     int64   `json:"totalItems" example:"1000" description:"Total items to process"`
+
+	// Phase-specific details
+	DomainGeneration *DomainGenerationProgress `json:"domainGeneration,omitempty" description:"Domain generation progress details"`
+	DNSValidation    *DNSValidationProgress    `json:"dnsValidation,omitempty" description:"DNS validation progress details"`
+	HTTPValidation   *HTTPValidationProgress   `json:"httpValidation,omitempty" description:"HTTP validation progress details"`
+	Analysis         *AnalysisProgress         `json:"analysis,omitempty" description:"Analysis progress details"`
+}
+
+// DomainGenerationProgress represents domain generation phase progress
+type DomainGenerationProgress struct {
+	DomainsGenerated int `json:"domainsGenerated" example:"500" description:"Number of domains generated"`
+	GenerationRate   int `json:"generationRate" example:"50" description:"Domains generated per minute"`
+}
+
+// DNSValidationProgress represents DNS validation phase progress
+type DNSValidationProgress struct {
+	ValidDomains   int `json:"validDomains" example:"400" description:"Number of domains with valid DNS"`
+	InvalidDomains int `json:"invalidDomains" example:"100" description:"Number of domains with invalid DNS"`
+	ValidationRate int `json:"validationRate" example:"25" description:"Domains validated per minute"`
+}
+
+// HTTPValidationProgress represents HTTP validation phase progress
+type HTTPValidationProgress struct {
+	MatchingDomains int     `json:"matchingDomains" example:"150" description:"Number of domains matching keywords"`
+	ScannedDomains  int     `json:"scannedDomains" example:"300" description:"Number of domains scanned"`
+	MatchRate       float64 `json:"matchRate" example:"50.0" description:"Percentage of domains with keyword matches"`
+}
+
+// AnalysisProgress represents analysis phase progress
+type AnalysisProgress struct {
+	CompletedAnalyses int `json:"completedAnalyses" example:"75" description:"Number of completed analyses"`
+	ReportsGenerated  int `json:"reportsGenerated" example:"20" description:"Number of reports generated"`
 }
 
 // CampaignParamsData represents campaign parameters
@@ -400,11 +439,11 @@ type CampaignParamsData struct {
 
 // EnrichedCampaignData represents enriched data for a single campaign
 type EnrichedCampaignData struct {
-	Campaign            CampaignData             `json:"campaign"`
-	Domains             []models.GeneratedDomain `json:"domains"`             // CRITICAL FIX: Full domain objects with status
-	DNSValidatedDomains []string                 `json:"dnsValidatedDomains"` // String array format
-	Leads               []models.LeadItem        `json:"leads"`
-	HTTPKeywordResults  []interface{}            `json:"httpKeywordResults"` // TODO: Replace with proper type when available
+	Campaign            CampaignData               `json:"campaign"`
+	Domains             []models.GeneratedDomain   `json:"domains"`             // CRITICAL FIX: Full domain objects with status
+	DNSValidatedDomains []string                   `json:"dnsValidatedDomains"` // String array format
+	Leads               []models.LeadItem          `json:"leads"`
+	HTTPKeywordResults  []models.HTTPKeywordResult `json:"httpKeywordResults"` // FIXED: Proper typed HTTP keyword results
 }
 
 // ErrorContext represents error context information with all possible fields
@@ -514,9 +553,9 @@ type BulkLogsRequest struct {
 // BulkLogsResponse represents log data for multiple campaigns
 // @Description Response containing log data for multiple campaigns with metadata
 type BulkLogsResponse struct {
-	Logs       map[string][]interface{} `json:"logs" description:"Map of campaign ID to list of log entries"`
-	TotalCount int                      `json:"totalCount" example:"500" description:"Total number of log entries across all campaigns"`
-	Metadata   *BulkMetadata            `json:"metadata,omitempty" description:"Processing metadata and statistics"`
+	Logs       map[string][]models.AuditLog `json:"logs" description:"Map of campaign ID to list of log entries"`
+	TotalCount int                          `json:"totalCount" example:"500" description:"Total number of log entries across all campaigns"`
+	Metadata   *BulkMetadata                `json:"metadata,omitempty" description:"Processing metadata and statistics"`
 }
 
 // BulkLeadsRequest represents a request for bulk lead data
@@ -572,12 +611,23 @@ type BulkDatabaseQueryResponse struct {
 // DatabaseQueryResult represents the result of a database query
 // @Description Response containing query results with metadata
 type DatabaseQueryResult struct {
-	Columns       []string        `json:"columns" example:"['id','name','status']" description:"Column names from the query result"`
-	Rows          [][]interface{} `json:"rows" description:"Query result rows, each row is an array of values"`
-	RowCount      int             `json:"rowCount" example:"25" description:"Number of rows returned"`
-	ExecutionTime int64           `json:"executionTime" example:"125" description:"Query execution time in milliseconds"`
-	Success       bool            `json:"success" example:"true" description:"Whether the query executed successfully"`
-	Error         string          `json:"error,omitempty" example:"" description:"Error message if query failed"`
+	Columns       []string          `json:"columns" example:"['id','name','status']" description:"Column names from the query result"`
+	Rows          [][]DatabaseValue `json:"rows" description:"Query result rows, each row is an array of database values"`
+	RowCount      int               `json:"rowCount" example:"25" description:"Number of rows returned"`
+	ExecutionTime int64             `json:"executionTime" example:"125" description:"Query execution time in milliseconds"`
+	Success       bool              `json:"success" example:"true" description:"Whether the query executed successfully"`
+	Error         string            `json:"error,omitempty" example:"" description:"Error message if query failed"`
+}
+
+// DatabaseValue represents a value that can be returned from a database query
+// @Description A database value that can be string, number, boolean, or null
+type DatabaseValue struct {
+	StringValue *string  `json:"stringValue,omitempty" description:"String value"`
+	IntValue    *int64   `json:"intValue,omitempty" description:"Integer value"`
+	FloatValue  *float64 `json:"floatValue,omitempty" description:"Float value"`
+	BoolValue   *bool    `json:"boolValue,omitempty" description:"Boolean value"`
+	IsNull      bool     `json:"isNull" description:"Whether the value is null"`
+	RawValue    string   `json:"rawValue" description:"Raw string representation of the value"`
 }
 
 // BulkQueryMetadata represents processing metadata for bulk database operations
@@ -656,7 +706,16 @@ type BulkStatsMetadata struct {
 // @Description Request payload for configuring campaign phase parameters
 type PhaseConfigureRequest struct {
 	PhaseType string      `json:"phaseType" validate:"required,oneof=dns_validation http_keyword_validation analysis" example:"dns_validation" description:"Type of phase to configure"`
-	Config    interface{} `json:"config" validate:"required" description:"Phase-specific configuration object"`
+	Config    PhaseConfig `json:"config" validate:"required" description:"Phase-specific configuration object"`
+}
+
+// PhaseConfig is a union type for all possible phase configurations
+// @Description Phase configuration that can be DNS validation, HTTP validation, or analysis configuration
+type PhaseConfig struct {
+	// Exactly one of these fields should be populated based on PhaseType
+	DNSValidation  *DNSValidationConfig  `json:"dnsValidation,omitempty" description:"DNS validation configuration (when phaseType=dns_validation)"`
+	HTTPValidation *HTTPValidationConfig `json:"httpValidation,omitempty" description:"HTTP validation configuration (when phaseType=http_keyword_validation)"`
+	Analysis       *AnalysisConfig       `json:"analysis,omitempty" description:"Analysis configuration (when phaseType=analysis)"`
 }
 
 // DNSValidationConfig represents DNS validation phase configuration
@@ -705,19 +764,65 @@ type PhaseStartRequest struct {
 
 // BulkOperationStatusResponse represents the current status of a bulk operation
 type BulkOperationStatusResponse struct {
-	OperationID     string                 `json:"operationId"`
-	Type            string                 `json:"type"`                  // "domain_generation", "dns_validation", "http_validation", "analytics"
-	Status          string                 `json:"status"`                // "queued", "running", "completed", "failed", "cancelled"
-	Progress        float64                `json:"progress"`              // 0.0 to 100.0
-	StartedAt       string                 `json:"startedAt"`             // ISO 8601
-	CompletedAt     *string                `json:"completedAt,omitempty"` // ISO 8601
-	EstimatedTime   *int64                 `json:"estimatedTimeMs,omitempty"`
-	ProcessingTime  int64                  `json:"processingTimeMs"`
-	TotalOperations int                    `json:"totalOperations"`
-	CompletedOps    int                    `json:"completedOps"`
-	FailedOps       int                    `json:"failedOps"`
-	Results         map[string]interface{} `json:"results,omitempty"`
-	ErrorMessage    *string                `json:"errorMessage,omitempty"`
+	OperationID     string                `json:"operationId"`
+	Type            string                `json:"type"`                  // "domain_generation", "dns_validation", "http_validation", "analytics"
+	Status          string                `json:"status"`                // "queued", "running", "completed", "failed", "cancelled"
+	Progress        float64               `json:"progress"`              // 0.0 to 100.0
+	StartedAt       string                `json:"startedAt"`             // ISO 8601
+	CompletedAt     *string               `json:"completedAt,omitempty"` // ISO 8601
+	EstimatedTime   *int64                `json:"estimatedTimeMs,omitempty"`
+	ProcessingTime  int64                 `json:"processingTimeMs"`
+	TotalOperations int                   `json:"totalOperations"`
+	CompletedOps    int                   `json:"completedOps"`
+	FailedOps       int                   `json:"failedOps"`
+	Results         *BulkOperationResults `json:"results,omitempty" description:"Operation-specific results"`
+	ErrorMessage    *string               `json:"errorMessage,omitempty"`
+}
+
+// BulkOperationResults represents typed results for different bulk operations
+// @Description Operation results that vary by operation type
+type BulkOperationResults struct {
+	// Domain generation results
+	DomainGeneration *DomainGenerationResults `json:"domainGeneration,omitempty" description:"Domain generation operation results"`
+
+	// DNS validation results
+	DNSValidation *DNSValidationResults `json:"dnsValidation,omitempty" description:"DNS validation operation results"`
+
+	// HTTP validation results
+	HTTPValidation *HTTPValidationResults `json:"httpValidation,omitempty" description:"HTTP validation operation results"`
+
+	// Analytics results
+	Analytics *AnalyticsResults `json:"analytics,omitempty" description:"Analytics operation results"`
+}
+
+// DomainGenerationResults represents domain generation operation results
+type DomainGenerationResults struct {
+	GeneratedDomains []string `json:"generatedDomains" description:"List of generated domains"`
+	TotalGenerated   int      `json:"totalGenerated" description:"Total number of domains generated"`
+	UniqueCount      int      `json:"uniqueCount" description:"Number of unique domains generated"`
+}
+
+// DNSValidationResults represents DNS validation operation results
+type DNSValidationResults struct {
+	ValidDomains   []string `json:"validDomains" description:"Domains with valid DNS resolution"`
+	InvalidDomains []string `json:"invalidDomains" description:"Domains with invalid DNS"`
+	TotalValidated int      `json:"totalValidated" description:"Total domains validated"`
+	ValidationRate float64  `json:"validationRate" description:"Percentage of valid domains"`
+}
+
+// HTTPValidationResults represents HTTP validation operation results
+type HTTPValidationResults struct {
+	MatchingDomains []string                   `json:"matchingDomains" description:"Domains matching search criteria"`
+	KeywordMatches  []models.HTTPKeywordResult `json:"keywordMatches" description:"Detailed keyword match results"`
+	TotalScanned    int                        `json:"totalScanned" description:"Total domains scanned"`
+	MatchPercentage float64                    `json:"matchPercentage" description:"Percentage of domains with matches"`
+}
+
+// AnalyticsResults represents analytics operation results
+type AnalyticsResults struct {
+	ProcessedCampaigns int                        `json:"processedCampaigns" description:"Number of campaigns analyzed"`
+	AnalyticsData      []models.CampaignAnalytics `json:"analyticsData" description:"Campaign analytics data"`
+	AggregatedMetrics  models.AggregatedAnalytics `json:"aggregatedMetrics" description:"Aggregated analytics across campaigns"`
 }
 
 // BulkResourceStatusResponse represents current resource utilization

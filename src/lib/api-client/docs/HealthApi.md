@@ -1,16 +1,16 @@
 # HealthApi
 
-All URIs are relative to *http://localhost*
+All URIs are relative to */api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**handleHealthCheck**](#handlehealthcheck) | **GET** /health | Health check|
-|[**handleLivenessCheck**](#handlelivenesscheck) | **GET** /health/live | Liveness check|
-|[**handleReadinessCheck**](#handlereadinesscheck) | **GET** /health/ready | Readiness check|
-|[**ping**](#ping) | **GET** /ping | Ping server|
+|[**healthCheck**](#healthcheck) | **GET** /health | Health check|
+|[**healthLiveness**](#healthliveness) | **GET** /health/live | Liveness check|
+|[**healthReadiness**](#healthreadiness) | **GET** /health/ready | Readiness check|
+|[**pingGet**](#pingget) | **GET** /ping | Ping server|
 
-# **handleHealthCheck**
-> HealthStatus handleHealthCheck()
+# **healthCheck**
+> ApiHealthStatus healthCheck()
 
 Get overall system health status including component checks
 
@@ -25,7 +25,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new HealthApi(configuration);
 
-const { status, data } = await apiInstance.handleHealthCheck();
+const { status, data } = await apiInstance.healthCheck();
 ```
 
 ### Parameters
@@ -34,7 +34,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**HealthStatus**
+**ApiHealthStatus**
 
 ### Authorization
 
@@ -49,14 +49,12 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | System health status |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **handleLivenessCheck**
-> HealthCheckResponse handleLivenessCheck()
+# **healthLiveness**
+> ApiHealthCheckResponse healthLiveness()
 
 Check if the service is alive and responding
 
@@ -71,7 +69,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new HealthApi(configuration);
 
-const { status, data } = await apiInstance.handleLivenessCheck();
+const { status, data } = await apiInstance.healthLiveness();
 ```
 
 ### Parameters
@@ -80,7 +78,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**HealthCheckResponse**
+**ApiHealthCheckResponse**
 
 ### Authorization
 
@@ -95,14 +93,12 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Service is alive |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **handleReadinessCheck**
-> HealthCheckResponse handleReadinessCheck()
+# **healthReadiness**
+> ApiHealthCheckResponse healthReadiness()
 
 Check if the service is ready to accept requests
 
@@ -117,7 +113,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new HealthApi(configuration);
 
-const { status, data } = await apiInstance.handleReadinessCheck();
+const { status, data } = await apiInstance.healthReadiness();
 ```
 
 ### Parameters
@@ -126,7 +122,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**HealthCheckResponse**
+**ApiHealthCheckResponse**
 
 ### Authorization
 
@@ -141,14 +137,13 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Service is ready |  -  |
+|**503** | Service not ready |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **ping**
-> PingResponse ping()
+# **pingGet**
+> ApiPingResponse pingGet()
 
 Simple ping endpoint to verify server is responding
 
@@ -163,7 +158,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new HealthApi(configuration);
 
-const { status, data } = await apiInstance.ping();
+const { status, data } = await apiInstance.pingGet();
 ```
 
 ### Parameters
@@ -172,7 +167,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**PingResponse**
+**ApiPingResponse**
 
 ### Authorization
 
@@ -187,9 +182,7 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Pong response with timestamp |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

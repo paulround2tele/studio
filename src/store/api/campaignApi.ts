@@ -1,14 +1,12 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
 import type { 
-  CreateLeadGenerationCampaignRequest,
-  PhaseConfigureRequest,
-  APIResponse,
-  LeadGenerationCampaignResponse,
-  BulkEnrichedDataRequest,
-  BulkEnrichedDataResponse,
-  PatternOffsetRequest,
-  PatternOffsetResponse
+  ApiAPIResponse,
+  ServicesCreateLeadGenerationCampaignRequest,
+  ApiPhaseConfigureRequest,
+  ApiBulkEnrichedDataRequest,
+  ApiPatternOffsetRequest,
+  ApiPatternOffsetResponse
 } from '@/lib/api-client/models';
 import type { CampaignCurrentPhaseEnum } from '@/lib/api-client/models/campaign';
 
@@ -23,17 +21,12 @@ export const campaignApi = createApi({
   }),
   tagTypes: ['Campaign', 'CampaignPhases', 'CampaignStatus'],
   endpoints: (builder) => ({
-    // Create new campaign using generated client - respects backend APIResponse wrapper
-    createCampaign: builder.mutation<LeadGenerationCampaignResponse, CreateLeadGenerationCampaignRequest>({
+    // Create new campaign using generated client with proper type safety
+    createCampaign: builder.mutation<ApiAPIResponse, ServicesCreateLeadGenerationCampaignRequest>({
       queryFn: async (campaign) => {
         try {
-          const response = await campaignsApiClient.createLeadGenerationCampaign(campaign);
-          const apiResponse = response.data as APIResponse;
-          if (apiResponse.success && apiResponse.data) {
-            return { data: apiResponse.data as LeadGenerationCampaignResponse };
-          } else {
-            return { error: { status: 500, data: apiResponse.error?.message || 'Campaign creation failed' } };
-          }
+          const response = await (await campaignsApiClient.createLeadGenerationCampaign(campaign))();
+          return { data: response.data };
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
@@ -41,45 +34,33 @@ export const campaignApi = createApi({
       invalidatesTags: ['Campaign'],
     }),
     
-    // Configure phase using generated client - respects backend APIResponse wrapper
-    configurePhaseStandalone: builder.mutation<APIResponse, { 
+        
+    // Configure phase using generated client with proper type safety
+    configurePhaseStandalone: builder.mutation<ApiAPIResponse, { 
       campaignId: string; 
       phase: CampaignCurrentPhaseEnum; 
-      config: PhaseConfigureRequest 
+      config: ApiPhaseConfigureRequest 
     }>({
       queryFn: async ({ campaignId, phase, config }) => {
         try {
-          const response = await campaignsApiClient.configurePhaseStandalone(campaignId, phase, config);
-          const apiResponse = response.data as APIResponse;
-          if (apiResponse.success) {
-            return { data: apiResponse };
-          } else {
-            return { error: { status: 500, data: apiResponse.error?.message || 'Phase configuration failed' } };
-          }
+          const response = await (await campaignsApiClient.configurePhaseStandalone(campaignId, phase, config))();
+          return { data: response.data };
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
       },
-      invalidatesTags: (result, error, { campaignId }) => [
-        { type: 'Campaign', id: campaignId },
-        { type: 'CampaignPhases', id: campaignId },
-      ],
+      invalidatesTags: ['CampaignPhases'],
     }),
     
-        // Start phase using generated client - respects backend APIResponse wrapper
-    startPhaseStandalone: builder.mutation<APIResponse, { 
+    // Start phase using generated client with proper type safety
+    startPhaseStandalone: builder.mutation<ApiAPIResponse, { 
       campaignId: string; 
       phase: CampaignCurrentPhaseEnum; 
     }>({
       queryFn: async ({ campaignId, phase }) => {
         try {
-          const response = await campaignsApiClient.startPhaseStandalone(campaignId, phase);
-          const apiResponse = response.data as APIResponse;
-          if (apiResponse.success) {
-            return { data: apiResponse };
-          } else {
-            return { error: { status: 500, data: apiResponse.error?.message || 'Phase start failed' } };
-          }
+          const response = await (await campaignsApiClient.startPhaseStandalone(campaignId, phase))();
+          return { data: response.data };
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
@@ -90,17 +71,12 @@ export const campaignApi = createApi({
       ],
     }),
     
-    // Get campaign progress using generated client - respects backend APIResponse wrapper
-    getCampaignProgressStandalone: builder.query<APIResponse, string>({
+    // Get campaign progress using generated client with proper type safety
+    getCampaignProgressStandalone: builder.query<ApiAPIResponse, string>({
       queryFn: async (campaignId) => {
         try {
-          const response = await campaignsApiClient.getCampaignProgressStandalone(campaignId);
-          const apiResponse = response.data as APIResponse;
-          if (apiResponse.success) {
-            return { data: apiResponse };
-          } else {
-            return { error: { status: 500, data: apiResponse.error?.message || 'Failed to get campaign progress' } };
-          }
+          const response = await (await campaignsApiClient.getCampaignProgressStandalone(campaignId))();
+          return { data: response.data };
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
@@ -110,20 +86,15 @@ export const campaignApi = createApi({
       ],
     }),
     
-    // Get phase status using generated client - respects backend APIResponse wrapper
-    getPhaseStatusStandalone: builder.query<APIResponse, { 
+    // Get phase status using generated client with proper type safety
+    getPhaseStatusStandalone: builder.query<ApiAPIResponse, { 
       campaignId: string; 
       phase: CampaignCurrentPhaseEnum; 
     }>({
       queryFn: async ({ campaignId, phase }) => {
         try {
-          const response = await campaignsApiClient.getPhaseStatusStandalone(campaignId, phase);
-          const apiResponse = response.data as APIResponse;
-          if (apiResponse.success) {
-            return { data: apiResponse };
-          } else {
-            return { error: { status: 500, data: apiResponse.error?.message || 'Failed to get phase status' } };
-          }
+          const response = await (await campaignsApiClient.getPhaseStatusStandalone(campaignId, phase))();
+          return { data: response.data };
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }

@@ -1,182 +1,18 @@
 # ProxyPoolsApi
 
-All URIs are relative to *http://localhost*
+All URIs are relative to */api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**addProxyToPool**](#addproxytopool) | **POST** /proxy-pools/{poolId}/proxies | Add proxy to pool|
-|[**createProxyPool**](#createproxypool) | **POST** /proxy-pools | Create proxy pool|
-|[**deleteProxyPool**](#deleteproxypool) | **DELETE** /proxy-pools/{poolId} | Delete proxy pool|
 |[**listProxyPools**](#listproxypools) | **GET** /proxy-pools | List proxy pools|
-|[**removeProxyFromPool**](#removeproxyfrompool) | **DELETE** /proxy-pools/{poolId}/proxies/{proxyId} | Remove proxy from pool|
-|[**updateProxyPool**](#updateproxypool) | **PUT** /proxy-pools/{poolId} | Update proxy pool|
-
-# **addProxyToPool**
-> BulkAnalyzeDomains200Response addProxyToPool(addProxyToPoolRequest)
-
-Assign a proxy to a proxy pool with optional weight
-
-### Example
-
-```typescript
-import {
-    ProxyPoolsApi,
-    Configuration,
-    AddProxyToPoolRequest
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ProxyPoolsApi(configuration);
-
-let poolId: string; //Proxy pool ID (default to undefined)
-let addProxyToPoolRequest: AddProxyToPoolRequest; //
-
-const { status, data } = await apiInstance.addProxyToPool(
-    poolId,
-    addProxyToPoolRequest
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **addProxyToPoolRequest** | **AddProxyToPoolRequest**|  | |
-| **poolId** | [**string**] | Proxy pool ID | defaults to undefined|
-
-
-### Return type
-
-**BulkAnalyzeDomains200Response**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **createProxyPool**
-> BulkAnalyzeDomains200Response createProxyPool(proxyPoolRequest)
-
-Create a new proxy pool with configuration settings
-
-### Example
-
-```typescript
-import {
-    ProxyPoolsApi,
-    Configuration,
-    ProxyPoolRequest
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ProxyPoolsApi(configuration);
-
-let proxyPoolRequest: ProxyPoolRequest; //
-
-const { status, data } = await apiInstance.createProxyPool(
-    proxyPoolRequest
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **proxyPoolRequest** | **ProxyPoolRequest**|  | |
-
-
-### Return type
-
-**BulkAnalyzeDomains200Response**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **deleteProxyPool**
-> APIResponse deleteProxyPool()
-
-Delete a proxy pool
-
-### Example
-
-```typescript
-import {
-    ProxyPoolsApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ProxyPoolsApi(configuration);
-
-let poolId: string; //Proxy pool ID (default to undefined)
-
-const { status, data } = await apiInstance.deleteProxyPool(
-    poolId
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **poolId** | [**string**] | Proxy pool ID | defaults to undefined|
-
-
-### Return type
-
-**APIResponse**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+|[**proxyPoolsPoolIdDelete**](#proxypoolspooliddelete) | **DELETE** /proxy-pools/{poolId} | Delete proxy pool|
+|[**proxyPoolsPoolIdProxiesPost**](#proxypoolspoolidproxiespost) | **POST** /proxy-pools/{poolId}/proxies | Add proxy to pool|
+|[**proxyPoolsPoolIdProxiesProxyIdDelete**](#proxypoolspoolidproxiesproxyiddelete) | **DELETE** /proxy-pools/{poolId}/proxies/{proxyId} | Remove proxy from pool|
+|[**proxyPoolsPoolIdPut**](#proxypoolspoolidput) | **PUT** /proxy-pools/{poolId} | Update proxy pool|
+|[**proxyPoolsPost**](#proxypoolspost) | **POST** /proxy-pools | Create proxy pool|
 
 # **listProxyPools**
-> BulkAnalyzeDomains200Response listProxyPools()
+> Array<GithubComFntelecomllcStudioBackendInternalModelsProxyPool> listProxyPools()
 
 Retrieve all proxy pools with their associated proxies
 
@@ -200,7 +36,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**BulkAnalyzeDomains200Response**
+**Array<GithubComFntelecomllcStudioBackendInternalModelsProxyPool>**
 
 ### Authorization
 
@@ -215,14 +51,124 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | List of proxy pools |  -  |
+|**500** | Failed to list proxy pools |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **removeProxyFromPool**
-> ProxyPoolMembershipResponse removeProxyFromPool()
+# **proxyPoolsPoolIdDelete**
+> { [key: string]: boolean; } proxyPoolsPoolIdDelete()
+
+Delete a proxy pool
+
+### Example
+
+```typescript
+import {
+    ProxyPoolsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ProxyPoolsApi(configuration);
+
+let poolId: string; //Proxy pool ID (default to undefined)
+
+const { status, data } = await apiInstance.proxyPoolsPoolIdDelete(
+    poolId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **poolId** | [**string**] | Proxy pool ID | defaults to undefined|
+
+
+### Return type
+
+**{ [key: string]: boolean; }**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Deletion confirmation |  -  |
+|**400** | Invalid ID |  -  |
+|**404** | Failed to delete pool |  -  |
+|**500** | Failed to delete pool |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **proxyPoolsPoolIdProxiesPost**
+> GithubComFntelecomllcStudioBackendInternalModelsProxyPoolMembership proxyPoolsPoolIdProxiesPost(proxyPoolsPoolIdProxiesPostRequest)
+
+Assign a proxy to a proxy pool with optional weight
+
+### Example
+
+```typescript
+import {
+    ProxyPoolsApi,
+    Configuration,
+    ProxyPoolsPoolIdProxiesPostRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ProxyPoolsApi(configuration);
+
+let poolId: string; //Proxy pool ID (default to undefined)
+let proxyPoolsPoolIdProxiesPostRequest: ProxyPoolsPoolIdProxiesPostRequest; //Proxy assignment request
+
+const { status, data } = await apiInstance.proxyPoolsPoolIdProxiesPost(
+    poolId,
+    proxyPoolsPoolIdProxiesPostRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **proxyPoolsPoolIdProxiesPostRequest** | **ProxyPoolsPoolIdProxiesPostRequest**| Proxy assignment request | |
+| **poolId** | [**string**] | Proxy pool ID | defaults to undefined|
+
+
+### Return type
+
+**GithubComFntelecomllcStudioBackendInternalModelsProxyPoolMembership**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**201** | Created membership |  -  |
+|**400** | Invalid pool ID, payload, or proxy ID |  -  |
+|**500** | Failed to add proxy |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **proxyPoolsPoolIdProxiesProxyIdDelete**
+> ApiProxyPoolMembershipResponse proxyPoolsPoolIdProxiesProxyIdDelete()
 
 Remove a proxy from a specific proxy pool
 
@@ -240,7 +186,7 @@ const apiInstance = new ProxyPoolsApi(configuration);
 let poolId: string; //Pool ID (UUID) (default to undefined)
 let proxyId: string; //Proxy ID (UUID) (default to undefined)
 
-const { status, data } = await apiInstance.removeProxyFromPool(
+const { status, data } = await apiInstance.proxyPoolsPoolIdProxiesProxyIdDelete(
     poolId,
     proxyId
 );
@@ -256,7 +202,7 @@ const { status, data } = await apiInstance.removeProxyFromPool(
 
 ### Return type
 
-**ProxyPoolMembershipResponse**
+**ApiProxyPoolMembershipResponse**
 
 ### Authorization
 
@@ -271,14 +217,15 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
+|**200** | Proxy removed from pool successfully |  -  |
 |**400** | Bad Request |  -  |
+|**404** | Pool or proxy not found |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **updateProxyPool**
-> ProxyPool updateProxyPool(proxyPoolRequest)
+# **proxyPoolsPoolIdPut**
+> GithubComFntelecomllcStudioBackendInternalModelsProxyPool proxyPoolsPoolIdPut(apiProxyPoolRequest)
 
 Update an existing proxy pool configuration
 
@@ -288,18 +235,18 @@ Update an existing proxy pool configuration
 import {
     ProxyPoolsApi,
     Configuration,
-    ProxyPoolRequest
+    ApiProxyPoolRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxyPoolsApi(configuration);
 
 let poolId: string; //Proxy pool ID (default to undefined)
-let proxyPoolRequest: ProxyPoolRequest; //
+let apiProxyPoolRequest: ApiProxyPoolRequest; //Proxy pool update request
 
-const { status, data } = await apiInstance.updateProxyPool(
+const { status, data } = await apiInstance.proxyPoolsPoolIdPut(
     poolId,
-    proxyPoolRequest
+    apiProxyPoolRequest
 );
 ```
 
@@ -307,13 +254,13 @@ const { status, data } = await apiInstance.updateProxyPool(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **proxyPoolRequest** | **ProxyPoolRequest**|  | |
+| **apiProxyPoolRequest** | **ApiProxyPoolRequest**| Proxy pool update request | |
 | **poolId** | [**string**] | Proxy pool ID | defaults to undefined|
 
 
 ### Return type
 
-**ProxyPool**
+**GithubComFntelecomllcStudioBackendInternalModelsProxyPool**
 
 ### Authorization
 
@@ -328,9 +275,64 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Updated proxy pool |  -  |
+|**400** | Invalid ID or request payload |  -  |
+|**404** | Pool not found |  -  |
+|**500** | Failed to update pool |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **proxyPoolsPost**
+> GithubComFntelecomllcStudioBackendInternalModelsProxyPool proxyPoolsPost(apiProxyPoolRequest)
+
+Create a new proxy pool with configuration settings
+
+### Example
+
+```typescript
+import {
+    ProxyPoolsApi,
+    Configuration,
+    ApiProxyPoolRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ProxyPoolsApi(configuration);
+
+let apiProxyPoolRequest: ApiProxyPoolRequest; //Proxy pool creation request
+
+const { status, data } = await apiInstance.proxyPoolsPost(
+    apiProxyPoolRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **apiProxyPoolRequest** | **ApiProxyPoolRequest**| Proxy pool creation request | |
+
+
+### Return type
+
+**GithubComFntelecomllcStudioBackendInternalModelsProxyPool**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**201** | Created proxy pool |  -  |
+|**400** | Invalid request payload |  -  |
+|**500** | Failed to create pool |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

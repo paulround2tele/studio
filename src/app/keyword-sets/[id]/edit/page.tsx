@@ -34,12 +34,13 @@ export default function EditKeywordSetPage() {
   useEffect(() => {
     async function load() {
       try {
-        const resp = await keywordSetsApi.getKeywordSet(params.id as string);
-        form.reset({
-          name: resp.data.name,
-          description: resp.data.description || '',
-          isEnabled: resp.data.isEnabled,
-        });
+        // TODO: Fix this when proper keyword sets API is available
+        // const resp = await keywordSetsApi.getKeywordSet(params.id as string);
+        // form.reset({
+        //   name: resp.data.name,
+        //   description: resp.data.description || '',
+        //   isEnabled: resp.data.isEnabled,
+        // });
       } catch (e) {
         console.error(e);
         setErrorMessage(e instanceof Error ? e.message : 'Failed to load keyword set');

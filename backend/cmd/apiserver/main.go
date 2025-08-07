@@ -12,7 +12,8 @@
 //	@license.name	Apache 2.0
 //	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 //
-//	@BasePath	/api/v2
+//	@servers.url		http://localhost:8080/api/v2
+//	@servers.description	Development server
 //
 //	@securityDefinitions.basic	BasicAuth
 //

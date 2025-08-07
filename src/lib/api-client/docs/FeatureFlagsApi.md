@@ -1,6 +1,6 @@
 # FeatureFlagsApi
 
-All URIs are relative to *http://localhost*
+All URIs are relative to */api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
@@ -8,7 +8,7 @@ All URIs are relative to *http://localhost*
 |[**updateFeatureFlags**](#updatefeatureflags) | **PUT** /feature-flags | Update feature flags|
 
 # **getFeatureFlags**
-> FeatureFlags getFeatureFlags()
+> ConfigFeatureFlags getFeatureFlags()
 
 Retrieve current feature flag settings
 
@@ -32,7 +32,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**FeatureFlags**
+**ConfigFeatureFlags**
 
 ### Authorization
 
@@ -47,14 +47,12 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Feature flags settings |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **updateFeatureFlags**
-> FeatureFlags updateFeatureFlags(featureFlags)
+> ConfigFeatureFlags updateFeatureFlags(configFeatureFlags)
 
 Update feature flag settings
 
@@ -64,16 +62,16 @@ Update feature flag settings
 import {
     FeatureFlagsApi,
     Configuration,
-    FeatureFlags
+    ConfigFeatureFlags
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new FeatureFlagsApi(configuration);
 
-let featureFlags: FeatureFlags; //
+let configFeatureFlags: ConfigFeatureFlags; //Feature flags settings
 
 const { status, data } = await apiInstance.updateFeatureFlags(
-    featureFlags
+    configFeatureFlags
 );
 ```
 
@@ -81,12 +79,12 @@ const { status, data } = await apiInstance.updateFeatureFlags(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **featureFlags** | **FeatureFlags**|  | |
+| **configFeatureFlags** | **ConfigFeatureFlags**| Feature flags settings | |
 
 
 ### Return type
 
-**FeatureFlags**
+**ConfigFeatureFlags**
 
 ### Authorization
 
@@ -101,9 +99,9 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Updated feature flags |  -  |
+|**400** | Invalid request body |  -  |
+|**500** | Failed to save feature flags |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

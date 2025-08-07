@@ -1,6 +1,6 @@
 # KeywordExtractionApi
 
-All URIs are relative to *http://localhost*
+All URIs are relative to */api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
@@ -8,7 +8,7 @@ All URIs are relative to *http://localhost*
 |[**streamExtractKeywords**](#streamextractkeywords) | **GET** /keyword-extraction/stream | Stream keyword extraction|
 
 # **batchExtractKeywords**
-> BatchKeywordExtractionResponse batchExtractKeywords(batchKeywordExtractionRequest)
+> ApiBatchKeywordExtractionResponse batchExtractKeywords(apiBatchKeywordExtractionRequest)
 
 Extract keywords from multiple URLs using specified keyword sets and personas
 
@@ -18,16 +18,16 @@ Extract keywords from multiple URLs using specified keyword sets and personas
 import {
     KeywordExtractionApi,
     Configuration,
-    BatchKeywordExtractionRequest
+    ApiBatchKeywordExtractionRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordExtractionApi(configuration);
 
-let batchKeywordExtractionRequest: BatchKeywordExtractionRequest; //
+let apiBatchKeywordExtractionRequest: ApiBatchKeywordExtractionRequest; //Batch extraction request
 
 const { status, data } = await apiInstance.batchExtractKeywords(
-    batchKeywordExtractionRequest
+    apiBatchKeywordExtractionRequest
 );
 ```
 
@@ -35,12 +35,12 @@ const { status, data } = await apiInstance.batchExtractKeywords(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **batchKeywordExtractionRequest** | **BatchKeywordExtractionRequest**|  | |
+| **apiBatchKeywordExtractionRequest** | **ApiBatchKeywordExtractionRequest**| Batch extraction request | |
 
 
 ### Return type
 
-**BatchKeywordExtractionResponse**
+**ApiBatchKeywordExtractionResponse**
 
 ### Authorization
 
@@ -55,14 +55,13 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Extraction results |  -  |
+|**400** | Invalid request body or validation failed |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **streamExtractKeywords**
-> BulkAnalyzeDomains200Response streamExtractKeywords()
+> string streamExtractKeywords()
 
 Extract keywords from a single URL with real-time streaming results
 
@@ -102,7 +101,7 @@ const { status, data } = await apiInstance.streamExtractKeywords(
 
 ### Return type
 
-**BulkAnalyzeDomains200Response**
+**string**
 
 ### Authorization
 
@@ -111,15 +110,14 @@ No authorization required
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: application/json
+ - **Accept**: application/json, text/event-stream
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Operation successful |  -  |
-|**400** | Bad Request |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Server-sent events stream with extraction results |  -  |
+|**400** | Invalid query parameters |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

@@ -4,6 +4,46 @@
  */
 
 export interface paths {
+    "/api/v2/campaigns/bulk/domains/validate-dns": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate domains using bulk DNS validation with stealth
+         * @description Perform bulk DNS validation with stealth detection avoidance and resource optimization
+         */
+        post: operations["bulkValidateDNS"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v2/campaigns/bulk/domains/validate-http": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate domains using bulk HTTP validation with stealth
+         * @description Perform bulk HTTP validation with keyword extraction, stealth detection avoidance, and resource optimization
+         */
+        post: operations["bulkValidateHTTP"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v2/database/query": {
         parameters: {
             query?: never;
@@ -17,7 +57,61 @@ export interface paths {
          * Execute bulk database queries
          * @description Execute multiple SQL queries against the database with security restrictions for enterprise operations
          */
-        post: operations["handleBulkDatabaseQuery"];
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description Must be XMLHttpRequest */
+                    "X-Requested-With": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Bulk query request */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["api.BulkDatabaseQueryRequest"];
+                };
+            };
+            responses: {
+                /** @description Queries executed successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.BulkDatabaseQueryResponse"];
+                    };
+                };
+                /** @description Bad request or invalid queries */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden query detected */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    };
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -37,7 +131,52 @@ export interface paths {
          * Get bulk database statistics
          * @description Retrieve comprehensive database statistics including schema and table-level details for enterprise monitoring
          */
-        post: operations["handleBulkDatabaseStats"];
+        post: {
+            parameters: {
+                query?: never;
+                header: {
+                    /** @description Must be XMLHttpRequest */
+                    "X-Requested-With": string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Bulk stats request */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["api.BulkDatabaseStatsRequest"];
+                };
+            };
+            responses: {
+                /** @description Statistics retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.BulkDatabaseStatsResponse"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    };
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -55,7 +194,59 @@ export interface paths {
          * Query keyword rules with advanced filtering
          * @description Advanced querying for keyword rule management across sets with multiple filter options
          */
-        get: operations["queryKeywordRules"];
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Filter by keyword set ID */
+                    keyword_set_id?: string;
+                    /** @description Filter by rule type */
+                    rule_type?: "string" | "regex";
+                    /** @description Filter by category */
+                    category?: string;
+                    /** @description Filter by case sensitivity */
+                    is_case_sensitive?: boolean;
+                    /** @description Search pattern in rule patterns (partial match) */
+                    pattern?: string;
+                    /** @description Maximum number of results */
+                    limit?: number;
+                    /** @description Number of results to skip */
+                    offset?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.APIResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.APIResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.APIResponse"];
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         delete?: never;
@@ -75,7 +266,56 @@ export interface paths {
          * Get keyword set with high-performance rules loading
          * @description Optimized endpoint for Phase 3 HTTP keyword validation scanning using JSONB rules column
          */
-        get: operations["getKeywordSetWithRules"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Keyword Set ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.APIResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.APIResponse"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.APIResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.APIResponse"];
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         delete?: never;
@@ -117,7 +357,7 @@ export interface paths {
          * User login
          * @description Authenticate user credentials and create session
          */
-        post: operations["login"];
+        post: operations["loginUser"];
         delete?: never;
         options?: never;
         head?: never;
@@ -137,7 +377,7 @@ export interface paths {
          * User logout
          * @description Invalidate current user session and clear cookies
          */
-        post: operations["logout"];
+        post: operations["logoutUser"];
         delete?: never;
         options?: never;
         head?: never;
@@ -324,26 +564,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/campaigns/bulk/campaigns/operate": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Manage bulk campaign operations
-         * @description Perform bulk operations on multiple campaigns (start, stop, pause, resume, delete, configure)
-         */
-        post: operations["bulkCampaignOperations"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/campaigns/bulk/domains/generate": {
         parameters: {
             query?: never;
@@ -358,46 +578,6 @@ export interface paths {
          * @description Generate large batches of domains with stealth-aware configuration and resource management
          */
         post: operations["bulkGenerateDomains"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/bulk/domains/validate-dns": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Validate domains using bulk DNS validation with stealth
-         * @description Perform bulk DNS validation with stealth detection avoidance and resource optimization
-         */
-        post: operations["bulkValidateDNS"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/campaigns/bulk/domains/validate-http": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Validate domains using bulk HTTP validation with stealth
-         * @description Perform bulk HTTP validation with keyword extraction, stealth detection avoidance, and resource optimization
-         */
-        post: operations["bulkValidateHTTP"];
         delete?: never;
         options?: never;
         head?: never;
@@ -599,7 +779,7 @@ export interface paths {
          * Health check
          * @description Get overall system health status including component checks
          */
-        get: operations["handleHealthCheck"];
+        get: operations["healthCheck"];
         put?: never;
         post?: never;
         delete?: never;
@@ -619,7 +799,7 @@ export interface paths {
          * Liveness check
          * @description Check if the service is alive and responding
          */
-        get: operations["handleLivenessCheck"];
+        get: operations["healthLiveness"];
         put?: never;
         post?: never;
         delete?: never;
@@ -639,7 +819,7 @@ export interface paths {
          * Readiness check
          * @description Check if the service is ready to accept requests
          */
-        get: operations["handleReadinessCheck"];
+        get: operations["healthReadiness"];
         put?: never;
         post?: never;
         delete?: never;
@@ -699,13 +879,109 @@ export interface paths {
          * List keyword sets
          * @description Retrieve a list of keyword sets with optional filtering
          */
-        get: operations["listKeywordSets"];
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Maximum number of results */
+                    limit?: number;
+                    /** @description Number of results to skip */
+                    offset?: number;
+                    /** @description Include rules in response */
+                    includeRules?: boolean;
+                    /** @description Filter by enabled status */
+                    isEnabled?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description List of keyword sets */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.KeywordSetResponse"][];
+                    };
+                };
+                /** @description Failed to list keyword sets */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         put?: never;
         /**
          * Create keyword set
          * @description Create a new keyword set with optional rules
          */
-        post: operations["createKeywordSet"];
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Keyword set creation request */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["api.CreateKeywordSetRequest"];
+                };
+            };
+            responses: {
+                /** @description Created keyword set */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.KeywordSetResponse"];
+                    };
+                };
+                /** @description Invalid request payload or validation failed */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Keyword set with name already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Failed to create keyword set */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -723,18 +999,199 @@ export interface paths {
          * Get keyword set
          * @description Retrieve a specific keyword set by ID including its rules
          */
-        get: operations["getKeywordSet"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Keyword set ID */
+                    setId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Keyword set with rules */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.KeywordSetResponse"];
+                    };
+                };
+                /** @description Invalid keyword set ID format */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Keyword set not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Failed to fetch keyword set */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         /**
          * Update keyword set
          * @description Update an existing keyword set and its rules
          */
-        put: operations["updateKeywordSet"];
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Keyword set ID */
+                    setId: string;
+                };
+                cookie?: never;
+            };
+            /** @description Keyword set update request */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["api.UpdateKeywordSetRequest"];
+                };
+            };
+            responses: {
+                /** @description Updated keyword set */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.KeywordSetResponse"];
+                    };
+                };
+                /** @description Invalid request payload or validation failed */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Keyword set not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Keyword set name already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Failed to update keyword set */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         post?: never;
         /**
          * Delete keyword set
          * @description Delete a keyword set by ID
          */
-        delete: operations["deleteKeywordSet"];
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Keyword Set ID (UUID) */
+                    setId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Keyword set deleted successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.KeywordSetDeleteResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Keyword set not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -751,13 +1208,120 @@ export interface paths {
          * List all personas
          * @description Retrieve a list of all personas with optional filtering by type and status
          */
-        get: operations["listAllPersonas"];
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Maximum number of results */
+                    limit?: number;
+                    /** @description Number of results to skip */
+                    offset?: number;
+                    /** @description Filter by enabled status */
+                    isEnabled?: boolean;
+                    /** @description Filter by persona type (dns, http) */
+                    personaType?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description List of personas */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.PersonaResponse"][];
+                    };
+                };
+                /** @description Invalid personaType parameter */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Failed to list personas */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         put?: never;
         /**
          * Create persona
          * @description Create a new persona (DNS or HTTP) with configuration details
          */
-        post: operations["createPersona"];
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Persona creation request */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["api.CreatePersonaRequest"];
+                };
+            };
+            responses: {
+                /** @description Created persona */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.PersonaResponse"];
+                    };
+                };
+                /** @description Invalid request payload or configuration */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Persona with name and type already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Failed to create persona */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -775,18 +1339,188 @@ export interface paths {
          * Get persona by ID
          * @description Retrieve a specific persona by ID regardless of type
          */
-        get: operations["getPersonaByID"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Persona ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Persona details */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.PersonaResponse"];
+                    };
+                };
+                /** @description Invalid persona ID format */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Persona not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Failed to fetch persona */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         /**
          * Update persona
          * @description Update an existing persona's configuration by ID
          */
-        put: operations["updatePersona"];
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Persona ID (UUID) */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            /** @description Persona update request */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["api.UpdatePersonaRequest"];
+                };
+            };
+            responses: {
+                /** @description Persona updated successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.PersonaResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Persona not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         post?: never;
         /**
          * Delete persona
          * @description Delete a persona by ID
          */
-        delete: operations["deletePersona"];
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Persona ID (UUID) */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Persona deleted successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.PersonaDeleteResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Persona not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -805,7 +1539,62 @@ export interface paths {
          * Test persona
          * @description Test a persona configuration to verify it works correctly
          */
-        post: operations["testPersona"];
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Persona ID (UUID) */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Persona test results */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.PersonaTestResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Persona not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -823,7 +1612,66 @@ export interface paths {
          * Get DNS persona by ID
          * @description Retrieve a specific DNS persona configuration by its unique identifier
          */
-        get: operations["getDnsPersonaByID"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description DNS Persona ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description DNS persona retrieved successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.PersonaResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Persona Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         delete?: never;
@@ -843,7 +1691,62 @@ export interface paths {
          * Get HTTP persona by ID
          * @description Retrieve a specific HTTP persona by ID
          */
-        get: operations["getHttpPersonaByID"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description HTTP Persona ID */
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description HTTP persona details */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.PersonaResponse"];
+                    };
+                };
+                /** @description Invalid persona ID format or not HTTP persona */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description HTTP persona not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Failed to fetch HTTP persona */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         delete?: never;
@@ -863,7 +1766,26 @@ export interface paths {
          * Ping server
          * @description Simple ping endpoint to verify server is responding
          */
-        get: operations["ping"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Pong response with timestamp */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.PingResponse"];
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         delete?: never;
@@ -883,13 +1805,111 @@ export interface paths {
          * List proxies
          * @description Retrieve a list of proxies with optional filtering by protocol, status, and health
          */
-        get: operations["listProxies"];
+        get: {
+            parameters: {
+                query?: {
+                    /** @description Maximum number of results */
+                    limit?: number;
+                    /** @description Number of results to skip */
+                    offset?: number;
+                    /** @description Filter by protocol (http, https, socks4, socks5) */
+                    protocol?: string;
+                    /** @description Filter by enabled status */
+                    isEnabled?: boolean;
+                    /** @description Filter by health status */
+                    isHealthy?: boolean;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description List of proxies */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.Proxy"][];
+                    };
+                };
+                /** @description Failed to list proxies */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         put?: never;
         /**
          * Create proxy
          * @description Add a new proxy configuration
          */
-        post: operations["addProxy"];
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Proxy creation request */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.CreateProxyRequest"];
+                };
+            };
+            responses: {
+                /** @description Created proxy */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.Proxy"];
+                    };
+                };
+                /** @description Invalid request payload or validation failed */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Proxy with address already exists */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Failed to create proxy */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -908,13 +1928,126 @@ export interface paths {
          * Update proxy
          * @description Update an existing proxy configuration
          */
-        put: operations["updateProxy"];
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Proxy ID */
+                    proxyId: string;
+                };
+                cookie?: never;
+            };
+            /** @description Proxy update request */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.UpdateProxyRequest"];
+                };
+            };
+            responses: {
+                /** @description Updated proxy */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.Proxy"];
+                    };
+                };
+                /** @description Invalid request payload or validation failed */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Proxy not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Failed to update proxy */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         post?: never;
         /**
          * Delete proxy
          * @description Delete a proxy configuration
          */
-        delete: operations["deleteProxy"];
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Proxy ID */
+                    proxyId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Proxy deleted successfully */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid proxy ID format */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Proxy not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Failed to delete proxy */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -933,7 +2066,62 @@ export interface paths {
          * Force proxy health check
          * @description Force a health check on a specific proxy
          */
-        post: operations["forceCheckSingleProxy"];
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Proxy ID (UUID) */
+                    proxyId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Health check completed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.ProxyHealthCheckResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Proxy not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -953,7 +2141,62 @@ export interface paths {
          * Test proxy
          * @description Test a proxy configuration to verify it works correctly
          */
-        post: operations["testProxy"];
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Proxy ID (UUID) */
+                    proxyId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Proxy test results */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.ProxyTestResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Proxy not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -974,7 +2217,53 @@ export interface paths {
          * Bulk delete proxies
          * @description Delete multiple proxy configurations simultaneously
          */
-        delete: operations["bulkDeleteProxies"];
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Bulk proxy delete request */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkDeleteProxiesRequest"];
+                };
+            };
+            responses: {
+                /** @description Bulk operation results */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse"];
+                    };
+                };
+                /** @description Invalid request payload or validation failed */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -993,7 +2282,53 @@ export interface paths {
          * Bulk test proxies
          * @description Test multiple proxy configurations simultaneously
          */
-        post: operations["bulkTestProxies"];
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Bulk proxy test request */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkTestProxiesRequest"];
+                };
+            };
+            responses: {
+                /** @description Bulk test results */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.BulkProxyTestResponse"];
+                    };
+                };
+                /** @description Invalid request payload or validation failed */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -1012,7 +2347,53 @@ export interface paths {
          * Bulk update proxies
          * @description Update multiple proxy configurations simultaneously
          */
-        put: operations["bulkUpdateProxies"];
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Bulk proxy update request */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkUpdateProxiesRequest"];
+                };
+            };
+            responses: {
+                /** @description Bulk operation results */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse"];
+                    };
+                };
+                /** @description Invalid request payload or validation failed */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Internal server error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -1033,7 +2414,37 @@ export interface paths {
          * Force health check on all proxies
          * @description Force health checks on all registered proxies
          */
-        post: operations["forceCheckAllProxies"];
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Health checks completed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.BulkHealthCheckResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -1051,7 +2462,37 @@ export interface paths {
          * Get proxy statuses
          * @description Retrieve health status information for all proxies
          */
-        get: operations["getProxyStatuses"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Proxy status information */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.ProxyStatusResponse"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         put?: never;
         post?: never;
         delete?: never;
@@ -1077,7 +2518,53 @@ export interface paths {
          * Create proxy pool
          * @description Create a new proxy pool with configuration settings
          */
-        post: operations["createProxyPool"];
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Proxy pool creation request */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["api.ProxyPoolRequest"];
+                };
+            };
+            responses: {
+                /** @description Created proxy pool */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ProxyPool"];
+                    };
+                };
+                /** @description Invalid request payload */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Failed to create pool */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -1096,13 +2583,130 @@ export interface paths {
          * Update proxy pool
          * @description Update an existing proxy pool configuration
          */
-        put: operations["updateProxyPool"];
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Proxy pool ID */
+                    poolId: string;
+                };
+                cookie?: never;
+            };
+            /** @description Proxy pool update request */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["api.ProxyPoolRequest"];
+                };
+            };
+            responses: {
+                /** @description Updated proxy pool */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ProxyPool"];
+                    };
+                };
+                /** @description Invalid ID or request payload */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Pool not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Failed to update pool */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         post?: never;
         /**
          * Delete proxy pool
          * @description Delete a proxy pool
          */
-        delete: operations["deleteProxyPool"];
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Proxy pool ID */
+                    poolId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deletion confirmation */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: boolean;
+                        };
+                    };
+                };
+                /** @description Invalid ID */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Failed to delete pool */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Failed to delete pool */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -1121,7 +2725,59 @@ export interface paths {
          * Add proxy to pool
          * @description Assign a proxy to a proxy pool with optional weight
          */
-        post: operations["addProxyToPool"];
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Proxy pool ID */
+                    poolId: string;
+                };
+                cookie?: never;
+            };
+            /** @description Proxy assignment request */
+            requestBody: {
+                content: {
+                    "application/json": {
+                        proxyId?: string;
+                        weight?: number;
+                    };
+                };
+            };
+            responses: {
+                /** @description Created membership */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ProxyPoolMembership"];
+                    };
+                };
+                /** @description Invalid pool ID, payload, or proxy ID */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Failed to add proxy */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -1142,7 +2798,64 @@ export interface paths {
          * Remove proxy from pool
          * @description Remove a proxy from a specific proxy pool
          */
-        delete: operations["removeProxyFromPool"];
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description Pool ID (UUID) */
+                    poolId: string;
+                    /** @description Proxy ID (UUID) */
+                    proxyId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Proxy removed from pool successfully */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.ProxyPoolMembershipResponse"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Pool or proxy not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -1159,12 +2872,88 @@ export interface paths {
          * Get authentication configuration
          * @description Retrieve the current authentication configuration settings
          */
-        get: operations["getAuthConfigGin"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Authentication configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["config.AuthConfig"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         /**
          * Update authentication configuration
          * @description Update the authentication configuration settings
          */
-        put: operations["updateAuthConfigGin"];
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Authentication configuration */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["config.AuthConfig"];
+                };
+            };
+            responses: {
+                /** @description Updated authentication configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["config.AuthConfig"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -1183,12 +2972,77 @@ export interface paths {
          * Get server configuration
          * @description Retrieve current server-wide configuration settings
          */
-        get: operations["getServerConfigGin"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Server configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.ServerConfigResponse"];
+                    };
+                };
+            };
+        };
         /**
          * Update server configuration
          * @description Update server-wide configuration settings
          */
-        put: operations["updateServerConfigGin"];
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Server configuration update */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["api.ServerConfigUpdateRequest"];
+                };
+            };
+            responses: {
+                /** @description Updated server configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["api.ServerConfigResponse"];
+                    };
+                };
+                /** @description Invalid request payload */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Failed to save server configuration */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -1207,12 +3061,77 @@ export interface paths {
          * Get DNS configuration
          * @description Retrieve default DNS validator configuration
          */
-        get: operations["getDNSConfigGin"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description DNS validator configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["config.DNSValidatorConfigJSON"];
+                    };
+                };
+            };
+        };
         /**
          * Update DNS configuration
          * @description Update default DNS validator configuration
          */
-        put: operations["updateDNSConfigGin"];
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description DNS validator configuration */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["config.DNSValidatorConfigJSON"];
+                };
+            };
+            responses: {
+                /** @description Updated DNS configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["config.DNSValidatorConfigJSON"];
+                    };
+                };
+                /** @description Invalid request body or validation failed */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Failed to save DNS configuration */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -1231,12 +3150,77 @@ export interface paths {
          * Get HTTP configuration
          * @description Retrieve default HTTP validator configuration
          */
-        get: operations["getHTTPConfigGin"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description HTTP validator configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["config.HTTPValidatorConfigJSON"];
+                    };
+                };
+            };
+        };
         /**
          * Update HTTP configuration
          * @description Update default HTTP validator configuration
          */
-        put: operations["updateHTTPConfigGin"];
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description HTTP validator configuration */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["config.HTTPValidatorConfigJSON"];
+                };
+            };
+            responses: {
+                /** @description Updated HTTP configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["config.HTTPValidatorConfigJSON"];
+                    };
+                };
+                /** @description Invalid request body or validation failed */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Failed to save HTTP configuration */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -1255,12 +3239,88 @@ export interface paths {
          * Get logging configuration
          * @description Retrieve the current logging configuration settings
          */
-        get: operations["getLoggingConfigGin"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Logging configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["config.LoggingConfig"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         /**
          * Update logging configuration
          * @description Update the logging configuration settings
          */
-        put: operations["updateLoggingConfigGin"];
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Logging configuration */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["config.LoggingConfig"];
+                };
+            };
+            responses: {
+                /** @description Updated logging configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["config.LoggingConfig"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -1279,12 +3339,88 @@ export interface paths {
          * Get proxy manager configuration
          * @description Retrieve the current proxy manager configuration settings
          */
-        get: operations["getProxyManagerConfigGin"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Proxy manager configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["config.ProxyManagerConfigJSON"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         /**
          * Update proxy manager configuration
          * @description Update the proxy manager configuration settings
          */
-        put: operations["updateProxyManagerConfigGin"];
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Proxy manager configuration */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["config.ProxyManagerConfigJSON"];
+                };
+            };
+            responses: {
+                /** @description Updated proxy manager configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["config.ProxyManagerConfigJSON"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -1303,12 +3439,88 @@ export interface paths {
          * Get rate limiter configuration
          * @description Retrieve the current rate limiter configuration settings
          */
-        get: operations["getRateLimiterConfigGin"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Rate limiter configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["config.RateLimiterConfig"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         /**
          * Update rate limiter configuration
          * @description Update the rate limiter configuration settings
          */
-        put: operations["updateRateLimiterConfigGin"];
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Rate limiter configuration */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["config.RateLimiterConfig"];
+                };
+            };
+            responses: {
+                /** @description Updated rate limiter configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["config.RateLimiterConfig"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -1327,12 +3539,88 @@ export interface paths {
          * Get worker configuration
          * @description Retrieve the current worker configuration settings
          */
-        get: operations["getWorkerConfigGin"];
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Worker configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["config.WorkerConfig"];
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         /**
          * Update worker configuration
          * @description Update the worker configuration settings
          */
-        put: operations["updateWorkerConfigGin"];
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            /** @description Worker configuration */
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["config.WorkerConfig"];
+                };
+            };
+            responses: {
+                /** @description Updated worker configuration */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["config.WorkerConfig"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+                /** @description Internal Server Error */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -1411,7 +3699,7 @@ export interface paths {
          * WebSocket connection
          * @description Upgrade HTTP connection to WebSocket for real-time communication
          */
-        get: operations["handleConnections"];
+        get: operations["connectWebSocket"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1424,315 +3712,608 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        APIKey: {
-            /** Format: date-time */
-            CreatedAt?: string;
-            /** Format: date-time */
-            ExpiresAt?: string;
-            ID?: components["schemas"]["UUID"];
-            Key?: string;
-            KeyHash?: string;
-            KeyHint?: string;
-            KeyName?: string;
-            /** Format: date-time */
-            LastUsedAt?: string;
-            /** Format: date-time */
-            UpdatedAt?: string;
-            UserID?: components["schemas"]["UUID"];
-        };
-        APIKeyRotationPolicy: {
-            MaxAge?: string;
-            MaxUsageCount?: number;
-            RotateOnCompromise?: boolean;
-        };
-        APIKeyService: Record<string, never>;
-        APIResponse: {
+        /** @description Standard API response envelope used by all endpoints */
+        "api.APIResponse": {
+            /** @description Response data (only present on success) */
             data?: Record<string, never>;
-            error?: components["schemas"]["ErrorInfo"];
-            metadata?: components["schemas"]["Metadata"];
-            requestId?: components["schemas"]["UUID"];
-            success?: boolean;
-        };
-        AddProxyToPoolRequest: {
-            proxyId: components["schemas"]["UUID"];
-            /** Format: int32 */
-            weight?: number;
-        };
-        AdvancedAnalyticsData: {
-            costEffectiveness?: components["schemas"]["CostEffectivenessData"];
-            operationalEfficiency?: components["schemas"]["OperationalEfficiencyMetrics"];
-            qualityMetrics?: components["schemas"]["QualityAssuranceMetrics"];
-            scalabilityMetrics?: components["schemas"]["ScalabilityAnalyticsData"];
-        };
-        AdvancedBulkAnalyticsAPIHandler: Record<string, never>;
-        AdvancedBulkAnalyticsRequest: {
-            advancedMetrics?: string[];
-            alertThresholds?: components["schemas"]["AnalyticsAlertConfig"];
+            error?: components["schemas"]["api.ErrorInfo"];
+            metadata?: components["schemas"]["api.Metadata"];
             /**
-             * @description Week 2 Advanced Features
+             * @description Unique request identifier for tracing
+             * @example req_1234567890abcdef
+             */
+            requestId?: string;
+            /**
+             * @description Indicates if the request was successful
+             * @example true
+             */
+            success?: boolean;
+        } & components["schemas"]["data"];
+        /** @description Configuration for analysis phase */
+        "api.AnalysisConfig": {
+            /**
+             * @example comprehensive
              * @enum {string}
              */
-            analyticsType: "performance" | "stealth" | "resource" | "comparative" | "predictive";
-            /** @description Inherited from basic analytics */
-            campaignIds?: string[];
-            comparisonBaseline?: components["schemas"]["ComparisonBaseline"];
-            /** @enum {string} */
-            exportFormat?: "json" | "csv" | "excel" | "pdf";
-            filters?: {
-                [key: string]: Record<string, never>;
-            };
-            /** @enum {string} */
-            granularity?: "minute" | "hour" | "day" | "week" | "month" | "quarter" | "year";
-            groupBy?: string[];
-            metrics: string[];
-            /** Format: int32 */
-            predictionHorizon?: number;
-            timeRange?: components["schemas"]["TimeRangeFilter"];
-            visualization?: components["schemas"]["VisualizationConfig"];
-        };
-        AdvancedBulkAnalyticsResponse: {
-            advancedMetrics?: components["schemas"]["AdvancedAnalyticsData"];
-            aggregatedData?: components["schemas"]["AggregatedAnalytics"];
-            alertStatus?: components["schemas"]["AnalyticsAlert"][];
-            /** @description Inherited basic analytics */
-            campaignMetrics?: {
-                [key: string]: components["schemas"]["CampaignAnalytics"];
-            };
-            comparativeData?: components["schemas"]["ComparativeAnalyticsData"];
-            /** Format: int32 */
-            dataPoints?: number;
-            exportInfo?: components["schemas"]["ExportInfo"];
-            metadata?: components["schemas"]["BulkMetadata"];
-            performanceKPIs?: components["schemas"]["PerformanceKPIData"];
-            predictiveInsights?: components["schemas"]["PredictiveAnalyticsData"];
-            /** Format: int64 */
-            processingTimeMs?: number;
-            resourceAnalytics?: components["schemas"]["ResourceAnalyticsData"];
-            stealthAnalytics?: components["schemas"]["StealthAnalyticsData"];
-            visualizationData?: components["schemas"]["VisualizationDataPrep"];
-        };
-        AdvancedStealthPolicy: {
-            adaptiveThrottling?: boolean;
-            cooldownPeriods?: number[];
-            geographicDistribution?: boolean;
-            humanBehaviorPatterns?: string[];
-            /** Format: int32 */
-            maxConcurrentRequests?: number;
-            /** @enum {string} */
-            profile?: "conservative" | "moderate" | "aggressive" | "extreme_stealth";
-            /** Format: int32 */
-            requestBurstLimit?: number;
-            timeZoneSimulation?: boolean;
-        };
-        AggregatedAnalytics: {
-            overallSuccessRate?: number;
-            resourceUtilization?: components["schemas"]["ResourceUtilizationMetrics"];
-            topPerformingPhases?: components["schemas"]["PhasePerformance"][];
-            topPerformingTlds?: components["schemas"]["TLDPerformance"][];
-            totalCampaigns?: number;
-            totalDomains?: number;
-            totalLeads?: number;
-        };
-        AlertColorConfiguration: {
-            criticalColor?: string;
-            errorColor?: string;
-            infoColor?: string;
-            successColor?: string;
-            warningColor?: string;
-        };
-        AlertService: Record<string, never>;
-        AnalysisConfig: {
-            /** @enum {string} */
             analysisType: "basic" | "comprehensive" | "custom";
+            /** @example [
+             *       "[\"rule1\"",
+             *       " \"rule2\"]"
+             *     ] */
             customRules?: string[];
+            /** @example true */
             generateReport?: boolean;
+            /** @example true */
             includeScreenshots?: boolean;
         };
-        AnalysisPhaseConfig: {
-            analysisRules?: string[];
-            /** Format: double */
-            minLeadScore?: number;
-            requiredFields?: string[];
+        "api.BatchKeywordExtractionRequest": {
+            items: components["schemas"]["api.KeywordExtractionRequestItem"][];
         };
-        AnalysisService: Record<string, never>;
-        AnalysisSummary: {
-            avgKeywordsPerUrl?: number;
-            totalKeywordMatches?: number;
-            totalUrlsAnalyzed?: number;
-            uniqueKeywordsFound?: number;
-            urlsWithKeywords?: number;
-            urlsWithScreenshots?: number;
-            urlsWithoutKeywords?: number;
-            urlsWithoutScreenshots?: number;
+        "api.BatchKeywordExtractionResponse": {
+            results?: components["schemas"]["api.KeywordExtractionAPIResult"][];
         };
-        AnalyticsAPISpec: {
-            description?: string;
-            endpoints?: components["schemas"]["AnalyticsEndpointSpec"][];
-            title?: string;
-            version?: string;
+        /** @description Request payload for executing multiple database queries in a single operation */
+        "api.BulkDatabaseQueryRequest": {
+            /** @example 1000 */
+            limit?: number;
+            queries: components["schemas"]["api.DatabaseQuery"][];
+            /** @example 30 */
+            timeout?: number;
         };
-        AnalyticsAlert: {
-            alertId?: components["schemas"]["UUID"];
-            /** @enum {string} */
-            alertType?: "threshold" | "anomaly" | "trend" | "prediction" | "quality" | "performance";
-            autoResolve?: boolean;
-            /** Format: double */
-            currentValue?: number;
-            description?: string;
-            escalationRules?: components["schemas"]["EscalationRule"][];
-            /** @enum {string} */
-            estimatedImpact?: "minimal" | "low" | "moderate" | "high" | "severe";
-            metricAffected?: string;
-            /** @enum {string} */
-            priority?: "low" | "medium" | "high" | "urgent";
-            recommendedActions?: string[];
-            /** @enum {string} */
-            severity?: "low" | "medium" | "high" | "critical";
-            /** @enum {string} */
-            status?: "active" | "acknowledged" | "resolved" | "dismissed";
-            /** Format: double */
-            thresholdValue?: number;
-            title?: string;
-            /** Format: date-time */
-            triggeredAt?: string;
-        };
-        AnalyticsAlertConfig: {
-            /** Format: double */
-            errorRateThreshold?: number;
-            /** Format: int64 */
-            performanceThreshold?: number;
-            /** Format: double */
-            resourceUsageThreshold?: number;
-            /** Format: double */
-            stealthScoreThreshold?: number;
-            /** Format: double */
-            successRateThreshold?: number;
-        };
-        AnalyticsEndpointSpec: {
-            description?: string;
-            examples?: components["schemas"]["ExampleSpec"][];
-            method?: string;
-            parameters?: components["schemas"]["ParameterSpec"][];
-            path?: string;
-            requestBody?: components["schemas"]["RequestBodySpec"];
-            responses?: {
-                [key: string]: components["schemas"]["ResponseSpec"];
+        /** @description Response containing results from multiple database queries with metadata */
+        "api.BulkDatabaseQueryResponse": {
+            metadata?: components["schemas"]["api.BulkQueryMetadata"];
+            results?: {
+                [key: string]: components["schemas"]["api.DatabaseQueryResult"];
             };
-            summary?: string;
+            /** @example 5 */
+            totalCount?: number;
         };
-        AnalyticsEngine: Record<string, never>;
-        AnalyticsResponse: {
-            data?: Record<string, never>;
+        /** @description Request payload for retrieving database statistics for multiple schemas/databases */
+        "api.BulkDatabaseStatsRequest": {
+            /** @example false */
+            detailed?: boolean;
+            /** @example [
+             *       "['public'",
+             *       "'analytics']"
+             *     ] */
+            schemas?: string[];
+            /** @example [
+             *       "['campaigns'",
+             *       "'users']"
+             *     ] */
+            tables?: string[];
+        };
+        /** @description Response containing database statistics with metadata */
+        "api.BulkDatabaseStatsResponse": {
+            databaseStats?: components["schemas"]["api.DatabaseStats"];
+            metadata?: components["schemas"]["api.BulkStatsMetadata"];
+            schemaStats?: {
+                [key: string]: components["schemas"]["api.SchemaStats"];
+            };
+            tableStats?: {
+                [key: string]: components["schemas"]["api.TableStats"];
+            };
+            /** @example 3 */
+            totalCount?: number;
+        };
+        /** @description Request payload for retrieving enriched data for multiple campaigns */
+        "api.BulkEnrichedDataRequest": {
+            /** @example [
+             *       "['550e8400-e29b-41d4-a716-446655440000']"
+             *     ] */
+            campaignIds?: string[];
+            /** @example 100 */
+            limit?: number;
+            /** @example 0 */
+            offset?: number;
+        };
+        "api.BulkHealthCheckResponse": {
+            failedProxies?: number;
+            healthyProxies?: number;
+            results?: components["schemas"]["api.ProxyHealthCheckResponse"][];
+            totalProxies?: number;
+        };
+        "api.BulkProxyTestResponse": {
+            errorCount?: number;
+            successCount?: number;
+            testResults?: components["schemas"]["api.ProxyTestResponse"][];
+            totalRequested?: number;
+        };
+        /** @description Metadata containing processing statistics and performance metrics for bulk database operations */
+        "api.BulkQueryMetadata": {
+            /** @example [
+             *       "['query_9']"
+             *     ] */
+            failedQueries?: string[];
+            /** @example 8 */
+            processedQueries?: number;
+            /** @example 2340 */
+            processingTimeMs?: number;
+            /** @example 1 */
+            skippedQueries?: number;
+            /** @example 15420 */
+            totalRowsReturned?: number;
+        };
+        "api.BulkResourceStatusResponse": {
+            activeOperations?: number;
+            availablePersonas?: number;
+            availableProxies?: number;
+            /** @description Percentage 0-100 */
+            cpuUsage?: number;
+            maxConcurrent?: number;
+            /** @description Percentage 0-100 */
+            memoryUsage?: number;
+            /** @description Percentage 0-100 */
+            networkUsage?: number;
+            queuedOperations?: number;
+            resourceLimits?: {
+                maxCpu?: number;
+                maxMemory?: number;
+                maxNetwork?: number;
+            };
+        };
+        /** @description Metadata containing processing statistics for bulk database statistics operations */
+        "api.BulkStatsMetadata": {
+            /** @example [
+             *       "['invalid_schema']"
+             *     ] */
+            failedItems?: string[];
+            /** @example 2 */
+            processedSchemas?: number;
+            /** @example 8 */
+            processedTables?: number;
+            /** @example 1850 */
+            processingTimeMs?: number;
+            /** @example 1 */
+            skippedItems?: number;
+        };
+        "api.CreateKeywordSetRequest": {
+            description?: string;
+            isEnabled?: boolean;
+            name: string;
+            rules?: components["schemas"]["api.KeywordRuleRequest"][];
+        };
+        "api.CreatePersonaRequest": {
+            /** @description Accept structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig */
+            configDetails: Record<string, never>;
+            description?: string;
+            isEnabled?: boolean;
+            name: string;
+            /** @enum {string} */
+            personaType: "dns" | "http";
+        };
+        /** @description Exactly one of these fields should be populated based on PhaseType */
+        "api.DNSValidationConfig": {
+            /** @example My DNS Campaign */
+            name?: string;
+            /** @example [
+             *       "[\"550e8400-e29b-41d4-a716-446655440000\"]"
+             *     ] */
+            personaIds: string[];
+        };
+        /** @description Individual query with identifier for bulk operations */
+        "api.DatabaseQuery": {
+            /** @example query_1 */
+            id: string;
+            /** @example SELECT * FROM campaigns LIMIT 10 */
+            sql: string;
+        };
+        /** @description Response containing query results with metadata */
+        "api.DatabaseQueryResult": {
+            /** @example [
+             *       "['id'",
+             *       "'name'",
+             *       "'status']"
+             *     ] */
+            columns?: string[];
+            /** @example  */
             error?: string;
-            requestId?: components["schemas"]["UUID"];
+            /** @example 125 */
+            executionTime?: number;
+            /** @example 25 */
+            rowCount?: number;
+            rows?: components["schemas"]["api.DatabaseValue"][][];
+            /** @example true */
             success?: boolean;
-            /** Format: date-time */
-            timestamp?: string;
+        };
+        /** @description Database statistics and health information */
+        "api.DatabaseStats": {
+            /** @example 156 MB */
+            databaseSize?: string;
+            /** @example true */
+            isHealthy?: boolean;
+            /** @example v2.1 */
+            schemaVersion?: string;
+            /** @example 3 */
+            totalSessions?: number;
+            /** @example 23 */
+            totalTables?: number;
+            /** @example 5 */
+            totalUsers?: number;
+            /** @example 2d 14h 30m */
+            uptime?: string;
+            /** @example PostgreSQL 15.4 */
             version?: string;
         };
-        AnimationSettings: {
-            animationDuration?: number;
-            animationEasing?: string;
-            enableAnimations?: boolean;
-            hoverEffects?: boolean;
-            loadAnimation?: boolean;
-            reducedMotion?: boolean;
-            transitionAnimation?: boolean;
+        /** @description A database value that can be string, number, boolean, or null */
+        "api.DatabaseValue": {
+            boolValue?: boolean;
+            floatValue?: number;
+            intValue?: number;
+            isNull?: boolean;
+            rawValue?: string;
+            stringValue?: string;
         };
-        AnomalyDetectionResults: {
-            alertStatus?: string;
-            anomaliesDetected?: components["schemas"]["DetectedAnomaly"][];
-            anomalyScore?: number;
-            baselineVariability?: number;
-            detectionSensitivity?: number;
-            falsePositiveRate?: number;
-        };
-        AnonymityMetrics: {
-            /** Format: int64 */
-            anonymitySet?: number;
-            /** Format: double */
-            entropyScore?: number;
-            /** Format: double */
-            pseudonymityScore?: number;
-            /** Format: double */
-            trafficAnalysisResistance?: number;
-            /** Format: double */
-            unlinkabilityScore?: number;
-            /** Format: double */
-            unobservabilityScore?: number;
-        };
-        AppConfig: {
-            dnsPersonas?: components["schemas"]["DNSPersona"][];
-            dnsValidator?: components["schemas"]["DNSValidatorConfig"];
-            features?: components["schemas"]["FeatureFlags"];
-            httpPersonas?: components["schemas"]["HTTPPersona"][];
-            httpValidator?: components["schemas"]["HTTPValidatorConfig"];
-            keywordSets?: components["schemas"]["KeywordSet"][];
-            logging?: components["schemas"]["LoggingConfig"];
-            optimization?: components["schemas"]["OptimizationConfig"];
-            proxies?: components["schemas"]["ProxyConfigEntry"][];
-            proxyManager?: components["schemas"]["ProxyManagerConfig"];
-            rateLimiter?: components["schemas"]["RateLimiterConfig"];
-            server?: components["schemas"]["ServerConfig"];
-            worker?: components["schemas"]["WorkerConfig"];
-        };
-        AppConfigJSON: {
-            dnsValidator?: components["schemas"]["DNSValidatorConfigJSON"];
-            features?: components["schemas"]["FeatureFlags"];
-            httpValidator?: components["schemas"]["HTTPValidatorConfigJSON"];
-            logging?: components["schemas"]["LoggingConfig"];
-            proxyManager?: components["schemas"]["ProxyManagerConfigJSON"];
-            rateLimiter?: components["schemas"]["RateLimiterConfig"];
-            server?: components["schemas"]["ServerConfig"];
-            worker?: components["schemas"]["WorkerConfig"];
-        };
-        ArchitectureRefactorLog: {
-            afterPattern?: string;
-            beforePattern?: string;
-            /** Format: int32 */
-            complexityReduction?: number;
-            /** Format: int64 */
-            id?: number;
-            /** Format: date-time */
-            implementedAt?: string;
-            implementedBy?: string;
-            /** Format: double */
-            performanceImpact?: number;
-            refactorType?: string;
-            rollbackPlan?: string;
-            serviceName?: string;
-        };
-        AuditLog: {
-            action: string;
-            clientIp?: string;
-            details?: Record<string, never>;
-            entityId?: components["schemas"]["UUID"];
-            entityType?: string;
-            id?: components["schemas"]["UUID"];
-            /** Format: date-time */
+        /**
+         * @description Primary error code
+         * @example VALIDATION_ERROR
+         */
+        "api.ErrorCode": string;
+        /** @description Detailed error information structure */
+        "api.ErrorInfo": {
+            code?: components["schemas"]["api.ErrorCode"];
+            /** @description Detailed error information */
+            details?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_api.ErrorDetail"][];
+            /**
+             * @description Primary error message
+             * @example Invalid input parameters
+             */
+            message?: string;
+            /**
+             * @description API path that generated the error
+             * @example /api/v2/campaigns/validate
+             */
+            path?: string;
+            /**
+             * @description When the error occurred
+             * @example 2023-01-01T12:00:00Z
+             */
             timestamp?: string;
-            userAgent?: string;
-            userId?: components["schemas"]["UUID"];
         };
-        AuthAuditLog: {
-            /** Format: date-time */
+        "api.ErrorMeta": {
+            api_version?: string;
+            method?: string;
+            path?: string;
+            timestamp?: string;
+            user_agent?: string;
+        };
+        /** @description Configuration for HTTP keyword validation phase - all technical parameters derived from persona ConfigDetails */
+        "api.HTTPValidationConfig": {
+            /** @example [
+             *       "[\"custom1\"",
+             *       " \"custom2\"]"
+             *     ] */
+            adHocKeywords?: string[];
+            /** @example [
+             *       "[\"set1\"",
+             *       " \"set2\"]"
+             *     ] */
+            keywordSetIds?: string[];
+            /** @example My HTTP Campaign */
+            name?: string;
+            /** @example [
+             *       "[\"550e8400-e29b-41d4-a716-446655440000\"]"
+             *     ] */
+            personaIds: string[];
+        };
+        "api.HealthCheckResponse": {
+            message?: string;
+            status?: string;
+        };
+        "api.HealthStatus": {
+            buildTime?: string;
+            components?: {
+                [key: string]: components["schemas"]["api.Status"];
+            };
+            environment?: string;
+            status?: string;
+            systemInfo?: components["schemas"]["api.SystemInfo"];
+            version?: string;
+        };
+        "api.KeywordExtractionAPIResult": {
+            /** @description String UUID of persona used */
+            dnsPersonaIdUsed?: string;
+            error?: string;
+            finalUrl?: string;
+            /** @description String UUID of persona used */
+            httpPersonaIdUsed?: string;
+            keywordSetIdUsed?: string;
+            matches?: components["schemas"]["keywordextractor.KeywordExtractionResult"][];
+            /** @description String UUID of proxy used */
+            proxyIdUsed?: string;
+            statusCode?: number;
+            url?: string;
+        };
+        "api.KeywordExtractionRequestItem": {
+            /** @description Optional: string representation of UUID */
+            dnsPersonaId?: string;
+            /** @description Optional: string representation of UUID */
+            httpPersonaId?: string;
+            /** @description Required: string representation of UUID */
+            keywordSetId: string;
+            url: string;
+        };
+        "api.KeywordRuleRequest": {
+            category?: string;
+            contextChars?: number;
+            isCaseSensitive?: boolean;
+            pattern: string;
+            ruleType: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.KeywordRuleTypeEnum"];
+        };
+        "api.KeywordSetDeleteResponse": {
+            deleted?: boolean;
+            keywordSetId?: string;
+            message?: string;
+        };
+        "api.KeywordSetResponse": {
             createdAt?: string;
-            details?: string;
-            eventStatus?: string;
-            eventType?: string;
-            /** Format: int64 */
-            id?: number;
-            ipAddress?: string;
-            /** Format: int32 */
-            riskScore?: number;
-            /** Format: uri */
-            securityFlags?: string;
-            sessionFingerprint?: string;
-            sessionId?: components["schemas"]["UUID"];
-            userAgent?: string;
-            userId?: components["schemas"]["UUID"];
+            description?: string;
+            id?: string;
+            isEnabled?: boolean;
+            name?: string;
+            ruleCount?: number;
+            rules?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.KeywordRule"][];
+            updatedAt?: string;
         };
-        AuthConfig: {
+        "api.LoginSuccessResponse": {
+            message?: string;
+            session?: components["schemas"]["api.SessionData"];
+            user?: components["schemas"]["api.UserPublicResponse"];
+        };
+        /** @description Optional metadata attached to API responses */
+        "api.Metadata": {
+            /** @description Additional metadata */
+            extra?: {
+                [key: string]: unknown;
+            };
+            page?: components["schemas"]["api.PageInfo"];
+            processing?: components["schemas"]["api.ProcessingInfo"];
+            rateLimit?: components["schemas"]["api.RateLimitInfo"];
+        };
+        "api.OperationCancellationResponse": {
+            /** @description ISO 8601 */
+            cancellationTime?: string;
+            message?: string;
+            operationId?: string;
+            partialResults?: boolean;
+            resourcesFreed?: boolean;
+            /** @description "cancelled", "cancelling", "cannot_cancel" */
+            status?: string;
+        };
+        /** @description Pagination info */
+        "api.PageInfo": {
+            /** @description Total item count */
+            count?: number;
+            /** @description Current page number */
+            current?: number;
+            /** @description Items per page */
+            pageSize?: number;
+            /** @description Total number of pages */
+            total?: number;
+        };
+        "api.PasswordChangeResponse": {
+            message?: string;
+            success?: boolean;
+        };
+        "api.PatternOffsetRequest": {
+            characterSet: string;
+            constantString: string;
+            /** @enum {string} */
+            patternType: "prefix" | "suffix" | "both";
+            tld: string;
+            variableLength: number;
+        };
+        "api.PatternOffsetResponse": {
+            characterSet?: string;
+            constantString?: string;
+            currentOffset?: number;
+            patternType?: string;
+            tld?: string;
+            totalPossibleCombinations?: number;
+            variableLength?: number;
+        };
+        "api.PersonaDeleteResponse": {
+            deleted?: boolean;
+            message?: string;
+            personaId?: string;
+        };
+        /** @description API response containing persona details */
+        "api.PersonaResponse": {
+            /** @description Return structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig */
+            configDetails?: Record<string, never>;
+            createdAt?: string;
+            description?: string;
+            id?: string;
+            isEnabled?: boolean;
+            name?: string;
+            personaType?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.PersonaTypeEnum"];
+            updatedAt?: string;
+        };
+        "api.PersonaTestResponse": {
+            message?: string;
+            personaId?: string;
+            personaName?: string;
+            personaType?: string;
+            results?: components["schemas"]["api.PersonaTestResultData"];
+            success?: boolean;
+            testPassed?: boolean;
+            testResults?: components["schemas"]["api.PersonaTestResultData"];
+            timestamp?: string;
+        };
+        "api.PersonaTestResultData": {
+            details?: string;
+            durationMs?: number;
+            errorCount?: number;
+            requestCount?: number;
+            successCount?: number;
+        };
+        /** @description Phase configuration that can be DNS validation, HTTP validation, or analysis configuration */
+        "api.PhaseConfig": {
+            analysis?: components["schemas"]["api.AnalysisConfig"];
+            dnsValidation?: components["schemas"]["api.DNSValidationConfig"];
+            httpValidation?: components["schemas"]["api.HTTPValidationConfig"];
+        };
+        /** @description Request payload for configuring campaign phase parameters */
+        "api.PhaseConfigureRequest": {
+            config: components["schemas"]["api.PhaseConfig"];
+            /**
+             * @example dns_validation
+             * @enum {string}
+             */
+            phaseType: "dns_validation" | "http_keyword_validation" | "analysis";
+        };
+        "api.PingResponse": {
+            message?: string;
+            timestamp?: string;
+        };
+        /** @description Processing time info */
+        "api.ProcessingInfo": {
+            /** @description Processing duration (e.g., "125ms") */
+            duration?: string;
+            /** @description API version */
+            version?: string;
+        };
+        "api.ProxyDetailsResponse": {
+            host?: string;
+            port?: number;
+            protocol?: string;
+            username?: string;
+        };
+        "api.ProxyHealthCheckResponse": {
+            message?: string;
+            proxyId?: string;
+            responseTimeMs?: number;
+            status?: string;
+            success?: boolean;
+            timestamp?: string;
+        };
+        "api.ProxyPoolMembershipResponse": {
+            added?: boolean;
+            message?: string;
+            poolId?: string;
+            proxyId?: string;
+            removed?: boolean;
+        };
+        "api.ProxyPoolRequest": {
+            description?: string;
+            healthCheckEnabled?: boolean;
+            healthCheckIntervalSeconds?: number;
+            isEnabled?: boolean;
+            maxRetries?: number;
+            name: string;
+            poolStrategy?: string;
+            timeoutSeconds?: number;
+        };
+        "api.ProxyStatusResponse": {
+            isHealthy?: boolean;
+            lastChecked?: string;
+            proxyDetails?: components["schemas"]["api.ProxyDetailsResponse"];
+            proxyId?: string;
+            responseTimeMs?: number;
+            status?: string;
+        };
+        "api.ProxyTestResponse": {
+            error?: string;
+            proxyId?: string;
+            responseTime?: number;
+            statusCode?: number;
+            success?: boolean;
+        };
+        /** @description Rate limiting info */
+        "api.RateLimitInfo": {
+            /** @description Request limit */
+            limit?: number;
+            /** @description Remaining requests */
+            remaining?: number;
+            /** @description When the limit resets */
+            reset?: string;
+        };
+        /** @description Statistics for a specific database schema */
+        "api.SchemaStats": {
+            /** @example public */
+            name?: string;
+            /** @example 15 */
+            tableCount?: number;
+            /** @example 1250000 */
+            totalRows?: number;
+            /** @example 45 MB */
+            totalSize?: string;
+        };
+        "api.ServerConfigResponse": {
+            ginMode?: string;
+            port?: string;
+            streamChunkSize?: number;
+        };
+        "api.ServerConfigUpdateRequest": {
+            ginMode?: string;
+            streamChunkSize?: number;
+        };
+        "api.SessionData": {
+            expiresAt?: string;
+            refreshToken?: string;
+            token?: string;
+        };
+        "api.SessionRefreshResponse": {
+            expiresAt?: string;
+            message?: string;
+        };
+        "api.StandardErrorResponse": {
+            error?: components["schemas"]["github_com_fntelecomllc_studio_backend_pkg_api.ErrorDetail"];
+            meta?: components["schemas"]["api.ErrorMeta"];
+            trace_id?: string;
+        };
+        "api.Status": {
+            message?: string;
+            status?: string;
+            timestamp?: string;
+        };
+        "api.SuccessMessageResponse": {
+            message?: string;
+        };
+        "api.SystemInfo": {
+            goVersion?: string;
+            numCPU?: number;
+            numGoroutine?: number;
+        };
+        /** @description Statistics for a specific database table */
+        "api.TableStats": {
+            /** @example 5 */
+            indexCount?: number;
+            /** @example campaigns */
+            name?: string;
+            /** @example 125000 */
+            rowCount?: number;
+            /** @example public */
+            schema?: string;
+            /** @example 12 MB */
+            size?: string;
+        };
+        "api.UpdateKeywordSetRequest": {
+            description?: string;
+            isEnabled?: boolean;
+            name?: string;
+            rules?: components["schemas"]["api.KeywordRuleRequest"][];
+        };
+        "api.UpdatePersonaRequest": {
+            /** @description Accept structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig */
+            configDetails?: Record<string, never>;
+            description?: string;
+            isEnabled?: boolean;
+            name?: string;
+        };
+        "api.UserPublicResponse": {
+            email?: string;
+            id?: string;
+            isActive?: boolean;
+            username?: string;
+        };
+        "api.WebSocketErrorResponse": {
+            code?: number;
+            error?: string;
+            message?: string;
+        };
+        "config.AuthConfig": {
             accountLockDuration?: string;
             /** @description Password security */
             bcryptCost?: number;
@@ -1764,1635 +4345,7 @@ export interface components {
             smtpPort?: number;
             smtpUsername?: string;
         };
-        AuthResult: {
-            error?: string;
-            success?: boolean;
-            user?: components["schemas"]["User"];
-        };
-        AuthorizationDecision: {
-            action?: string;
-            conditionsMet?: Record<string, never>;
-            context?: Record<string, never>;
-            /** Format: date-time */
-            createdAt?: string;
-            decision?: string;
-            decisionId?: components["schemas"]["UUID"];
-            /** Format: int32 */
-            decisionTimeMs?: number;
-            evaluatedPolicies?: string;
-            id?: components["schemas"]["UUID"];
-            policyVersion?: string;
-            resourceId?: components["schemas"]["UUID"];
-            resourceType?: string;
-            securityEventId?: components["schemas"]["UUID"];
-            userId?: components["schemas"]["UUID"];
-        };
-        AxisConfiguration: {
-            /** Format: date-time */
-            format?: string;
-            gridLines?: boolean;
-            /** Format: double */
-            maxValue?: number;
-            /** Format: double */
-            minValue?: number;
-            /** @enum {string} */
-            scale?: "linear" | "logarithmic" | "time";
-            /** Format: double */
-            tickInterval?: number;
-            title?: string;
-            unit?: string;
-        };
-        BaselineMetrics: {
-            costMetrics?: components["schemas"]["CostBaselineMetrics"];
-            operationalMetrics?: components["schemas"]["OperationalBaselineMetrics"];
-            performanceMetrics?: components["schemas"]["PerformanceBaselineMetrics"];
-            qualityMetrics?: components["schemas"]["QualityBaselineMetrics"];
-            resourceMetrics?: components["schemas"]["ResourceBaselineMetrics"];
-            stealthMetrics?: components["schemas"]["StealthBaselineMetrics"];
-            timePeriod?: components["schemas"]["TimeRangeFilter"];
-        };
-        BatchKeywordExtractionRequest: {
-            items: components["schemas"]["KeywordExtractionRequestItem"][];
-        };
-        BatchKeywordExtractionResponse: {
-            results?: components["schemas"]["KeywordExtractionAPIResult"][];
-        };
-        BehavioralMimicryConfig: {
-            browserBehavior?: boolean;
-            enabled?: boolean;
-            idlePeriods?: number[];
-            randomMouseMovement?: boolean;
-            scrollingBehavior?: boolean;
-            searchPatterns?: boolean;
-            /** Format: int32 */
-            sessionDuration?: number;
-            socialMediaPatterns?: boolean;
-            typingDelays?: boolean;
-        };
-        BenchmarkComparison: {
-            benchmarkName?: string;
-            benchmarkValue?: number;
-            competitivePosition?: string;
-            currentValue?: number;
-            metricName?: string;
-            percentile?: number;
-            performanceGap?: number;
-        };
-        BenchmarkMetricComparison: {
-            benchmarkValue?: number;
-            competitivePosition?: string;
-            gapToBenchmark?: number;
-            industryAverage?: number;
-            metricName?: string;
-            ourValue?: number;
-            performancePercentile?: number;
-            topQuartileValue?: number;
-        };
-        BottleneckIdentification: {
-            component?: string;
-            description?: string;
-            impact?: number;
-            recommendation?: string;
-            severity?: string;
-        };
-        BudgetAlert: {
-            /** @enum {string} */
-            alertType?: "approaching_limit" | "exceeded_budget" | "unusual_spend" | "trend_change";
-            /** Format: double */
-            currentValue?: number;
-            description?: string;
-            recommendation?: string;
-            /** @enum {string} */
-            severity?: "low" | "medium" | "high" | "critical";
-            /** Format: double */
-            threshold?: number;
-            /** Format: date-time */
-            timestamp?: string;
-        };
-        BudgetUtilizationData: {
-            /** Format: double */
-            burnRate?: number;
-            /** Format: date-time */
-            projectedDepleteDate?: string;
-            /** Format: double */
-            remainingBudget?: number;
-            /** Format: double */
-            totalBudget?: number;
-            /** Format: double */
-            utilizationRate?: number;
-            /** Format: double */
-            utilizedBudget?: number;
-        };
-        BulkAnalyticsAPIHandler: Record<string, never>;
-        BulkAnalyticsRequest: {
-            campaignIds?: string[];
-            filters?: {
-                [key: string]: Record<string, never>;
-            };
-            /** @enum {string} */
-            granularity?: "hour" | "day" | "week" | "month";
-            groupBy?: string[];
-            metrics: string[];
-            timeRange?: components["schemas"]["TimeRangeFilter"];
-        };
-        BulkAnalyticsResponse: {
-            aggregatedData?: components["schemas"]["AggregatedAnalytics"];
-            campaignMetrics?: {
-                [key: string]: components["schemas"]["CampaignAnalytics"];
-            };
-            /** Format: int32 */
-            dataPoints?: number;
-            metadata?: components["schemas"]["BulkMetadata"];
-            /** Format: int64 */
-            processingTimeMs?: number;
-        };
-        BulkCampaignDeleteResponse: {
-            deletedCampaigns?: string[];
-            /** Format: int32 */
-            deletedCount?: number;
-            message?: string;
-            success?: boolean;
-        };
-        BulkCampaignOperationRequest: {
-            campaignIds: string[];
-            config?: {
-                [key: string]: Record<string, never>;
-            };
-            force?: boolean;
-            /** @enum {string} */
-            operation: "start" | "stop" | "pause" | "resume" | "delete" | "configure";
-        };
-        BulkCampaignOperationResponse: {
-            /** Format: int32 */
-            failedOps?: number;
-            operation?: string;
-            operationId?: components["schemas"]["UUID"];
-            /** Format: int64 */
-            processingTimeMs?: number;
-            results?: {
-                [key: string]: components["schemas"]["CampaignOperationResult"];
-            };
-            /** Format: int32 */
-            successfulOps?: number;
-        };
-        BulkDNSValidationRequest: {
-            /** Format: int32 */
-            batchSize?: number;
-            operations: components["schemas"]["DNSValidationOperation"][];
-            stealth?: components["schemas"]["StealthValidationConfig"];
-        };
-        BulkDatabaseQueryRequest: {
-            /** Format: int32 */
-            limit?: number;
-            queries: components["schemas"]["DatabaseQuery"][];
-            /** Format: int32 */
-            timeout?: number;
-        };
-        BulkDatabaseQueryResponse: {
-            metadata?: components["schemas"]["BulkQueryMetadata"];
-            results?: {
-                [key: string]: components["schemas"]["DatabaseQueryResult"];
-            };
-            /** Format: int32 */
-            totalCount?: number;
-        };
-        BulkDatabaseStatsRequest: {
-            detailed?: boolean;
-            schemas?: string[];
-            tables?: string[];
-        };
-        BulkDatabaseStatsResponse: {
-            databaseStats?: components["schemas"]["DatabaseStats"];
-            metadata?: components["schemas"]["BulkStatsMetadata"];
-            schemaStats?: {
-                [key: string]: components["schemas"]["SchemaStats"];
-            };
-            tableStats?: {
-                [key: string]: components["schemas"]["TableStats"];
-            };
-            /** Format: int32 */
-            totalCount?: number;
-        };
-        BulkDeleteProxiesRequest: {
-            proxyIds: string[];
-        };
-        BulkDeleteResult: {
-            deleted_campaign_ids?: string[];
-            /** Format: int32 */
-            failed_deletions?: number;
-            message?: string;
-            /** Format: int32 */
-            successfully_deleted?: number;
-            /** Format: int32 */
-            total_requested?: number;
-        };
-        BulkDomainGenerationRequest: {
-            /** Format: int32 */
-            batchSize?: number;
-            operations: components["schemas"]["DomainGenerationOperation"][];
-            parallel?: boolean;
-        };
-        BulkDomainGenerationResponse: {
-            /** Format: int32 */
-            failedOps?: number;
-            operationId?: components["schemas"]["UUID"];
-            operations?: {
-                [key: string]: components["schemas"]["DomainGenerationResult"];
-            };
-            /** Format: int64 */
-            processingTimeMs?: number;
-            status?: string;
-            /** Format: int32 */
-            successfulOps?: number;
-            /** Format: int64 */
-            totalGenerated?: number;
-            /** Format: int64 */
-            totalRequested?: number;
-        };
-        BulkDomainsAPIHandler: Record<string, never>;
-        BulkDomainsRequest: {
-            campaignIds: string[];
-            /** Format: int32 */
-            limit?: number;
-            /** Format: int32 */
-            offset?: number;
-        };
-        BulkDomainsResponse: {
-            domains?: {
-                [key: string]: string[];
-            };
-            metadata?: components["schemas"]["BulkMetadata"];
-            /** Format: int32 */
-            totalCount?: number;
-        };
-        BulkEnrichedDataRequest: {
-            campaignIds?: string[];
-            /** Format: int32 */
-            limit?: number;
-            /** Format: int32 */
-            offset?: number;
-        };
-        BulkEnrichedDataResponse: {
-            campaigns?: {
-                [key: string]: components["schemas"]["EnrichedCampaignData"];
-            };
-            metadata?: components["schemas"]["BulkMetadata"];
-            /** Format: int32 */
-            totalCount?: number;
-        };
-        BulkHTTPValidationRequest: {
-            /** Format: int32 */
-            batchSize?: number;
-            /** Format: int32 */
-            concurrent?: number;
-            operations: components["schemas"]["HTTPValidationOperation"][];
-            stealth?: components["schemas"]["StealthValidationConfig"];
-        };
-        BulkHealthCheckResponse: {
-            /** Format: int32 */
-            failedProxies?: number;
-            /** Format: int32 */
-            healthyProxies?: number;
-            results?: components["schemas"]["ProxyHealthCheckResponse"][];
-            /** Format: int32 */
-            totalProxies?: number;
-        };
-        BulkLeadsRequest: {
-            campaignIds: string[];
-            /** Format: int32 */
-            limit?: number;
-            /** Format: int32 */
-            offset?: number;
-        };
-        BulkLeadsResponse: {
-            leads?: {
-                [key: string]: components["schemas"]["LeadItem"][];
-            };
-            metadata?: components["schemas"]["BulkMetadata"];
-            /** Format: int32 */
-            totalCount?: number;
-        };
-        BulkLogsRequest: {
-            campaignIds: string[];
-            /** Format: int32 */
-            limit?: number;
-            /** Format: int32 */
-            offset?: number;
-        };
-        BulkLogsResponse: {
-            logs?: {
-                [key: string]: Record<string, never>[];
-            };
-            metadata?: components["schemas"]["BulkMetadata"];
-            /** Format: int32 */
-            totalCount?: number;
-        };
-        BulkMetadata: {
-            debug?: {
-                [key: string]: Record<string, never>;
-            };
-            executionNode?: string;
-            requestId?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            timestamp?: string;
-            userId?: components["schemas"]["UUID"];
-            version?: string;
-        };
-        BulkOperationListRequest: {
-            /** Format: date-time */
-            endTime?: string;
-            /** Format: int32 */
-            limit?: number;
-            /** Format: int32 */
-            offset?: number;
-            /** Format: date-time */
-            startTime?: string;
-            status?: string[];
-            type?: string[];
-            userId?: components["schemas"]["UUID"];
-        };
-        BulkOperationListResponse: {
-            metadata?: components["schemas"]["BulkMetadata"];
-            operations?: components["schemas"]["BulkOperationStatus"][];
-            /** Format: int32 */
-            totalCount?: number;
-        };
-        BulkOperationStatus: {
-            /** Format: int64 */
-            durationMs?: number;
-            /** Format: date-time */
-            endTime?: string;
-            error?: string;
-            metadata?: {
-                [key: string]: Record<string, never>;
-            };
-            operationId?: components["schemas"]["UUID"];
-            progress?: components["schemas"]["OperationProgress"];
-            results?: {
-                [key: string]: Record<string, never>;
-            };
-            /** Format: date-time */
-            startTime?: string;
-            status?: string;
-            type?: string;
-        };
-        BulkOperationStatusResponse: {
-            /** Format: date-time */
-            completedAt?: string;
-            /** Format: int32 */
-            completedOps?: number;
-            errorMessage?: string;
-            /** Format: int64 */
-            estimatedTimeMs?: number;
-            /** Format: int32 */
-            failedOps?: number;
-            operationId?: components["schemas"]["UUID"];
-            /** Format: int64 */
-            processingTimeMs?: number;
-            /** Format: double */
-            progress?: number;
-            results?: {
-                [key: string]: Record<string, never>;
-            };
-            /** Format: date-time */
-            startedAt?: string;
-            status?: string;
-            /** Format: int32 */
-            totalOperations?: number;
-            type?: string;
-        };
-        BulkProxyError: {
-            error?: string;
-            proxyId?: components["schemas"]["UUID"];
-        };
-        BulkProxyOperationResponse: {
-            /** Format: int32 */
-            errorCount?: number;
-            failedProxies?: components["schemas"]["BulkProxyError"][];
-            results?: components["schemas"]["Proxy"][];
-            /** Format: int32 */
-            successCount?: number;
-            successfulProxies?: string[];
-            /** Format: int32 */
-            totalRequested?: number;
-        };
-        BulkProxyTestResponse: {
-            /** Format: int32 */
-            errorCount?: number;
-            /** Format: int32 */
-            successCount?: number;
-            testResults?: components["schemas"]["ProxyTestResponse"][];
-            /** Format: int32 */
-            totalRequested?: number;
-        };
-        BulkQueryMetadata: {
-            failedQueries?: string[];
-            /** Format: int32 */
-            processedQueries?: number;
-            /** Format: int64 */
-            processingTimeMs?: number;
-            /** Format: int32 */
-            skippedQueries?: number;
-            /** Format: int64 */
-            totalRowsReturned?: number;
-        };
-        BulkResourceAllocationResponse: {
-            /** Format: int32 */
-            allocatedCpu?: number;
-            /** Format: int32 */
-            allocatedMemory?: number;
-            /** Format: int32 */
-            allocatedPersonas?: number;
-            /** Format: int32 */
-            allocatedProxies?: number;
-            allocationId?: components["schemas"]["UUID"];
-            /** Format: int64 */
-            estimatedDurationMs?: number;
-            priority?: string;
-            /** Format: date-time */
-            scheduledTime?: string;
-            status?: string;
-        };
-        BulkResourceRequest: {
-            /** Format: int64 */
-            maxDuration?: number;
-            operations: components["schemas"]["ResourceOperation"][];
-            /** @enum {string} */
-            priority?: "low" | "normal" | "high" | "critical";
-            resourceLimits?: components["schemas"]["ResourceLimits"];
-            /** Format: date-time */
-            scheduledTime?: string;
-        };
-        BulkResourceResponse: {
-            allocationId?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            expirationTime?: string;
-            /** Format: int32 */
-            failedOps?: number;
-            operations?: {
-                [key: string]: components["schemas"]["ResourceAllocationResult"];
-            };
-            /** Format: int64 */
-            processingTimeMs?: number;
-            /** Format: int32 */
-            successfulOps?: number;
-            totalAllocated?: components["schemas"]["ResourceUtilizationMetrics"];
-        };
-        BulkResourceStatusResponse: {
-            /** Format: int32 */
-            activeOperations?: number;
-            /** Format: int32 */
-            availablePersonas?: number;
-            /** Format: int32 */
-            availableProxies?: number;
-            /** Format: double */
-            cpuUsage?: number;
-            /** Format: int32 */
-            maxConcurrent?: number;
-            /** Format: double */
-            memoryUsage?: number;
-            /** Format: double */
-            networkUsage?: number;
-            /** Format: int32 */
-            queuedOperations?: number;
-            resourceLimits?: {
-                maxCpu?: number;
-                maxMemory?: number;
-                maxNetwork?: number;
-            };
-        };
-        BulkResourcesAPIHandler: Record<string, never>;
-        BulkStatsMetadata: {
-            failedItems?: string[];
-            /** Format: int32 */
-            processedSchemas?: number;
-            /** Format: int32 */
-            processedTables?: number;
-            /** Format: int64 */
-            processingTimeMs?: number;
-            /** Format: int32 */
-            skippedItems?: number;
-        };
-        BulkTestProxiesRequest: {
-            proxyIds: string[];
-        };
-        BulkUpdateProxiesRequest: {
-            proxyIds: string[];
-            updates: components["schemas"]["UpdateProxyRequest"];
-        };
-        BulkValidationAPIHandler: Record<string, never>;
-        BulkValidationDomainResult: {
-            content?: string;
-            dnsResolved?: boolean;
-            domainName?: string;
-            error?: string;
-            httpAccessible?: boolean;
-            keywords?: string[];
-            metadata?: {
-                [key: string]: Record<string, never>;
-            };
-            /** Format: int64 */
-            responseTimeMs?: number;
-            status?: string;
-            /** Format: int32 */
-            statusCode?: number;
-        };
-        BulkValidationResponse: {
-            /** Format: int32 */
-            failedOps?: number;
-            operationId?: components["schemas"]["UUID"];
-            operations?: {
-                [key: string]: components["schemas"]["ValidationOperationResult"];
-            };
-            /** Format: int64 */
-            processingTimeMs?: number;
-            status?: string;
-            stealthMetrics?: components["schemas"]["StealthOperationMetrics"];
-            /** Format: int32 */
-            successfulOps?: number;
-            /** Format: int64 */
-            totalFailed?: number;
-            /** Format: int64 */
-            totalProcessed?: number;
-            /** Format: int64 */
-            totalSuccessful?: number;
-        };
-        BusinessKPIs: {
-            /** Format: double */
-            competitiveAdvantage?: number;
-            /** Format: double */
-            conversionRate?: number;
-            /** Format: double */
-            costPerLead?: number;
-            /** Format: double */
-            customerAcquisitionCost?: number;
-            /** Format: double */
-            customerLifetimeValue?: number;
-            /** Format: double */
-            leadGenerationRate?: number;
-            /** Format: double */
-            leadQualityScore?: number;
-            /** Format: double */
-            marketPenetrationRate?: number;
-            /** Format: double */
-            revenuePerOperation?: number;
-        };
-        CacheConfiguration: {
-            cacheName?: string;
-            cacheStatus?: string;
-            cacheType?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: int32 */
-            currentEntries?: number;
-            /** Format: int64 */
-            currentSizeBytes?: number;
-            /** Format: int32 */
-            defaultTtlSeconds?: number;
-            evictionPolicy?: string;
-            id?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            lastCleanupAt?: string;
-            /** Format: int32 */
-            maxEntries?: number;
-            /** Format: int64 */
-            maxSizeBytes?: number;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        CacheEntry: {
-            /** Format: double */
-            accessFrequency?: number;
-            cacheKey?: string;
-            cacheNamespace?: string;
-            cacheValue?: string;
-            cacheValueCompressed?: string[];
-            campaignId?: components["schemas"]["UUID"];
-            campaignPhase?: string;
-            contentType?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            expiresAt?: string;
-            /** Format: int32 */
-            hitCount?: number;
-            id?: components["schemas"]["UUID"];
-            isCompressed?: boolean;
-            /** Format: date-time */
-            lastAccessed?: string;
-            metadata?: Record<string, never>;
-            serviceName?: string;
-            /** Format: int32 */
-            sizeBytes?: number;
-            tags?: string;
-            /** Format: int32 */
-            ttlSeconds?: number;
-        };
-        CacheInvalidation: {
-            /** Format: int64 */
-            bytesFreed?: number;
-            cacheName?: string;
-            id?: components["schemas"]["UUID"];
-            invalidatedAt?: components["schemas"]["UUID"];
-            invalidationReason?: components["schemas"]["UUID"];
-            invalidationType?: components["schemas"]["UUID"];
-            /** Format: int32 */
-            keysInvalidated?: number;
-            operationContext?: Record<string, never>;
-        };
-        CacheInvalidationLog: {
-            /** Format: int32 */
-            affectedKeysCount?: number;
-            cacheNamespace?: string;
-            campaignId?: components["schemas"]["UUID"];
-            campaignPhase?: string;
-            errorMessage?: string;
-            /** Format: date-time */
-            executedAt?: string;
-            /** Format: double */
-            executionTimeMs?: number;
-            id?: components["schemas"]["UUID"];
-            invalidationPattern?: components["schemas"]["UUID"];
-            invalidationReason?: components["schemas"]["UUID"];
-            serviceName?: string;
-            success?: boolean;
-            triggeredBy?: string;
-        };
-        CacheMetric: {
-            cacheKey?: string;
-            cacheNamespace?: string;
-            /** Format: int32 */
-            cacheSizeBytes?: number;
-            campaignPhase?: string;
-            /** Format: double */
-            executionTimeMs?: number;
-            /** Format: double */
-            hitRatioPct?: number;
-            id?: components["schemas"]["UUID"];
-            operationType?: string;
-            /** Format: date-time */
-            recordedAt?: string;
-            serviceName?: string;
-            /** Format: int32 */
-            ttlUsedSeconds?: number;
-        };
-        CacheTTLConfig: {
-            dns_validation?: string;
-            http_validation?: string;
-            keyword_sets?: string;
-            keywords?: string;
-            personas?: string;
-            proxies?: string;
-        };
-        CachedSessionConfig: {
-            /** @description How long to cache valid sessions in Redis (default: 5 minutes) */
-            CacheTTL?: string;
-            /** @description Enable/disable distributed caching */
-            Enabled?: boolean;
-            /** @description Cache key prefix */
-            KeyPrefix?: string;
-            /** @description How long to cache "session not found" results to prevent DB spam (default: 30 seconds) */
-            NegativeCacheTTL?: string;
-        };
-        CachedSessionData: {
-            /** Format: date-time */
-            cached_at?: string;
-            is_valid?: boolean;
-        };
-        CachedSessionService: Record<string, never>;
-        CampaignAPI: {
-            /** Format: double */
-            avgProcessingRate?: number;
-            /** Format: date-time */
-            completedAt?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /**
-             * @description Phases-based architecture (replaces legacy CampaignType + Status)
-             * @enum {string}
-             */
-            currentPhase?: "domain_generation" | "dns_validation" | "http_keyword_validation" | "analysis";
-            /** Format: int64 */
-            dnsValidatedDomains?: number;
-            /** Format: int64 */
-            domains?: number;
-            errorMessage?: string;
-            /** Format: date-time */
-            estimatedCompletionAt?: string;
-            /** Format: int64 */
-            failedItems?: number;
-            id?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            lastHeartbeatAt?: string;
-            /** Format: int64 */
-            leads?: number;
-            metadata?: Record<string, never>;
-            name?: string;
-            /** @enum {string} */
-            phaseStatus?: "not_started" | "ready" | "configured" | "in_progress" | "paused" | "completed" | "failed";
-            /** Format: int64 */
-            processedItems?: number;
-            /** Format: double */
-            progress?: number;
-            /** Format: double */
-            progressPercentage?: number;
-            /** Format: date-time */
-            startedAt?: string;
-            /** Format: int64 */
-            successfulItems?: number;
-            /** Format: int64 */
-            totalItems?: number;
-            /** Format: date-time */
-            updatedAt?: string;
-            userId?: components["schemas"]["UUID"];
-        };
-        CampaignAccessGrant: {
-            accessType?: string;
-            campaignId?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            expiresAt?: string;
-            /** Format: date-time */
-            grantedAt?: string;
-            grantedBy?: string;
-            id?: components["schemas"]["UUID"];
-            isActive?: boolean;
-            userId?: components["schemas"]["UUID"];
-        };
-        CampaignActionResponse: {
-            action?: string;
-            campaignId?: components["schemas"]["UUID"];
-            message?: string;
-            success?: boolean;
-        };
-        CampaignAnalytics: {
-            /** Format: int64 */
-            avgResponseTimeMs?: number;
-            campaignId?: components["schemas"]["UUID"];
-            /** Format: double */
-            costPerLead?: number;
-            /** Format: int64 */
-            domainsGenerated?: number;
-            /** Format: int64 */
-            domainsValidated?: number;
-            /** Format: int64 */
-            leadsGenerated?: number;
-            phaseBreakdown?: {
-                [key: string]: components["schemas"]["PhaseMetrics"];
-            };
-            /** Format: double */
-            successRate?: number;
-            timeSeriesData?: components["schemas"]["TimeSeriesPoint"][];
-        };
-        CampaignData: {
-            /** Format: date-time */
-            createdAt?: string;
-            currentPhase?: components["schemas"]["PhaseTypeEnum"];
-            description?: string;
-            id?: components["schemas"]["UUID"];
-            name?: string;
-            phaseStatus?: components["schemas"]["PhaseStatusEnum"];
-            /** @description @Description Overall progress percentage (0-100) */
-            progress?: {
-                [key: string]: Record<string, never>;
-            };
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        CampaignDependencyInfo: {
-            campaign?: components["schemas"]["LeadGenerationCampaign"];
-            canDelete?: boolean;
-            dependentCampaigns?: components["schemas"]["LeadGenerationCampaign"][];
-            hasDependencies?: boolean;
-        };
-        CampaignDetailsResponse: {
-            campaign?: components["schemas"]["CampaignData"];
-            params?: components["schemas"]["CampaignParamsData"];
-        };
-        CampaignJob: {
-            /** Format: int32 */
-            attempts?: number;
-            /** @enum {string} */
-            businessStatus?: "processing" | "retry" | "priority_queued" | "batch_optimized";
-            campaignId?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            createdAt?: string;
-            id?: components["schemas"]["UUID"];
-            jobPayload?: Record<string, never>;
-            /** @enum {string} */
-            jobType: "generation" | "dns_validation" | "http_keyword_validation" | "analysis";
-            /** Format: date-time */
-            lastAttemptedAt?: string;
-            lastError?: string;
-            /** Format: date-time */
-            lockedAt?: string;
-            lockedBy?: string;
-            /** Format: int32 */
-            maxAttempts?: number;
-            /** Format: date-time */
-            nextExecutionAt?: string;
-            processingServerId?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            scheduledAt?: string;
-            /** @enum {string} */
-            status?: "pending" | "queued" | "running" | "completed" | "failed" | "cancelled";
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        CampaignJobStatusEnum: string;
-        CampaignModeEnum: string;
-        CampaignOperationResponse: {
-            campaignId?: components["schemas"]["UUID"];
-            message?: string;
-            status?: string;
-            success?: boolean;
-        };
-        CampaignOperationResult: {
-            campaignId?: components["schemas"]["UUID"];
-            /** Format: int64 */
-            durationMs?: number;
-            error?: string;
-            newState?: string;
-            previousState?: string;
-            success?: boolean;
-        };
-        CampaignParamsData: {
-            configuration?: string;
-            /** Format: int32 */
-            domainCount?: number;
-            keywordSetId?: components["schemas"]["UUID"];
-            personaId?: components["schemas"]["UUID"];
-            proxyPoolId?: components["schemas"]["UUID"];
-        };
-        CampaignPhase: {
-            campaignId?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            completedAt?: string;
-            /** @description Phase configuration (JSON storage for phase-specific params) */
-            configuration?: Record<string, never>;
-            /**
-             * Format: date-time
-             * @description Audit fields
-             */
-            createdAt?: string;
-            errorMessage?: string;
-            /** Format: date-time */
-            failedAt?: string;
-            /** Format: int64 */
-            failedItems?: number;
-            id?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            pausedAt?: string;
-            /** Format: int32 */
-            phaseOrder?: number;
-            /** @enum {string} */
-            phaseType?: "domain_generation" | "dns_validation" | "http_keyword_validation" | "analysis";
-            /** Format: int64 */
-            processedItems?: number;
-            /** Format: double */
-            progressPercentage?: number;
-            /**
-             * Format: date-time
-             * @description Phase lifecycle timestamps
-             */
-            startedAt?: string;
-            /**
-             * @description Phase execution status
-             * @enum {string}
-             */
-            status?: "not_started" | "ready" | "configured" | "in_progress" | "paused" | "completed" | "failed";
-            /** Format: int64 */
-            successfulItems?: number;
-            /**
-             * Format: int64
-             * @description Phase execution counters
-             */
-            totalItems?: number;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        CampaignProgressResponse: {
-            campaignId?: components["schemas"]["UUID"];
-            currentPhase?: components["schemas"]["PhaseTypeEnum"];
-            /** Format: date-time */
-            estimatedTimeRemaining?: string;
-            /** Format: double */
-            overallProgress?: number;
-            phaseStatus?: components["schemas"]["PhaseStatusEnum"];
-            phases?: components["schemas"]["PhaseProgressResponse"][];
-        };
-        CampaignStartResponse: {
-            campaignId?: components["schemas"]["UUID"];
-            message?: string;
-            /** Format: date-time */
-            queuedAt?: string;
-        };
-        CampaignState: {
-            campaignId?: components["schemas"]["UUID"];
-            configuration?: Record<string, never>;
-            /** Format: date-time */
-            createdAt?: string;
-            /** @enum {string} */
-            currentState?: "draft" | "running" | "paused" | "completed" | "failed" | "cancelled" | "archived";
-            /** @enum {string} */
-            mode?: "full_sequence" | "step_by_step";
-            /** Format: date-time */
-            updatedAt?: string;
-            /** Format: int32 */
-            version?: number;
-        };
-        CampaignStateEnum: string;
-        CampaignStateEvent: {
-            campaignId?: components["schemas"]["UUID"];
-            correlationId?: components["schemas"]["UUID"];
-            eventData?: Record<string, never>;
-            eventType?: string;
-            id?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            occurredAt?: string;
-            operationContext?: Record<string, never>;
-            /** Format: date-time */
-            persistedAt?: string;
-            processingError?: string;
-            processingStatus?: string;
-            reason?: string;
-            /** Format: int64 */
-            sequenceNumber?: number;
-            sourceState?: string;
-            targetState?: string;
-            triggeredBy?: string;
-        };
-        CampaignStateMachine: Record<string, never>;
-        CampaignStateSnapshot: {
-            campaignId?: components["schemas"]["UUID"];
-            checksum?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            currentState?: string;
-            id?: components["schemas"]["UUID"];
-            isValid?: boolean;
-            /** Format: int64 */
-            lastEventSequence?: number;
-            snapshotMetadata?: Record<string, never>;
-            stateData?: Record<string, never>;
-        };
-        CampaignStateTransition: {
-            campaignId?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            completedAt?: string;
-            durationMs?: string;
-            fromState?: string;
-            id?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            initiatedAt?: string;
-            isValidTransition?: boolean;
-            stateEventId?: components["schemas"]["UUID"];
-            toState?: string;
-            transitionMetadata?: Record<string, never>;
-            triggeredBy?: string;
-            validationErrors?: Record<string, never>;
-        };
-        CampaignStateWithExecution: {
-            phaseExecutions?: components["schemas"]["PhaseExecution"][];
-        };
-        CampaignTransactionOptions: {
-            CampaignID?: components["schemas"]["UUID"];
-            IsolationLevel?: string;
-            /** Format: int32 */
-            MaxRetries?: number;
-            Operation?: string;
-            ReadOnly?: boolean;
-            RetryDelay?: string;
-            /** Format: date-time */
-            Timeout?: string;
-        };
-        CampaignWorkerService: Record<string, never>;
-        CapacityConstraint: {
-            constraintType?: string;
-            description?: string;
-            /** @enum {string} */
-            impactSeverity?: "low" | "medium" | "high" | "critical";
-            /** Format: double */
-            resolutionCost?: number;
-            /** Format: int32 */
-            timeToResolve?: number;
-            workaround?: string;
-        };
-        CapacityForecast: {
-            /** Format: double */
-            confidenceLevel?: number;
-            /** Format: date-time */
-            forecastDate?: string;
-            growthDrivers?: string[];
-            /** Format: double */
-            predictedLoad?: number;
-            requiredCapacity?: components["schemas"]["ResourceCapacitySnapshot"];
-            /** Format: double */
-            seasonalFactors?: number;
-        };
-        CapacityForecastPoint: {
-            /** Format: double */
-            confidenceInterval?: number;
-            /** Format: double */
-            predictedLoad?: number;
-            /** Format: double */
-            recommendedCapacity?: number;
-            /** Format: double */
-            scalingTriggerPoint?: number;
-            /** Format: date-time */
-            timeHorizon?: string;
-        };
-        CapacityInvestment: {
-            alternativeOptions?: string[];
-            businessJustification?: string;
-            expectedROI?: number;
-            investmentType?: string;
-            paybackPeriod?: number;
-            requiredAmount?: number;
-            riskLevel?: string;
-        };
-        CapacityPlanningData: {
-            capacityConstraints?: components["schemas"]["CapacityConstraint"][];
-            currentCapacity?: components["schemas"]["ResourceCapacitySnapshot"];
-            forecastedRequirements?: components["schemas"]["CapacityForecast"][];
-            investmentRequirements?: components["schemas"]["CapacityInvestment"][];
-            scalingRecommendations?: components["schemas"]["CapacityScalingRec"][];
-        };
-        CapacityScalingRec: {
-            businessImpact?: string;
-            /** Format: double */
-            currentCapacity?: number;
-            /** Format: double */
-            estimatedCost?: number;
-            /** @enum {string} */
-            priority?: "low" | "medium" | "high" | "critical";
-            /** Format: double */
-            recommendedCapacity?: number;
-            resourceType?: string;
-            /** Format: date-time */
-            scalingTimeframe?: string;
-        };
-        ChangePasswordRequest: {
-            /** Format: password */
-            currentPassword: string;
-            /** Format: password */
-            newPassword: string;
-        };
-        ChartDataSet: {
-            chartTitle?: string;
-            /** @enum {string} */
-            chartType?: "line" | "bar" | "pie" | "scatter" | "heatmap" | "radar" | "treemap";
-            dataSeries?: components["schemas"]["DataSeries"][];
-            drillDownData?: components["schemas"]["DrillDownLevel"][];
-            legendConfig?: components["schemas"]["LegendConfiguration"];
-            tooltipConfig?: components["schemas"]["TooltipConfiguration"];
-            xAxisConfig?: components["schemas"]["AxisConfiguration"];
-            yAxisConfig?: components["schemas"]["AxisConfiguration"];
-        };
-        ColorSchemeData: {
-            accentColors?: string[];
-            accessibilityCompliant?: boolean;
-            alertColors?: components["schemas"]["AlertColorConfiguration"];
-            brandCompliant?: boolean;
-            gradientColors?: string[];
-            primaryColors?: string[];
-            schemeName?: string;
-            secondaryColors?: string[];
-        };
-        CommunicationPattern: {
-            /** Format: double */
-            avgLatencyMs?: number;
-            circuitBreakerState?: string;
-            communicationType?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: double */
-            errorRate?: number;
-            /** Format: int64 */
-            id?: number;
-            /** Format: date-time */
-            lastHealthCheck?: string;
-            /** Format: date-time */
-            messageFormat?: string;
-            protocol?: string;
-            /** Format: int32 */
-            retryCount?: number;
-            sourceService?: string;
-            /** Format: double */
-            successRate?: number;
-            targetService?: string;
-            /** Format: double */
-            throughputRps?: number;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        ComparativeAnalyticsData: {
-            baselineMetrics?: components["schemas"]["BaselineMetrics"];
-            benchmarkComparisons?: components["schemas"]["DetailedBenchmarkComparison"][];
-            /** @enum {string} */
-            comparisonType?: "period" | "historical" | "benchmark" | "competitor";
-            competitiveAnalysis?: components["schemas"]["CompetitiveAnalysis"];
-            currentMetrics?: components["schemas"]["BaselineMetrics"];
-            improvementRecommendations?: components["schemas"]["ImprovementRecommendation"][];
-            performanceComparison?: components["schemas"]["PerformanceComparison"];
-            trendAnalysis?: components["schemas"]["TrendAnalysis"];
-        };
-        ComparisonBaseline: {
-            periodOffset?: number;
-            referencePeriod?: components["schemas"]["TimeRangeFilter"];
-            type: string;
-        };
-        CompetitiveAnalysis: {
-            competitiveStrengths?: components["schemas"]["CompetitiveStrength"][];
-            competitiveWeaknesses?: components["schemas"]["CompetitiveWeakness"][];
-            competitorComparisons?: components["schemas"]["CompetitorComparison"][];
-            marketPosition?: string;
-            marketShare?: number;
-            threatLevel?: string;
-        };
-        CompetitiveStrength: {
-            description?: string;
-            quantitativeAdvantage?: number;
-            strategicValue?: string;
-            strengthArea?: string;
-            strengthLevel?: string;
-            sustainability?: string;
-        };
-        CompetitiveWeakness: {
-            impactOnBusiness?: string;
-            improvementPlan?: string;
-            quantitativeGap?: number;
-            severityLevel?: string;
-            urgencyLevel?: string;
-            weaknessArea?: string;
-        };
-        CompetitorComparison: {
-            competitorName?: string;
-            competitorType?: string;
-            growthRate?: number;
-            marketShare?: number;
-            overallRanking?: string;
-            performanceComparison?: components["schemas"]["CompetitorMetricComparison"][];
-            threatLevel?: string;
-        };
-        CompetitorMetricComparison: {
-            competitiveAdvantage?: string;
-            competitorPerformance?: number;
-            metricName?: string;
-            ourPerformance?: number;
-            performanceGap?: number;
-            strategicImportance?: string;
-        };
-        ComplianceAssessmentData: {
-            /** Format: double */
-            overallComplianceScore?: number;
-            policyCompliance?: components["schemas"]["PolicyComplianceItem"][];
-            regulatoryCompliance?: components["schemas"]["RegulatoryComplianceItem"][];
-            securityCompliance?: components["schemas"]["SecurityComplianceData"];
-        };
-        ConfigLock: {
-            /** Format: date-time */
-            acquiredAt?: string;
-            configHash?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            expiresAt?: string;
-            id?: components["schemas"]["UUID"];
-            isActive?: boolean;
-            lockType?: string;
-            metadata?: Record<string, never>;
-            owner?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        ConfigManager: Record<string, never>;
-        ConfigManagerConfig: {
-            /** Format: date-time */
-            CacheEvictionTime?: string;
-            EnableCaching?: boolean;
-            EnableStateTracking?: boolean;
-            /** Format: int32 */
-            MaxCacheEntries?: number;
-        };
-        ConfigManagerInterface: Record<string, never>;
-        ConfigTemplate: {
-            name?: string;
-            schema?: {
-                [key: string]: Record<string, never>;
-            };
-            type?: string;
-            validation_rules?: components["schemas"]["ValidationRule"][];
-        };
-        ConfigVersion: {
-            configHash?: string;
-            configState?: Record<string, never>;
-            /** Format: date-time */
-            createdAt?: string;
-            id?: components["schemas"]["UUID"];
-            lockType?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            /** Format: int32 */
-            version?: number;
-        };
-        ConnectionPoolMetrics: {
-            /** Format: int32 */
-            activeConnections?: number;
-            /** Format: int32 */
-            connectionErrors?: number;
-            /** Format: int64 */
-            id?: number;
-            /** Format: int32 */
-            idleConnections?: number;
-            /** Format: int32 */
-            maxConnections?: number;
-            /** Format: double */
-            poolUtilizationPercent?: number;
-            /** Format: date-time */
-            recordedAt?: string;
-            /** Format: int32 */
-            waitCount?: number;
-            /** Format: int32 */
-            waitDurationMs?: number;
-        };
-        ConnectionPoolReport: {
-            /** Format: double */
-            averageActiveConnections?: number;
-            /** Format: double */
-            averageIdleConnections?: number;
-            /** Format: double */
-            averageUtilizationPercent?: number;
-            /** Format: double */
-            averageWaitTimeMs?: number;
-            /** Format: double */
-            connectionErrorRate?: number;
-            /** Format: int32 */
-            maxActiveConnections?: number;
-            /** Format: double */
-            peakUtilizationPercent?: number;
-            period?: string;
-            /** Format: int64 */
-            totalConnectionErrors?: number;
-            /** Format: int64 */
-            totalWaitEvents?: number;
-        };
-        ConsistencyReport: {
-            isConsistent?: boolean;
-            /** Format: int32 */
-            jsonbRuleCount?: number;
-            keywordSetId?: components["schemas"]["UUID"];
-            missingFromJsonb?: string[];
-            missingFromRelational?: string[];
-            /** Format: int32 */
-            relationalRuleCount?: number;
-        };
-        ContentAnalysisResult: {
-            extractedContent?: components["schemas"]["ExtractedContentItem"][];
-            leadItems?: components["schemas"]["LeadItem"][];
-            /** Format: date-time */
-            processedAt?: string;
-            summary?: components["schemas"]["AnalysisSummary"];
-        };
-        CookieHandling: {
-            mode?: string;
-        };
-        CookieHandlingConfig: {
-            mode?: string;
-        };
-        CostBaselineMetrics: {
-            /** Format: double */
-            costPerOperation?: number;
-            /** Format: double */
-            costPerSuccessfulLead?: number;
-            resourceCostBreakdown?: components["schemas"]["ResourceCostBreakdown"];
-            /** Format: double */
-            roi?: number;
-            /** Format: double */
-            totalCost?: number;
-        };
-        CostEffectivenessData: {
-            budgetUtilization?: components["schemas"]["BudgetUtilizationData"];
-            costOptimizationAreas?: components["schemas"]["CostOptimizationArea"][];
-            /** Format: double */
-            costPerOperation?: number;
-            /** Format: double */
-            costPerSuccessfulLead?: number;
-            costTrendAnalysis?: components["schemas"]["CostTrendPoint"][];
-            roiAnalysis?: components["schemas"]["ROIAnalysisData"];
-        };
-        CostEfficiencyMetrics: {
-            /** @enum {string} */
-            competitiveCostPosition?: "excellent" | "good" | "average" | "poor";
-            /** Format: double */
-            costPerPerformanceUnit?: number;
-            /** Format: double */
-            optimizationPotential?: number;
-            /** Format: double */
-            overallCostEfficiency?: number;
-            /** Format: double */
-            resourceValueRatio?: number;
-            /** Format: double */
-            wasteReductionScore?: number;
-        };
-        CostOptimizationArea: {
-            category?: string;
-            /** Format: double */
-            currentCost?: number;
-            description?: string;
-            /** Format: double */
-            implementationCost?: number;
-            /** Format: double */
-            potentialSavings?: number;
-            /** @enum {string} */
-            riskLevel?: "low" | "medium" | "high";
-            /** Format: double */
-            savingsPercentage?: number;
-            /** Format: int32 */
-            timeToRealization?: number;
-        };
-        CostOptimizationStrategy: {
-            description?: string;
-            /** Format: double */
-            estimatedSavings?: number;
-            /** @enum {string} */
-            implementationEffort?: "low" | "medium" | "high";
-            prerequisites?: string[];
-            /** @enum {string} */
-            riskLevel?: "low" | "medium" | "high";
-            strategyName?: string;
-            /** Format: int32 */
-            timeToImplement?: number;
-        };
-        CostTrendPoint: {
-            /** Format: double */
-            budgetUtilization?: number;
-            /** Format: double */
-            costPerOperation?: number;
-            /** Format: double */
-            efficiencyScore?: number;
-            /** Format: date-time */
-            timestamp?: string;
-            /** Format: double */
-            totalCost?: number;
-        };
-        CountermeasureAnalysis: {
-            /** Format: double */
-            bypassSuccessRate?: number;
-            countermeasureName?: string;
-            /** @enum {string} */
-            deploymentStatus?: "active" | "inactive" | "testing" | "deprecated";
-            /** Format: double */
-            effectivenessRating?: number;
-            maintenanceRequired?: boolean;
-            /** Format: double */
-            resourceUtilization?: number;
-            /** @enum {string} */
-            updateFrequency?: "realtime" | "hourly" | "daily" | "weekly" | "monthly";
-        };
-        CreateCampaignRequest: {
-            description?: string;
-            dnsValidationParams?: components["schemas"]["DNSValidationRequest"];
-            domainGenerationParams?: components["schemas"]["DomainGenerationParams"];
-            /** @description Full sequence mode support - when enabled, stores all phase configurations at creation */
-            fullSequenceMode?: boolean;
-            httpKeywordParams?: components["schemas"]["HTTPKeywordValidationRequest"];
-            launchSequence?: boolean;
-            name: string;
-            userId?: components["schemas"]["UUID"];
-        };
-        CreateDomainGenerationCampaignRequest: {
-            characterSet: string;
-            constantString?: string;
-            dnsValidationConfig?: components["schemas"]["DNSValidationPhaseConfig"];
-            dnsValidationParams?: components["schemas"]["DNSValidationParams"];
-            enableDnsValidation?: boolean;
-            enableHttpValidation?: boolean;
-            httpKeywordParams?: components["schemas"]["HTTPKeywordParams"];
-            httpValidationConfig?: components["schemas"]["HTTPValidationPhaseConfig"];
-            keywords: string[];
-            launchSequence?: boolean;
-            /** Format: int32 */
-            maxResults: number;
-            name: string;
-            /** Format: int32 */
-            numDomainsToGenerate: number;
-            /** @enum {string} */
-            patternType: "prefix" | "suffix" | "both";
-            tld: string;
-            tlds: string[];
-            userId?: components["schemas"]["UUID"];
-            /**
-             * Format: int32
-             * @description Domain generation fields
-             */
-            variableLength: number;
-        };
-        CreateKeywordSetRequest: {
-            description?: string;
-            isEnabled?: boolean;
-            name: string;
-            rules?: components["schemas"]["KeywordRuleRequest"][];
-        };
-        CreateLeadGenerationCampaignRequest: {
-            description?: string;
-            domainConfig: components["schemas"]["DomainGenerationPhaseConfig"];
-            name: string;
-            userId?: components["schemas"]["UUID"];
-        };
-        CreatePersonaRequest: {
-            configDetails: Record<string, never>;
-            description?: string;
-            isEnabled?: boolean;
-            name: string;
-            personaType: components["schemas"]["PersonaTypeEnum"];
-        };
-        CreateProxyRequest: {
-            address: string;
-            countryCode?: string;
-            description?: string;
-            isEnabled?: boolean;
-            name: string;
-            notes?: string;
-            /** Format: password */
-            password?: string;
-            /** @enum {string} */
-            protocol?: "http" | "https" | "socks5" | "socks4";
-            username?: string;
-        };
-        CreateUserRequest: {
-            /** Format: email */
-            email: string;
-            firstName: string;
-            lastName: string;
-            /** Format: password */
-            password: string;
-        };
-        CyclicalPattern: {
-            averageAmplitude?: number;
-            cycleLength?: number;
-            cycleReliability?: number;
-            cycleStrength?: number;
-            /** Format: date-time */
-            lastCycleStart?: string;
-            /** Format: date-time */
-            nextCycleStart?: string;
-        };
-        DNSCampaignService: Record<string, never>;
-        DNSConfigDetails: {
-            /** Format: int32 */
-            concurrentQueriesPerDomain?: number;
-            /** Format: int32 */
-            maxConcurrentGoroutines?: number;
-            /** Format: int32 */
-            maxDomainsPerRequest?: number;
-            /** Format: int32 */
-            queryDelayMaxMs?: number;
-            /** Format: int32 */
-            queryDelayMinMs?: number;
-            /** Format: int32 */
-            queryTimeoutSeconds?: number;
-            /** Format: int32 */
-            rateLimitBurst?: number;
-            /** Format: double */
-            rateLimitDps?: number;
-            /** @enum {string} */
-            resolverStrategy?: "round_robin" | "random" | "weighted" | "priority";
-            resolvers?: string[];
-            resolversPreferredOrder?: string[];
-            resolversWeighted?: {
-                [key: string]: number;
-            };
-            useSystemResolvers?: boolean;
-        };
-        DNSPersona: {
-            config?: components["schemas"]["DNSValidatorConfigJSON"];
-            description?: string;
-            id?: string;
-            name?: string;
-        };
-        DNSPhaseConfigRequest: {
-            name?: string;
-            personaIds: string[];
-        };
-        DNSValidationAPIRequest: {
-            /** Format: int32 */
-            batchSize?: number;
-            campaignId: components["schemas"]["UUID"];
-            onlyInvalidDomains?: boolean;
-            personaIds?: string[];
-            /** Format: int32 */
-            processingSpeedPerMinute?: number;
-            /** Format: int32 */
-            retryAttempts?: number;
-            /** Format: int32 */
-            rotationIntervalSeconds?: number;
-        };
-        DNSValidationCampaignParams: {
-            /** Format: int32 */
-            batchSize?: number;
-            metadata?: Record<string, never>;
-            personaIds: string[];
-            /** Format: int32 */
-            processingSpeedPerMinute?: number;
-            /** Format: int32 */
-            retryAttempts?: number;
-            /** Format: int32 */
-            rotationIntervalSeconds?: number;
-        };
-        DNSValidationConfig: {
-            name?: string;
-            personaIds: string[];
-        };
-        DNSValidationOperation: {
-            campaignId: components["schemas"]["UUID"];
-            domainFilter?: components["schemas"]["DomainFilter"];
-            /** Format: int32 */
-            maxDomains?: number;
-            personaIds: string[];
-            /** Format: int32 */
-            retryAttempts?: number;
-        };
-        DNSValidationParams: {
-            /** Format: int32 */
-            batchSize?: number;
-            personaIds: string[];
-            /** Format: int32 */
-            processingSpeedPerMinute?: number;
-            /** Format: int32 */
-            retryAttempts?: number;
-            /** Format: int32 */
-            rotationIntervalSeconds?: number;
-        };
-        DNSValidationPhaseConfig: {
-            /** Format: int32 */
-            batchSize?: number;
-            /** Format: int32 */
-            maxRetries?: number;
-            personaIds: string[];
-            /** Format: int32 */
-            timeout?: number;
-        };
-        DNSValidationRequest: {
-            /** Format: int32 */
-            batchSize?: number;
-            personaIds?: string[];
-            /** Format: int32 */
-            processingSpeedPerMinute?: number;
-            /** Format: int32 */
-            retryAttempts?: number;
-            /** Format: int32 */
-            rotationIntervalSeconds?: number;
-        };
-        DNSValidationResult: {
-            /** Format: int32 */
-            attempts?: number;
-            businessStatus?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            dnsCampaignId: components["schemas"]["UUID"];
-            dnsRecords?: Record<string, never>;
-            domainName: string;
-            generatedDomainId?: components["schemas"]["UUID"];
-            id?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            lastCheckedAt?: string;
-            validatedByPersonaId?: components["schemas"]["UUID"];
-            validationStatus: components["schemas"]["UUID"];
-        };
-        DNSValidationResultsResponse: {
-            data?: components["schemas"]["DNSValidationResult"][];
-            nextCursor?: string;
-            /** Format: int64 */
-            totalCount?: number;
-        };
-        DNSValidationStartResponse: {
-            campaignId?: components["schemas"]["UUID"];
-            /** Format: int32 */
-            domainsToProcess?: number;
-            message?: string;
-            validationJobId?: components["schemas"]["UUID"];
-        };
-        DNSValidationStatusEnum: string;
-        DNSValidatorConfig: {
-            ConcurrentQueriesPerDomain?: number;
-            MaxConcurrentGoroutines?: number;
-            MaxDomainsPerRequest?: number;
-            QueryDelayMax?: string;
-            QueryDelayMin?: string;
-            QueryTimeout?: string;
-            RateLimitBurst?: number;
-            RateLimitDPS?: number;
-            ResolverStrategy?: string;
-            Resolvers?: string[];
-            ResolversPreferredOrder?: string[];
-            ResolversWeighted?: {
-                [key: string]: number;
-            };
-            UseSystemResolvers?: boolean;
-        };
-        DNSValidatorConfigJSON: {
+        "config.DNSValidatorConfigJSON": {
             concurrentQueriesPerDomain?: number;
             maxConcurrentGoroutines?: number;
             maxDomainsPerRequest?: number;
@@ -3409,878 +4362,13 @@ export interface components {
             };
             useSystemResolvers?: boolean;
         };
-        DashboardLayout: {
-            autoRefresh?: boolean;
-            layoutName?: string;
-            layoutType?: string;
-            refreshInterval?: number;
-            responsive?: boolean;
-            sections?: components["schemas"]["DashboardSection"][];
-            shareableLink?: string;
-        };
-        DashboardPosition: {
-            column?: number;
-            row?: number;
-            zIndex?: number;
-        };
-        DashboardSection: {
-            collapsible?: boolean;
-            dataSource?: string;
-            position?: components["schemas"]["DashboardPosition"];
-            /** Format: int32 */
-            refreshRate?: number;
-            sectionId?: components["schemas"]["UUID"];
-            sectionTitle?: string;
-            /** @enum {string} */
-            sectionType?: "chart" | "table" | "metric" | "alert" | "summary";
-            size?: components["schemas"]["DashboardSize"];
-            visible?: boolean;
-        };
-        DashboardSize: {
-            /** Format: int32 */
-            height?: number;
-            /** Format: int32 */
-            minHeight?: number;
-            /** Format: int32 */
-            minWidth?: number;
-            resizable?: boolean;
-            /** Format: int32 */
-            width?: number;
-        };
-        DataPoint: {
-            category?: string;
-            drillDownEnabled?: boolean;
-            formattedValue?: string;
-            label?: string;
-            metadata?: {
-                [key: string]: Record<string, never>;
-            };
-            /** Format: date-time */
-            timestamp?: string;
-            /** Format: double */
-            value?: number;
-        };
-        DataSeries: {
-            aggregation?: string;
-            colorCode?: string;
-            dataPoints?: components["schemas"]["DataPoint"][];
-            lineStyle?: string;
-            markerStyle?: string;
-            seriesName?: string;
-            seriesType?: string;
-        };
-        DatabaseConfig: {
-            connectionLifetime?: number;
-            host?: string;
-            maxConnections?: number;
-            maxIdleConnections?: number;
-            name?: string;
-            password?: string;
-            port?: number;
-            sslmode?: string;
-            user?: string;
-        };
-        DatabaseHandler: Record<string, never>;
-        DatabaseMonitor: Record<string, never>;
-        DatabaseOptimizationRecommendation: {
-            /** Format: date-time */
-            createdAt?: string;
-            description?: string;
-            effort?: string;
-            impact?: string;
-            priority?: string;
-            sql?: string;
-            title?: string;
-            type?: string;
-        };
-        DatabaseQuery: {
-            id: components["schemas"]["UUID"];
-            sql: string;
-        };
-        DatabaseQueryResult: {
-            columns?: string[];
-            error?: string;
-            /** Format: int64 */
-            executionTime?: number;
-            /** Format: int32 */
-            rowCount?: number;
-            rows?: Record<string, never>[][];
-            success?: boolean;
-        };
-        DatabaseStats: {
-            databaseSize?: string;
-            isHealthy?: boolean;
-            schemaVersion?: string;
-            /** Format: int32 */
-            totalSessions?: number;
-            /** Format: int32 */
-            totalTables?: number;
-            /** Format: int32 */
-            totalUsers?: number;
-            /** Format: date-time */
-            uptime?: string;
-            version?: string;
-        };
-        DeletionConfirmationResponse: {
-            deleted?: boolean;
-            message?: string;
-        };
-        DeletionResponse: {
-            id?: components["schemas"]["UUID"];
-            message?: string;
-            success?: boolean;
-        };
-        DetailedBenchmarkComparison: {
-            /** Format: date-time */
-            benchmarkDate?: string;
-            benchmarkName?: string;
-            benchmarkSource?: string;
-            comparisonResults?: components["schemas"]["BenchmarkMetricComparison"][];
-            competitiveAdvantages?: string[];
-            improvementAreas?: string[];
-            /** Format: int32 */
-            overallRanking?: number;
-            /** Format: double */
-            performanceGap?: number;
-        };
-        DetailedTestResultResponse: {
-            details?: string;
-            /** Format: int64 */
-            durationMs?: number;
-            /** Format: int32 */
-            errorCount?: number;
-            message?: string;
-            status?: string;
-            success?: boolean;
-            /** Format: int32 */
-            successCount?: number;
-            testId?: components["schemas"]["UUID"];
-        };
-        DetectedAnomaly: {
-            affectedMetrics?: string[];
-            anomalyType?: string;
-            /** @enum {string} */
-            businessImpact?: "minimal" | "low" | "moderate" | "high" | "severe";
-            /** Format: date-time */
-            detectedAt?: string;
-            /** Format: int64 */
-            duration?: number;
-            /** Format: double */
-            magnitude?: number;
-            potentialCauses?: string[];
-            /** Format: int64 */
-            recoveryTime?: number;
-            /** @enum {string} */
-            severity?: "low" | "medium" | "high" | "critical";
-        };
-        DetectionEvasionConfig: {
-            antiAnalysisFeatures?: string[];
-            captchaBypass?: boolean;
-            enabled?: boolean;
-            fingerprintRandomization?: boolean;
-            honeypotDetection?: boolean;
-            httpHeaderRandomization?: boolean;
-            payloadObfuscation?: boolean;
-            rateLimitEvasion?: boolean;
-            requestOrderRandomization?: boolean;
-            timingAttackPrevention?: boolean;
-            tlsFingerprintRotation?: boolean;
-        };
-        DetectionRiskAnalysis: {
-            /** @enum {string} */
-            currentRiskLevel?: "minimal" | "low" | "medium" | "high" | "critical";
-            lastDetectionIncident?: components["schemas"]["UUID"];
-            mitigationStrategies?: components["schemas"]["MitigationStrategy"][];
-            riskFactors?: components["schemas"]["RiskFactor"][];
-            /** Format: double */
-            riskScore?: number;
-            /** @enum {string} */
-            riskTrendDirection?: "decreasing" | "stable" | "increasing";
-            /** Format: int64 */
-            timeToDetectionEstimate?: number;
-        };
-        DnsPersonaConfig: {
-            /** Format: int32 */
-            concurrentQueriesPerDomain?: number;
-            /** Format: int32 */
-            maxConcurrentGoroutines?: number;
-            /** Format: int32 */
-            maxDomainsPerRequest?: number;
-            /** Format: int32 */
-            queryDelayMaxMs?: number;
-            /** Format: int32 */
-            queryDelayMinMs?: number;
-            /** Format: int32 */
-            queryTimeoutSeconds?: number;
-            /** Format: int32 */
-            rateLimitBurst?: number;
-            /** Format: double */
-            rateLimitDps?: number;
-            /** @enum {string} */
-            resolverStrategy: "round_robin" | "random" | "weighted" | "priority" | "random_rotation" | "weighted_rotation" | "sequential_failover";
-            resolvers: string[];
-            resolversPreferredOrder?: string[];
-            resolversWeighted?: {
-                [key: string]: number;
-            };
-            useSystemResolvers?: boolean;
-        };
-        DnsValidationParams: {
-            /** Format: int32 */
-            batchSize?: number;
-            personaIds: string[];
-            /** Format: int32 */
-            processingSpeedPerMinute?: number;
-            /** Format: int32 */
-            retryAttempts?: number;
-            /** Format: int32 */
-            rotationIntervalSeconds?: number;
-            sourceCampaignId?: components["schemas"]["UUID"];
-        };
-        DomainBatch: {
-            CampaignID?: components["schemas"]["UUID"];
-            Domains?: string[];
-        };
-        DomainDNSStatusEnum: string;
-        DomainFilter: {
-            excludeList?: string[];
-            maxLength?: number;
-            minLength?: number;
-            onlyFailed?: boolean;
-            pattern?: string;
-            status?: string[];
-            tlds?: string[];
-        };
-        DomainGenerationCampaignParams: {
-            characterSet: string;
-            constantString?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: int64 */
-            currentOffset?: number;
-            /** Format: int32 */
-            numDomainsToGenerate: number;
-            /** @enum {string} */
-            patternType: "prefix_variable" | "suffix_variable" | "both_variable";
-            tld: string;
-            /** Format: int64 */
-            totalPossibleCombinations: number;
-            /** Format: date-time */
-            updatedAt?: string;
-            /** Format: int32 */
-            variableLength?: number;
-        };
-        DomainGenerationOperation: {
-            campaignId: components["schemas"]["UUID"];
-            config: Record<string, never>;
-            /** Format: int32 */
-            maxDomains?: number;
-            /** Format: int64 */
-            startFrom?: number;
-        };
-        DomainGenerationParams: {
-            characterSet: string;
-            constantString: string;
-            /** Format: int64 */
-            numDomainsToGenerate?: number;
-            /** @enum {string} */
-            patternType: "prefix" | "suffix" | "both";
-            tld: string;
-            /** Format: int32 */
-            variableLength: number;
-        };
-        DomainGenerationPhaseConfig: {
-            /** Format: int32 */
-            batchSize?: number;
-            characterSet: string;
-            constantString: string;
-            /** Format: int32 */
-            numDomainsToGenerate?: number;
-            /** @enum {string} */
-            patternType: "prefix" | "suffix" | "both";
-            tlds: string[];
-            /** Format: int32 */
-            variableLength: number;
-        };
-        DomainGenerationPhaseConfigState: {
-            configDetails?: Record<string, never>;
-            configHash?: string;
-            configState?: components["schemas"]["DomainGenerationPhaseConfigState"];
-            /** Format: int64 */
-            lastOffset?: number;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        DomainGenerationProgress: {
-            campaignId?: components["schemas"]["UUID"];
-            /** Format: int32 */
-            domainsGenerated?: number;
-            /** Format: date-time */
-            estimatedEnd?: string;
-            /** Format: int32 */
-            failedCount?: number;
-            /** Format: int32 */
-            processedCount?: number;
-            /** Format: double */
-            progress?: number;
-            /** Format: double */
-            progressPercentage?: number;
-            /** Format: date-time */
-            startedAt?: string;
-            status?: string;
-            /** Format: int32 */
-            successfulCount?: number;
-            /** Format: int32 */
-            totalDomains?: number;
-        };
-        DomainGenerationResult: {
-            campaignId?: components["schemas"]["UUID"];
-            /** Format: int32 */
-            domainsGenerated?: number;
-            /** Format: int64 */
-            durationMs?: number;
-            /** Format: int64 */
-            endOffset?: number;
-            error?: string;
-            /** Format: int64 */
-            startOffset?: number;
-            success?: boolean;
-        };
-        DomainGenerationService: Record<string, never>;
-        DomainGenerationStats: {
-            campaignId?: components["schemas"]["UUID"];
-            configHash?: string;
-            /** Format: int64 */
-            currentOffset?: number;
-            /** Format: int32 */
-            domainsGenerated?: number;
-            /** Format: int64 */
-            duplicatesSkipped?: number;
-            /** Format: int64 */
-            errorCount?: number;
-            /** Format: int64 */
-            estimatedTimeLeft?: number;
-            /** Format: double */
-            generationRate?: number;
-            /** Format: int64 */
-            memoryUsage?: number;
-            /** Format: int64 */
-            totalCombinations?: number;
-            /** Format: int64 */
-            totalGenerated?: number;
-            /** Format: int64 */
-            uniqueDomainsCount?: number;
-        };
-        DomainHTTPStatusEnum: string;
-        DomainLeadStatusEnum: string;
-        DomainPatternType: string;
-        DomainStealthService: Record<string, never>;
-        DrillDownLevel: {
-            availableFields?: string[];
-            dataQuery?: string;
-            groupingField?: string;
-            level?: number;
-            levelName?: string;
-        };
-        EncryptionService: Record<string, never>;
-        EnhancedServerConfig: {
-            auth?: components["schemas"]["EnvAuthConfig"];
-            database?: components["schemas"]["DatabaseConfig"];
-        };
-        EnrichedCampaignData: {
-            campaign?: components["schemas"]["CampaignData"];
-            dnsValidatedDomains?: string[];
-            domains?: components["schemas"]["GeneratedDomain"][];
-            httpKeywordResults?: Record<string, never>[];
-            leads?: components["schemas"]["LeadItem"][];
-        };
-        EnterpriseProxyStrategy: {
-            backupProxyPools?: string[];
-            failoverThreshold?: number;
-            geoTargeting?: boolean;
-            healthCheckInterval?: number;
-            proxyPools?: string[];
-            proxyQualityFiltering?: boolean;
-            proxyRotationRate?: string;
-            strategy?: string;
-        };
-        EnvAuthConfig: {
-            apiKeySalt?: string;
-            cookieHttpOnly?: boolean;
-            cookieSameSite?: string;
-            cookieSecure?: boolean;
-            encryptionKey?: string;
-            jwtSecret?: string;
-            sessionSecret?: string;
-            sessionTimeout?: string;
-        };
-        EnvironmentConfig: {
-            configuration?: {
-                [key: string]: Record<string, never>;
-            };
-            encrypted_fields?: string[];
-            environment?: string;
-            service_name?: string;
-            version?: string;
-        };
-        EnvironmentManager: Record<string, never>;
-        ErrorCode: string;
-        ErrorContext: {
-            /** Format: int32 */
-            campaign_count?: number;
-            campaign_id?: components["schemas"]["UUID"];
-            campaign_phase?: string;
-            /** Format: int32 */
-            domain_count?: number;
-            error_type?: string;
-            help?: string;
-            phase_status?: string;
-            provided_value?: components["schemas"]["UUID"];
-            required_field?: string;
-            /** Format: int32 */
-            result_count?: number;
-            source_campaign_id?: components["schemas"]["UUID"];
-            target_campaign_id?: components["schemas"]["UUID"];
-            validation_job_id?: components["schemas"]["UUID"];
-        };
-        ErrorDetail: {
-            code?: components["schemas"]["ErrorCode"];
-            context?: Record<string, never>;
-            field?: string;
-            message?: string;
-        };
-        ErrorInfo: {
-            /** @enum {string} */
-            code?: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_ERROR" | "REQUIRED_FIELD" | "RATE_LIMIT_EXCEEDED" | "REQUEST_TIMEOUT" | "NOT_IMPLEMENTED" | "INTERNAL_SERVER_ERROR" | "DATABASE_ERROR" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "CAMPAIGN_IN_PROGRESS" | "QUOTA_EXCEEDED" | "INVALID_STATE";
-            details?: components["schemas"]["ErrorDetail"][];
-            message?: string;
-            path?: string;
-            /** Format: date-time */
-            timestamp?: string;
-        };
-        ErrorPatternData: {
-            errorType?: string;
-            /** Format: date-time */
-            firstOccurred?: string;
-            /** Format: int64 */
-            frequency?: number;
-            impactScope?: string;
-            /** Format: date-time */
-            lastOccurred?: string;
-            mitigation?: string;
-            /** Format: double */
-            trendSlope?: number;
-        };
-        ErrorResponse: {
-            /** Format: int32 */
-            code?: number;
-            message?: string;
-            status?: string;
-        };
-        EscalationRule: {
-            additionalRecipients?: string[];
-            escalationActions?: string[];
-            /** Format: int32 */
-            escalationLevel?: number;
-            notificationChannels?: string[];
-            /** Format: int32 */
-            timeThreshold?: number;
-        };
-        EventProjection: {
-            aggregateId?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: int64 */
-            id?: number;
-            /** Format: int64 */
-            lastEventPosition?: number;
-            projectionData?: Record<string, never>;
-            projectionName?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            /** Format: int32 */
-            version?: number;
-        };
-        EventStoreRecord: {
-            aggregateId?: components["schemas"]["UUID"];
-            aggregateType?: string;
-            causationId?: components["schemas"]["UUID"];
-            correlationId?: components["schemas"]["UUID"];
-            eventData?: Record<string, never>;
-            eventId?: components["schemas"]["UUID"];
-            eventType?: string;
-            /** Format: int32 */
-            eventVersion?: number;
-            /** Format: int64 */
-            globalPosition?: number;
-            /** Format: int64 */
-            id?: number;
-            metadata?: Record<string, never>;
-            /** Format: date-time */
-            occurredAt?: string;
-            /** Format: date-time */
-            recordedAt?: string;
-            /** Format: int64 */
-            streamPosition?: number;
-        };
-        ExampleSpec: {
-            description?: string;
-            name?: string;
-            request?: Record<string, never>;
-            response?: Record<string, never>;
-        };
-        ExecutionStatusEnum: string;
-        ExportFormat: {
-            compression?: boolean;
-            customOptions?: {
-                [key: string]: Record<string, never>;
-            };
-            description?: string;
-            formatName?: string;
-            formatType?: string;
-            maxSize?: number;
-            requiresTemplate?: boolean;
-        };
-        ExportInfo: {
-            availableFormats?: components["schemas"]["ExportFormat"][];
-            customTemplates?: components["schemas"]["ExportTemplate"][];
-            /** Format: date-time */
-            expirationTime?: string;
-            /** Format: int64 */
-            exportSize?: number;
-            /** Format: uri */
-            exportUrl?: string;
-            /** Format: int64 */
-            generationTime?: number;
-            scheduledExports?: components["schemas"]["ScheduledExport"][];
-        };
-        ExportService: Record<string, never>;
-        ExportTemplate: {
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: uuid */
-            createdBy?: string;
-            customBranding?: boolean;
-            /** Format: date-time */
-            format?: string;
-            /** Format: date-time */
-            lastModified?: string;
-            sections?: components["schemas"]["TemplateSection"][];
-            templateId?: components["schemas"]["UUID"];
-            templateName?: string;
-            /** @enum {string} */
-            templateType?: "report" | "dashboard" | "summary" | "executive" | "technical";
-        };
-        ExtractedContentAnalysis: {
-            advancedKeywords?: string[];
-            categories?: string[];
-            /** @enum {string} */
-            sentiment?: "Positive" | "Negative" | "Neutral";
-            summary?: string;
-        };
-        ExtractedContentItem: {
-            advancedAnalysis?: components["schemas"]["ExtractedContentAnalysis"];
-            id: components["schemas"]["UUID"];
-            previousCampaignId?: components["schemas"]["UUID"];
-            /** Format: int32 */
-            similarityScore?: number;
-            /** Format: uri */
-            sourceUrl?: string;
-            text: string;
-        };
-        FallbackPolicy: string;
-        FeatureFlagConfig: {
-            debug_logging?: boolean;
-            fallback_on_error?: boolean;
-            gradual_rollout?: boolean;
-            rollout_percentage?: number;
-        };
-        FeatureFlagService: Record<string, never>;
-        FeatureFlags: {
+        "config.FeatureFlags": {
             enableAnalytics?: boolean;
             enableDebugMode?: boolean;
             enableOfflineMode?: boolean;
             enableRealTimeUpdates?: boolean;
         };
-        FeatureImportance: {
-            businessRelevance?: string;
-            featureName?: string;
-            importanceScore?: number;
-            influenceDirection?: string;
-            statisticalSignificance?: number;
-        };
-        FingerprintConfig: {
-            hash_algorithm?: string;
-            include_ip?: boolean;
-            include_language?: boolean;
-            include_screen_resolution?: boolean;
-            include_timezone?: boolean;
-            include_user_agent?: boolean;
-            truncate_length?: number;
-        };
-        GeneralErrorResponse: {
-            details?: string;
-            error?: string;
-        };
-        GenerateDomainsRequest: {
-            /** Format: int32 */
-            batchSize: number;
-            campaignId: components["schemas"]["UUID"];
-            config: components["schemas"]["DomainGenerationPhaseConfig"];
-            /** Format: int64 */
-            startFromOffset?: number;
-        };
-        GeneratedDomain: {
-            campaignId: components["schemas"]["UUID"];
-            /** Format: date-time */
-            createdAt?: string;
-            dnsIp?: string;
-            /**
-             * @description Domain-centric validation status fields
-             * @enum {string}
-             */
-            dnsStatus?: "pending" | "ok" | "error" | "timeout";
-            domainName: string;
-            /** Format: date-time */
-            generatedAt?: string;
-            httpKeywords?: string;
-            /** @enum {string} */
-            httpStatus?: "pending" | "ok" | "error" | "timeout";
-            httpStatusCode?: string;
-            httpTitle?: string;
-            id?: components["schemas"]["UUID"];
-            lastValidatedAt?: components["schemas"]["UUID"];
-            leadScore?: string;
-            /** @enum {string} */
-            leadStatus?: "pending" | "match" | "no_match" | "error" | "timeout";
-            /** Format: int64 */
-            offsetIndex?: number;
-            sourceKeyword?: string;
-            sourcePattern?: string;
-            tld?: string;
-        };
-        GeneratedDomainsResponse: {
-            data?: components["schemas"]["GeneratedDomain"][];
-            /** Format: int64 */
-            nextCursor?: number;
-            /** Format: int64 */
-            totalCount?: number;
-        };
-        HTTP2Settings: {
-            enabled?: boolean;
-        };
-        HTTP2SettingsConfig: {
-            enabled?: boolean;
-        };
-        HTTPConfigDetails: {
-            allowedStatusCodes?: number[];
-            cookieHandling?: components["schemas"]["HTTPCookieHandling"];
-            followRedirects?: boolean;
-            headerOrder?: string[];
-            headers?: {
-                [key: string]: string;
-            };
-            http2Settings?: components["schemas"]["HTTP2Settings"];
-            notes?: string;
-            /** Format: int32 */
-            rateLimitBurst?: number;
-            /** Format: double */
-            rateLimitDps?: number;
-            /** Format: int32 */
-            requestTimeoutSeconds?: number;
-            tlsClientHello?: components["schemas"]["HTTPTLSClientHello"];
-            userAgent: string;
-        };
-        HTTPCookieHandling: {
-            mode?: string;
-        };
-        HTTPKeywordCampaignParams: {
-            adHocKeywords?: string[];
-            /** Format: int32 */
-            batchSize?: number;
-            keywordSetIds?: string[];
-            lastProcessedDomainName?: string;
-            metadata?: Record<string, never>;
-            personaIds: string[];
-            /** Format: int32 */
-            processingSpeedPerMinute?: number;
-            proxyIds?: string[];
-            proxyPoolId?: components["schemas"]["UUID"];
-            proxySelectionStrategy?: string;
-            /** Format: int32 */
-            retryAttempts?: number;
-            /** Format: int32 */
-            rotationIntervalSeconds?: number;
-            sourceCampaignId: components["schemas"]["UUID"];
-            sourceType: string;
-            targetHttpPorts?: number[];
-        };
-        HTTPKeywordCampaignService: Record<string, never>;
-        HTTPKeywordParams: {
-            adHocKeywords?: string[];
-            keywords?: string[];
-            personaIds: string[];
-        };
-        HTTPKeywordResult: {
-            /** Format: int32 */
-            attempts?: number;
-            contentHash?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            dnsResultId?: components["schemas"]["UUID"];
-            domainName: string;
-            extractedContentSnippet?: string;
-            foundAdHocKeywords?: string[];
-            foundKeywordsFromSets?: Record<string, never>;
-            httpKeywordCampaignId: components["schemas"]["UUID"];
-            /** Format: int32 */
-            httpStatusCode?: number;
-            id?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            lastCheckedAt?: string;
-            pageTitle?: string;
-            responseHeaders?: Record<string, never>;
-            usedProxyId?: components["schemas"]["UUID"];
-            validatedByPersonaId?: components["schemas"]["UUID"];
-            validationStatus: components["schemas"]["UUID"];
-        };
-        HTTPKeywordResultsResponse: {
-            data?: components["schemas"]["HTTPKeywordResult"][];
-            nextCursor?: string;
-            /** Format: int64 */
-            totalCount?: number;
-        };
-        HTTPKeywordValidationPhaseConfig: {
-            adHocKeywords?: string[];
-            /** Format: int32 */
-            batchSize?: number;
-            keywords?: string[];
-            /** Format: int32 */
-            maxRetries?: number;
-            personaIds: string[];
-            /** Format: int32 */
-            timeout?: number;
-        };
-        HTTPKeywordValidationRequest: {
-            adHocKeywords: string[];
-            keywords: string[];
-            personaIds?: string[];
-        };
-        HTTPPersona: {
-            /** @description Validation Rules */
-            allowedStatusCodes?: number[];
-            cookieHandling?: components["schemas"]["CookieHandlingConfig"];
-            /**
-             * Format: date-time
-             * @description Metadata
-             */
-            createdAt?: string;
-            description?: string;
-            domSnapshot?: boolean;
-            fallbackPolicy?: components["schemas"]["FallbackPolicy"];
-            fetchBodyForKeywords?: boolean;
-            followRedirects?: boolean;
-            forbiddenContent?: string[];
-            forbiddenHeaders?: string[];
-            headerOrder?: string[];
-            headers?: {
-                [key: string]: string;
-            };
-            headlessTimeoutSeconds?: string;
-            headlessUserAgent?: string;
-            http2Settings?: components["schemas"]["HTTP2SettingsConfig"];
-            /** @description Core Identification & Existing Fields */
-            id?: string;
-            loadImages?: boolean;
-            /** @description Common or Overarching Settings */
-            maxRetries?: number;
-            name?: string;
-            notes?: string;
-            rateLimitBurst?: number;
-            rateLimitDps?: number;
-            requestTimeoutSeconds?: string;
-            requiredContent?: string[];
-            requiredHeaders?: {
-                [key: string]: string;
-            };
-            screenshot?: boolean;
-            scriptExecution?: boolean;
-            tags?: string[];
-            tlsClientHello?: components["schemas"]["TLSClientHelloConfig"];
-            /** Format: date-time */
-            updatedAt?: string;
-            /** @description Headless Browser Configuration */
-            useHeadless?: boolean;
-            userAgent?: string;
-            viewportHeight?: number;
-            viewportWidth?: number;
-            waitDelaySeconds?: string;
-        };
-        HTTPPhaseConfigRequest: {
-            adHocKeywords?: string[];
-            keywords?: string[];
-            name?: string;
-            personaIds: string[];
-        };
-        HTTPTLSClientHello: {
-            cipherSuites?: string[];
-            curvePreferences?: string[];
-            maxVersion?: string;
-            minVersion?: string;
-        };
-        HTTPValidationConfig: {
-            adHocKeywords?: string[];
-            keywordSetIds?: string[];
-            name?: string;
-            personaIds: string[];
-        };
-        HTTPValidationOperation: {
-            campaignId: components["schemas"]["UUID"];
-            domainFilter?: components["schemas"]["DomainFilter"];
-            keywordSetIds?: string[];
-            keywords?: string[];
-            /** Format: int32 */
-            maxDomains?: number;
-            personaIds: string[];
-        };
-        HTTPValidationPhaseConfig: {
-            adHocKeywords?: string[];
-            /** Format: int32 */
-            batchSize?: number;
-            keywords?: string[];
-            personaIds: string[];
-            /** Format: int32 */
-            processingSpeedPerMinute?: number;
-            /** Format: int32 */
-            retryAttempts?: number;
-            /** Format: int32 */
-            rotationIntervalSeconds?: number;
-        };
-        HTTPValidationStartResponse: {
-            campaignId?: components["schemas"]["UUID"];
-            /** Format: int32 */
-            domainsToTest?: number;
-            message?: string;
-            validationJobId?: components["schemas"]["UUID"];
-        };
-        HTTPValidationStatusEnum: string;
-        HTTPValidatorConfig: {
-            AllowInsecureTLS?: boolean;
-            DefaultHeaders?: {
-                [key: string]: string;
-            };
-            DefaultUserAgent?: string;
-            FollowRedirects?: boolean;
-            MaxBodyReadBytes?: number;
-            MaxConcurrentGoroutines?: number;
-            MaxDomainsPerRequest?: number;
-            MaxRedirects?: number;
-            RateLimitBurst?: number;
-            RateLimitDPS?: number;
-            RequestTimeout?: string;
-            UserAgents?: string[];
-        };
-        HTTPValidatorConfigJSON: {
+        "config.HTTPValidatorConfigJSON": {
             allowInsecureTLS?: boolean;
             defaultHeaders?: {
                 [key: string]: string;
@@ -4296,394 +4384,7 @@ export interface components {
             requestTimeoutSeconds?: number;
             userAgents?: string[];
         };
-        HealthCheckResponse: {
-            message?: string;
-            status?: string;
-        };
-        HealthStatus: {
-            /** Format: date-time */
-            buildTime?: string;
-            components?: {
-                [key: string]: components["schemas"]["Status"];
-            };
-            environment?: string;
-            status?: string;
-            systemInfo?: components["schemas"]["SystemInfo"];
-            version?: string;
-        };
-        HttpKeywordParams: {
-            adHocKeywords?: string[];
-            /** Format: int32 */
-            batchSize?: number;
-            keywordSetIds?: string[];
-            personaIds: string[];
-            /** Format: int32 */
-            processingSpeedPerMinute?: number;
-            proxyPoolId?: components["schemas"]["UUID"];
-            proxySelectionStrategy?: string;
-            /** Format: int32 */
-            retryAttempts?: number;
-            /** Format: int32 */
-            rotationIntervalSeconds?: number;
-            sourceCampaignId: components["schemas"]["UUID"];
-            targetHttpPorts?: number[];
-        };
-        HttpPersonaConfig: {
-            /** @description Validation settings */
-            allowInsecureTls?: boolean;
-            cookieHandling?: components["schemas"]["CookieHandling"];
-            domSnapshot?: boolean;
-            fetchBodyForKeywords?: boolean;
-            headerOrder?: string[];
-            headers?: {
-                [key: string]: string;
-            };
-            /** Format: int32 */
-            headlessTimeoutSeconds?: number;
-            headlessUserAgent?: string;
-            http2Settings?: components["schemas"]["HTTP2SettingsConfig"];
-            loadImages?: boolean;
-            /** Format: int32 */
-            maxRedirects?: number;
-            /** Format: int32 */
-            rateLimitBurst?: number;
-            /** Format: double */
-            rateLimitDps?: number;
-            /** Format: int32 */
-            requestTimeoutSec?: number;
-            /** Format: int32 */
-            requestTimeoutSeconds?: number;
-            screenshot?: boolean;
-            scriptExecution?: boolean;
-            tlsClientHello?: components["schemas"]["TLSClientHello"];
-            /** @description Headless browser settings */
-            useHeadless?: boolean;
-            userAgent: string;
-            /** Format: int32 */
-            viewportHeight?: number;
-            /** Format: int32 */
-            viewportWidth?: number;
-            /** Format: int32 */
-            waitDelaySeconds?: number;
-        };
-        ImplementedOptimization: {
-            /** Format: double */
-            actualSavings?: number;
-            description?: string;
-            /** Format: double */
-            expectedSavings?: number;
-            /** Format: date-time */
-            implementationDate?: string;
-            maintenanceRequired?: boolean;
-            optimizationName?: string;
-            /** @enum {string} */
-            performanceImpact?: "positive" | "neutral" | "negative";
-        };
-        ImprovementRecommendation: {
-            /** Format: double */
-            currentGap?: number;
-            dependencies?: string[];
-            description?: string;
-            /** Format: double */
-            estimatedCost?: number;
-            /** Format: double */
-            expectedROI?: number;
-            /** Format: int32 */
-            expectedTimeframe?: number;
-            improvementArea?: string;
-            /** @enum {string} */
-            priority?: "low" | "medium" | "high" | "critical";
-            recommendationType?: string;
-            resourceRequirements?: string[];
-            /** @enum {string} */
-            riskLevel?: "low" | "medium" | "high";
-            successMetrics?: string[];
-            /** Format: double */
-            targetImprovement?: number;
-        };
-        InMemorySessionStore: Record<string, never>;
-        InteractiveElement: {
-            configuration?: {
-                [key: string]: Record<string, never>;
-            };
-            elementId?: components["schemas"]["UUID"];
-            /** @enum {string} */
-            elementType?: "filter" | "drill_down" | "zoom" | "pan" | "select" | "highlight";
-            enabled?: boolean;
-            eventTriggers?: string[];
-            targetCharts?: string[];
-        };
-        JobBusinessStatusEnum: string;
-        JobTypeEnum: string;
-        KPITrendPoint: {
-            /** Format: double */
-            businessScore?: number;
-            /** Format: double */
-            operationalScore?: number;
-            /** Format: double */
-            overallScore?: number;
-            /** Format: double */
-            technicalScore?: number;
-            /** Format: date-time */
-            timestamp?: string;
-            /** @enum {string} */
-            trendDirection?: "improving" | "stable" | "declining";
-            /** Format: double */
-            userExperienceScore?: number;
-        };
-        KeywordExtractionAPIResult: {
-            dnsPersonaIdUsed?: components["schemas"]["UUID"];
-            error?: string;
-            /** Format: uri */
-            finalUrl?: string;
-            httpPersonaIdUsed?: components["schemas"]["UUID"];
-            keywordSetIdUsed?: components["schemas"]["UUID"];
-            matches?: string[];
-            proxyIdUsed?: components["schemas"]["UUID"];
-            /** Format: int32 */
-            statusCode?: number;
-            /** Format: uri */
-            url?: string;
-        };
-        KeywordExtractionRequestItem: {
-            dnsPersonaId?: components["schemas"]["UUID"];
-            httpPersonaId?: components["schemas"]["UUID"];
-            keywordSetId: components["schemas"]["UUID"];
-            /** Format: uri */
-            url: string;
-        };
-        KeywordRule: {
-            category?: string;
-            /** Format: int32 */
-            contextChars?: number;
-            /** Format: date-time */
-            createdAt?: string;
-            id?: components["schemas"]["UUID"];
-            isCaseSensitive?: boolean;
-            keywordSetId?: components["schemas"]["UUID"];
-            pattern: string;
-            /** @enum {string} */
-            ruleType: "string" | "regex";
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        KeywordRuleRequest: {
-            category?: string;
-            /** Format: int32 */
-            contextChars?: number;
-            isCaseSensitive?: boolean;
-            pattern: string;
-            ruleType: components["schemas"]["KeywordRuleTypeEnum"];
-        };
-        KeywordRuleTypeEnum: string;
-        KeywordSet: {
-            /** Format: date-time */
-            createdAt?: string;
-            description?: string;
-            id?: components["schemas"]["UUID"];
-            isEnabled?: boolean;
-            name: string;
-            rules?: components["schemas"]["KeywordRule"][];
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        KeywordSetDeleteResponse: {
-            deleted?: boolean;
-            keywordSetId?: components["schemas"]["UUID"];
-            message?: string;
-        };
-        KeywordSetResponse: {
-            /** Format: date-time */
-            createdAt?: string;
-            description?: string;
-            id?: components["schemas"]["UUID"];
-            isEnabled?: boolean;
-            name?: string;
-            /** Format: int32 */
-            ruleCount?: number;
-            rules?: components["schemas"]["KeywordRule"][];
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        KeywordSetService: Record<string, never>;
-        LeadGenerationCampaign: {
-            analysisResults?: Record<string, never>;
-            autoAdvancePhases?: boolean;
-            /** Format: double */
-            avgProcessingRate?: number;
-            businessStatus?: string;
-            /** @description Campaign type (always 'lead_generation' in new architecture) */
-            campaignType: string;
-            /** Format: date-time */
-            completedAt?: string;
-            /** Format: int32 */
-            completedPhases?: number;
-            /**
-             * Format: date-time
-             * @description Campaign lifecycle timestamps
-             */
-            createdAt?: string;
-            /** @enum {string} */
-            currentPhase?: "domain_generation" | "dns_validation" | "http_keyword_validation" | "analysis";
-            currentPhaseId?: components["schemas"]["UUID"];
-            dnsConfig?: Record<string, never>;
-            dnsResults?: Record<string, never>;
-            /** Format: int64 */
-            dnsValidatedDomains?: number;
-            /**
-             * Format: int64
-             * @description Summary metrics (computed from phases)
-             */
-            domains?: number;
-            /** @description JSONB columns for efficient phase data storage */
-            domainsData?: Record<string, never>;
-            errorMessage?: string;
-            /**
-             * Format: date-time
-             * @description Campaign-level tracking (aggregated from phases)
-             */
-            estimatedCompletionAt?: string;
-            /** @description Content analysis data (from analysis phase) */
-            extractedContent?: components["schemas"]["ExtractedContentItem"][];
-            /** Format: int64 */
-            failedItems?: number;
-            fullSequenceMode?: boolean;
-            httpConfig?: Record<string, never>;
-            httpResults?: Record<string, never>;
-            id?: components["schemas"]["UUID"];
-            /** @description Sequence mode configuration */
-            isFullSequenceMode?: boolean;
-            /** Format: date-time */
-            lastHeartbeatAt?: string;
-            leadItems?: components["schemas"]["LeadItem"][];
-            /** Format: int64 */
-            leads?: number;
-            metadata?: Record<string, never>;
-            name: string;
-            /** Format: double */
-            overallProgress?: number;
-            /**
-             * @description Transition fields
-             * @enum {string}
-             */
-            phaseStatus?: "not_started" | "ready" | "configured" | "in_progress" | "paused" | "completed" | "failed";
-            /** @description Phase collections (populated when needed) */
-            phases?: components["schemas"]["CampaignPhase"][];
-            /** Format: int64 */
-            processedItems?: number;
-            /**
-             * Format: double
-             * @description Transition fields
-             */
-            progressPercentage?: number;
-            /** Format: date-time */
-            startedAt?: string;
-            stateData?: Record<string, never>;
-            /**
-             * Format: int32
-             * @description State management fields (new in refactor)
-             */
-            stateVersion?: number;
-            /** Format: int64 */
-            successfulItems?: number;
-            /** Format: int64 */
-            totalItems?: number;
-            /** Format: int32 */
-            totalPhases?: number;
-            /** Format: date-time */
-            updatedAt?: string;
-            userId?: components["schemas"]["UUID"];
-        };
-        LeadGenerationCampaignResponse: {
-            campaignType: string;
-            /** Format: date-time */
-            completedAt?: string;
-            /** Format: int32 */
-            completedPhases?: number;
-            /** Format: date-time */
-            createdAt: string;
-            currentPhase?: components["schemas"]["PhaseTypeEnum"];
-            /** Format: int64 */
-            dnsValidatedDomains?: number;
-            /**
-             * Format: int64
-             * @description Summary metrics
-             */
-            domains?: number;
-            errorMessage?: string;
-            /** Format: int64 */
-            failedItems?: number;
-            id: components["schemas"]["UUID"];
-            /** Format: int64 */
-            leads?: number;
-            name: string;
-            /** Format: double */
-            overallProgress?: number;
-            phaseStatus?: components["schemas"]["PhaseStatusEnum"];
-            /** @description Phase execution details */
-            phases?: components["schemas"]["PhaseProgressResponse"][];
-            /** Format: int64 */
-            processedItems?: number;
-            /** Format: date-time */
-            startedAt?: string;
-            /** Format: int64 */
-            successfulItems?: number;
-            /**
-             * Format: int64
-             * @description Campaign-level tracking
-             */
-            totalItems?: number;
-            /** Format: int32 */
-            totalPhases?: number;
-            /** Format: date-time */
-            updatedAt: string;
-        };
-        LeadGenerationProgress: {
-            campaign_id?: components["schemas"]["UUID"];
-            current_phase?: components["schemas"]["PhaseTypeEnum"];
-            /** Format: double */
-            overall_progress?: number;
-            phase_progress?: {
-                [key: string]: components["schemas"]["PhaseProgress"];
-            };
-        };
-        LeadItem: {
-            company?: string;
-            /** Format: email */
-            email?: string;
-            id: components["schemas"]["UUID"];
-            name?: string;
-            previousCampaignId?: components["schemas"]["UUID"];
-            /** Format: int32 */
-            similarityScore?: number;
-            /** Format: uri */
-            sourceUrl?: string;
-        };
-        LegendConfiguration: {
-            enabled?: boolean;
-            interactive?: boolean;
-            /** Format: int32 */
-            maxItems?: number;
-            /** @enum {string} */
-            orientation?: "horizontal" | "vertical";
-            /** @enum {string} */
-            position?: "top" | "bottom" | "left" | "right";
-        };
-        LoadTestingResult: {
-            /** Format: double */
-            errorRate?: number;
-            /** Format: double */
-            loadLevel?: number;
-            /** Format: double */
-            resourceUtilization?: number;
-            /** Format: int64 */
-            responseTime?: number;
-            /** Format: double */
-            stabilityScore?: number;
-            /** Format: double */
-            throughputRate?: number;
-        };
-        LoggingConfig: {
+        "config.LoggingConfig": {
             enableFileLogging?: boolean;
             enableJSONFormat?: boolean;
             enablePerformanceLogging?: boolean;
@@ -4694,2378 +4395,22 @@ export interface components {
             maxBackups?: number;
             maxFileSize?: number;
         };
-        LoginRequest: {
-            captchaToken?: string;
-            /** Format: email */
-            email: string;
-            /** Format: password */
-            password: string;
-            rememberMe?: boolean;
-        };
-        LoginResponse: {
-            error?: string;
-            /** Format: date-time */
-            expiresAt?: string;
-            requires_captcha?: boolean;
-            sessionId?: components["schemas"]["UUID"];
-            success?: boolean;
-            user?: components["schemas"]["User"];
-        };
-        LoginResponseAPI: {
-            error?: string;
-            /** Format: date-time */
-            expiresAt?: string;
-            requires_captcha?: boolean;
-            sessionId?: components["schemas"]["UUID"];
-            success?: boolean;
-            user?: components["schemas"]["UserAPI"];
-        };
-        LoginSuccessResponse: {
-            message?: string;
-            session?: components["schemas"]["SessionData"];
-            user?: components["schemas"]["UserPublicResponse"];
-        };
-        MFAChallenge: {
-            /** Format: int32 */
-            attempts?: number;
-            challengeId?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            expiresAt?: string;
-            /** Format: int32 */
-            maxAttempts?: number;
-            /** @enum {string} */
-            method?: "totp" | "sms" | "email" | "backup";
-            userId?: components["schemas"]["UUID"];
-        };
-        MFAEnrollment: {
-            /** Format: date-time */
-            enrolledAt?: string;
-            /** Format: date-time */
-            lastUsedAt?: string;
-            /** @enum {string} */
-            preferredMethod?: "totp" | "sms" | "email" | "backup";
-            totpEnabled?: boolean;
-            userId?: components["schemas"]["UUID"];
-        };
-        MFAMethod: string;
-        MFAService: Record<string, never>;
-        Metadata: {
-            extra?: {
-                [key: string]: Record<string, never>;
-            };
-            page?: components["schemas"]["PageInfo"];
-            processing?: components["schemas"]["ProcessingInfo"];
-            rateLimit?: components["schemas"]["RateLimitInfo"];
-        };
-        MetricComparison: {
-            /** Format: double */
-            absoluteChange?: number;
-            /** Format: double */
-            baselineValue?: number;
-            /** @enum {string} */
-            changeDirection?: "improvement" | "regression" | "stable";
-            /** Format: double */
-            confidenceInterval?: number;
-            /** Format: double */
-            currentValue?: number;
-            metricName?: string;
-            /** Format: double */
-            percentageChange?: number;
-            /** @enum {string} */
-            significanceLevel?: "not_significant" | "low" | "medium" | "high" | "very_high";
-        };
-        MitigationStrategy: {
-            description?: string;
-            effectiveness?: number;
-            implementationCost?: string;
-            isActive?: boolean;
-            resourceRequirement?: string;
-            riskReduction?: number;
-            strategyName?: string;
-        };
-        MonitoringHandlers: Record<string, never>;
-        NormalizedDomainGenerationParams: {
-            characterSet?: string;
-            constantString?: string;
-            patternType?: string;
-            tld?: string;
-            /** Format: int32 */
-            variableLength?: number;
-        };
-        OffsetResponse: {
-            /** Format: int64 */
-            offset?: number;
-            pattern?: string;
-        };
-        OperationCancellationResponse: {
-            /** Format: date-time */
-            cancellationTime?: string;
-            message?: string;
-            operationId?: components["schemas"]["UUID"];
-            partialResults?: boolean;
-            resourcesFreed?: boolean;
-            status?: string;
-        };
-        OperationProgress: {
-            currentPhase?: string;
-            /** Format: int64 */
-            estimatedTimeMs?: number;
-            /** Format: int64 */
-            failedItems?: number;
-            /** Format: double */
-            percentage?: number;
-            /** Format: int64 */
-            processedItems?: number;
-            /** Format: int64 */
-            remainingItems?: number;
-            /** Format: int64 */
-            successfulItems?: number;
-            /** Format: int64 */
-            totalItems?: number;
-        };
-        OperationalBaselineMetrics: {
-            /** Format: int64 */
-            averageResponseTime?: number;
-            /** Format: double */
-            errorRate?: number;
-            /** Format: int64 */
-            failedOperations?: number;
-            /** Format: int64 */
-            successfulOperations?: number;
-            /** Format: double */
-            throughputRate?: number;
-            /** Format: int64 */
-            totalOperations?: number;
-            /** Format: double */
-            uptimePercentage?: number;
-        };
-        OperationalEfficiencyMetrics: {
-            bottleneckAnalysis?: components["schemas"]["BottleneckIdentification"][];
-            /** Format: double */
-            idleTimePercentage?: number;
-            optimizationOpportunities?: components["schemas"]["OptimizationRecommendation"][];
-            /** Format: double */
-            processingEfficiency?: number;
-            /** Format: double */
-            resourceUtilizationScore?: number;
-            /** Format: double */
-            throughputRate?: number;
-        };
-        OperationalKPIs: {
-            /** Format: int64 */
-            averageProcessingTime?: number;
-            /** Format: int64 */
-            concurrentOperations?: number;
-            /** Format: double */
-            errorRate?: number;
-            /** Format: double */
-            processingEfficiency?: number;
-            /** Format: int64 */
-            queueLength?: number;
-            /** Format: double */
-            resourceUtilization?: number;
-            /** Format: double */
-            successRate?: number;
-            /** Format: double */
-            systemUptime?: number;
-            /** Format: double */
-            throughputRate?: number;
-        };
-        OpportunityPrediction: {
-            opportunityLevel?: string;
-            opportunityType?: string;
-            /** Format: date-time */
-            optimalTiming?: string;
-            potentialBenefit?: number;
-            probability?: number;
-            recommendedActions?: string[];
-            requiredConditions?: string[];
-            resourceRequirements?: string[];
-            successProbability?: number;
-            windowDuration?: number;
-        };
-        OptimalLevels: {
-            cpuTarget?: number;
-            databaseTarget?: number;
-            memoryTarget?: number;
-            networkTarget?: number;
-            proxyTarget?: number;
-            storageTarget?: number;
-        };
-        OptimalResourceLevels: {
-            highVolume?: components["schemas"]["OptimalLevels"];
-            lowLoad?: components["schemas"]["OptimalLevels"];
-            normalOperations?: components["schemas"]["OptimalLevels"];
-            peakLoad?: components["schemas"]["OptimalLevels"];
-        };
-        OptimalScalingPoint: {
-            costEfficiency?: number;
-            expectedPerformance?: number;
-            loadLevel?: number;
-            recommendedCapacity?: number;
-        };
-        OptimizationConfig: {
-            enabled?: boolean;
-            feature_flags?: components["schemas"]["FeatureFlagConfig"];
-            performance?: components["schemas"]["PerformanceConfig"];
-            phases?: components["schemas"]["PhaseConfig"];
-            redis?: components["schemas"]["RedisConfig"];
-        };
-        OptimizationHealthHandler: Record<string, never>;
-        OptimizationLevel: {
-            batchQueries?: boolean;
-            caching?: boolean;
-            externalValidation?: boolean;
-            identifier?: components["schemas"]["UUID"];
-            serviceOptimization?: boolean;
-        };
-        OptimizationRecommendation: {
-            category?: string;
-            description?: string;
-            expectedImprovement?: number;
-            implementationCost?: string;
-            priority?: string;
-            steps?: string[];
-        };
-        OptimizationStatus: {
-            cacheAvailable?: boolean;
-            enabled?: boolean;
-            featureFlagConfig?: string;
-            optimizationLevel?: components["schemas"]["OptimizationLevel"];
-            phaseConfig?: components["schemas"]["PhaseConfig"];
-        };
-        PageInfo: {
-            /** Format: int32 */
-            count?: number;
-            /** Format: int32 */
-            current?: number;
-            /** Format: int32 */
-            pageSize?: number;
-            /** Format: int32 */
-            total?: number;
-        };
-        PaginationPerformanceMetric: {
-            /** Format: int32 */
-            executionTimeMs?: number;
-            /** Format: int64 */
-            id?: number;
-            indexesUsed?: string;
-            /** Format: int32 */
-            memoryUsageKb?: number;
-            /** Format: int32 */
-            pageNumber?: number;
-            /** Format: int32 */
-            pageSize?: number;
-            paginationType?: string;
-            /** Format: date-time */
-            recordedAt?: string;
-            tableName?: string;
-            /** Format: int64 */
-            totalRows?: number;
-        };
-        ParameterSpec: {
-            description?: string;
-            in?: string;
-            name?: string;
-            required?: boolean;
-            type?: string;
-        };
-        PasswordChangeResponse: {
-            message?: string;
-            success?: boolean;
-        };
-        PasswordResetToken: {
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            expiresAt?: string;
-            id?: components["schemas"]["UUID"];
-            ipAddress?: string;
-            tokenHash?: string;
-            /** Format: date-time */
-            usedAt?: string;
-            userAgent?: string;
-            userId?: components["schemas"]["UUID"];
-        };
-        PatternOffsetRequest: {
-            characterSet: string;
-            constantString: string;
-            /** @enum {string} */
-            patternType: "prefix" | "suffix" | "both";
-            tld: string;
-            /** Format: int32 */
-            variableLength: number;
-        };
-        PatternOffsetResponse: {
-            characterSet?: string;
-            constantString?: string;
-            /** Format: int64 */
-            currentOffset?: number;
-            patternType?: string;
-            tld?: string;
-            /** Format: int64 */
-            totalPossibleCombinations?: number;
-            /** Format: int32 */
-            variableLength?: number;
-        };
-        PerformanceBaselineMetrics: {
-            /** Format: int64 */
-            averageLatency?: number;
-            /** Format: double */
-            efficiencyScore?: number;
-            /** Format: int64 */
-            p95Latency?: number;
-            /** Format: int64 */
-            p99Latency?: number;
-            /** Format: double */
-            reliabilityScore?: number;
-            /** Format: double */
-            scalabilityScore?: number;
-            /** Format: double */
-            throughputScore?: number;
-        };
-        PerformanceBottleneck: {
-            bottleneckType?: string;
-            estimatedFix?: string;
-            impactOnPerf?: number;
-            mitigation?: string;
-            resourceThreshold?: number;
-            severity?: string;
-        };
-        PerformanceComparison: {
-            metricComparisons?: components["schemas"]["MetricComparison"][];
-            overallImprovement?: number;
-            regressionAnalysis?: components["schemas"]["RegressionAnalysis"];
-            significantChanges?: components["schemas"]["SignificantChange"][];
-            statisticalSignificance?: components["schemas"]["StatisticalSignificanceData"];
-        };
-        PerformanceConfig: {
-            batch_size?: number;
-            cache_ttl?: components["schemas"]["CacheTTLConfig"];
-            dns_timeout?: string;
-            http_timeout?: string;
-            max_concurrent_requests?: number;
-        };
-        PerformanceForecast: {
-            assumptions?: string[];
-            /** Format: double */
-            confidenceInterval?: number;
-            /** Format: double */
-            currentValue?: number;
-            forecastMethod?: string;
-            /** Format: date-time */
-            forecastTime?: string;
-            influencingFactors?: string[];
-            metricName?: string;
-            /** Format: double */
-            predictedValue?: number;
-            /** Format: double */
-            predictionAccuracy?: number;
-        };
-        PerformanceKPIData: {
-            benchmarkComparisons?: components["schemas"]["BenchmarkComparison"][];
-            businessKPIs?: components["schemas"]["BusinessKPIs"];
-            kpiTrends?: components["schemas"]["KPITrendPoint"][];
-            operationalKPIs?: components["schemas"]["OperationalKPIs"];
-            /** Format: double */
-            overallPerformanceScore?: number;
-            technicalKPIs?: components["schemas"]["TechnicalKPIs"];
-            userExperienceKPIs?: components["schemas"]["UserExperienceKPIs"];
-        };
-        PerformanceThreshold: {
-            /** Format: int32 */
-            maxConnectionWaitTimeMs?: number;
-            /** Format: int32 */
-            maxExecutionTimeMs?: number;
-            /** Format: int32 */
-            maxMemoryUsageKb?: number;
-            /** Format: double */
-            maxRowsScannedRatio?: number;
-            /** Format: double */
-            minIndexUsageRate?: number;
-            queryType?: string;
-        };
-        Persona: {
-            configDetails: Record<string, never>;
-            /** Format: date-time */
-            createdAt?: string;
-            description?: string;
-            id?: components["schemas"]["UUID"];
-            isEnabled?: boolean;
-            lastError?: string;
-            /**
-             * Format: date-time
-             * @description Frontend-expected properties
-             */
-            lastTested?: string;
-            name: string;
-            /** @enum {string} */
-            personaType: "dns" | "http";
-            /** @enum {string} */
-            status?: "Active" | "Disabled" | "Testing" | "Failed";
-            tags?: string[];
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        PersonaDeleteResponse: {
-            deleted?: boolean;
-            message?: string;
-            personaId?: components["schemas"]["UUID"];
-        };
-        PersonaResponse: {
-            configDetails?: Record<string, never>;
-            /** Format: date-time */
-            createdAt?: string;
-            description?: string;
-            id?: components["schemas"]["UUID"];
-            isEnabled?: boolean;
-            name?: string;
-            personaType?: components["schemas"]["PersonaTypeEnum"];
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        PersonaStatusEnum: string;
-        PersonaTestResponse: {
-            message?: string;
-            personaId?: components["schemas"]["UUID"];
-            personaName?: string;
-            personaType?: string;
-            results?: components["schemas"]["PersonaTestResultData"];
-            success?: boolean;
-            testPassed?: boolean;
-            testResults?: components["schemas"]["PersonaTestResultData"];
-            /** Format: date-time */
-            timestamp?: string;
-        };
-        PersonaTestResultData: {
-            details?: string;
-            /** Format: int64 */
-            durationMs?: number;
-            /** Format: int32 */
-            errorCount?: number;
-            /** Format: int32 */
-            requestCount?: number;
-            /** Format: int32 */
-            successCount?: number;
-        };
-        PersonaTypeEnum: string;
-        PhaseConfig: {
-            analysis?: components["schemas"]["AnalysisPhaseConfig"];
-            dnsValidation?: components["schemas"]["DNSValidationPhaseConfig"];
-            domainGeneration?: components["schemas"]["DomainGenerationPhaseConfig"];
-            httpKeywordValidation?: components["schemas"]["HTTPKeywordValidationPhaseConfig"];
-            phaseType?: components["schemas"]["PhaseTypeEnum"];
-        };
-        PhaseConfigureRequest: {
-            config: Record<string, never>;
-            /** @enum {string} */
-            phaseType: "dns_validation" | "http_keyword_validation" | "analysis";
-        };
-        PhaseExecution: {
-            campaignId?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            completedAt?: string;
-            /** @description Data storage */
-            configuration?: Record<string, never>;
-            /**
-             * Format: date-time
-             * @description Metadata
-             */
-            createdAt?: string;
-            errorDetails?: Record<string, never>;
-            /** Format: date-time */
-            failedAt?: string;
-            /** Format: int64 */
-            failedItems?: number;
-            id?: components["schemas"]["UUID"];
-            metrics?: Record<string, never>;
-            /** Format: date-time */
-            pausedAt?: string;
-            /** @enum {string} */
-            phaseType?: "domain_generation" | "dns_validation" | "http_keyword_validation" | "analysis";
-            /** Format: int64 */
-            processedItems?: number;
-            /**
-             * Format: double
-             * @description Progress tracking
-             */
-            progressPercentage?: number;
-            /**
-             * Format: date-time
-             * @description Execution timing
-             */
-            startedAt?: string;
-            /** @enum {string} */
-            status?: "not_started" | "ready" | "configured" | "in_progress" | "paused" | "completed" | "failed";
-            /** Format: int64 */
-            successfulItems?: number;
-            /** Format: int64 */
-            totalItems?: number;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        PhaseMetrics: {
-            /** Format: int64 */
-            avgDurationMs?: number;
-            /** Format: int64 */
-            failureCount?: number;
-            /** Format: int64 */
-            itemsProcessed?: number;
-            phase?: string;
-            /** Format: int64 */
-            successCount?: number;
-            /** Format: double */
-            successRate?: number;
-            /** Format: int64 */
-            totalDurationMs?: number;
-        };
-        PhasePerformance: {
-            avgDurationMs?: number;
-            campaigns?: number;
-            items?: number;
-            phase?: string;
-            successRate?: number;
-        };
-        PhaseProgress: {
-            campaignId?: components["schemas"]["UUID"];
-            errorMessage?: string;
-            /** Format: date-time */
-            estimatedEnd?: string;
-            /** Format: int64 */
-            itemsFailed?: number;
-            /** Format: int64 */
-            itemsProcessed?: number;
-            /** Format: int64 */
-            itemsSuccessful?: number;
-            /** Format: int64 */
-            itemsTotal?: number;
-            phaseType?: components["schemas"]["PhaseTypeEnum"];
-            /** Format: double */
-            progress?: number;
-            /** Format: date-time */
-            startedAt?: string;
-            status?: components["schemas"]["PhaseStatusEnum"];
-        };
-        PhaseProgressResponse: {
-            /** Format: date-time */
-            completedAt?: string;
-            errorMessage?: string;
-            /** Format: int64 */
-            failedItems?: number;
-            phaseType?: components["schemas"]["PhaseTypeEnum"];
-            /** Format: int64 */
-            processedItems?: number;
-            /** Format: double */
-            progress?: number;
-            /** Format: date-time */
-            startedAt?: string;
-            status?: components["schemas"]["PhaseStatusEnum"];
-            /** Format: int64 */
-            successfulItems?: number;
-            /** Format: int64 */
-            totalItems?: number;
-        };
-        PhaseStartRequest: {
-            /** @enum {string} */
-            phaseType: "domain_generation" | "dns_validation" | "http_keyword_validation" | "analysis";
-        };
-        PhaseStats: {
-            campaignId?: components["schemas"]["UUID"];
-            duration?: string;
-            errorCounts?: {
-                [key: string]: number;
-            };
-            /** Format: int64 */
-            memoryUsage?: number;
-            phaseType?: components["schemas"]["PhaseTypeEnum"];
-            /** Format: double */
-            processingRate?: number;
-            /** Format: double */
-            successRate?: number;
-            /** Format: int64 */
-            totalResults?: number;
-        };
-        PhaseStatusDerivationService: Record<string, never>;
-        PhaseStatusEnum: string;
-        PhaseTypeEnum: string;
-        PingResponse: {
-            message?: string;
-            /** Format: date-time */
-            timestamp?: string;
-        };
-        PolicyComplianceItem: {
-            /** Format: double */
-            complianceRate?: number;
-            /** Format: date-time */
-            lastAssessed?: string;
-            policyName?: string;
-            /** @enum {string} */
-            severity?: "low" | "medium" | "high" | "critical";
-            /** Format: int64 */
-            violationCount?: number;
-        };
-        PredictiveAnalyticsData: {
-            modelPerformance?: components["schemas"]["PredictiveModelPerformance"];
-            opportunityPredictions?: components["schemas"]["OpportunityPrediction"][];
-            /** Format: double */
-            overallPredictionAccuracy?: number;
-            performanceForecasts?: components["schemas"]["PerformanceForecast"][];
-            /** Format: int32 */
-            predictionHorizon?: number;
-            resourceForecasts?: components["schemas"]["ResourceForecast"][];
-            riskPredictions?: components["schemas"]["RiskPrediction"][];
-            scenarioAnalysis?: components["schemas"]["ScenarioAnalysis"];
-            trendPredictions?: components["schemas"]["TrendPrediction"][];
-        };
-        PredictiveModelPerformance: {
-            featureImportance?: components["schemas"]["FeatureImportance"][];
-            /** Format: date-time */
-            lastModelUpdate?: string;
-            /** Format: double */
-            meanAbsoluteError?: number;
-            /** Format: double */
-            modelAccuracy?: number;
-            /** @enum {string} */
-            modelComplexity?: "simple" | "moderate" | "complex" | "very_complex";
-            /** Format: double */
-            modelF1Score?: number;
-            /** Format: double */
-            modelPrecision?: number;
-            /** Format: double */
-            modelRecall?: number;
-            /** Format: double */
-            modelReliability?: number;
-            /** @enum {string} */
-            overfittingRisk?: "low" | "medium" | "high";
-            /** Format: double */
-            rootMeanSquaredError?: number;
-            /** Format: int64 */
-            trainingDataSize?: number;
-        };
-        PreparationRecommendation: {
-            actionDescription?: string;
-            expectedBenefit?: string;
-            /** @enum {string} */
-            implementationRisk?: "low" | "medium" | "high";
-            /** @enum {string} */
-            priority?: "low" | "medium" | "high" | "critical";
-            recommendationType?: string;
-            resourceRequirements?: string[];
-            targetScenarios?: string[];
-            /** Format: date-time */
-            timeFrame?: string;
-        };
-        ProcessingInfo: {
-            duration?: string;
-            version?: string;
-        };
-        Proxy: {
-            address: string;
-            city?: string;
-            countryCode?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            description?: string;
-            failureCount?: string;
-            host?: string;
-            id?: components["schemas"]["UUID"];
-            /** Format: password */
-            inputPassword?: string;
-            /** @description Fields for input/logic, not direct DB columns if already covered by Address or PasswordHash */
-            inputUsername?: string;
-            isEnabled?: boolean;
-            isHealthy?: boolean;
-            /** Format: date-time */
-            lastCheckedAt?: string;
-            lastError?: string;
-            lastStatus?: string;
-            lastTested?: string;
-            latencyMs?: string;
-            name: string;
-            notes?: string;
-            port?: string;
-            /** @enum {string} */
-            protocol?: "http" | "https" | "socks5" | "socks4";
-            provider?: components["schemas"]["UUID"];
-            /**
-             * @description Frontend-expected fields
-             * @enum {string}
-             */
-            status?: "Active" | "Disabled" | "Testing" | "Failed";
-            successCount?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-            username?: string;
-        };
-        ProxyConfigEntry: {
-            address?: string;
-            description?: string;
-            id?: string;
-            name?: string;
-            notes?: string;
-            password?: string;
-            protocol?: string;
-            userEnabled?: boolean;
-            username?: string;
-        };
-        ProxyDetailsResponse: {
-            host?: string;
-            /** Format: int32 */
-            port?: number;
-            protocol?: string;
-            username?: string;
-        };
-        ProxyHealthCheckRequest: {
-            ids?: string[];
-        };
-        ProxyHealthCheckResponse: {
-            message?: string;
-            proxyId?: components["schemas"]["UUID"];
-            /** Format: int64 */
-            responseTimeMs?: number;
-            status?: string;
-            success?: boolean;
-            /** Format: date-time */
-            timestamp?: string;
-        };
-        ProxyManagerConfig: {
-            InitialHealthCheckTimeout?: string;
-            MaxConcurrentInitialChecks?: number;
-            TestTimeout?: string;
-            TestURL?: string;
-        };
-        ProxyManagerConfigJSON: {
+        "config.ProxyManagerConfigJSON": {
             initialHealthCheckTimeoutSeconds?: number;
             maxConcurrentInitialChecks?: number;
             testTimeoutSeconds?: number;
             testUrl?: string;
         };
-        ProxyPool: {
-            /** Format: date-time */
-            createdAt?: string;
-            description?: string;
-            healthCheckEnabled?: boolean;
-            /** Format: int32 */
-            healthCheckIntervalSeconds?: number;
-            id?: components["schemas"]["UUID"];
-            isEnabled?: boolean;
-            /** Format: int32 */
-            maxRetries?: number;
-            name: string;
-            poolStrategy?: string;
-            /** @description Computed fields (not stored in DB) */
-            proxies?: components["schemas"]["Proxy"][];
-            /** Format: int32 */
-            timeoutSeconds?: number;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        ProxyPoolDeleteResponse: {
-            deleted?: boolean;
-            message?: string;
-            poolId?: components["schemas"]["UUID"];
-        };
-        ProxyPoolMembership: {
-            /** Format: date-time */
-            addedAt?: string;
-            isActive?: boolean;
-            poolId: components["schemas"]["UUID"];
-            proxyId: components["schemas"]["UUID"];
-            /** Format: int32 */
-            weight?: number;
-        };
-        ProxyPoolMembershipResponse: {
-            added?: boolean;
-            message?: string;
-            poolId?: components["schemas"]["UUID"];
-            proxyId?: components["schemas"]["UUID"];
-            removed?: boolean;
-        };
-        ProxyPoolRequest: {
-            description?: string;
-            healthCheckEnabled?: boolean;
-            /** Format: int32 */
-            healthCheckIntervalSeconds?: number;
-            isEnabled?: boolean;
-            /** Format: int32 */
-            maxRetries?: number;
-            name: string;
-            poolStrategy?: string;
-            /** Format: int32 */
-            timeoutSeconds?: number;
-        };
-        ProxyProtocolEnum: string;
-        ProxyStatusEnum: string;
-        ProxyStatusResponse: {
-            isHealthy?: boolean;
-            lastChecked?: string;
-            proxyDetails?: components["schemas"]["ProxyDetailsResponse"];
-            proxyId?: components["schemas"]["UUID"];
-            /** Format: int64 */
-            responseTimeMs?: number;
-            status?: string;
-        };
-        ProxyTestResponse: {
-            error?: string;
-            proxyId?: components["schemas"]["UUID"];
-            /** Format: int64 */
-            responseTime?: number;
-            /** Format: int32 */
-            statusCode?: number;
-            success?: boolean;
-        };
-        QualityAssuranceMetrics: {
-            complianceScore?: components["schemas"]["ComplianceAssessmentData"];
-            /** Format: double */
-            consistencyIndex?: number;
-            /** Format: double */
-            dataAccuracyScore?: number;
-            errorPatternAnalysis?: components["schemas"]["ErrorPatternData"][];
-            qualityTrends?: components["schemas"]["QualityTrendPoint"][];
-            /** Format: double */
-            validationReliability?: number;
-        };
-        QualityBaselineMetrics: {
-            /** Format: double */
-            dataAccuracy?: number;
-            /** Format: double */
-            dataCompleteness?: number;
-            /** Format: double */
-            dataConsistency?: number;
-            /** Format: double */
-            qualityScore?: number;
-            /** Format: double */
-            validationSuccess?: number;
-        };
-        QualityTrendPoint: {
-            /** Format: double */
-            accuracyScore?: number;
-            /** Format: double */
-            consistencyScore?: number;
-            /** Format: double */
-            reliabilityScore?: number;
-            /** Format: int64 */
-            sampleSize?: number;
-            /** Format: date-time */
-            timestamp?: string;
-        };
-        QueryPerformanceMetric: {
-            /** Format: int64 */
-            bufferHits?: number;
-            /** Format: int64 */
-            bufferReads?: number;
-            campaignId?: components["schemas"]["UUID"];
-            campaignPhase?: string;
-            /** Format: double */
-            cpuTimeMs?: number;
-            /** Format: date-time */
-            executedAt?: string;
-            /** Format: double */
-            executionTimeMs?: number;
-            id?: components["schemas"]["UUID"];
-            indexUsage?: Record<string, never>;
-            /** Format: double */
-            ioWaitMs?: number;
-            /** Format: double */
-            lockWaitMs?: number;
-            /** Format: int64 */
-            memoryUsedBytes?: number;
-            needsOptimization?: boolean;
-            optimizationApplied?: boolean;
-            /** Format: double */
-            optimizationScore?: number;
-            optimizationSuggestions?: Record<string, never>;
-            performanceCategory?: string;
-            queryHash?: string;
-            queryPlan?: Record<string, never>;
-            querySQL?: string;
-            queryType?: string;
-            /** Format: int64 */
-            rowsExamined?: number;
-            /** Format: int64 */
-            rowsReturned?: number;
-            serviceName?: string;
-            tableNames?: string[];
-            userId?: components["schemas"]["UUID"];
-        };
-        QueryPerformanceReport: {
-            /** Format: double */
-            averageRowsReturned?: number;
-            /** Format: double */
-            averageRowsScanned?: number;
-            /** Format: double */
-            averageTimeMs?: number;
-            /** Format: double */
-            errorRate?: number;
-            /** Format: double */
-            indexUsageRate?: number;
-            /** Format: int32 */
-            maxTimeMs?: number;
-            /** Format: int32 */
-            minTimeMs?: number;
-            /** Format: int32 */
-            p50TimeMs?: number;
-            /** Format: int32 */
-            p95TimeMs?: number;
-            /** Format: int32 */
-            p99TimeMs?: number;
-            period?: string;
-            queryType?: string;
-            /** Format: int64 */
-            totalQueries?: number;
-        };
-        ROIAnalysisData: {
-            /** Format: int32 */
-            breakEvenPoint?: number;
-            /** Format: int32 */
-            paybackPeriod?: number;
-            /** Format: double */
-            profitabilityIndex?: number;
-            /** Format: double */
-            roiPercentage?: number;
-            /** Format: double */
-            totalInvestment?: number;
-            /** Format: double */
-            totalReturn?: number;
-        };
-        RandomizedDomain: {
-            /** Format: int32 */
-            JitterDelay?: number;
-            /** Format: int64 */
-            OriginalOffset?: number;
-            /** Format: int32 */
-            Priority?: number;
-            /** Format: int64 */
-            RandomSeed?: number;
-            ValidationGroup?: components["schemas"]["UUID"];
-            /** Format: int64 */
-            ValidationOrder?: number;
-        };
-        RateLimit: {
-            action?: string;
-            /** Format: int32 */
-            attempts?: number;
-            /** Format: date-time */
-            blockedUntil?: string;
-            /** Format: int64 */
-            id?: number;
-            identifier?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            windowStart?: string;
-        };
-        RateLimitInfo: {
-            /** Format: int32 */
-            limit?: number;
-            /** Format: int32 */
-            remaining?: number;
-            /** Format: date-time */
-            reset?: string;
-        };
-        RateLimiterConfig: {
+        "config.RateLimiterConfig": {
             maxRequests?: number;
             windowSeconds?: number;
         };
-        RecommendationMonitoring: {
-            keyMetrics?: string[];
-            monitoringPeriod?: number;
-            reviewSchedule?: string;
-            rollbackTriggers?: string[];
-            successCriteria?: string[];
-        };
-        RecoveryOptions: {
-            alternativeMethods?: components["schemas"]["MFAMethod"][];
-            backupCodesRemaining?: number;
-            recoveryEmail?: string;
-            recoveryPhone?: string;
-        };
-        RedisCacheConfig: {
-            connMaxLifetime?: string;
-            defaultTTL?: string;
-            dialTimeout?: string;
-            enableMetrics?: boolean;
-            idleTimeout?: string;
-            maxRetries?: number;
-            metricsFlushInterval?: string;
-            minIdleConns?: number;
-            poolSize?: number;
-            readTimeout?: string;
-            redisAddr?: string;
-            redisDB?: number;
-            redisPassword?: string;
-            writeTimeout?: string;
-        };
-        RedisConfig: {
-            addr?: string;
-            /** @description Campaign data TTLs */
-            campaignTTL?: {
-                batchQueryResultTTL?: string;
-                campaignDetailsTTL?: string;
-                campaignRelationshipTTL?: string;
-            };
-            connMaxLifetime?: string;
-            db?: number;
-            /** @description Timeouts */
-            dialTimeout?: string;
-            /** @description Basic connection settings */
-            enabled?: boolean;
-            /** @description TTL settings for different entity types */
-            entityTTL?: {
-                keywordSetTTL?: string;
-                keywordTTL?: string;
-                personaTTL?: string;
-                proxyTTL?: string;
-            };
-            idleTimeout?: string;
-            /** @description Retry and reliability */
-            maxRetries?: number;
-            /** @description Monitoring and metrics */
-            metrics?: {
-                enabled?: boolean;
-                flushInterval?: string;
-                performanceThreshold?: {
-                    errorRateWarning?: number;
-                    hitRatioWarning?: number;
-                    latencyCriticalMs?: number;
-                    latencyWarningMs?: number;
-                };
-            };
-            minIdleConns?: number;
-            password?: string;
-            /** @description Connection pool settings */
-            poolSize?: number;
-            readTimeout?: string;
-            /** @description Validation result TTLs */
-            validationTTL?: {
-                configFingerprintTTL?: string;
-                dnsValidationTTL?: string;
-                httpValidationTTL?: string;
-            };
-            writeTimeout?: string;
-        };
-        RegressionAnalysis: {
-            correlationCoefficient?: number;
-            forecastAccuracy?: number;
-            rSquaredValue?: number;
-            statisticalSignificance?: number;
-            trendDirection?: string;
-            trendEquation?: string;
-        };
-        RegulatoryComplianceItem: {
-            /** Format: double */
-            complianceRate?: number;
-            /** Format: date-time */
-            lastAudit?: string;
-            /** Format: date-time */
-            nextAuditDue?: string;
-            regulation?: string;
-            /** @enum {string} */
-            riskLevel?: "low" | "medium" | "high" | "critical";
-        };
-        RequestBodySpec: {
-            contentType?: string;
-            description?: string;
-            required?: boolean;
-            schema?: string;
-        };
-        RequiredResources: {
-            cpuCores?: number;
-            memoryMB?: number;
-            networkMbps?: number;
-            personas?: number;
-            proxies?: number;
-            storageMB?: number;
-        };
-        ResolvedConfig: {
-            data?: {
-                [key: string]: Record<string, never>;
-            };
-            environment?: string;
-            service_name?: string;
-        };
-        ResourceAllocationRec: {
-            conditions?: string[];
-            expectedBenefit?: string;
-            /** Format: int32 */
-            implementationTime?: number;
-            monitoring?: components["schemas"]["RecommendationMonitoring"];
-            /** @enum {string} */
-            priority?: "low" | "medium" | "high" | "critical";
-            recommendationType?: string;
-            resourceChanges?: components["schemas"]["ResourceChange"][];
-            /** @enum {string} */
-            riskAssessment?: "low" | "medium" | "high";
-        };
-        ResourceAllocationResult: {
-            allocatedResources?: components["schemas"]["RequiredResources"];
-            /** Format: date-time */
-            allocationTime?: string;
-            campaignId?: components["schemas"]["UUID"];
-            error?: string;
-            /** Format: date-time */
-            expirationTime?: string;
-            success?: boolean;
-            type?: string;
-        };
-        ResourceAnalyticsData: {
-            allocationRecommendations?: components["schemas"]["ResourceAllocationRec"][];
-            capacityPlanningData?: components["schemas"]["CapacityPlanningData"];
-            costAnalysis?: components["schemas"]["ResourceCostAnalysis"];
-            performanceCorrelation?: components["schemas"]["ResourcePerformanceData"];
-            resourceOptimization?: components["schemas"]["ResourceOptimizationData"];
-            resourceUtilizationSummary?: components["schemas"]["ResourceUtilizationSummary"];
-        };
-        ResourceAutomationOpp: {
-            automationType?: string;
-            complexityLevel?: string;
-            description?: string;
-            developmentEffort?: number;
-            expectedBenefit?: string;
-            maintenanceOverhead?: number;
-            roiEstimate?: number;
-            technicalRequirements?: string[];
-        };
-        ResourceBaselineMetrics: {
-            /** Format: double */
-            averageCPUUsage?: number;
-            /** Format: double */
-            averageMemoryUsage?: number;
-            /** Format: double */
-            averageNetworkUsage?: number;
-            /** Format: double */
-            averageStorageUsage?: number;
-            /** Format: double */
-            costEfficiencyScore?: number;
-            /** Format: double */
-            resourceEfficiencyScore?: number;
-        };
-        ResourceBudgetAnalysis: {
-            /** Format: double */
-            allocatedBudget?: number;
-            budgetAlerts?: components["schemas"]["BudgetAlert"][];
-            /** Format: double */
-            budgetUtilization?: number;
-            /** Format: double */
-            burnRate?: number;
-            /** Format: double */
-            forecastedSpend?: number;
-            /** Format: double */
-            remainingBudget?: number;
-            /** Format: double */
-            spentToDate?: number;
-            /** Format: double */
-            varianceFromPlan?: number;
-        };
-        ResourceCapacitySnapshot: {
-            /** Format: int64 */
-            activeProxies?: number;
-            /** Format: int64 */
-            databaseConnections?: number;
-            /** Format: double */
-            networkBandwidthMbps?: number;
-            /** Format: int64 */
-            totalCPUCores?: number;
-            /** Format: double */
-            totalMemoryGB?: number;
-            /** Format: double */
-            totalStorageGB?: number;
-            /** Format: double */
-            utilizationRate?: number;
-        };
-        ResourceChange: {
-            changeType?: string;
-            currentValue?: number;
-            expectedImpact?: string;
-            justification?: string;
-            recommendedValue?: number;
-            resourceType?: string;
-        };
-        ResourceCostAnalysis: {
-            budgetAnalysis?: components["schemas"]["ResourceBudgetAnalysis"];
-            costBreakdown?: components["schemas"]["ResourceCostBreakdown"];
-            costEfficiencyMetrics?: components["schemas"]["CostEfficiencyMetrics"];
-            costOptimization?: components["schemas"]["ResourceCostOptimization"];
-            costTrends?: components["schemas"]["ResourceCostTrendPoint"][];
-            totalCost?: number;
-        };
-        ResourceCostBreakdown: {
-            cpuCosts?: number;
-            databaseCosts?: number;
-            licensingCosts?: number;
-            memoryCosts?: number;
-            networkCosts?: number;
-            operationalCosts?: number;
-            proxyCosts?: number;
-            storageCosts?: number;
-        };
-        ResourceCostOptimization: {
-            /** Format: double */
-            currentMonthlySpend?: number;
-            implementedOptimizations?: components["schemas"]["ImplementedOptimization"][];
-            optimizationStrategies?: components["schemas"]["CostOptimizationStrategy"][];
-            /** Format: double */
-            potentialMonthlySavings?: number;
-            /** Format: double */
-            savingsToDate?: number;
-        };
-        ResourceCostTrendPoint: {
-            /** Format: double */
-            budgetUtilization?: number;
-            /** Format: double */
-            costEfficiency?: number;
-            /** Format: double */
-            costPerOperation?: number;
-            /** Format: date-time */
-            timestamp?: string;
-            /** Format: double */
-            totalCost?: number;
-        };
-        ResourceEfficiencyMetrics: {
-            /** Format: double */
-            costEfficiency?: number;
-            /** Format: double */
-            cpuEfficiency?: number;
-            /** Format: double */
-            memoryEfficiency?: number;
-            /** Format: double */
-            networkEfficiency?: number;
-            /** Format: double */
-            optimizationPotential?: number;
-            /** Format: double */
-            overallEfficiency?: number;
-            /** Format: double */
-            storageEfficiency?: number;
-            /** Format: double */
-            wasteReduction?: number;
-        };
-        ResourceForecast: {
-            /** Format: double */
-            capacityThreshold?: number;
-            /** Format: double */
-            confidenceLevel?: number;
-            /** Format: double */
-            currentUtilization?: number;
-            /** Format: date-time */
-            forecastTime?: string;
-            /** Format: double */
-            predictedUtilization?: number;
-            /** Format: double */
-            predictionError?: number;
-            resourceType?: string;
-            scalingRecommendation?: string;
-        };
-        ResourceGrowthTrendPoint: {
-            /** Format: double */
-            cpuUsageGrowth?: number;
-            /** Format: double */
-            memoryGrowth?: number;
-            /** Format: double */
-            networkGrowth?: number;
-            /** Format: double */
-            storageGrowth?: number;
-            /** Format: date-time */
-            timestamp?: string;
-        };
-        ResourceImprovementOpp: {
-            dependencies?: string[];
-            description?: string;
-            /** Format: double */
-            expectedSavings?: number;
-            /** Format: double */
-            implementationCost?: number;
-            /** Format: int32 */
-            implementationTime?: number;
-            opportunityType?: string;
-            /** @enum {string} */
-            priority?: "low" | "medium" | "high" | "critical";
-            /** @enum {string} */
-            riskLevel?: "low" | "medium" | "high";
-        };
-        ResourceLimits: {
-            maxConcurrent?: number;
-            maxCpuPercent?: number;
-            maxDiskIO?: number;
-            maxMemoryPercent?: number;
-            maxNetworkIO?: number;
-        };
-        ResourceLockManager: Record<string, never>;
-        ResourceOperation: {
-            campaignId: components["schemas"]["UUID"];
-            config?: {
-                [key: string]: Record<string, never>;
-            };
-            /** @enum {string} */
-            priority?: "low" | "normal" | "high" | "critical";
-            resources?: components["schemas"]["RequiredResources"];
-            /** @enum {string} */
-            type: "domain_generation" | "dns_validation" | "http_validation" | "analytics";
-        };
-        ResourceOptimizationData: {
-            automationOpportunities?: components["schemas"]["ResourceAutomationOpp"][];
-            efficiencyMetrics?: components["schemas"]["ResourceEfficiencyMetrics"];
-            improvementOpportunities?: components["schemas"]["ResourceImprovementOpp"][];
-            optimizationHistory?: components["schemas"]["ResourceOptimizationEvent"][];
-            /** Format: double */
-            optimizationScore?: number;
-        };
-        ResourceOptimizationEvent: {
-            /** Format: double */
-            costImpact?: number;
-            description?: string;
-            /** Format: double */
-            efficiencyGain?: number;
-            optimizationType?: string;
-            performanceImpact?: string;
-            resourcesAffected?: string[];
-            /** Format: date-time */
-            timestamp?: string;
-        };
-        ResourcePerformanceCorrelation: {
-            correlationCoeff?: number;
-            correlationStrength?: string;
-            description?: string;
-            optimalRange?: components["schemas"]["ResourceRange"];
-            performanceMetric?: string;
-            resourceType?: string;
-        };
-        ResourcePerformanceData: {
-            optimalResourceLevels?: components["schemas"]["OptimalResourceLevels"];
-            performanceBottlenecks?: components["schemas"]["PerformanceBottleneck"][];
-            performanceCorrelations?: components["schemas"]["ResourcePerformanceCorrelation"][];
-            scalingImpactAnalysis?: components["schemas"]["ScalingImpactAnalysis"];
-        };
-        ResourceRange: {
-            maxValue?: number;
-            minValue?: number;
-            optimalValue?: number;
-        };
-        ResourceUsageHistoryPoint: {
-            /** Format: double */
-            cost?: number;
-            /** Format: double */
-            efficiency?: number;
-            /** Format: date-time */
-            timestamp?: string;
-            /** Format: double */
-            usage?: number;
-        };
-        ResourceUtilizationDetail: {
-            averageUsage?: number;
-            bottleneckRisk?: string;
-            currentUsage?: number;
-            efficiencyScore?: number;
-            peakUsage?: number;
-            usageHistory?: components["schemas"]["ResourceUsageHistoryPoint"][];
-            utilizationTrend?: string;
-        };
-        ResourceUtilizationMetric: {
-            bottleneckDetected?: boolean;
-            campaignId?: components["schemas"]["UUID"];
-            campaignPhase?: string;
-            component?: string;
-            /** Format: double */
-            currentUsage?: number;
-            /** Format: double */
-            efficiencyScore?: number;
-            id?: components["schemas"]["UUID"];
-            /** Format: double */
-            maxCapacity?: number;
-            optimizationApplied?: Record<string, never>;
-            /** Format: date-time */
-            recordedAt?: string;
-            resourceType?: string;
-            serviceName?: string;
-            /** Format: double */
-            utilizationPct?: number;
-        };
-        ResourceUtilizationMetrics: {
-            /** Format: double */
-            cpuUsage?: number;
-            /** Format: int64 */
-            databaseQueries?: number;
-            /** Format: double */
-            memoryUsage?: number;
-            /** Format: int64 */
-            networkIO?: number;
-            /** Format: int64 */
-            proxyRequests?: number;
-        };
-        ResourceUtilizationSummary: {
-            cpuUtilization?: components["schemas"]["ResourceUtilizationDetail"];
-            databaseUtilization?: components["schemas"]["ResourceUtilizationDetail"];
-            memoryUtilization?: components["schemas"]["ResourceUtilizationDetail"];
-            networkUtilization?: components["schemas"]["ResourceUtilizationDetail"];
-            proxyUtilization?: components["schemas"]["ResourceUtilizationDetail"];
-            storageUtilization?: components["schemas"]["ResourceUtilizationDetail"];
-        };
-        ResponseSpec: {
-            contentType?: string;
-            description?: string;
-            schema?: string;
-        };
-        ResponsiveSettings: {
-            breakpointLarge?: number;
-            breakpointMedium?: number;
-            breakpointSmall?: number;
-            flexibleLayout?: boolean;
-            mobileOptimized?: boolean;
-            responsiveCharts?: boolean;
-            tabletOptimized?: boolean;
-        };
-        RiskFactor: {
-            detectability?: number;
-            factorName?: string;
-            mitigation?: string;
-            riskContribution?: number;
-            severity?: string;
-            status?: string;
-        };
-        RiskPrediction: {
-            /** Format: date-time */
-            earliestOccurrence?: string;
-            /** Format: date-time */
-            latestOccurrence?: string;
-            mitigationStrategies?: string[];
-            monitoringRecommendations?: string[];
-            potentialImpact?: string;
-            preventiveMeasures?: string[];
-            probability?: number;
-            riskIndicators?: string[];
-            riskLevel?: string;
-            riskType?: string;
-        };
-        RuleLoaderService: Record<string, never>;
-        RuleQueryFilter: {
-            category?: string;
-            isCaseSensitive?: boolean;
-            keywordSetId?: components["schemas"]["UUID"];
-            /** Format: int32 */
-            limit?: number;
-            /** Format: int32 */
-            offset?: number;
-            patternSearch?: string;
-            ruleType?: components["schemas"]["KeywordRuleTypeEnum"];
-        };
-        RuleStatistics: {
-            caseSensitiveRules?: number;
-            distinctCategories?: number;
-            enabledKeywordSets?: number;
-            regexRules?: number;
-            stringRules?: number;
-            totalKeywordSets?: number;
-            totalRules?: number;
-        };
-        SSEClient: {
-            CampaignID?: components["schemas"]["UUID"];
-            Cancel?: string;
-            Context?: string;
-            Flusher?: string;
-            ID?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            LastSeen?: string;
-            ResponseWriter?: string;
-            UserID?: components["schemas"]["UUID"];
-        };
-        SSEEvent: {
-            campaign_id?: components["schemas"]["UUID"];
-            data?: {
-                [key: string]: Record<string, never>;
-            };
-            /** @enum {string} */
-            event?: "campaign_progress" | "phase_started" | "phase_completed" | "phase_failed" | "domain_generated" | "domain_validated" | "analysis_completed" | "keep_alive" | "error";
-            id?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            timestamp?: string;
-            user_id?: components["schemas"]["UUID"];
-        };
-        SSEEventType: string;
-        SSEHandler: Record<string, never>;
-        SSEService: Record<string, never>;
-        SafetyValidationError: {
-            Impact?: string;
-            Operation?: string;
-            Remediation?: string;
-            Violation?: string;
-        };
-        ScalabilityAnalyticsData: {
-            /** Format: double */
-            currentCapacityUtilization?: number;
-            performanceUnderLoad?: components["schemas"]["LoadTestingResult"][];
-            predictedCapacityNeeds?: components["schemas"]["CapacityForecastPoint"][];
-            resourceGrowthTrends?: components["schemas"]["ResourceGrowthTrendPoint"][];
-            scalingRecommendations?: components["schemas"]["ScalingRecommendation"][];
-        };
-        ScalingImpactAnalysis: {
-            diminishingReturns?: number;
-            linearScalingRange?: components["schemas"]["ResourceRange"];
-            optimalScalingPoints?: components["schemas"]["OptimalScalingPoint"][];
-            scalingEfficiency?: number;
-            scalingRecommendations?: components["schemas"]["ScalingRecommendation"][];
-        };
-        ScalingRecommendation: {
-            component?: string;
-            /** Format: double */
-            currentCapacity?: number;
-            /** Format: double */
-            estimatedCost?: number;
-            expectedBenefit?: string;
-            /** Format: double */
-            recommendedScale?: number;
-            /** Format: date-time */
-            timeFrame?: string;
-        };
-        Scenario: {
-            assumptions?: string[];
-            businessImpact?: string;
-            predictedOutcomes?: components["schemas"]["ScenarioOutcome"][];
-            probability?: number;
-            requiredActions?: string[];
-            riskMitigation?: string[];
-            scenarioName?: string;
-            scenarioType?: string;
-        };
-        ScenarioAnalysis: {
-            baseScenario?: components["schemas"]["Scenario"];
-            customScenarios?: components["schemas"]["Scenario"][];
-            optimisticScenario?: components["schemas"]["Scenario"];
-            pessimisticScenario?: components["schemas"]["Scenario"];
-            recommendedPreparation?: components["schemas"]["PreparationRecommendation"][];
-            scenarioProbabilities?: components["schemas"]["ScenarioProbability"][];
-        };
-        ScenarioOutcome: {
-            /** Format: double */
-            confidenceLevel?: number;
-            impactDescription?: string;
-            metricAffected?: string;
-            outcomeType?: string;
-            /** Format: double */
-            predictedValue?: number;
-            /** Format: double */
-            varianceFromBase?: number;
-        };
-        ScenarioProbability: {
-            influencingFactors?: string[];
-            /** Format: date-time */
-            lastUpdated?: string;
-            monitoringIndicators?: string[];
-            /** Format: double */
-            probability?: number;
-            /** @enum {string} */
-            probabilityTrend?: "increasing" | "stable" | "decreasing";
-            scenarioName?: string;
-        };
-        ScheduledExport: {
-            exportId?: components["schemas"]["UUID"];
-            exportName?: string;
-            /** Format: date-time */
-            format?: string;
-            /** Format: date-time */
-            lastGenerated?: string;
-            /** Format: date-time */
-            nextGeneration?: string;
-            recipients?: string[];
-            /** Format: int32 */
-            retentionDays?: number;
-            schedule?: string;
-            /** @enum {string} */
-            status?: "active" | "paused" | "error";
-        };
-        SchemaStats: {
-            name?: string;
-            /** Format: int32 */
-            tableCount?: number;
-            /** Format: int64 */
-            totalRows?: number;
-            totalSize?: string;
-        };
-        SeasonalPattern: {
-            /** Format: double */
-            amplitudeVariation?: number;
-            /** Format: date-time */
-            nextPredictedPeak?: string;
-            /** Format: date-time */
-            nextPredictedTrough?: string;
-            /** Format: double */
-            patternStrength?: number;
-            patternType?: string;
-            /** Format: date-time */
-            peakTime?: string;
-            /** Format: date-time */
-            troughTime?: string;
-        };
-        SecretManager: Record<string, never>;
-        SecurityComplianceData: {
-            /** Format: double */
-            accessControlCompliance?: number;
-            /** Format: double */
-            auditTrailCompliance?: number;
-            /** Format: double */
-            dataRetentionCompliance?: number;
-            /** Format: double */
-            encryptionCompliance?: number;
-        };
-        SecurityContext: {
-            /** Format: date-time */
-            lastActivity?: string;
-            requiresPasswordChange?: boolean;
-            /** Format: int32 */
-            riskScore?: number;
-            /** Format: date-time */
-            sessionExpiry?: string;
-            sessionId?: components["schemas"]["UUID"];
-            userId?: components["schemas"]["UUID"];
-        };
-        SecurityEvent: {
-            actionAttempted?: string;
-            auditLogId?: components["schemas"]["UUID"];
-            authorizationResult?: string;
-            campaignId?: components["schemas"]["UUID"];
-            /** Format: date-time */
-            createdAt?: string;
-            denialReason?: string;
-            eventType?: string;
-            id?: components["schemas"]["UUID"];
-            requestContext?: Record<string, never>;
-            resourceId?: components["schemas"]["UUID"];
-            resourceType?: string;
-            /** Format: int32 */
-            riskScore?: number;
-            sessionId?: components["schemas"]["UUID"];
-            sourceIp?: string;
-            userAgent?: string;
-            userId?: components["schemas"]["UUID"];
-        };
-        ServerConfig: {
-            apiKey?: string;
-            auth?: components["schemas"]["AuthConfig"];
-            database?: components["schemas"]["DatabaseConfig"];
-            dbConnMaxLifetimeMinutes?: number;
-            dbMaxIdleConns?: number;
-            dbMaxOpenConns?: number;
-            ginMode?: string;
-            port?: string;
-            streamChunkSize?: number;
-        };
-        ServerConfigResponse: {
-            ginMode?: string;
-            port?: string;
-            /** Format: int32 */
-            streamChunkSize?: number;
-        };
-        ServerConfigUpdateRequest: {
-            ginMode?: string;
-            /** Format: int32 */
-            streamChunkSize?: number;
-        };
-        ServiceArchitectureMetric: {
-            architecturePattern?: string;
-            /** Format: double */
-            couplingScore?: number;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: int32 */
-            dependencyCount?: number;
-            /** Format: int32 */
-            deploymentComplexityScore?: number;
-            /** Format: double */
-            errorRate?: number;
-            /** Format: int64 */
-            id?: number;
-            interfaceType?: string;
-            /** Format: date-time */
-            lastRefactorDate?: string;
-            /** Format: double */
-            performanceImpact?: number;
-            serviceName?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        ServiceCapacityMetric: {
-            /** Format: double */
-            cpuUtilization?: number;
-            id?: components["schemas"]["UUID"];
-            /** Format: int32 */
-            instanceCount?: number;
-            /** Format: double */
-            memoryUtilization?: number;
-            /** Format: date-time */
-            recordedAt?: string;
-            serviceName?: string;
-        };
-        ServiceConfiguration: {
-            AppConfig?: string;
-            AuditLogStore?: string;
-            CampaignJobStore?: string;
-            CampaignStore?: string;
-            KeywordStore?: string;
-            PersonaStore?: string;
-            ProxyStore?: string;
-        };
-        ServiceDependency: {
-            /** Format: date-time */
-            createdAt?: string;
-            dependencyType?: string;
-            /** Format: int32 */
-            failureCount?: number;
-            /** Format: int64 */
-            id?: number;
-            interfaceContract?: string;
-            /** Format: date-time */
-            lastSuccess?: string;
-            /** Format: double */
-            latencyP95?: number;
-            /** Format: double */
-            reliabilityScore?: number;
-            sourceService?: string;
-            targetService?: string;
-        };
-        ServiceFactory: Record<string, never>;
-        Session: {
-            browserFingerprint?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: date-time */
-            expiresAt?: string;
-            id?: components["schemas"]["UUID"];
-            ipAddress?: string;
-            isActive?: boolean;
-            /** Format: date-time */
-            lastActivityAt?: string;
-            screenResolution?: string;
-            sessionFingerprint?: string;
-            userAgent?: string;
-            userAgentHash?: string;
-            userId?: components["schemas"]["UUID"];
-        };
-        SessionConfig: {
-            CleanupInterval?: string;
-            Duration?: string;
-            IdleTimeout?: string;
-            MaxSessionsPerUser?: number;
-            RequireIPMatch?: boolean;
-            RequireUAMatch?: boolean;
-            SessionIDLength?: number;
-        };
-        SessionConfigManager: Record<string, never>;
-        SessionData: {
-            /** Format: date-time */
-            expiresAt?: string;
-            refreshToken?: string;
-            token?: string;
-        };
-        SessionMetrics: {
-            /** Format: int64 */
-            ActiveSessions?: number;
-            /** Format: date-time */
-            AvgLookupTime?: string;
-            /** Format: double */
-            CacheHitRate?: number;
-            /** Format: int64 */
-            CleanupCount?: number;
-            /** Format: int64 */
-            SecurityEvents?: number;
-            /** Format: int64 */
-            TotalSessions?: number;
-        };
-        SessionRefreshResponse: {
-            /** Format: date-time */
-            expiresAt?: string;
-            message?: string;
-        };
-        SessionResponse: {
-            /** Format: date-time */
-            expiresAt?: string;
-            refreshToken?: string;
-            token?: string;
-            user?: components["schemas"]["UserPublicResponse"];
-        };
-        SessionService: Record<string, never>;
-        SessionSettings: {
-            allowed_origins?: string[];
-            cleanup_interval?: string;
-            cookie_domain?: string;
-            cookie_http_only?: boolean;
-            cookie_max_age?: number;
-            /** @description Cookie settings */
-            cookie_name?: string;
-            cookie_path?: string;
-            cookie_same_site?: string;
-            cookie_secure?: boolean;
-            custom_header_name?: string;
-            custom_header_value?: string;
-            enable_fingerprinting?: boolean;
-            idle_timeout?: string;
-            max_login_attempts?: number;
-            max_session_validations?: number;
-            max_sessions_per_user?: number;
-            /** @description Rate limiting */
-            rate_limit_enabled?: boolean;
-            rate_limit_window?: string;
-            require_custom_header?: boolean;
-            /** @description Security settings */
-            require_ip_match?: boolean;
-            /** @description CSRF Protection (without tokens) */
-            require_origin_validation?: boolean;
-            require_ua_match?: boolean;
-            /** @description Session duration and timeouts */
-            session_duration?: string;
-            session_id_length?: number;
-        };
-        SetCampaignLimitsRequest: {
-            /** Format: double */
-            maxCpuPercent: number;
-            /** Format: int64 */
-            maxDiskGB: number;
-            /** Format: int32 */
-            maxDurationMins: number;
-            /** Format: int64 */
-            maxMemoryMB: number;
-        };
-        SignificantChange: {
-            changeType?: string;
-            /** Format: double */
-            confidenceLevel?: number;
-            /** Format: date-time */
-            detectedAt?: string;
-            /** Format: double */
-            magnitude?: number;
-            metricAffected?: string;
-            potentialCauses?: string[];
-            recommendedActions?: string[];
-        };
-        StatisticalSignificanceData: {
-            /** Format: double */
-            confidenceLevel?: number;
-            isStatisticallySignificant?: boolean;
-            /** Format: double */
-            marginOfError?: number;
-            /** Format: double */
-            pValue?: number;
-            /** Format: int64 */
-            sampleSize?: number;
-            /** Format: double */
-            standardDeviation?: number;
-        };
-        Status: {
-            message?: string;
-            status?: string;
-            /** Format: date-time */
-            timestamp?: string;
-        };
-        StealthAnalyticsData: {
-            anonymityMetrics?: components["schemas"]["AnonymityMetrics"];
-            complianceWithPolicies?: components["schemas"]["StealthComplianceData"];
-            countermeasureAnalysis?: components["schemas"]["CountermeasureAnalysis"][];
-            detectionRiskAnalysis?: components["schemas"]["DetectionRiskAnalysis"];
-            /** Format: double */
-            overallStealthScore?: number;
-            stealthTechniques?: components["schemas"]["StealthTechniqueMetrics"][];
-            stealthTrendAnalysis?: components["schemas"]["StealthTrendPoint"][];
-        };
-        StealthAuditEntry: {
-            description?: string;
-            justification?: string;
-            operation?: string;
-            /** @enum {string} */
-            riskImpact?: "none" | "minimal" | "moderate" | "significant" | "high";
-            /** Format: date-time */
-            timestamp?: string;
-            userId?: components["schemas"]["UUID"];
-        };
-        StealthBaselineMetrics: {
-            /** Format: double */
-            anonymityScore?: number;
-            /** Format: double */
-            averageStealthScore?: number;
-            /** Format: double */
-            countermeasureEffectiveness?: number;
-            /** Format: int64 */
-            detectionEvents?: number;
-            /** Format: int64 */
-            successfulEvasions?: number;
-        };
-        StealthCompatibleService: Record<string, never>;
-        StealthComplianceData: {
-            auditTrail?: components["schemas"]["StealthAuditEntry"][];
-            complianceViolations?: components["schemas"]["StealthComplianceViolation"][];
-            /** Format: double */
-            ethicalGuidelineScore?: number;
-            /** Format: double */
-            legalComplianceScore?: number;
-            /** Format: double */
-            policyComplianceScore?: number;
-        };
-        StealthComplianceViolation: {
-            description?: string;
-            preventiveMeasure?: string;
-            resolution?: string;
-            /** Format: date-time */
-            resolutionTime?: string;
-            /** @enum {string} */
-            severity?: "low" | "medium" | "high" | "critical";
-            /** Format: date-time */
-            timestamp?: string;
-            violationType?: string;
-        };
-        StealthConfig: {
-            /** @description BatchRandomization randomizes order within validation batches */
-            batchRandomization?: boolean;
-            /** @description OffsetScrambling scrambles the starting offset to avoid predictable patterns */
-            offsetScrambling?: boolean;
-            /**
-             * @description ShuffleStrategy determines how domains are randomized
-             * @enum {string}
-             */
-            shuffleStrategy?: "sequential" | "full_shuffle" | "block_shuffle" | "weighted" | "interleaved";
-            /** Format: double */
-            subsetPercentage?: number;
-            /** @description SubsetValidation validates random subsets instead of all domains */
-            subsetValidation?: boolean;
-            /** Format: int32 */
-            temporalJitterMax?: number;
-            /**
-             * Format: int32
-             * @description TemporalJitter adds random delays between validations (milliseconds)
-             */
-            temporalJitterMin?: number;
-            /** @description ValidationPriority allows prioritizing certain domain patterns */
-            validationPriority?: string[];
-        };
-        StealthIntegrationService: Record<string, never>;
-        StealthMetrics: {
-            /** Format: int32 */
-            avgValidationDelayMs?: number;
-            /** Format: double */
-            patternDetectionRisk?: number;
-            /** Format: double */
-            randomizationRatio?: number;
-            /** Format: int64 */
-            shuffledDomains?: number;
-            temporalDistribution?: string;
-            /** Format: int64 */
-            totalDomains?: number;
-            /** Format: double */
-            validationCoverage?: number;
-        };
-        StealthOperationMetrics: {
-            /** Format: int64 */
-            avgRequestSpacing?: number;
-            /** Format: double */
-            detectionScore?: number;
-            /** Format: int32 */
-            patternBreaks?: number;
-            /** Format: int32 */
-            proxyRotations?: number;
-            /** Format: int32 */
-            randomizationEvents?: number;
-            /** Format: int32 */
-            temporalJitterEvents?: number;
-            /** Format: int32 */
-            userAgentRotations?: number;
-        };
-        StealthStrategy: string;
-        StealthTechniqueMetrics: {
-            /** Format: double */
-            adaptabilityScore?: number;
-            /** Format: double */
-            configurationScore?: number;
-            /** Format: int64 */
-            detectionEvaded?: number;
-            /** Format: double */
-            effectivenessScore?: number;
-            /** Format: double */
-            resourceCost?: number;
-            /** Format: double */
-            successRate?: number;
-            techniqueName?: string;
-        };
-        StealthTrendPoint: {
-            /** Format: int32 */
-            activeCountermeasures?: number;
-            /** Format: int64 */
-            detectionEvents?: number;
-            /** @enum {string} */
-            riskLevel?: "minimal" | "low" | "medium" | "high" | "critical";
-            /** Format: double */
-            stealthScore?: number;
-            /** Format: int64 */
-            successfulEvasions?: number;
-            /** Format: date-time */
-            timestamp?: string;
-        };
-        StealthValidationConfig: {
-            advancedPolicy?: components["schemas"]["AdvancedStealthPolicy"];
-            behavioralMimicry?: components["schemas"]["BehavioralMimicryConfig"];
-            detectionEvasion?: components["schemas"]["DetectionEvasionConfig"];
-            /** Format: double */
-            detectionThreshold?: number;
-            enabled?: boolean;
-            patternAvoidance?: boolean;
-            proxyRotationForced?: boolean;
-            proxyStrategy?: components["schemas"]["EnterpriseProxyStrategy"];
-            /** @enum {string} */
-            randomizationLevel?: "low" | "medium" | "high" | "extreme";
-            /** Format: int32 */
-            requestSpacing?: number;
-            temporalJitter?: boolean;
-            userAgentRotation?: boolean;
-        };
-        StreamingResponseHandler: Record<string, never>;
-        SuccessMessageResponse: {
-            message?: string;
-        };
-        SuccessResponse: {
-            /** @description Response data */
-            data?: unknown;
-            /** @description Success message */
-            message?: string;
-        };
-        SystemInfo: {
-            goVersion?: string;
-            /** Format: int32 */
-            numCPU?: number;
-            /** Format: int32 */
-            numGoroutine?: number;
-        };
-        TLDPerformance: {
-            domains?: number;
-            leads?: number;
-            rank?: number;
-            successRate?: number;
-            tld?: string;
-        };
-        TLSClientHello: {
-            cipherSuites?: string[];
-            curvePreferences?: string[];
-            ja3?: string;
-            maxVersion?: string;
-            minVersion?: string;
-        };
-        TLSClientHelloConfig: {
-            cipherSuites?: string[];
-            curvePreferences?: string[];
-            maxVersion?: string;
-            minVersion?: string;
-        };
-        TOTPSecret: {
-            backupCodes?: string[];
-            /** Format: date-time */
-            createdAt?: string;
-            qrCode?: string;
-            /** Format: password */
-            secret?: string;
-            userId?: components["schemas"]["UUID"];
-        };
-        TableStats: {
-            /** Format: int32 */
-            indexCount?: number;
-            name?: string;
-            /** Format: int64 */
-            rowCount?: number;
-            schema?: string;
-            size?: string;
-        };
-        TechnicalKPIs: {
-            /** Format: double */
-            codeQuality?: number;
-            /** Format: double */
-            dataIntegrity?: number;
-            /** Format: double */
-            deploymentSuccess?: number;
-            /** Format: double */
-            infrastructureHealth?: number;
-            /** Format: int64 */
-            meanTimeToRecovery?: number;
-            /** Format: double */
-            scalabilityIndex?: number;
-            /** Format: double */
-            securityScore?: number;
-            /** Format: double */
-            systemReliability?: number;
-            /** Format: double */
-            testCoverage?: number;
-        };
-        TemplateManager: Record<string, never>;
-        TemplateSection: {
-            dataSource?: string;
-            formatting?: {
-                [key: string]: Record<string, never>;
-            };
-            /** Format: int32 */
-            position?: number;
-            sectionId?: components["schemas"]["UUID"];
-            sectionTitle?: string;
-            /** @enum {string} */
-            sectionType?: "summary" | "chart" | "table" | "text" | "metrics";
-            visible?: boolean;
-        };
-        TestResultResponse: {
-            message?: string;
-            success?: boolean;
-        };
-        TimeRangeFilter: {
-            /** Format: date-time */
-            endTime: string;
-            /** Format: date-time */
-            startTime: string;
-            /** Format: date-time */
-            timezone?: string;
-        };
-        TimeSeriesPoint: {
-            /** Format: date-time */
-            timestamp?: string;
-            values?: {
-                [key: string]: Record<string, never>;
-            };
-        };
-        TooltipConfiguration: {
-            customFields?: string[];
-            enabled?: boolean;
-            /** Format: date-time */
-            format?: string;
-            interactive?: boolean;
-            showAll?: boolean;
-        };
-        TrendAnalysis: {
-            anomalyDetection?: components["schemas"]["AnomalyDetectionResults"];
-            cyclicalPatterns?: components["schemas"]["CyclicalPattern"][];
-            longTermTrend?: components["schemas"]["TrendDirection"];
-            mediumTermTrend?: components["schemas"]["TrendDirection"];
-            seasonalPatterns?: components["schemas"]["SeasonalPattern"][];
-            shortTermTrend?: components["schemas"]["TrendDirection"];
-            trendBreakpoints?: components["schemas"]["TrendBreakpoint"][];
-        };
-        TrendBreakpoint: {
-            /** Format: date-time */
-            breakpointTime?: string;
-            /** @enum {string} */
-            breakpointType?: "level_shift" | "trend_change" | "variance_change";
-            businessEvents?: string[];
-            /** @enum {string} */
-            newTrend?: "improving" | "stable" | "declining";
-            potentialCauses?: string[];
-            /** @enum {string} */
-            previousTrend?: "improving" | "stable" | "declining";
-            /** Format: double */
-            significanceLevel?: number;
-        };
-        TrendDirection: {
-            /** Format: double */
-            confidence?: number;
-            /** @enum {string} */
-            direction?: "strongly_improving" | "improving" | "stable" | "declining" | "strongly_declining";
-            /** Format: int32 */
-            duration?: number;
-            /** Format: double */
-            rate?: number;
-            /** Format: double */
-            strength?: number;
-        };
-        TrendPrediction: {
-            businessImplications?: string[];
-            /** Format: double */
-            confidenceLevel?: number;
-            /** @enum {string} */
-            currentDirection?: "improving" | "stable" | "declining";
-            influencingFactors?: string[];
-            /** @enum {string} */
-            predictedDirection?: "improving" | "stable" | "declining";
-            /** Format: date-time */
-            trendChangeTime?: string;
-            /** Format: int32 */
-            trendDuration?: number;
-            trendName?: string;
-            /** Format: double */
-            trendStrength?: number;
-        };
-        /**
-         * Format: uuid
-         * @description Unique identifier (UUID v4)
-         * @example 550e8400-e29b-41d4-a716-446655440000
-         */
-        UUID: string;
-        UpdateCampaignRequest: {
-            adHocKeywords?: string[];
-            /** Format: int32 */
+        "config.WorkerConfig": {
             batchSize?: number;
-            campaignType?: components["schemas"]["JobTypeEnum"];
-            characterSet?: string;
-            constantString?: string;
-            keywordSetIds?: string[];
-            name?: string;
-            /** Format: int64 */
-            numDomainsToGenerate?: number;
-            personaIds?: string[];
-            /** Format: int32 */
-            processingSpeedPerMinute?: number;
-            proxyPoolId?: components["schemas"]["UUID"];
-            proxySelectionStrategy?: string;
-            /** Format: int32 */
-            retryAttempts?: number;
-            /** Format: int32 */
-            rotationIntervalSeconds?: number;
-            status?: components["schemas"]["PhaseStatusEnum"];
-            targetHttpPorts?: number[];
-            tld?: string;
-            /** Format: int32 */
-            variableLength?: number;
-        };
-        UpdateKeywordSetRequest: {
-            description?: string;
-            isEnabled?: boolean;
-            name?: string;
-            rules?: components["schemas"]["KeywordRuleRequest"][];
-        };
-        UpdatePersonaRequest: {
-            configDetails?: Record<string, never>;
-            description?: string;
-            isEnabled?: boolean;
-            name?: string;
-        };
-        UpdateProxyRequest: {
-            address?: string;
-            countryCode?: string;
-            description?: string;
-            isEnabled?: boolean;
-            name?: string;
-            notes?: string;
-            /** Format: password */
-            password?: string;
-            /** @enum {string} */
-            protocol?: "http" | "https" | "socks5" | "socks4";
-            username?: string;
-        };
-        UpdateUserRequest: {
-            firstName?: string;
-            isActive?: boolean;
-            lastName?: string;
-        };
-        User: {
-            /** Format: uri */
-            avatarUrl?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: email */
-            email?: string;
-            emailVerified?: boolean;
-            firstName?: string;
-            id?: components["schemas"]["UUID"];
-            isActive?: boolean;
-            isLocked?: boolean;
-            /** Format: date-time */
-            lastLoginAt?: string;
-            lastLoginIp?: string;
-            lastName?: string;
-            /** @description MFA support fields */
-            mfaEnabled?: boolean;
-            /** Format: date-time */
-            mfaLastUsedAt?: string;
-            mustChangePassword?: boolean;
-            /** @description Computed fields (not stored in DB) */
-            name?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        UserAPI: {
-            /** Format: uri */
-            avatarUrl?: string;
-            /** Format: date-time */
-            createdAt?: string;
-            /** Format: email */
-            email?: string;
-            emailVerified?: boolean;
-            firstName?: string;
-            id?: components["schemas"]["UUID"];
-            isActive?: boolean;
-            isLocked?: boolean;
-            /** Format: date-time */
-            lastLoginAt?: string;
-            lastLoginIp?: string;
-            lastName?: string;
-            mfaEnabled?: boolean;
-            /** Format: date-time */
-            mfaLastUsedAt?: string;
-            mustChangePassword?: boolean;
-            name?: string;
-            /** Format: date-time */
-            updatedAt?: string;
-        };
-        UserExperienceKPIs: {
-            featureAdoptionRate?: number;
-            interfaceUsability?: number;
-            supportTicketResolution?: number;
-            systemResponsiveness?: number;
-            userEngagementScore?: number;
-            userRetentionRate?: number;
-            userSatisfactionScore?: number;
-        };
-        UserPublicResponse: {
-            /** Format: email */
-            email?: string;
-            id?: components["schemas"]["UUID"];
-            isActive?: boolean;
-            username?: string;
-        };
-        ValidationOperationResponse: {
-            campaignId?: components["schemas"]["UUID"];
-            jobId?: components["schemas"]["UUID"];
-            message?: string;
-            success?: boolean;
-            validationType?: components["schemas"]["UUID"];
-        };
-        ValidationOperationResult: {
-            campaignId?: components["schemas"]["UUID"];
-            /** Format: int32 */
-            domainsFailed?: number;
-            /** Format: int32 */
-            domainsProcessed?: number;
-            /** Format: int32 */
-            domainsSuccessful?: number;
-            /** Format: int64 */
-            durationMs?: number;
-            error?: string;
-            results?: components["schemas"]["BulkValidationDomainResult"][];
-            success?: boolean;
-            validationType?: components["schemas"]["UUID"];
-        };
-        ValidationRule: {
-            Field?: string;
-        };
-        ValidationStartResponse: {
-            campaignId?: components["schemas"]["UUID"];
-            message?: string;
-            validationId?: components["schemas"]["UUID"];
-        };
-        ValidationStatusEnum: string;
-        VisualizationConfig: {
-            /** @enum {string} */
-            chartTypes?: "line" | "bar" | "pie" | "scatter" | "heatmap" | "radar";
-            /** @enum {string} */
-            colorScheme?: "corporate" | "professional" | "colorful" | "monochrome";
-            interactive?: boolean;
-            realTimeUpdate?: boolean;
-        };
-        VisualizationDataPrep: {
-            animationSettings?: components["schemas"]["AnimationSettings"];
-            chartData?: components["schemas"]["ChartDataSet"][];
-            colorSchemeData?: components["schemas"]["ColorSchemeData"];
-            dashboardLayouts?: components["schemas"]["DashboardLayout"][];
-            exportFormats?: string[];
-            interactiveElements?: components["schemas"]["InteractiveElement"][];
-            responsiveSettings?: components["schemas"]["ResponsiveSettings"];
-        };
-        WebSocketErrorResponse: {
-            /** Format: int32 */
-            code?: number;
-            error?: string;
-            message?: string;
-        };
-        WorkerCompatibleService: Record<string, never>;
-        WorkerConfig: {
-            batchSize?: number;
+            /** @description Added */
             dnsSubtaskConcurrency?: number;
             errorRetryDelaySeconds?: number;
+            /** @description Added */
             httpKeywordSubtaskConcurrency?: number;
             jobProcessingTimeoutMinutes?: number;
             maxJobRetries?: number;
@@ -7074,21 +4419,627 @@ export interface components {
             pollIntervalSeconds?: number;
             retryDelaySeconds?: number;
         };
-        WorkerPoolConfig: {
-            /** Format: int32 */
-            MaxWorkers?: number;
-            /** Format: int32 */
-            MinWorkers?: number;
-            /** Format: int32 */
-            QueueSize?: number;
+        data: {
+            data?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkValidationResponse"];
         };
-        WorkerPoolMetrics: {
-            /** Format: int32 */
-            ActiveWorkers?: number;
-            /** Format: int32 */
-            QueueSize?: number;
-            /** Format: int64 */
-            TotalJobs?: number;
+        "github_com_fntelecomllc_studio_backend_internal_api.ErrorDetail": {
+            /** @description Primary error code */
+            code?: string;
+            /** @description Additional context data */
+            context?: unknown;
+            /** @description Field that caused the error (for validation) */
+            field?: string;
+            /** @description Human-readable error message */
+            message?: string;
+        };
+        /** @description Enterprise-grade enhancements for Day 3 */
+        "github_com_fntelecomllc_studio_backend_internal_models.AdvancedStealthPolicy": {
+            adaptiveThrottling?: boolean;
+            /** @description seconds */
+            cooldownPeriods?: number[];
+            geographicDistribution?: boolean;
+            humanBehaviorPatterns?: string[];
+            maxConcurrentRequests?: number;
+            /** @enum {string} */
+            profile?: "conservative" | "moderate" | "aggressive" | "extreme_stealth";
+            requestBurstLimit?: number;
+            timeZoneSimulation?: boolean;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.AggregatedAnalytics": {
+            overallSuccessRate?: number;
+            resourceUtilization?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ResourceUtilizationMetrics"];
+            topPerformingPhases?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.PhasePerformance"][];
+            topPerformingTlds?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.TLDPerformance"][];
+            totalCampaigns?: number;
+            totalDomains?: number;
+            totalLeads?: number;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BehavioralMimicryConfig": {
+            /** @description Simulate real browser behavior */
+            browserBehavior?: boolean;
+            enabled?: boolean;
+            /** @description seconds */
+            idlePeriods?: number[];
+            /** @description Simulate user interactions */
+            randomMouseMovement?: boolean;
+            /** @description Natural scrolling patterns */
+            scrollingBehavior?: boolean;
+            /** @description Mimic search engine patterns */
+            searchPatterns?: boolean;
+            /** @description seconds */
+            sessionDuration?: number;
+            /** @description Mimic social media crawling */
+            socialMediaPatterns?: boolean;
+            /** @description Human typing speed simulation */
+            typingDelays?: boolean;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsRequest": {
+            campaignIds?: string[];
+            filters?: {
+                [key: string]: unknown;
+            };
+            /** @enum {string} */
+            granularity?: "hour" | "day" | "week" | "month";
+            /** @description ["campaign", "phase", "tld", "persona"] */
+            groupBy?: string[];
+            /** @description ["domains", "success_rate", "performance", "costs"] */
+            metrics: string[];
+            timeRange?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.TimeRangeFilter"];
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse": {
+            aggregatedData?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.AggregatedAnalytics"];
+            campaignMetrics?: {
+                [key: string]: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.CampaignAnalytics"];
+            };
+            dataPoints?: number;
+            metadata?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkMetadata"];
+            processingTimeMs?: number;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BulkDNSValidationRequest": {
+            batchSize?: number;
+            operations: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.DNSValidationOperation"][];
+            stealth?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.StealthValidationConfig"];
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BulkDeleteProxiesRequest": {
+            proxyIds: string[];
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationRequest": {
+            batchSize?: number;
+            operations: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.DomainGenerationOperation"][];
+            parallel?: boolean;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse": {
+            failedOps?: number;
+            operationId?: string;
+            operations?: {
+                [key: string]: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.DomainGenerationResult"];
+            };
+            processingTimeMs?: number;
+            /** @description "running", "completed", "failed", "partial" */
+            status?: string;
+            successfulOps?: number;
+            totalGenerated?: number;
+            totalRequested?: number;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BulkHTTPValidationRequest": {
+            batchSize?: number;
+            concurrent?: number;
+            operations: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.HTTPValidationOperation"][];
+            stealth?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.StealthValidationConfig"];
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BulkMetadata": {
+            debug?: {
+                [key: string]: unknown;
+            };
+            executionNode?: string;
+            requestId?: string;
+            timestamp?: string;
+            userId?: string;
+            version?: string;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BulkOperationListResponse": {
+            metadata?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkMetadata"];
+            operations?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkOperationStatus"][];
+            totalCount?: number;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BulkOperationStatus": {
+            durationMs?: number;
+            endTime?: string;
+            error?: string;
+            metadata?: {
+                [key: string]: unknown;
+            };
+            operationId?: string;
+            progress?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.OperationProgress"];
+            results?: {
+                [key: string]: unknown;
+            };
+            startTime?: string;
+            /** @description "queued", "running", "completed", "failed", "cancelled" */
+            status?: string;
+            /** @description "domain_generation", "dns_validation", "http_validation", "analytics" */
+            type?: string;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BulkProxyError": {
+            error?: string;
+            proxyId?: string;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse": {
+            errorCount?: number;
+            failedProxies?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkProxyError"][];
+            /** @description For bulk update operations */
+            results?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.Proxy"][];
+            successCount?: number;
+            successfulProxies?: string[];
+            totalRequested?: number;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BulkResourceRequest": {
+            maxDuration?: number;
+            operations: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ResourceOperation"][];
+            /** @enum {string} */
+            priority?: "low" | "normal" | "high" | "critical";
+            resourceLimits?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ResourceLimits"];
+            scheduledTime?: string;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse": {
+            allocationId?: string;
+            expirationTime?: string;
+            failedOps?: number;
+            operations?: {
+                [key: string]: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ResourceAllocationResult"];
+            };
+            processingTimeMs?: number;
+            successfulOps?: number;
+            totalAllocated?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ResourceUtilizationMetrics"];
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BulkTestProxiesRequest": {
+            proxyIds: string[];
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BulkUpdateProxiesRequest": {
+            proxyIds: string[];
+            updates: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.UpdateProxyRequest"];
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BulkValidationDomainResult": {
+            content?: string;
+            dnsResolved?: boolean;
+            domainName?: string;
+            error?: string;
+            httpAccessible?: boolean;
+            keywords?: string[];
+            metadata?: {
+                [key: string]: unknown;
+            };
+            responseTimeMs?: number;
+            /** @description "success", "failed", "timeout", "error" */
+            status?: string;
+            statusCode?: number;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.BulkValidationResponse": {
+            failedOps?: number;
+            operationId?: string;
+            operations?: {
+                [key: string]: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ValidationOperationResult"];
+            };
+            processingTimeMs?: number;
+            status?: string;
+            stealthMetrics?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.StealthOperationMetrics"];
+            successfulOps?: number;
+            totalFailed?: number;
+            totalProcessed?: number;
+            totalSuccessful?: number;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.CampaignAnalytics": {
+            avgResponseTimeMs?: number;
+            campaignId?: string;
+            costPerLead?: number;
+            domainsGenerated?: number;
+            domainsValidated?: number;
+            leadsGenerated?: number;
+            phaseBreakdown?: {
+                [key: string]: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.PhaseMetrics"];
+            };
+            successRate?: number;
+            timeSeriesData?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.TimeSeriesPoint"][];
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.ChangePasswordRequest": {
+            currentPassword: string;
+            newPassword: string;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.CreateProxyRequest": {
+            address: string;
+            countryCode?: string;
+            description?: string;
+            isEnabled?: boolean;
+            name: string;
+            notes?: string;
+            password?: string;
+            protocol?: string;
+            username?: string;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.DNSValidationOperation": {
+            campaignId: string;
+            domainFilter?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.DomainFilter"];
+            maxDomains?: number;
+            personaIds: string[];
+            retryAttempts?: number;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.DetectionEvasionConfig": {
+            antiAnalysisFeatures?: string[];
+            captchaBypass?: boolean;
+            enabled?: boolean;
+            fingerprintRandomization?: boolean;
+            honeypotDetection?: boolean;
+            httpHeaderRandomization?: boolean;
+            payloadObfuscation?: boolean;
+            rateLimitEvasion?: boolean;
+            requestOrderRandomization?: boolean;
+            timingAttackPrevention?: boolean;
+            tlsFingerprintRotation?: boolean;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.DomainFilter": {
+            /** @description Domains to exclude */
+            excludeList?: string[];
+            maxLength?: number;
+            minLength?: number;
+            /** @description Only retry failed domains */
+            onlyFailed?: boolean;
+            /** @description Regex pattern */
+            pattern?: string;
+            /** @description ["generated", "dns_validated", "http_validated"] */
+            status?: string[];
+            /** @description [".com", ".net", ".org"] */
+            tlds?: string[];
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.DomainGenerationOperation": {
+            campaignId: string;
+            /** @description DomainGenerationPhaseConfig */
+            config: unknown;
+            maxDomains?: number;
+            startFrom?: number;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.DomainGenerationResult": {
+            campaignId?: string;
+            domainsGenerated?: number;
+            durationMs?: number;
+            endOffset?: number;
+            error?: string;
+            startOffset?: number;
+            success?: boolean;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.EnterpriseProxyStrategy": {
+            backupProxyPools?: string[];
+            failoverThreshold?: number;
+            geoTargeting?: boolean;
+            /** @description seconds */
+            healthCheckInterval?: number;
+            proxyPools?: string[];
+            proxyQualityFiltering?: boolean;
+            /** @enum {string} */
+            proxyRotationRate?: "per_request" | "per_domain" | "per_batch" | "adaptive";
+            /** @enum {string} */
+            strategy?: "round_robin" | "weighted_random" | "geographic" | "intelligent_failover";
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse": {
+            /** @example 400 */
+            code?: number;
+            /** @example Error message description */
+            message?: string;
+            /** @example error */
+            status?: string;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.HTTPValidationOperation": {
+            campaignId: string;
+            domainFilter?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.DomainFilter"];
+            keywordSetIds?: string[];
+            keywords?: string[];
+            maxDomains?: number;
+            personaIds: string[];
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.KeywordRule": {
+            category?: string;
+            contextChars?: number;
+            createdAt?: string;
+            id?: string;
+            isCaseSensitive?: boolean;
+            keywordSetId?: string;
+            pattern: string;
+            ruleType: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.KeywordRuleTypeEnum"];
+            updatedAt?: string;
+        };
+        /** @enum {string} */
+        "github_com_fntelecomllc_studio_backend_internal_models.KeywordRuleTypeEnum": "string" | "regex";
+        "github_com_fntelecomllc_studio_backend_internal_models.LoginRequest": {
+            captchaToken?: string;
+            email: string;
+            password: string;
+            rememberMe?: boolean;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.OperationProgress": {
+            currentPhase?: string;
+            estimatedTimeMs?: number;
+            failedItems?: number;
+            percentage?: number;
+            processedItems?: number;
+            remainingItems?: number;
+            successfulItems?: number;
+            totalItems?: number;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.PersonaTypeEnum": string;
+        "github_com_fntelecomllc_studio_backend_internal_models.PhaseMetrics": {
+            avgDurationMs?: number;
+            failureCount?: number;
+            itemsProcessed?: number;
+            phase?: string;
+            successCount?: number;
+            successRate?: number;
+            totalDurationMs?: number;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.PhasePerformance": {
+            avgDurationMs?: number;
+            campaigns?: number;
+            items?: number;
+            phase?: string;
+            successRate?: number;
+        };
+        /** @description Proxy server connection and authentication details */
+        "github_com_fntelecomllc_studio_backend_internal_models.Proxy": {
+            /** @description Full proxy address (e.g., 'http://user:pass@host:port') */
+            address: string;
+            city?: string;
+            countryCode?: string;
+            createdAt?: string;
+            description?: string;
+            /** @description Count of failed operations */
+            failureCount?: number;
+            /** @description Hostname or IP */
+            host?: string;
+            id?: string;
+            /** @description For API input, to be hashed into PasswordHash */
+            inputPassword?: string;
+            /** @description Fields for input/logic, not direct DB columns if already covered by Address or PasswordHash */
+            inputUsername?: string;
+            isEnabled?: boolean;
+            isHealthy?: boolean;
+            /** @description Timestamp of last health check */
+            lastCheckedAt?: string;
+            /** @description Last error message */
+            lastError?: string;
+            /** @description e.g., 'Active', 'Inactive', 'Error' */
+            lastStatus?: string;
+            /** @description Last test timestamp */
+            lastTested?: string;
+            /** @description Last measured latency */
+            latencyMs?: number;
+            name: string;
+            /** @description Proxy notes/comments */
+            notes?: string;
+            /** @description Port number */
+            port?: number;
+            protocol?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ProxyProtocolEnum"];
+            provider?: string;
+            status?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ProxyStatusEnum"];
+            /** @description Count of successful operations */
+            successCount?: number;
+            updatedAt?: string;
+            /** @description Username for proxy auth, from DB */
+            username?: string;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.ProxyPool": {
+            createdAt?: string;
+            description?: string;
+            healthCheckEnabled?: boolean;
+            healthCheckIntervalSeconds?: number;
+            id?: string;
+            isEnabled?: boolean;
+            maxRetries?: number;
+            name: string;
+            /** @description round_robin, random, weighted, failover */
+            poolStrategy?: string;
+            /** @description Computed fields (not stored in DB) */
+            proxies?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.Proxy"][];
+            timeoutSeconds?: number;
+            updatedAt?: string;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.ProxyPoolMembership": {
+            addedAt?: string;
+            isActive?: boolean;
+            poolId: string;
+            proxyId: string;
+            weight?: number;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.ProxyProtocolEnum": string;
+        /** @description Frontend-expected fields */
+        "github_com_fntelecomllc_studio_backend_internal_models.ProxyStatusEnum": string;
+        "github_com_fntelecomllc_studio_backend_internal_models.RequiredResources": {
+            cpuCores?: number;
+            memoryMB?: number;
+            networkMbps?: number;
+            personas?: number;
+            proxies?: number;
+            storageMB?: number;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.ResourceAllocationResult": {
+            allocatedResources?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.RequiredResources"];
+            allocationTime?: string;
+            campaignId?: string;
+            error?: string;
+            expirationTime?: string;
+            success?: boolean;
+            type?: string;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.ResourceLimits": {
+            maxConcurrent?: number;
+            maxCpuPercent?: number;
+            maxDiskIO?: number;
+            maxMemoryPercent?: number;
+            maxNetworkIO?: number;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.ResourceOperation": {
+            campaignId: string;
+            config?: {
+                [key: string]: unknown;
+            };
+            /** @enum {string} */
+            priority?: "low" | "normal" | "high" | "critical";
+            resources?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.RequiredResources"];
+            /** @enum {string} */
+            type: "domain_generation" | "dns_validation" | "http_validation" | "analytics";
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.ResourceUtilizationMetrics": {
+            /** @description Percentage */
+            cpuUsage?: number;
+            /** @description Count */
+            databaseQueries?: number;
+            /** @description Percentage */
+            memoryUsage?: number;
+            /** @description Bytes */
+            networkIO?: number;
+            /** @description Count */
+            proxyRequests?: number;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.StealthOperationMetrics": {
+            /** @description milliseconds */
+            avgRequestSpacing?: number;
+            /** @description 0.0 = undetectable, 1.0 = highly detectable */
+            detectionScore?: number;
+            patternBreaks?: number;
+            proxyRotations?: number;
+            randomizationEvents?: number;
+            temporalJitterEvents?: number;
+            userAgentRotations?: number;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.StealthValidationConfig": {
+            advancedPolicy?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.AdvancedStealthPolicy"];
+            behavioralMimicry?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BehavioralMimicryConfig"];
+            detectionEvasion?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.DetectionEvasionConfig"];
+            detectionThreshold?: number;
+            enabled?: boolean;
+            patternAvoidance?: boolean;
+            proxyRotationForced?: boolean;
+            proxyStrategy?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.EnterpriseProxyStrategy"];
+            /** @enum {string} */
+            randomizationLevel?: "low" | "medium" | "high" | "extreme";
+            /** @description milliseconds */
+            requestSpacing?: number;
+            temporalJitter?: boolean;
+            userAgentRotation?: boolean;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.TLDPerformance": {
+            domains?: number;
+            leads?: number;
+            rank?: number;
+            successRate?: number;
+            tld?: string;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.TimeRangeFilter": {
+            /** @description ISO 8601 */
+            endTime: string;
+            /** @description ISO 8601 */
+            startTime: string;
+            /** @description "UTC", "America/New_York", etc. */
+            timezone?: string;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.TimeSeriesPoint": {
+            timestamp?: string;
+            values?: {
+                [key: string]: unknown;
+            };
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.UpdateProxyRequest": {
+            address?: string;
+            countryCode?: string;
+            description?: string;
+            isEnabled?: boolean;
+            name?: string;
+            notes?: string;
+            password?: string;
+            protocol?: string;
+            username?: string;
+        };
+        /** @description User account information */
+        "github_com_fntelecomllc_studio_backend_internal_models.User": {
+            avatarUrl?: string;
+            createdAt?: string;
+            email?: string;
+            emailVerified?: boolean;
+            firstName?: string;
+            id?: string;
+            isActive?: boolean;
+            isLocked?: boolean;
+            lastLoginAt?: string;
+            /** @example 192.168.1.1 */
+            lastLoginIp?: string;
+            lastName?: string;
+            /** @description MFA support fields */
+            mfaEnabled?: boolean;
+            mfaLastUsedAt?: string;
+            mustChangePassword?: boolean;
+            /** @description Computed fields (not stored in DB) */
+            name?: string;
+            updatedAt?: string;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.ValidationOperationResult": {
+            campaignId?: string;
+            domainsFailed?: number;
+            domainsProcessed?: number;
+            domainsSuccessful?: number;
+            durationMs?: number;
+            error?: string;
+            results?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkValidationDomainResult"][];
+            success?: boolean;
+            /** @description "dns", "http" */
+            validationType?: string;
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse": {
+            /** @example 400 */
+            code?: number;
+            /** @example Error message description */
+            message?: string;
+            /** @example error */
+            status?: string;
+        };
+        "github_com_fntelecomllc_studio_backend_pkg_api.ErrorDetail": {
+            code?: string;
+            details?: string;
+            fields?: {
+                [key: string]: string;
+            };
+            message?: string;
+            suggestions?: string[];
+        };
+        "keywordextractor.KeywordExtractionResult": {
+            category?: string;
+            contexts?: string[];
+            matchedPattern?: string;
+            matchedText?: string;
+        };
+        "services.CreateLeadGenerationCampaignRequest": {
+            description?: string;
+            domainConfig: components["schemas"]["services.DomainGenerationPhaseConfig"];
+            name: string;
+            userId?: string;
+        };
+        /** @description Domain generation config for Phase 1 initialization */
+        "services.DomainGenerationPhaseConfig": {
+            /** @example 100 */
+            batchSize?: number;
+            /** @example abcdefghijklmnopqrstuvwxyz */
+            characterSet: string;
+            /** @example test */
+            constantString: string;
+            /** @example 1000 */
+            numDomainsToGenerate?: number;
+            /**
+             * @example prefix
+             * @enum {string}
+             */
+            patternType: "prefix" | "suffix" | "both";
+            /** @example [
+             *       "[\".com\"]"
+             *     ] */
+            tlds: string[];
+            /** @example 5 */
+            variableLength: number;
         };
     };
     responses: never;
@@ -7099,38 +5050,84 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    handleBulkDatabaseQuery: {
+    bulkValidateDNS: {
         parameters: {
             query?: never;
-            header: {
-                /** @description Must be XMLHttpRequest */
-                "X-Requested-With": string;
-            };
+            header?: never;
             path?: never;
             cookie?: never;
         };
+        /** @description Bulk DNS validation request */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BulkDatabaseQueryRequest"];
+                "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkDNSValidationRequest"];
             };
         };
         responses: {
-            /** @description Operation successful */
+            /** @description DNS validation completed successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BulkDatabaseQueryResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
-            /** @description Bad Request */
+            /** @description Validation accepted and processing */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
+                };
+            };
+            /** @description Bad Request - Invalid domains or configuration */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
+                };
+            };
+            /** @description Rate Limited - Too many concurrent validations */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -7139,96 +5136,89 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
     };
-    handleBulkDatabaseStats: {
+    bulkValidateHTTP: {
         parameters: {
             query?: never;
-            header: {
-                /** @description Must be XMLHttpRequest */
-                "X-Requested-With": string;
-            };
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkDatabaseStatsRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BulkDatabaseStatsResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    queryKeywordRules: {
-        parameters: {
-            query?: {
-                /** @description Filter by keyword set ID */
-                keyword_set_id?: string;
-                /** @description Filter by rule type */
-                rule_type?: string;
-                /** @description Filter by category */
-                category?: string;
-                /** @description Filter by case sensitivity */
-                is_case_sensitive?: boolean;
-                /** @description Search pattern in rule patterns (partial match) */
-                pattern?: string;
-                /** @description Maximum number of results */
-                limit?: number;
-                /** @description Number of results to skip */
-                offset?: number;
-            };
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        /** @description Bulk HTTP validation request */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkHTTPValidationRequest"];
+            };
+        };
         responses: {
-            /** @description Operation successful */
+            /** @description HTTP validation completed successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["APIResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
-            /** @description Bad Request */
+            /** @description Validation accepted and processing */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
+                };
+            };
+            /** @description Bad Request - Invalid domains or configuration */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
+                };
+            };
+            /** @description Rate Limited - Too many concurrent validations */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -7237,48 +5227,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getKeywordSetWithRules: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Keyword Set ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["APIResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -7290,84 +5239,122 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
+        /** @description Password change request */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ChangePasswordRequest"];
+                "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ChangePasswordRequest"];
             };
         };
         responses: {
-            /** @description Operation successful */
+            /** @description Password changed successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PasswordChangeResponse"];
+                    "application/json": components["schemas"]["api.PasswordChangeResponse"];
                 };
             };
-            /** @description Bad Request */
+            /** @description Invalid request format */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.StandardErrorResponse"];
                 };
             };
-            /** @description Internal Server Error */
-            500: {
+            /** @description Authentication required */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                };
+            };
+            /** @description Not implemented */
+            501: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.StandardErrorResponse"];
                 };
             };
         };
     };
-    login: {
+    loginUser: {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
+        /** @description Login credentials */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["LoginRequest"];
+                "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.LoginRequest"];
             };
         };
         responses: {
-            /** @description Operation successful */
+            /** @description Login successful with user and session info */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["LoginSuccessResponse"];
+                    "application/json": components["schemas"]["api.LoginSuccessResponse"];
                 };
             };
-            /** @description Bad Request */
+            /** @description Invalid request format */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.StandardErrorResponse"];
                 };
             };
-            /** @description Internal Server Error */
+            /** @description Invalid credentials */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                };
+            };
+            /** @description Account inactive */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                };
+            };
+            /** @description Account locked */
+            423: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.StandardErrorResponse"];
                 };
             };
         };
     };
-    logout: {
+    logoutUser: {
         parameters: {
             query?: never;
             header?: never;
@@ -7376,31 +5363,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Operation successful */
+            /** @description Logout successful */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessMessageResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.SuccessMessageResponse"];
                 };
             };
         };
@@ -7414,31 +5383,40 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Operation successful */
+            /** @description Current user information */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["User"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.User"];
                 };
             };
-            /** @description Bad Request */
-            400: {
+            /** @description Authentication required */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.StandardErrorResponse"];
                 };
             };
-            /** @description Internal Server Error */
+            /** @description User not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                };
+            };
+            /** @description Internal server error */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.StandardErrorResponse"];
                 };
             };
         };
@@ -7452,31 +5430,31 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Operation successful */
+            /** @description Session refreshed with new expiry */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SessionRefreshResponse"];
+                    "application/json": components["schemas"]["api.SessionRefreshResponse"];
                 };
             };
-            /** @description Bad Request */
-            400: {
+            /** @description Invalid or expired session */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.StandardErrorResponse"];
                 };
             };
-            /** @description Internal Server Error */
+            /** @description Failed to refresh session */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.StandardErrorResponse"];
                 };
             };
         };
@@ -7490,22 +5468,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Operation successful */
+            /** @description Campaigns retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["APIResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -7514,7 +5483,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
         };
@@ -7531,13 +5500,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Operation successful */
+            /** @description Domain status summary retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["APIResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Bad Request */
@@ -7546,7 +5515,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -7555,7 +5533,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
         };
@@ -7568,23 +5546,24 @@ export interface operations {
                 /** @description Campaign ID (UUID) */
                 campaignId: string;
                 /** @description Phase type */
-                phase: string;
+                phase: "dns_validation" | "http_keyword_validation" | "analysis";
             };
             cookie?: never;
         };
+        /** @description Phase configuration request */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PhaseConfigureRequest"];
+                "application/json": components["schemas"]["api.PhaseConfigureRequest"];
             };
         };
         responses: {
-            /** @description Operation successful */
+            /** @description Phase configured successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["APIResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Bad Request */
@@ -7593,7 +5572,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -7602,7 +5590,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
         };
@@ -7615,19 +5603,19 @@ export interface operations {
                 /** @description Campaign ID (UUID) */
                 campaignId: string;
                 /** @description Phase name */
-                phase: string;
+                phase: "domain-generation" | "dns-validation" | "http-validation";
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Operation successful */
+            /** @description Phase started successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["APIResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Bad Request */
@@ -7636,7 +5624,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -7645,7 +5642,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
         };
@@ -7658,19 +5655,19 @@ export interface operations {
                 /** @description Campaign ID (UUID) */
                 campaignId: string;
                 /** @description Phase type */
-                phase: string;
+                phase: "domain_generation" | "dns_validation" | "http_keyword_validation" | "analysis";
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description Operation successful */
+            /** @description Phase status retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["APIResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Bad Request */
@@ -7679,7 +5676,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                };
+            };
+            /** @description Campaign or phase not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -7688,7 +5694,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
         };
@@ -7705,13 +5711,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Operation successful */
+            /** @description Campaign progress */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["APIResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Bad Request */
@@ -7720,7 +5726,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                };
+            };
+            /** @description Campaign not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -7729,7 +5744,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
         };
@@ -7741,33 +5756,47 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
+        /** @description Bulk analytics request */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BulkAnalyticsRequest"];
+                "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsRequest"];
             };
         };
         responses: {
-            /** @description Operation successful */
+            /** @description Analytics completed successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse"];
                 };
             };
-            /** @description Bad Request */
+            /** @description Analytics accepted and processing */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse"];
+                };
+            };
+            /** @description Bad Request - Invalid configuration */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
+                };
+            };
+            /** @description Rate Limited - Too many concurrent analytics */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -7776,54 +5805,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    bulkCampaignOperations: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkCampaignOperationRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -7835,33 +5817,47 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
+        /** @description Bulk domain generation request */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BulkDomainGenerationRequest"];
+                "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationRequest"];
             };
         };
         responses: {
-            /** @description Operation successful */
+            /** @description Domains generated successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse"];
                 };
             };
-            /** @description Bad Request */
+            /** @description Operation accepted and processing */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse"];
+                };
+            };
+            /** @description Bad Request - Invalid configuration */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
+                };
+            };
+            /** @description Rate Limited - Too many concurrent operations */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -7870,101 +5866,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    bulkValidateDNS: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkDNSValidationRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    bulkValidateHTTP: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkHTTPValidationRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -7976,19 +5878,20 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
+        /** @description Bulk data request */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BulkEnrichedDataRequest"];
+                "application/json": components["schemas"]["api.BulkEnrichedDataRequest"];
             };
         };
         responses: {
-            /** @description Operation successful */
+            /** @description Bulk data retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["APIResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Bad Request */
@@ -7997,7 +5900,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -8006,7 +5909,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
         };
@@ -8015,9 +5918,9 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Filter by operation status */
-                status?: string;
+                status?: "queued" | "running" | "completed" | "failed" | "cancelled";
                 /** @description Filter by operation type */
-                type?: string;
+                type?: "domain_generation" | "dns_validation" | "http_validation" | "analytics";
                 /** @description Number of operations to return (max 1000) */
                 limit?: number;
                 /** @description Number of operations to skip */
@@ -8027,24 +5930,28 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
         responses: {
-            /** @description Operation successful */
+            /** @description Operations list retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BulkOperationListResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkOperationListResponse"];
                 };
             };
-            /** @description Bad Request */
+            /** @description Bad Request - Invalid parameters */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -8053,7 +5960,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -8068,24 +5975,37 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
         responses: {
-            /** @description Operation successful */
+            /** @description Operation cancelled successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["OperationCancellationResponse"];
+                    "application/json": components["schemas"]["api.OperationCancellationResponse"];
                 };
             };
-            /** @description Bad Request */
-            400: {
+            /** @description Operation not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
+                };
+            };
+            /** @description Operation cannot be cancelled (already completed) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -8094,7 +6014,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -8109,24 +6029,28 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
         responses: {
-            /** @description Operation successful */
+            /** @description Operation status retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BulkOperationStatus"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkOperationStatus"];
                 };
             };
-            /** @description Bad Request */
-            400: {
+            /** @description Operation not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -8135,7 +6059,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -8147,33 +6071,47 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
+        /** @description Bulk resource allocation request */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BulkResourceRequest"];
+                "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkResourceRequest"];
             };
         };
         responses: {
-            /** @description Operation successful */
+            /** @description Resources allocated successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse"];
                 };
             };
-            /** @description Bad Request */
+            /** @description Resource allocation accepted and processing */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse"];
+                };
+            };
+            /** @description Bad Request - Invalid resource configuration */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
+                };
+            };
+            /** @description Rate Limited - Resource quota exceeded */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -8182,7 +6120,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -8197,24 +6135,28 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
         responses: {
-            /** @description Operation successful */
+            /** @description Resource status retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BulkResourceStatusResponse"];
+                    "application/json": components["schemas"]["api.BulkResourceStatusResponse"];
                 };
             };
-            /** @description Bad Request */
-            400: {
+            /** @description Resource allocation not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -8223,7 +6165,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -8235,19 +6177,20 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
+        /** @description Pattern offset request */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PatternOffsetRequest"];
+                "application/json": components["schemas"]["api.PatternOffsetRequest"];
             };
         };
         responses: {
-            /** @description Operation successful */
+            /** @description Pattern offset retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PatternOffsetResponse"];
+                    "application/json": components["schemas"]["api.PatternOffsetResponse"];
                 };
             };
             /** @description Bad Request */
@@ -8256,7 +6199,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -8265,7 +6208,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
         };
@@ -8277,24 +6220,20 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
+        /** @description Lead generation campaign creation request */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["CreateLeadGenerationCampaignRequest"];
+                "application/json": components["schemas"]["services.CreateLeadGenerationCampaignRequest"];
             };
         };
         responses: {
-            /** @description Operation successful */
-            200: {
+            /** @description Campaign created successfully */
+            201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Bad Request */
@@ -8303,7 +6242,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -8312,7 +6251,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
                 };
             };
         };
@@ -8326,31 +6265,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Operation successful */
+            /** @description Feature flags settings */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FeatureFlags"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["config.FeatureFlags"];
                 };
             };
         };
@@ -8362,42 +6283,47 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
+        /** @description Feature flags settings */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["FeatureFlags"];
+                "application/json": components["schemas"]["config.FeatureFlags"];
             };
         };
         responses: {
-            /** @description Operation successful */
+            /** @description Updated feature flags */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["FeatureFlags"];
+                    "application/json": components["schemas"]["config.FeatureFlags"];
                 };
             };
-            /** @description Bad Request */
+            /** @description Invalid request body */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": {
+                        [key: string]: string;
+                    };
                 };
             };
-            /** @description Internal Server Error */
+            /** @description Failed to save feature flags */
             500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": {
+                        [key: string]: string;
+                    };
                 };
             };
         };
     };
-    handleHealthCheck: {
+    healthCheck: {
         parameters: {
             query?: never;
             header?: never;
@@ -8406,36 +6332,18 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Operation successful */
+            /** @description System health status */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HealthStatus"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.HealthStatus"];
                 };
             };
         };
     };
-    handleLivenessCheck: {
+    healthLiveness: {
         parameters: {
             query?: never;
             header?: never;
@@ -8444,36 +6352,18 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Operation successful */
+            /** @description Service is alive */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HealthCheckResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.HealthCheckResponse"];
                 };
             };
         };
     };
-    handleReadinessCheck: {
+    healthReadiness: {
         parameters: {
             query?: never;
             header?: never;
@@ -8482,31 +6372,22 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Operation successful */
+            /** @description Service is ready */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["HealthCheckResponse"];
+                    "application/json": components["schemas"]["api.HealthCheckResponse"];
                 };
             };
-            /** @description Bad Request */
-            400: {
+            /** @description Service not ready */
+            503: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.StandardErrorResponse"];
                 };
             };
         };
@@ -8518,37 +6399,31 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
+        /** @description Batch extraction request */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["BatchKeywordExtractionRequest"];
+                "application/json": components["schemas"]["api.BatchKeywordExtractionRequest"];
             };
         };
         responses: {
-            /** @description Operation successful */
+            /** @description Extraction results */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BatchKeywordExtractionResponse"];
+                    "application/json": components["schemas"]["api.BatchKeywordExtractionResponse"];
                 };
             };
-            /** @description Bad Request */
+            /** @description Invalid request body or validation failed */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": {
+                        [key: string]: string;
+                    };
                 };
             };
         };
@@ -8571,1129 +6446,25 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Operation successful */
+            /** @description Server-sent events stream with extraction results */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                    "text/event-stream": string;
+                };
+            };
+            /** @description Invalid query parameters */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
+                        [key: string]: string;
                     };
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    listKeywordSets: {
-        parameters: {
-            query?: {
-                /** @description Maximum number of results */
-                limit?: number;
-                /** @description Number of results to skip */
-                offset?: number;
-                /** @description Include rules in response */
-                includeRules?: boolean;
-                /** @description Filter by enabled status */
-                isEnabled?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    createKeywordSet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateKeywordSetRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getKeywordSet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Keyword set ID */
-                setId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KeywordSetResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    updateKeywordSet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Keyword set ID */
-                setId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateKeywordSetRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KeywordSetResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    deleteKeywordSet: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Keyword Set ID (UUID) */
-                setId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["KeywordSetDeleteResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    listAllPersonas: {
-        parameters: {
-            query?: {
-                /** @description Maximum number of results */
-                limit?: number;
-                /** @description Number of results to skip */
-                offset?: number;
-                /** @description Filter by enabled status */
-                isEnabled?: boolean;
-                /** @description Filter by persona type (dns, http) */
-                personaType?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    createPersona: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreatePersonaRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getPersonaByID: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Persona ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PersonaResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    updatePersona: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Persona ID (UUID) */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdatePersonaRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PersonaResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    deletePersona: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Persona ID (UUID) */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PersonaDeleteResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    testPersona: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Persona ID (UUID) */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PersonaTestResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getDnsPersonaByID: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description DNS Persona ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PersonaResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getHttpPersonaByID: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description HTTP Persona ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PersonaResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    ping: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["PingResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    listProxies: {
-        parameters: {
-            query?: {
-                /** @description Maximum number of results */
-                limit?: number;
-                /** @description Number of results to skip */
-                offset?: number;
-                /** @description Filter by protocol (http, https, socks4, socks5) */
-                protocol?: string;
-                /** @description Filter by enabled status */
-                isEnabled?: boolean;
-                /** @description Filter by health status */
-                isHealthy?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    addProxy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["CreateProxyRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    updateProxy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Proxy ID */
-                proxyId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["UpdateProxyRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Proxy"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    deleteProxy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Proxy ID */
-                proxyId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    forceCheckSingleProxy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Proxy ID (UUID) */
-                proxyId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProxyHealthCheckResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    testProxy: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Proxy ID (UUID) */
-                proxyId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProxyTestResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    bulkDeleteProxies: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkDeleteProxiesRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BulkProxyOperationResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    bulkTestProxies: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkTestProxiesRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BulkProxyTestResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    bulkUpdateProxies: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["BulkUpdateProxiesRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BulkProxyOperationResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    forceCheckAllProxies: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProxyHealthCheckRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BulkHealthCheckResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getProxyStatuses: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProxyStatusResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };
@@ -9707,902 +6478,24 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Operation successful */
+            /** @description List of proxy pools */
             200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ProxyPool"][];
+                };
+            };
+            /** @description Failed to list proxy pools */
+            500: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
+                        [key: string]: string;
                     };
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    createProxyPool: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProxyPoolRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    updateProxyPool: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Proxy pool ID */
-                poolId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProxyPoolRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProxyPool"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    deleteProxyPool: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Proxy pool ID */
-                poolId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["APIResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    addProxyToPool: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Proxy pool ID */
-                poolId: string;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AddProxyToPoolRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    removeProxyFromPool: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Pool ID (UUID) */
-                poolId: string;
-                /** @description Proxy ID (UUID) */
-                proxyId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProxyPoolMembershipResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getAuthConfigGin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthConfig"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    updateAuthConfigGin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AuthConfig"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AuthConfig"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getServerConfigGin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ServerConfigResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    updateServerConfigGin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ServerConfigUpdateRequest"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ServerConfigResponse"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getDNSConfigGin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DNSValidatorConfigJSON"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    updateDNSConfigGin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["DNSValidatorConfigJSON"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["DNSValidatorConfigJSON"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getHTTPConfigGin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidatorConfigJSON"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    updateHTTPConfigGin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["HTTPValidatorConfigJSON"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidatorConfigJSON"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getLoggingConfigGin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LoggingConfig"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    updateLoggingConfigGin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["LoggingConfig"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["LoggingConfig"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getProxyManagerConfigGin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProxyManagerConfigJSON"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    updateProxyManagerConfigGin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProxyManagerConfig"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProxyManagerConfigJSON"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getRateLimiterConfigGin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RateLimiterConfig"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    updateRateLimiterConfigGin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["RateLimiterConfig"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["RateLimiterConfig"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    getWorkerConfigGin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkerConfig"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-        };
-    };
-    updateWorkerConfigGin: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["WorkerConfig"];
-            };
-        };
-        responses: {
-            /** @description Operation successful */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkerConfig"];
-                };
-            };
-            /** @description Bad Request */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };
@@ -10619,18 +6512,14 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Operation successful */
+            /** @description SSE event stream */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
+                    "application/json": string;
+                    "text/event-stream": string;
                 };
             };
             /** @description Bad Request */
@@ -10639,7 +6528,16 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -10648,7 +6546,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
                 };
             };
         };
@@ -10662,27 +6560,23 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Operation successful */
+            /** @description SSE event stream */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
+                    "application/json": string;
+                    "text/event-stream": string;
                 };
             };
-            /** @description Bad Request */
-            400: {
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -10691,7 +6585,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
         };
@@ -10705,36 +6599,27 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Operation successful */
+            /** @description SSE statistics */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["APIResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
-            /** @description Bad Request */
-            400: {
+            /** @description Unauthorized */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
-                };
-            };
-            /** @description Internal Server Error */
-            500: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
         };
     };
-    handleConnections: {
+    connectWebSocket: {
         parameters: {
             query?: never;
             header?: {
@@ -10746,36 +6631,31 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Operation successful */
-            200: {
+            /** @description WebSocket connection established */
+            101: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /** @description Response data */
-                        data?: unknown;
-                        /** @description Success message */
-                        message?: string;
-                    };
+                    "application/json": string;
                 };
             };
-            /** @description Bad Request */
-            400: {
+            /** @description Authentication required */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.WebSocketErrorResponse"];
                 };
             };
-            /** @description Internal Server Error */
-            500: {
+            /** @description Invalid origin or session security validation failed */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ErrorResponse"];
+                    "application/json": components["schemas"]["api.WebSocketErrorResponse"];
                 };
             };
         };

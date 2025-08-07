@@ -6,7 +6,8 @@ import PageHeader from '@/components/shared/PageHeader';
 import type { components } from '@/lib/api-client/types';
 import { useGetCampaignsStandaloneQuery } from '@/store/api/campaignApi';
 
-type CampaignDetailsResponse = components['schemas']['CampaignDetailsResponse'];
+// TODO: Fix this when proper campaign detail types are available
+// type EnrichedCampaignData = components['schemas']['api.EnrichedCampaignData'];
 import { FilePenLine, AlertCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { Suspense } from 'react';
