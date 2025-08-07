@@ -15,12 +15,50 @@ type BulkDomainGenerationRequest struct {
 	Parallel   bool                        `json:"parallel" validate:"omitempty"`
 }
 
+// DomainGenerationOperationConfig represents the configuration for domain generation operations
+// @Description Union type for different domain generation configuration patterns
+type DomainGenerationOperationConfig struct {
+	// Pattern-based generation (most common)
+	PatternBased *DomainGenerationPhaseConfig `json:"patternBased,omitempty" description:"Pattern-based domain generation configuration"`
+
+	// Custom generation logic
+	CustomLogic *CustomDomainGenerationConfig `json:"customLogic,omitempty" description:"Custom domain generation logic configuration"`
+}
+
+// CustomDomainGenerationConfig represents custom domain generation parameters
+type CustomDomainGenerationConfig struct {
+	GenerationType string                `json:"generationType" validate:"required,oneof=template ai_assisted custom_algorithm" description:"Type of custom generation"`
+	Parameters     map[string]string     `json:"parameters,omitempty" description:"Custom generation parameters"`
+	Templates      []string              `json:"templates,omitempty" description:"Domain templates for template-based generation"`
+	Constraints    GenerationConstraints `json:"constraints,omitempty" description:"Generation constraints and limits"`
+}
+
+// GenerationConstraints defines limits and rules for domain generation
+type GenerationConstraints struct {
+	MinLength    int      `json:"minLength,omitempty" validate:"omitempty,gt=0" description:"Minimum domain length"`
+	MaxLength    int      `json:"maxLength,omitempty" validate:"omitempty,gt=0" description:"Maximum domain length"`
+	ExcludeWords []string `json:"excludeWords,omitempty" description:"Words to exclude from generation"`
+	RequireWords []string `json:"requireWords,omitempty" description:"Words that must be included"`
+}
+
+// DomainGenerationPhaseConfig represents standard pattern-based domain generation
+// @Description Configuration for pattern-based domain generation
+type DomainGenerationPhaseConfig struct {
+	PatternType          string   `json:"patternType" validate:"required,oneof=prefix suffix both" example:"prefix" description:"Pattern type for domain generation"`
+	VariableLength       int      `json:"variableLength" validate:"required,gt=0" example:"5" description:"Length of variable part"`
+	CharacterSet         string   `json:"characterSet" validate:"required" example:"abcdefghijklmnopqrstuvwxyz" description:"Character set for generation"`
+	ConstantString       string   `json:"constantString" validate:"required" example:"test" description:"Constant string part"`
+	TLDs                 []string `json:"tlds" validate:"required,min=1" example:"[\".com\"]" description:"Array of top-level domains"`
+	NumDomainsToGenerate int      `json:"numDomainsToGenerate,omitempty" validate:"omitempty,gte=0" example:"1000" description:"Number of domains to generate"`
+	BatchSize            int      `json:"batchSize,omitempty" validate:"omitempty,gt=0" example:"100" description:"Batch size for generation"`
+}
+
 // DomainGenerationOperation - Single campaign generation operation
 type DomainGenerationOperation struct {
-	CampaignID uuid.UUID   `json:"campaignId" validate:"required,uuid"`
-	Config     interface{} `json:"config" validate:"required"` // DomainGenerationPhaseConfig
-	StartFrom  int64       `json:"startFrom,omitempty" validate:"omitempty,gte=0"`
-	MaxDomains int         `json:"maxDomains,omitempty" validate:"omitempty,gt=0,lte=1000000"`
+	CampaignID uuid.UUID                       `json:"campaignId" validate:"required,uuid"`
+	Config     DomainGenerationOperationConfig `json:"config" validate:"required" description:"Typed domain generation configuration"`
+	StartFrom  int64                           `json:"startFrom,omitempty" validate:"omitempty,gte=0"`
+	MaxDomains int                             `json:"maxDomains,omitempty" validate:"omitempty,gt=0,lte=1000000"`
 }
 
 // BulkDomainGenerationResponse - Results from bulk generation
@@ -194,16 +232,45 @@ type ValidationOperationResult struct {
 
 // BulkValidationDomainResult - Individual domain validation result
 type BulkValidationDomainResult struct {
-	DomainName     string                 `json:"domainName"`
-	Status         string                 `json:"status"` // "success", "failed", "timeout", "error"
-	ResponseTime   int64                  `json:"responseTimeMs"`
-	StatusCode     *int                   `json:"statusCode,omitempty"`
-	Error          string                 `json:"error,omitempty"`
-	DNSResolved    *bool                  `json:"dnsResolved,omitempty"`
-	HTTPAccessible *bool                  `json:"httpAccessible,omitempty"`
-	Keywords       []string               `json:"keywords,omitempty"`
-	Content        string                 `json:"content,omitempty"`
-	Metadata       map[string]interface{} `json:"metadata,omitempty"`
+	DomainName     string                        `json:"domainName"`
+	Status         string                        `json:"status"` // "success", "failed", "timeout", "error"
+	ResponseTime   int64                         `json:"responseTimeMs"`
+	StatusCode     *int                          `json:"statusCode,omitempty"`
+	Error          string                        `json:"error,omitempty"`
+	DNSResolved    *bool                         `json:"dnsResolved,omitempty"`
+	HTTPAccessible *bool                         `json:"httpAccessible,omitempty"`
+	Keywords       []string                      `json:"keywords,omitempty"`
+	Content        string                        `json:"content,omitempty"`
+	Metadata       *BulkValidationDomainMetadata `json:"metadata,omitempty"`
+}
+
+// BulkValidationDomainMetadata contains additional validation-specific information
+type BulkValidationDomainMetadata struct {
+	// DNS-specific metadata
+	ResolverUsed   *string  `json:"resolverUsed,omitempty"`   // Which DNS resolver was used
+	DNSRecordTypes []string `json:"dnsRecordTypes,omitempty"` // Types of DNS records found (A, AAAA, CNAME, etc.)
+	IPAddresses    []string `json:"ipAddresses,omitempty"`    // Resolved IP addresses
+
+	// HTTP-specific metadata
+	ResponseHeaders map[string]string `json:"responseHeaders,omitempty"` // HTTP response headers
+	ContentType     *string           `json:"contentType,omitempty"`     // Response content type
+	ContentLength   *int64            `json:"contentLength,omitempty"`   // Response content length
+	RedirectChain   []string          `json:"redirectChain,omitempty"`   // URLs in redirect chain
+
+	// Performance metadata
+	DNSLookupTime *int64 `json:"dnsLookupTime,omitempty"`    // DNS lookup duration (ms)
+	ConnectTime   *int64 `json:"connectTime,omitempty"`      // TCP connect time (ms)
+	TLSHandshake  *int64 `json:"tlsHandshakeTime,omitempty"` // TLS handshake time (ms)
+
+	// Stealth metadata
+	ProxyUsed   *string `json:"proxyUsed,omitempty"`   // Proxy server used
+	UserAgent   *string `json:"userAgent,omitempty"`   // User agent used
+	PersonaUsed *string `json:"personaUsed,omitempty"` // Persona identifier
+
+	// Error details
+	AttemptCount  *int    `json:"attemptCount,omitempty"`  // Number of attempts made
+	LastError     *string `json:"lastError,omitempty"`     // Last error encountered
+	ErrorCategory *string `json:"errorCategory,omitempty"` // Error category (timeout, network, etc.)
 }
 
 // StealthOperationMetrics - Stealth detection avoidance metrics
@@ -221,12 +288,49 @@ type StealthOperationMetrics struct {
 // BULK CAMPAIGN OPERATIONS - Campaign lifecycle management at scale
 // ===============================================================================
 
+// BulkCampaignOperationConfig contains operation-specific configuration settings
+type BulkCampaignOperationConfig struct {
+	// Domain Generation Configuration
+	DomainGeneration *DomainGenerationOperationConfig `json:"domainGeneration,omitempty"`
+
+	// DNS Validation Configuration
+	DNSValidation *struct {
+		BatchSize                int         `json:"batchSize,omitempty"`
+		ProcessingSpeedPerMinute int         `json:"processingSpeedPerMinute,omitempty"`
+		RetryAttempts            int         `json:"retryAttempts,omitempty"`
+		RotationIntervalSeconds  int         `json:"rotationIntervalSeconds,omitempty"`
+		PersonaIDs               []uuid.UUID `json:"personaIds,omitempty"`
+		OnlyInvalidDomains       bool        `json:"onlyInvalidDomains,omitempty"`
+	} `json:"dnsValidation,omitempty"`
+
+	// HTTP Validation Configuration
+	HTTPValidation *struct {
+		BatchSize                int         `json:"batchSize,omitempty"`
+		ProcessingSpeedPerMinute int         `json:"processingSpeedPerMinute,omitempty"`
+		RetryAttempts            int         `json:"retryAttempts,omitempty"`
+		RotationIntervalSeconds  int         `json:"rotationIntervalSeconds,omitempty"`
+		PersonaIDs               []uuid.UUID `json:"personaIds,omitempty"`
+		TargetHttpPorts          []int       `json:"targetHttpPorts,omitempty"`
+		KeywordSetIDs            []uuid.UUID `json:"keywordSetIds,omitempty"`
+		AdHocKeywords            []string    `json:"adHocKeywords,omitempty"`
+	} `json:"httpValidation,omitempty"`
+
+	// General Campaign Settings
+	GeneralSettings *struct {
+		Status                 string     `json:"status,omitempty"`
+		Name                   string     `json:"name,omitempty"`
+		ProxyPoolID            *uuid.UUID `json:"proxyPoolId,omitempty"`
+		ProxySelectionStrategy string     `json:"proxySelectionStrategy,omitempty"`
+		VariableLength         int        `json:"variableLength,omitempty"`
+	} `json:"generalSettings,omitempty"`
+}
+
 // BulkCampaignOperationRequest - Manage multiple campaigns
 type BulkCampaignOperationRequest struct {
-	Operation   string                 `json:"operation" binding:"required" validate:"required,oneof=start stop pause resume delete configure"`
-	CampaignIDs []uuid.UUID            `json:"campaignIds" binding:"required,min=1,max=100" validate:"required,min=1,max=100,dive,uuid"`
-	Config      map[string]interface{} `json:"config,omitempty"`
-	Force       bool                   `json:"force"` // Force operation even if campaign state conflicts
+	Operation   string                       `json:"operation" binding:"required" validate:"required,oneof=start stop pause resume delete configure"`
+	CampaignIDs []uuid.UUID                  `json:"campaignIds" binding:"required,min=1,max=100" validate:"required,min=1,max=100,dive,uuid"`
+	Config      *BulkCampaignOperationConfig `json:"config,omitempty"`
+	Force       bool                         `json:"force"` // Force operation even if campaign state conflicts
 }
 
 // BulkCampaignOperationResponse - Results from bulk campaign operations
@@ -253,14 +357,66 @@ type CampaignOperationResult struct {
 // BULK ANALYTICS AND REPORTING - Enterprise intelligence at scale
 // ===============================================================================
 
+// BulkAnalyticsFilters contains filtering criteria for analytics queries
+type BulkAnalyticsFilters struct {
+	// Campaign-level filters
+	CampaignStatuses []string `json:"campaignStatuses,omitempty"` // ["active", "completed", "failed", "paused"]
+	CampaignTypes    []string `json:"campaignTypes,omitempty"`    // ["domain_generation", "dns_validation", "http_validation"]
+	CreatedDateRange *struct {
+		StartDate string `json:"startDate,omitempty"` // ISO 8601
+		EndDate   string `json:"endDate,omitempty"`   // ISO 8601
+	} `json:"createdDateRange,omitempty"`
+
+	// Phase-level filters
+	PhaseTypes    []string `json:"phaseTypes,omitempty"`    // ["domain_generation", "dns_validation", "http_validation", "analysis"]
+	PhaseStatuses []string `json:"phaseStatuses,omitempty"` // ["not_started", "in_progress", "completed", "failed", "paused"]
+
+	// Domain-level filters
+	TLDs               []string `json:"tlds,omitempty"`               // [".com", ".net", ".org", ".io"]
+	DomainStatusFilter []string `json:"domainStatusFilter,omitempty"` // ["valid", "invalid", "timeout", "error"]
+	DomainCountRange   *struct {
+		Min *int `json:"min,omitempty"`
+		Max *int `json:"max,omitempty"`
+	} `json:"domainCountRange,omitempty"`
+
+	// Performance filters
+	SuccessRateRange *struct {
+		Min *float64 `json:"min,omitempty"` // 0.0 - 1.0
+		Max *float64 `json:"max,omitempty"` // 0.0 - 1.0
+	} `json:"successRateRange,omitempty"`
+	ResponseTimeRange *struct {
+		MinMs *int64 `json:"minMs,omitempty"`
+		MaxMs *int64 `json:"maxMs,omitempty"`
+	} `json:"responseTimeRange,omitempty"`
+
+	// Resource filters
+	PersonaIDs    []uuid.UUID `json:"personaIds,omitempty"`
+	ProxyIDs      []uuid.UUID `json:"proxyIds,omitempty"`
+	KeywordSetIDs []uuid.UUID `json:"keywordSetIds,omitempty"`
+
+	// Cost and ROI filters
+	CostRange *struct {
+		Min *float64 `json:"min,omitempty"`
+		Max *float64 `json:"max,omitempty"`
+	} `json:"costRange,omitempty"`
+	LeadsRange *struct {
+		Min *int64 `json:"min,omitempty"`
+		Max *int64 `json:"max,omitempty"`
+	} `json:"leadsRange,omitempty"`
+
+	// Advanced filters
+	TagsFilter []string    `json:"tags,omitempty"`    // Campaign tags for grouping
+	UserIDs    []uuid.UUID `json:"userIds,omitempty"` // Filter by campaign owners
+}
+
 // BulkAnalyticsRequest - Analytics across campaigns
 type BulkAnalyticsRequest struct {
-	CampaignIDs []uuid.UUID            `json:"campaignIds" binding:"max=1000" validate:"max=1000,dive,uuid"`
-	TimeRange   *TimeRangeFilter       `json:"timeRange,omitempty"`
-	Metrics     []string               `json:"metrics" validate:"required,min=1"` // ["domains", "success_rate", "performance", "costs"]
-	Granularity string                 `json:"granularity" validate:"omitempty,oneof=hour day week month"`
-	GroupBy     []string               `json:"groupBy,omitempty"` // ["campaign", "phase", "tld", "persona"]
-	Filters     map[string]interface{} `json:"filters,omitempty"`
+	CampaignIDs []uuid.UUID           `json:"campaignIds" binding:"max=1000" validate:"max=1000,dive,uuid"`
+	TimeRange   *TimeRangeFilter      `json:"timeRange,omitempty"`
+	Metrics     []string              `json:"metrics" validate:"required,min=1"` // ["domains", "success_rate", "performance", "costs"]
+	Granularity string                `json:"granularity" validate:"omitempty,oneof=hour day week month"`
+	GroupBy     []string              `json:"groupBy,omitempty"` // ["campaign", "phase", "tld", "persona"]
+	Filters     *BulkAnalyticsFilters `json:"filters,omitempty"`
 }
 
 // TimeRangeFilter - Time range for analytics
@@ -292,6 +448,42 @@ type CampaignAnalytics struct {
 	TimeSeriesData   []TimeSeriesPoint       `json:"timeSeriesData,omitempty"`
 }
 
+// TimeSeriesMetricValues contains metric values for a specific time point
+type TimeSeriesMetricValues struct {
+	// Domain metrics
+	DomainsGenerated *int64   `json:"domainsGenerated,omitempty"`
+	DomainsValidated *int64   `json:"domainsValidated,omitempty"`
+	DomainsFailed    *int64   `json:"domainsFailed,omitempty"`
+	ValidDomainRate  *float64 `json:"validDomainRate,omitempty"`
+
+	// Lead metrics
+	LeadsGenerated     *int64   `json:"leadsGenerated,omitempty"`
+	QualifiedLeads     *int64   `json:"qualifiedLeads,omitempty"`
+	LeadConversionRate *float64 `json:"leadConversionRate,omitempty"`
+
+	// Performance metrics
+	AvgResponseTimeMs *int64   `json:"avgResponseTimeMs,omitempty"`
+	SuccessRate       *float64 `json:"successRate,omitempty"`
+	ErrorRate         *float64 `json:"errorRate,omitempty"`
+	TimeoutRate       *float64 `json:"timeoutRate,omitempty"`
+
+	// Cost metrics
+	CostPerDomain *float64 `json:"costPerDomain,omitempty"`
+	CostPerLead   *float64 `json:"costPerLead,omitempty"`
+	TotalCost     *float64 `json:"totalCost,omitempty"`
+
+	// Resource metrics
+	CpuUtilization     *float64 `json:"cpuUtilization,omitempty"`
+	MemoryUtilization  *float64 `json:"memoryUtilization,omitempty"`
+	NetworkUtilization *float64 `json:"networkUtilization,omitempty"`
+	ProxyRotations     *int64   `json:"proxyRotations,omitempty"`
+
+	// Throughput metrics
+	DomainsPerMinute     *float64 `json:"domainsPerMinute,omitempty"`
+	RequestsPerSecond    *float64 `json:"requestsPerSecond,omitempty"`
+	ConcurrentOperations *int64   `json:"concurrentOperations,omitempty"`
+}
+
 // PhaseMetrics - Metrics for campaign phase
 type PhaseMetrics struct {
 	Phase          string  `json:"phase"`
@@ -305,8 +497,8 @@ type PhaseMetrics struct {
 
 // TimeSeriesPoint - Data point in time series
 type TimeSeriesPoint struct {
-	Timestamp string                 `json:"timestamp"`
-	Values    map[string]interface{} `json:"values"`
+	Timestamp string                  `json:"timestamp"`
+	Values    *TimeSeriesMetricValues `json:"values"`
 }
 
 // AggregatedAnalytics - Cross-campaign aggregated data
@@ -351,6 +543,86 @@ type ResourceUtilizationMetrics struct {
 // BULK OPERATION STATUS AND MONITORING - Real-time operation tracking
 // ===============================================================================
 
+// BulkOperationResults contains operation-specific result data
+type BulkOperationResults struct {
+	// Domain Generation Results
+	DomainGeneration *struct {
+		GeneratedDomains []string       `json:"generatedDomains,omitempty"`
+		UniqueCount      int            `json:"uniqueCount,omitempty"`
+		TotalGenerated   int            `json:"totalGenerated,omitempty"`
+		PatternStats     map[string]int `json:"patternStats,omitempty"` // Pattern usage statistics
+	} `json:"domainGeneration,omitempty"`
+
+	// DNS Validation Results
+	DNSValidation *struct {
+		ValidDomains   []string `json:"validDomains,omitempty"`
+		InvalidDomains []string `json:"invalidDomains,omitempty"`
+		TimeoutDomains []string `json:"timeoutDomains,omitempty"`
+		ErrorDomains   []string `json:"errorDomains,omitempty"`
+		TotalValidated int      `json:"totalValidated,omitempty"`
+	} `json:"dnsValidation,omitempty"`
+
+	// HTTP Validation Results
+	HTTPValidation *struct {
+		AccessibleDomains   []string            `json:"accessibleDomains,omitempty"`
+		InaccessibleDomains []string            `json:"inaccessibleDomains,omitempty"`
+		KeywordMatches      map[string][]string `json:"keywordMatches,omitempty"`   // domain -> matched keywords
+		ExtractedContent    map[string]string   `json:"extractedContent,omitempty"` // domain -> content excerpt
+		TotalTested         int                 `json:"totalTested,omitempty"`
+	} `json:"httpValidation,omitempty"`
+
+	// Analytics Results
+	Analytics *struct {
+		CampaignSummaries []CampaignAnalytics `json:"campaignSummaries,omitempty"`
+		AggregatedMetrics AggregatedAnalytics `json:"aggregatedMetrics,omitempty"`
+		ExportedDataSize  int64               `json:"exportedDataSize,omitempty"` // bytes
+	} `json:"analytics,omitempty"`
+
+	// Campaign Operation Results
+	CampaignOperations *struct {
+		SuccessfulOperations []string                           `json:"successfulOperations,omitempty"` // campaign IDs
+		FailedOperations     []string                           `json:"failedOperations,omitempty"`     // campaign IDs
+		OperationResults     map[string]CampaignOperationResult `json:"operationResults,omitempty"`     // detailed results per campaign
+	} `json:"campaignOperations,omitempty"`
+}
+
+// BulkOperationMetadata contains operation-specific metadata
+type BulkOperationMetadata struct {
+	// Execution context
+	ExecutorNodeID string   `json:"executorNodeId,omitempty"`
+	RequestOrigin  string   `json:"requestOrigin,omitempty"` // IP or service that triggered operation
+	UserAgent      string   `json:"userAgent,omitempty"`
+	ExecutionPlan  []string `json:"executionPlan,omitempty"` // Steps planned for execution
+
+	// Performance tracking
+	PeakMemoryUsage int64 `json:"peakMemoryUsage,omitempty"` // bytes
+	CPUTimeUsed     int64 `json:"cpuTimeUsed,omitempty"`     // milliseconds
+	NetworkRequests int64 `json:"networkRequests,omitempty"`
+	DatabaseQueries int64 `json:"databaseQueries,omitempty"`
+
+	// Resource utilization
+	ProxiesUsed       []string `json:"proxiesUsed,omitempty"`  // Proxy IDs used
+	PersonasUsed      []string `json:"personasUsed,omitempty"` // Persona IDs used
+	ConcurrentWorkers int      `json:"concurrentWorkers,omitempty"`
+	BatchSizeUsed     int      `json:"batchSizeUsed,omitempty"`
+
+	// Quality metrics
+	SuccessRate     float64        `json:"successRate,omitempty"`
+	AvgResponseTime int64          `json:"avgResponseTime,omitempty"` // milliseconds
+	ErrorCategories map[string]int `json:"errorCategories,omitempty"` // error type -> count
+
+	// Business context
+	CostEstimate    float64  `json:"costEstimate,omitempty"` // USD
+	EstimatedROI    float64  `json:"estimatedROI,omitempty"`
+	QualityScore    float64  `json:"qualityScore,omitempty"`    // 0-100
+	ComplianceFlags []string `json:"complianceFlags,omitempty"` // Regulatory compliance notes
+
+	// Debugging info
+	LogFileURL string   `json:"logFileUrl,omitempty"`
+	TraceID    string   `json:"traceId,omitempty"`
+	DebugFlags []string `json:"debugFlags,omitempty"`
+}
+
 // BulkOperationStatus - Status of long-running bulk operation
 type BulkOperationStatus struct {
 	OperationID string                 `json:"operationId"`
@@ -361,8 +633,8 @@ type BulkOperationStatus struct {
 	EndTime     string                 `json:"endTime,omitempty"`
 	Duration    int64                  `json:"durationMs,omitempty"`
 	Error       string                 `json:"error,omitempty"`
-	Results     map[string]interface{} `json:"results,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Results     *BulkOperationResults  `json:"results,omitempty"`
+	Metadata    *BulkOperationMetadata `json:"metadata,omitempty"`
 }
 
 // OperationProgress - Progress tracking for bulk operations
@@ -410,11 +682,11 @@ type BulkResourceRequest struct {
 
 // ResourceOperation - Single resource operation
 type ResourceOperation struct {
-	Type       string                 `json:"type" validate:"required,oneof=domain_generation dns_validation http_validation analytics"`
-	CampaignID uuid.UUID              `json:"campaignId" validate:"required,uuid"`
-	Config     map[string]interface{} `json:"config"`
-	Priority   string                 `json:"priority" validate:"omitempty,oneof=low normal high critical"`
-	Resources  *RequiredResources     `json:"resources,omitempty"`
+	Type       string                       `json:"type" validate:"required,oneof=domain_generation dns_validation http_validation analytics"`
+	CampaignID uuid.UUID                    `json:"campaignId" validate:"required,uuid"`
+	Config     *BulkCampaignOperationConfig `json:"config"`
+	Priority   string                       `json:"priority" validate:"omitempty,oneof=low normal high critical"`
+	Resources  *RequiredResources           `json:"resources,omitempty"`
 }
 
 // RequiredResources - Resources required for operation
@@ -458,12 +730,47 @@ type ResourceAllocationResult struct {
 	ExpirationTime     string            `json:"expirationTime"`
 }
 
+// BulkOperationDebugInfo contains debugging and diagnostic information
+type BulkOperationDebugInfo struct {
+	// Request context
+	RequestHeaders  map[string]string `json:"requestHeaders,omitempty"`
+	QueryParameters map[string]string `json:"queryParameters,omitempty"`
+	UserContext     map[string]string `json:"userContext,omitempty"`
+
+	// Processing details
+	ProcessingSteps []string          `json:"processingSteps,omitempty"` // Execution steps taken
+	ConfigSnapshot  map[string]string `json:"configSnapshot,omitempty"`  // Configuration values used
+	FeatureFlags    map[string]bool   `json:"featureFlags,omitempty"`    // Feature flags active during operation
+
+	// Performance diagnostics
+	MemorySnapshots []int64          `json:"memorySnapshots,omitempty"` // Memory usage at key points (bytes)
+	TimingBreakdown map[string]int64 `json:"timingBreakdown,omitempty"` // Time spent in each phase (ms)
+	DatabaseStats   map[string]int64 `json:"databaseStats,omitempty"`   // Database operation counts
+	NetworkStats    map[string]int64 `json:"networkStats,omitempty"`    // Network request counts
+
+	// Error diagnostics
+	WarningMessages   []string       `json:"warningMessages,omitempty"`
+	PerformanceIssues []string       `json:"performanceIssues,omitempty"`
+	RetryAttempts     map[string]int `json:"retryAttempts,omitempty"` // Component -> retry count
+
+	// System state
+	SystemResources   map[string]float64 `json:"systemResources,omitempty"`   // CPU, memory, disk usage percentages
+	LoadBalancingInfo map[string]string  `json:"loadBalancingInfo,omitempty"` // Load balancer routing info
+	CacheHitRates     map[string]float64 `json:"cacheHitRates,omitempty"`     // Cache performance by component
+
+	// Development info
+	GitCommit       string `json:"gitCommit,omitempty"`
+	BuildVersion    string `json:"buildVersion,omitempty"`
+	EnvironmentType string `json:"environmentType,omitempty"` // dev, staging, production
+	DebugLevel      string `json:"debugLevel,omitempty"`      // verbose, normal, minimal
+}
+
 // BulkMetadata - Metadata for bulk operations
 type BulkMetadata struct {
-	RequestID     string                 `json:"requestId"`
-	UserID        *uuid.UUID             `json:"userId,omitempty"`
-	Timestamp     string                 `json:"timestamp"`
-	Version       string                 `json:"version"`
-	ExecutionNode string                 `json:"executionNode,omitempty"`
-	Debug         map[string]interface{} `json:"debug,omitempty"`
+	RequestID     string                  `json:"requestId"`
+	UserID        *uuid.UUID              `json:"userId,omitempty"`
+	Timestamp     string                  `json:"timestamp"`
+	Version       string                  `json:"version"`
+	ExecutionNode string                  `json:"executionNode,omitempty"`
+	Debug         *BulkOperationDebugInfo `json:"debug,omitempty"`
 }

@@ -277,6 +277,13 @@ components:
                         type: string
                     type: array
             type: object
+        AnalysisProgress:
+            properties:
+                completedAnalyses:
+                    type: integer
+                reportsGenerated:
+                    type: integer
+            type: object
         AnalysisService:
             type: object
         AnalysisSummary:
@@ -439,6 +446,17 @@ components:
                     type: string
                 version:
                     type: string
+            type: object
+        AnalyticsResults:
+            properties:
+                aggregatedMetrics:
+                    $ref: '#/components/schemas/AggregatedAnalytics'
+                analyticsData:
+                    items:
+                        $ref: '#/components/schemas/CampaignAnalytics'
+                    type: array
+                processedCampaigns:
+                    type: integer
             type: object
         AnimationSettings:
             properties:
@@ -918,6 +936,106 @@ components:
             type: object
         BulkAnalyticsAPIHandler:
             type: object
+        BulkAnalyticsFilters:
+            properties:
+                campaignStatuses:
+                    description: Campaign-level filters
+                    items:
+                        type: string
+                    type: array
+                campaignTypes:
+                    items:
+                        type: string
+                    type: array
+                costRange:
+                    description: Cost and ROI filters
+                    properties:
+                        max:
+                            type: number
+                        min:
+                            type: number
+                    type: object
+                createdDateRange:
+                    properties:
+                        endDate:
+                            type: string
+                        startDate:
+                            type: string
+                    type: object
+                domainCountRange:
+                    properties:
+                        max:
+                            type: integer
+                        min:
+                            type: integer
+                    type: object
+                domainStatusFilter:
+                    items:
+                        type: string
+                    type: array
+                keywordSetIds:
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+                leadsRange:
+                    properties:
+                        max:
+                            type: integer
+                        min:
+                            type: integer
+                    type: object
+                personaIds:
+                    description: Resource filters
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+                phaseStatuses:
+                    items:
+                        type: string
+                    type: array
+                phaseTypes:
+                    description: Phase-level filters
+                    items:
+                        type: string
+                    type: array
+                proxyIds:
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+                responseTimeRange:
+                    properties:
+                        maxMs:
+                            type: integer
+                        minMs:
+                            type: integer
+                    type: object
+                successRateRange:
+                    description: Performance filters
+                    properties:
+                        max:
+                            type: number
+                        min:
+                            type: number
+                    type: object
+                tags:
+                    description: Advanced filters
+                    items:
+                        type: string
+                    type: array
+                tlds:
+                    description: Domain-level filters
+                    items:
+                        type: string
+                    type: array
+                userIds:
+                    items:
+                        format: uuid
+                        type: string
+                    type: array
+            type: object
         BulkAnalyticsRequest:
             properties:
                 campaignIds:
@@ -926,9 +1044,7 @@ components:
                         type: string
                     type: array
                 filters:
-                    additionalProperties:
-                        type: object
-                    type: object
+                    $ref: '#/components/schemas/BulkAnalyticsFilters'
                 granularity:
                     enum:
                         - hour
@@ -980,6 +1096,75 @@ components:
                 success:
                     type: boolean
             type: object
+        BulkCampaignOperationConfig:
+            properties:
+                dnsValidation:
+                    description: DNS Validation Configuration
+                    properties:
+                        batchSize:
+                            type: integer
+                        onlyInvalidDomains:
+                            type: boolean
+                        personaIds:
+                            items:
+                                format: uuid
+                                type: string
+                            type: array
+                        processingSpeedPerMinute:
+                            type: integer
+                        retryAttempts:
+                            type: integer
+                        rotationIntervalSeconds:
+                            type: integer
+                    type: object
+                domainGeneration:
+                    $ref: '#/components/schemas/DomainGenerationOperationConfig'
+                generalSettings:
+                    description: General Campaign Settings
+                    properties:
+                        name:
+                            type: string
+                        proxyPoolId:
+                            format: uuid
+                            type: string
+                        proxySelectionStrategy:
+                            type: string
+                        status:
+                            type: string
+                        variableLength:
+                            type: integer
+                    type: object
+                httpValidation:
+                    description: HTTP Validation Configuration
+                    properties:
+                        adHocKeywords:
+                            items:
+                                type: string
+                            type: array
+                        batchSize:
+                            type: integer
+                        keywordSetIds:
+                            items:
+                                format: uuid
+                                type: string
+                            type: array
+                        personaIds:
+                            items:
+                                format: uuid
+                                type: string
+                            type: array
+                        processingSpeedPerMinute:
+                            type: integer
+                        retryAttempts:
+                            type: integer
+                        rotationIntervalSeconds:
+                            type: integer
+                        targetHttpPorts:
+                            items:
+                                type: integer
+                            type: array
+                    type: object
+            type: object
         BulkCampaignOperationRequest:
             properties:
                 campaignIds:
@@ -988,9 +1173,7 @@ components:
                         type: string
                     type: array
                 config:
-                    additionalProperties:
-                        type: object
-                    type: object
+                    $ref: '#/components/schemas/BulkCampaignOperationConfig'
                 force:
                     type: boolean
                 operation:
@@ -1303,7 +1486,7 @@ components:
                 logs:
                     additionalProperties:
                         items:
-                            type: object
+                            $ref: '#/components/schemas/AuditLog'
                         type: array
                     type: object
                 metadata:
@@ -1315,9 +1498,7 @@ components:
         BulkMetadata:
             properties:
                 debug:
-                    additionalProperties:
-                        type: object
-                    type: object
+                    $ref: '#/components/schemas/BulkOperationDebugInfo'
                 executionNode:
                     type: string
                 requestId:
@@ -1329,6 +1510,94 @@ components:
                     $ref: '#/components/schemas/UUID'
                 version:
                     type: string
+            type: object
+        BulkOperationDebugInfo:
+            properties:
+                buildVersion:
+                    type: string
+                cacheHitRates:
+                    additionalProperties:
+                        format: double
+                        type: number
+                    type: object
+                configSnapshot:
+                    additionalProperties:
+                        type: string
+                    type: object
+                databaseStats:
+                    additionalProperties:
+                        format: int64
+                        type: integer
+                    type: object
+                debugLevel:
+                    type: string
+                environmentType:
+                    type: string
+                featureFlags:
+                    additionalProperties:
+                        type: boolean
+                    type: object
+                gitCommit:
+                    description: Development info
+                    type: string
+                loadBalancingInfo:
+                    additionalProperties:
+                        type: string
+                    type: object
+                memorySnapshots:
+                    description: Performance diagnostics
+                    items:
+                        format: int64
+                        type: integer
+                    type: array
+                networkStats:
+                    additionalProperties:
+                        format: int64
+                        type: integer
+                    type: object
+                performanceIssues:
+                    items:
+                        type: string
+                    type: array
+                processingSteps:
+                    description: Processing details
+                    items:
+                        type: string
+                    type: array
+                queryParameters:
+                    additionalProperties:
+                        type: string
+                    type: object
+                requestHeaders:
+                    additionalProperties:
+                        type: string
+                    description: Request context
+                    type: object
+                retryAttempts:
+                    additionalProperties:
+                        format: int32
+                        type: integer
+                    type: object
+                systemResources:
+                    additionalProperties:
+                        format: double
+                        type: number
+                    description: System state
+                    type: object
+                timingBreakdown:
+                    additionalProperties:
+                        format: int64
+                        type: integer
+                    type: object
+                userContext:
+                    additionalProperties:
+                        type: string
+                    type: object
+                warningMessages:
+                    description: Error diagnostics
+                    items:
+                        type: string
+                    type: array
             type: object
         BulkOperationListRequest:
             properties:
@@ -1367,6 +1636,176 @@ components:
                     format: int32
                     type: integer
             type: object
+        BulkOperationMetadata:
+            properties:
+                avgResponseTime:
+                    format: int64
+                    type: integer
+                batchSizeUsed:
+                    format: int32
+                    type: integer
+                complianceFlags:
+                    items:
+                        type: string
+                    type: array
+                concurrentWorkers:
+                    format: int32
+                    type: integer
+                costEstimate:
+                    description: Business context
+                    format: double
+                    type: number
+                cpuTimeUsed:
+                    format: int64
+                    type: integer
+                databaseQueries:
+                    format: int64
+                    type: integer
+                debugFlags:
+                    items:
+                        type: string
+                    type: array
+                errorCategories:
+                    additionalProperties:
+                        format: int32
+                        type: integer
+                    type: object
+                estimatedROI:
+                    format: double
+                    type: number
+                executionPlan:
+                    items:
+                        type: string
+                    type: array
+                executorNodeId:
+                    $ref: '#/components/schemas/UUID'
+                logFileUrl:
+                    description: Debugging info
+                    format: uri
+                    type: string
+                networkRequests:
+                    format: int64
+                    type: integer
+                peakMemoryUsage:
+                    description: Performance tracking
+                    format: int64
+                    type: integer
+                personasUsed:
+                    items:
+                        type: string
+                    type: array
+                proxiesUsed:
+                    description: Resource utilization
+                    items:
+                        type: string
+                    type: array
+                qualityScore:
+                    format: double
+                    type: number
+                requestOrigin:
+                    type: string
+                successRate:
+                    description: Quality metrics
+                    format: double
+                    type: number
+                traceId:
+                    $ref: '#/components/schemas/UUID'
+                userAgent:
+                    type: string
+            type: object
+        BulkOperationResults:
+            properties:
+                analytics:
+                    description: Analytics Results
+                    properties:
+                        aggregatedMetrics:
+                            $ref: '#/components/schemas/AggregatedAnalytics'
+                        campaignSummaries:
+                            items:
+                                $ref: '#/components/schemas/CampaignAnalytics'
+                            type: array
+                        exportedDataSize:
+                            type: integer
+                    type: object
+                campaignOperations:
+                    description: Campaign Operation Results
+                    properties:
+                        failedOperations:
+                            items:
+                                type: string
+                            type: array
+                        operationResults:
+                            additionalProperties:
+                                $ref: '#/components/schemas/CampaignOperationResult'
+                            type: object
+                        successfulOperations:
+                            items:
+                                type: string
+                            type: array
+                    type: object
+                dnsValidation:
+                    description: DNS Validation Results
+                    properties:
+                        errorDomains:
+                            items:
+                                type: string
+                            type: array
+                        invalidDomains:
+                            items:
+                                type: string
+                            type: array
+                        timeoutDomains:
+                            items:
+                                type: string
+                            type: array
+                        totalValidated:
+                            type: integer
+                        validDomains:
+                            items:
+                                type: string
+                            type: array
+                    type: object
+                domainGeneration:
+                    description: Domain Generation Results
+                    properties:
+                        generatedDomains:
+                            items:
+                                type: string
+                            type: array
+                        patternStats:
+                            additionalProperties:
+                                type: integer
+                            type: object
+                        totalGenerated:
+                            type: integer
+                        uniqueCount:
+                            type: integer
+                    type: object
+                httpValidation:
+                    description: HTTP Validation Results
+                    properties:
+                        accessibleDomains:
+                            items:
+                                type: string
+                            type: array
+                        extractedContent:
+                            additionalProperties:
+                                type: string
+                            type: object
+                        inaccessibleDomains:
+                            items:
+                                type: string
+                            type: array
+                        keywordMatches:
+                            additionalProperties:
+                                items:
+                                    type: string
+                                type: array
+                            type: object
+                        totalTested:
+                            type: integer
+                    type: object
+            type: object
         BulkOperationStatus:
             properties:
                 durationMs:
@@ -1378,17 +1817,13 @@ components:
                 error:
                     type: string
                 metadata:
-                    additionalProperties:
-                        type: object
-                    type: object
+                    $ref: '#/components/schemas/BulkOperationMetadata'
                 operationId:
                     $ref: '#/components/schemas/UUID'
                 progress:
                     $ref: '#/components/schemas/OperationProgress'
                 results:
-                    additionalProperties:
-                        type: object
-                    type: object
+                    $ref: '#/components/schemas/BulkOperationResults'
                 startTime:
                     format: date-time
                     type: string
@@ -1422,9 +1857,7 @@ components:
                     format: double
                     type: number
                 results:
-                    additionalProperties:
-                        type: object
-                    type: object
+                    $ref: '#/components/schemas/BulkOperationResults'
                 startedAt:
                     format: date-time
                     type: string
@@ -1656,6 +2089,59 @@ components:
             type: object
         BulkValidationAPIHandler:
             type: object
+        BulkValidationDomainMetadata:
+            properties:
+                attemptCount:
+                    description: Error details
+                    format: int32
+                    type: integer
+                connectTime:
+                    format: int64
+                    type: integer
+                contentLength:
+                    format: int64
+                    type: integer
+                contentType:
+                    type: string
+                dnsLookupTime:
+                    description: Performance metadata
+                    format: int64
+                    type: integer
+                dnsRecordTypes:
+                    items:
+                        type: string
+                    type: array
+                errorCategory:
+                    type: string
+                ipAddresses:
+                    items:
+                        type: string
+                    type: array
+                lastError:
+                    type: string
+                personaUsed:
+                    type: string
+                proxyUsed:
+                    description: Stealth metadata
+                    type: string
+                redirectChain:
+                    items:
+                        type: string
+                    type: array
+                resolverUsed:
+                    description: DNS-specific metadata
+                    type: string
+                responseHeaders:
+                    additionalProperties:
+                        type: string
+                    description: HTTP-specific metadata
+                    type: object
+                tlsHandshakeTime:
+                    format: int64
+                    type: integer
+                userAgent:
+                    type: string
+            type: object
         BulkValidationDomainResult:
             properties:
                 content:
@@ -1673,9 +2159,7 @@ components:
                         type: string
                     type: array
                 metadata:
-                    additionalProperties:
-                        type: object
-                    type: object
+                    $ref: '#/components/schemas/BulkValidationDomainMetadata'
                 responseTimeMs:
                     format: int64
                     type: integer
@@ -2118,10 +2602,7 @@ components:
                 phaseStatus:
                     $ref: '#/components/schemas/PhaseStatusEnum'
                 progress:
-                    additionalProperties:
-                        type: object
-                    description: '@Description Overall progress percentage (0-100)'
-                    type: object
+                    $ref: '#/components/schemas/PhaseProgressData'
                 updatedAt:
                     format: date-time
                     type: string
@@ -3420,6 +3901,27 @@ components:
                 - lastName
                 - password
             type: object
+        CustomDomainGenerationConfig:
+            properties:
+                constraints:
+                    $ref: '#/components/schemas/GenerationConstraints'
+                generationType:
+                    enum:
+                        - template
+                        - ai_assisted
+                        - custom_algorithm
+                    type: string
+                parameters:
+                    additionalProperties:
+                        type: string
+                    type: object
+                templates:
+                    items:
+                        type: string
+                    type: array
+            required:
+                - generationType
+            type: object
         CyclicalPattern:
             properties:
                 averageAmplitude:
@@ -3632,6 +4134,18 @@ components:
             required:
                 - personaIds
             type: object
+        DNSValidationProgress:
+            properties:
+                invalidDomains:
+                    format: int32
+                    type: integer
+                validDomains:
+                    format: int32
+                    type: integer
+                validationRate:
+                    format: int32
+                    type: integer
+            type: object
         DNSValidationRequest:
             properties:
                 batchSize:
@@ -3683,6 +4197,23 @@ components:
                 - dnsCampaignId
                 - domainName
                 - validationStatus
+            type: object
+        DNSValidationResults:
+            properties:
+                invalidDomains:
+                    items:
+                        type: string
+                    type: array
+                totalValidated:
+                    format: int32
+                    type: integer
+                validDomains:
+                    items:
+                        type: string
+                    type: array
+                validationRate:
+                    format: double
+                    type: number
             type: object
         DNSValidationResultsResponse:
             properties:
@@ -3965,7 +4496,7 @@ components:
                 rows:
                     items:
                         items:
-                            type: object
+                            $ref: '#/components/schemas/DatabaseValue'
                         type: array
                     type: array
                 success:
@@ -3992,6 +4523,21 @@ components:
                     format: date-time
                     type: string
                 version:
+                    type: string
+            type: object
+        DatabaseValue:
+            properties:
+                boolValue:
+                    type: boolean
+                floatValue:
+                    type: number
+                intValue:
+                    type: integer
+                isNull:
+                    type: boolean
+                rawValue:
+                    type: string
+                stringValue:
                     type: string
             type: object
         DeletionConfirmationResponse:
@@ -4317,7 +4863,7 @@ components:
                 campaignId:
                     $ref: '#/components/schemas/UUID'
                 config:
-                    type: object
+                    $ref: '#/components/schemas/DomainGenerationOperationConfig'
                 maxDomains:
                     format: int32
                     type: integer
@@ -4327,6 +4873,13 @@ components:
             required:
                 - campaignId
                 - config
+            type: object
+        DomainGenerationOperationConfig:
+            properties:
+                customLogic:
+                    $ref: '#/components/schemas/CustomDomainGenerationConfig'
+                patternBased:
+                    $ref: '#/components/schemas/DomainGenerationPhaseConfig'
             type: object
         DomainGenerationParams:
             properties:
@@ -4457,6 +5010,17 @@ components:
                 success:
                     type: boolean
             type: object
+        DomainGenerationResults:
+            properties:
+                generatedDomains:
+                    items:
+                        type: string
+                    type: array
+                totalGenerated:
+                    type: integer
+                uniqueCount:
+                    type: integer
+            type: object
         DomainGenerationService:
             type: object
         DomainGenerationStats:
@@ -4542,7 +5106,7 @@ components:
                     type: array
                 httpKeywordResults:
                     items:
-                        type: object
+                        $ref: '#/components/schemas/HTTPKeywordResult'
                     type: array
                 leads:
                     items:
@@ -5090,6 +5654,21 @@ components:
                     format: int64
                     type: integer
             type: object
+        GenerationConstraints:
+            properties:
+                excludeWords:
+                    items:
+                        type: string
+                    type: array
+                maxLength:
+                    type: integer
+                minLength:
+                    type: integer
+                requireWords:
+                    items:
+                        type: string
+                    type: array
+            type: object
         HTTP2Settings:
             properties:
                 enabled:
@@ -5528,6 +6107,30 @@ components:
                     type: integer
             required:
                 - personaIds
+            type: object
+        HTTPValidationProgress:
+            properties:
+                matchRate:
+                    type: number
+                matchingDomains:
+                    type: integer
+                scannedDomains:
+                    type: integer
+            type: object
+        HTTPValidationResults:
+            properties:
+                keywordMatches:
+                    items:
+                        $ref: '#/components/schemas/HTTPKeywordResult'
+                    type: array
+                matchPercentage:
+                    type: number
+                matchingDomains:
+                    items:
+                        type: string
+                    type: array
+                totalScanned:
+                    type: integer
             type: object
         HTTPValidationStartResponse:
             properties:
@@ -7162,20 +7765,16 @@ components:
         PhaseConfig:
             properties:
                 analysis:
-                    $ref: '#/components/schemas/AnalysisPhaseConfig'
+                    $ref: '#/components/schemas/AnalysisConfig'
                 dnsValidation:
-                    $ref: '#/components/schemas/DNSValidationPhaseConfig'
-                domainGeneration:
-                    $ref: '#/components/schemas/DomainGenerationPhaseConfig'
-                httpKeywordValidation:
-                    $ref: '#/components/schemas/HTTPKeywordValidationPhaseConfig'
-                phaseType:
-                    $ref: '#/components/schemas/PhaseTypeEnum'
+                    $ref: '#/components/schemas/DNSValidationConfig'
+                httpValidation:
+                    $ref: '#/components/schemas/HTTPValidationConfig'
             type: object
         PhaseConfigureRequest:
             properties:
                 config:
-                    type: object
+                    $ref: '#/components/schemas/PhaseConfig'
                 phaseType:
                     enum:
                         - dns_validation
@@ -7320,6 +7919,27 @@ components:
                     type: string
                 status:
                     $ref: '#/components/schemas/PhaseStatusEnum'
+            type: object
+        PhaseProgressData:
+            properties:
+                analysis:
+                    $ref: '#/components/schemas/AnalysisProgress'
+                dnsValidation:
+                    $ref: '#/components/schemas/DNSValidationProgress'
+                domainGeneration:
+                    $ref: '#/components/schemas/DomainGenerationProgress'
+                httpValidation:
+                    $ref: '#/components/schemas/HTTPValidationProgress'
+                percentage:
+                    description: Common fields for all phases
+                    format: double
+                    type: number
+                processedItems:
+                    format: int64
+                    type: integer
+                totalItems:
+                    format: int64
+                    type: integer
             type: object
         PhaseProgressResponse:
             properties:
@@ -8671,9 +9291,7 @@ components:
                 campaignId:
                     $ref: '#/components/schemas/UUID'
                 config:
-                    additionalProperties:
-                        type: object
-                    type: object
+                    $ref: '#/components/schemas/BulkCampaignOperationConfig'
                 priority:
                     enum:
                         - low
@@ -10182,15 +10800,85 @@ components:
                 - startTime
                 - endTime
             type: object
+        TimeSeriesMetricValues:
+            properties:
+                avgResponseTimeMs:
+                    description: Performance metrics
+                    format: int64
+                    type: integer
+                concurrentOperations:
+                    format: int64
+                    type: integer
+                costPerDomain:
+                    description: Cost metrics
+                    format: double
+                    type: number
+                costPerLead:
+                    format: double
+                    type: number
+                cpuUtilization:
+                    description: Resource metrics
+                    format: double
+                    type: number
+                domainsFailed:
+                    format: int64
+                    type: integer
+                domainsGenerated:
+                    description: Domain metrics
+                    format: int64
+                    type: integer
+                domainsPerMinute:
+                    description: Throughput metrics
+                    format: double
+                    type: number
+                domainsValidated:
+                    format: int64
+                    type: integer
+                errorRate:
+                    format: double
+                    type: number
+                leadConversionRate:
+                    format: double
+                    type: number
+                leadsGenerated:
+                    description: Lead metrics
+                    format: int64
+                    type: integer
+                memoryUtilization:
+                    format: double
+                    type: number
+                networkUtilization:
+                    format: double
+                    type: number
+                proxyRotations:
+                    format: int64
+                    type: integer
+                qualifiedLeads:
+                    format: int64
+                    type: integer
+                requestsPerSecond:
+                    format: double
+                    type: number
+                successRate:
+                    format: double
+                    type: number
+                timeoutRate:
+                    format: double
+                    type: number
+                totalCost:
+                    format: double
+                    type: number
+                validDomainRate:
+                    format: double
+                    type: number
+            type: object
         TimeSeriesPoint:
             properties:
                 timestamp:
                     format: date-time
                     type: string
                 values:
-                    additionalProperties:
-                        type: object
-                    type: object
+                    $ref: '#/components/schemas/TimeSeriesMetricValues'
             type: object
         TooltipConfiguration:
             properties:
@@ -10725,6 +11413,16 @@ components:
                 TotalJobs:
                     format: int64
                     type: integer
+            type: object
+        analysisServiceImpl:
+            type: object
+        campaignWorkerServiceImpl:
+            type: object
+        domainGenerationServiceImpl:
+            type: object
+        domainStealthServiceImpl:
+            type: object
+        stealthIntegrationServiceImpl:
             type: object
     securitySchemes:
         bearerAuth:
