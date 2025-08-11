@@ -19,7 +19,7 @@ import { PersonaResponse } from '@/lib/api-client/models/persona-response';
 import { Proxy } from '@/lib/api-client/models/proxy';
 import { getPersonas } from '@/lib/services/personaService';
 import { getProxies } from '@/lib/services/proxyService.production';
-import { campaignsApi } from '@/lib/api-client/client';
+import { useConfigurePhaseStandaloneMutation } from '@/store/api/campaignApi';
 import type { DNSValidationConfig } from '@/lib/api-client/models/dnsvalidation-config';
 import type { PhaseConfigureRequest } from '@/lib/api-client/models/phase-configure-request';
 // PhaseConfigureRequestPhaseTypeEnum removed - using direct string literals now
@@ -47,11 +47,13 @@ export default function DNSValidationConfigModal({
 }: DNSValidationConfigModalProps) {
   const { toast } = useToast();
   
+  // Professional RTK Query mutation instead of amateur singleton API
+  const [configurePhase, { isLoading: isConfiguringPhase }] = useConfigurePhaseStandaloneMutation();
+  
   // Data state - following campaign form pattern
   const [dnsPersonas, setDnsPersonas] = useState<any[]>([]);
   const [proxies, setProxies] = useState<any[]>([]);
   const [loadingData, setLoadingData] = useState(true);
-  const [configuring, setConfiguring] = useState(false);
 
   // Form initialization with persona-only configuration
   const form = useForm<DNSValidationFormValues>({
@@ -141,8 +143,6 @@ export default function DNSValidationConfigModal({
 
   const onSubmit = async (data: DNSValidationFormValues) => {
     try {
-      setConfiguring(true);
-
       // Prepare the simplified persona-only configuration
       const dnsConfig: DNSValidationConfig = {
         personaIds: data.personaIds,
@@ -154,8 +154,12 @@ export default function DNSValidationConfigModal({
         config: dnsConfig,
       };
 
-      // Use the generated API client method
-      await campaignsApi.configurePhaseStandalone(campaignId, 'dns_validation', configRequest);
+      // Use professional RTK Query mutation instead of amateur singleton API
+      await configurePhase({
+        campaignId,
+        phase: 'dns_validation' as any,
+        config: configRequest
+      }).unwrap();
 
       toast({
         title: "DNS validation configured",
@@ -164,15 +168,16 @@ export default function DNSValidationConfigModal({
 
       onConfigured();
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to configure DNS validation:', error);
+      
+      // RTK Query standardized error handling
+      const errorMessage = error?.data?.message || error?.message || "Failed to configure DNS validation. Please try again.";
       toast({
         title: "Configuration failed",
-        description: "Failed to configure DNS validation. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
-    } finally {
-      setConfiguring(false);
     }
   };
 
@@ -347,9 +352,9 @@ export default function DNSValidationConfigModal({
               </Button>
               <Button 
                 type="submit" 
-                disabled={configuring || watchedPersonaIds.length === 0}
+                disabled={isConfiguringPhase || watchedPersonaIds.length === 0}
               >
-                {configuring ? 'Configuring...' : 'Configure DNS Validation'}
+                {isConfiguringPhase ? 'Configuring...' : 'Configure DNS Validation'}
               </Button>
             </DialogFooter>
           </form>

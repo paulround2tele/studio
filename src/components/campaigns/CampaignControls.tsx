@@ -3,7 +3,7 @@ import { CheckCircle, Play, Pause, Square, Settings, RotateCcw, AlertTriangle } 
 import PhaseGateButton from './PhaseGateButton';
 import { PhaseConfiguration } from './PhaseConfiguration';
 import type { LeadGenerationCampaign } from '@/lib/api-client/models';
-import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
+import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { useToast } from '@/hooks/use-toast';
 
 interface CampaignControlsProps {
@@ -28,6 +28,9 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [selectedPhaseType, setSelectedPhaseType] = useState<string | null>(null);
   const { toast } = useToast();
+  
+  // Professional RTK Query mutation instead of amateur singleton API instantiation
+  const [startPhaseStandalone, { isLoading: isStartingPhase }] = useStartPhaseStandaloneMutation();
 
   // Determine campaign mode
   const isFullSequenceMode = campaign.fullSequenceMode === true;
@@ -46,30 +49,41 @@ export const CampaignControls: React.FC<CampaignControlsProps> = ({
     setConfigDialogOpen(true);
   };
 
-  // Handle phase restart - use standalone services API
+  // Handle phase restart - use professional RTK Query instead of amateur singleton pattern
   const handleRestartPhase = async (phaseType: string) => {
+    if (!campaign.id) {
+      toast({
+        title: "Error",
+        description: "Campaign ID is missing",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
-      const campaignsApi = new CampaignsApi();
-      
-      // For standalone services, we directly start the phase
-      // Backend handles any necessary cleanup/restart logic
-      await campaignsApi.startPhaseStandalone(campaign.id!, phaseType);
+      // Use RTK Query mutation with proper error handling
+      await startPhaseStandalone({ 
+        campaignId: campaign.id, 
+        phase: phaseType as any // RTK Query handles type validation
+      }).unwrap();
 
       toast({
         title: "Phase Started",
         description: `${phaseType.replace('_', ' ')} phase has been started successfully.`,
       });
 
-      // Trigger campaign refresh
+      // Trigger campaign refresh through RTK Query cache invalidation
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('force_campaign_refresh', {
           detail: { campaignId: campaign.id }
         }));
       }
-    } catch (error) {
+    } catch (error: any) {
+      // RTK Query provides consistent error format
+      const errorMessage = error?.data?.message || error?.message || 'Failed to start phase';
       toast({
         title: "Start Failed",
-        description: error instanceof Error ? error.message : 'Failed to start phase',
+        description: errorMessage,
         variant: "destructive"
       });
     }

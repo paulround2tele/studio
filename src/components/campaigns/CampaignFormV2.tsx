@@ -19,6 +19,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { SimpleCampaignFormValues } from './types/SimpleCampaignFormTypes';
 import { formToApiRequest, defaultFormValues } from './types/SimpleCampaignFormTypes';
 import { campaignsApi } from '@/lib/api-client/client';
+import { useCreateCampaignMutation } from '@/store/api/campaignApi';
 import { calculateMaxTheoreticalDomains, calculateRemainingDomains } from '@/lib/utils/domainCalculation';
 import type { LeadGenerationCampaignResponse } from '@/lib/api-client/models/lead-generation-campaign-response';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
@@ -37,6 +38,9 @@ interface CampaignFormV2Props {
 export default function CampaignFormV2({ editMode = false, campaignData }: CampaignFormV2Props) {
   const router = useRouter();
   const { toast } = useToast();
+  
+  // Professional RTK Query mutation instead of direct API calls
+  const [createCampaign, { isLoading: isCreatingCampaign }] = useCreateCampaignMutation();
   
   // Domain calculation state
   const [totalRemainingDomains, setTotalRemainingDomains] = useState<number>(0);
@@ -180,11 +184,8 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
         // Convert to API request using auto-generated types
         const apiRequest = formToApiRequest(processedData);
 
-        // Create campaign using phase-centric API
-        const response = await campaignsApi.createLeadGenerationCampaign(apiRequest);
-        
-        // FIXED: Use extractResponseData helper instead of manual unwrapping
-        const newCampaignData = extractResponseData<LeadGenerationCampaignResponse>(response);
+        // Use professional RTK Query mutation instead of amateur direct API call
+        const newCampaignData = await createCampaign(apiRequest).unwrap();
         
         if (!newCampaignData || !newCampaignData.id) {
           throw new Error('Campaign creation succeeded but no campaign ID returned');
@@ -213,14 +214,16 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
     } catch (error: any) {
       console.error('Campaign operation error:', error);
       
-      // Enhanced error handling
+      // RTK Query provides standardized error format
       let errorMessage = editMode ? "Failed to update campaign. Please try again." : "Failed to create campaign. Please try again.";
       
-      if (error instanceof Error) {
+      // Handle RTK Query error format
+      if (error?.data?.message) {
+        errorMessage = error.data.message;
+      } else if (error?.message) {
         errorMessage = error.message;
-      } else if (error.response?.data) {
-        const errorData = error.response.data;
-        errorMessage = errorData.error || errorData.message || errorMessage;
+      } else if (error?.data?.error?.message) {
+        errorMessage = error.data.error.message;
       }
       
       toast({
@@ -468,11 +471,15 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
                   type="button"
                   variant="outline"
                   onClick={() => router.push('/campaigns')}
+                  disabled={isCreatingCampaign}
                 >
                   Cancel
                 </Button>
-                <Button type="submit">
-                  Create Campaign
+                <Button 
+                  type="submit" 
+                  disabled={isCreatingCampaign}
+                >
+                  {isCreatingCampaign ? 'Creating...' : 'Create Campaign'}
                 </Button>
               </div>
             </form>

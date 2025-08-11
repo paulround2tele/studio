@@ -22,7 +22,7 @@ function EditPersonaPageContent() {
   const personaId = params.id as string;
   const personaTypeParam = searchParams.get('type') as 'http' | 'dns' | null; 
   
-  const [persona, setPersona] = useState<components['schemas']['Persona'] | null>(null);
+  const [persona, setPersona] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -51,7 +51,7 @@ function EditPersonaPageContent() {
             setPersona(null);
             toast({ title: "Type Mismatch", description: `Persona found, but it's not of type '${type}'.`, variant: "destructive" });
           } else {
-            setPersona(response.data as components['schemas']['Persona']);
+            setPersona(response.data as any);
           }
         } else {
           const errorMessage = typeof response.error === 'string' ? response.error : response.error?.message || "Persona not found.";

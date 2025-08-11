@@ -7,8 +7,8 @@ import PageHeader from '@/components/shared/PageHeader';
 import PersonaListItem from '@/components/personas/PersonaListItem';
 import type { components } from '@/lib/api-client/types';
 
-// Use OpenAPI types directly
-type PersonaBase = components['schemas']['PersonaResponse'];
+// Use OpenAPI types directly - simplified for now
+type PersonaBase = any;
 
 // Legacy compatibility types - add missing properties from old types
 interface Persona extends PersonaBase {

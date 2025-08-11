@@ -56,7 +56,8 @@ export default function EditKeywordSetPage() {
     setIsLoading(true);
     setErrorMessage(null);
     try {
-      await keywordSetsApi.updateKeywordSet(params.id as string, data);
+      // Use the correct method name from the generated API
+      await keywordSetsApi.keywordsSetsSetIdPut(params.id as string, data);
       setSuccessMessage('Keyword set updated');
       // PERFORMANCE FIX: Immediate navigation instead of 500ms delay
       router.push('/keyword-sets');

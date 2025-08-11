@@ -31,7 +31,8 @@ export default function NewKeywordSetPage() {
     try {
       // Remove rules from payload since this form doesn't handle them
       const { rules: _rules, ...cleanData } = data;
-      await keywordSetsApi.createKeywordSet(cleanData);
+      // Use the correct method name from the generated API
+      await keywordSetsApi.keywordsSetsPost(cleanData);
       setSuccessMessage('Keyword set created');
       // PERFORMANCE FIX: Immediate navigation instead of 500ms delay
       router.push('/keyword-sets');

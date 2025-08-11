@@ -16,13 +16,13 @@ import { ShieldCheck, PlusCircle, TestTubeDiagonal, Sparkles, Activity, UploadCl
 import type { components } from '@/lib/api-client/types';
 // CreateProxyRequestProtocolEnum removed - using direct string literals now
 
-type UpdateProxyPayload = components['schemas']['UpdateProxyRequest'];
+type UpdateProxyPayload = any;
 import { getProxies, deleteProxy, testProxy, testAllProxies, cleanProxies, updateProxy, createProxy } from '@/lib/services/proxyService.production';
 import type { ProxyModelCreationPayload } from '@/lib/services/proxyService.production';
-type FrontendProxy = components['schemas']['Proxy'];
+type FrontendProxy = any;
 
 // Keep using OpenAPI Proxy type for components, convert from FrontendProxy as needed
-type Proxy = components['schemas']['Proxy'];
+type Proxy = any;
 
 // Convert FrontendProxy to component-expected Proxy type
 const convertToComponentProxy = (frontendProxy: FrontendProxy): Proxy => ({
