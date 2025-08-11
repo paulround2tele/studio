@@ -69,28 +69,19 @@ func (h *MonitoringHandlers) RegisterMonitoringRoutes(r *gin.RouterGroup) {
 // GetSystemHealth - Get overall system health status
 func (h *MonitoringHandlers) GetSystemHealth(c *gin.Context) {
 	health := h.monitoringService.GetSystemHealth()
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    health,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(health, getRequestID(c)))
 }
 
 // GetMonitoringStats - Get comprehensive monitoring statistics
 func (h *MonitoringHandlers) GetMonitoringStats(c *gin.Context) {
 	stats := h.monitoringService.GetMonitoringStats()
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    stats,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(stats, getRequestID(c)))
 }
 
 // GetSystemResources - Get current system resource usage
 func (h *MonitoringHandlers) GetSystemResources(c *gin.Context) {
 	usage := h.monitoringService.ResourceMonitor.GetSystemUsage()
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    usage,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(usage, getRequestID(c)))
 }
 
 // GetResourceHistory - Get resource usage history
@@ -98,18 +89,12 @@ func (h *MonitoringHandlers) GetResourceHistory(c *gin.Context) {
 	hoursStr := c.DefaultQuery("hours", "24")
 	hours, err := strconv.Atoi(hoursStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "Invalid hours parameter",
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid hours parameter", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	history := h.monitoringService.ResourceMonitor.GetResourceHistory(hours)
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    history,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(history, getRequestID(c)))
 }
 
 // GetResourceAlerts - Get active resource alerts
@@ -117,18 +102,12 @@ func (h *MonitoringHandlers) GetResourceAlerts(c *gin.Context) {
 	limitStr := c.DefaultQuery("limit", "50")
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "Invalid limit parameter",
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid limit parameter", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	alerts := h.monitoringService.ResourceMonitor.GetActiveAlerts(limit)
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    alerts,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(alerts, getRequestID(c)))
 }
 
 // GetPerformanceMetrics - Get recent performance metrics
@@ -136,10 +115,7 @@ func (h *MonitoringHandlers) GetPerformanceMetrics(c *gin.Context) {
 	limitStr := c.DefaultQuery("limit", "100")
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "Invalid limit parameter",
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid limit parameter", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
@@ -152,10 +128,7 @@ func (h *MonitoringHandlers) GetPerformanceMetrics(c *gin.Context) {
 		metrics = h.monitoringService.PerformanceTracker.GetRecentMetrics(limit)
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    metrics,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(metrics, getRequestID(c)))
 }
 
 // GetPerformanceSummary - Get performance summary for operation types
@@ -165,32 +138,20 @@ func (h *MonitoringHandlers) GetPerformanceSummary(c *gin.Context) {
 	if operationType != "" {
 		summary, exists := h.monitoringService.PerformanceTracker.GetSummary(operationType)
 		if !exists {
-			c.JSON(http.StatusNotFound, gin.H{
-				"success": false,
-				"error":   "No data found for operation type: " + operationType,
-			})
+			c.JSON(http.StatusNotFound, NewErrorResponse(ErrorCodeNotFound, "No data found for operation type: "+operationType, getRequestID(c), c.Request.URL.Path))
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{
-			"success": true,
-			"data":    summary,
-		})
+		c.JSON(http.StatusOK, NewSuccessResponse(summary, getRequestID(c)))
 	} else {
 		summaries := h.monitoringService.PerformanceTracker.GetAllSummaries()
-		c.JSON(http.StatusOK, gin.H{
-			"success": true,
-			"data":    summaries,
-		})
+		c.JSON(http.StatusOK, NewSuccessResponse(summaries, getRequestID(c)))
 	}
 }
 
 // GetActiveOperations - Get currently running operations
 func (h *MonitoringHandlers) GetActiveOperations(c *gin.Context) {
 	operations := h.monitoringService.PerformanceTracker.GetActiveOperations()
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    operations,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(operations, getRequestID(c)))
 }
 
 // GetSlowOperations - Get operations that took longer than threshold
@@ -198,28 +159,19 @@ func (h *MonitoringHandlers) GetSlowOperations(c *gin.Context) {
 	thresholdStr := c.DefaultQuery("threshold", "5000") // 5 seconds default
 	threshold, err := strconv.ParseInt(thresholdStr, 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "Invalid threshold parameter",
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid threshold parameter", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	limitStr := c.DefaultQuery("limit", "50")
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "Invalid limit parameter",
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid limit parameter", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	slowOps := h.monitoringService.PerformanceTracker.GetSlowOperations(threshold, limit)
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    slowOps,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(slowOps, getRequestID(c)))
 }
 
 // GetFailedOperations - Get recent failed operations
@@ -227,18 +179,12 @@ func (h *MonitoringHandlers) GetFailedOperations(c *gin.Context) {
 	limitStr := c.DefaultQuery("limit", "50")
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "Invalid limit parameter",
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid limit parameter", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	failedOps := h.monitoringService.PerformanceTracker.GetFailedOperations(limit)
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    failedOps,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(failedOps, getRequestID(c)))
 }
 
 // GetCampaignResources - Get resource usage for specific campaign
@@ -246,26 +192,17 @@ func (h *MonitoringHandlers) GetCampaignResources(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "Invalid campaign ID",
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid campaign ID", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	usage, exists := h.monitoringService.GetCampaignResourceUsage(campaignID)
 	if !exists {
-		c.JSON(http.StatusNotFound, gin.H{
-			"success": false,
-			"error":   "Campaign not found or no resource data available",
-		})
+		c.JSON(http.StatusNotFound, NewErrorResponse(ErrorCodeNotFound, "Campaign not found or no resource data available", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    usage,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(usage, getRequestID(c)))
 }
 
 // SetCampaignLimitsRequest - Request structure for setting campaign limits
@@ -281,19 +218,13 @@ func (h *MonitoringHandlers) SetCampaignLimits(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "Invalid campaign ID",
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid campaign ID", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	var req SetCampaignLimitsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "Invalid request: " + err.Error(),
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid request: "+err.Error(), getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
@@ -306,10 +237,7 @@ func (h *MonitoringHandlers) SetCampaignLimits(c *gin.Context) {
 
 	h.monitoringService.SetCampaignResourceLimits(campaignID, limits)
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "Campaign resource limits set successfully",
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(map[string]string{"message": "Campaign resource limits set successfully"}, getRequestID(c)))
 }
 
 // GetCampaignPerformance - Get performance metrics for specific campaign
@@ -317,20 +245,14 @@ func (h *MonitoringHandlers) GetCampaignPerformance(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "Invalid campaign ID",
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid campaign ID", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	limitStr := c.DefaultQuery("limit", "100")
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "Invalid limit parameter",
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid limit parameter", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
@@ -347,38 +269,26 @@ func (h *MonitoringHandlers) GetCampaignPerformance(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    campaignMetrics,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(campaignMetrics, getRequestID(c)))
 }
 
 // GetThroughputTrends - Get throughput trends for operation type
 func (h *MonitoringHandlers) GetThroughputTrends(c *gin.Context) {
 	operationType := c.Query("type")
 	if operationType == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "Operation type is required",
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Operation type is required", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	hoursStr := c.DefaultQuery("hours", "24")
 	hours, err := strconv.Atoi(hoursStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "Invalid hours parameter",
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid hours parameter", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	trends := h.monitoringService.PerformanceTracker.GetThroughputTrends(operationType, hours)
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    trends,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(trends, getRequestID(c)))
 }
 
 // GetCampaignHealth - Get health status for specific campaign
@@ -386,28 +296,19 @@ func (h *MonitoringHandlers) GetCampaignHealth(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "Invalid campaign ID",
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid campaign ID", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	// Get campaign monitoring integration
 	integration := monitoring.GetGlobalMonitoringIntegration()
 	if integration == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"success": false,
-			"error":   "Monitoring integration not available",
-		})
+		c.JSON(http.StatusServiceUnavailable, NewErrorResponse(ErrorCodeServiceUnavailable, "Monitoring integration not available", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	health := integration.GetCampaignHealth(campaignID)
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    health,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(health, getRequestID(c)))
 }
 
 // GetDashboardSummary - Get system health summary for dashboard
@@ -415,18 +316,12 @@ func (h *MonitoringHandlers) GetDashboardSummary(c *gin.Context) {
 	// Get campaign monitoring integration
 	integration := monitoring.GetGlobalMonitoringIntegration()
 	if integration == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"success": false,
-			"error":   "Monitoring integration not available",
-		})
+		c.JSON(http.StatusServiceUnavailable, NewErrorResponse(ErrorCodeServiceUnavailable, "Monitoring integration not available", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	summary := integration.GetSystemHealthSummary()
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    summary,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(summary, getRequestID(c)))
 }
 
 // Week 2 Day 4: Cleanup API endpoints
@@ -434,85 +329,55 @@ func (h *MonitoringHandlers) GetDashboardSummary(c *gin.Context) {
 // GetCleanupStats - Get cleanup service statistics
 func (h *MonitoringHandlers) GetCleanupStats(c *gin.Context) {
 	if h.cleanupService == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"success": false,
-			"error":   "Cleanup service not available",
-		})
+		c.JSON(http.StatusServiceUnavailable, NewErrorResponse(ErrorCodeServiceUnavailable, "Cleanup service not available", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	stats := h.cleanupService.GetCleanupStats()
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    stats,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(stats, getRequestID(c)))
 }
 
 // GetCampaignCleanupInfo - Get cleanup info for specific campaign
 func (h *MonitoringHandlers) GetCampaignCleanupInfo(c *gin.Context) {
 	if h.cleanupService == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"success": false,
-			"error":   "Cleanup service not available",
-		})
+		c.JSON(http.StatusServiceUnavailable, NewErrorResponse(ErrorCodeServiceUnavailable, "Cleanup service not available", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "Invalid campaign ID",
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid campaign ID", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	info, exists := h.cleanupService.GetCampaignCleanupInfo(campaignID)
 	if !exists {
-		c.JSON(http.StatusNotFound, gin.H{
-			"success": false,
-			"error":   "Campaign cleanup info not found",
-		})
+		c.JSON(http.StatusNotFound, NewErrorResponse(ErrorCodeNotFound, "Campaign cleanup info not found", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    info,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(info, getRequestID(c)))
 }
 
 // ForceCleanupCampaign - Force cleanup of specific campaign
 func (h *MonitoringHandlers) ForceCleanupCampaign(c *gin.Context) {
 	if h.cleanupService == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"success": false,
-			"error":   "Cleanup service not available",
-		})
+		c.JSON(http.StatusServiceUnavailable, NewErrorResponse(ErrorCodeServiceUnavailable, "Cleanup service not available", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"success": false,
-			"error":   "Invalid campaign ID",
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid campaign ID", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	if err := h.cleanupService.ForceCleanupCampaign(campaignID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"success": false,
-			"error":   "Cleanup failed: " + err.Error(),
-		})
+		c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrorCodeInternalServer, "Cleanup failed: "+err.Error(), getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "Campaign cleanup completed successfully",
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(map[string]string{"message": "Campaign cleanup completed successfully"}, getRequestID(c)))
 }

@@ -40,18 +40,8 @@ func NewBulkResourcesAPIHandler(orchestrator *application.CampaignOrchestrator) 
 func (h *BulkResourcesAPIHandler) AllocateBulkResources(c *gin.Context) {
 	var request models.BulkResourceRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success: false,
-			Error: &ErrorInfo{
-				Code:    ErrorCodeBadRequest,
-				Message: "Invalid request format",
-				Details: []ErrorDetail{{
-					Code:    ErrorCodeValidation,
-					Message: err.Error(),
-				}},
-				Timestamp: time.Now(),
-			},
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest,
+			"Invalid request format: "+err.Error(), getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
@@ -156,11 +146,7 @@ func (h *BulkResourcesAPIHandler) AllocateBulkResources(c *gin.Context) {
 		ProcessingTime: time.Since(startTime).Milliseconds(),
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Success:   true,
-		Data:      response,
-		RequestID: uuid.NewString(),
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
 }
 
 // @Summary Get bulk resource allocation status
@@ -178,19 +164,8 @@ func (h *BulkResourcesAPIHandler) GetBulkResourceStatus(c *gin.Context) {
 	allocationID := c.Param("allocationId")
 
 	if allocationID == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success: false,
-			Error: &ErrorInfo{
-				Code:    ErrorCodeBadRequest,
-				Message: "Resource allocation ID is required",
-				Details: []ErrorDetail{{
-					Field:   "allocationId",
-					Code:    ErrorCodeRequired,
-					Message: "allocationId path parameter is required",
-				}},
-				Timestamp: time.Now(),
-			},
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest,
+			"Resource allocation ID is required", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
@@ -215,11 +190,7 @@ func (h *BulkResourcesAPIHandler) GetBulkResourceStatus(c *gin.Context) {
 		},
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Success:   true,
-		Data:      response,
-		RequestID: uuid.NewString(),
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
 }
 
 // @Summary Cancel bulk operations
@@ -238,37 +209,15 @@ func (h *BulkResourcesAPIHandler) CancelBulkOperation(c *gin.Context) {
 	operationID := c.Param("operationId")
 
 	if operationID == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success: false,
-			Error: &ErrorInfo{
-				Code:    ErrorCodeBadRequest,
-				Message: "Operation ID is required",
-				Details: []ErrorDetail{{
-					Field:   "operationId",
-					Code:    ErrorCodeRequired,
-					Message: "operationId path parameter is required",
-				}},
-				Timestamp: time.Now(),
-			},
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest,
+			"Operation ID is required", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	// Validate operation ID format
 	if _, err := uuid.Parse(operationID); err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success: false,
-			Error: &ErrorInfo{
-				Code:    ErrorCodeValidation,
-				Message: "Invalid operation ID format",
-				Details: []ErrorDetail{{
-					Field:   "operationId",
-					Code:    ErrorCodeValidation,
-					Message: "Operation ID must be a valid UUID",
-				}},
-				Timestamp: time.Now(),
-			},
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeValidation,
+			"Invalid operation ID format: must be a valid UUID", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
@@ -282,11 +231,7 @@ func (h *BulkResourcesAPIHandler) CancelBulkOperation(c *gin.Context) {
 		CancellationTime: time.Now().Format(time.RFC3339),
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Success:   true,
-		Data:      response,
-		RequestID: operationID,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
 }
 
 // @Summary Get bulk operation status by ID
@@ -304,37 +249,15 @@ func (h *BulkResourcesAPIHandler) GetBulkOperationStatus(c *gin.Context) {
 	operationID := c.Param("operationId")
 
 	if operationID == "" {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success: false,
-			Error: &ErrorInfo{
-				Code:    ErrorCodeBadRequest,
-				Message: "Operation ID is required",
-				Details: []ErrorDetail{{
-					Field:   "operationId",
-					Code:    ErrorCodeRequired,
-					Message: "operationId path parameter is required",
-				}},
-				Timestamp: time.Now(),
-			},
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest,
+			"Operation ID is required", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	// Validate operation ID format
 	if _, err := uuid.Parse(operationID); err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success: false,
-			Error: &ErrorInfo{
-				Code:    ErrorCodeValidation,
-				Message: "Invalid operation ID format",
-				Details: []ErrorDetail{{
-					Field:   "operationId",
-					Code:    ErrorCodeValidation,
-					Message: "Operation ID must be a valid UUID",
-				}},
-				Timestamp: time.Now(),
-			},
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeValidation,
+			"Invalid operation ID format: must be a valid UUID", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
@@ -355,19 +278,15 @@ func (h *BulkResourcesAPIHandler) GetBulkOperationStatus(c *gin.Context) {
 		},
 		StartTime: time.Now().Add(-30 * time.Minute).Format(time.RFC3339),
 		Duration:  1800000, // 30 minutes so far
-		Metadata: map[string]interface{}{
-			"campaign_count":    5,
-			"stealth_enabled":   true,
-			"resource_tier":     "enterprise",
-			"allocated_proxies": 25,
+		Metadata: &models.BulkOperationMetadata{
+			ConcurrentWorkers: 5,
+			ProxiesUsed:       []string{"enterprise-proxy-1", "enterprise-proxy-2"},
+			SuccessRate:       96.0,
+			QualityScore:      85.5,
 		},
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Success:   true,
-		Data:      response,
-		RequestID: operationID,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
 }
 
 // @Summary List bulk operations with filtering
@@ -393,37 +312,15 @@ func (h *BulkResourcesAPIHandler) ListBulkOperations(c *gin.Context) {
 
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil || limit < 1 || limit > 1000 {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success: false,
-			Error: &ErrorInfo{
-				Code:    ErrorCodeValidation,
-				Message: "Invalid limit parameter",
-				Details: []ErrorDetail{{
-					Field:   "limit",
-					Code:    ErrorCodeValidation,
-					Message: "Limit must be an integer between 1 and 1000",
-				}},
-				Timestamp: time.Now(),
-			},
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeValidation,
+			"Invalid limit parameter: must be an integer between 1 and 1000", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	offset, err := strconv.Atoi(offsetStr)
 	if err != nil || offset < 0 {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success: false,
-			Error: &ErrorInfo{
-				Code:    ErrorCodeValidation,
-				Message: "Invalid offset parameter",
-				Details: []ErrorDetail{{
-					Field:   "offset",
-					Code:    ErrorCodeValidation,
-					Message: "Offset must be a non-negative integer",
-				}},
-				Timestamp: time.Now(),
-			},
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeValidation,
+			"Invalid offset parameter: must be a non-negative integer", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
@@ -493,13 +390,15 @@ func (h *BulkResourcesAPIHandler) ListBulkOperations(c *gin.Context) {
 		RequestID: uuid.New().String(),
 		Timestamp: time.Now().Format(time.RFC3339),
 		Version:   "2.0.0",
-		Debug: map[string]interface{}{
-			"total_before_pagination": totalCount,
-			"limit":                   limit,
-			"offset":                  offset,
-			"filters_applied": map[string]interface{}{
-				"status": status,
-				"type":   operationType,
+		Debug: &models.BulkOperationDebugInfo{
+			DatabaseStats: map[string]int64{
+				"total_before_pagination": int64(totalCount),
+				"limit":                   int64(limit),
+				"offset":                  int64(offset),
+			},
+			ConfigSnapshot: map[string]string{
+				"status_filter": status,
+				"type_filter":   operationType,
 			},
 		},
 	}
@@ -510,9 +409,5 @@ func (h *BulkResourcesAPIHandler) ListBulkOperations(c *gin.Context) {
 		Metadata:   metadata,
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Success:   true,
-		Data:      response,
-		RequestID: uuid.NewString(),
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
 }

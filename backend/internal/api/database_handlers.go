@@ -40,7 +40,7 @@ func NewDatabaseHandler(apiHandler *APIHandler) *DatabaseHandler {
 func (h *DatabaseHandler) HandleBulkDatabaseQuery(c *gin.Context) {
 	startTime := time.Now()
 	requestID := uuid.New().String()
-	
+
 	// Verify this is a legitimate request
 	xRequestedWith := c.GetHeader("X-Requested-With")
 	if xRequestedWith != "XMLHttpRequest" {
@@ -184,7 +184,7 @@ func (h *DatabaseHandler) HandleBulkDatabaseQuery(c *gin.Context) {
 func (h *DatabaseHandler) HandleBulkDatabaseStats(c *gin.Context) {
 	startTime := time.Now()
 	requestID := uuid.New().String()
-	
+
 	// Verify this is a legitimate request
 	xRequestedWith := c.GetHeader("X-Requested-With")
 	if xRequestedWith != "XMLHttpRequest" {
@@ -297,7 +297,7 @@ func (h *DatabaseHandler) HandleBulkDatabaseStats(c *gin.Context) {
 // isQuerySafe checks if a SQL query is safe to execute
 func (h *DatabaseHandler) isQuerySafe(query string) bool {
 	queryLower := strings.ToLower(strings.TrimSpace(query))
-	
+
 	// List of dangerous patterns
 	dangerousPatterns := []string{
 		"drop table",
@@ -325,10 +325,10 @@ func (h *DatabaseHandler) isQuerySafe(query string) bool {
 	}
 
 	// Only allow SELECT statements and basic queries
-	if !strings.HasPrefix(queryLower, "select") && 
-	   !strings.HasPrefix(queryLower, "show") && 
-	   !strings.HasPrefix(queryLower, "describe") && 
-	   !strings.HasPrefix(queryLower, "explain") {
+	if !strings.HasPrefix(queryLower, "select") &&
+		!strings.HasPrefix(queryLower, "show") &&
+		!strings.HasPrefix(queryLower, "describe") &&
+		!strings.HasPrefix(queryLower, "explain") {
 		return false
 	}
 
@@ -358,7 +358,7 @@ func (h *DatabaseHandler) executeQueryWithLimit(query string, limit int, timeout
 	// Prepare result
 	result := &DatabaseQueryResult{
 		Columns: columns,
-		Rows:    make([][]interface{}, 0),
+		Rows:    make([][]DatabaseValue, 0),
 	}
 
 	// Scan rows with limit enforcement
@@ -367,7 +367,7 @@ func (h *DatabaseHandler) executeQueryWithLimit(query string, limit int, timeout
 		// Create a slice of interface{} to hold the values
 		values := make([]interface{}, len(columns))
 		valuePtrs := make([]interface{}, len(columns))
-		
+
 		for i := range values {
 			valuePtrs[i] = &values[i]
 		}
@@ -376,14 +376,47 @@ func (h *DatabaseHandler) executeQueryWithLimit(query string, limit int, timeout
 			return nil, err
 		}
 
-		// Convert []byte to string for better JSON serialization
-		row := make([]interface{}, len(values))
+		// Convert values to DatabaseValue structs
+		row := make([]DatabaseValue, len(values))
 		for i, v := range values {
-			if b, ok := v.([]byte); ok {
-				row[i] = string(b)
+			dbValue := DatabaseValue{}
+
+			if v == nil {
+				dbValue.IsNull = true
+				dbValue.RawValue = "null"
 			} else {
-				row[i] = v
+				dbValue.IsNull = false
+
+				switch val := v.(type) {
+				case []byte:
+					strVal := string(val)
+					dbValue.StringValue = &strVal
+					dbValue.RawValue = strVal
+				case string:
+					dbValue.StringValue = &val
+					dbValue.RawValue = val
+				case int64:
+					dbValue.IntValue = &val
+					dbValue.RawValue = fmt.Sprintf("%d", val)
+				case int:
+					intVal := int64(val)
+					dbValue.IntValue = &intVal
+					dbValue.RawValue = fmt.Sprintf("%d", val)
+				case float64:
+					dbValue.FloatValue = &val
+					dbValue.RawValue = fmt.Sprintf("%f", val)
+				case bool:
+					dbValue.BoolValue = &val
+					dbValue.RawValue = fmt.Sprintf("%t", val)
+				default:
+					// Fallback to string representation
+					strVal := fmt.Sprintf("%v", val)
+					dbValue.StringValue = &strVal
+					dbValue.RawValue = strVal
+				}
 			}
+
+			row[i] = dbValue
 		}
 
 		result.Rows = append(result.Rows, row)
@@ -450,7 +483,7 @@ func (h *DatabaseHandler) getDatabaseStats() (*DatabaseStats, error) {
 	if err != nil {
 		version = "Unknown"
 	}
-	
+
 	// Extract just the PostgreSQL version part
 	re := regexp.MustCompile(`PostgreSQL (\d+\.\d+)`)
 	matches := re.FindStringSubmatch(version)
@@ -468,7 +501,7 @@ func (h *DatabaseHandler) getDatabaseStats() (*DatabaseStats, error) {
 		days := int(uptime.Hours() / 24)
 		hours := int(uptime.Hours()) % 24
 		minutes := int(uptime.Minutes()) % 60
-		
+
 		if days > 0 {
 			stats.Uptime = fmt.Sprintf("%dd %dh %dm", days, hours, minutes)
 		} else if hours > 0 {
@@ -553,7 +586,7 @@ func (h *DatabaseHandler) getTableStats(tableName string) (*TableStats, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	stats.Schema = schemaName
 	if rowCount.Valid {
 		stats.RowCount = rowCount.Int64

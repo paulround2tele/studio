@@ -41,36 +41,13 @@ func NewBulkAnalyticsAPIHandler(orchestrator *application.CampaignOrchestrator) 
 func (h *BulkAnalyticsAPIHandler) BulkAnalyzeDomains(c *gin.Context) {
 	var request models.BulkAnalyticsRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success: false,
-			Error: &ErrorInfo{
-				Code:    ErrorCodeBadRequest,
-				Message: "Invalid request format",
-				Details: []ErrorDetail{{
-					Code:    ErrorCodeValidation,
-					Message: err.Error(),
-				}},
-				Timestamp: time.Now(),
-			},
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid request format", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	// Validate campaign count limits
 	if len(request.CampaignIDs) > 1000 {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success: false,
-			Error: &ErrorInfo{
-				Code:    ErrorCodeValidation,
-				Message: "Too many campaigns requested",
-				Details: []ErrorDetail{{
-					Field:   "campaignIds",
-					Code:    ErrorCodeValidation,
-					Message: "Maximum 1000 campaigns allowed per analytics request",
-				}},
-				Timestamp: time.Now(),
-			},
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeValidation, "Too many campaigns requested", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
@@ -183,10 +160,12 @@ func (h *BulkAnalyticsAPIHandler) BulkAnalyzeDomains(c *gin.Context) {
 		Timestamp:     time.Now().Format(time.RFC3339),
 		Version:       "2.0.0",
 		ExecutionNode: "analytics-node-01",
-		Debug: map[string]interface{}{
-			"metrics_requested": request.Metrics,
-			"granularity":       request.Granularity,
-			"group_by":          request.GroupBy,
+		Debug: &models.BulkOperationDebugInfo{
+			ConfigSnapshot: map[string]string{
+				"metrics_requested": fmt.Sprintf("%v", request.Metrics),
+				"granularity":       request.Granularity,
+				"group_by":          fmt.Sprintf("%v", request.GroupBy),
+			},
 		},
 	}
 
@@ -198,11 +177,7 @@ func (h *BulkAnalyticsAPIHandler) BulkAnalyzeDomains(c *gin.Context) {
 		Metadata:        metadata,
 	}
 
-	c.JSON(http.StatusOK, APIResponse{
-		Success:   true,
-		Data:      response,
-		RequestID: uuid.NewString(),
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
 }
 
 // @Summary Manage bulk campaign operations

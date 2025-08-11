@@ -4,6 +4,7 @@ package api
 import (
 	"fmt"
 	"math/rand"
+	"net/http"
 	"strings"
 	"time"
 
@@ -65,10 +66,7 @@ func RateLimitingMiddleware() gin.HandlerFunc {
 
 		// Check rate limit (placeholder)
 		if isRateLimited(clientIP) {
-			c.JSON(429, gin.H{
-				"error":       "Rate limit exceeded - slow down there, speed racer",
-				"retry_after": "60s",
-			})
+			c.JSON(http.StatusTooManyRequests, NewErrorResponse(ErrorCodeRateLimitExceeded, "Rate limit exceeded - slow down there, speed racer", getRequestID(c), c.Request.URL.Path))
 			c.Abort()
 			return
 		}
@@ -82,18 +80,14 @@ func AuthenticationMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		apiKey := c.GetHeader("X-API-Key")
 		if apiKey == "" {
-			c.JSON(401, gin.H{
-				"error": "API key required - authentication is not optional",
-			})
+			c.JSON(http.StatusUnauthorized, NewErrorResponse(ErrorCodeUnauthorized, "API key required - authentication is not optional", getRequestID(c), c.Request.URL.Path))
 			c.Abort()
 			return
 		}
 
 		// Validate API key (placeholder)
 		if !isValidAPIKey(apiKey) {
-			c.JSON(401, gin.H{
-				"error": "Invalid API key - try one that actually exists",
-			})
+			c.JSON(http.StatusUnauthorized, NewErrorResponse(ErrorCodeUnauthorized, "Invalid API key - try one that actually exists", getRequestID(c), c.Request.URL.Path))
 			c.Abort()
 			return
 		}
@@ -107,9 +101,7 @@ func ValidationMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Add request size limits
 		if c.Request.ContentLength > 10*1024*1024 { // 10MB limit
-			c.JSON(413, gin.H{
-				"error": "Request too large - this isn't a file upload service",
-			})
+			c.JSON(http.StatusRequestEntityTooLarge, NewErrorResponse(ErrorCodeBadRequest, "Request too large - this isn't a file upload service", getRequestID(c), c.Request.URL.Path))
 			c.Abort()
 			return
 		}

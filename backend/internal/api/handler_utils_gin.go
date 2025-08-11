@@ -99,16 +99,9 @@ func respondWithDetailedErrorGin(c *gin.Context, code int, errorCode ErrorCode, 
 	log.Printf("API Error: status=%d, code=%s, message=%s, path=%s, clientIP=%s, requestID=%s, details=%d",
 		code, errorCode, message, c.Request.URL.Path, c.ClientIP(), requestID, len(details))
 
-	response := &APIResponse{
-		Success: false,
-		Error: &ErrorInfo{
-			Code:      errorCode,
-			Message:   message,
-			Details:   details,
-			Timestamp: time.Now().UTC(),
-			Path:      c.Request.URL.Path,
-		},
-		RequestID: requestID,
+	response := NewErrorResponse(errorCode, message, requestID, c.Request.URL.Path)
+	if len(details) > 0 {
+		response.Error.Details = details
 	}
 
 	c.JSON(code, response)

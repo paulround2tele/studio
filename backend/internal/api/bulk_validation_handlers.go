@@ -42,37 +42,16 @@ func NewBulkValidationAPIHandler(orchestrator *application.CampaignOrchestrator,
 func (h *BulkValidationAPIHandler) BulkValidateDNS(c *gin.Context) {
 	var request models.BulkDNSValidationRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success: false,
-			Error: &ErrorInfo{
-				Code:    ErrorCodeBadRequest,
-				Message: "Invalid request format",
-				Details: []ErrorDetail{{
-					Code:    ErrorCodeValidation,
-					Message: err.Error(),
-				}},
-				Timestamp: time.Now(),
-			},
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest,
+			"Invalid request format: "+err.Error(), getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	// Validate stealth configuration if provided
 	if request.Stealth != nil && request.Stealth.Enabled {
 		if request.Stealth.DetectionThreshold > 0 && request.Stealth.DetectionThreshold < 0.1 {
-			c.JSON(http.StatusBadRequest, APIResponse{
-				Success: false,
-				Error: &ErrorInfo{
-					Code:    ErrorCodeValidation,
-					Message: "Invalid stealth detection threshold",
-					Details: []ErrorDetail{{
-						Field:   "stealth.detectionThreshold",
-						Code:    ErrorCodeValidation,
-						Message: "Detection threshold must be between 0.1 and 1.0",
-					}},
-					Timestamp: time.Now(),
-				},
-			})
+			c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeValidation,
+				"Detection threshold must be between 0.1 and 1.0", getRequestID(c), c.Request.URL.Path))
 			return
 		}
 	}
@@ -225,11 +204,7 @@ func (h *BulkValidationAPIHandler) BulkValidateDNS(c *gin.Context) {
 	}
 
 	// Use unified APIResponse envelope for consistency
-	c.JSON(http.StatusOK, APIResponse{
-		Success:   true,
-		Data:      response,
-		RequestID: operationID,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
 }
 
 // @Summary Validate domains using bulk HTTP validation with stealth
@@ -248,37 +223,14 @@ func (h *BulkValidationAPIHandler) BulkValidateDNS(c *gin.Context) {
 func (h *BulkValidationAPIHandler) BulkValidateHTTP(c *gin.Context) {
 	var request models.BulkHTTPValidationRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success: false,
-			Error: &ErrorInfo{
-				Code:    ErrorCodeBadRequest,
-				Message: "Invalid request format",
-				Details: []ErrorDetail{{
-					Code:    ErrorCodeValidation,
-					Message: err.Error(),
-				}},
-				Timestamp: time.Now(),
-			},
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid request format", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	// Validate stealth configuration
 	if request.Stealth != nil && request.Stealth.Enabled {
 		if request.Stealth.DetectionThreshold > 0 && request.Stealth.DetectionThreshold < 0.1 {
-			c.JSON(http.StatusBadRequest, APIResponse{
-				Success: false,
-				Error: &ErrorInfo{
-					Code:    ErrorCodeValidation,
-					Message: "Invalid stealth detection threshold",
-					Details: []ErrorDetail{{
-						Field:   "stealth.detectionThreshold",
-						Code:    ErrorCodeValidation,
-						Message: "Detection threshold must be between 0.1 and 1.0",
-					}},
-					Timestamp: time.Now(),
-				},
-			})
+			c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeValidation, "Detection threshold must be between 0.1 and 1.0", getRequestID(c), c.Request.URL.Path))
 			return
 		}
 	}
@@ -431,11 +383,7 @@ func (h *BulkValidationAPIHandler) BulkValidateHTTP(c *gin.Context) {
 	}
 
 	// Use unified APIResponse envelope for consistency
-	c.JSON(http.StatusOK, APIResponse{
-		Success:   true,
-		Data:      response,
-		RequestID: operationID,
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
 }
 
 // applyEnterpriseStealthConfig applies advanced enterprise stealth configuration to operation config

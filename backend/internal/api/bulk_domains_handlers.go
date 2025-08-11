@@ -44,36 +44,15 @@ func NewBulkDomainsAPIHandler(orchestrator *application.CampaignOrchestrator, ss
 func (h *BulkDomainsAPIHandler) BulkGenerateDomains(c *gin.Context) {
 	var request models.BulkDomainGenerationRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success: false,
-			Error: &ErrorInfo{
-				Code:    ErrorCodeBadRequest,
-				Message: "Invalid request format",
-				Details: []ErrorDetail{{
-					Code:    ErrorCodeValidation,
-					Message: err.Error(),
-				}},
-				Timestamp: time.Now(),
-			},
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest,
+			"Invalid request format: "+err.Error(), getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	// Validate operations count
 	if len(request.Operations) > 100 {
-		c.JSON(http.StatusBadRequest, APIResponse{
-			Success: false,
-			Error: &ErrorInfo{
-				Code:    ErrorCodeValidation,
-				Message: "Too many operations requested",
-				Details: []ErrorDetail{{
-					Field:   "operations",
-					Code:    ErrorCodeValidation,
-					Message: "Maximum 100 operations allowed per bulk request",
-				}},
-				Timestamp: time.Now(),
-			},
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeValidation,
+			"Too many operations requested: maximum 100 operations allowed per bulk request", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
@@ -171,23 +150,12 @@ func (h *BulkDomainsAPIHandler) BulkGenerateDomains(c *gin.Context) {
 
 	// Return appropriate HTTP status with unified envelope
 	if status == "failed" {
-		c.JSON(http.StatusInternalServerError, APIResponse{
-			Success:   false,
-			Data:      response,
-			RequestID: response.OperationID,
-		})
+		c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrorCodeInternalServer,
+			"Domain generation operation failed", getRequestID(c), c.Request.URL.Path))
 	} else if status == "partial" {
-		c.JSON(http.StatusPartialContent, APIResponse{
-			Success:   false,
-			Data:      response,
-			RequestID: response.OperationID,
-		})
+		c.JSON(http.StatusPartialContent, NewSuccessResponse(response, getRequestID(c)))
 	} else {
-		c.JSON(http.StatusOK, APIResponse{
-			Success:   true,
-			Data:      response,
-			RequestID: response.OperationID,
-		})
+		c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
 	}
 }
 
@@ -202,7 +170,7 @@ func (h *BulkDomainsAPIHandler) executeDomainGeneration(ctx context.Context, op 
 	}
 
 	// Merge the operation config if provided
-	if op.Config != nil {
+	if op.Config.PatternBased != nil || op.Config.CustomLogic != nil {
 		// Config contains DomainGenerationPhaseConfig
 		domainConfig["operation_config"] = op.Config
 	}

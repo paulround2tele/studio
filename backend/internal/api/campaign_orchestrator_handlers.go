@@ -777,50 +777,48 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 		currentPhase := models.PhaseTypeEnum(getCurrentPhaseString(campaign))
 		phaseStatus := models.PhaseStatusEnum(getPhaseStatusString(campaign))
 
-		// Build progress map with bulk JSONB data
-		progressData := make(map[string]interface{})
-
-		// Include bulk JSONB data for enterprise-scale processing
-		if campaign.DomainsData != nil {
-			var domainsData interface{}
-			if err := json.Unmarshal(*campaign.DomainsData, &domainsData); err == nil {
-				progressData["domainsData"] = domainsData
-			}
+		// Build proper phase progress data
+		progressData := PhaseProgressData{
+			Percentage:     0.0,
+			ProcessedItems: 0,
+			TotalItems:     0,
 		}
 
-		if campaign.DNSResults != nil {
-			var dnsResults interface{}
-			if err := json.Unmarshal(*campaign.DNSResults, &dnsResults); err == nil {
-				progressData["dnsResults"] = dnsResults
-			}
-		}
-
-		if campaign.HTTPResults != nil {
-			var httpResults interface{}
-			if err := json.Unmarshal(*campaign.HTTPResults, &httpResults); err == nil {
-				progressData["httpResults"] = httpResults
-			}
-		}
-
-		if campaign.AnalysisResults != nil {
-			var analysisResults interface{}
-			if err := json.Unmarshal(*campaign.AnalysisResults, &analysisResults); err == nil {
-				progressData["analysisResults"] = analysisResults
-			}
-		}
-
-		// Include phase-centric metrics
+		// Set progress based on campaign data
 		if campaign.OverallProgress != nil {
-			progressData["overallProgress"] = *campaign.OverallProgress
+			progressData.Percentage = float64(*campaign.OverallProgress)
 		}
 		if campaign.Domains != nil {
-			progressData["domains"] = *campaign.Domains
-		}
-		if campaign.Leads != nil {
-			progressData["leads"] = *campaign.Leads
+			progressData.TotalItems = int64(*campaign.Domains)
 		}
 		if campaign.DNSValidatedDomains != nil {
-			progressData["dnsValidatedDomains"] = *campaign.DNSValidatedDomains
+			progressData.ProcessedItems = int64(*campaign.DNSValidatedDomains)
+		}
+
+		// Set phase-specific progress based on current phase
+		switch currentPhase {
+		case models.PhaseTypeDomainGeneration:
+			if campaign.Domains != nil {
+				progressData.DomainGeneration = &DomainGenerationProgress{
+					DomainsGenerated: int(*campaign.Domains),
+					GenerationRate:   50, // Default rate
+				}
+			}
+		case models.PhaseTypeDNSValidation:
+			if campaign.DNSValidatedDomains != nil {
+				progressData.DNSValidation = &DNSValidationProgress{
+					ValidDomains:   int(*campaign.DNSValidatedDomains),
+					ValidationRate: 30, // Default rate
+				}
+			}
+		case models.PhaseTypeHTTPKeywordValidation:
+			if campaign.Leads != nil {
+				progressData.HTTPValidation = &HTTPValidationProgress{
+					ScannedDomains:  int(*campaign.Leads),
+					MatchingDomains: int(*campaign.Leads / 3), // Estimate 1/3 match
+					MatchRate:       33.3,                     // Default match rate
+				}
+			}
 		}
 
 		// CRITICAL FIX: Fetch actual domain records from generated_domains table

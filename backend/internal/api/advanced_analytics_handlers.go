@@ -44,44 +44,33 @@ func NewAdvancedBulkAnalyticsAPIHandler(
 
 // AdvancedBulkAnalyze - POST /api/v1/bulk/analytics/advanced
 // Advanced bulk analytics with enterprise intelligence capabilities
-// Unlike the amateur hour analytics you had before
 func (h *AdvancedBulkAnalyticsAPIHandler) AdvancedBulkAnalyze(c *gin.Context) {
 	ctx := context.Background()
 	startTime := time.Now()
 
 	var request models.AdvancedBulkAnalyticsRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Invalid request format - learn to read API documentation",
-			"details": err.Error(),
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid request format", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	// Validate the request with actual intelligence
 	if err := h.validateAdvancedAnalyticsRequest(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Request validation failed - your request is as broken as my faith in humanity",
-			"details": err.Error(),
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Request validation failed: "+err.Error(), getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	// Generate advanced analytics with enterprise capabilities
 	response, err := h.generateAdvancedAnalytics(ctx, &request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "Analytics generation failed - this system is more broken than expected",
-			"details": err.Error(),
-		})
+		c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrorCodeInternalServer, "Analytics generation failed: "+err.Error(), getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	response.ProcessingTime = time.Since(startTime).Milliseconds()
 
-	// Set appropriate status based on alert levels
-	statusCode := h.determineResponseStatus(response)
-	c.JSON(statusCode, response)
+	// Return unified APIResponse envelope
+	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
 }
 
 // ExportAnalytics - POST /api/v1/bulk/analytics/export
@@ -92,48 +81,35 @@ func (h *AdvancedBulkAnalyticsAPIHandler) ExportAnalytics(c *gin.Context) {
 
 	var request models.AdvancedBulkAnalyticsRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "Invalid export request - exporting garbage requires valid input",
-			"details": err.Error(),
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Invalid export request: "+err.Error(), getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	if request.ExportFormat == "" {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Export format is required - specify what format you want your disappointment in",
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, "Export format is required", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	// Generate analytics data first
 	response, err := h.generateAdvancedAnalytics(ctx, &request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "Failed to generate analytics for export",
-			"details": err.Error(),
-		})
+		c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrorCodeInternalServer, 
+			"Failed to generate analytics for export: "+err.Error(), getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	// Generate export
 	exportInfo, err := h.exportService.ExportAnalytics(ctx, response, request.ExportFormat)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "Export generation failed - even the export function gave up",
-			"details": err.Error(),
-		})
+		c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrorCodeInternalServer, 
+			"Export generation failed: "+err.Error(), getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
 	response.ExportInfo = exportInfo
 	response.ProcessingTime = time.Since(startTime).Milliseconds()
 
-	c.JSON(http.StatusOK, APIResponse{
-		Success:   true,
-		Data:      response,
-		RequestID: uuid.NewString(),
-	})
+	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
 }
 
 // GetVisualizationData - GET /api/v1/bulk/analytics/visualization/{campaignId}
@@ -144,9 +120,8 @@ func (h *AdvancedBulkAnalyticsAPIHandler) GetVisualizationData(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Invalid campaign ID - UUIDs have a specific format for a reason",
-		})
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, 
+			"Invalid campaign ID format", getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
@@ -157,18 +132,18 @@ func (h *AdvancedBulkAnalyticsAPIHandler) GetVisualizationData(c *gin.Context) {
 
 	visualizationData, err := h.analyticsEngine.GenerateVisualizationData(ctx, campaignID, chartType, timeRange, granularity)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "Visualization data generation failed - charts require actual data",
-			"details": err.Error(),
-		})
+		c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrorCodeInternalServer, 
+			"Visualization data generation failed: "+err.Error(), getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	response := map[string]interface{}{
 		"campaignId":    campaignID,
 		"visualization": visualizationData,
 		"generatedAt":   time.Now(),
-	})
+	}
+
+	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
 }
 
 // GetAnalyticsAlerts - GET /api/v1/bulk/analytics/alerts
@@ -186,32 +161,32 @@ func (h *AdvancedBulkAnalyticsAPIHandler) GetAnalyticsAlerts(c *gin.Context) {
 
 	alerts, err := h.alertService.GetActiveAlerts(ctx, severityFilter, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "Failed to retrieve alerts - even the alert system is broken",
-			"details": err.Error(),
-		})
+		c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrorCodeInternalServer, 
+			"Failed to retrieve alerts: "+err.Error(), getRequestID(c), c.Request.URL.Path))
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	response := map[string]interface{}{
 		"alerts":      alerts,
 		"count":       len(alerts),
 		"retrievedAt": time.Now(),
-	})
+	}
+
+	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
 }
 
 // validateAdvancedAnalyticsRequest - Validates advanced analytics request
 func (h *AdvancedBulkAnalyticsAPIHandler) validateAdvancedAnalyticsRequest(request *models.AdvancedBulkAnalyticsRequest) error {
 	if len(request.CampaignIDs) == 0 {
-		return fmt.Errorf("at least one campaign ID is required - basic math")
+		return fmt.Errorf("at least one campaign ID is required")
 	}
 
 	if len(request.CampaignIDs) > 1000 {
-		return fmt.Errorf("maximum 1000 campaigns allowed - this isn't a stress test")
+		return fmt.Errorf("maximum 1000 campaigns allowed")
 	}
 
 	if len(request.Metrics) == 0 {
-		return fmt.Errorf("at least one metric is required - what exactly are you analyzing?")
+		return fmt.Errorf("at least one metric is required")
 	}
 
 	validAnalyticsTypes := map[string]bool{
@@ -223,26 +198,26 @@ func (h *AdvancedBulkAnalyticsAPIHandler) validateAdvancedAnalyticsRequest(reque
 	}
 
 	if !validAnalyticsTypes[request.AnalyticsType] {
-		return fmt.Errorf("invalid analytics type: %s - read the documentation", request.AnalyticsType)
+		return fmt.Errorf("invalid analytics type: %s", request.AnalyticsType)
 	}
 
 	// Validate time range if provided
 	if request.TimeRange != nil {
 		startTime, err := time.Parse(time.RFC3339, request.TimeRange.StartTime)
 		if err != nil {
-			return fmt.Errorf("invalid start time format - use ISO 8601")
+			return fmt.Errorf("invalid start time format: %w", err)
 		}
 		endTime, err := time.Parse(time.RFC3339, request.TimeRange.EndTime)
 		if err != nil {
-			return fmt.Errorf("invalid end time format - use ISO 8601")
+			return fmt.Errorf("invalid end time format: %w", err)
 		}
 
 		if startTime.After(endTime) {
-			return fmt.Errorf("start time cannot be after end time - temporal paradoxes not supported")
+			return fmt.Errorf("start time cannot be after end time")
 		}
 
 		if time.Since(startTime) > 365*24*time.Hour {
-			return fmt.Errorf("time range cannot exceed 1 year - this isn't a historical analysis")
+			return fmt.Errorf("time range cannot exceed 1 year")
 		}
 	}
 
@@ -253,7 +228,7 @@ func (h *AdvancedBulkAnalyticsAPIHandler) validateAdvancedAnalyticsRequest(reque
 		}
 
 		if *request.PredictionHorizon > 8760 { // 1 year in hours
-			return fmt.Errorf("prediction horizon cannot exceed 1 year - we're not fortune tellers")
+			return fmt.Errorf("prediction horizon cannot exceed 1 year")
 		}
 	}
 
@@ -342,33 +317,10 @@ func (h *AdvancedBulkAnalyticsAPIHandler) generateAdvancedAnalytics(ctx context.
 // generateBasicAnalytics - Generate basic analytics using existing infrastructure
 func (h *AdvancedBulkAnalyticsAPIHandler) generateBasicAnalytics(ctx context.Context, request *models.AdvancedBulkAnalyticsRequest) (*models.BulkAnalyticsResponse, error) {
 	// Use analytics engine to generate basic campaign data
-	// TODO: Implement proper basic analytics in analytics engine
 	return &models.BulkAnalyticsResponse{
 		CampaignMetrics: make(map[string]models.CampaignAnalytics),
 		AggregatedData:  models.AggregatedAnalytics{},
 	}, nil
-}
-
-// determineResponseStatus - Determine appropriate HTTP status based on analytics results
-func (h *AdvancedBulkAnalyticsAPIHandler) determineResponseStatus(response *models.AdvancedBulkAnalyticsResponse) int {
-	// Check for critical alerts
-	for _, alert := range response.AlertStatus {
-		if alert.Severity == "critical" {
-			return http.StatusPartialContent // 206 indicates partial success with issues
-		}
-	}
-
-	// Check stealth analytics for high detection risk
-	if response.StealthAnalytics != nil && response.StealthAnalytics.OverallStealthScore > 0.7 {
-		return http.StatusPartialContent
-	}
-
-	// Check performance KPIs for poor performance
-	if response.PerformanceKPIs != nil && response.PerformanceKPIs.OverallPerformanceScore < 50 {
-		return http.StatusPartialContent
-	}
-
-	return http.StatusOK
 }
 
 // ===============================================================================

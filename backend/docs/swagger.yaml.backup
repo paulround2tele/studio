@@ -179,7 +179,7 @@ components:
           type: integer
         results:
           items:
-            $ref: '#/components/schemas/api.APIResponse'
+            $ref: '#/components/schemas/api.ProxyHealthCheckResponse'
           type: array
           uniqueItems: false
         totalProxies:
@@ -193,7 +193,7 @@ components:
           type: integer
         testResults:
           items:
-            $ref: '#/components/schemas/api.APIResponse'
+            $ref: '#/components/schemas/api.ProxyTestResponse'
           type: array
           uniqueItems: false
         totalRequested:
@@ -648,7 +648,7 @@ components:
         session:
           $ref: '#/components/schemas/api.SessionData'
         user:
-          $ref: '#/components/schemas/api.APIResponse'
+          $ref: '#/components/schemas/api.UserPublicResponse'
       type: object
     api.Metadata:
       description: Optional metadata attached to API responses
@@ -921,7 +921,7 @@ components:
         lastChecked:
           type: string
         proxyDetails:
-          $ref: '#/components/schemas/api.APIResponse'
+          $ref: '#/components/schemas/api.ProxyDetailsResponse'
         proxyId:
           type: string
         responseTimeMs:
@@ -3583,25 +3583,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.BulkDatabaseQueryResponse'
           description: Queries executed successfully
         "400":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Bad request or invalid queries
         "403":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Forbidden query detected
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal server error
       summary: Execute bulk database queries
       tags:
@@ -3629,19 +3629,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.BulkDatabaseStatsResponse'
           description: Statistics retrieved successfully
         "400":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Bad request
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal server error
       summary: Get bulk database statistics
       tags:
@@ -3776,19 +3776,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.StandardErrorResponse'
           description: Invalid request format
         "401":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.StandardErrorResponse'
           description: Authentication required
         "501":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.StandardErrorResponse'
           description: Not implemented
       summary: Change user password
       tags:
@@ -3815,31 +3815,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.StandardErrorResponse'
           description: Invalid request format
         "401":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.StandardErrorResponse'
           description: Invalid credentials
         "403":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.StandardErrorResponse'
           description: Account inactive
         "423":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.StandardErrorResponse'
           description: Account locked
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.StandardErrorResponse'
           description: Internal server error
       summary: User login
       tags:
@@ -3873,19 +3873,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.StandardErrorResponse'
           description: Authentication required
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.StandardErrorResponse'
           description: User not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.StandardErrorResponse'
           description: Internal server error
       summary: Get current user
       tags:
@@ -3905,13 +3905,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.StandardErrorResponse'
           description: Invalid or expired session
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.StandardErrorResponse'
           description: Failed to refresh session
       summary: Refresh user session
       tags:
@@ -3931,7 +3931,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal Server Error
       summary: List campaigns (standalone)
       tags:
@@ -3958,19 +3958,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Bad Request
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Campaign not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal Server Error
       summary: Get campaign domain status summary
       tags:
@@ -4014,19 +4014,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Bad Request
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Campaign not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal Server Error
       summary: Configure campaign phase (standalone)
       tags:
@@ -4063,19 +4063,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Bad Request
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Campaign not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal Server Error
       summary: Start campaign phase (standalone)
       tags:
@@ -4114,19 +4114,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Bad Request
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Campaign or phase not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal Server Error
       summary: Get phase status (standalone)
       tags:
@@ -4153,19 +4153,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Bad Request
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Campaign not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal Server Error
       summary: Get campaign progress (standalone)
       tags:
@@ -4287,13 +4287,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Bad Request
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal Server Error
       summary: Get bulk enriched campaign data
       tags:
@@ -4561,13 +4561,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Bad Request
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal Server Error
       summary: Get domain generation pattern offset
       tags:
@@ -4594,13 +4594,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Bad Request
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal Server Error
       summary: Create lead generation campaign
       tags:
@@ -4698,7 +4698,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.StandardErrorResponse'
           description: Service not ready
       summary: Readiness check
       tags:
@@ -5266,7 +5266,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.PersonaTestResponse'
           description: Persona test results
         "400":
           content:
@@ -5602,7 +5602,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.ProxyHealthCheckResponse'
           description: Health check completed
         "400":
           content:
@@ -5646,7 +5646,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.ProxyTestResponse'
           description: Proxy test results
         "400":
           content:
@@ -5726,7 +5726,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.BulkProxyTestResponse'
           description: Bulk test results
         "400":
           content:
@@ -5791,7 +5791,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.BulkHealthCheckResponse'
           description: Health checks completed
         "500":
           content:
@@ -6528,19 +6528,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Bad Request
         "401":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Unauthorized
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal Server Error
       summary: Stream specific campaign events via SSE
       tags:
@@ -6564,13 +6564,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Unauthorized
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal Server Error
       summary: Stream campaign events via SSE
       tags:
@@ -6590,7 +6590,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Unauthorized
       summary: Get SSE connection statistics
       tags:
