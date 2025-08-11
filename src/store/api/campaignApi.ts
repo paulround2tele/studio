@@ -2,6 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
 import type { 
   ApiAPIResponse,
+  LeadGenerationCampaignResponse,
   ServicesCreateLeadGenerationCampaignRequest,
   ApiPhaseConfigureRequest,
   ApiBulkEnrichedDataRequest,
@@ -22,7 +23,7 @@ export const campaignApi = createApi({
   tagTypes: ['Campaign', 'CampaignPhases', 'CampaignStatus'],
   endpoints: (builder) => ({
     // Create new campaign using generated client with proper type safety
-    createCampaign: builder.mutation<ApiAPIResponse, ServicesCreateLeadGenerationCampaignRequest>({
+    createCampaign: builder.mutation<LeadGenerationCampaignResponse, ServicesCreateLeadGenerationCampaignRequest>({
       queryFn: async (campaign) => {
         try {
           const response = await (await campaignsApiClient.createLeadGenerationCampaign(campaign))();

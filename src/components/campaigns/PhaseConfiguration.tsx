@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCampaignFormData } from "@/lib/hooks/useCampaignFormData";
 import type { CampaignViewModel, CampaignType } from '@/lib/types';
 import { campaignsApi } from '@/lib/api-client/client';
+import { StartPhaseStandalonePhaseEnum } from '@/lib/api-client/apis/campaigns-api';
 import { isResponseSuccess, getResponseError } from '@/lib/utils/apiResponseHelpers';
 import { validateUUID } from '@/lib/utils/uuidValidation';
 
@@ -147,10 +148,11 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
       }
 
       // Map phase type to backend parameter
-      const phaseParameterMap: Record<string, string> = {
-        'dns_validation': 'dns_validation',
-        'http_keyword_validation': 'http_keyword_validation',
-        'analysis': 'analysis'
+      // Map phase type to backend parameter using correct enum values
+      const phaseParameterMap: Record<string, StartPhaseStandalonePhaseEnum> = {
+        'dns_validation': StartPhaseStandalonePhaseEnum.dns_validation,
+        'http_keyword_validation': StartPhaseStandalonePhaseEnum.http_validation,
+        'analysis': StartPhaseStandalonePhaseEnum.http_validation  // Assuming analysis maps to http_validation
       };
 
       const backendPhaseParam = phaseParameterMap[phaseType as string];
