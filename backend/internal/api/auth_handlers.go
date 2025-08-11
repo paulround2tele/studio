@@ -45,12 +45,12 @@ func NewAuthHandler(sessionService *services.SessionService, sessionConfig *conf
 // @Accept json
 // @Produce json
 // @Param request body models.LoginRequest true "Login credentials"
-// @Success 200 {object} LoginSuccessResponse "Login successful with user and session info"
-// @Failure 400 {object} StandardErrorResponse "Invalid request format"
-// @Failure 401 {object} StandardErrorResponse "Invalid credentials"
-// @Failure 423 {object} StandardErrorResponse "Account locked"
-// @Failure 403 {object} StandardErrorResponse "Account inactive"
-// @Failure 500 {object} StandardErrorResponse "Internal server error"
+// @Success 200 {object} APIResponse{data=SessionResponse} "Login successful with user and session info"
+// @Failure 400 {object} APIResponse{error=ErrorInfo} "Invalid request format"
+// @Failure 401 {object} APIResponse{error=ErrorInfo} "Invalid credentials"
+// @Failure 423 {object} APIResponse{error=ErrorInfo} "Account locked"
+// @Failure 403 {object} APIResponse{error=ErrorInfo} "Account inactive"
+// @Failure 500 {object} APIResponse{error=ErrorInfo} "Internal server error"
 // @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	fmt.Println("DEBUG: Login handler started")
@@ -165,7 +165,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 // @Tags authentication
 // @ID logoutUser
 // @Produce json
-// @Success 200 {object} SuccessMessageResponse "Logout successful"
+// @Success 200 {object} APIResponse{data=SuccessMessageResponse} "Logout successful"
 // @Router /auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	// Get session ID from cookie
@@ -272,10 +272,10 @@ func (h *AuthHandler) Me(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body models.ChangePasswordRequest true "Password change request"
-// @Success 200 {object} PasswordChangeResponse "Password changed successfully"
-// @Failure 400 {object} StandardErrorResponse "Invalid request format"
-// @Failure 401 {object} StandardErrorResponse "Authentication required"
-// @Failure 501 {object} StandardErrorResponse "Not implemented"
+// @Success 200 {object} APIResponse{data=SuccessMessageResponse} "Password changed successfully"
+// @Failure 400 {object} APIResponse{error=ErrorInfo} "Invalid request format"
+// @Failure 401 {object} APIResponse{error=ErrorInfo} "Authentication required"
+// @Failure 501 {object} APIResponse{error=ErrorInfo} "Not implemented"
 // @Router /auth/change-password [post]
 func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	var req models.ChangePasswordRequest
@@ -294,9 +294,9 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 // @Tags authentication
 // @ID refreshSession
 // @Produce json
-// @Success 200 {object} SessionRefreshResponse "Session refreshed with new expiry"
-// @Failure 401 {object} StandardErrorResponse "Invalid or expired session"
-// @Failure 500 {object} StandardErrorResponse "Failed to refresh session"
+// @Success 200 {object} APIResponse{data=SessionRefreshResponse} "Session refreshed with new expiry"
+// @Failure 401 {object} APIResponse{error=ErrorInfo} "Invalid or expired session"
+// @Failure 500 {object} APIResponse{error=ErrorInfo} "Failed to refresh session"
 // @Router /auth/refresh [post]
 func (h *AuthHandler) RefreshSession(c *gin.Context) {
 	// Get session ID from cookie

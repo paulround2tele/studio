@@ -13,6 +13,9 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { ApiPhaseConfig } from './api-phase-config';
 
 /**
  * Request payload for configuring campaign phase parameters
@@ -22,10 +25,10 @@
 export interface ApiPhaseConfigureRequest {
     /**
      * 
-     * @type {any}
+     * @type {ApiPhaseConfig}
      * @memberof ApiPhaseConfigureRequest
      */
-    'config': any;
+    'config': ApiPhaseConfig;
     /**
      * 
      * @type {string}

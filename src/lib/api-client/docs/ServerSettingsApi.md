@@ -1,6 +1,6 @@
 # ServerSettingsApi
 
-All URIs are relative to */api/v2*
+All URIs are relative to *http://localhost:8080/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|

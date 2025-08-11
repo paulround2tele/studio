@@ -13,6 +13,9 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { ApiDatabaseValue } from './api-database-value';
 
 /**
  * Response containing query results with metadata
@@ -46,10 +49,10 @@ export interface ApiDatabaseQueryResult {
     'rowCount'?: number;
     /**
      * 
-     * @type {Array<Array<any>>}
+     * @type {Array<Array<ApiDatabaseValue>>}
      * @memberof ApiDatabaseQueryResult
      */
-    'rows'?: Array<Array<any>>;
+    'rows'?: Array<Array<ApiDatabaseValue>>;
     /**
      * 
      * @type {boolean}

@@ -16,6 +16,9 @@
 // May contain unused imports in some cases
 // @ts-ignore
 import type { GithubComFntelecomllcStudioBackendInternalModelsTimeRangeFilter } from './github-com-fntelecomllc-studio-backend-internal-models-time-range-filter';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { ModelsBulkAnalyticsFilters } from './models-bulk-analytics-filters';
 
 /**
  * 
@@ -31,10 +34,10 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRe
     'campaignIds'?: Array<string>;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {ModelsBulkAnalyticsFilters}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest
      */
-    'filters'?: { [key: string]: any; };
+    'filters'?: ModelsBulkAnalyticsFilters;
     /**
      * 
      * @type {string}

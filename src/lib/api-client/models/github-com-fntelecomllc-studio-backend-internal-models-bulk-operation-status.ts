@@ -16,6 +16,12 @@
 // May contain unused imports in some cases
 // @ts-ignore
 import type { GithubComFntelecomllcStudioBackendInternalModelsOperationProgress } from './github-com-fntelecomllc-studio-backend-internal-models-operation-progress';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { ModelsBulkOperationMetadata } from './models-bulk-operation-metadata';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { ModelsBulkOperationResults } from './models-bulk-operation-results';
 
 /**
  * 
@@ -43,10 +49,10 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsBulkOperationSt
     'error'?: string;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {ModelsBulkOperationMetadata}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsBulkOperationStatus
      */
-    'metadata'?: { [key: string]: any; };
+    'metadata'?: ModelsBulkOperationMetadata;
     /**
      * 
      * @type {string}
@@ -61,10 +67,10 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsBulkOperationSt
     'progress'?: GithubComFntelecomllcStudioBackendInternalModelsOperationProgress;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {ModelsBulkOperationResults}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsBulkOperationStatus
      */
-    'results'?: { [key: string]: any; };
+    'results'?: ModelsBulkOperationResults;
     /**
      * 
      * @type {string}

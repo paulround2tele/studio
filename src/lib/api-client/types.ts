@@ -89,7 +89,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
                     };
                 };
                 /** @description Forbidden query detected */
@@ -98,7 +98,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
                     };
                 };
                 /** @description Internal server error */
@@ -107,7 +107,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
                     };
                 };
             };
@@ -163,7 +163,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
                     };
                 };
                 /** @description Internal server error */
@@ -4056,11 +4056,6 @@ export interface components {
             rules?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.KeywordRule"][];
             updatedAt?: string;
         };
-        "api.LoginSuccessResponse": {
-            message?: string;
-            session?: components["schemas"]["api.SessionData"];
-            user?: components["schemas"]["api.UserPublicResponse"];
-        };
         /** @description Optional metadata attached to API responses */
         "api.Metadata": {
             /** @description Additional metadata */
@@ -4091,10 +4086,6 @@ export interface components {
             pageSize?: number;
             /** @description Total number of pages */
             total?: number;
-        };
-        "api.PasswordChangeResponse": {
-            message?: string;
-            success?: boolean;
         };
         "api.PatternOffsetRequest": {
             characterSet: string;
@@ -4249,14 +4240,15 @@ export interface components {
             ginMode?: string;
             streamChunkSize?: number;
         };
-        "api.SessionData": {
-            expiresAt?: string;
-            refreshToken?: string;
-            token?: string;
-        };
         "api.SessionRefreshResponse": {
             expiresAt?: string;
             message?: string;
+        };
+        "api.SessionResponse": {
+            expiresAt?: string;
+            refreshToken?: string;
+            token?: string;
+            user?: components["schemas"]["api.UserPublicResponse"];
         };
         "api.StandardErrorResponse": {
             error?: components["schemas"]["github_com_fntelecomllc_studio_backend_pkg_api.ErrorDetail"];
@@ -4422,6 +4414,9 @@ export interface components {
         data: {
             data?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkValidationResponse"];
         };
+        error: {
+            error?: components["schemas"]["api.ErrorInfo"];
+        };
         "github_com_fntelecomllc_studio_backend_internal_api.ErrorDetail": {
             /** @description Primary error code */
             code?: string;
@@ -4475,9 +4470,7 @@ export interface components {
         };
         "github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsRequest": {
             campaignIds?: string[];
-            filters?: {
-                [key: string]: unknown;
-            };
+            filters?: components["schemas"]["models.BulkAnalyticsFilters"];
             /** @enum {string} */
             granularity?: "hour" | "day" | "week" | "month";
             /** @description ["campaign", "phase", "tld", "persona"] */
@@ -4528,9 +4521,7 @@ export interface components {
             stealth?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.StealthValidationConfig"];
         };
         "github_com_fntelecomllc_studio_backend_internal_models.BulkMetadata": {
-            debug?: {
-                [key: string]: unknown;
-            };
+            debug?: components["schemas"]["models.BulkOperationDebugInfo"];
             executionNode?: string;
             requestId?: string;
             timestamp?: string;
@@ -4546,14 +4537,10 @@ export interface components {
             durationMs?: number;
             endTime?: string;
             error?: string;
-            metadata?: {
-                [key: string]: unknown;
-            };
+            metadata?: components["schemas"]["models.BulkOperationMetadata"];
             operationId?: string;
             progress?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.OperationProgress"];
-            results?: {
-                [key: string]: unknown;
-            };
+            results?: components["schemas"]["models.BulkOperationResults"];
             startTime?: string;
             /** @description "queued", "running", "completed", "failed", "cancelled" */
             status?: string;
@@ -4606,9 +4593,7 @@ export interface components {
             error?: string;
             httpAccessible?: boolean;
             keywords?: string[];
-            metadata?: {
-                [key: string]: unknown;
-            };
+            metadata?: components["schemas"]["models.BulkValidationDomainMetadata"];
             responseTimeMs?: number;
             /** @description "success", "failed", "timeout", "error" */
             status?: string;
@@ -4640,6 +4625,14 @@ export interface components {
             };
             successRate?: number;
             timeSeriesData?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.TimeSeriesPoint"][];
+        };
+        "github_com_fntelecomllc_studio_backend_internal_models.CampaignOperationResult": {
+            campaignId?: string;
+            durationMs?: number;
+            error?: string;
+            newState?: string;
+            previousState?: string;
+            success?: boolean;
         };
         "github_com_fntelecomllc_studio_backend_internal_models.ChangePasswordRequest": {
             currentPassword: string;
@@ -4692,8 +4685,7 @@ export interface components {
         };
         "github_com_fntelecomllc_studio_backend_internal_models.DomainGenerationOperation": {
             campaignId: string;
-            /** @description DomainGenerationPhaseConfig */
-            config: unknown;
+            config: components["schemas"]["models.DomainGenerationOperationConfig"];
             maxDomains?: number;
             startFrom?: number;
         };
@@ -4876,9 +4868,7 @@ export interface components {
         };
         "github_com_fntelecomllc_studio_backend_internal_models.ResourceOperation": {
             campaignId: string;
-            config?: {
-                [key: string]: unknown;
-            };
+            config?: components["schemas"]["models.BulkCampaignOperationConfig"];
             /** @enum {string} */
             priority?: "low" | "normal" | "high" | "critical";
             resources?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.RequiredResources"];
@@ -4941,9 +4931,7 @@ export interface components {
         };
         "github_com_fntelecomllc_studio_backend_internal_models.TimeSeriesPoint": {
             timestamp?: string;
-            values?: {
-                [key: string]: unknown;
-            };
+            values?: components["schemas"]["models.TimeSeriesMetricValues"];
         };
         "github_com_fntelecomllc_studio_backend_internal_models.UpdateProxyRequest": {
             address?: string;
@@ -5012,6 +5000,351 @@ export interface components {
             contexts?: string[];
             matchedPattern?: string;
             matchedText?: string;
+        };
+        "models.BulkAnalyticsFilters": {
+            /** @description Campaign-level filters */
+            campaignStatuses?: string[];
+            /** @description ["domain_generation", "dns_validation", "http_validation"] */
+            campaignTypes?: string[];
+            /** @description Cost and ROI filters */
+            costRange?: {
+                max?: number;
+                min?: number;
+            };
+            createdDateRange?: {
+                /** @description ISO 8601 */
+                endDate?: string;
+                /** @description ISO 8601 */
+                startDate?: string;
+            };
+            domainCountRange?: {
+                max?: number;
+                min?: number;
+            };
+            /** @description ["valid", "invalid", "timeout", "error"] */
+            domainStatusFilter?: string[];
+            keywordSetIds?: string[];
+            leadsRange?: {
+                max?: number;
+                min?: number;
+            };
+            /** @description Resource filters */
+            personaIds?: string[];
+            /** @description ["not_started", "in_progress", "completed", "failed", "paused"] */
+            phaseStatuses?: string[];
+            /** @description Phase-level filters */
+            phaseTypes?: string[];
+            proxyIds?: string[];
+            responseTimeRange?: {
+                maxMs?: number;
+                minMs?: number;
+            };
+            /** @description Performance filters */
+            successRateRange?: {
+                /** @description 0.0 - 1.0 */
+                max?: number;
+                /** @description 0.0 - 1.0 */
+                min?: number;
+            };
+            /** @description Advanced filters */
+            tags?: string[];
+            /** @description Domain-level filters */
+            tlds?: string[];
+            /** @description Filter by campaign owners */
+            userIds?: string[];
+        };
+        "models.BulkCampaignOperationConfig": {
+            /** @description DNS Validation Configuration */
+            dnsValidation?: {
+                batchSize?: number;
+                onlyInvalidDomains?: boolean;
+                personaIds?: string[];
+                processingSpeedPerMinute?: number;
+                retryAttempts?: number;
+                rotationIntervalSeconds?: number;
+            };
+            domainGeneration?: components["schemas"]["models.DomainGenerationOperationConfig"];
+            /** @description General Campaign Settings */
+            generalSettings?: {
+                name?: string;
+                proxyPoolId?: string;
+                proxySelectionStrategy?: string;
+                status?: string;
+                variableLength?: number;
+            };
+            /** @description HTTP Validation Configuration */
+            httpValidation?: {
+                adHocKeywords?: string[];
+                batchSize?: number;
+                keywordSetIds?: string[];
+                personaIds?: string[];
+                processingSpeedPerMinute?: number;
+                retryAttempts?: number;
+                rotationIntervalSeconds?: number;
+                targetHttpPorts?: number[];
+            };
+        };
+        "models.BulkOperationDebugInfo": {
+            buildVersion?: string;
+            /** @description Cache performance by component */
+            cacheHitRates?: {
+                [key: string]: number;
+            };
+            /** @description Configuration values used */
+            configSnapshot?: {
+                [key: string]: string;
+            };
+            /** @description Database operation counts */
+            databaseStats?: {
+                [key: string]: number;
+            };
+            /** @description verbose, normal, minimal */
+            debugLevel?: string;
+            /** @description dev, staging, production */
+            environmentType?: string;
+            /** @description Feature flags active during operation */
+            featureFlags?: {
+                [key: string]: boolean;
+            };
+            /** @description Development info */
+            gitCommit?: string;
+            /** @description Load balancer routing info */
+            loadBalancingInfo?: {
+                [key: string]: string;
+            };
+            /** @description Performance diagnostics */
+            memorySnapshots?: number[];
+            /** @description Network request counts */
+            networkStats?: {
+                [key: string]: number;
+            };
+            performanceIssues?: string[];
+            /** @description Processing details */
+            processingSteps?: string[];
+            queryParameters?: {
+                [key: string]: string;
+            };
+            /** @description Request context */
+            requestHeaders?: {
+                [key: string]: string;
+            };
+            /** @description Component -> retry count */
+            retryAttempts?: {
+                [key: string]: number;
+            };
+            /** @description System state */
+            systemResources?: {
+                [key: string]: number;
+            };
+            /** @description Time spent in each phase (ms) */
+            timingBreakdown?: {
+                [key: string]: number;
+            };
+            userContext?: {
+                [key: string]: string;
+            };
+            /** @description Error diagnostics */
+            warningMessages?: string[];
+        };
+        "models.BulkOperationMetadata": {
+            /** @description milliseconds */
+            avgResponseTime?: number;
+            batchSizeUsed?: number;
+            /** @description Regulatory compliance notes */
+            complianceFlags?: string[];
+            concurrentWorkers?: number;
+            /** @description Business context */
+            costEstimate?: number;
+            /** @description milliseconds */
+            cpuTimeUsed?: number;
+            databaseQueries?: number;
+            debugFlags?: string[];
+            /** @description error type -> count */
+            errorCategories?: {
+                [key: string]: number;
+            };
+            estimatedROI?: number;
+            /** @description Steps planned for execution */
+            executionPlan?: string[];
+            /** @description Execution context */
+            executorNodeId?: string;
+            /** @description Debugging info */
+            logFileUrl?: string;
+            networkRequests?: number;
+            /** @description Performance tracking */
+            peakMemoryUsage?: number;
+            /** @description Persona IDs used */
+            personasUsed?: string[];
+            /** @description Resource utilization */
+            proxiesUsed?: string[];
+            /** @description 0-100 */
+            qualityScore?: number;
+            /** @description IP or service that triggered operation */
+            requestOrigin?: string;
+            /** @description Quality metrics */
+            successRate?: number;
+            traceId?: string;
+            userAgent?: string;
+        };
+        "models.BulkOperationResults": {
+            /** @description Analytics Results */
+            analytics?: {
+                aggregatedMetrics?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.AggregatedAnalytics"];
+                campaignSummaries?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.CampaignAnalytics"][];
+                /** @description bytes */
+                exportedDataSize?: number;
+            };
+            /** @description Campaign Operation Results */
+            campaignOperations?: {
+                /** @description campaign IDs */
+                failedOperations?: string[];
+                /** @description detailed results per campaign */
+                operationResults?: {
+                    [key: string]: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.CampaignOperationResult"];
+                };
+                /** @description campaign IDs */
+                successfulOperations?: string[];
+            };
+            /** @description DNS Validation Results */
+            dnsValidation?: {
+                errorDomains?: string[];
+                invalidDomains?: string[];
+                timeoutDomains?: string[];
+                totalValidated?: number;
+                validDomains?: string[];
+            };
+            /** @description Domain Generation Results */
+            domainGeneration?: {
+                generatedDomains?: string[];
+                /** @description Pattern usage statistics */
+                patternStats?: {
+                    [key: string]: number;
+                };
+                totalGenerated?: number;
+                uniqueCount?: number;
+            };
+            /** @description HTTP Validation Results */
+            httpValidation?: {
+                accessibleDomains?: string[];
+                /** @description domain -> content excerpt */
+                extractedContent?: {
+                    [key: string]: string;
+                };
+                inaccessibleDomains?: string[];
+                /** @description domain -> matched keywords */
+                keywordMatches?: {
+                    [key: string]: string[];
+                };
+                totalTested?: number;
+            };
+        };
+        "models.BulkValidationDomainMetadata": {
+            /** @description Error details */
+            attemptCount?: number;
+            /** @description TCP connect time (ms) */
+            connectTime?: number;
+            /** @description Response content length */
+            contentLength?: number;
+            /** @description Response content type */
+            contentType?: string;
+            /** @description Performance metadata */
+            dnsLookupTime?: number;
+            /** @description Types of DNS records found (A, AAAA, CNAME, etc.) */
+            dnsRecordTypes?: string[];
+            /** @description Error category (timeout, network, etc.) */
+            errorCategory?: string;
+            /** @description Resolved IP addresses */
+            ipAddresses?: string[];
+            /** @description Last error encountered */
+            lastError?: string;
+            /** @description Persona identifier */
+            personaUsed?: string;
+            /** @description Stealth metadata */
+            proxyUsed?: string;
+            /** @description URLs in redirect chain */
+            redirectChain?: string[];
+            /** @description DNS-specific metadata */
+            resolverUsed?: string;
+            /** @description HTTP-specific metadata */
+            responseHeaders?: {
+                [key: string]: string;
+            };
+            /** @description TLS handshake time (ms) */
+            tlsHandshakeTime?: number;
+            /** @description User agent used */
+            userAgent?: string;
+        };
+        /** @description Custom generation logic */
+        "models.CustomDomainGenerationConfig": {
+            constraints?: components["schemas"]["models.GenerationConstraints"];
+            /** @enum {string} */
+            generationType: "template" | "ai_assisted" | "custom_algorithm";
+            parameters?: {
+                [key: string]: string;
+            };
+            templates?: string[];
+        };
+        /** @description Domain Generation Configuration */
+        "models.DomainGenerationOperationConfig": {
+            customLogic?: components["schemas"]["models.CustomDomainGenerationConfig"];
+            patternBased?: components["schemas"]["models.DomainGenerationPhaseConfig"];
+        };
+        /** @description Pattern-based generation (most common) */
+        "models.DomainGenerationPhaseConfig": {
+            /** @example 100 */
+            batchSize?: number;
+            /** @example abcdefghijklmnopqrstuvwxyz */
+            characterSet: string;
+            /** @example test */
+            constantString: string;
+            /** @example 1000 */
+            numDomainsToGenerate?: number;
+            /**
+             * @example prefix
+             * @enum {string}
+             */
+            patternType: "prefix" | "suffix" | "both";
+            /** @example [
+             *       "[\".com\"]"
+             *     ] */
+            tlds: string[];
+            /** @example 5 */
+            variableLength: number;
+        };
+        "models.GenerationConstraints": {
+            excludeWords?: string[];
+            maxLength?: number;
+            minLength?: number;
+            requireWords?: string[];
+        };
+        "models.TimeSeriesMetricValues": {
+            /** @description Performance metrics */
+            avgResponseTimeMs?: number;
+            concurrentOperations?: number;
+            /** @description Cost metrics */
+            costPerDomain?: number;
+            costPerLead?: number;
+            /** @description Resource metrics */
+            cpuUtilization?: number;
+            domainsFailed?: number;
+            /** @description Domain metrics */
+            domainsGenerated?: number;
+            /** @description Throughput metrics */
+            domainsPerMinute?: number;
+            domainsValidated?: number;
+            errorRate?: number;
+            leadConversionRate?: number;
+            /** @description Lead metrics */
+            leadsGenerated?: number;
+            memoryUtilization?: number;
+            networkUtilization?: number;
+            proxyRotations?: number;
+            qualifiedLeads?: number;
+            requestsPerSecond?: number;
+            successRate?: number;
+            timeoutRate?: number;
+            totalCost?: number;
+            validDomainRate?: number;
         };
         "services.CreateLeadGenerationCampaignRequest": {
             description?: string;
@@ -5252,7 +5585,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.PasswordChangeResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
             /** @description Invalid request format */
@@ -5261,7 +5609,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
             /** @description Authentication required */
@@ -5270,7 +5633,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
             /** @description Not implemented */
@@ -5279,7 +5657,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
         };
@@ -5304,7 +5697,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.LoginSuccessResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
             /** @description Invalid request format */
@@ -5313,7 +5721,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
             /** @description Invalid credentials */
@@ -5322,7 +5745,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
             /** @description Account inactive */
@@ -5331,7 +5769,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
             /** @description Account locked */
@@ -5340,7 +5793,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
             /** @description Internal server error */
@@ -5349,7 +5817,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
         };
@@ -5369,7 +5852,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.SuccessMessageResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
         };
@@ -5436,7 +5934,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.SessionRefreshResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
             /** @description Invalid or expired session */
@@ -5445,7 +5958,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
             /** @description Failed to refresh session */
@@ -5454,7 +5982,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
         };
@@ -5483,7 +6026,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
                 };
             };
         };
@@ -5533,7 +6076,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
                 };
             };
         };
@@ -5581,7 +6124,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -5633,7 +6176,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -5642,7 +6185,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
                 };
             };
         };
@@ -5685,7 +6228,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -5694,7 +6237,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
                 };
             };
         };
@@ -5726,7 +6269,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
                 };
             };
             /** @description Campaign not found */
@@ -5735,7 +6278,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -5909,7 +6452,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
                 };
             };
         };
@@ -6199,7 +6742,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -6242,7 +6785,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -6251,7 +6794,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
         };
@@ -6546,7 +7089,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
+                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
                 };
             };
         };

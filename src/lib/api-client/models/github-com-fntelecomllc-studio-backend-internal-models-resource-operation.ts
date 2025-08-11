@@ -16,6 +16,9 @@
 // May contain unused imports in some cases
 // @ts-ignore
 import type { GithubComFntelecomllcStudioBackendInternalModelsRequiredResources } from './github-com-fntelecomllc-studio-backend-internal-models-required-resources';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { ModelsBulkCampaignOperationConfig } from './models-bulk-campaign-operation-config';
 
 /**
  * 
@@ -31,10 +34,10 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsResourceOperati
     'campaignId': string;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {ModelsBulkCampaignOperationConfig}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsResourceOperation
      */
-    'config'?: { [key: string]: any; };
+    'config'?: ModelsBulkCampaignOperationConfig;
     /**
      * 
      * @type {string}

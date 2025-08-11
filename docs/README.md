@@ -1,23 +1,24 @@
-# DomainFlow V3.0 Documentation
+# Documentation Directory
 
-## 🌐 About DomainFlow V3.0 Stable
+## Primary Documentation
 
-DomainFlow is a sophisticated domain intelligence and campaign orchestration platform that enables systematic domain generation, DNS validation, and HTTP keyword analysis through a streamlined multi-phase workflow system.
+- **[API System Documentation](./API_SYSTEM_DOCUMENTATION.md)**: Complete API architecture, endpoints, and client integration patterns
+- **[openapi-3.json](./openapi-3.json)**: OpenAPI 3.1 specification (JSON format)  
+- **[openapi-3.yaml](./openapi-3.yaml)**: OpenAPI 3.1 specification (YAML format)
 
-### 🔄 Multi-Phase Campaign Orchestration
+## Auto-Generated Documentation
 
-DomainFlow V3.0 operates on a **three-phase orchestration architecture** where users control the progression through strategic campaign phases:
+- **[API Client Docs](../src/lib/api-client/docs/)**: Auto-generated documentation for all TypeScript interfaces and API methods
 
-**Campaign Workflow:**
-```
-Domain Generation ──→ DNS Validation ──→ HTTP Keyword Validation
-       ↓                    ↓                     ↓
-   Domain List      →   DNS Status     →    Content Analysis
-```
+## Legacy Files
 
-**Phase Types & Orchestration:**
+- **[API_ARCHITECTURE.md](./API_ARCHITECTURE.md)**: Legacy documentation (superseded by API_SYSTEM_DOCUMENTATION.md)
 
-1. **Domain Generation Phase** (`domain_generation`)
+---
+
+## Domain Flow System Overview (Legacy Content)
+
+*Note: The content below represents legacy documentation. Refer to API_SYSTEM_DOCUMENTATION.md for current architecture.*
    - **Purpose**: Generate domain variations using algorithmic patterns
    - **Input**: Patterns (prefix, suffix, both), character sets, TLDs, generation parameters
    - **Process**: Systematic domain generation with configurable batch processing

@@ -22,15 +22,9 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
-import type { ApiLoginSuccessResponse } from '../models';
-// @ts-ignore
-import type { ApiPasswordChangeResponse } from '../models';
-// @ts-ignore
-import type { ApiSessionRefreshResponse } from '../models';
-// @ts-ignore
 import type { ApiStandardErrorResponse } from '../models';
 // @ts-ignore
-import type { ApiSuccessMessageResponse } from '../models';
+import type { BulkValidateDNS200Response } from '../models';
 // @ts-ignore
 import type { GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest } from '../models';
 // @ts-ignore
@@ -222,7 +216,7 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest: GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiPasswordChangeResponse>> {
+        async changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest: GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.changePassword']?.[localVarOperationServerIndex]?.url;
@@ -247,7 +241,7 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest: GithubComFntelecomllcStudioBackendInternalModelsLoginRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiLoginSuccessResponse>> {
+        async loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest: GithubComFntelecomllcStudioBackendInternalModelsLoginRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.loginUser']?.[localVarOperationServerIndex]?.url;
@@ -259,7 +253,7 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async logoutUser(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiSuccessMessageResponse>> {
+        async logoutUser(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.logoutUser(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.logoutUser']?.[localVarOperationServerIndex]?.url;
@@ -271,7 +265,7 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async refreshSession(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiSessionRefreshResponse>> {
+        async refreshSession(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.refreshSession(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.refreshSession']?.[localVarOperationServerIndex]?.url;
@@ -294,7 +288,7 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest: GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiPasswordChangeResponse> {
+        changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest: GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
             return localVarFp.changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -313,7 +307,7 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest: GithubComFntelecomllcStudioBackendInternalModelsLoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiLoginSuccessResponse> {
+        loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest: GithubComFntelecomllcStudioBackendInternalModelsLoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
             return localVarFp.loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -322,7 +316,7 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        logoutUser(options?: RawAxiosRequestConfig): AxiosPromise<ApiSuccessMessageResponse> {
+        logoutUser(options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
             return localVarFp.logoutUser(options).then((request) => request(axios, basePath));
         },
         /**
@@ -331,7 +325,7 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        refreshSession(options?: RawAxiosRequestConfig): AxiosPromise<ApiSessionRefreshResponse> {
+        refreshSession(options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
             return localVarFp.refreshSession(options).then((request) => request(axios, basePath));
         },
     };
@@ -351,7 +345,7 @@ export interface AuthenticationApiInterface {
      * @throws {RequiredError}
      * @memberof AuthenticationApiInterface
      */
-    changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest: GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiPasswordChangeResponse>;
+    changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest: GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Get information about the currently authenticated user
@@ -370,7 +364,7 @@ export interface AuthenticationApiInterface {
      * @throws {RequiredError}
      * @memberof AuthenticationApiInterface
      */
-    loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest: GithubComFntelecomllcStudioBackendInternalModelsLoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiLoginSuccessResponse>;
+    loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest: GithubComFntelecomllcStudioBackendInternalModelsLoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Invalidate current user session and clear cookies
@@ -379,7 +373,7 @@ export interface AuthenticationApiInterface {
      * @throws {RequiredError}
      * @memberof AuthenticationApiInterface
      */
-    logoutUser(options?: RawAxiosRequestConfig): AxiosPromise<ApiSuccessMessageResponse>;
+    logoutUser(options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Extend the current session expiry time
@@ -388,7 +382,7 @@ export interface AuthenticationApiInterface {
      * @throws {RequiredError}
      * @memberof AuthenticationApiInterface
      */
-    refreshSession(options?: RawAxiosRequestConfig): AxiosPromise<ApiSessionRefreshResponse>;
+    refreshSession(options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
 }
 

@@ -1,6 +1,6 @@
 # AuthenticationApi
 
-All URIs are relative to */api/v2*
+All URIs are relative to *http://localhost:8080/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
@@ -11,7 +11,7 @@ All URIs are relative to */api/v2*
 |[**refreshSession**](#refreshsession) | **POST** /auth/refresh | Refresh user session|
 
 # **changePassword**
-> ApiPasswordChangeResponse changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest)
+> BulkValidateDNS200Response changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest)
 
 Change password for the currently authenticated user
 
@@ -43,7 +43,7 @@ const { status, data } = await apiInstance.changePassword(
 
 ### Return type
 
-**ApiPasswordChangeResponse**
+**BulkValidateDNS200Response**
 
 ### Authorization
 
@@ -113,7 +113,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **loginUser**
-> ApiLoginSuccessResponse loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest)
+> BulkValidateDNS200Response loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest)
 
 Authenticate user credentials and create session
 
@@ -145,7 +145,7 @@ const { status, data } = await apiInstance.loginUser(
 
 ### Return type
 
-**ApiLoginSuccessResponse**
+**BulkValidateDNS200Response**
 
 ### Authorization
 
@@ -170,7 +170,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **logoutUser**
-> ApiSuccessMessageResponse logoutUser()
+> BulkValidateDNS200Response logoutUser()
 
 Invalidate current user session and clear cookies
 
@@ -194,7 +194,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ApiSuccessMessageResponse**
+**BulkValidateDNS200Response**
 
 ### Authorization
 
@@ -214,7 +214,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **refreshSession**
-> ApiSessionRefreshResponse refreshSession()
+> BulkValidateDNS200Response refreshSession()
 
 Extend the current session expiry time
 
@@ -238,7 +238,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ApiSessionRefreshResponse**
+**BulkValidateDNS200Response**
 
 ### Authorization
 

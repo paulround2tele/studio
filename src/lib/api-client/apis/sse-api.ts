@@ -24,8 +24,6 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 // @ts-ignore
 import type { ApiAPIResponse } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBackupErrorResponse } from '../models';
-// @ts-ignore
 import type { GithubComFntelecomllcStudioBackendInternalModelsErrorResponse } from '../models';
 /**
  * SseApi - axios parameter creator

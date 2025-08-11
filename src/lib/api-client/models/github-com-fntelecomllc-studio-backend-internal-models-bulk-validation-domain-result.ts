@@ -13,6 +13,9 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { ModelsBulkValidationDomainMetadata } from './models-bulk-validation-domain-metadata';
 
 /**
  * 
@@ -58,10 +61,10 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsBulkValidationD
     'keywords'?: Array<string>;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {ModelsBulkValidationDomainMetadata}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsBulkValidationDomainResult
      */
-    'metadata'?: { [key: string]: any; };
+    'metadata'?: ModelsBulkValidationDomainMetadata;
     /**
      * 
      * @type {number}

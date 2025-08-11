@@ -179,7 +179,7 @@ components:
           type: integer
         results:
           items:
-            $ref: '#/components/schemas/api.APIResponse'
+            $ref: '#/components/schemas/api.ProxyHealthCheckResponse'
           type: array
           uniqueItems: false
         totalProxies:
@@ -193,7 +193,7 @@ components:
           type: integer
         testResults:
           items:
-            $ref: '#/components/schemas/api.APIResponse'
+            $ref: '#/components/schemas/api.ProxyTestResponse'
           type: array
           uniqueItems: false
         totalRequested:
@@ -641,15 +641,6 @@ components:
         updatedAt:
           type: string
       type: object
-    api.LoginSuccessResponse:
-      properties:
-        message:
-          type: string
-        session:
-          $ref: '#/components/schemas/api.SessionData'
-        user:
-          $ref: '#/components/schemas/api.APIResponse'
-      type: object
     api.Metadata:
       description: Optional metadata attached to API responses
       properties:
@@ -696,13 +687,6 @@ components:
         total:
           description: Total number of pages
           type: integer
-      type: object
-    api.PasswordChangeResponse:
-      properties:
-        message:
-          type: string
-        success:
-          type: boolean
       type: object
     api.PatternOffsetRequest:
       properties:
@@ -921,7 +905,7 @@ components:
         lastChecked:
           type: string
         proxyDetails:
-          $ref: '#/components/schemas/api.APIResponse'
+          $ref: '#/components/schemas/api.ProxyDetailsResponse'
         proxyId:
           type: string
         responseTimeMs:
@@ -987,7 +971,14 @@ components:
         streamChunkSize:
           type: integer
       type: object
-    api.SessionData:
+    api.SessionRefreshResponse:
+      properties:
+        expiresAt:
+          type: string
+        message:
+          type: string
+      type: object
+    api.SessionResponse:
       properties:
         expiresAt:
           type: string
@@ -995,13 +986,8 @@ components:
           type: string
         token:
           type: string
-      type: object
-    api.SessionRefreshResponse:
-      properties:
-        expiresAt:
-          type: string
-        message:
-          type: string
+        user:
+          $ref: '#/components/schemas/api.UserPublicResponse'
       type: object
     api.StandardErrorResponse:
       properties:
@@ -1309,6 +1295,11 @@ components:
       properties:
         data:
           $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkValidationResponse'
+      type: object
+    error:
+      properties:
+        error:
+          $ref: '#/components/schemas/api.ErrorInfo'
       type: object
     github_com_fntelecomllc_studio_backend_internal_api.ErrorDetail:
       properties:
@@ -2033,6 +2024,18 @@ components:
           - weighted_random
           - geographic
           - intelligent_failover
+          type: string
+      type: object
+    github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse:
+      properties:
+        code:
+          example: 400
+          type: integer
+        message:
+          example: Error message description
+          type: string
+        status:
+          example: error
           type: string
       type: object
     github_com_fntelecomllc_studio_backend_internal_models.HTTPValidationOperation:
@@ -3583,25 +3586,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.BulkDatabaseQueryResponse'
           description: Queries executed successfully
         "400":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Bad request or invalid queries
         "403":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Forbidden query detected
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal server error
       summary: Execute bulk database queries
       tags:
@@ -3629,19 +3632,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.BulkDatabaseStatsResponse'
           description: Statistics retrieved successfully
         "400":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Bad request
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
           description: Internal server error
       summary: Get bulk database statistics
       tags:
@@ -3770,25 +3773,101 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.PasswordChangeResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Password changed successfully
         "400":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Invalid request format
         "401":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Authentication required
         "501":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Not implemented
       summary: Change user password
       tags:
@@ -3809,37 +3888,151 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.LoginSuccessResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Login successful with user and session info
         "400":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Invalid request format
         "401":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Invalid credentials
         "403":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Account inactive
         "423":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Account locked
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Internal server error
       summary: User login
       tags:
@@ -3853,7 +4046,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.SuccessMessageResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Logout successful
       summary: User logout
       tags:
@@ -3873,19 +4085,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.StandardErrorResponse'
           description: Authentication required
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.StandardErrorResponse'
           description: User not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.StandardErrorResponse'
           description: Internal server error
       summary: Get current user
       tags:
@@ -3899,19 +4111,76 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.SessionRefreshResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Session refreshed with new expiry
         "401":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Invalid or expired session
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Failed to refresh session
       summary: Refresh user session
       tags:
@@ -3931,7 +4200,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal Server Error
       summary: List campaigns (standalone)
       tags:
@@ -3958,19 +4227,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
           description: Bad Request
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
           description: Campaign not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal Server Error
       summary: Get campaign domain status summary
       tags:
@@ -4014,19 +4283,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
           description: Bad Request
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Campaign not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
           description: Internal Server Error
       summary: Configure campaign phase (standalone)
       tags:
@@ -4063,19 +4332,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
           description: Bad Request
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Campaign not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal Server Error
       summary: Start campaign phase (standalone)
       tags:
@@ -4114,19 +4383,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
           description: Bad Request
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Campaign or phase not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal Server Error
       summary: Get phase status (standalone)
       tags:
@@ -4153,19 +4422,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Bad Request
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Campaign not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
           description: Internal Server Error
       summary: Get campaign progress (standalone)
       tags:
@@ -4287,13 +4556,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
           description: Bad Request
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Internal Server Error
       summary: Get bulk enriched campaign data
       tags:
@@ -4561,13 +4830,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Bad Request
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
           description: Internal Server Error
       summary: Get domain generation pattern offset
       tags:
@@ -4594,13 +4863,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
           description: Bad Request
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
           description: Internal Server Error
       summary: Create lead generation campaign
       tags:
@@ -4698,7 +4967,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.StandardErrorResponse'
           description: Service not ready
       summary: Readiness check
       tags:
@@ -5266,7 +5535,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.PersonaTestResponse'
           description: Persona test results
         "400":
           content:
@@ -5602,7 +5871,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.ProxyHealthCheckResponse'
           description: Health check completed
         "400":
           content:
@@ -5646,7 +5915,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.ProxyTestResponse'
           description: Proxy test results
         "400":
           content:
@@ -5726,7 +5995,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.BulkProxyTestResponse'
           description: Bulk test results
         "400":
           content:
@@ -5791,7 +6060,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.BulkHealthCheckResponse'
           description: Health checks completed
         "500":
           content:
@@ -6528,19 +6797,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
           description: Bad Request
         "401":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
           description: Unauthorized
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
           description: Internal Server Error
       summary: Stream specific campaign events via SSE
       tags:
@@ -6564,13 +6833,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
           description: Unauthorized
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
           description: Internal Server Error
       summary: Stream campaign events via SSE
       tags:
@@ -6590,7 +6859,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
           description: Unauthorized
       summary: Get SSE connection statistics
       tags:

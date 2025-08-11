@@ -13,6 +13,9 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { ModelsBulkOperationDebugInfo } from './models-bulk-operation-debug-info';
 
 /**
  * 
@@ -22,10 +25,10 @@
 export interface GithubComFntelecomllcStudioBackendInternalModelsBulkMetadata {
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {ModelsBulkOperationDebugInfo}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsBulkMetadata
      */
-    'debug'?: { [key: string]: any; };
+    'debug'?: ModelsBulkOperationDebugInfo;
     /**
      * 
      * @type {string}

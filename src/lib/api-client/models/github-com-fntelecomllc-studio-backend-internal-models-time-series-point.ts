@@ -13,6 +13,9 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { ModelsTimeSeriesMetricValues } from './models-time-series-metric-values';
 
 /**
  * 
@@ -28,9 +31,9 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsTimeSeriesPoint
     'timestamp'?: string;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {ModelsTimeSeriesMetricValues}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsTimeSeriesPoint
      */
-    'values'?: { [key: string]: any; };
+    'values'?: ModelsTimeSeriesMetricValues;
 }
 

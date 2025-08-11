@@ -13,6 +13,9 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { ModelsDomainGenerationOperationConfig } from './models-domain-generation-operation-config';
 
 /**
  * 
@@ -28,10 +31,10 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsDomainGeneratio
     'campaignId': string;
     /**
      * 
-     * @type {any}
+     * @type {ModelsDomainGenerationOperationConfig}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsDomainGenerationOperation
      */
-    'config': any;
+    'config': ModelsDomainGenerationOperationConfig;
     /**
      * 
      * @type {number}
