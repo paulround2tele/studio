@@ -187,3 +187,4 @@ export const apiClient = new UnifiedAPIClient();
  * Export helper functions from unified-types for convenience
  */
 export { isSuccessResponse, isErrorResponse } from './unified-types';
+export type { APIResponse, SessionData } from './unified-types';

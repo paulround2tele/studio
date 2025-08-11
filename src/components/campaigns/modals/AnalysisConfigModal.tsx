@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 
 // Import types and services - using the new auto-generated API client
 import { campaignsApi } from '@/lib/api-client/client';
+import { ConfigurePhaseStandalonePhaseEnum } from '@/lib/api-client/apis/campaigns-api';
 import type { AnalysisConfig } from '@/lib/api-client/models/analysis-config';
 import type { PhaseConfigureRequest } from '@/lib/api-client/models/phase-configure-request';
 
@@ -71,7 +72,7 @@ export default function AnalysisConfigModal({
       };
 
       // Use the generated API client method
-      await campaignsApi.configurePhaseStandalone(campaignId, 'analysis', configRequest);
+      await campaignsApi.configurePhaseStandalone(campaignId, ConfigurePhaseStandalonePhaseEnum.analysis, configRequest);
 
       toast({
         title: "Analysis Configuration Saved",

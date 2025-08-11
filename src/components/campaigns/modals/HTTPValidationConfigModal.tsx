@@ -15,18 +15,16 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Import types and services - using the EXACT same pattern as campaign form
-import type { components } from '@/lib/api-client/types';
 import { getPersonas } from '@/lib/services/personaService';
 import { listKeywordSets } from '@/lib/services/keywordSetService';
 import { campaignsApi } from '@/lib/api-client/client';
+import { ConfigurePhaseStandalonePhaseEnum } from '@/lib/api-client/apis/campaigns-api';
 import type { HTTPValidationConfig } from '@/lib/api-client/models/httpvalidation-config';
 import type { PhaseConfigureRequest } from '@/lib/api-client/models/phase-configure-request';
-// PhaseConfigureRequestPhaseTypeEnum removed - using direct string literals now
+import type { PersonaResponse as PersonaBaseResponse } from '@/lib/api-client/models/persona-response';
 
-// Response types from OpenAPI - using exact same types as campaign form
-type PersonaBase = components['schemas']['PersonaResponse'];
-
-interface PersonaResponse extends PersonaBase {
+// Response types from OpenAPI - using direct imports instead of components schema
+interface PersonaResponse extends PersonaBaseResponse {
   status?: "Active" | "Disabled" | "Testing" | "Failed";
   tags?: string[];
 }
@@ -190,7 +188,7 @@ export default function HTTPValidationConfigModal({
       };
 
       // Use the generated API client method
-      await campaignsApi.configurePhaseStandalone(campaignId, 'http_keyword_validation', configRequest);
+      await campaignsApi.configurePhaseStandalone(campaignId, ConfigurePhaseStandalonePhaseEnum.http_keyword_validation, configRequest);
 
       toast({
         title: "HTTP validation configured",

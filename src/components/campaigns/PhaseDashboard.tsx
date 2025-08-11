@@ -25,8 +25,10 @@ import AnalysisConfigModal from './modals/AnalysisConfigModal';
 
 // Import types and services
 import { campaignsApi } from '@/lib/api-client/client';
+import { StartPhaseStandalonePhaseEnum } from '@/lib/api-client/apis/campaigns-api';
 import type { CampaignViewModel } from '@/lib/types';
 import type { PhaseStartRequest } from '@/lib/api-client/models/phase-start-request';
+import type { PhaseProgressResponse } from '@/lib/api-client/models/phase-progress-response';
 
 interface PhaseStatus {
   phase: string;
@@ -99,7 +101,7 @@ export default function PhaseDashboard({ campaignId, campaign, totalDomains = 0,
     
     // Check campaign phases data
     if (campaign.phases) {
-      const phase = campaign.phases.find(p => p.phaseType === phaseKey);
+      const phase = campaign.phases.find((p: PhaseProgressResponse) => p.phaseType === phaseKey);
       if (phase) {
         return !!(phase.status === 'completed' || (phase.successfulItems && phase.successfulItems > 0));
       }
@@ -135,7 +137,7 @@ export default function PhaseDashboard({ campaignId, campaign, totalDomains = 0,
       
       for (let i = 0; i < phaseOrder.length; i++) {
         const phaseType = phaseOrder[i]!; // Safe because we're within array bounds
-        const phaseData = campaign?.phases?.find(p => p.phaseType === phaseType);
+        const phaseData = campaign?.phases?.find((p: PhaseProgressResponse) => p.phaseType === phaseType);
         const previousPhaseType = i > 0 ? phaseOrder[i - 1]! : null;
         const previousPhaseComplete = i === 0 || Boolean(previousPhaseType && isPhaseCompleted(previousPhaseType));
         
@@ -283,9 +285,21 @@ export default function PhaseDashboard({ campaignId, campaign, totalDomains = 0,
     try {
       setStartingPhase(phaseKey);
       
+      // Map phase key to proper enum value
+      const phaseEnumMap: Record<string, StartPhaseStandalonePhaseEnum> = {
+        'domain_generation': StartPhaseStandalonePhaseEnum.domain_generation,
+        'dns_validation': StartPhaseStandalonePhaseEnum.dns_validation,
+        'http_validation': StartPhaseStandalonePhaseEnum.http_validation,
+        'http_keyword_validation': StartPhaseStandalonePhaseEnum.http_validation
+      };
+      
+      const enumPhaseKey = phaseEnumMap[phaseKey];
+      if (!enumPhaseKey) {
+        throw new Error(`Unsupported phase: ${phaseKey}`);
+      }
+      
       // Use autonomous phase execution - backend determines the correct phase based on campaign state
-      // The phaseKey parameter is maintained for UI consistency but backend ignores it
-      await campaignsApi.startPhaseStandalone(campaignId, phaseKey);
+      await campaignsApi.startPhaseStandalone(campaignId, enumPhaseKey);
       
       toast({
         title: "Phase started",
