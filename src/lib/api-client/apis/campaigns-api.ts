@@ -26,6 +26,8 @@ import type { ApiAPIResponse } from '../models';
 // @ts-ignore
 import type { ApiBulkEnrichedDataRequest } from '../models';
 // @ts-ignore
+import type { ApiCampaignsListAPIResponse } from '../models';
+// @ts-ignore
 import type { ApiPatternOffsetRequest } from '../models';
 // @ts-ignore
 import type { ApiPatternOffsetResponse } from '../models';
@@ -448,7 +450,7 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getCampaignsStandalone(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiAPIResponse>> {
+        async getCampaignsStandalone(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiCampaignsListAPIResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getCampaignsStandalone(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.getCampaignsStandalone']?.[localVarOperationServerIndex]?.url;
@@ -563,7 +565,7 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getCampaignsStandalone(options?: RawAxiosRequestConfig): AxiosPromise<ApiAPIResponse> {
+        getCampaignsStandalone(options?: RawAxiosRequestConfig): AxiosPromise<ApiCampaignsListAPIResponse> {
             return localVarFp.getCampaignsStandalone(options).then((request) => request(axios, basePath));
         },
         /**
@@ -666,7 +668,7 @@ export interface CampaignsApiInterface {
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    getCampaignsStandalone(options?: RawAxiosRequestConfig): AxiosPromise<ApiAPIResponse>;
+    getCampaignsStandalone(options?: RawAxiosRequestConfig): AxiosPromise<ApiCampaignsListAPIResponse>;
 
     /**
      * Get the current offset for domain generation patterns

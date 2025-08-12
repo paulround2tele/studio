@@ -3911,6 +3911,27 @@ export interface components {
                 maxNetwork?: number;
             };
         };
+        /** @description Campaign summary with phase-centric bulk data */
+        "api.CampaignSummary": {
+            /** @example 550e8400-e29b-41d4-a716-446655440000 */
+            campaignId?: string;
+            /** @example 2024-01-15T10:30:00Z */
+            createdAt?: string;
+            currentPhase?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.PhaseTypeEnum"];
+            /** @example Enterprise Lead Generation */
+            name?: string;
+            phaseStatus?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.PhaseStatusEnum"];
+            /** @example 1500 */
+            totalItems?: number;
+            /** @example 2024-01-15T15:45:30Z */
+            updatedAt?: string;
+        };
+        /** @description List of all campaigns with phase-centric bulk data */
+        "api.CampaignsListResponse": {
+            campaigns?: components["schemas"]["api.CampaignSummary"][];
+            /** @example 25 */
+            total?: number;
+        };
         "api.CreateKeywordSetRequest": {
             description?: string;
             isEnabled?: boolean;
@@ -4792,6 +4813,10 @@ export interface components {
             phase?: string;
             successRate?: number;
         };
+        /** @enum {string} */
+        "github_com_fntelecomllc_studio_backend_internal_models.PhaseStatusEnum": "not_started" | "in_progress" | "paused" | "completed" | "failed";
+        /** @enum {string} */
+        "github_com_fntelecomllc_studio_backend_internal_models.PhaseTypeEnum": "setup" | "domain_generation" | "dns_validation" | "http_keyword_validation" | "analysis";
         /** @description Proxy server connection and authentication details */
         "github_com_fntelecomllc_studio_backend_internal_models.Proxy": {
             /** @description Full proxy address (e.g., 'http://user:pass@host:port') */
@@ -6019,7 +6044,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.APIResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
             /** @description Internal Server Error */

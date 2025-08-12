@@ -825,3 +825,31 @@ type OperationCancellationResponse struct {
 	PartialResults   bool   `json:"partialResults"`
 	CancellationTime string `json:"cancellationTime"` // ISO 8601
 }
+
+// CampaignSummary represents a single campaign in the campaigns list
+// @Description Campaign summary with phase-centric bulk data
+type CampaignSummary struct {
+	CampaignID   string                  `json:"campaignId" example:"550e8400-e29b-41d4-a716-446655440000" description:"Campaign UUID"`
+	Name         string                  `json:"name" example:"Enterprise Lead Generation" description:"Campaign name"`
+	CurrentPhase *models.PhaseTypeEnum   `json:"currentPhase,omitempty" enums:"setup,domain_generation,dns_validation,http_keyword_validation,analysis"`
+	PhaseStatus  *models.PhaseStatusEnum `json:"phaseStatus,omitempty" enums:"not_started,in_progress,paused,completed,failed"`
+	TotalItems   int                     `json:"totalItems" example:"1500" description:"Total items across all phases"`
+	CreatedAt    string                  `json:"createdAt" example:"2024-01-15T10:30:00Z" description:"Campaign creation timestamp"`
+	UpdatedAt    string                  `json:"updatedAt" example:"2024-01-15T15:45:30Z" description:"Last update timestamp"`
+}
+
+// CampaignsListResponse represents the campaigns list endpoint response
+// @Description List of all campaigns with phase-centric bulk data
+type CampaignsListResponse struct {
+	Campaigns []CampaignSummary `json:"campaigns" description:"Array of campaign summaries"`
+	Total     int               `json:"total" example:"25" description:"Total number of campaigns"`
+}
+
+// CampaignsListAPIResponse represents the complete API response for campaigns list endpoint
+// @Description Professional typed response for campaigns list with proper swagger generation
+type CampaignsListAPIResponse struct {
+	Success   bool                  `json:"success" example:"true"`
+	Data      CampaignsListResponse `json:"data"`
+	Metadata  *Metadata             `json:"metadata,omitempty"`
+	RequestID string                `json:"requestId" example:"req_1234567890abcdef"`
+}

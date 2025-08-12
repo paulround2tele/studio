@@ -61,24 +61,34 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxy
      * @type {string}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxyStrategy
      */
-    'proxyRotationRate'?: 'per_request' | 'per_domain' | 'per_batch' | 'adaptive';
+    'proxyRotationRate'?: GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxyStrategyProxyRotationRateEnum;
     /**
      * 
      * @type {string}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxyStrategy
      */
-    'strategy'?: 'round_robin' | 'weighted_random' | 'geographic' | 'intelligent_failover';
+    'strategy'?: GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxyStrategyStrategyEnum;
 }
 
 /**
     * @export
     * @enum {string}
     */
-// Enum GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxyStrategyProxyRotationRateEnum converted to direct string literals in interface
+export enum GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxyStrategyProxyRotationRateEnum {
+    per_request = 'per_request',
+    per_domain = 'per_domain',
+    per_batch = 'per_batch',
+    adaptive = 'adaptive'
+}
 /**
     * @export
     * @enum {string}
     */
-// Enum GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxyStrategyStrategyEnum converted to direct string literals in interface
+export enum GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxyStrategyStrategyEnum {
+    round_robin = 'round_robin',
+    weighted_random = 'weighted_random',
+    geographic = 'geographic',
+    intelligent_failover = 'intelligent_failover'
+}
 
 

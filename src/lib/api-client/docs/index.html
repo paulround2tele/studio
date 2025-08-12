@@ -1155,6 +1155,53 @@ ul.nav-tabs {
     }
   }
 };
+    defs["api.CampaignSummary"] = {
+  "properties" : {
+    "campaignId" : {
+      "type" : "string",
+      "example" : "550e8400-e29b-41d4-a716-446655440000"
+    },
+    "createdAt" : {
+      "type" : "string",
+      "example" : "2024-01-15T10:30:00Z"
+    },
+    "currentPhase" : {
+      "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.PhaseTypeEnum"
+    },
+    "name" : {
+      "type" : "string",
+      "example" : "Enterprise Lead Generation"
+    },
+    "phaseStatus" : {
+      "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.PhaseStatusEnum"
+    },
+    "totalItems" : {
+      "type" : "integer",
+      "example" : 1500
+    },
+    "updatedAt" : {
+      "type" : "string",
+      "example" : "2024-01-15T15:45:30Z"
+    }
+  },
+  "description" : "Campaign summary with phase-centric bulk data"
+};
+    defs["api.CampaignsListResponse"] = {
+  "properties" : {
+    "campaigns" : {
+      "uniqueItems" : false,
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/components/schemas/api.CampaignSummary"
+      }
+    },
+    "total" : {
+      "type" : "integer",
+      "example" : 25
+    }
+  },
+  "description" : "List of all campaigns with phase-centric bulk data"
+};
     defs["api.CreateKeywordSetRequest"] = {
   "required" : [ "name" ],
   "properties" : {
@@ -3555,6 +3602,20 @@ ul.nav-tabs {
       "type" : "number"
     }
   }
+};
+    defs["github_com_fntelecomllc_studio_backend_internal_models.PhaseStatusEnum"] = {
+  "type" : "string",
+  "enum" : [ "not_started", "in_progress", "paused", "completed", "failed" ],
+  "x-enum-comments" : {
+    "PhaseStatusConfigured" : "Phase has been configured and ready to start",
+    "PhaseStatusReady" : "Phase is ready to be configured"
+  },
+  "x-enum-varnames" : [ "PhaseStatusNotStarted", "PhaseStatusReady", "PhaseStatusConfigured", "PhaseStatusInProgress", "PhaseStatusPaused", "PhaseStatusCompleted", "PhaseStatusFailed" ]
+};
+    defs["github_com_fntelecomllc_studio_backend_internal_models.PhaseTypeEnum"] = {
+  "type" : "string",
+  "enum" : [ "setup", "domain_generation", "dns_validation", "http_keyword_validation", "analysis" ],
+  "x-enum-varnames" : [ "PhaseTypeDomainGeneration", "PhaseTypeDNSValidation", "PhaseTypeHTTPKeywordValidation", "PhaseTypeAnalysis" ]
 };
     defs["github_com_fntelecomllc_studio_backend_internal_models.Proxy"] = {
   "required" : [ "address", "name" ],
@@ -17916,7 +17977,7 @@ public class CampaignsApiExample {
         CampaignsApi apiInstance = new CampaignsApi();
 
         try {
-            api.APIResponse result = apiInstance.getCampaignsStandalone();
+            bulkValidateDNS_200_response result = apiInstance.getCampaignsStandalone();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling CampaignsApi#getCampaignsStandalone");
@@ -17951,7 +18012,7 @@ public class CampaignsApiExample {
         CampaignsApi apiInstance = new CampaignsApi();
 
         try {
-            api.APIResponse result = apiInstance.getCampaignsStandalone();
+            bulkValidateDNS_200_response result = apiInstance.getCampaignsStandalone();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling CampaignsApi#getCampaignsStandalone");
@@ -17972,7 +18033,7 @@ CampaignsApi *apiInstance = [[CampaignsApi alloc] init];
 
 // List campaigns (standalone)
 [apiInstance getCampaignsStandaloneWithCompletionHandler: 
-              ^(api.APIResponse output, NSError* error) {
+              ^(bulkValidateDNS_200_response output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -18021,7 +18082,7 @@ namespace Example
 
             try {
                 // List campaigns (standalone)
-                api.APIResponse result = apiInstance.getCampaignsStandalone();
+                bulkValidateDNS_200_response result = apiInstance.getCampaignsStandalone();
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling CampaignsApi.getCampaignsStandalone: " + e.Message );
@@ -18145,7 +18206,7 @@ pub fn main() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/api.APIResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }

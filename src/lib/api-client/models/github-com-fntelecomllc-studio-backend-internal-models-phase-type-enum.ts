@@ -13,6 +13,20 @@
  */
 
 
-export * from "./api";
-export * from "./configuration";
-export * from "./models";
+
+/**
+ * 
+ * @export
+ * @enum {string}
+ */
+
+export enum GithubComFntelecomllcStudioBackendInternalModelsPhaseTypeEnum {
+    PhaseTypeDomainGeneration = 'setup',
+    PhaseTypeDNSValidation = 'domain_generation',
+    PhaseTypeHTTPKeywordValidation = 'dns_validation',
+    PhaseTypeAnalysis = 'http_keyword_validation',
+    analysis = 'analysis'
+}
+
+
+

@@ -39,6 +39,9 @@ docs/ApiBulkOperationInfo.md
 docs/ApiBulkProxyTestResponse.md
 docs/ApiBulkResourceStatusResponse.md
 docs/ApiBulkResourceStatusResponseResourceLimits.md
+docs/ApiCampaignSummary.md
+docs/ApiCampaignsListAPIResponse.md
+docs/ApiCampaignsListResponse.md
 docs/ApiCreateKeywordSetRequest.md
 docs/ApiCreatePersonaRequest.md
 docs/ApiDNSValidationConfig.md
@@ -143,6 +146,8 @@ docs/GithubComFntelecomllcStudioBackendInternalModelsLoginRequest.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsOperationProgress.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsPhaseMetrics.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsPhasePerformance.md
+docs/GithubComFntelecomllcStudioBackendInternalModelsPhaseStatusEnum.md
+docs/GithubComFntelecomllcStudioBackendInternalModelsPhaseTypeEnum.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsProxy.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsProxyPool.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsProxyPoolMembership.md
@@ -216,6 +221,9 @@ models/api-bulk-operation-info.ts
 models/api-bulk-proxy-test-response.ts
 models/api-bulk-resource-status-response-resource-limits.ts
 models/api-bulk-resource-status-response.ts
+models/api-campaign-summary.ts
+models/api-campaigns-list-apiresponse.ts
+models/api-campaigns-list-response.ts
 models/api-create-keyword-set-request.ts
 models/api-create-persona-request.ts
 models/api-database-query-result.ts
@@ -313,6 +321,8 @@ models/github-com-fntelecomllc-studio-backend-internal-models-login-request.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-operation-progress.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-phase-metrics.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-phase-performance.ts
+models/github-com-fntelecomllc-studio-backend-internal-models-phase-status-enum.ts
+models/github-com-fntelecomllc-studio-backend-internal-models-phase-type-enum.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-proxy-pool-membership.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-proxy-pool.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-proxy.ts

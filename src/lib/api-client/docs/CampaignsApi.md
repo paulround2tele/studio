@@ -292,7 +292,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getCampaignsStandalone**
-> ApiAPIResponse getCampaignsStandalone()
+> ApiCampaignsListAPIResponse getCampaignsStandalone()
 
 Get list of all campaigns with phase-centric bulk data
 
@@ -316,7 +316,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ApiAPIResponse**
+**ApiCampaignsListAPIResponse**
 
 ### Authorization
 

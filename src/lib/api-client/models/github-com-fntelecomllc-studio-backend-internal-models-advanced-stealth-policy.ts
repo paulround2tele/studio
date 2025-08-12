@@ -55,7 +55,7 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsAdvancedStealth
      * @type {string}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsAdvancedStealthPolicy
      */
-    'profile'?: 'conservative' | 'moderate' | 'aggressive' | 'extreme_stealth';
+    'profile'?: GithubComFntelecomllcStudioBackendInternalModelsAdvancedStealthPolicyProfileEnum;
     /**
      * 
      * @type {number}
@@ -74,6 +74,11 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsAdvancedStealth
     * @export
     * @enum {string}
     */
-// Enum GithubComFntelecomllcStudioBackendInternalModelsAdvancedStealthPolicyProfileEnum converted to direct string literals in interface
+export enum GithubComFntelecomllcStudioBackendInternalModelsAdvancedStealthPolicyProfileEnum {
+    conservative = 'conservative',
+    moderate = 'moderate',
+    aggressive = 'aggressive',
+    extreme_stealth = 'extreme_stealth'
+}
 
 

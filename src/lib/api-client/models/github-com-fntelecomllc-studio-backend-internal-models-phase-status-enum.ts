@@ -13,6 +13,20 @@
  */
 
 
-export * from "./api";
-export * from "./configuration";
-export * from "./models";
+
+/**
+ * 
+ * @export
+ * @enum {string}
+ */
+
+export enum GithubComFntelecomllcStudioBackendInternalModelsPhaseStatusEnum {
+    PhaseStatusNotStarted = 'not_started',
+    PhaseStatusReady = 'in_progress',
+    PhaseStatusConfigured = 'paused',
+    PhaseStatusInProgress = 'completed',
+    PhaseStatusPaused = 'failed'
+}
+
+
+

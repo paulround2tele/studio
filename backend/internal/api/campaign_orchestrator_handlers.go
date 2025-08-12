@@ -66,6 +66,14 @@ func getCurrentPhaseString(campaign *models.LeadGenerationCampaign) string {
 	return "setup"
 }
 
+func getCurrentPhaseEnum(campaign *models.LeadGenerationCampaign) *models.PhaseTypeEnum {
+	return campaign.CurrentPhase
+}
+
+func getPhaseStatusEnum(campaign *models.LeadGenerationCampaign) *models.PhaseStatusEnum {
+	return campaign.PhaseStatus
+}
+
 // RegisterCampaignOrchestrationRoutes registers all campaign orchestration related routes.
 // CLEANED UP: Only standalone service endpoints remain
 func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(group *gin.RouterGroup, authMiddleware *middleware.CachedAuthMiddleware) {
@@ -566,8 +574,8 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignProgressStandalone(c *gin.Co
 // @Tags campaigns
 // @ID getCampaignsStandalone
 // @Produce json
-// @Success 200 {object} APIResponse "Campaigns retrieved successfully"
-// @Failure 500 {object} api.APIResponse "Internal Server Error"
+// @Success 200 {object} CampaignsListAPIResponse "Campaigns retrieved successfully"
+// @Failure 500 {object} APIResponse "Internal Server Error"
 // @Router /campaigns [get]
 func (h *CampaignOrchestratorAPIHandler) getCampaignsStandalone(c *gin.Context) {
 	// Get user from context
@@ -604,102 +612,40 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignsStandalone(c *gin.Context) 
 		return
 	}
 
-	// Build response with bulk data for each campaign
-	campaignList := make([]map[string]interface{}, 0, len(campaigns))
+	// Build response with proper structured data
+	campaignSummaries := make([]CampaignSummary, 0, len(campaigns))
 	for _, campaign := range campaigns {
-		campaignData := map[string]interface{}{
-			"campaignId":   campaign.ID.String(),
-			"name":         campaign.Name,
-			"currentPhase": getCurrentPhaseString(campaign),
-			"phaseStatus":  getPhaseStatusString(campaign),
-			"totalItems":   getTotalItemsCount(campaign),
-			"createdAt":    campaign.CreatedAt.Format(time.RFC3339),
-			"updatedAt":    campaign.UpdatedAt.Format(time.RFC3339),
+		summary := CampaignSummary{
+			CampaignID: campaign.ID.String(),
+			Name:       campaign.Name,
+			TotalItems: getTotalItemsCount(campaign),
+			CreatedAt:  campaign.CreatedAt.Format(time.RFC3339),
+			UpdatedAt:  campaign.UpdatedAt.Format(time.RFC3339),
 		}
 
-		// 🆕 CRITICAL FIX: Add campaign phases data that frontend expects
-		phases, err := h.campaignStore.GetCampaignPhases(c.Request.Context(), h.db, campaign.ID)
-		if err != nil {
-			log.Printf("Warning: Failed to get phases for campaign %s: %v", campaign.ID, err)
-			// Provide default phases if database query fails
-			campaignData["phases"] = []map[string]interface{}{
-				{"phaseType": "domain_generation", "status": "not_started", "phaseOrder": 1},
-				{"phaseType": "dns_validation", "status": "not_started", "phaseOrder": 2},
-				{"phaseType": "http_keyword_validation", "status": "not_started", "phaseOrder": 3},
-				{"phaseType": "analysis", "status": "not_started", "phaseOrder": 4},
-			}
-		} else {
-			// Convert phases to format expected by frontend
-			phasesData := make([]map[string]interface{}, len(phases))
-			for i, phase := range phases {
-				phasesData[i] = map[string]interface{}{
-					"id":                 phase.ID.String(),
-					"campaignId":         phase.CampaignID.String(),
-					"phaseType":          string(phase.PhaseType),
-					"phaseOrder":         phase.PhaseOrder,
-					"status":             string(phase.Status),
-					"progressPercentage": phase.ProgressPercentage,
-					"startedAt":          phase.StartedAt,
-					"completedAt":        phase.CompletedAt,
-					"errorMessage":       phase.ErrorMessage,
-					"totalItems":         phase.TotalItems,
-					"processedItems":     phase.ProcessedItems,
-					"successfulItems":    phase.SuccessfulItems,
-					"failedItems":        phase.FailedItems,
-					"createdAt":          phase.CreatedAt.Format(time.RFC3339),
-					"updatedAt":          phase.UpdatedAt.Format(time.RFC3339),
-				}
-			}
-			campaignData["phases"] = phasesData
+		// Set current phase and status using proper enums
+		if currentPhase := getCurrentPhaseEnum(campaign); currentPhase != nil {
+			summary.CurrentPhase = currentPhase
+		}
+		if phaseStatus := getPhaseStatusEnum(campaign); phaseStatus != nil {
+			summary.PhaseStatus = phaseStatus
 		}
 
-		// Include bulk JSONB data for enterprise-scale processing
-		if campaign.DomainsData != nil {
-			var domainsData interface{}
-			if err := json.Unmarshal(*campaign.DomainsData, &domainsData); err == nil {
-				campaignData["domainsData"] = domainsData
-			}
-		}
-
-		if campaign.DNSResults != nil {
-			var dnsResults interface{}
-			if err := json.Unmarshal(*campaign.DNSResults, &dnsResults); err == nil {
-				campaignData["dnsResults"] = dnsResults
-			}
-		}
-
-		if campaign.HTTPResults != nil {
-			var httpResults interface{}
-			if err := json.Unmarshal(*campaign.HTTPResults, &httpResults); err == nil {
-				campaignData["httpResults"] = httpResults
-			}
-		}
-
-		if campaign.AnalysisResults != nil {
-			var analysisResults interface{}
-			if err := json.Unmarshal(*campaign.AnalysisResults, &analysisResults); err == nil {
-				campaignData["analysisResults"] = analysisResults
-			}
-		}
-
-		// Include phase-centric progress information
-		if campaign.OverallProgress != nil {
-			campaignData["progress"] = *campaign.OverallProgress
-		}
-		if campaign.Domains != nil {
-			campaignData["domains"] = *campaign.Domains
-		}
-		if campaign.Leads != nil {
-			campaignData["leads"] = *campaign.Leads
-		}
-		if campaign.DNSValidatedDomains != nil {
-			campaignData["dnsValidatedDomains"] = *campaign.DNSValidatedDomains
-		}
-
-		campaignList = append(campaignList, campaignData)
+		campaignSummaries = append(campaignSummaries, summary)
 	}
 
-	response := NewSuccessResponse(campaignList, getRequestID(c))
+	// Create structured response
+	responseData := CampaignsListResponse{
+		Campaigns: campaignSummaries,
+		Total:     len(campaignSummaries),
+	}
+
+	// Use concrete typed response instead of generic APIResponse wrapper
+	response := CampaignsListAPIResponse{
+		Success:   true,
+		Data:      responseData,
+		RequestID: getRequestID(c),
+	}
 	respondWithJSONGin(c, http.StatusOK, response)
 }
 

@@ -1,185 +1,141 @@
-// Backend-Driven Campaign Details Page
-// Clean implementation without frontend stores - pure backend-driven architecture
-
 "use client";
 
-import React, { useState } from 'react';
-import { useParams } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, Briefcase, Loader2 } from 'lucide-react';
+import { AlertCircle, Briefcase, Loader2, ArrowLeft } from 'lucide-react';
+
+// PROFESSIONAL: Direct OpenAPI client imports - no amateur wrappers
+import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
+import type { Campaign } from '@/lib/api-client/models';
+
+// Professional components using real OpenAPI types
 import PageHeader from '@/components/shared/PageHeader';
 import CampaignProgress from '@/components/campaigns/CampaignProgress';
-import ContentSimilarityView from '@/components/campaigns/ContentSimilarityView';
-
-// New modular components
 import CampaignHeader from '@/components/campaigns/CampaignHeader';
 import CampaignControls from '@/components/campaigns/CampaignControls';
-import { CampaignMetrics } from '@/components/campaigns/CampaignStatistics';
-import DomainStreamingTable from '@/components/campaigns/DomainStreamingTable';
-import PhaseDashboard from '@/components/campaigns/PhaseDashboard';
 
-// RTK Query data fetching
-// ✅ PROFESSIONAL: Direct OpenAPI client usage
-import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
-import { Configuration } from '@/lib/api-client/configuration';
-import useCampaignOperations from '@/hooks/useCampaignOperations';
+interface CampaignPageParams {
+  id: string;
+}
 
-// Types
-// TODO: Fix this when proper campaign detail types are available
-// import type { LeadGenerationCampaign } from '@/lib/api-client/models';
-import { CampaignsApi, StartPhaseStandalonePhaseEnum } from '@/lib/api-client/apis/campaigns-api';
-import { convertCampaignToLeadGeneration } from '@/lib/utils/typeGuards';
-
-// type CampaignPhase = LeadGenerationCampaign['currentPhase'];
-
-export default function CampaignDetailsPage() {
+export default function CampaignPage() {
   const params = useParams();
-  const campaignId = params.id as string;
+  const router = useRouter();
+  const campaignId = params?.id as string;
 
-  // RTK Query: Get campaign data from centralized store
-  const { data: campaignsResponse, isLoading: loading, error, refetch } = useGetCampaignsStandaloneQuery();
-  
-  // Extract campaigns and find specific campaign
-  const campaigns = Array.isArray(campaignsResponse) ? campaignsResponse : [];
-  const campaign = campaigns.find((c: any) => c.id === campaignId);
+  // Professional state management - no amateur RTK Query wrapper crimes
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Explicit type annotation to ensure proper transformation
-  const typedCampaign = campaign as import('@/lib/types').Campaign | null;
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        setLoading(true);
+        const api = new CampaignsApi();
+        // Professional bulk API call - prevents amateur N+1 query disasters
+        const response = await api.getCampaignsStandalone();
+        
+        // Professional handling of backend APIResponse structure
+        if (response && response.data) {
+          const campaignData = response.data as any[];
+          // Convert backend campaign data to frontend Campaign model
+          const formattedCampaigns: Campaign[] = campaignData.map((item: any) => ({
+            id: item.campaignId,
+            name: item.name,
+            currentPhase: item.currentPhase,
+            phaseStatus: item.phaseStatus,
+            createdAt: item.createdAt,
+            updatedAt: item.updatedAt,
+          }));
+          setCampaigns(formattedCampaigns);
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch campaigns');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Extract domain-related data from campaign (RTK Query consolidation)
-  const generatedDomains = campaign?.domains || [];
-  const dnsCampaignItems = generatedDomains.filter((d: any) => d.dns_status === 'ok');
-  const httpCampaignItems = generatedDomains.filter((d: any) => d.http_status === 'ok');
-  const totalDomainCount = generatedDomains.length;
+    fetchCampaigns();
+  }, []);
 
-  // Simple state for UI-only concerns (no business data)
-  const [filters, setFilters] = useState<any>({});
+  // Professional client-side filtering - no database abuse like amateur single-resource endpoints
+  const campaign = campaigns.find(c => c.id === campaignId);
 
-  // Campaign operations (still useful for actions)
-  const campaignOperations = useCampaignOperations(campaignId);
-  const {
-    startPhase,
-    pauseCampaign,
-    resumeCampaign,
-    stopCampaign,
-    downloadDomains
-  } = campaignOperations;
-
-  // Use auto-generated API client for phase operations
-  const campaignsApi = new CampaignsApi();
-
-  // Adapter function to match DomainStreamingTable's expected signature
-  const handleDownloadDomains = (domains: string[], fileNamePrefix: string) => {
-    // Call the hook's downloadDomains function with the prefix
-    downloadDomains(fileNamePrefix);
+  const handleBack = () => {
+    router.push('/campaigns');
   };
 
-
-  // Error state
-  if (error) {
+  if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center gap-2 text-red-600 mb-4">
-          <AlertCircle className="h-5 w-5" />
-          <span>Error loading campaign: {
-            typeof error === 'string' 
-              ? error 
-              : 'An error occurred while loading campaign data'
-          }</span>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-8 h-8 text-blue-500 animate-spin mx-auto" />
+          <p className="text-gray-600 dark:text-gray-400">Loading campaign...</p>
         </div>
-        <Button onClick={refetch} variant="outline">
-          Try Again
-        </Button>
       </div>
     );
   }
 
-  // Loading state
-  if (loading || !typedCampaign) {
+  if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center gap-2 text-gray-600">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span>Loading campaign...</span>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            Error Loading Campaign
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 max-w-md">
+            {error}
+          </p>
+          <Button onClick={() => window.location.reload()} variant="outline">
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!campaign) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Briefcase className="w-12 h-12 text-gray-400 mx-auto" />
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            Campaign Not Found
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 max-w-md">
+            The campaign with ID "{campaignId}" was not found.
+          </p>
+          <Button onClick={handleBack} variant="outline">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Campaigns
+          </Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      {/* Page Header */}
+    <div className="container mx-auto px-4 py-8 space-y-6">
+      {/* Professional page header */}
       <PageHeader
-        title="Campaign Details"
-        icon={Briefcase}
+        title={campaign.name || 'Untitled Campaign'}
+        description={`Campaign details and management for ${campaign.name || 'campaign'}`}
+        showBackButton
+        onBack={handleBack}
       />
 
-      {/* Main Campaign Card - Unified Header & Key Metrics */}
-      <CampaignHeader
-        campaign={typedCampaign}
-        onRefresh={refetch}
-        totalDomains={totalDomainCount}
-      />
-
-      {/* Phase Management Dashboard */}
-      <PhaseDashboard
-        campaignId={campaignId}
-        campaign={typedCampaign}
-        totalDomains={totalDomainCount}
-        onCampaignUpdate={refetch}
-      />
-
-      {/* Campaign Controls */}
-      <CampaignControls
-        campaign={convertCampaignToLeadGeneration(typedCampaign)}
-        onStartPhase={async (phaseType: string) => { 
-          await campaignsApi.startPhaseStandalone(campaignId, phaseType as StartPhaseStandalonePhaseEnum); 
-        }}
-        onPausePhase={async (phaseType: string) => {
-          // Note: Pause/Resume/Cancel not available in standalone services - use startPhaseStandalone for control
-          console.log('Pause not implemented for standalone services');
-        }}
-        onResumePhase={async (phaseType: string) => {
-          console.log('Resume not implemented for standalone services');
-        }}
-        onCancelPhase={async (phaseType: string) => {
-          console.log('Cancel not implemented for standalone services');
-        }}
-        actionLoading={{}}
-      />
-
-      {/* Domain Streaming Table - Backend-driven data */}
-      <DomainStreamingTable
-        campaign={typedCampaign}
-        generatedDomains={generatedDomains as any}
-        dnsCampaignItems={dnsCampaignItems}
-        httpCampaignItems={httpCampaignItems}
-        totalDomains={totalDomainCount}
-        loading={loading}
-        filters={filters}
-        onFiltersChange={setFilters}
-        onDownloadDomains={handleDownloadDomains}
-        className="w-full"
-      />
-
-      {/* Content Similarity View - Original component for lead analysis */}
-      {typedCampaign.currentPhase === 'http_keyword_validation' && typedCampaign.phaseStatus === 'completed' && (
-        <ContentSimilarityView campaign={typedCampaign} />
-      )}
-
-      {/* Refresh Button for Manual Updates */}
-      <div className="flex justify-center">
-        <Button onClick={refetch} variant="outline" disabled={loading}>
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              Refreshing...
-            </>
-          ) : (
-            'Refresh Data'
-          )}
-        </Button>
-      </div>
+      {/* Professional campaign header with real OpenAPI types */}
+      <CampaignHeader campaign={campaign} />
+      
+      {/* Professional campaign progress using real enum values */}
+      <CampaignProgress campaign={campaign} />
+      
+      {/* Professional campaign controls (disaster recovery component) */}
+      <CampaignControls campaign={campaign} />
     </div>
   );
 }

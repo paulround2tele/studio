@@ -250,6 +250,56 @@ components:
               type: number
           type: object
       type: object
+    api.CampaignSummary:
+      description: Campaign summary with phase-centric bulk data
+      properties:
+        campaignId:
+          example: 550e8400-e29b-41d4-a716-446655440000
+          type: string
+        createdAt:
+          example: "2024-01-15T10:30:00Z"
+          type: string
+        currentPhase:
+          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.PhaseTypeEnum'
+        name:
+          example: Enterprise Lead Generation
+          type: string
+        phaseStatus:
+          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.PhaseStatusEnum'
+        totalItems:
+          example: 1500
+          type: integer
+        updatedAt:
+          example: "2024-01-15T15:45:30Z"
+          type: string
+      type: object
+    api.CampaignsListAPIResponse:
+      description: Professional typed response for campaigns list with proper swagger
+        generation
+      properties:
+        data:
+          $ref: '#/components/schemas/api.CampaignsListResponse'
+        metadata:
+          $ref: '#/components/schemas/api.Metadata'
+        requestId:
+          example: req_1234567890abcdef
+          type: string
+        success:
+          example: true
+          type: boolean
+      type: object
+    api.CampaignsListResponse:
+      description: List of all campaigns with phase-centric bulk data
+      properties:
+        campaigns:
+          items:
+            $ref: '#/components/schemas/api.CampaignSummary'
+          type: array
+          uniqueItems: false
+        total:
+          example: 25
+          type: integer
+      type: object
     api.CreateKeywordSetRequest:
       properties:
         description:
@@ -2105,6 +2155,38 @@ components:
         successRate:
           type: number
       type: object
+    github_com_fntelecomllc_studio_backend_internal_models.PhaseStatusEnum:
+      enum:
+      - not_started
+      - in_progress
+      - paused
+      - completed
+      - failed
+      type: string
+      x-enum-comments:
+        PhaseStatusConfigured: Phase has been configured and ready to start
+        PhaseStatusReady: Phase is ready to be configured
+      x-enum-varnames:
+      - PhaseStatusNotStarted
+      - PhaseStatusReady
+      - PhaseStatusConfigured
+      - PhaseStatusInProgress
+      - PhaseStatusPaused
+      - PhaseStatusCompleted
+      - PhaseStatusFailed
+    github_com_fntelecomllc_studio_backend_internal_models.PhaseTypeEnum:
+      enum:
+      - setup
+      - domain_generation
+      - dns_validation
+      - http_keyword_validation
+      - analysis
+      type: string
+      x-enum-varnames:
+      - PhaseTypeDomainGeneration
+      - PhaseTypeDNSValidation
+      - PhaseTypeHTTPKeywordValidation
+      - PhaseTypeAnalysis
     github_com_fntelecomllc_studio_backend_internal_models.Proxy:
       description: Proxy server connection and authentication details
       properties:
@@ -4133,7 +4215,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.APIResponse'
+                $ref: '#/components/schemas/api.CampaignsListAPIResponse'
           description: Campaigns retrieved successfully
         "500":
           content:

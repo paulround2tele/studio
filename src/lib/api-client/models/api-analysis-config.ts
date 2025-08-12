@@ -25,7 +25,7 @@ export interface ApiAnalysisConfig {
      * @type {string}
      * @memberof ApiAnalysisConfig
      */
-    'analysisType': 'basic' | 'comprehensive' | 'custom';
+    'analysisType': ApiAnalysisConfigAnalysisTypeEnum;
     /**
      * 
      * @type {Array<string>}
@@ -50,6 +50,10 @@ export interface ApiAnalysisConfig {
     * @export
     * @enum {string}
     */
-// Enum ApiAnalysisConfigAnalysisTypeEnum converted to direct string literals in interface
+export enum ApiAnalysisConfigAnalysisTypeEnum {
+    basic = 'basic',
+    comprehensive = 'comprehensive',
+    custom = 'custom'
+}
 
 
