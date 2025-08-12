@@ -6,7 +6,7 @@ import { ExternalLink, RefreshCw } from 'lucide-react';
 import type {
   CampaignViewModel,
   CampaignValidationItem
-} from '@/lib/types';
+} from '@/lib/api-client/types-bridge';
 import type { GeneratedDomain } from '@/lib/api-client';
 import { ScrollArea } from '../ui/scroll-area';
 import { StatusBadge, type DomainActivityStatus } from '@/components/shared/StatusBadge';

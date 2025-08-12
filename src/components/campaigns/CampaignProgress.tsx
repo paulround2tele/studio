@@ -1,7 +1,7 @@
 "use client";
 
 import React, { memo, useMemo, useCallback } from 'react';
-import type { CampaignViewModel, CampaignPhase, CampaignPhaseStatus } from '@/lib/types';
+import type { CampaignViewModel, CampaignPhase, CampaignPhaseStatusEnum } from '@/lib/api-client/types-bridge';
 import { CheckCircle, AlertTriangle, Clock, Loader2, WorkflowIcon, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';

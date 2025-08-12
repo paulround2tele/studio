@@ -22,7 +22,7 @@ import type {
   APIResponse,
   CreateCampaignRequest,
   CampaignData
-} from '@/lib/types';
+} from '@/lib/api-client/types-bridge';
 
 // Create a single instance of the generated API client
 const campaignsApiClient = new CampaignsApi();

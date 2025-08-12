@@ -37,7 +37,7 @@ import {
   Loader2
 } from 'lucide-react';
 import type { Proxy, UpdateProxyRequest } from '@/lib/api-client/professional-types';
-import type { ApiResponse } from '@/lib/types';
+import type { ApiResponse } from '@/lib/api-client/types-bridge';
 import { isResponseSuccess } from '@/lib/utils/apiResponseHelpers';
 
 type ProxyActionResponse = { status: 'success' | 'error'; message?: string };
@@ -47,10 +47,8 @@ import {
   cleanProxies,
   updateProxy,
   deleteProxy,
-  bulkUpdateProxies,
-  bulkDeleteProxies,
-  bulkTestProxies
-} from '@/lib/services/proxyService.production';
+import { apiClient } from '@/lib/api-client/client-bridge';
+import type { Proxy } from '@/lib/api-client/types-bridge';
 import { useToast } from '@/hooks/use-toast';
 
 export interface BulkOperationsProps {

@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Briefcase, RefreshCw, CheckCircle, AlertCircle, Clock, Pause, Play, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { CampaignViewModel, CampaignPhaseStatus } from '@/lib/types';
+import type { CampaignViewModel, CampaignPhaseStatusEnum } from '@/lib/api-client/types-bridge';
 
 export interface CampaignHeaderProps {
   campaign: CampaignViewModel;
@@ -20,7 +20,7 @@ export interface CampaignHeaderProps {
   className?: string;
 }
 
-const getStatusIcon = (status: CampaignPhaseStatus) => {
+const getStatusIcon = (status: CampaignPhaseStatusEnum) => {
   switch (status) {
     case 'completed': return CheckCircle;
     case 'failed': return AlertCircle;
@@ -31,7 +31,7 @@ const getStatusIcon = (status: CampaignPhaseStatus) => {
   }
 };
 
-const getStatusVariant = (status: CampaignPhaseStatus): 'default' | 'secondary' | 'destructive' | 'outline' => {
+const getStatusVariant = (status: CampaignPhaseStatusEnum): 'default' | 'secondary' | 'destructive' | 'outline' => {
   switch (status) {
     case 'completed': return 'default' as any;
     case 'failed': return 'destructive' as any;
@@ -42,7 +42,7 @@ const getStatusVariant = (status: CampaignPhaseStatus): 'default' | 'secondary' 
   }
 };
 
-const getStatusDisplayText = (status: CampaignPhaseStatus): string => {
+const getStatusDisplayText = (status: CampaignPhaseStatusEnum): string => {
   switch (status) {
     case 'completed': return 'Completed';
     case 'failed': return 'Failed';
@@ -83,13 +83,13 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
   const campaignPhase = campaign.currentPhase || 'setup';
   
   // Determine actual status based on data
-  const actualStatus = totalDomains > 0 && campaignPhase === 'domain_generation' 
+  const actualStatus = totalDomains > 0 && campaignPhase === 'generation' 
     ? 'completed' as const 
     : campaignStatus;
   
   const StatusIcon = getStatusIcon(actualStatus);
   const statusVariant = getStatusVariant(actualStatus);
-  const statusText = totalDomains > 0 && campaignPhase === 'domain_generation' 
+  const statusText = totalDomains > 0 && campaignPhase === 'generation' 
     ? 'Phase 1 Complete' 
     : getStatusDisplayText(actualStatus);
   const phaseDisplayName = getPhaseDisplayName(campaignPhase);
@@ -160,7 +160,7 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
             <div className="text-muted-foreground font-medium">Phase Progress</div>
             <div className="font-semibold text-base">
               {/* Calculate accurate progress based on actual data */}
-              {totalDomains > 0 && campaign.currentPhase === 'domain_generation' 
+              {totalDomains > 0 && campaign.currentPhase === 'generation' 
                 ? <span className="text-green-600 font-bold">100% Complete</span>
                 : campaign.progressPercentage !== undefined 
                   ? `${campaign.progressPercentage}%` 
@@ -196,12 +196,7 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
           </div>
         </div>
         
-        {campaign.description && (
-          <div className="mt-4 pt-4 border-t">
-            <div className="text-sm text-muted-foreground mb-1">Description</div>
-            <div className="text-sm">{campaign.description}</div>
-          </div>
-        )}
+        {/* Note: Campaign description not available in current schema */}
         
         {campaign.errorMessage && (
           <div className="mt-4 pt-4 border-t">

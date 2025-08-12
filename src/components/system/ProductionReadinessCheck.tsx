@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, XCircle, AlertCircle, RefreshCw, Loader2, Shield, Wifi, Database, Key } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import healthService from '@/lib/services/healthService';
+import healthService from '@/lib/api-client/client-bridge';
 import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
 
 // Enhanced error serialization utility for robust logging

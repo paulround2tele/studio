@@ -14,7 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 // THIN CLIENT: Removed AuthContext - backend handles auth
-import { createPersona, updatePersona, type CreatePersonaRequest, type UpdatePersonaRequest } from "@/lib/services/personaService";
+import { apiClient } from "@/lib/api-client/client-bridge";
+import type { CreatePersonaRequest, UpdatePersonaRequest } from "@/lib/api-client/types-bridge";
 // Import types from professional-types layer
 import type { HttpPersonaConfig, DnsPersonaConfig, PersonaResponse } from '@/lib/api-client/professional-types';
 
@@ -227,9 +228,9 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
           ...commonPayloadData,
           configDetails: httpConfigDetails
         };
-        response = await updatePersona(persona.id, updatePayload as any, 'http');
+        response = await apiClient.personas.update(persona.id, updatePayload as any);
       } else {
-        response = await createPersona(payload as any);
+        response = await apiClient.personas.create(payload as any);
       }
 
       if (response.success === true) {
@@ -483,9 +484,9 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
           ...commonPayloadData,
           configDetails: dnsConfigDetails
         };
-        response = await updatePersona(persona.id, updatePayload, 'dns');
+        response = await apiClient.personas.update(persona.id, updatePayload);
       } else {
-        response = await createPersona(payload);
+        response = await apiClient.personas.create(payload);
       }
 
       if (response.success === true) {

@@ -9,8 +9,8 @@ import type {
   PaginationActions,
   PaginationHook,
   PaginationContext
-} from '@/lib/types';
-import { getDefaultPageSize } from '@/lib/types';
+} from '@/lib/api-client/types-bridge';
+import { getDefaultPageSize } from '@/lib/api-client/types-bridge';
 
 // Base pagination hook
 export function usePagination(

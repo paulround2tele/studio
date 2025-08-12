@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 // Only import icons that are actually used in the component
 import { Database, Server } from 'lucide-react';
 import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
-import databaseService from '@/lib/services/databaseService';
+import databaseService from '@/lib/api-client/client-bridge';
 import type { DatabaseQueryResult } from '@/lib/api-client/models/database-query-result';
 import type { DatabaseStats } from '@/lib/api-client/models/database-stats';
 

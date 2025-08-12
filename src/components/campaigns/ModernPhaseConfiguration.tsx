@@ -14,7 +14,7 @@ import { PerformanceTuningSection } from './sections/PerformanceTuningSection';
 import { campaignsApi } from '@/lib/api-client/client';
 import { isResponseSuccess, getResponseError } from '@/lib/utils/apiResponseHelpers';
 import { validateUUID } from '@/lib/utils/uuidValidation';
-import type { CampaignViewModel } from '@/lib/types';
+import type { CampaignViewModel } from '@/lib/api-client/types-bridge';
 
 // Phase configuration form interface
 interface PhaseConfigurationFormValues {

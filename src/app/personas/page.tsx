@@ -42,7 +42,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from '@/components/ui/input';
-import { getPersonas, deletePersona, createPersona, testPersona, updatePersona } from '@/lib/services/personaService'; // Updated import
+import { apiClient } from '@/lib/api-client/client-bridge'; // Professional API import
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 // THIN CLIENT: Removed LoadingStore - backend handles loading state via WebSocket

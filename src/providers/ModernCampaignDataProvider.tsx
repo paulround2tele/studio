@@ -7,7 +7,7 @@ import React, { createContext, useContext, ReactNode } from 'react';
 import { useAppSelector } from '@/store/hooks';
 import { useGetCampaignsStandaloneQuery } from '@/store/api/campaignApi';
 import { transformCampaignToViewModel } from '@/lib/utils/campaignTransforms';
-import type { CampaignViewModel } from '@/lib/types';
+import type { CampaignViewModel } from '@/lib/api-client/types-bridge';
 
 interface ModernCampaignDataContextValue {
   campaigns: CampaignViewModel[];

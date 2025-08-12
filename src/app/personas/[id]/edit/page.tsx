@@ -10,7 +10,7 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { getPersonaById } from '@/lib/services/personaService'; // Updated import
+import { apiClient } from '@/lib/api-client/client-bridge'; // Professional API import
 import { useToast } from '@/hooks/use-toast';
 
 function EditPersonaPageContent() {

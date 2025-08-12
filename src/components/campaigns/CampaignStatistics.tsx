@@ -19,7 +19,7 @@ import {
   TrendingUp,
   Activity
 } from 'lucide-react';
-import type { CampaignViewModel } from '@/lib/types';
+import type { CampaignViewModel } from '@/lib/api-client/types-bridge';
 import type { CampaignPhase } from '@/lib/api-client/professional-types';
 import { cn } from '@/lib/utils';
 

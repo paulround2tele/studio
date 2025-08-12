@@ -4,7 +4,7 @@
 import type { components } from '@/lib/api-client/types';
 import type { UUID } from '@/lib/api-client/uuid-types';
 // Enum types removed - using direct string literals now
-import type { CampaignViewModel } from '@/lib/types';
+import type { CampaignViewModel } from '@/lib/api-client/types-bridge';
 
 type OpenAPICampaign = components['schemas']['LeadGenerationCampaign'];
 type CampaignPhase = 'domain_generation' | 'dns_validation' | 'http_keyword_validation' | 'analysis';

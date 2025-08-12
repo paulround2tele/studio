@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { Proxy, UpdateProxyRequest } from '@/lib/api-client/professional-types';
 
 // Type aliases for better readability
-import { createProxy, updateProxy } from '@/lib/services/proxyService.production';
+import { apiClient } from '@/lib/api-client/client-bridge';
 import { useToast } from '@/hooks/use-toast';
 // THIN CLIENT: Removed AuthContext - backend handles auth
 import { Loader2 } from "lucide-react";

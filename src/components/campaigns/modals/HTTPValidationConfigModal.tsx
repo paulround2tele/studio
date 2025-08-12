@@ -15,8 +15,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Import types and services - using the EXACT same pattern as campaign form
-import { getPersonas } from '@/lib/services/personaService';
-import { listKeywordSets } from '@/lib/services/keywordSetService';
+import { apiClient } from '@/lib/api-client/client-bridge';
 import { campaignsApi } from '@/lib/api-client/client';
 import type { HTTPValidationConfig, PhaseConfigureRequest, PersonaResponse } from '@/lib/api-client/professional-types';
 import { ConfigurePhaseStandalonePhaseEnum } from '@/lib/api-client/apis/campaigns-api';

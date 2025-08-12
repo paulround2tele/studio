@@ -1,16 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { CampaignViewModel } from '@/lib/types';
-import type { components } from '@/lib/api-client/types';
-
-type HttpPersona = components['schemas']['PersonaResponse'] & { personaType: 'http' };
-type DnsPersona = components['schemas']['PersonaResponse'] & { personaType: 'dns' };
-import { getPersonas } from "@/lib/services/personaService";
-import { getProxies } from "@/lib/services/proxyService.production";
-import { campaignsApi } from '@/lib/api-client/client';
+import type { CampaignViewModel, PersonaResponse, Proxy } from '@/lib/api-client/types-bridge';
+import { apiClient } from '@/lib/api-client/client-bridge';
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 
-type Campaign = components['schemas']['LeadGenerationCampaign'];
-type Proxy = components['schemas']['Proxy'];
+// Professional type definitions based on ACTUAL schema
+type HttpPersona = PersonaResponse & { personaType: 'http' };
+type DnsPersona = PersonaResponse & { personaType: 'dns' };
 
 interface CampaignFormData {
   httpPersonas: HttpPersona[];
@@ -43,15 +38,17 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
       // Enhanced bulk resource loading to reduce N+1 patterns
       // Instead of 3 separate calls, use batched approach with shared connection pooling
       const bulkResourcePromise = Promise.allSettled([
-        // Batch persona requests concurrently but with shared connection pooling
-        Promise.all([getPersonas('http'), getPersonas('dns')]).then(([httpPersonas, dnsPersonas]) => ({
-          httpPersonas,
-          dnsPersonas
+        // Batch persona requests using professional API client
+        Promise.all([
+          apiClient.personas.list(undefined, undefined, undefined, 'http'),
+          apiClient.personas.list(undefined, undefined, undefined, 'dns')
+        ]).then(([httpPersonas, dnsPersonas]) => ({
+          httpPersonas: httpPersonas.data || [],
+          dnsPersonas: dnsPersonas.data || []
         })),
-        getProxies(),
-        // TEMPORARY: Campaign listing disabled during legacy cleanup - only standalone services remain
-        // TODO: Implement campaign listing using standalone service endpoints after cleanup is complete
-        Promise.resolve({ data: { data: { data: [] } } }) // Mock empty campaigns response
+        apiClient.proxies.list(),
+        // Campaign listing using professional API client
+        apiClient.campaigns.list()
       ]);
 
       const [personasResult, proxiesResult, campaignsResult] = await bulkResourcePromise;
@@ -87,7 +84,7 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
       if (campaignsResult.status === 'fulfilled' && campaignsResult.value && campaignsResult.value.data) {
         // Handle wrapped response format: { success: true, data: { campaigns: [...] } }
         const responseData = campaignsResult.value.data;
-        let campaignsArray: Campaign[] = [];
+        let campaignsArray: CampaignViewModel[] = [];
         
         // Check if data is wrapped with campaigns property
         if (responseData && typeof responseData === 'object' && 'campaigns' in responseData) {

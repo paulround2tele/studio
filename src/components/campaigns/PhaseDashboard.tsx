@@ -25,7 +25,7 @@ import AnalysisConfigModal from './modals/AnalysisConfigModal';
 
 // Import types and services
 import { campaignsApi } from '@/lib/api-client/client';
-import type { CampaignViewModel } from '@/lib/types';
+import type { CampaignViewModel } from '@/lib/api-client/types-bridge';
 import type { PhaseStartRequest } from '@/lib/api-client/models/phase-start-request';
 
 interface PhaseStatus {

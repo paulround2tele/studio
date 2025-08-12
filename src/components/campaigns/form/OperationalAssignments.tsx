@@ -11,14 +11,14 @@ const CampaignFormConstants = {
 
 // Import shared types to prevent conflicts
 import type { CampaignFormValues } from '../types/CampaignFormTypes';
-import type { HttpPersona, DnsPersona } from '@/lib/types';
+import type { PersonaResponse } from '@/lib/api-client/types-bridge';
 
 interface OperationalAssignmentsProps {
   control: Control<CampaignFormValues>;
   needsHttp: boolean;
   needsDns: boolean;
-  httpPersonas: HttpPersona[];
-  dnsPersonas: DnsPersona[];
+  httpPersonas: PersonaResponse[];
+  dnsPersonas: PersonaResponse[];
   isLoading: boolean;
 }
 

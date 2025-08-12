@@ -1,7 +1,7 @@
 import { useMemo, useCallback } from 'react';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import type { components } from '@/lib/api-client/types';
-import type { DomainGenerationPattern } from '@/lib/types/openapi-extensions';
+import type { DomainGenerationPattern } from '@/lib/api-client/types-bridge'openapi-extensions';
 
 type CampaignSelectedType = components['schemas']['LeadGenerationCampaign']['currentPhase'];
 

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, CheckCircle, Clock, Pause } from 'lucide-react';
-import type { CampaignViewModel, CampaignPhase, CampaignPhaseStatus } from '@/lib/types';
+import type { CampaignViewModel, CampaignPhase, CampaignPhaseStatusEnum } from '@/lib/api-client/types-bridge';
 import { normalizeStatus, getStatusColor } from '@/lib/utils/statusMapping';
 
 interface CampaignProgressMonitorProps {
@@ -16,7 +16,7 @@ interface CampaignProgressMonitorProps {
 
 interface ProgressInfo {
   phase: CampaignPhase;
-  status: CampaignPhaseStatus;
+  status: CampaignPhaseStatusEnum;
   progress: number;
   normalizedStatus: string;
   statusColor: string;
@@ -45,7 +45,7 @@ const CampaignProgressMonitor = memo(({
   // Progress calculation logic
   const progressInfo = useMemo((): ProgressInfo => {
     const phase = campaignKey.currentPhase as CampaignPhase;
-    const status = campaignKey.status as CampaignPhaseStatus;
+    const status = campaignKey.status as CampaignPhaseStatusEnum;
     const progress = campaign?.progressPercentage || 0;
     
     const normalizedStatus = normalizeStatus(status);
@@ -83,7 +83,7 @@ const CampaignProgressMonitor = memo(({
   // Phase display names
   const getPhaseDisplayName = (phase: CampaignPhase): string => {
     switch (phase) {
-      case 'domain_generation':
+      case 'generation':
         return 'Domain Generation';
       case 'dns_validation':
         return 'DNS Validation';
