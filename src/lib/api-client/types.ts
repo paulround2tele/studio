@@ -80,7 +80,22 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["api.BulkDatabaseQueryResponse"];
+                        "application/json": {
+                            /** @description Response data (only present on success) */
+                            data?: Record<string, never>;
+                            error?: components["schemas"]["api.ErrorInfo"];
+                            metadata?: components["schemas"]["api.Metadata"];
+                            /**
+                             * @description Unique request identifier for tracing
+                             * @example req_1234567890abcdef
+                             */
+                            requestId?: string;
+                            /**
+                             * @description Indicates if the request was successful
+                             * @example true
+                             */
+                            success?: boolean;
+                        } & components["schemas"]["data"];
                     };
                 };
                 /** @description Bad request or invalid queries */
@@ -89,7 +104,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["models.ErrorResponse"];
+                        "application/json": components["schemas"]["api.APIResponse"];
                     };
                 };
                 /** @description Forbidden query detected */
@@ -98,7 +113,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["models.ErrorResponse"];
+                        "application/json": components["schemas"]["api.APIResponse"];
                     };
                 };
                 /** @description Internal server error */
@@ -107,7 +122,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["models.ErrorResponse"];
+                        "application/json": components["schemas"]["api.APIResponse"];
                     };
                 };
             };
@@ -154,7 +169,22 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["api.BulkDatabaseStatsResponse"];
+                        "application/json": {
+                            /** @description Response data (only present on success) */
+                            data?: Record<string, never>;
+                            error?: components["schemas"]["api.ErrorInfo"];
+                            metadata?: components["schemas"]["api.Metadata"];
+                            /**
+                             * @description Unique request identifier for tracing
+                             * @example req_1234567890abcdef
+                             */
+                            requestId?: string;
+                            /**
+                             * @description Indicates if the request was successful
+                             * @example true
+                             */
+                            success?: boolean;
+                        } & components["schemas"]["data"];
                     };
                 };
                 /** @description Bad request */
@@ -163,7 +193,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["models.ErrorResponse"];
+                        "application/json": components["schemas"]["api.APIResponse"];
                     };
                 };
                 /** @description Internal server error */
@@ -172,7 +202,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["models.ErrorResponse"];
+                        "application/json": components["schemas"]["api.APIResponse"];
                     };
                 };
             };
@@ -2237,7 +2267,22 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse"];
+                        "application/json": {
+                            /** @description Response data (only present on success) */
+                            data?: Record<string, never>;
+                            error?: components["schemas"]["api.ErrorInfo"];
+                            metadata?: components["schemas"]["api.Metadata"];
+                            /**
+                             * @description Unique request identifier for tracing
+                             * @example req_1234567890abcdef
+                             */
+                            requestId?: string;
+                            /**
+                             * @description Indicates if the request was successful
+                             * @example true
+                             */
+                            success?: boolean;
+                        } & components["schemas"]["data"];
                     };
                 };
                 /** @description Invalid request payload or validation failed */
@@ -2367,7 +2412,22 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse"];
+                        "application/json": {
+                            /** @description Response data (only present on success) */
+                            data?: Record<string, never>;
+                            error?: components["schemas"]["api.ErrorInfo"];
+                            metadata?: components["schemas"]["api.Metadata"];
+                            /**
+                             * @description Unique request identifier for tracing
+                             * @example req_1234567890abcdef
+                             */
+                            requestId?: string;
+                            /**
+                             * @description Indicates if the request was successful
+                             * @example true
+                             */
+                            success?: boolean;
+                        } & components["schemas"]["data"];
                     };
                 };
                 /** @description Invalid request payload or validation failed */
@@ -3760,9 +3820,8 @@ export interface components {
             /** @example 30 */
             timeout?: number;
         };
-        /** @description Response containing results from multiple database queries with metadata */
+        /** @description Response containing results from multiple database queries */
         "api.BulkDatabaseQueryResponse": {
-            metadata?: components["schemas"]["api.BulkQueryMetadata"];
             results?: {
                 [key: string]: components["schemas"]["api.DatabaseQueryResult"];
             };
@@ -3784,10 +3843,9 @@ export interface components {
              *     ] */
             tables?: string[];
         };
-        /** @description Response containing database statistics with metadata */
+        /** @description Response containing database statistics */
         "api.BulkDatabaseStatsResponse": {
             databaseStats?: components["schemas"]["api.DatabaseStats"];
-            metadata?: components["schemas"]["api.BulkStatsMetadata"];
             schemaStats?: {
                 [key: string]: components["schemas"]["api.SchemaStats"];
             };
@@ -3814,26 +3872,26 @@ export interface components {
             results?: components["schemas"]["api.ProxyHealthCheckResponse"][];
             totalProxies?: number;
         };
+        /** @description Bulk operation metadata */
+        "api.BulkOperationInfo": {
+            /** @description List of item IDs that failed processing */
+            failedItems?: string[];
+            /** @description Number of items successfully processed */
+            processedItems?: number;
+            /** @description Total processing time in milliseconds */
+            processingTimeMs?: number;
+            /** @description Number of items skipped due to errors */
+            skippedItems?: number;
+            /** @description For database operations */
+            totalRowsReturned?: number;
+            /** @description Type of bulk operation (campaigns, queries, etc.) */
+            type?: string;
+        };
         "api.BulkProxyTestResponse": {
             errorCount?: number;
             successCount?: number;
             testResults?: components["schemas"]["api.ProxyTestResponse"][];
             totalRequested?: number;
-        };
-        /** @description Metadata containing processing statistics and performance metrics for bulk database operations */
-        "api.BulkQueryMetadata": {
-            /** @example [
-             *       "['query_9']"
-             *     ] */
-            failedQueries?: string[];
-            /** @example 8 */
-            processedQueries?: number;
-            /** @example 2340 */
-            processingTimeMs?: number;
-            /** @example 1 */
-            skippedQueries?: number;
-            /** @example 15420 */
-            totalRowsReturned?: number;
         };
         "api.BulkResourceStatusResponse": {
             activeOperations?: number;
@@ -3852,21 +3910,6 @@ export interface components {
                 maxMemory?: number;
                 maxNetwork?: number;
             };
-        };
-        /** @description Metadata containing processing statistics for bulk database statistics operations */
-        "api.BulkStatsMetadata": {
-            /** @example [
-             *       "['invalid_schema']"
-             *     ] */
-            failedItems?: string[];
-            /** @example 2 */
-            processedSchemas?: number;
-            /** @example 8 */
-            processedTables?: number;
-            /** @example 1850 */
-            processingTimeMs?: number;
-            /** @example 1 */
-            skippedItems?: number;
         };
         "api.CreateKeywordSetRequest": {
             description?: string;
@@ -4061,6 +4104,7 @@ export interface components {
         };
         /** @description Optional metadata attached to API responses */
         "api.Metadata": {
+            bulk?: components["schemas"]["api.BulkOperationInfo"];
             /** @description Additional metadata */
             extra?: {
                 [key: string]: unknown;
@@ -4405,7 +4449,7 @@ export interface components {
             retryDelaySeconds?: number;
         };
         data: {
-            data?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkValidationResponse"];
+            data?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse"];
         };
         error: {
             error?: components["schemas"]["api.ErrorInfo"];
@@ -5268,14 +5312,6 @@ export interface components {
             tlds: string[];
             /** @example 5 */
             variableLength: number;
-        };
-        "models.ErrorResponse": {
-            /** @example 400 */
-            code?: number;
-            /** @example Error message description */
-            message?: string;
-            /** @example error */
-            status?: string;
         };
         "models.GenerationConstraints": {
             excludeWords?: string[];
@@ -6278,7 +6314,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
             /** @description Analytics accepted and processing */
@@ -6287,7 +6338,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
             /** @description Bad Request - Invalid configuration */
@@ -6339,7 +6405,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
             /** @description Operation accepted and processing */
@@ -6348,7 +6429,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
             /** @description Bad Request - Invalid configuration */
@@ -6451,7 +6547,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkOperationListResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
             /** @description Bad Request - Invalid parameters */
@@ -6593,7 +6704,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
             /** @description Resource allocation accepted and processing */
@@ -6602,7 +6728,22 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse"];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
             /** @description Bad Request - Invalid resource configuration */

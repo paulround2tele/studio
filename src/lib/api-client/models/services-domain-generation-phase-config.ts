@@ -49,7 +49,7 @@ export interface ServicesDomainGenerationPhaseConfig {
      * @type {string}
      * @memberof ServicesDomainGenerationPhaseConfig
      */
-    'patternType': ServicesDomainGenerationPhaseConfigPatternTypeEnum;
+    'patternType': 'prefix' | 'suffix' | 'both';
     /**
      * 
      * @type {Array<string>}
@@ -68,10 +68,6 @@ export interface ServicesDomainGenerationPhaseConfig {
     * @export
     * @enum {string}
     */
-export enum ServicesDomainGenerationPhaseConfigPatternTypeEnum {
-    prefix = 'prefix',
-    suffix = 'suffix',
-    both = 'both'
-}
+// Enum ServicesDomainGenerationPhaseConfigPatternTypeEnum converted to direct string literals in interface
 
 

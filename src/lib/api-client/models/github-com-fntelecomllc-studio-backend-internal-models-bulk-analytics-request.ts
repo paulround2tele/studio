@@ -43,7 +43,7 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRe
      * @type {string}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest
      */
-    'granularity'?: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequestGranularityEnum;
+    'granularity'?: 'hour' | 'day' | 'week' | 'month';
     /**
      * [\"campaign\", \"phase\", \"tld\", \"persona\"]
      * @type {Array<string>}
@@ -68,11 +68,6 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRe
     * @export
     * @enum {string}
     */
-export enum GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequestGranularityEnum {
-    hour = 'hour',
-    day = 'day',
-    week = 'week',
-    month = 'month'
-}
+// Enum GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequestGranularityEnum converted to direct string literals in interface
 
 

@@ -43,7 +43,7 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsBulkResourceReq
      * @type {string}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest
      */
-    'priority'?: GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequestPriorityEnum;
+    'priority'?: 'low' | 'normal' | 'high' | 'critical';
     /**
      * 
      * @type {GithubComFntelecomllcStudioBackendInternalModelsResourceLimits}
@@ -62,11 +62,6 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsBulkResourceReq
     * @export
     * @enum {string}
     */
-export enum GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequestPriorityEnum {
-    low = 'low',
-    normal = 'normal',
-    high = 'high',
-    critical = 'critical'
-}
+// Enum GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequestPriorityEnum converted to direct string literals in interface
 
 

@@ -34,17 +34,13 @@ export interface ApiPhaseConfigureRequest {
      * @type {string}
      * @memberof ApiPhaseConfigureRequest
      */
-    'phaseType': ApiPhaseConfigureRequestPhaseTypeEnum;
+    'phaseType': 'dns_validation' | 'http_keyword_validation' | 'analysis';
 }
 
 /**
     * @export
     * @enum {string}
     */
-export enum ApiPhaseConfigureRequestPhaseTypeEnum {
-    dns_validation = 'dns_validation',
-    http_keyword_validation = 'http_keyword_validation',
-    analysis = 'analysis'
-}
+// Enum ApiPhaseConfigureRequestPhaseTypeEnum converted to direct string literals in interface
 
 

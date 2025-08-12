@@ -37,7 +37,7 @@ export interface ApiPatternOffsetRequest {
      * @type {string}
      * @memberof ApiPatternOffsetRequest
      */
-    'patternType': ApiPatternOffsetRequestPatternTypeEnum;
+    'patternType': 'prefix' | 'suffix' | 'both';
     /**
      * 
      * @type {string}
@@ -56,10 +56,6 @@ export interface ApiPatternOffsetRequest {
     * @export
     * @enum {string}
     */
-export enum ApiPatternOffsetRequestPatternTypeEnum {
-    prefix = 'prefix',
-    suffix = 'suffix',
-    both = 'both'
-}
+// Enum ApiPatternOffsetRequestPatternTypeEnum converted to direct string literals in interface
 
 

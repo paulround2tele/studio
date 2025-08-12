@@ -43,7 +43,7 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsResourceOperati
      * @type {string}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsResourceOperation
      */
-    'priority'?: GithubComFntelecomllcStudioBackendInternalModelsResourceOperationPriorityEnum;
+    'priority'?: 'low' | 'normal' | 'high' | 'critical';
     /**
      * 
      * @type {GithubComFntelecomllcStudioBackendInternalModelsRequiredResources}
@@ -55,28 +55,18 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsResourceOperati
      * @type {string}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsResourceOperation
      */
-    'type': GithubComFntelecomllcStudioBackendInternalModelsResourceOperationTypeEnum;
+    'type': 'domain_generation' | 'dns_validation' | 'http_validation' | 'analytics';
 }
 
 /**
     * @export
     * @enum {string}
     */
-export enum GithubComFntelecomllcStudioBackendInternalModelsResourceOperationPriorityEnum {
-    low = 'low',
-    normal = 'normal',
-    high = 'high',
-    critical = 'critical'
-}
+// Enum GithubComFntelecomllcStudioBackendInternalModelsResourceOperationPriorityEnum converted to direct string literals in interface
 /**
     * @export
     * @enum {string}
     */
-export enum GithubComFntelecomllcStudioBackendInternalModelsResourceOperationTypeEnum {
-    domain_generation = 'domain_generation',
-    dns_validation = 'dns_validation',
-    http_validation = 'http_validation',
-    analytics = 'analytics'
-}
+// Enum GithubComFntelecomllcStudioBackendInternalModelsResourceOperationTypeEnum converted to direct string literals in interface
 
 

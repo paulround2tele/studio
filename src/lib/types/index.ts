@@ -1,92 +1,77 @@
 /**
- * Type exports - mapping legacy type names to OpenAPI types
- * This file provides compatibility layer for existing imports
+ * PROFESSIONAL TYPE SYSTEM - Reality-Based Architecture
+ * Aligned with actual backend schema from OpenAPI generation
+ * 
+ * CRITICAL: All types now map to ACTUAL backend schemas, not fantasies
  */
 
-// Re-export OpenAPI types with legacy names for compatibility
-export type { components } from '@/lib/api-client/types';
-
-// Core OpenAPI types re-exported
 import type { components } from '@/lib/api-client/types';
 
-// Import the proper ErrorInfo and Metadata types from the generated models
-import type { ErrorInfo } from '@/lib/api-client/models/error-info';
-import type { Metadata } from '@/lib/api-client/models/metadata';
+// ✅ CORE BACKEND TYPES - ACTUAL SCHEMA PATHS
+export type APIResponse = components["schemas"]["api.APIResponse"];
+export type User = components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.User"];
+export type CreateCampaignRequest = components["schemas"]["services.CreateLeadGenerationCampaignRequest"];
+export type PersonaResponse = components["schemas"]["api.PersonaResponse"];
+export type CreatePersonaRequest = components["schemas"]["api.CreatePersonaRequest"];
+export type UpdatePersonaRequest = components["schemas"]["api.UpdatePersonaRequest"];
 
-export type Campaign = components["schemas"]["LeadGenerationCampaign"];
-export type User = components["schemas"]["User"];
-export type Persona = components["schemas"]["Persona"];
-export type Proxy = components["schemas"]["Proxy"];
-export type GeneratedDomain = components["schemas"]["GeneratedDomain"];
-export type DNSValidationResult = components["schemas"]["DNSValidationResult"];
-export type HTTPKeywordResult = components["schemas"]["HTTPKeywordResult"];
+// ✅ PROFESSIONAL RESPONSE HANDLING TYPES
+export type ErrorInfo = components["schemas"]["api.ErrorInfo"];
+export type Metadata = components["schemas"]["api.Metadata"];
 
-// Phase-based architecture types (replacing legacy CampaignType and CampaignStatus)
-export type CampaignPhase = NonNullable<Campaign["currentPhase"]>;
-export type CampaignPhaseStatus = NonNullable<Campaign["phaseStatus"]>;
-export type PersonaType = NonNullable<Persona["personaType"]>;
-export type ProxyProtocol = NonNullable<Proxy["protocol"]>;
+// ✅ CAMPAIGN DATA - Generic until backend provides dedicated response schema
+export type CampaignData = Record<string, any>;
+export type CampaignListData = CampaignData[];
 
-// Legacy compatibility exports - these redirect to phases-only architecture
-export type CampaignStatus = CampaignPhaseStatus;
-export type CampaignType = CampaignPhase;
-export type CampaignTypeEnum = CampaignPhase;
+// ✅ LEGACY COMPATIBILITY - Map old names to new reality
+export type ApiResponse<T = any> = APIResponse; // For compatibility with existing imports
+export type Persona = PersonaResponse; // Map to actual backend type
+export type Proxy = components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.Proxy"];
 
-// UI-specific string union types (corrected to match actual usage)
+// ✅ UI STATUS TYPES - Not backed by schemas (frontend-only)
 export type ProxyStatus = "Active" | "Disabled" | "Testing" | "Failed";
 export type PersonaStatus = "Active" | "Disabled" | "Testing" | "Failed";
 
-// Re-export from openapi-extensions for UI-specific types
-export type {
-  CampaignViewModel,
-  CampaignSelectedType,
-  DomainGenerationPattern,
-  DomainSourceSelectionMode
-} from './openapi-extensions';
+// ✅ PERSONA TYPE ALIASES - For UI compatibility
+export type HttpPersona = PersonaResponse;
+export type DnsPersona = PersonaResponse;
 
-// Unified API Response wrapper for all services - Compatible with both string and ErrorInfo
-export interface ApiResponse<T = unknown> {
-  success: boolean;           // Always boolean, not string
-  data?: T;                   // Actual response data
-  error?: ErrorInfo | string | null;   // ErrorInfo object OR string for compatibility
-  metadata?: Metadata;        // Structured metadata object
-  requestId: string;          // UUID for request tracking
-}
-
-// Legacy type aliases for backwards compatibility - now using proper OpenAPI definitions
-// Note: These are duplicated above but kept for backwards compatibility
-export type CampaignPhaseCompat = components['schemas']['LeadGenerationCampaign']['currentPhase'];
-export type CampaignPhaseStatusCompat = components['schemas']['LeadGenerationCampaign']['phaseStatus'];
-
-// Persona type aliases
-export type HttpPersona = Persona;
-export type DnsPersona = Persona;
-
-// Configuration details from OpenAPI
-export type { HTTPConfigDetails } from '@/lib/api-client/models/httpconfig-details';
-export type { DNSConfigDetails } from '@/lib/api-client/models/dnsconfig-details';
-
-// Domain validation items - use OpenAPI GeneratedDomain as base with UI extensions
-export interface CampaignValidationItem extends Omit<GeneratedDomain, 'domainName'> {
+// ✅ CAMPAIGN UI TYPES - Frontend data structures (no backend equivalent)
+export interface CampaignViewModel {
   id: string;
-  domainName: string;
-  domain?: string; // Alternative property name for compatibility
+  name: string;
+  description?: string;
   status: string;
-  validationStatus?: string;
-  validatedAt?: string;
+  phase: string;
+  progress?: number;
+  createdAt: string;
+  updatedAt?: string;
+  // Add other UI-specific fields as needed
 }
 
-// UI-specific content analysis input (different from OpenAPI batch extraction)
+export type CampaignPhase = string; // Generic string until backend provides enum
+export type CampaignPhaseStatus = string; // Generic string until backend provides enum  
+export type CampaignSelectedType = string; // UI-specific type
+export type CampaignType = CampaignPhase; // Legacy alias
+
+// ✅ PAGINATION - Missing from our reconstruction
+export interface PageInfo {
+  current: number;
+  pageSize: number;
+  total: number;
+  count: number;
+}
+
+// ✅ RE-EXPORT GENERATED TYPES FOR DIRECT USE
+export type { components } from '@/lib/api-client/types';
+
+// ✅ UI-SPECIFIC TYPES - Not backed by OpenAPI schemas
 export interface AnalyzeContentInput {
   urls: string[];
   content?: string;
   keywords?: string[];
   maxResults?: number;
 }
-
-// OpenAPI keyword extraction types for direct API usage
-export type BatchKeywordExtractionRequest = components["schemas"]["BatchKeywordExtractionRequest"];
-export type KeywordExtractionResult = components["schemas"]["KeywordExtractionAPIResult"];
 
 export type DomainActivityStatus =
   | 'validated'
@@ -116,7 +101,6 @@ export interface LatestDomainActivity {
   sourceUrl: string;
 }
 
-// Domain detail interface for tables
 export interface DomainDetail {
   id: string;
   domainName: string;
@@ -126,13 +110,7 @@ export interface DomainDetail {
   leadScanStatus: DomainActivityStatus;
 }
 
-// Auth types using OpenAPI base types
-export type LoginRequest = components["schemas"]["LoginRequest"];
-export type LoginResponse = components["schemas"]["LoginResponse"];
-export type RefreshResponse = components['schemas']['SessionRefreshResponse'];
-export type ChangePasswordRequest = components["schemas"]["ChangePasswordRequest"];
-
-// Session management (extending OpenAPI User type)
+// ✅ SESSION MANAGEMENT - UI Extensions
 export interface Session {
   id: string;
   userId: string;
@@ -141,39 +119,16 @@ export interface Session {
   user?: User;
 }
 
-// Role and permission types (UI-specific extensions)
-export interface Role {
-  id: string;
-  name: string;
-  description?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface Permission {
-  id: string;
-  resource: string;
-  action: string;
-  description?: string;
-  createdAt: string;
-}
-
-// Pagination types using backend-generated PageInfo and Metadata
-export type { PageInfo } from '@/lib/api-client/models/page-info';
-export type { Metadata } from '@/lib/api-client/models/metadata';
-
-// Frontend pagination helpers (compatible with backend PageInfo)
+// ✅ PAGINATION HELPERS - UI State Management
 export interface PaginationParams {
-  current?: number;  // matches backend PageInfo.current
-  pageSize?: number; // matches backend PageInfo.pageSize
-  count?: number;    // matches backend PageInfo.count
-  total?: number;    // matches backend PageInfo.total
+  current?: number;
+  pageSize?: number;
+  count?: number;
+  total?: number;
 }
 
-// Pagination context for different UI areas
 export type PaginationContext = 'dashboard' | 'detail' | 'list';
 
-// Default page sizes for different contexts
 export const getDefaultPageSize = (context?: PaginationContext): number => {
   switch (context) {
     case 'dashboard': return 50;
@@ -183,10 +138,8 @@ export const getDefaultPageSize = (context?: PaginationContext): number => {
   }
 };
 
-// Common pagination options
 export const PAGE_SIZE_OPTIONS = [10, 20, 25, 50, 100] as const;
 
-// Simple pagination state management
 export interface PaginationState {
   currentPage: number;
   pageSize: number;

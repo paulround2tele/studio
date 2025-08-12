@@ -49,16 +49,13 @@ export interface ApiCreatePersonaRequest {
      * @type {string}
      * @memberof ApiCreatePersonaRequest
      */
-    'personaType': ApiCreatePersonaRequestPersonaTypeEnum;
+    'personaType': 'dns' | 'http';
 }
 
 /**
     * @export
     * @enum {string}
     */
-export enum ApiCreatePersonaRequestPersonaTypeEnum {
-    PersonaTypeDNS = 'dns',
-    PersonaTypeHTTP = 'http'
-}
+// Enum ApiCreatePersonaRequestPersonaTypeEnum converted to direct string literals in interface
 
 

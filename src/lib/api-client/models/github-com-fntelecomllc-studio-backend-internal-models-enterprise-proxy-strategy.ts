@@ -61,34 +61,24 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxy
      * @type {string}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxyStrategy
      */
-    'proxyRotationRate'?: GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxyStrategyProxyRotationRateEnum;
+    'proxyRotationRate'?: 'per_request' | 'per_domain' | 'per_batch' | 'adaptive';
     /**
      * 
      * @type {string}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxyStrategy
      */
-    'strategy'?: GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxyStrategyStrategyEnum;
+    'strategy'?: 'round_robin' | 'weighted_random' | 'geographic' | 'intelligent_failover';
 }
 
 /**
     * @export
     * @enum {string}
     */
-export enum GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxyStrategyProxyRotationRateEnum {
-    per_request = 'per_request',
-    per_domain = 'per_domain',
-    per_batch = 'per_batch',
-    adaptive = 'adaptive'
-}
+// Enum GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxyStrategyProxyRotationRateEnum converted to direct string literals in interface
 /**
     * @export
     * @enum {string}
     */
-export enum GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxyStrategyStrategyEnum {
-    round_robin = 'round_robin',
-    weighted_random = 'weighted_random',
-    geographic = 'geographic',
-    intelligent_failover = 'intelligent_failover'
-}
+// Enum GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxyStrategyStrategyEnum converted to direct string literals in interface
 
 

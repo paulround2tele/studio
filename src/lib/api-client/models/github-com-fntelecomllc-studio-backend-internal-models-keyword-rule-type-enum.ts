@@ -20,10 +20,7 @@
  * @enum {string}
  */
 
-export enum GithubComFntelecomllcStudioBackendInternalModelsKeywordRuleTypeEnum {
-    KeywordRuleTypeString = 'string',
-    KeywordRuleTypeRegex = 'regex'
-}
+// Enum GithubComFntelecomllcStudioBackendInternalModelsKeywordRuleTypeEnum converted to direct string literals in interface
 
 
 

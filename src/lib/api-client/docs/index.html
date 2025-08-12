@@ -949,9 +949,6 @@ ul.nav-tabs {
 };
     defs["api.BulkDatabaseQueryResponse"] = {
   "properties" : {
-    "metadata" : {
-      "$ref" : "#/components/schemas/api.BulkQueryMetadata"
-    },
     "results" : {
       "additionalProperties" : {
         "$ref" : "#/components/schemas/api.DatabaseQueryResult"
@@ -962,7 +959,7 @@ ul.nav-tabs {
       "example" : 5
     }
   },
-  "description" : "Response containing results from multiple database queries with metadata"
+  "description" : "Response containing results from multiple database queries"
 };
     defs["api.BulkDatabaseStatsRequest"] = {
   "properties" : {
@@ -996,9 +993,6 @@ ul.nav-tabs {
     "databaseStats" : {
       "$ref" : "#/components/schemas/api.DatabaseStats"
     },
-    "metadata" : {
-      "$ref" : "#/components/schemas/api.BulkStatsMetadata"
-    },
     "schemaStats" : {
       "additionalProperties" : {
         "$ref" : "#/components/schemas/api.SchemaStats"
@@ -1014,7 +1008,7 @@ ul.nav-tabs {
       "example" : 3
     }
   },
-  "description" : "Response containing database statistics with metadata"
+  "description" : "Response containing database statistics"
 };
     defs["api.BulkEnrichedDataRequest"] = {
   "properties" : {
@@ -1061,6 +1055,39 @@ ul.nav-tabs {
     }
   }
 };
+    defs["api.BulkOperationInfo"] = {
+  "properties" : {
+    "failedItems" : {
+      "uniqueItems" : false,
+      "type" : "array",
+      "description" : "List of item IDs that failed processing",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "processedItems" : {
+      "type" : "integer",
+      "description" : "Number of items successfully processed"
+    },
+    "processingTimeMs" : {
+      "type" : "integer",
+      "description" : "Total processing time in milliseconds"
+    },
+    "skippedItems" : {
+      "type" : "integer",
+      "description" : "Number of items skipped due to errors"
+    },
+    "totalRowsReturned" : {
+      "type" : "integer",
+      "description" : "For database operations"
+    },
+    "type" : {
+      "type" : "string",
+      "description" : "Type of bulk operation (campaigns, queries, etc.)"
+    }
+  },
+  "description" : "Bulk operation metadata"
+};
     defs["api.BulkProxyTestResponse"] = {
   "properties" : {
     "errorCount" : {
@@ -1080,35 +1107,6 @@ ul.nav-tabs {
       "type" : "integer"
     }
   }
-};
-    defs["api.BulkQueryMetadata"] = {
-  "properties" : {
-    "failedQueries" : {
-      "uniqueItems" : false,
-      "type" : "array",
-      "example" : [ "['query_9']" ],
-      "items" : {
-        "type" : "string"
-      }
-    },
-    "processedQueries" : {
-      "type" : "integer",
-      "example" : 8
-    },
-    "processingTimeMs" : {
-      "type" : "integer",
-      "example" : 2340
-    },
-    "skippedQueries" : {
-      "type" : "integer",
-      "example" : 1
-    },
-    "totalRowsReturned" : {
-      "type" : "integer",
-      "example" : 15420
-    }
-  },
-  "description" : "Metadata containing processing statistics and performance metrics for bulk database operations"
 };
     defs["api.BulkResourceStatusResponse"] = {
   "properties" : {
@@ -1156,35 +1154,6 @@ ul.nav-tabs {
       "type" : "number"
     }
   }
-};
-    defs["api.BulkStatsMetadata"] = {
-  "properties" : {
-    "failedItems" : {
-      "uniqueItems" : false,
-      "type" : "array",
-      "example" : [ "['invalid_schema']" ],
-      "items" : {
-        "type" : "string"
-      }
-    },
-    "processedSchemas" : {
-      "type" : "integer",
-      "example" : 2
-    },
-    "processedTables" : {
-      "type" : "integer",
-      "example" : 8
-    },
-    "processingTimeMs" : {
-      "type" : "integer",
-      "example" : 1850
-    },
-    "skippedItems" : {
-      "type" : "integer",
-      "example" : 1
-    }
-  },
-  "description" : "Metadata containing processing statistics for bulk database statistics operations"
 };
     defs["api.CreateKeywordSetRequest"] = {
   "required" : [ "name" ],
@@ -1614,6 +1583,9 @@ ul.nav-tabs {
 };
     defs["api.Metadata"] = {
   "properties" : {
+    "bulk" : {
+      "$ref" : "#/components/schemas/api.BulkOperationInfo"
+    },
     "extra" : {
       "additionalProperties" : { },
       "description" : "Additional metadata"
@@ -2511,7 +2483,7 @@ ul.nav-tabs {
     defs["data"] = {
   "properties" : {
     "data" : {
-      "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkValidationResponse"
+      "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse"
     }
   }
 };
@@ -4957,22 +4929,6 @@ ul.nav-tabs {
   },
   "description" : "Pattern-based generation (most common)"
 };
-    defs["models.ErrorResponse"] = {
-  "properties" : {
-    "code" : {
-      "type" : "integer",
-      "example" : 400
-    },
-    "message" : {
-      "type" : "string",
-      "example" : "Error message description"
-    },
-    "status" : {
-      "type" : "string",
-      "example" : "error"
-    }
-  }
-};
     defs["models.GenerationConstraints"] = {
   "properties" : {
     "excludeWords" : {
@@ -5569,7 +5525,7 @@ public class AnalyticsApiExample {
         GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest = ; // GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse result = apiInstance.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest);
+            bulkValidateDNS_200_response result = apiInstance.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling AnalyticsApi#bulkAnalyzeDomains");
@@ -5606,7 +5562,7 @@ public class AnalyticsApiExample {
         GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest = ; // GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse result = apiInstance.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest);
+            bulkValidateDNS_200_response result = apiInstance.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling AnalyticsApi#bulkAnalyzeDomains");
@@ -5628,7 +5584,7 @@ GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest *githubComF
 
 // Analyze domains in bulk with enterprise intelligence
 [apiInstance bulkAnalyzeDomainsWith:githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest
-              completionHandler: ^(github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse output, NSError* error) {
+              completionHandler: ^(bulkValidateDNS_200_response output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -5680,7 +5636,7 @@ namespace Example
 
             try {
                 // Analyze domains in bulk with enterprise intelligence
-                github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse result = apiInstance.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest);
+                bulkValidateDNS_200_response result = apiInstance.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling AnalyticsApi.bulkAnalyzeDomains: " + e.Message );
@@ -5857,7 +5813,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }
@@ -5933,7 +5889,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }
@@ -9021,7 +8977,7 @@ public class BulkOperationsApiExample {
         GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest = ; // GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse result = apiInstance.allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest);
+            bulkValidateDNS_200_response result = apiInstance.allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling BulkOperationsApi#allocateBulkResources");
@@ -9058,7 +9014,7 @@ public class BulkOperationsApiExample {
         GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest = ; // GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse result = apiInstance.allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest);
+            bulkValidateDNS_200_response result = apiInstance.allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling BulkOperationsApi#allocateBulkResources");
@@ -9080,7 +9036,7 @@ GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest *githubComFn
 
 // Allocate bulk resources for enterprise operations
 [apiInstance allocateBulkResourcesWith:githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest
-              completionHandler: ^(github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse output, NSError* error) {
+              completionHandler: ^(bulkValidateDNS_200_response output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -9132,7 +9088,7 @@ namespace Example
 
             try {
                 // Allocate bulk resources for enterprise operations
-                github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse result = apiInstance.allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest);
+                bulkValidateDNS_200_response result = apiInstance.allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling BulkOperationsApi.allocateBulkResources: " + e.Message );
@@ -9309,7 +9265,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }
@@ -9385,7 +9341,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }
@@ -9715,7 +9671,7 @@ public class BulkOperationsApiExample {
         GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest = ; // GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse result = apiInstance.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest);
+            bulkValidateDNS_200_response result = apiInstance.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling BulkOperationsApi#bulkAnalyzeDomains");
@@ -9752,7 +9708,7 @@ public class BulkOperationsApiExample {
         GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest = ; // GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse result = apiInstance.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest);
+            bulkValidateDNS_200_response result = apiInstance.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling BulkOperationsApi#bulkAnalyzeDomains");
@@ -9774,7 +9730,7 @@ GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest *githubComF
 
 // Analyze domains in bulk with enterprise intelligence
 [apiInstance bulkAnalyzeDomainsWith:githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest
-              completionHandler: ^(github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse output, NSError* error) {
+              completionHandler: ^(bulkValidateDNS_200_response output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -9826,7 +9782,7 @@ namespace Example
 
             try {
                 // Analyze domains in bulk with enterprise intelligence
-                github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse result = apiInstance.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest);
+                bulkValidateDNS_200_response result = apiInstance.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling BulkOperationsApi.bulkAnalyzeDomains: " + e.Message );
@@ -10003,7 +9959,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }
@@ -10079,7 +10035,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }
@@ -10409,7 +10365,7 @@ public class BulkOperationsApiExample {
         GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest = ; // GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse result = apiInstance.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest);
+            bulkValidateDNS_200_response result = apiInstance.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling BulkOperationsApi#bulkGenerateDomains");
@@ -10446,7 +10402,7 @@ public class BulkOperationsApiExample {
         GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest = ; // GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse result = apiInstance.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest);
+            bulkValidateDNS_200_response result = apiInstance.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling BulkOperationsApi#bulkGenerateDomains");
@@ -10468,7 +10424,7 @@ GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest *git
 
 // Generate domains in bulk using orchestrator
 [apiInstance bulkGenerateDomainsWith:githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest
-              completionHandler: ^(github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse output, NSError* error) {
+              completionHandler: ^(bulkValidateDNS_200_response output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -10520,7 +10476,7 @@ namespace Example
 
             try {
                 // Generate domains in bulk using orchestrator
-                github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse result = apiInstance.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest);
+                bulkValidateDNS_200_response result = apiInstance.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling BulkOperationsApi.bulkGenerateDomains: " + e.Message );
@@ -10697,7 +10653,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }
@@ -10773,7 +10729,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }
@@ -14320,7 +14276,7 @@ public class BulkOperationsApiExample {
         Object body = Object; // Object | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkOperationListResponse result = apiInstance.listBulkOperations(status, type, limit, offset, body);
+            bulkValidateDNS_200_response result = apiInstance.listBulkOperations(status, type, limit, offset, body);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling BulkOperationsApi#listBulkOperations");
@@ -14365,7 +14321,7 @@ public class BulkOperationsApiExample {
         Object body = Object; // Object | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkOperationListResponse result = apiInstance.listBulkOperations(status, type, limit, offset, body);
+            bulkValidateDNS_200_response result = apiInstance.listBulkOperations(status, type, limit, offset, body);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling BulkOperationsApi#listBulkOperations");
@@ -14395,7 +14351,7 @@ Object *body = Object; //  (optional)
     limit:limit
     offset:offset
     body:body
-              completionHandler: ^(github_com_fntelecomllc_studio_backend_internal_models.BulkOperationListResponse output, NSError* error) {
+              completionHandler: ^(bulkValidateDNS_200_response output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -14457,7 +14413,7 @@ namespace Example
 
             try {
                 // List bulk operations with filtering
-                github_com_fntelecomllc_studio_backend_internal_models.BulkOperationListResponse result = apiInstance.listBulkOperations(status, type, limit, offset, body);
+                bulkValidateDNS_200_response result = apiInstance.listBulkOperations(status, type, limit, offset, body);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling BulkOperationsApi.listBulkOperations: " + e.Message );
@@ -14735,7 +14691,7 @@ Number of operations to skip
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkOperationListResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }
@@ -20175,7 +20131,7 @@ public class DatabaseApiExample {
         ApiBulkDatabaseQueryRequest apiBulkDatabaseQueryRequest = ; // ApiBulkDatabaseQueryRequest | 
 
         try {
-            api.BulkDatabaseQueryResponse result = apiInstance.apiV2DatabaseQueryPost(xRequestedWith, apiBulkDatabaseQueryRequest);
+            bulkValidateDNS_200_response result = apiInstance.apiV2DatabaseQueryPost(xRequestedWith, apiBulkDatabaseQueryRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling DatabaseApi#apiV2DatabaseQueryPost");
@@ -20214,7 +20170,7 @@ public class DatabaseApiExample {
         ApiBulkDatabaseQueryRequest apiBulkDatabaseQueryRequest = ; // ApiBulkDatabaseQueryRequest | 
 
         try {
-            api.BulkDatabaseQueryResponse result = apiInstance.apiV2DatabaseQueryPost(xRequestedWith, apiBulkDatabaseQueryRequest);
+            bulkValidateDNS_200_response result = apiInstance.apiV2DatabaseQueryPost(xRequestedWith, apiBulkDatabaseQueryRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling DatabaseApi#apiV2DatabaseQueryPost");
@@ -20238,7 +20194,7 @@ ApiBulkDatabaseQueryRequest *apiBulkDatabaseQueryRequest = ; //
 // Execute bulk database queries
 [apiInstance apiV2DatabaseQueryPostWith:xRequestedWith
     apiBulkDatabaseQueryRequest:apiBulkDatabaseQueryRequest
-              completionHandler: ^(api.BulkDatabaseQueryResponse output, NSError* error) {
+              completionHandler: ^(bulkValidateDNS_200_response output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -20292,7 +20248,7 @@ namespace Example
 
             try {
                 // Execute bulk database queries
-                api.BulkDatabaseQueryResponse result = apiInstance.apiV2DatabaseQueryPost(xRequestedWith, apiBulkDatabaseQueryRequest);
+                bulkValidateDNS_200_response result = apiInstance.apiV2DatabaseQueryPost(xRequestedWith, apiBulkDatabaseQueryRequest);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling DatabaseApi.apiV2DatabaseQueryPost: " + e.Message );
@@ -20503,7 +20459,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/api.BulkDatabaseQueryResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }
@@ -20579,7 +20535,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -20655,7 +20611,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -20731,7 +20687,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -20834,7 +20790,7 @@ public class DatabaseApiExample {
         ApiBulkDatabaseStatsRequest apiBulkDatabaseStatsRequest = ; // ApiBulkDatabaseStatsRequest | 
 
         try {
-            api.BulkDatabaseStatsResponse result = apiInstance.apiV2DatabaseStatsPost(xRequestedWith, apiBulkDatabaseStatsRequest);
+            bulkValidateDNS_200_response result = apiInstance.apiV2DatabaseStatsPost(xRequestedWith, apiBulkDatabaseStatsRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling DatabaseApi#apiV2DatabaseStatsPost");
@@ -20873,7 +20829,7 @@ public class DatabaseApiExample {
         ApiBulkDatabaseStatsRequest apiBulkDatabaseStatsRequest = ; // ApiBulkDatabaseStatsRequest | 
 
         try {
-            api.BulkDatabaseStatsResponse result = apiInstance.apiV2DatabaseStatsPost(xRequestedWith, apiBulkDatabaseStatsRequest);
+            bulkValidateDNS_200_response result = apiInstance.apiV2DatabaseStatsPost(xRequestedWith, apiBulkDatabaseStatsRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling DatabaseApi#apiV2DatabaseStatsPost");
@@ -20897,7 +20853,7 @@ ApiBulkDatabaseStatsRequest *apiBulkDatabaseStatsRequest = ; //
 // Get bulk database statistics
 [apiInstance apiV2DatabaseStatsPostWith:xRequestedWith
     apiBulkDatabaseStatsRequest:apiBulkDatabaseStatsRequest
-              completionHandler: ^(api.BulkDatabaseStatsResponse output, NSError* error) {
+              completionHandler: ^(bulkValidateDNS_200_response output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -20951,7 +20907,7 @@ namespace Example
 
             try {
                 // Get bulk database statistics
-                api.BulkDatabaseStatsResponse result = apiInstance.apiV2DatabaseStatsPost(xRequestedWith, apiBulkDatabaseStatsRequest);
+                bulkValidateDNS_200_response result = apiInstance.apiV2DatabaseStatsPost(xRequestedWith, apiBulkDatabaseStatsRequest);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling DatabaseApi.apiV2DatabaseStatsPost: " + e.Message );
@@ -21162,7 +21118,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/api.BulkDatabaseStatsResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }
@@ -21238,7 +21194,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -21314,7 +21270,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -21419,7 +21375,7 @@ public class DomainsApiExample {
         GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest = ; // GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse result = apiInstance.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest);
+            bulkValidateDNS_200_response result = apiInstance.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling DomainsApi#bulkGenerateDomains");
@@ -21456,7 +21412,7 @@ public class DomainsApiExample {
         GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest = ; // GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse result = apiInstance.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest);
+            bulkValidateDNS_200_response result = apiInstance.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling DomainsApi#bulkGenerateDomains");
@@ -21478,7 +21434,7 @@ GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest *git
 
 // Generate domains in bulk using orchestrator
 [apiInstance bulkGenerateDomainsWith:githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest
-              completionHandler: ^(github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse output, NSError* error) {
+              completionHandler: ^(bulkValidateDNS_200_response output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -21530,7 +21486,7 @@ namespace Example
 
             try {
                 // Generate domains in bulk using orchestrator
-                github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse result = apiInstance.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest);
+                bulkValidateDNS_200_response result = apiInstance.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling DomainsApi.bulkGenerateDomains: " + e.Message );
@@ -21707,7 +21663,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }
@@ -21783,7 +21739,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }
@@ -31081,7 +31037,7 @@ public class MonitoringApiExample {
         Object body = Object; // Object | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkOperationListResponse result = apiInstance.listBulkOperations(status, type, limit, offset, body);
+            bulkValidateDNS_200_response result = apiInstance.listBulkOperations(status, type, limit, offset, body);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling MonitoringApi#listBulkOperations");
@@ -31126,7 +31082,7 @@ public class MonitoringApiExample {
         Object body = Object; // Object | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkOperationListResponse result = apiInstance.listBulkOperations(status, type, limit, offset, body);
+            bulkValidateDNS_200_response result = apiInstance.listBulkOperations(status, type, limit, offset, body);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling MonitoringApi#listBulkOperations");
@@ -31156,7 +31112,7 @@ Object *body = Object; //  (optional)
     limit:limit
     offset:offset
     body:body
-              completionHandler: ^(github_com_fntelecomllc_studio_backend_internal_models.BulkOperationListResponse output, NSError* error) {
+              completionHandler: ^(bulkValidateDNS_200_response output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -31218,7 +31174,7 @@ namespace Example
 
             try {
                 // List bulk operations with filtering
-                github_com_fntelecomllc_studio_backend_internal_models.BulkOperationListResponse result = apiInstance.listBulkOperations(status, type, limit, offset, body);
+                bulkValidateDNS_200_response result = apiInstance.listBulkOperations(status, type, limit, offset, body);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling MonitoringApi.listBulkOperations: " + e.Message );
@@ -31496,7 +31452,7 @@ Number of operations to skip
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkOperationListResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }
@@ -36745,7 +36701,7 @@ public class ProxiesApiExample {
         GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest = ; // GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse result = apiInstance.proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest);
+            bulkValidateDNS_200_response result = apiInstance.proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxiesApi#proxiesBulkDeleteDelete");
@@ -36782,7 +36738,7 @@ public class ProxiesApiExample {
         GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest = ; // GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse result = apiInstance.proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest);
+            bulkValidateDNS_200_response result = apiInstance.proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxiesApi#proxiesBulkDeleteDelete");
@@ -36804,7 +36760,7 @@ GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest *github
 
 // Bulk delete proxies
 [apiInstance proxiesBulkDeleteDeleteWith:githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest
-              completionHandler: ^(github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse output, NSError* error) {
+              completionHandler: ^(bulkValidateDNS_200_response output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -36856,7 +36812,7 @@ namespace Example
 
             try {
                 // Bulk delete proxies
-                github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse result = apiInstance.proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest);
+                bulkValidateDNS_200_response result = apiInstance.proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ProxiesApi.proxiesBulkDeleteDelete: " + e.Message );
@@ -37033,7 +36989,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }
@@ -37837,7 +37793,7 @@ public class ProxiesApiExample {
         GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest = ; // GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse result = apiInstance.proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest);
+            bulkValidateDNS_200_response result = apiInstance.proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxiesApi#proxiesBulkUpdatePut");
@@ -37874,7 +37830,7 @@ public class ProxiesApiExample {
         GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest = ; // GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse result = apiInstance.proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest);
+            bulkValidateDNS_200_response result = apiInstance.proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxiesApi#proxiesBulkUpdatePut");
@@ -37896,7 +37852,7 @@ GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest *github
 
 // Bulk update proxies
 [apiInstance proxiesBulkUpdatePutWith:githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest
-              completionHandler: ^(github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse output, NSError* error) {
+              completionHandler: ^(bulkValidateDNS_200_response output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -37948,7 +37904,7 @@ namespace Example
 
             try {
                 // Bulk update proxies
-                github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse result = apiInstance.proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest);
+                bulkValidateDNS_200_response result = apiInstance.proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ProxiesApi.proxiesBulkUpdatePut: " + e.Message );
@@ -38125,7 +38081,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }
@@ -46300,7 +46256,7 @@ public class ResourcesApiExample {
         GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest = ; // GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse result = apiInstance.allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest);
+            bulkValidateDNS_200_response result = apiInstance.allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ResourcesApi#allocateBulkResources");
@@ -46337,7 +46293,7 @@ public class ResourcesApiExample {
         GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest = ; // GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest | 
 
         try {
-            github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse result = apiInstance.allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest);
+            bulkValidateDNS_200_response result = apiInstance.allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ResourcesApi#allocateBulkResources");
@@ -46359,7 +46315,7 @@ GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest *githubComFn
 
 // Allocate bulk resources for enterprise operations
 [apiInstance allocateBulkResourcesWith:githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest
-              completionHandler: ^(github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse output, NSError* error) {
+              completionHandler: ^(bulkValidateDNS_200_response output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -46411,7 +46367,7 @@ namespace Example
 
             try {
                 // Allocate bulk resources for enterprise operations
-                github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse result = apiInstance.allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest);
+                bulkValidateDNS_200_response result = apiInstance.allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ResourcesApi.allocateBulkResources: " + e.Message );
@@ -46588,7 +46544,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }
@@ -46664,7 +46620,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse"
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }

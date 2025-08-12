@@ -5,7 +5,7 @@
  * 
  * Exports ALL model types (both api-* prefixed and short-form)
  * EXCLUDES legacy garbage that conflicts with professional unified types
- * Fixed by post-generation script: 2025-08-12T09:47:44.291Z
+ * Fixed by post-generation script: 2025-08-12T10:04:18.029Z
  * 
  * NOTE: This file is auto-regenerated after OpenAPI generation.
  * Do not edit manually - your changes will be overwritten.
