@@ -219,8 +219,56 @@ class KeywordSetService {
 export { KeywordSetService };
 export type { KeywordSetServiceResult };
 
+// Re-export types for component convenience
+export type { 
+  KeywordSet,
+  CreateKeywordSetRequest, 
+  UpdateKeywordSetRequest
+} from '@/lib/api-client/models';
+
+// Additional type aliases for clarity
+export type KeywordSetDeleteResponse = { success: boolean; message?: string };
+
 // Singleton instance for convenience
 export const keywordSetService = KeywordSetService.getInstance();
+
+// ===========================================================================================
+// PROFESSIONAL FUNCTION EXPORTS - For component compatibility
+// ===========================================================================================
+
+/**
+ * Professional function exports that wrap the singleton service
+ * Maintains clean component import patterns while using professional service architecture
+ */
+
+export const listKeywordSets = async (options?: {
+  limit?: number;
+  offset?: number;
+  includeRules?: boolean;
+  isEnabled?: boolean;
+}): Promise<KeywordSetServiceResult<KeywordSet[]>> => {
+  return keywordSetService.listKeywordSets(options || {});
+};
+
+export const createKeywordSet = async (payload: CreateKeywordSetRequest): Promise<KeywordSetServiceResult<KeywordSet>> => {
+  return keywordSetService.createKeywordSet(payload);
+};
+
+export const getKeywordSetById = async (setId: string): Promise<KeywordSetServiceResult<KeywordSet>> => {
+  return keywordSetService.getKeywordSet(setId);
+};
+
+export const updateKeywordSet = async (setId: string, payload: UpdateKeywordSetRequest): Promise<KeywordSetServiceResult<KeywordSet>> => {
+  return keywordSetService.updateKeywordSet(setId, payload);
+};
+
+export const deleteKeywordSet = async (setId: string): Promise<KeywordSetServiceResult<KeywordSetDeleteResponse>> => {
+  const result = await keywordSetService.deleteKeywordSet(setId);
+  return {
+    ...result,
+    data: result.success ? { success: true, message: 'Keyword set deleted successfully' } : undefined
+  };
+};
 
 // ===========================================================================================
 // PROFESSIONAL USAGE EXAMPLES

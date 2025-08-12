@@ -253,8 +253,52 @@ class PersonaService {
 export { PersonaService };
 export type { PersonaServiceResult };
 
+// Re-export types for component convenience
+export type { 
+  CreatePersonaRequest, 
+  UpdatePersonaRequest, 
+  PersonaResponse as Persona,
+  PersonaTestResponse as PersonaTestResult
+} from '@/lib/api-client/professional-types';
+
 // Singleton instance for convenience
 export const personaService = PersonaService.getInstance();
+
+// ===========================================================================================
+// PROFESSIONAL FUNCTION EXPORTS - For component compatibility
+// ===========================================================================================
+
+/**
+ * Professional function exports that wrap the singleton service
+ * Maintains clean component import patterns while using professional service architecture
+ */
+
+export const createPersona = async (payload: CreatePersonaRequest): Promise<PersonaServiceResult<Persona>> => {
+  return personaService.createPersona(payload);
+};
+
+export const updatePersona = async (personaId: string, payload: UpdatePersonaRequest): Promise<PersonaServiceResult<Persona>> => {
+  return personaService.updatePersona(personaId, payload);
+};
+
+export const deletePersona = async (personaId: string): Promise<PersonaServiceResult<void>> => {
+  return personaService.deletePersona(personaId);
+};
+
+export const getPersonaById = async (personaId: string): Promise<PersonaServiceResult<Persona>> => {
+  return personaService.getPersonaById(personaId);
+};
+
+export const listPersonas = async (params?: { limit?: number; offset?: number; personaType?: string }): Promise<PersonaServiceResult<Persona[]>> => {
+  return personaService.listPersonas(params);
+};
+
+export const testPersona = async (personaId: string): Promise<PersonaServiceResult<PersonaTestResult>> => {
+  return personaService.testPersona(personaId);
+};
+
+// Legacy compatibility export (for components still expecting this name)
+export const getPersonas = listPersonas;
 
 // ===========================================================================================
 // PROFESSIONAL USAGE EXAMPLES
