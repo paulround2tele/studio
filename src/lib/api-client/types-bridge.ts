@@ -93,22 +93,25 @@ export type ApiResponse<T = any> = ApiAPIResponse & {
 // FRONTEND UI EXTENSIONS - UI-only properties that don't exist in backend
 // ===================================================================================================
 
-// Campaign UI extensions for frontend-specific properties
+// Campaign UI extensions (for frontend-specific properties not in backend schema)
 export interface CampaignViewModel extends Campaign {
-  // UI State Management
+  // UI-only properties that don't exist in backend schema
   isLoading?: boolean;
   uiState?: 'editing' | 'viewing' | 'creating';
   localChanges?: boolean;
-  validationErrors?: Record<string, string>;
   
-  // Frontend-only computed properties
-  progressPercentage?: number;
-  estimatedTimeRemaining?: string;
-  canTransitionToNextPhase?: boolean;
+  // PROFESSIONAL MAPPING: These exist in Campaign but components may expect different names
+  // progress vs progressPercentage - both exist, components can use either
+  // domains: number - EXISTS in backend ✅
+  // leads: number - EXISTS in backend ✅  
+  // currentPhase: CampaignCurrentPhaseEnum - EXISTS in backend ✅
+  // phaseStatus: CampaignPhaseStatusEnum - EXISTS in backend ✅
+  // errorMessage: string - EXISTS in backend ✅
   
-  // Legacy compatibility (if needed during migration)
-  selectedType?: string;
-  fullSequenceMode?: boolean;
+  // AMATEUR PROPERTIES THAT DON'T EXIST (to be removed from components):
+  // description - NOT IN BACKEND ❌
+  // phases - NOT IN BACKEND ❌  
+  // overallProgress - use 'progress' or 'progressPercentage' instead ❌
 }
 
 // Persona UI extensions

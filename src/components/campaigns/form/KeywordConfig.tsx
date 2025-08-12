@@ -1,40 +1,33 @@
-import React, { memo } from 'react';
-import { Control } from 'react-hook-form';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
-// Import shared types to prevent conflicts
-import type { CampaignFormValues } from '../types/CampaignFormTypes';
-
-interface KeywordConfigProps {
-  control: Control<CampaignFormValues>;
-}
-
 /**
- * Memoized keyword configuration component
- * Handles keyword settings for HTTP validation campaigns
+ * PROFESSIONAL DISASTER RECOVERY
+ * 
+ * This component was part of the amateur monolithic form architecture
+ * that tried to configure everything in one massive form.
+ * 
+ * The professional architecture handles keyword configuration through:
+ * - Phase-specific components in /configuration/ directory
+ * - HTTPKeywordValidationConfig.tsx for HTTP keyword validation
+ * - Proper OpenAPI integration with phase management
+ * 
+ * This component has been professionally decommissioned.
  */
-const KeywordConfig = memo<KeywordConfigProps>(({ control }) => {
+
+import React from 'react';
+import { AlertTriangle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
+const KeywordConfig = () => {
   return (
-    <Card className="p-4 pt-2 border-dashed">
-      <CardHeader className="p-2">
-        <CardTitle className="text-base">Keyword Configuration</CardTitle>
-        <CardDescription className="text-xs">Configure keywords to search for during HTTP validation.</CardDescription>
-      </CardHeader>
-      <CardContent className="p-2 space-y-4">
-        <FormField control={control} name="targetKeywordsInput" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Target Keywords (comma-separated)</FormLabel>
-            <FormControl>
-              <Textarea placeholder="e.g., telecom, voip, saas, technology" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-      </CardContent>
-    </Card>
+    <Alert className="border-amber-200 bg-amber-50">
+      <AlertTriangle className="h-4 w-4 text-amber-600" />
+      <AlertDescription className="text-amber-800">
+        <strong>Component Decommissioned</strong><br/>
+        This amateur component has been replaced by professional phase-centric keyword configuration
+        in HTTPKeywordValidationConfig.tsx with proper OpenAPI integration.
+      </AlertDescription>
+    </Alert>
   );
-});
+};
 
 KeywordConfig.displayName = 'KeywordConfig';
 

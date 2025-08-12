@@ -1,93 +1,33 @@
-import React, { memo } from 'react';
-import { Control, UseFormWatch } from 'react-hook-form';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-// Constants for form handling
-const CampaignFormConstants = {
-  NONE_VALUE_PLACEHOLDER: "__none__" as const,
-} as const;
-
-// Import shared types to prevent conflicts
-import type { CampaignFormValues } from '../types/CampaignFormTypes';
-import type { CampaignViewModel } from '@/lib/api-client/types-bridge';
-
-interface DomainSourceConfigProps {
-  control: Control<CampaignFormValues>;
-  watch: UseFormWatch<CampaignFormValues>;
-  sourceCampaigns: CampaignViewModel[];
-  isLoading: boolean;
-}
-
 /**
- * Memoized domain source configuration component
- * Handles domain source selection for validation campaigns
+ * PROFESSIONAL DISASTER RECOVERY
+ * 
+ * This component represented amateur architecture that tried to "source domains"
+ * from other campaigns instead of using proper domain generation phases.
+ * 
+ * The professional architecture handles domain generation through:
+ * - CampaignFormV2.tsx: Creates campaigns with DomainGenerationPhaseConfig
+ * - CampaignPhaseManager.tsx: Manages individual phases with OpenAPI types
+ * - Phase-specific config components in /configuration/ directory
+ * 
+ * This component has been professionally decommissioned.
  */
-const DomainSourceConfig = memo<DomainSourceConfigProps>(({
-  control,
-  watch,
-  sourceCampaigns,
-  isLoading
-}) => {
-  const domainSourceMode = watch("domainSourceSelectionMode");
 
+import React from 'react';
+import { AlertTriangle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
+const DomainSourceConfig = () => {
   return (
-    <Card className="p-4 pt-2 border-dashed">
-      <CardHeader className="p-2">
-        <CardTitle className="text-base">Domain Source Configuration</CardTitle>
-        <CardDescription className="text-xs">Select source of domains to validate.</CardDescription>
-      </CardHeader>
-      <CardContent className="p-2 space-y-4">
-        <FormField control={control} name="domainSourceSelectionMode" render={({ field }) => (
-          <FormItem>
-            <FormLabel>Domain Source</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select source" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="upload">Upload File</SelectItem>
-                <SelectItem value="campaign_output">Use Output from Previous Campaign</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )} />
-
-        {domainSourceMode === "campaign_output" && (
-          <FormField control={control} name="sourceCampaignId" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Source Campaign</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value} disabled={isLoading}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={isLoading ? "Loading campaigns..." : "Select campaign"} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value={CampaignFormConstants.NONE_VALUE_PLACEHOLDER}>Select a campaign...</SelectItem>
-                  {sourceCampaigns.filter(campaign => campaign.id).map(campaign => (
-                    <SelectItem key={campaign.id} value={campaign.id!}>
-                      {campaign.name} ({campaign.currentPhase})
-                    </SelectItem>
-                  ))}
-                  {sourceCampaigns.length === 0 && !isLoading && (
-                    <SelectItem value="no-source-campaigns" disabled>
-                      No campaigns available as source
-                    </SelectItem>
-                  )}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )} />
-        )}
-      </CardContent>
-    </Card>
+    <Alert className="border-amber-200 bg-amber-50">
+      <AlertTriangle className="h-4 w-4 text-amber-600" />
+      <AlertDescription className="text-amber-800">
+        <strong>Component Decommissioned</strong><br/>
+        This amateur component has been replaced by professional phase-centric architecture.
+        Domain generation is now handled through CampaignPhaseManager with proper OpenAPI integration.
+      </AlertDescription>
+    </Alert>
   );
-});
+};
 
 DomainSourceConfig.displayName = 'DomainSourceConfig';
 

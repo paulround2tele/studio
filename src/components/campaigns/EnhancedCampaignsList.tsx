@@ -15,9 +15,12 @@ import {
   PaginationPrevious 
 } from '@/components/ui/pagination';
 import { Search, Filter, SortAsc, SortDesc } from 'lucide-react';
-import type { CampaignViewModel, PaginationContext } from '@/lib/api-client/types-bridge';
-import { getDefaultPageSize } from '@/lib/api-client/types-bridge';
+import type { CampaignViewModel } from '@/lib/api-client/types-bridge';
 import CampaignListItem from './CampaignListItem';
+
+// Professional pagination context type (no fantasy imports)
+type PaginationContext = 'dashboard' | 'full-page' | 'modal';
+const DEFAULT_PAGE_SIZE = 10;
 
 interface EnhancedCampaignsListProps {
   campaigns: CampaignViewModel[];
@@ -49,8 +52,8 @@ const EnhancedCampaignsList: React.FC<EnhancedCampaignsListProps> = ({
   pageSize,
   context = 'dashboard'
 }) => {
-  // Use context-aware default page size
-  const effectivePageSize = pageSize || getDefaultPageSize(context);
+  // Use professional default page size
+  const effectivePageSize = pageSize || DEFAULT_PAGE_SIZE;
   // Pagination and filtering state
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');

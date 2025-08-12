@@ -101,9 +101,9 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
         if (campaignsArray.length > 0 || (responseData && typeof responseData === 'object')) {
           // Transform OpenAPI campaigns to view models first
           const campaignViewModels = transformCampaignsToViewModels(campaignsArray);
-          // Filter campaigns that can be used as source (only domain_generation and dns_validation)
+          // Filter campaigns that can be used as source (based on current phase)
           const validSourceCampaigns = campaignViewModels.filter(c =>
-            c.selectedType === 'domain_generation' || c.selectedType === 'dns_validation'
+            c.currentPhase === 'generation' || c.currentPhase === 'dns_validation'
           );
           setSourceCampaigns(validSourceCampaigns);
         } else {
@@ -192,7 +192,7 @@ export function useCampaignSelectionOptions(campaigns: CampaignViewModel[]) {
     campaigns.map(campaign => ({
       id: campaign.id,
       name: campaign.name,
-      selectedType: campaign.selectedType
+      currentPhase: campaign.currentPhase // Use REAL property
     })),
     [campaigns]
   );

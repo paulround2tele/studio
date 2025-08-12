@@ -1,88 +1,33 @@
-import React, { memo } from 'react';
-import { Control, Controller } from 'react-hook-form';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-// Import shared types to prevent conflicts
-import type { CampaignFormValues } from '../types/CampaignFormTypes';
+/**
+ * PROFESSIONAL DISASTER RECOVERY
+ * 
+ * This component was part of the amateur monolithic form architecture
+ * that tried to configure low-level tuning parameters in the main form.
+ * 
+ * The professional architecture handles tuning through:
+ * - Environment configuration files
+ * - Phase-specific configuration components
+ * - Proper OpenAPI integration with validated parameters
+ * 
+ * This component has been professionally decommissioned.
+ */
 
-interface CampaignTuningConfigProps {
-  control: Control<CampaignFormValues>;
-  showHttpPorts: boolean;
-}
+import React from 'react';
+import { AlertTriangle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
-const CampaignTuningConfig = memo<CampaignTuningConfigProps>(({ control, showHttpPorts }) => {
+const CampaignTuningConfig = () => {
   return (
-    <Card className="p-4 pt-2 border-dashed">
-      <CardHeader className="p-2">
-        <CardTitle className="text-base">Campaign Tuning</CardTitle>
-        <CardDescription className="text-xs">Adjust processing parameters.</CardDescription>
-      </CardHeader>
-      <CardContent className="p-2 space-y-4">
-        <Controller name="rotationIntervalSeconds" control={control} render={({ field }) => (
-          <FormItem>
-            <FormLabel>Rotation Interval (seconds)</FormLabel>
-            <FormControl>
-              <Input type="number" min="0" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-
-        <Controller name="processingSpeedPerMinute" control={control} render={({ field }) => (
-          <FormItem>
-            <FormLabel>Processing Speed Per Minute</FormLabel>
-            <FormControl>
-              <Input type="number" min="0" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-
-        <Controller name="batchSize" control={control} render={({ field }) => (
-          <FormItem>
-            <FormLabel>Batch Size</FormLabel>
-            <FormControl>
-              <Input type="number" min="1" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-
-        <Controller name="retryAttempts" control={control} render={({ field }) => (
-          <FormItem>
-            <FormLabel>Retry Attempts</FormLabel>
-            <FormControl>
-              <Input type="number" min="0" {...field} />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )} />
-
-        {showHttpPorts && (
-          <Controller name="targetHttpPorts" control={control} render={({ field }) => (
-            <FormItem>
-              <FormLabel>Target HTTP Ports (comma-separated)</FormLabel>
-              <FormControl>
-                <Input
-                  value={field.value?.join(', ') || ''}
-                  onChange={(e) => {
-                    const ports = e.target.value
-                      .split(',')
-                      .map(p => parseInt(p.trim(), 10))
-                      .filter(p => !Number.isNaN(p));
-                    field.onChange(ports);
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-        )}
-      </CardContent>
-    </Card>
+    <Alert className="border-amber-200 bg-amber-50">
+      <AlertTriangle className="h-4 w-4 text-amber-600" />
+      <AlertDescription className="text-amber-800">
+        <strong>Component Decommissioned</strong><br/>
+        This amateur component has been replaced by professional environment configuration
+        and phase-specific tuning parameters with proper OpenAPI validation.
+      </AlertDescription>
+    </Alert>
   );
-});
+};
 
 CampaignTuningConfig.displayName = 'CampaignTuningConfig';
 

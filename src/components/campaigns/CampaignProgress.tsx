@@ -16,17 +16,19 @@ interface CampaignProgressProps {
   campaign: CampaignViewModel;
 }
 
+// PROFESSIONAL PHASE DISPLAY NAMES using ACTUAL ENUM VALUES
 const phaseDisplayNames: Record<NonNullable<CampaignPhase>, string> = {
-  domain_generation: "Domain Generation",
+  setup: "Campaign Setup",
+  generation: "Domain Generation", 
   dns_validation: "DNS Validation",
   http_keyword_validation: "HTTP Keyword Validation",
-  analysis: "Analysis",
+  analysis: "Analysis"
 };
 
-// Memoized phase status icon component for better performance
+// Memoized phase status icon component for better performance  
 const PhaseStatusIcon = memo(({ phase, status, isActivePhase }: {
   phase: CampaignPhase;
-  status: CampaignPhaseStatus;
+  status: CampaignPhaseStatusEnum;
   isActivePhase: boolean;
 }) => {
   if (status === 'completed') return <CheckCircle className="h-5 w-5 text-green-500" />;
@@ -52,7 +54,7 @@ const PhaseItem = memo(({
   displayPhases: CampaignPhase[];
   operationalPhasesForType: CampaignPhase[];
   isActivePhaseNode: boolean;
-  nodeStatus: CampaignPhaseStatus;
+  nodeStatus: CampaignPhaseStatusEnum;
 }) => {
   return (
     <Tooltip>
@@ -104,12 +106,12 @@ const getProgressWidthClass = (width: number): string => {
 
 // Memoized main component for optimal performance
 const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
-  // All campaigns follow the same phase progression in the phases-based architecture
-  const allPhases: CampaignPhase[] = ['domain_generation', 'dns_validation', 'http_keyword_validation', 'analysis'];
+  // PROFESSIONAL: Use ACTUAL enum values from OpenAPI schema
+  const allPhases: CampaignPhase[] = ['setup', 'generation', 'dns_validation', 'http_keyword_validation', 'analysis'];
   
   // Memoize display phases calculation to prevent recalculation on every render
   const displayPhases = useMemo(() => {
-    // All campaigns use the standard phase progression - no special setup phase
+    // All campaigns use the standard phase progression
     return allPhases;
   }, []);
   
@@ -128,8 +130,8 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
     };
   }, [campaign.currentPhase, operationalPhasesForType]);
 
-  // Simplified and fixed node status calculation
-  const getNodeStatus = useCallback((phase: CampaignPhase): CampaignPhaseStatus => {
+  // Simplified and fixed node status calculation using PROFESSIONAL TYPES
+  const getNodeStatus = useCallback((phase: CampaignPhase): CampaignPhaseStatusEnum => {
     const isActivePhaseNode = phase === campaign.currentPhase;
     const operationalPhaseIndexInType = operationalPhasesForType.indexOf(phase);
     const currentPhaseIndex = campaign.currentPhase ? operationalPhasesForType.indexOf(campaign.currentPhase) : -1;
@@ -168,12 +170,12 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
     return 'not_started';
   }, [campaign.currentPhase, campaign.phaseStatus, operationalPhasesForType]);
 
-  // Memoize progress calculation - FIXED: Use actual campaign progress values like CampaignListItem
+  // PROFESSIONAL progress calculation using ACTUAL campaign properties
   const progressWidth = useMemo(() => {
-    // Use overallProgress first, then progressPercentage fallback, then calculate based on items
-    let progressValue = campaign.overallProgress ?? campaign.progressPercentage ?? 0;
+    // Use REAL properties: progressPercentage or progress, then calculate from items
+    let progressValue = campaign.progressPercentage ?? campaign.progress ?? 0;
     
-    // If no direct progress, try to calculate from processed vs total items
+    // If no direct progress, calculate from processed vs total items
     if (progressValue === 0 && campaign.totalItems && campaign.processedItems) {
       progressValue = Math.floor((campaign.processedItems / campaign.totalItems) * 100);
     }
@@ -188,7 +190,7 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
 
     // For active campaigns, use actual progress value
     return Math.max(0, Math.min(100, progressValue));
-  }, [campaign.currentPhase, campaign.phaseStatus, campaign.overallProgress, campaign.progressPercentage, campaign.totalItems, campaign.processedItems]);
+  }, [campaign.currentPhase, campaign.phaseStatus, campaign.progressPercentage, campaign.progress, campaign.totalItems, campaign.processedItems]);
   
   return (
     <div className="space-y-6">
@@ -231,17 +233,16 @@ const CampaignProgress = memo(({ campaign }: CampaignProgressProps) => {
         <div className="mt-4">
           <div className="flex justify-between text-sm mb-1">
             <span>
-              {(campaign.currentPhase as any) === "completed" ? 'Campaign Completed' :
-               (campaign.phaseStatus as any) === 'completed' ? 'Phase Completed' : 'Current Phase Progress'}
-              {(campaign.currentPhase as any) !== "completed" && `(${campaign.currentPhase ? phaseDisplayNames[campaign.currentPhase] : 'Unknown'})`}
+              {campaign.phaseStatus === 'completed' ? 'Phase Completed' : 'Current Phase Progress'}
+              {campaign.currentPhase && ` (${phaseDisplayNames[campaign.currentPhase] || 'Unknown'})`}
             </span>
-            <span>{(campaign.currentPhase as any) === "completed" ? '100' : (campaign.overallProgress || campaign.progressPercentage || 0)}%</span>
+            <span>{campaign.progressPercentage || campaign.progress || 0}%</span>
           </div>
           <Progress
-            value={(campaign.currentPhase as any) === "completed" ? 100 : (campaign.overallProgress || campaign.progressPercentage || 0)}
+            value={campaign.progressPercentage || campaign.progress || 0}
             className="w-full h-3"
             indicatorVariant={
-              ((campaign.phaseStatus as any) === 'completed' && (campaign.progressPercentage === 100 || (campaign.currentPhase as any) === "completed"))
+              (campaign.phaseStatus === 'completed' && (campaign.progressPercentage === 100 || campaign.progress === 100))
                 ? "success" // Green when phase succeeded
                 : "info"    // Blue during progress
             }
