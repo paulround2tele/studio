@@ -2,7 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { 
   BulkOperationStatus,
   BulkAnalyzeDomains200Response 
-} from '@/lib/api-client/models';
+} from '@/lib/api-client/professional-types';
 
 // Bulk operation types matching our separated backend handlers
 export type BulkOperationType = 

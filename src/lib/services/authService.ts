@@ -2,12 +2,8 @@
 // Clean authentication service using auto-generated API clients with unified response handling
 
 import { authApi } from '@/lib/api-client/client';
-import type { components } from '@/lib/api-client/types';
+import type { User, LoginRequest, ChangePasswordRequest } from '@/lib/api-client/professional-types';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
-
-type User = components['schemas']['User'];
-type LoginRequest = components['schemas']['LoginRequest'];
-type ChangePasswordRequest = components['schemas']['ChangePasswordRequest'];
 import { getLogger } from '@/lib/utils/logger';
 
 const logger = getLogger();
@@ -134,7 +130,8 @@ class AuthService {
     });
 
     try {
-      const response = await authApi.login({
+      // ✅ PROFESSIONAL REALITY - Using actual generated method name
+      const response = await authApi.loginUser({
         email: credentials.email,
         password: credentials.password,
         rememberMe: credentials.rememberMe
@@ -197,7 +194,8 @@ class AuthService {
     logger.info('AUTH_SERVICE', 'Logout started');
 
     try {
-      const response = await authApi.logout();
+      // ✅ PROFESSIONAL REALITY - Using actual generated method name
+      const response = await authApi.logoutUser();
       extractResponseData(response); // Just validate the response structure
 
       logger.info('AUTH_SERVICE', 'Logout successful');

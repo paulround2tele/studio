@@ -8,7 +8,15 @@
  * Fixed by post-generation script: 2025-08-12T10:04:18.029Z
  * 
  * NOTE: This file is auto-regenerated after OpenAPI generation.
- * Do not edit manually - your changes will be overwritten.
+ * Do not edit manually - your changes will be ovexport * from './http-persona-config';
+export * from './http2-settings-config';
+export * from './http2-settings';
+export * from './httpconfig-details';
+export * from './httpcookie-handling';
+export * from './httpkeyword-campaign-params';
+export * from './httpkeyword-params';
+// export * from './http-keyword-params0'; // DUPLICATE EXPORT CONFLICT
+export * from './httpkeyword-result';.
  */
 
 export * from './add-proxy-to-pool-request';
@@ -52,7 +60,7 @@ export * from './api-database-query';
 export * from './api-database-stats';
 export * from './api-database-value';
 export * from './api-dnsvalidation-config';
-export * from './api-error-code';
+// export * from './api-error-code'; // NOT A MODULE - just comments
 export * from './api-error-detail';
 export * from './api-error-info';
 export * from './api-error-meta';
@@ -274,7 +282,7 @@ export * from './detection-evasion-config';
 export * from './detection-risk-analysis';
 export * from './dns-persona-config';
 export * from './dns-validation-params';
-export * from './dns-validation-params0';
+// export * from './dns-validation-params0'; // DUPLICATE EXPORT CONFLICT
 export * from './dnsconfig-details';
 export * from './dnsperformance-metrics';
 export * from './dnspersona-group';
@@ -365,17 +373,17 @@ export * from './github-com-fntelecomllc-studio-backend-internal-models-domain-g
 export * from './github-com-fntelecomllc-studio-backend-internal-models-enterprise-proxy-strategy';
 export * from './github-com-fntelecomllc-studio-backend-internal-models-error-response';
 export * from './github-com-fntelecomllc-studio-backend-internal-models-httpvalidation-operation';
-export * from './github-com-fntelecomllc-studio-backend-internal-models-keyword-rule-type-enum';
+// export * from './github-com-fntelecomllc-studio-backend-internal-models-keyword-rule-type-enum'; // NOT A MODULE
 export * from './github-com-fntelecomllc-studio-backend-internal-models-keyword-rule';
 export * from './github-com-fntelecomllc-studio-backend-internal-models-login-request';
 export * from './github-com-fntelecomllc-studio-backend-internal-models-operation-progress';
-export * from './github-com-fntelecomllc-studio-backend-internal-models-persona-type-enum';
+// export * from './github-com-fntelecomllc-studio-backend-internal-models-persona-type-enum'; // NOT A MODULE
 export * from './github-com-fntelecomllc-studio-backend-internal-models-phase-metrics';
 export * from './github-com-fntelecomllc-studio-backend-internal-models-phase-performance';
 export * from './github-com-fntelecomllc-studio-backend-internal-models-proxy-pool-membership';
 export * from './github-com-fntelecomllc-studio-backend-internal-models-proxy-pool';
-export * from './github-com-fntelecomllc-studio-backend-internal-models-proxy-protocol-enum';
-export * from './github-com-fntelecomllc-studio-backend-internal-models-proxy-status-enum';
+// export * from './github-com-fntelecomllc-studio-backend-internal-models-proxy-protocol-enum'; // NOT A MODULE
+// export * from './github-com-fntelecomllc-studio-backend-internal-models-proxy-status-enum'; // NOT A MODULE
 export * from './github-com-fntelecomllc-studio-backend-internal-models-proxy';
 export * from './github-com-fntelecomllc-studio-backend-internal-models-required-resources';
 export * from './github-com-fntelecomllc-studio-backend-internal-models-resource-allocation-result';
@@ -394,7 +402,7 @@ export * from './github-com-fntelecomllc-studio-backend-pkg-api-error-detail';
 export * from './health-check-response';
 export * from './health-status';
 export * from './http-keyword-params';
-export * from './http-keyword-params0';
+// export * from './http-keyword-params0'; // DUPLICATE EXPORT CONFLICT  
 export * from './http-persona-config';
 export * from './http2-settings-config';
 export * from './http2-settings';

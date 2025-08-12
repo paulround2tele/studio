@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, UserCheck, Percent, Link as LinkIcon, ExternalLink, Sparkles, Loader2 } from 'lucide-react';
 import type { CampaignViewModel, AnalyzeContentInput } from '@/lib/types';
-import type { ExtractedContentItem, LeadItem } from '@/lib/api-client/models';
+import type { ExtractedContentItem, LeadItem } from '@/lib/api-client/professional-types';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import React, { useState } from 'react';

@@ -36,7 +36,7 @@ import {
   AlertTriangle,
   Loader2
 } from 'lucide-react';
-import type { Proxy, UpdateProxyRequest } from '@/lib/api-client/models';
+import type { Proxy, UpdateProxyRequest } from '@/lib/api-client/professional-types';
 import type { ApiResponse } from '@/lib/types';
 import { isResponseSuccess } from '@/lib/utils/apiResponseHelpers';
 

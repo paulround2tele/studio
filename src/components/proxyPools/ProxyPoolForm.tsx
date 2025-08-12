@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { proxyPoolsApi } from "@/lib/api-client/client";
-import type { ProxyPool } from '@/lib/api-client/models';
+import type { ProxyPool } from '@/lib/api-client/professional-types';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 

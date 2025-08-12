@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { CheckCircle, Play, Pause, Square, Settings, RotateCcw, AlertTriangle } from 'lucide-react';
 import PhaseGateButton from './PhaseGateButton';
 import { PhaseConfiguration } from './PhaseConfiguration';
-import type { LeadGenerationCampaign } from '@/lib/api-client/models';
+import type { Campaign } from '@/lib/api-client/professional-types';
 import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { useToast } from '@/hooks/use-toast';
 
 interface CampaignControlsProps {
-  campaign: LeadGenerationCampaign;
+  campaign: Campaign;
   actionLoading: Record<string, boolean>;
   onStartPhase: (phaseType: string) => Promise<void>;
   onPausePhase: (phaseType: string) => Promise<void>;

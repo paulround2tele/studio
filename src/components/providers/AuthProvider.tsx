@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
-import type { User } from '@/lib/api-client/models';
+import type { User } from '@/lib/api-client/professional-types';
 
 // Type definitions
 

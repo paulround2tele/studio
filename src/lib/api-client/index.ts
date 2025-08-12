@@ -60,10 +60,11 @@ export * from './models';
 // ==================================================
 // PROFESSIONAL API CLIENT (Recommended)
 // ==================================================
-// Professional unified types (no more legacy APIResponse conflicts!)
-export * from './unified-types';
-export * from './unified-client';
-export { apiClient } from './unified-client';
+// NOTE: unified-types and unified-client were never generated
+// Using actual generated types and clients instead
+// export * from './unified-types'; // FILE DOESN'T EXIST
+// export * from './unified-client'; // FILE DOESN'T EXIST  
+// export { apiClient } from './unified-client'; // FILE DOESN'T EXIST
 
 /* 
  * USAGE EXAMPLES:

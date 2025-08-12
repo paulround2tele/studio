@@ -15,10 +15,8 @@ import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 // THIN CLIENT: Removed AuthContext - backend handles auth
 import { createPersona, updatePersona, type CreatePersonaRequest, type UpdatePersonaRequest } from "@/lib/services/personaService";
-// Import the actual generated types directly from their files
-import type { HttpPersonaConfig } from '@/lib/api-client/models/http-persona-config';
-import type { DnsPersonaConfig } from '@/lib/api-client/models/dns-persona-config';
-import type { PersonaResponse } from '@/lib/api-client/models';
+// Import types from professional-types layer
+import type { HttpPersonaConfig, DnsPersonaConfig, PersonaResponse } from '@/lib/api-client/professional-types';
 
 // Create proper typed interfaces for personas with correct config types
 

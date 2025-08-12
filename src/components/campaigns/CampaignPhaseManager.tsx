@@ -12,9 +12,9 @@ import type {
   DNSValidationPhaseConfig,
   HTTPKeywordValidationPhaseConfig,
   DomainGenerationPhaseConfig,
-  AnalysisPhaseConfig
-} from '@/lib/api-client/models';
-import type { CampaignCurrentPhaseEnum } from '@/lib/api-client/models/campaign';
+  AnalysisPhaseConfig,
+  CampaignCurrentPhaseEnum
+} from '@/lib/api-client/professional-types';
 
 // Import the properly typed configuration components
 import DNSValidationConfig from './configuration/DNSValidationConfig';

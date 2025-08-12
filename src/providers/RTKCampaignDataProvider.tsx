@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useMemo, ReactNode } from 'react';
 import { useGetCampaignsStandaloneQuery, useGetBulkEnrichedCampaignDataQuery } from '@/store/api/campaignApi';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
-import type { BulkEnrichedDataResponse } from '@/lib/api-client/models';
+import type { BulkEnrichedDataResponse } from '@/lib/api-client/professional-types';
 
 // Modern campaign data context using RTK Query
 interface RTKCampaignDataContextType {

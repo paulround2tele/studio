@@ -18,9 +18,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { getPersonas } from '@/lib/services/personaService';
 import { listKeywordSets } from '@/lib/services/keywordSetService';
 import { campaignsApi } from '@/lib/api-client/client';
-import type { HTTPValidationConfig } from '@/lib/api-client/models/httpvalidation-config';
-import type { PhaseConfigureRequest } from '@/lib/api-client/models/phase-configure-request';
-import type { PersonaResponse } from '@/lib/api-client/models';
+import type { HTTPValidationConfig, PhaseConfigureRequest, PersonaResponse } from '@/lib/api-client/professional-types';
 import { ConfigurePhaseStandalonePhaseEnum } from '@/lib/api-client/apis/campaigns-api';
 // PhaseConfigureRequestPhaseTypeEnum removed - using direct string literals now
 

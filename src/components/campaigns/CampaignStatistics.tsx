@@ -20,7 +20,7 @@ import {
   Activity
 } from 'lucide-react';
 import type { CampaignViewModel } from '@/lib/types';
-import type { CampaignPhase } from '@/lib/api-client/models';
+import type { CampaignPhase } from '@/lib/api-client/professional-types';
 import { cn } from '@/lib/utils';
 
 // Unified interfaces combining both original components
