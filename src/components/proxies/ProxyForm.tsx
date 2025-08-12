@@ -17,12 +17,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { components } from '@/lib/api-client/types';
+import type { Proxy, UpdateProxyRequest } from '@/lib/api-client/models';
 
-type Proxy = components['schemas']['Proxy'];
-type UpdateProxyPayload = components['schemas']['UpdateProxyRequest'];
-type _ProxyProtocol = components['schemas']['Proxy']['protocol']; // Unused
-type _ProxyStatus = components['schemas']['ProxyStatusEnum']; // Unused
+// Type aliases for better readability
 import { createProxy, updateProxy } from '@/lib/services/proxyService.production';
 import { useToast } from '@/hooks/use-toast';
 // THIN CLIENT: Removed AuthContext - backend handles auth
@@ -99,7 +96,7 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
     try {
       let response;
       if (isEditing && proxyToEdit) {
-        const payload: UpdateProxyPayload = {
+        const payload: UpdateProxyRequest = {
           name: data.name,
           description: data.description,
           address: data.address,

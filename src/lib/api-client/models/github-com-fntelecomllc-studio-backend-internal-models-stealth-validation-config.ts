@@ -85,7 +85,7 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsStealthValidati
      * @type {string}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsStealthValidationConfig
      */
-    'randomizationLevel'?: 'low' | 'medium' | 'high' | 'extreme';
+    'randomizationLevel'?: GithubComFntelecomllcStudioBackendInternalModelsStealthValidationConfigRandomizationLevelEnum;
     /**
      * milliseconds
      * @type {number}
@@ -110,6 +110,11 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsStealthValidati
     * @export
     * @enum {string}
     */
-// Enum GithubComFntelecomllcStudioBackendInternalModelsStealthValidationConfigRandomizationLevelEnum converted to direct string literals in interface
+export enum GithubComFntelecomllcStudioBackendInternalModelsStealthValidationConfigRandomizationLevelEnum {
+    low = 'low',
+    medium = 'medium',
+    high = 'high',
+    extreme = 'extreme'
+}
 
 

@@ -23,8 +23,6 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
 import type { ApiAPIResponse } from '../models';
-// @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsErrorResponse } from '../models';
 /**
  * SseApi - axios parameter creator
  * @export

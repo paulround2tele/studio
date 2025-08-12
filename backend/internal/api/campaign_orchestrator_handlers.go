@@ -106,8 +106,8 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 // @Produce json
 // @Param request body services.CreateLeadGenerationCampaignRequest true "Lead generation campaign creation request"
 // @Success 201 {object} APIResponse "Campaign created successfully"
-// @Failure 400 {object} ErrorResponse "Bad Request"
-// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Failure 400 {object} api.APIResponse "Bad Request"
+// @Failure 500 {object} api.APIResponse "Internal Server Error"
 // @Router /campaigns/lead-generation [post]
 func (h *CampaignOrchestratorAPIHandler) createLeadGenerationCampaign(c *gin.Context) {
 	var req services.CreateLeadGenerationCampaignRequest
@@ -189,9 +189,9 @@ func (h *CampaignOrchestratorAPIHandler) createLeadGenerationCampaign(c *gin.Con
 // @Param phase path string true "Phase type" Enums(dns_validation, http_keyword_validation, analysis)
 // @Param request body PhaseConfigureRequest true "Phase configuration request"
 // @Success 200 {object} APIResponse "Phase configured successfully"
-// @Failure 400 {object} ErrorResponse "Bad Request"
-// @Failure 404 {object} ErrorResponse "Campaign not found"
-// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Failure 400 {object} api.APIResponse "Bad Request"
+// @Failure 404 {object} api.APIResponse "Campaign not found"
+// @Failure 500 {object} api.APIResponse "Internal Server Error"
 // @Router /campaigns/{campaignId}/phases/{phase}/configure [post]
 func (h *CampaignOrchestratorAPIHandler) configurePhaseStandalone(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
@@ -272,9 +272,9 @@ func (h *CampaignOrchestratorAPIHandler) configurePhaseStandalone(c *gin.Context
 // @Param campaignId path string true "Campaign ID (UUID)"
 // @Param phase path string true "Phase name" Enums(domain-generation, dns-validation, http-validation)
 // @Success 200 {object} APIResponse "Phase started successfully"
-// @Failure 400 {object} ErrorResponse "Bad Request"
-// @Failure 404 {object} ErrorResponse "Campaign not found"
-// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Failure 400 {object} api.APIResponse "Bad Request"
+// @Failure 404 {object} api.APIResponse "Campaign not found"
+// @Failure 500 {object} api.APIResponse "Internal Server Error"
 // @Router /campaigns/{campaignId}/phases/{phase}/start [post]
 func (h *CampaignOrchestratorAPIHandler) startPhaseStandalone(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
@@ -327,9 +327,9 @@ func (h *CampaignOrchestratorAPIHandler) startPhaseStandalone(c *gin.Context) {
 // @Param campaignId path string true "Campaign ID (UUID)"
 // @Param phase path string true "Phase type" Enums(domain_generation, dns_validation, http_keyword_validation, analysis)
 // @Success 200 {object} APIResponse "Phase status retrieved successfully"
-// @Failure 400 {object} ErrorResponse "Bad Request"
-// @Failure 404 {object} ErrorResponse "Campaign or phase not found"
-// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Failure 400 {object} api.APIResponse "Bad Request"
+// @Failure 404 {object} api.APIResponse "Campaign or phase not found"
+// @Failure 500 {object} api.APIResponse "Internal Server Error"
 // @Router /campaigns/{campaignId}/phases/{phase}/status [get]
 func (h *CampaignOrchestratorAPIHandler) getPhaseStatusStandalone(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
@@ -465,9 +465,9 @@ func (h *CampaignOrchestratorAPIHandler) getPhaseStatusStandalone(c *gin.Context
 // @Produce json
 // @Param campaignId path string true "Campaign ID (UUID)"
 // @Success 200 {object} APIResponse "Campaign progress"
-// @Failure 400 {object} ErrorResponse "Bad Request"
-// @Failure 404 {object} ErrorResponse "Campaign not found"
-// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Failure 400 {object} api.APIResponse "Bad Request"
+// @Failure 404 {object} api.APIResponse "Campaign not found"
+// @Failure 500 {object} api.APIResponse "Internal Server Error"
 // @Router /campaigns/{campaignId}/progress [get]
 func (h *CampaignOrchestratorAPIHandler) getCampaignProgressStandalone(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
@@ -567,7 +567,7 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignProgressStandalone(c *gin.Co
 // @ID getCampaignsStandalone
 // @Produce json
 // @Success 200 {object} APIResponse "Campaigns retrieved successfully"
-// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Failure 500 {object} api.APIResponse "Internal Server Error"
 // @Router /campaigns [get]
 func (h *CampaignOrchestratorAPIHandler) getCampaignsStandalone(c *gin.Context) {
 	// Get user from context
@@ -712,8 +712,8 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignsStandalone(c *gin.Context) 
 // @Produce json
 // @Param request body BulkEnrichedDataRequest true "Bulk data request"
 // @Success 200 {object} APIResponse "Bulk data retrieved successfully"
-// @Failure 400 {object} ErrorResponse "Bad Request"
-// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Failure 400 {object} api.APIResponse "Bad Request"
+// @Failure 500 {object} api.APIResponse "Internal Server Error"
 // @Router /campaigns/bulk/enriched-data [post]
 func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Context) {
 	var request BulkEnrichedDataRequest
@@ -884,8 +884,8 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 // @Produce json
 // @Param request body PatternOffsetRequest true "Pattern offset request"
 // @Success 200 {object} PatternOffsetResponse "Pattern offset retrieved successfully"
-// @Failure 400 {object} ErrorResponse "Bad Request"
-// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Failure 400 {object} api.APIResponse "Bad Request"
+// @Failure 500 {object} api.APIResponse "Internal Server Error"
 // @Router /campaigns/domain-generation/pattern-offset [post]
 func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
 	var req PatternOffsetRequest
@@ -984,9 +984,9 @@ func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
 // @Produce json
 // @Param campaignId path string true "Campaign ID (UUID)"
 // @Success 200 {object} APIResponse "Domain status summary retrieved successfully"
-// @Failure 400 {object} ErrorResponse "Bad Request"
-// @Failure 404 {object} ErrorResponse "Campaign not found"
-// @Failure 500 {object} ErrorResponse "Internal Server Error"
+// @Failure 400 {object} api.APIResponse "Bad Request"
+// @Failure 404 {object} api.APIResponse "Campaign not found"
+// @Failure 500 {object} api.APIResponse "Internal Server Error"
 // @Router /campaigns/{campaignId}/domains/status [get]
 func (h *CampaignOrchestratorAPIHandler) getCampaignDomainsStatus(c *gin.Context) {
 	campaignId := c.Param("campaignId")

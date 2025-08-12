@@ -82,11 +82,6 @@ export const featureFlagsApi = new FeatureFlagsApi(apiConfiguration);
 export const apiClient = campaignsApi;
 
 // Export types for convenience
-export type { components } from './types';
-
-// Import components type to use for re-exports
-import type { components } from './types';
-
-// Re-export specific types that are commonly used
-export type CreateKeywordSetRequest = components['schemas']['CreateKeywordSetRequest'];
-export type CreateCampaignRequest = components['schemas']['CreateCampaignRequest'];
+// Professional type exports using direct model imports
+export type { CreateKeywordSetRequest } from './models/create-keyword-set-request';
+export type { CreateCampaignRequest } from './models/create-campaign-request';

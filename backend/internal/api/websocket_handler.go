@@ -141,8 +141,8 @@ func NewWebSocketHandler(hub internalwebsocket.Broadcaster, sessionService *serv
 // @ID connectWebSocket
 // @Param domainflow_session header string false "Session cookie for authentication"
 // @Success 101 {string} string "WebSocket connection established"
-// @Failure 401 {object} WebSocketErrorResponse "Authentication required"
-// @Failure 403 {object} WebSocketErrorResponse "Invalid origin or session security validation failed"
+// @Failure 401 {object} api.APIResponse "Authentication required"
+// @Failure 403 {object} api.APIResponse "Invalid origin or session security validation failed"
 // @Router /ws [get]
 func (h *WebSocketHandler) HandleConnections(c *gin.Context) {
 	// Session-based authentication: Validate session before upgrading to WebSocket

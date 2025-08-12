@@ -34,7 +34,7 @@ export interface ModelsCustomDomainGenerationConfig {
      * @type {string}
      * @memberof ModelsCustomDomainGenerationConfig
      */
-    'generationType': 'template' | 'ai_assisted' | 'custom_algorithm';
+    'generationType': ModelsCustomDomainGenerationConfigGenerationTypeEnum;
     /**
      * 
      * @type {{ [key: string]: string; }}
@@ -53,6 +53,10 @@ export interface ModelsCustomDomainGenerationConfig {
     * @export
     * @enum {string}
     */
-// Enum ModelsCustomDomainGenerationConfigGenerationTypeEnum converted to direct string literals in interface
+export enum ModelsCustomDomainGenerationConfigGenerationTypeEnum {
+    template = 'template',
+    ai_assisted = 'ai_assisted',
+    custom_algorithm = 'custom_algorithm'
+}
 
 

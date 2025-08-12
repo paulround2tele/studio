@@ -207,9 +207,9 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 // @ID getCurrentUser
 // @Produce json
 // @Success 200 {object} models.User "Current user information"
-// @Failure 401 {object} StandardErrorResponse "Authentication required"
-// @Failure 404 {object} StandardErrorResponse "User not found"
-// @Failure 500 {object} StandardErrorResponse "Internal server error"
+// @Failure 401 {object} api.APIResponse "Authentication required"
+// @Failure 404 {object} api.APIResponse "User not found"
+// @Failure 500 {object} api.APIResponse "Internal server error"
 // @Router /auth/me [get]
 func (h *AuthHandler) Me(c *gin.Context) {
 	// Get security context from middleware

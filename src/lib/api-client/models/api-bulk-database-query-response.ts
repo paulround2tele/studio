@@ -15,23 +15,14 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { ApiBulkQueryMetadata } from './api-bulk-query-metadata';
-// May contain unused imports in some cases
-// @ts-ignore
 import type { ApiDatabaseQueryResult } from './api-database-query-result';
 
 /**
- * Response containing results from multiple database queries with metadata
+ * Response containing results from multiple database queries
  * @export
  * @interface ApiBulkDatabaseQueryResponse
  */
 export interface ApiBulkDatabaseQueryResponse {
-    /**
-     * 
-     * @type {ApiBulkQueryMetadata}
-     * @memberof ApiBulkDatabaseQueryResponse
-     */
-    'metadata'?: ApiBulkQueryMetadata;
     /**
      * 
      * @type {{ [key: string]: ApiDatabaseQueryResult; }}

@@ -15,18 +15,17 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Import types and services - using the EXACT same pattern as campaign form
-import type { components } from '@/lib/api-client/types';
 import { getPersonas } from '@/lib/services/personaService';
 import { listKeywordSets } from '@/lib/services/keywordSetService';
 import { campaignsApi } from '@/lib/api-client/client';
 import type { HTTPValidationConfig } from '@/lib/api-client/models/httpvalidation-config';
 import type { PhaseConfigureRequest } from '@/lib/api-client/models/phase-configure-request';
+import type { PersonaResponse } from '@/lib/api-client/models';
+import { ConfigurePhaseStandalonePhaseEnum } from '@/lib/api-client/apis/campaigns-api';
 // PhaseConfigureRequestPhaseTypeEnum removed - using direct string literals now
 
 // Response types from OpenAPI - using exact same types as campaign form
-type PersonaBase = components['schemas']['PersonaResponse'];
-
-interface PersonaResponse extends PersonaBase {
+interface ExtendedPersonaResponse extends PersonaResponse {
   status?: "Active" | "Disabled" | "Testing" | "Failed";
   tags?: string[];
 }
@@ -63,7 +62,7 @@ export default function HTTPValidationConfigModal({
   const { toast } = useToast();
   
   // Data state - following campaign form pattern
-  const [httpPersonas, setHttpPersonas] = useState<PersonaResponse[]>([]);
+  const [httpPersonas, setHttpPersonas] = useState<ExtendedPersonaResponse[]>([]);
   const [keywordSets, setKeywordSets] = useState<KeywordSetResponse[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [configuring, setConfiguring] = useState(false);
@@ -100,7 +99,7 @@ export default function HTTPValidationConfigModal({
             name: persona.name || '',
             personaType: persona.personaType || 'http'
           })).filter(p => p.isEnabled); // Only enabled personas
-          setHttpPersonas(httpPersonasWithStatus as PersonaResponse[]);
+          setHttpPersonas(httpPersonasWithStatus as ExtendedPersonaResponse[]);
         }
 
 
@@ -190,7 +189,7 @@ export default function HTTPValidationConfigModal({
       };
 
       // Use the generated API client method
-      await campaignsApi.configurePhaseStandalone(campaignId, 'http_keyword_validation', configRequest);
+      await campaignsApi.configurePhaseStandalone(campaignId, ConfigurePhaseStandalonePhaseEnum.http_keyword_validation, configRequest);
 
       toast({
         title: "HTTP validation configured",

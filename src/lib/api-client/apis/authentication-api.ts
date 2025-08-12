@@ -22,7 +22,7 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
-import type { ApiStandardErrorResponse } from '../models';
+import type { ApiAPIResponse } from '../models';
 // @ts-ignore
 import type { BulkValidateDNS200Response } from '../models';
 // @ts-ignore

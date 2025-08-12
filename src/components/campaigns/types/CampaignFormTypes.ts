@@ -9,15 +9,19 @@
  *
  * @deprecated Use SimpleCampaignFormTypes.ts for new campaign forms
  */
-import type { components } from '@/lib/api-client/types';
+import type { 
+  CampaignCurrentPhaseEnum,
+  DNSValidationRequest as OpenAPIDNSValidationRequest,
+  HTTPKeywordValidationRequest as OpenAPIHTTPKeywordValidationRequest
+} from '@/lib/api-client/models';
 
 export type DomainGenerationPattern = "prefix_variable" | "suffix_variable" | "both_variable";
 export type DomainSourceSelectionMode = "none" | "upload" | "campaign_output";
-export type CampaignPhase = components['schemas']['LeadGenerationCampaign']['currentPhase'];
+export type CampaignPhase = CampaignCurrentPhaseEnum;
 
 // Import OpenAPI types for full sequence support (legacy)
-export type DNSValidationRequest = components['schemas']['DNSValidationRequest'];
-export type HTTPKeywordValidationRequest = components['schemas']['HTTPKeywordValidationRequest'];
+export type DNSValidationRequest = OpenAPIDNSValidationRequest;
+export type HTTPKeywordValidationRequest = OpenAPIHTTPKeywordValidationRequest;
 
 /**
  * LEGACY CampaignFormValues interface

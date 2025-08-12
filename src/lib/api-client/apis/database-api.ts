@@ -22,17 +22,13 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
-import type { ApiBulkDatabaseQueryRequest } from '../models';
+import type { ApiAPIResponse } from '../models';
 // @ts-ignore
-import type { ApiBulkDatabaseQueryResponse } from '../models';
+import type { ApiBulkDatabaseQueryRequest } from '../models';
 // @ts-ignore
 import type { ApiBulkDatabaseStatsRequest } from '../models';
 // @ts-ignore
-import type { ApiBulkDatabaseStatsResponse } from '../models';
-// @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBackupErrorResponse } from '../models';
-// @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsErrorResponse } from '../models';
+import type { BulkValidateDNS200Response } from '../models';
 /**
  * DatabaseApi - axios parameter creator
  * @export
@@ -141,7 +137,7 @@ export const DatabaseApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV2DatabaseQueryPost(xRequestedWith: string, apiBulkDatabaseQueryRequest: ApiBulkDatabaseQueryRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiBulkDatabaseQueryResponse>> {
+        async apiV2DatabaseQueryPost(xRequestedWith: string, apiBulkDatabaseQueryRequest: ApiBulkDatabaseQueryRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2DatabaseQueryPost(xRequestedWith, apiBulkDatabaseQueryRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DatabaseApi.apiV2DatabaseQueryPost']?.[localVarOperationServerIndex]?.url;
@@ -155,7 +151,7 @@ export const DatabaseApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV2DatabaseStatsPost(xRequestedWith: string, apiBulkDatabaseStatsRequest: ApiBulkDatabaseStatsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiBulkDatabaseStatsResponse>> {
+        async apiV2DatabaseStatsPost(xRequestedWith: string, apiBulkDatabaseStatsRequest: ApiBulkDatabaseStatsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2DatabaseStatsPost(xRequestedWith, apiBulkDatabaseStatsRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DatabaseApi.apiV2DatabaseStatsPost']?.[localVarOperationServerIndex]?.url;
@@ -179,7 +175,7 @@ export const DatabaseApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2DatabaseQueryPost(xRequestedWith: string, apiBulkDatabaseQueryRequest: ApiBulkDatabaseQueryRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiBulkDatabaseQueryResponse> {
+        apiV2DatabaseQueryPost(xRequestedWith: string, apiBulkDatabaseQueryRequest: ApiBulkDatabaseQueryRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
             return localVarFp.apiV2DatabaseQueryPost(xRequestedWith, apiBulkDatabaseQueryRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -190,7 +186,7 @@ export const DatabaseApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2DatabaseStatsPost(xRequestedWith: string, apiBulkDatabaseStatsRequest: ApiBulkDatabaseStatsRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiBulkDatabaseStatsResponse> {
+        apiV2DatabaseStatsPost(xRequestedWith: string, apiBulkDatabaseStatsRequest: ApiBulkDatabaseStatsRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
             return localVarFp.apiV2DatabaseStatsPost(xRequestedWith, apiBulkDatabaseStatsRequest, options).then((request) => request(axios, basePath));
         },
     };
@@ -211,7 +207,7 @@ export interface DatabaseApiInterface {
      * @throws {RequiredError}
      * @memberof DatabaseApiInterface
      */
-    apiV2DatabaseQueryPost(xRequestedWith: string, apiBulkDatabaseQueryRequest: ApiBulkDatabaseQueryRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiBulkDatabaseQueryResponse>;
+    apiV2DatabaseQueryPost(xRequestedWith: string, apiBulkDatabaseQueryRequest: ApiBulkDatabaseQueryRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Retrieve comprehensive database statistics including schema and table-level details for enterprise monitoring
@@ -222,7 +218,7 @@ export interface DatabaseApiInterface {
      * @throws {RequiredError}
      * @memberof DatabaseApiInterface
      */
-    apiV2DatabaseStatsPost(xRequestedWith: string, apiBulkDatabaseStatsRequest: ApiBulkDatabaseStatsRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiBulkDatabaseStatsResponse>;
+    apiV2DatabaseStatsPost(xRequestedWith: string, apiBulkDatabaseStatsRequest: ApiBulkDatabaseStatsRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
 }
 

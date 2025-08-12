@@ -92,11 +92,8 @@ components:
       - queries
       type: object
     api.BulkDatabaseQueryResponse:
-      description: Response containing results from multiple database queries with
-        metadata
+      description: Response containing results from multiple database queries
       properties:
-        metadata:
-          $ref: '#/components/schemas/api.BulkQueryMetadata'
         results:
           additionalProperties:
             $ref: '#/components/schemas/api.DatabaseQueryResult'
@@ -132,12 +129,10 @@ components:
           uniqueItems: false
       type: object
     api.BulkDatabaseStatsResponse:
-      description: Response containing database statistics with metadata
+      description: Response containing database statistics
       properties:
         databaseStats:
           $ref: '#/components/schemas/api.DatabaseStats'
-        metadata:
-          $ref: '#/components/schemas/api.BulkStatsMetadata'
         schemaStats:
           additionalProperties:
             $ref: '#/components/schemas/api.SchemaStats'
@@ -185,6 +180,31 @@ components:
         totalProxies:
           type: integer
       type: object
+    api.BulkOperationInfo:
+      description: Bulk operation metadata
+      properties:
+        failedItems:
+          description: List of item IDs that failed processing
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+        processedItems:
+          description: Number of items successfully processed
+          type: integer
+        processingTimeMs:
+          description: Total processing time in milliseconds
+          type: integer
+        skippedItems:
+          description: Number of items skipped due to errors
+          type: integer
+        totalRowsReturned:
+          description: For database operations
+          type: integer
+        type:
+          description: Type of bulk operation (campaigns, queries, etc.)
+          type: string
+      type: object
     api.BulkProxyTestResponse:
       properties:
         errorCount:
@@ -197,30 +217,6 @@ components:
           type: array
           uniqueItems: false
         totalRequested:
-          type: integer
-      type: object
-    api.BulkQueryMetadata:
-      description: Metadata containing processing statistics and performance metrics
-        for bulk database operations
-      properties:
-        failedQueries:
-          example:
-          - '[''query_9'']'
-          items:
-            type: string
-          type: array
-          uniqueItems: false
-        processedQueries:
-          example: 8
-          type: integer
-        processingTimeMs:
-          example: 2340
-          type: integer
-        skippedQueries:
-          example: 1
-          type: integer
-        totalRowsReturned:
-          example: 15420
           type: integer
       type: object
     api.BulkResourceStatusResponse:
@@ -253,30 +249,6 @@ components:
             maxNetwork:
               type: number
           type: object
-      type: object
-    api.BulkStatsMetadata:
-      description: Metadata containing processing statistics for bulk database statistics
-        operations
-      properties:
-        failedItems:
-          example:
-          - '[''invalid_schema'']'
-          items:
-            type: string
-          type: array
-          uniqueItems: false
-        processedSchemas:
-          example: 2
-          type: integer
-        processedTables:
-          example: 8
-          type: integer
-        processingTimeMs:
-          example: 1850
-          type: integer
-        skippedItems:
-          example: 1
-          type: integer
       type: object
     api.CreateKeywordSetRequest:
       properties:
@@ -454,6 +426,38 @@ components:
       - ErrorCodeCampaignInProgress
       - ErrorCodeQuotaExceeded
       - ErrorCodeInvalidState
+    api.ErrorDetail:
+      properties:
+        code:
+          description: Primary error code
+          type: string
+          x-enum-varnames:
+          - ErrorCodeBadRequest
+          - ErrorCodeUnauthorized
+          - ErrorCodeForbidden
+          - ErrorCodeNotFound
+          - ErrorCodeConflict
+          - ErrorCodeValidation
+          - ErrorCodeRequired
+          - ErrorCodeRateLimitExceeded
+          - ErrorCodeRequestTimeout
+          - ErrorCodeNotImplemented
+          - ErrorCodeInternalServer
+          - ErrorCodeDatabaseError
+          - ErrorCodeServiceUnavailable
+          - ErrorCodeGatewayTimeout
+          - ErrorCodeCampaignInProgress
+          - ErrorCodeQuotaExceeded
+          - ErrorCodeInvalidState
+        context:
+          description: Additional context data
+        field:
+          description: Field that caused the error (for validation)
+          type: string
+        message:
+          description: Human-readable error message
+          type: string
+      type: object
     api.ErrorInfo:
       description: Detailed error information structure
       properties:
@@ -462,7 +466,7 @@ components:
         details:
           description: Detailed error information
           items:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_api.ErrorDetail'
+            $ref: '#/components/schemas/api.ErrorDetail'
           type: array
           uniqueItems: false
         message:
@@ -476,19 +480,6 @@ components:
         timestamp:
           description: When the error occurred
           example: "2023-01-01T12:00:00Z"
-          type: string
-      type: object
-    api.ErrorMeta:
-      properties:
-        api_version:
-          type: string
-        method:
-          type: string
-        path:
-          type: string
-        timestamp:
-          type: string
-        user_agent:
           type: string
       type: object
     api.HTTPValidationConfig:
@@ -644,6 +635,8 @@ components:
     api.Metadata:
       description: Optional metadata attached to API responses
       properties:
+        bulk:
+          $ref: '#/components/schemas/api.BulkOperationInfo'
         extra:
           additionalProperties: {}
           description: Additional metadata
@@ -989,15 +982,6 @@ components:
         user:
           $ref: '#/components/schemas/api.UserPublicResponse'
       type: object
-    api.StandardErrorResponse:
-      properties:
-        error:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_pkg_api.ErrorDetail'
-        meta:
-          $ref: '#/components/schemas/api.ErrorMeta'
-        trace_id:
-          type: string
-      type: object
     api.Status:
       properties:
         message:
@@ -1080,15 +1064,6 @@ components:
         isActive:
           type: boolean
         username:
-          type: string
-      type: object
-    api.WebSocketErrorResponse:
-      properties:
-        code:
-          type: integer
-        error:
-          type: string
-        message:
           type: string
       type: object
     config.AuthConfig:
@@ -1294,44 +1269,12 @@ components:
     data:
       properties:
         data:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkValidationResponse'
+          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse'
       type: object
     error:
       properties:
         error:
           $ref: '#/components/schemas/api.ErrorInfo'
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_api.ErrorDetail:
-      properties:
-        code:
-          description: Primary error code
-          type: string
-          x-enum-varnames:
-          - ErrorCodeBadRequest
-          - ErrorCodeUnauthorized
-          - ErrorCodeForbidden
-          - ErrorCodeNotFound
-          - ErrorCodeConflict
-          - ErrorCodeValidation
-          - ErrorCodeRequired
-          - ErrorCodeRateLimitExceeded
-          - ErrorCodeRequestTimeout
-          - ErrorCodeNotImplemented
-          - ErrorCodeInternalServer
-          - ErrorCodeDatabaseError
-          - ErrorCodeServiceUnavailable
-          - ErrorCodeGatewayTimeout
-          - ErrorCodeCampaignInProgress
-          - ErrorCodeQuotaExceeded
-          - ErrorCodeInvalidState
-        context:
-          description: Additional context data
-        field:
-          description: Field that caused the error (for validation)
-          type: string
-        message:
-          description: Human-readable error message
-          type: string
       type: object
     github_com_fntelecomllc_studio_backend_internal_models.AdvancedStealthPolicy:
       description: Enterprise-grade enhancements for Day 3
@@ -2026,18 +1969,6 @@ components:
           - intelligent_failover
           type: string
       type: object
-    github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse:
-      properties:
-        code:
-          example: 400
-          type: integer
-        message:
-          example: Error message description
-          type: string
-        status:
-          example: error
-          type: string
-      type: object
     github_com_fntelecomllc_studio_backend_internal_models.HTTPValidationOperation:
       properties:
         campaignId:
@@ -2601,36 +2532,6 @@ components:
         validationType:
           description: '"dns", "http"'
           type: string
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse:
-      properties:
-        code:
-          example: 400
-          type: integer
-        message:
-          example: Error message description
-          type: string
-        status:
-          example: error
-          type: string
-      type: object
-    github_com_fntelecomllc_studio_backend_pkg_api.ErrorDetail:
-      properties:
-        code:
-          type: string
-        details:
-          type: string
-        fields:
-          additionalProperties:
-            type: string
-          type: object
-        message:
-          type: string
-        suggestions:
-          items:
-            type: string
-          type: array
-          uniqueItems: false
       type: object
     keywordextractor.KeywordExtractionResult:
       properties:
@@ -3586,25 +3487,44 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.BulkDatabaseQueryResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Queries executed successfully
         "400":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Bad request or invalid queries
         "403":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Forbidden query detected
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Internal server error
       summary: Execute bulk database queries
       tags:
@@ -3632,19 +3552,38 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.BulkDatabaseStatsResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Statistics retrieved successfully
         "400":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Bad request
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Internal server error
       summary: Get bulk database statistics
       tags:
@@ -4085,19 +4024,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.StandardErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Authentication required
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.StandardErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: User not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.StandardErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Internal server error
       summary: Get current user
       tags:
@@ -4200,7 +4139,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Internal Server Error
       summary: List campaigns (standalone)
       tags:
@@ -4227,19 +4166,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Bad Request
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Campaign not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Internal Server Error
       summary: Get campaign domain status summary
       tags:
@@ -4283,19 +4222,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Bad Request
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Campaign not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Internal Server Error
       summary: Configure campaign phase (standalone)
       tags:
@@ -4332,19 +4271,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Bad Request
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Campaign not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Internal Server Error
       summary: Start campaign phase (standalone)
       tags:
@@ -4383,19 +4322,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Bad Request
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Campaign or phase not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Internal Server Error
       summary: Get phase status (standalone)
       tags:
@@ -4422,19 +4361,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Bad Request
         "404":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Campaign not found
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Internal Server Error
       summary: Get campaign progress (standalone)
       tags:
@@ -4456,13 +4395,51 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Analytics completed successfully
         "202":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Analytics accepted and processing
         "400":
           content:
@@ -4503,13 +4480,51 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Domains generated successfully
         "202":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Operation accepted and processing
         "400":
           content:
@@ -4556,13 +4571,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Bad Request
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Internal Server Error
       summary: Get bulk enriched campaign data
       tags:
@@ -4619,7 +4634,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkOperationListResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Operations list retrieved successfully
         "400":
           content:
@@ -4739,13 +4773,51 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Resources allocated successfully
         "202":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Resource allocation accepted and processing
         "400":
           content:
@@ -4830,13 +4902,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Bad Request
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Internal Server Error
       summary: Get domain generation pattern offset
       tags:
@@ -4863,13 +4935,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Bad Request
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Internal Server Error
       summary: Create lead generation campaign
       tags:
@@ -4967,7 +5039,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.StandardErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Service not ready
       summary: Readiness check
       tags:
@@ -5959,7 +6031,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Bulk operation results
         "400":
           content:
@@ -6031,7 +6122,26 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse'
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
+                type: object
           description: Bulk operation results
         "400":
           content:
@@ -6797,19 +6907,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Bad Request
         "401":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Unauthorized
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Internal Server Error
       summary: Stream specific campaign events via SSE
       tags:
@@ -6833,13 +6943,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Unauthorized
         "500":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Internal Server Error
       summary: Stream campaign events via SSE
       tags:
@@ -6859,7 +6969,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Unauthorized
       summary: Get SSE connection statistics
       tags:
@@ -6885,13 +6995,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.WebSocketErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Authentication required
         "403":
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/api.WebSocketErrorResponse'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Invalid origin or session security validation failed
       summary: WebSocket connection
       tags:

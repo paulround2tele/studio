@@ -32,9 +32,9 @@ import type { ApiProxyStatusResponse } from '../models';
 // @ts-ignore
 import type { ApiProxyTestResponse } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest } from '../models';
+import type { BulkValidateDNS200Response } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkProxyOperationResponse } from '../models';
+import type { GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest } from '../models';
 // @ts-ignore
 import type { GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest } from '../models';
 // @ts-ignore
@@ -469,7 +469,7 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkProxyOperationResponse>> {
+        async proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesBulkDeleteDelete']?.[localVarOperationServerIndex]?.url;
@@ -495,7 +495,7 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkProxyOperationResponse>> {
+        async proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesBulkUpdatePut']?.[localVarOperationServerIndex]?.url;
@@ -625,7 +625,7 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkProxyOperationResponse> {
+        proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
             return localVarFp.proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -645,7 +645,7 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkProxyOperationResponse> {
+        proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
             return localVarFp.proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -748,7 +748,7 @@ export interface ProxiesApiInterface {
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkProxyOperationResponse>;
+    proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Test multiple proxy configurations simultaneously
@@ -768,7 +768,7 @@ export interface ProxiesApiInterface {
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkProxyOperationResponse>;
+    proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Retrieve a list of proxies with optional filtering by protocol, status, and health

@@ -89,7 +89,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
+                        "application/json": components["schemas"]["models.ErrorResponse"];
                     };
                 };
                 /** @description Forbidden query detected */
@@ -98,7 +98,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
+                        "application/json": components["schemas"]["models.ErrorResponse"];
                     };
                 };
                 /** @description Internal server error */
@@ -107,7 +107,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
+                        "application/json": components["schemas"]["models.ErrorResponse"];
                     };
                 };
             };
@@ -163,7 +163,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
+                        "application/json": components["schemas"]["models.ErrorResponse"];
                     };
                 };
                 /** @description Internal server error */
@@ -172,7 +172,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                        "application/json": components["schemas"]["models.ErrorResponse"];
                     };
                 };
             };
@@ -3950,11 +3950,21 @@ export interface components {
          * @example VALIDATION_ERROR
          */
         "api.ErrorCode": string;
+        "api.ErrorDetail": {
+            /** @description Primary error code */
+            code?: string;
+            /** @description Additional context data */
+            context?: unknown;
+            /** @description Field that caused the error (for validation) */
+            field?: string;
+            /** @description Human-readable error message */
+            message?: string;
+        };
         /** @description Detailed error information structure */
         "api.ErrorInfo": {
             code?: components["schemas"]["api.ErrorCode"];
             /** @description Detailed error information */
-            details?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_api.ErrorDetail"][];
+            details?: components["schemas"]["api.ErrorDetail"][];
             /**
              * @description Primary error message
              * @example Invalid input parameters
@@ -3970,13 +3980,6 @@ export interface components {
              * @example 2023-01-01T12:00:00Z
              */
             timestamp?: string;
-        };
-        "api.ErrorMeta": {
-            api_version?: string;
-            method?: string;
-            path?: string;
-            timestamp?: string;
-            user_agent?: string;
         };
         /** @description Configuration for HTTP keyword validation phase - all technical parameters derived from persona ConfigDetails */
         "api.HTTPValidationConfig": {
@@ -4250,11 +4253,6 @@ export interface components {
             token?: string;
             user?: components["schemas"]["api.UserPublicResponse"];
         };
-        "api.StandardErrorResponse": {
-            error?: components["schemas"]["github_com_fntelecomllc_studio_backend_pkg_api.ErrorDetail"];
-            meta?: components["schemas"]["api.ErrorMeta"];
-            trace_id?: string;
-        };
         "api.Status": {
             message?: string;
             status?: string;
@@ -4299,11 +4297,6 @@ export interface components {
             id?: string;
             isActive?: boolean;
             username?: string;
-        };
-        "api.WebSocketErrorResponse": {
-            code?: number;
-            error?: string;
-            message?: string;
         };
         "config.AuthConfig": {
             accountLockDuration?: string;
@@ -4416,16 +4409,6 @@ export interface components {
         };
         error: {
             error?: components["schemas"]["api.ErrorInfo"];
-        };
-        "github_com_fntelecomllc_studio_backend_internal_api.ErrorDetail": {
-            /** @description Primary error code */
-            code?: string;
-            /** @description Additional context data */
-            context?: unknown;
-            /** @description Field that caused the error (for validation) */
-            field?: string;
-            /** @description Human-readable error message */
-            message?: string;
         };
         /** @description Enterprise-grade enhancements for Day 3 */
         "github_com_fntelecomllc_studio_backend_internal_models.AdvancedStealthPolicy": {
@@ -4711,14 +4694,6 @@ export interface components {
             /** @enum {string} */
             strategy?: "round_robin" | "weighted_random" | "geographic" | "intelligent_failover";
         };
-        "github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse": {
-            /** @example 400 */
-            code?: number;
-            /** @example Error message description */
-            message?: string;
-            /** @example error */
-            status?: string;
-        };
         "github_com_fntelecomllc_studio_backend_internal_models.HTTPValidationOperation": {
             campaignId: string;
             domainFilter?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.DomainFilter"];
@@ -4977,23 +4952,6 @@ export interface components {
             success?: boolean;
             /** @description "dns", "http" */
             validationType?: string;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse": {
-            /** @example 400 */
-            code?: number;
-            /** @example Error message description */
-            message?: string;
-            /** @example error */
-            status?: string;
-        };
-        "github_com_fntelecomllc_studio_backend_pkg_api.ErrorDetail": {
-            code?: string;
-            details?: string;
-            fields?: {
-                [key: string]: string;
-            };
-            message?: string;
-            suggestions?: string[];
         };
         "keywordextractor.KeywordExtractionResult": {
             category?: string;
@@ -5310,6 +5268,14 @@ export interface components {
             tlds: string[];
             /** @example 5 */
             variableLength: number;
+        };
+        "models.ErrorResponse": {
+            /** @example 400 */
+            code?: number;
+            /** @example Error message description */
+            message?: string;
+            /** @example error */
+            status?: string;
         };
         "models.GenerationConstraints": {
             excludeWords?: string[];
@@ -5896,7 +5862,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description User not found */
@@ -5905,7 +5871,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal server error */
@@ -5914,7 +5880,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -6026,7 +5992,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -6058,7 +6024,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Campaign not found */
@@ -6067,7 +6033,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -6076,7 +6042,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -6115,7 +6081,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Campaign not found */
@@ -6124,7 +6090,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -6133,7 +6099,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -6167,7 +6133,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Campaign not found */
@@ -6176,7 +6142,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -6185,7 +6151,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -6219,7 +6185,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Campaign or phase not found */
@@ -6228,7 +6194,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -6237,7 +6203,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -6269,7 +6235,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Campaign not found */
@@ -6278,7 +6244,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -6287,7 +6253,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -6443,7 +6409,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -6452,7 +6418,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -6742,7 +6708,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -6751,7 +6717,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -6785,7 +6751,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -6794,7 +6760,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -6930,7 +6896,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.StandardErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -7071,7 +7037,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Unauthorized */
@@ -7080,7 +7046,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -7089,7 +7055,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -7119,7 +7085,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -7128,7 +7094,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -7157,7 +7123,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };
@@ -7189,7 +7155,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.WebSocketErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Invalid origin or session security validation failed */
@@ -7198,7 +7164,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.WebSocketErrorResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
         };

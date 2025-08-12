@@ -159,7 +159,7 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
       }
 
       // Execute phase transition
-      const response = await campaignsApi.startPhaseStandalone(sourceCampaign.id, backendPhaseParam);
+      const response = await campaignsApi.startPhaseStandalone(sourceCampaign.id, backendPhaseParam as any);
 
       if (!isResponseSuccess(response)) {
         const errorMessage = getResponseError(response) || 'Failed to start phase';

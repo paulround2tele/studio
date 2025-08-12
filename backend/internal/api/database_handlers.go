@@ -32,10 +32,10 @@ func NewDatabaseHandler(apiHandler *APIHandler) *DatabaseHandler {
 // @Produce json
 // @Param X-Requested-With header string true "Must be XMLHttpRequest"
 // @Param request body BulkDatabaseQueryRequest true "Bulk query request"
-// @Success 200 {object} BulkDatabaseQueryResponse "Queries executed successfully"
-// @Failure 400 {object} ErrorResponse "Bad request or invalid queries"
-// @Failure 403 {object} ErrorResponse "Forbidden query detected"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Success 200 {object} APIResponse{data=BulkDatabaseQueryResponse} "Queries executed successfully"
+// @Failure 400 {object} APIResponse "Bad request or invalid queries"
+// @Failure 403 {object} APIResponse "Forbidden query detected"
+// @Failure 500 {object} APIResponse "Internal server error"
 // @Router /api/v2/database/query [post]
 func (h *DatabaseHandler) HandleBulkDatabaseQuery(c *gin.Context) {
 	startTime := time.Now()
@@ -107,18 +107,19 @@ func (h *DatabaseHandler) HandleBulkDatabaseQuery(c *gin.Context) {
 		TotalCount: 0,
 	}
 
-	metadata := &BulkQueryMetadata{
-		ProcessedQueries:  0,
-		SkippedQueries:    0,
-		FailedQueries:     []string{},
+	bulkInfo := &BulkOperationInfo{
+		ProcessedItems:    0,
+		SkippedItems:      0,
+		FailedItems:       []string{},
 		TotalRowsReturned: 0,
+		Type:              "database_queries",
 	}
 
 	// Process each query with proper error tracking
 	for _, query := range req.Queries {
 		if strings.TrimSpace(query.SQL) == "" {
-			metadata.SkippedQueries++
-			metadata.FailedQueries = append(metadata.FailedQueries, query.ID)
+			bulkInfo.SkippedItems++
+			bulkInfo.FailedItems = append(bulkInfo.FailedItems, query.ID)
 			response.Results[query.ID] = DatabaseQueryResult{
 				Success: false,
 				Error:   "SQL query cannot be empty",
@@ -128,8 +129,8 @@ func (h *DatabaseHandler) HandleBulkDatabaseQuery(c *gin.Context) {
 
 		// Security check
 		if !h.isQuerySafe(query.SQL) {
-			metadata.SkippedQueries++
-			metadata.FailedQueries = append(metadata.FailedQueries, query.ID)
+			bulkInfo.SkippedItems++
+			bulkInfo.FailedItems = append(bulkInfo.FailedItems, query.ID)
 			response.Results[query.ID] = DatabaseQueryResult{
 				Success: false,
 				Error:   "Query contains potentially dangerous operations",
@@ -143,16 +144,16 @@ func (h *DatabaseHandler) HandleBulkDatabaseQuery(c *gin.Context) {
 		executionTime := time.Since(queryStartTime).Milliseconds()
 
 		if err != nil {
-			metadata.SkippedQueries++
-			metadata.FailedQueries = append(metadata.FailedQueries, query.ID)
+			bulkInfo.SkippedItems++
+			bulkInfo.FailedItems = append(bulkInfo.FailedItems, query.ID)
 			response.Results[query.ID] = DatabaseQueryResult{
 				Success:       false,
 				Error:         err.Error(),
 				ExecutionTime: executionTime,
 			}
 		} else {
-			metadata.ProcessedQueries++
-			metadata.TotalRowsReturned += int64(result.RowCount)
+			bulkInfo.ProcessedItems++
+			bulkInfo.TotalRowsReturned += int64(result.RowCount)
 			result.Success = true
 			result.ExecutionTime = executionTime
 			response.Results[query.ID] = *result
@@ -161,11 +162,12 @@ func (h *DatabaseHandler) HandleBulkDatabaseQuery(c *gin.Context) {
 		response.TotalCount++
 	}
 
-	// Set processing time
-	metadata.ProcessingTimeMs = time.Since(startTime).Milliseconds()
-	response.Metadata = metadata
+	// Set processing time and create unified metadata
+	bulkInfo.ProcessingTimeMs = time.Since(startTime).Milliseconds()
 
-	apiResponse := NewSuccessResponse(response, requestID)
+	apiResponse := NewSuccessResponse(response, requestID).WithMetadata(&Metadata{
+		Bulk: bulkInfo,
+	})
 	c.JSON(http.StatusOK, apiResponse)
 }
 
@@ -177,9 +179,9 @@ func (h *DatabaseHandler) HandleBulkDatabaseQuery(c *gin.Context) {
 // @Produce json
 // @Param X-Requested-With header string true "Must be XMLHttpRequest"
 // @Param request body BulkDatabaseStatsRequest true "Bulk stats request"
-// @Success 200 {object} BulkDatabaseStatsResponse "Statistics retrieved successfully"
-// @Failure 400 {object} ErrorResponse "Bad request"
-// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Success 200 {object} APIResponse{data=BulkDatabaseStatsResponse} "Statistics retrieved successfully"
+// @Failure 400 {object} APIResponse "Bad request"
+// @Failure 500 {object} APIResponse "Internal server error"
 // @Router /api/v2/database/stats [post]
 func (h *DatabaseHandler) HandleBulkDatabaseStats(c *gin.Context) {
 	startTime := time.Now()
@@ -225,11 +227,11 @@ func (h *DatabaseHandler) HandleBulkDatabaseStats(c *gin.Context) {
 		TotalCount: 0,
 	}
 
-	metadata := &BulkStatsMetadata{
-		ProcessedSchemas: 0,
-		ProcessedTables:  0,
-		SkippedItems:     0,
-		FailedItems:      []string{},
+	bulkInfo := &BulkOperationInfo{
+		ProcessedItems: 0,
+		SkippedItems:   0,
+		FailedItems:    []string{},
+		Type:           "database_stats",
 	}
 
 	// Get basic database stats
@@ -255,11 +257,11 @@ func (h *DatabaseHandler) HandleBulkDatabaseStats(c *gin.Context) {
 		for _, schemaName := range req.Schemas {
 			stats, err := h.getSchemaStats(schemaName)
 			if err != nil {
-				metadata.SkippedItems++
-				metadata.FailedItems = append(metadata.FailedItems, schemaName)
+				bulkInfo.SkippedItems++
+				bulkInfo.FailedItems = append(bulkInfo.FailedItems, schemaName)
 			} else {
 				response.SchemaStats[schemaName] = *stats
-				metadata.ProcessedSchemas++
+				bulkInfo.ProcessedItems++
 				response.TotalCount++
 			}
 		}
@@ -271,11 +273,11 @@ func (h *DatabaseHandler) HandleBulkDatabaseStats(c *gin.Context) {
 		for _, tableName := range req.Tables {
 			stats, err := h.getTableStats(tableName)
 			if err != nil {
-				metadata.SkippedItems++
-				metadata.FailedItems = append(metadata.FailedItems, tableName)
+				bulkInfo.SkippedItems++
+				bulkInfo.FailedItems = append(bulkInfo.FailedItems, tableName)
 			} else {
 				response.TableStats[tableName] = *stats
-				metadata.ProcessedTables++
+				bulkInfo.ProcessedItems++
 				response.TotalCount++
 			}
 		}
@@ -286,11 +288,12 @@ func (h *DatabaseHandler) HandleBulkDatabaseStats(c *gin.Context) {
 		response.TotalCount = 1
 	}
 
-	// Set processing time
-	metadata.ProcessingTimeMs = time.Since(startTime).Milliseconds()
-	response.Metadata = metadata
+	// Set processing time and create unified metadata
+	bulkInfo.ProcessingTimeMs = time.Since(startTime).Milliseconds()
 
-	apiResponse := NewSuccessResponse(response, requestID)
+	apiResponse := NewSuccessResponse(response, requestID).WithMetadata(&Metadata{
+		Bulk: bulkInfo,
+	})
 	c.JSON(http.StatusOK, apiResponse)
 }
 

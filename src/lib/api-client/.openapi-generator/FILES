@@ -35,11 +35,10 @@ docs/ApiBulkDatabaseStatsRequest.md
 docs/ApiBulkDatabaseStatsResponse.md
 docs/ApiBulkEnrichedDataRequest.md
 docs/ApiBulkHealthCheckResponse.md
+docs/ApiBulkOperationInfo.md
 docs/ApiBulkProxyTestResponse.md
-docs/ApiBulkQueryMetadata.md
 docs/ApiBulkResourceStatusResponse.md
 docs/ApiBulkResourceStatusResponseResourceLimits.md
-docs/ApiBulkStatsMetadata.md
 docs/ApiCreateKeywordSetRequest.md
 docs/ApiCreatePersonaRequest.md
 docs/ApiDNSValidationConfig.md
@@ -47,8 +46,8 @@ docs/ApiDatabaseQuery.md
 docs/ApiDatabaseQueryResult.md
 docs/ApiDatabaseStats.md
 docs/ApiDatabaseValue.md
+docs/ApiErrorDetail.md
 docs/ApiErrorInfo.md
-docs/ApiErrorMeta.md
 docs/ApiHTTPValidationConfig.md
 docs/ApiHealthCheckResponse.md
 docs/ApiHealthStatus.md
@@ -82,7 +81,6 @@ docs/ApiServerConfigResponse.md
 docs/ApiServerConfigUpdateRequest.md
 docs/ApiSessionRefreshResponse.md
 docs/ApiSessionResponse.md
-docs/ApiStandardErrorResponse.md
 docs/ApiStatus.md
 docs/ApiSuccessMessageResponse.md
 docs/ApiSystemInfo.md
@@ -90,7 +88,6 @@ docs/ApiTableStats.md
 docs/ApiUpdateKeywordSetRequest.md
 docs/ApiUpdatePersonaRequest.md
 docs/ApiUserPublicResponse.md
-docs/ApiWebSocketErrorResponse.md
 docs/AuthenticationApi.md
 docs/BulkOperationsApi.md
 docs/BulkValidateDNS200Response.md
@@ -108,10 +105,8 @@ docs/DatabaseApi.md
 docs/DomainsApi.md
 docs/Error.md
 docs/FeatureFlagsApi.md
-docs/GithubComFntelecomllcStudioBackendInternalApiErrorDetail.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsAdvancedStealthPolicy.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsAggregatedAnalytics.md
-docs/GithubComFntelecomllcStudioBackendInternalModelsBackupErrorResponse.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsBehavioralMimicryConfig.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsResponse.md
@@ -141,7 +136,6 @@ docs/GithubComFntelecomllcStudioBackendInternalModelsDomainFilter.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsDomainGenerationOperation.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsDomainGenerationResult.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsEnterpriseProxyStrategy.md
-docs/GithubComFntelecomllcStudioBackendInternalModelsErrorResponse.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsHTTPValidationOperation.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsKeywordRule.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsKeywordRuleTypeEnum.md
@@ -165,7 +159,6 @@ docs/GithubComFntelecomllcStudioBackendInternalModelsTimeSeriesPoint.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsUser.md
 docs/GithubComFntelecomllcStudioBackendInternalModelsValidationOperationResult.md
-docs/GithubComFntelecomllcStudioBackendPkgApiErrorDetail.md
 docs/HealthApi.md
 docs/KeywordExtractionApi.md
 docs/KeywordSetsApi.md
@@ -219,11 +212,10 @@ models/api-bulk-database-stats-request.ts
 models/api-bulk-database-stats-response.ts
 models/api-bulk-enriched-data-request.ts
 models/api-bulk-health-check-response.ts
+models/api-bulk-operation-info.ts
 models/api-bulk-proxy-test-response.ts
-models/api-bulk-query-metadata.ts
 models/api-bulk-resource-status-response-resource-limits.ts
 models/api-bulk-resource-status-response.ts
-models/api-bulk-stats-metadata.ts
 models/api-create-keyword-set-request.ts
 models/api-create-persona-request.ts
 models/api-database-query-result.ts
@@ -231,8 +223,8 @@ models/api-database-query.ts
 models/api-database-stats.ts
 models/api-database-value.ts
 models/api-dnsvalidation-config.ts
+models/api-error-detail.ts
 models/api-error-info.ts
-models/api-error-meta.ts
 models/api-health-check-response.ts
 models/api-health-status.ts
 models/api-httpvalidation-config.ts
@@ -266,7 +258,6 @@ models/api-server-config-response.ts
 models/api-server-config-update-request.ts
 models/api-session-refresh-response.ts
 models/api-session-response.ts
-models/api-standard-error-response.ts
 models/api-status.ts
 models/api-success-message-response.ts
 models/api-system-info.ts
@@ -274,7 +265,6 @@ models/api-table-stats.ts
 models/api-update-keyword-set-request.ts
 models/api-update-persona-request.ts
 models/api-user-public-response.ts
-models/api-web-socket-error-response.ts
 models/bulk-validate-dns200-response.ts
 models/config-auth-config.ts
 models/config-dnsvalidator-config-json.ts
@@ -285,10 +275,8 @@ models/config-proxy-manager-config-json.ts
 models/config-rate-limiter-config.ts
 models/config-worker-config.ts
 models/data.ts
-models/github-com-fntelecomllc-studio-backend-internal-api-error-detail.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-advanced-stealth-policy.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-aggregated-analytics.ts
-models/github-com-fntelecomllc-studio-backend-internal-models-backup-error-response.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-behavioral-mimicry-config.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-bulk-analytics-request.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-bulk-analytics-response.ts
@@ -318,7 +306,6 @@ models/github-com-fntelecomllc-studio-backend-internal-models-domain-filter.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-domain-generation-operation.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-domain-generation-result.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-enterprise-proxy-strategy.ts
-models/github-com-fntelecomllc-studio-backend-internal-models-error-response.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-httpvalidation-operation.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-keyword-rule-type-enum.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-keyword-rule.ts
@@ -342,7 +329,6 @@ models/github-com-fntelecomllc-studio-backend-internal-models-tldperformance.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-update-proxy-request.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-user.ts
 models/github-com-fntelecomllc-studio-backend-internal-models-validation-operation-result.ts
-models/github-com-fntelecomllc-studio-backend-pkg-api-error-detail.ts
 models/index.ts
 models/keywordextractor-keyword-extraction-result.ts
 models/model-error.ts

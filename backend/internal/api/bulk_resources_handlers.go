@@ -31,8 +31,8 @@ func NewBulkResourcesAPIHandler(orchestrator *application.CampaignOrchestrator) 
 // @Accept json
 // @Produce json
 // @Param request body models.BulkResourceRequest true "Bulk resource allocation request"
-// @Success 200 {object} models.BulkResourceResponse "Resources allocated successfully"
-// @Success 202 {object} models.BulkResourceResponse "Resource allocation accepted and processing"
+// @Success 200 {object} APIResponse{data=models.BulkResourceResponse} "Resources allocated successfully"
+// @Success 202 {object} APIResponse{data=models.BulkResourceResponse} "Resource allocation accepted and processing"
 // @Failure 400 {object} APIResponse "Bad Request - Invalid resource configuration"
 // @Failure 429 {object} APIResponse "Rate Limited - Resource quota exceeded"
 // @Failure 500 {object} APIResponse "Internal Server Error"
@@ -299,7 +299,7 @@ func (h *BulkResourcesAPIHandler) GetBulkOperationStatus(c *gin.Context) {
 // @Param type query string false "Filter by operation type" Enums(domain_generation,dns_validation,http_validation,analytics)
 // @Param limit query int false "Number of operations to return (max 1000)" minimum(1) maximum(1000) default(50)
 // @Param offset query int false "Number of operations to skip" minimum(0) default(0)
-// @Success 200 {object} models.BulkOperationListResponse "Operations list retrieved successfully"
+// @Success 200 {object} APIResponse{data=models.BulkOperationListResponse} "Operations list retrieved successfully"
 // @Failure 400 {object} APIResponse "Bad Request - Invalid parameters"
 // @Failure 500 {object} APIResponse "Internal Server Error"
 // @Router /campaigns/bulk/operations [get]

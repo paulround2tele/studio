@@ -67,6 +67,7 @@ type Metadata struct {
 	Page       *PageInfo              `json:"page,omitempty"`       // Pagination info
 	RateLimit  *RateLimitInfo         `json:"rateLimit,omitempty"`  // Rate limiting info
 	Processing *ProcessingInfo        `json:"processing,omitempty"` // Processing time info
+	Bulk       *BulkOperationInfo     `json:"bulk,omitempty"`       // Bulk operation metadata
 	Extra      map[string]interface{} `json:"extra,omitempty"`      // Additional metadata
 }
 
@@ -89,6 +90,16 @@ type RateLimitInfo struct {
 type ProcessingInfo struct {
 	Duration string `json:"duration"` // Processing duration (e.g., "125ms")
 	Version  string `json:"version"`  // API version
+}
+
+// BulkOperationInfo contains metadata for bulk operations
+type BulkOperationInfo struct {
+	ProcessedItems    int      `json:"processedItems"`              // Number of items successfully processed
+	SkippedItems      int      `json:"skippedItems"`                // Number of items skipped due to errors
+	FailedItems       []string `json:"failedItems,omitempty"`       // List of item IDs that failed processing
+	ProcessingTimeMs  int64    `json:"processingTimeMs"`            // Total processing time in milliseconds
+	TotalRowsReturned int64    `json:"totalRowsReturned,omitempty"` // For database operations
+	Type              string   `json:"type,omitempty"`              // Type of bulk operation (campaigns, queries, etc.)
 }
 
 // NewSuccessResponse creates a successful API response

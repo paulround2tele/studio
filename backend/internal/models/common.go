@@ -1,7 +1,4 @@
 package models
 
-// GeneralErrorResponse is a generic error response structure for the API
-type GeneralErrorResponse struct {
-	Error   string `json:"error"`
-	Details string `json:"details,omitempty"`
-}
+// This file previously contained GeneralErrorResponse - removed for API response consolidation
+// All API responses now use the unified api.APIResponse structure from internal/api/response_types.go

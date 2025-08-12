@@ -15,7 +15,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalApiErrorDetail } from './github-com-fntelecomllc-studio-backend-internal-api-error-detail';
+import type { ApiErrorDetail } from './api-error-detail';
 
 /**
  * Detailed error information structure
@@ -31,10 +31,10 @@ export interface ApiErrorInfo {
     'code'?: string;
     /**
      * Detailed error information
-     * @type {Array<GithubComFntelecomllcStudioBackendInternalApiErrorDetail>}
+     * @type {Array<ApiErrorDetail>}
      * @memberof ApiErrorInfo
      */
-    'details'?: Array<GithubComFntelecomllcStudioBackendInternalApiErrorDetail>;
+    'details'?: Array<ApiErrorDetail>;
     /**
      * Primary error message
      * @type {string}

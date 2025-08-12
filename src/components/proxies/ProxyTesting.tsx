@@ -31,9 +31,7 @@ import {
   Activity,
   Loader2
 } from 'lucide-react';
-import type { components } from '@/lib/api-client/types';
-
-type Proxy = components['schemas']['Proxy'];
+import type { Proxy } from '@/lib/api-client/models';
 import { testProxy } from '@/lib/services/proxyService.production';
 import { useToast } from '@/hooks/use-toast';
 import { useProxyHealth } from '@/lib/hooks/useProxyHealth';
@@ -256,7 +254,7 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
     if (selectedProxyIds.size === proxies.length) {
       setSelectedProxyIds(new Set());
     } else {
-      setSelectedProxyIds(new Set(proxies.map(p => p.id).filter((id): id is string => !!id)));
+      setSelectedProxyIds(new Set(proxies.map(p => p.id as string).filter(id => !!id)));
     }
   }, [selectedProxyIds.size, proxies]);
 

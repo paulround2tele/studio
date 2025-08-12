@@ -284,12 +284,8 @@ type PingResponse struct {
 	Timestamp string `json:"timestamp"`
 }
 
-// WebSocketErrorResponse represents WebSocket connection errors
-type WebSocketErrorResponse struct {
-	Error   string `json:"error"`
-	Message string `json:"message"`
-	Code    int    `json:"code,omitempty"`
-}
+// NOTE: WebSocketErrorResponse removed for API response consolidation
+// WebSocket errors now use the unified api.APIResponse structure
 
 // BulkDeleteResult represents the result of a bulk delete operation
 type BulkDeleteResult struct {
@@ -519,11 +515,10 @@ type BulkEnrichedDataRequest struct {
 }
 
 // BulkEnrichedDataResponse represents enriched campaign data for multiple campaigns
-// @Description Response containing enriched data for multiple campaigns with metadata
+// @Description Response containing enriched data for multiple campaigns
 type BulkEnrichedDataResponse struct {
 	Campaigns  map[string]EnrichedCampaignData `json:"campaigns" description:"Map of campaign ID to enriched campaign data"`
 	TotalCount int                             `json:"totalCount" example:"25" description:"Total number of successfully processed campaigns"`
-	Metadata   *BulkMetadata                   `json:"metadata,omitempty" description:"Processing metadata and statistics"`
 }
 
 // BulkDomainsRequest represents a request for bulk domain data
@@ -535,11 +530,10 @@ type BulkDomainsRequest struct {
 }
 
 // BulkDomainsResponse represents domain data for multiple campaigns
-// @Description Response containing domain data for multiple campaigns with metadata
+// @Description Response containing domain data for multiple campaigns
 type BulkDomainsResponse struct {
 	Domains    map[string][]string `json:"domains" description:"Map of campaign ID to list of domains"`
 	TotalCount int                 `json:"totalCount" example:"150" description:"Total number of domains across all campaigns"`
-	Metadata   *BulkMetadata       `json:"metadata,omitempty" description:"Processing metadata and statistics"`
 }
 
 // BulkLogsRequest represents a request for bulk log data
@@ -551,11 +545,10 @@ type BulkLogsRequest struct {
 }
 
 // BulkLogsResponse represents log data for multiple campaigns
-// @Description Response containing log data for multiple campaigns with metadata
+// @Description Response containing log data for multiple campaigns
 type BulkLogsResponse struct {
 	Logs       map[string][]models.AuditLog `json:"logs" description:"Map of campaign ID to list of log entries"`
 	TotalCount int                          `json:"totalCount" example:"500" description:"Total number of log entries across all campaigns"`
-	Metadata   *BulkMetadata                `json:"metadata,omitempty" description:"Processing metadata and statistics"`
 }
 
 // BulkLeadsRequest represents a request for bulk lead data
@@ -567,20 +560,10 @@ type BulkLeadsRequest struct {
 }
 
 // BulkLeadsResponse represents lead data for multiple campaigns
-// @Description Response containing lead data for multiple campaigns with metadata
+// @Description Response containing lead data for multiple campaigns
 type BulkLeadsResponse struct {
 	Leads      map[string][]models.LeadItem `json:"leads" description:"Map of campaign ID to list of leads"`
 	TotalCount int                          `json:"totalCount" example:"75" description:"Total number of leads across all campaigns"`
-	Metadata   *BulkMetadata                `json:"metadata,omitempty" description:"Processing metadata and statistics"`
-}
-
-// BulkMetadata represents processing metadata for bulk operations
-// @Description Metadata containing processing statistics and performance metrics for bulk operations
-type BulkMetadata struct {
-	ProcessedCampaigns int      `json:"processedCampaigns" example:"23" description:"Number of campaigns successfully processed"`
-	SkippedCampaigns   int      `json:"skippedCampaigns" example:"2" description:"Number of campaigns skipped due to errors"`
-	FailedCampaigns    []string `json:"failedCampaigns,omitempty" example:"['invalid-uuid','550e8400-e29b-41d4-a716-446655440001']" description:"List of campaign IDs that failed processing"`
-	ProcessingTimeMs   int64    `json:"processingTimeMs" example:"1234" description:"Total processing time in milliseconds"`
 }
 
 // Database API Models for Enterprise Bulk Operations
@@ -601,11 +584,10 @@ type DatabaseQuery struct {
 }
 
 // BulkDatabaseQueryResponse represents the response from bulk database queries
-// @Description Response containing results from multiple database queries with metadata
+// @Description Response containing results from multiple database queries
 type BulkDatabaseQueryResponse struct {
 	Results    map[string]DatabaseQueryResult `json:"results" description:"Map of query ID to query results"`
 	TotalCount int                            `json:"totalCount" example:"5" description:"Total number of queries processed"`
-	Metadata   *BulkQueryMetadata             `json:"metadata,omitempty" description:"Processing metadata and statistics"`
 }
 
 // DatabaseQueryResult represents the result of a database query
@@ -630,16 +612,6 @@ type DatabaseValue struct {
 	RawValue    string   `json:"rawValue" description:"Raw string representation of the value"`
 }
 
-// BulkQueryMetadata represents processing metadata for bulk database operations
-// @Description Metadata containing processing statistics and performance metrics for bulk database operations
-type BulkQueryMetadata struct {
-	ProcessedQueries  int      `json:"processedQueries" example:"8" description:"Number of queries successfully processed"`
-	SkippedQueries    int      `json:"skippedQueries" example:"1" description:"Number of queries skipped due to errors"`
-	FailedQueries     []string `json:"failedQueries,omitempty" example:"['query_9']" description:"List of query IDs that failed processing"`
-	ProcessingTimeMs  int64    `json:"processingTimeMs" example:"2340" description:"Total processing time in milliseconds"`
-	TotalRowsReturned int64    `json:"totalRowsReturned" example:"15420" description:"Total number of rows returned across all queries"`
-}
-
 // BulkDatabaseStatsRequest represents a bulk database statistics request
 // @Description Request payload for retrieving database statistics for multiple schemas/databases
 type BulkDatabaseStatsRequest struct {
@@ -649,13 +621,12 @@ type BulkDatabaseStatsRequest struct {
 }
 
 // BulkDatabaseStatsResponse represents the response from bulk database statistics
-// @Description Response containing database statistics with metadata
+// @Description Response containing database statistics
 type BulkDatabaseStatsResponse struct {
 	DatabaseStats DatabaseStats          `json:"databaseStats" description:"Overall database statistics"`
 	SchemaStats   map[string]SchemaStats `json:"schemaStats,omitempty" description:"Statistics by schema (if requested)"`
 	TableStats    map[string]TableStats  `json:"tableStats,omitempty" description:"Statistics by table (if requested)"`
 	TotalCount    int                    `json:"totalCount" example:"3" description:"Total number of analyzed schemas/tables"`
-	Metadata      *BulkStatsMetadata     `json:"metadata,omitempty" description:"Processing metadata and statistics"`
 }
 
 // DatabaseStats represents database statistics
@@ -688,16 +659,6 @@ type TableStats struct {
 	RowCount   int64  `json:"rowCount" example:"125000" description:"Number of rows in the table"`
 	Size       string `json:"size" example:"12 MB" description:"Table size"`
 	IndexCount int    `json:"indexCount" example:"5" description:"Number of indexes on the table"`
-}
-
-// BulkStatsMetadata represents processing metadata for bulk database statistics operations
-// @Description Metadata containing processing statistics for bulk database statistics operations
-type BulkStatsMetadata struct {
-	ProcessedSchemas int      `json:"processedSchemas" example:"2" description:"Number of schemas successfully processed"`
-	ProcessedTables  int      `json:"processedTables" example:"8" description:"Number of tables successfully processed"`
-	SkippedItems     int      `json:"skippedItems" example:"1" description:"Number of items skipped due to errors"`
-	FailedItems      []string `json:"failedItems,omitempty" example:"['invalid_schema']" description:"List of items that failed processing"`
-	ProcessingTimeMs int64    `json:"processingTimeMs" example:"1850" description:"Total processing time in milliseconds"`
 }
 
 // === STANDALONE SERVICES ARCHITECTURE RESPONSE MODELS ===

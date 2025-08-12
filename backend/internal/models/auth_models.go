@@ -178,9 +178,5 @@ type SecurityContext struct {
 	RiskScore              int       `json:"riskScore"`
 }
 
-// ErrorResponse represents a standard API error response
-type ErrorResponse struct {
-	Status  string `json:"status" example:"error"`
-	Message string `json:"message" example:"Error message description"`
-	Code    int    `json:"code,omitempty" example:"400"`
-} // @name ErrorResponse
+// NOTE: ErrorResponse removed for API response consolidation
+// All API responses now use the unified api.APIResponse structure from internal/api/response_types.go

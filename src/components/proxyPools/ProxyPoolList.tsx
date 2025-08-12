@@ -13,9 +13,8 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import ProxyPoolForm from "./ProxyPoolForm";
-import { proxyPoolsApi, type components } from "@/lib/api-client/client";
-
-type ProxyPool = components['schemas']['ProxyPool'];
+import { proxyPoolsApi } from "@/lib/api-client/client";
+import type { ProxyPool } from '@/lib/api-client/models';
 import {
   Dialog,
   DialogContent,
@@ -45,7 +44,7 @@ export default function ProxyPoolList() {
 
   const handleDelete = async (id: string) => {
     try {
-      await proxyPoolsApi.deleteProxyPool(id);
+      await proxyPoolsApi.proxyPoolsPoolIdDelete(id);
       toast({ title: "Deleted" });
       loadPools();
     } catch (error) {

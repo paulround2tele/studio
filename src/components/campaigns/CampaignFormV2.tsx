@@ -187,7 +187,10 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
         // Use professional RTK Query mutation instead of amateur direct API call
         const newCampaignData = await createCampaign(apiRequest).unwrap();
         
-        if (!newCampaignData || !newCampaignData.id) {
+        // The response is wrapped in a data field - classic OpenAPI amateur design
+        // Cast to any because the auto-generated types are completely wrong
+        const campaignData = (newCampaignData as any).data || newCampaignData;
+        if (!campaignData || !campaignData.id) {
           throw new Error('Campaign creation succeeded but no campaign ID returned');
         }
         
@@ -199,12 +202,12 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
         // DEBUG: Log redirect data before attempting navigation
         console.log('🚀 Campaign creation successful!');
         console.log('📊 newCampaignData:', JSON.stringify(newCampaignData, null, 2));
-        console.log('🆔 Campaign ID:', newCampaignData.id);
-        console.log('🧭 About to redirect to:', `/campaigns/${newCampaignData.id}`);
+        console.log('🆔 Campaign ID:', campaignData.id);
+        console.log('🧭 About to redirect to:', `/campaigns/${campaignData.id}`);
 
         // Redirect to campaign details page (which includes PhaseDashboard)
         try {
-          router.push(`/campaigns/${newCampaignData.id}`);
+          router.push(`/campaigns/${campaignData.id}`);
           console.log('✅ Router.push called successfully');
         } catch (routerError) {
           console.error('❌ Router.push failed:', routerError);

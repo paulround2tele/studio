@@ -99,7 +99,7 @@ export default function PhaseDashboard({ campaignId, campaign, totalDomains = 0,
     
     // Check campaign phases data
     if (campaign.phases) {
-      const phase = campaign.phases.find(p => p.phaseType === phaseKey);
+      const phase = campaign.phases.find((p: any) => p.phaseType === phaseKey);
       if (phase) {
         return !!(phase.status === 'completed' || (phase.successfulItems && phase.successfulItems > 0));
       }
@@ -135,7 +135,7 @@ export default function PhaseDashboard({ campaignId, campaign, totalDomains = 0,
       
       for (let i = 0; i < phaseOrder.length; i++) {
         const phaseType = phaseOrder[i]!; // Safe because we're within array bounds
-        const phaseData = campaign?.phases?.find(p => p.phaseType === phaseType);
+        const phaseData = campaign?.phases?.find((p: any) => p.phaseType === phaseType);
         const previousPhaseType = i > 0 ? phaseOrder[i - 1]! : null;
         const previousPhaseComplete = i === 0 || Boolean(previousPhaseType && isPhaseCompleted(previousPhaseType));
         
@@ -285,7 +285,7 @@ export default function PhaseDashboard({ campaignId, campaign, totalDomains = 0,
       
       // Use autonomous phase execution - backend determines the correct phase based on campaign state
       // The phaseKey parameter is maintained for UI consistency but backend ignores it
-      await campaignsApi.startPhaseStandalone(campaignId, phaseKey);
+      await campaignsApi.startPhaseStandalone(campaignId, phaseKey as any);
       
       toast({
         title: "Phase started",

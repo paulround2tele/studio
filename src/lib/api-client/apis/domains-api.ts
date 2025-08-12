@@ -24,9 +24,9 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 // @ts-ignore
 import type { ApiAPIResponse } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest } from '../models';
+import type { BulkValidateDNS200Response } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationResponse } from '../models';
+import type { GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest } from '../models';
 /**
  * DomainsApi - axios parameter creator
  * @export
@@ -86,7 +86,7 @@ export const DomainsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationResponse>> {
+        async bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DomainsApi.bulkGenerateDomains']?.[localVarOperationServerIndex]?.url;
@@ -109,7 +109,7 @@ export const DomainsApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationResponse> {
+        bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
             return localVarFp.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options).then((request) => request(axios, basePath));
         },
     };
@@ -129,7 +129,7 @@ export interface DomainsApiInterface {
      * @throws {RequiredError}
      * @memberof DomainsApiInterface
      */
-    bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationResponse>;
+    bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
 }
 

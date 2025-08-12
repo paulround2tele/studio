@@ -101,7 +101,7 @@ func (h *HealthCheckHandler) HandleHealthCheck(c *gin.Context) {
 // @ID healthReadiness
 // @Produce json
 // @Success 200 {object} HealthCheckResponse "Service is ready"
-// @Failure 503 {object} StandardErrorResponse "Service not ready"
+// @Failure 503 {object} api.APIResponse "Service not ready"
 // @Router /health/ready [get]
 func (h *HealthCheckHandler) HandleReadinessCheck(c *gin.Context) {
 	// Check if database is ready

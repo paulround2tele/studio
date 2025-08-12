@@ -43,7 +43,7 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsResourceOperati
      * @type {string}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsResourceOperation
      */
-    'priority'?: 'low' | 'normal' | 'high' | 'critical';
+    'priority'?: GithubComFntelecomllcStudioBackendInternalModelsResourceOperationPriorityEnum;
     /**
      * 
      * @type {GithubComFntelecomllcStudioBackendInternalModelsRequiredResources}
@@ -55,18 +55,28 @@ export interface GithubComFntelecomllcStudioBackendInternalModelsResourceOperati
      * @type {string}
      * @memberof GithubComFntelecomllcStudioBackendInternalModelsResourceOperation
      */
-    'type': 'domain_generation' | 'dns_validation' | 'http_validation' | 'analytics';
+    'type': GithubComFntelecomllcStudioBackendInternalModelsResourceOperationTypeEnum;
 }
 
 /**
     * @export
     * @enum {string}
     */
-// Enum GithubComFntelecomllcStudioBackendInternalModelsResourceOperationPriorityEnum converted to direct string literals in interface
+export enum GithubComFntelecomllcStudioBackendInternalModelsResourceOperationPriorityEnum {
+    low = 'low',
+    normal = 'normal',
+    high = 'high',
+    critical = 'critical'
+}
 /**
     * @export
     * @enum {string}
     */
-// Enum GithubComFntelecomllcStudioBackendInternalModelsResourceOperationTypeEnum converted to direct string literals in interface
+export enum GithubComFntelecomllcStudioBackendInternalModelsResourceOperationTypeEnum {
+    domain_generation = 'domain_generation',
+    dns_validation = 'dns_validation',
+    http_validation = 'http_validation',
+    analytics = 'analytics'
+}
 
 

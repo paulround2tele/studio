@@ -2,10 +2,9 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
-import type { components } from '@/lib/api-client/types';
+import type { User } from '@/lib/api-client/models';
 
 // Type definitions
-type User = components['schemas']['User'];
 
 type LoginResult =
   | { success: true }

@@ -8,13 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, UserCheck, Percent, Link as LinkIcon, ExternalLink, Sparkles, Loader2 } from 'lucide-react';
 import type { CampaignViewModel, AnalyzeContentInput } from '@/lib/types';
-import type { components } from '@/lib/api-client/types';
+import type { ExtractedContentItem, LeadItem } from '@/lib/api-client/models';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import React, { useState } from 'react';
-
-type ExtractedContentItem = components['schemas']['ExtractedContentItem'];
-type LeadItem = components['schemas']['LeadItem'];
 
 interface ContentSimilarityViewProps {
   campaign: CampaignViewModel;

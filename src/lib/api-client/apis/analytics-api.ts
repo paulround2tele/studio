@@ -24,9 +24,9 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 // @ts-ignore
 import type { ApiAPIResponse } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest } from '../models';
+import type { BulkValidateDNS200Response } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsResponse } from '../models';
+import type { GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest } from '../models';
 /**
  * AnalyticsApi - axios parameter creator
  * @export
@@ -86,7 +86,7 @@ export const AnalyticsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsResponse>> {
+        async bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AnalyticsApi.bulkAnalyzeDomains']?.[localVarOperationServerIndex]?.url;
@@ -109,7 +109,7 @@ export const AnalyticsApiFactory = function (configuration?: Configuration, base
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsResponse> {
+        bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
             return localVarFp.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options).then((request) => request(axios, basePath));
         },
     };
@@ -129,7 +129,7 @@ export interface AnalyticsApiInterface {
      * @throws {RequiredError}
      * @memberof AnalyticsApiInterface
      */
-    bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsResponse>;
+    bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
 }
 

@@ -653,7 +653,7 @@ func (h *APIHandler) TestProxyGin(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body models.BulkUpdateProxiesRequest true "Bulk proxy update request"
-// @Success 200 {object} models.BulkProxyOperationResponse "Bulk operation results"
+// @Success 200 {object} APIResponse{data=models.BulkProxyOperationResponse} "Bulk operation results"
 // @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
 // @Failure 500 {object} map[string]string "Internal server error"
 // @Router /proxies/bulk/update [put]
@@ -829,7 +829,7 @@ func (h *APIHandler) BulkUpdateProxiesGin(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body models.BulkDeleteProxiesRequest true "Bulk proxy delete request"
-// @Success 200 {object} models.BulkProxyOperationResponse "Bulk operation results"
+// @Success 200 {object} APIResponse{data=models.BulkProxyOperationResponse} "Bulk operation results"
 // @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
 // @Failure 500 {object} map[string]string "Internal server error"
 // @Router /proxies/bulk/delete [delete]

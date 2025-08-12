@@ -17,7 +17,7 @@ All URIs are relative to *http://localhost:8080/api/v2*
 |[**proxiesStatusGet**](#proxiesstatusget) | **GET** /proxies/status | Get proxy statuses|
 
 # **proxiesBulkDeleteDelete**
-> GithubComFntelecomllcStudioBackendInternalModelsBulkProxyOperationResponse proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest)
+> BulkValidateDNS200Response proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest)
 
 Delete multiple proxy configurations simultaneously
 
@@ -49,7 +49,7 @@ const { status, data } = await apiInstance.proxiesBulkDeleteDelete(
 
 ### Return type
 
-**GithubComFntelecomllcStudioBackendInternalModelsBulkProxyOperationResponse**
+**BulkValidateDNS200Response**
 
 ### Authorization
 
@@ -125,7 +125,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesBulkUpdatePut**
-> GithubComFntelecomllcStudioBackendInternalModelsBulkProxyOperationResponse proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest)
+> BulkValidateDNS200Response proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest)
 
 Update multiple proxy configurations simultaneously
 
@@ -157,7 +157,7 @@ const { status, data } = await apiInstance.proxiesBulkUpdatePut(
 
 ### Return type
 
-**GithubComFntelecomllcStudioBackendInternalModelsBulkProxyOperationResponse**
+**BulkValidateDNS200Response**
 
 ### Authorization
 

@@ -35,8 +35,8 @@ func NewBulkDomainsAPIHandler(orchestrator *application.CampaignOrchestrator, ss
 // @Accept json
 // @Produce json
 // @Param request body models.BulkDomainGenerationRequest true "Bulk domain generation request"
-// @Success 200 {object} models.BulkDomainGenerationResponse "Domains generated successfully"
-// @Success 202 {object} models.BulkDomainGenerationResponse "Operation accepted and processing"
+// @Success 200 {object} APIResponse{data=models.BulkDomainGenerationResponse} "Domains generated successfully"
+// @Success 202 {object} APIResponse{data=models.BulkDomainGenerationResponse} "Operation accepted and processing"
 // @Failure 400 {object} APIResponse "Bad Request - Invalid configuration"
 // @Failure 429 {object} APIResponse "Rate Limited - Too many concurrent operations"
 // @Failure 500 {object} APIResponse "Internal Server Error"

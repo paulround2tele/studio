@@ -17,13 +17,26 @@
 /**
  * 
  * @export
- * @enum {string}
+ * @interface ModelsErrorResponse
  */
-
-export enum GithubComFntelecomllcStudioBackendInternalModelsKeywordRuleTypeEnum {
-    KeywordRuleTypeString = 'string',
-    KeywordRuleTypeRegex = 'regex'
+export interface ModelsErrorResponse {
+    /**
+     * 
+     * @type {number}
+     * @memberof ModelsErrorResponse
+     */
+    'code'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ModelsErrorResponse
+     */
+    'message'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ModelsErrorResponse
+     */
+    'status'?: string;
 }
-
-
 

@@ -32,23 +32,15 @@ import type { BulkValidateDNS200Response } from '../models';
 // @ts-ignore
 import type { GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsResponse } from '../models';
-// @ts-ignore
 import type { GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest } from '../models';
 // @ts-ignore
 import type { GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationResponse } from '../models';
-// @ts-ignore
 import type { GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest } from '../models';
-// @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkOperationListResponse } from '../models';
 // @ts-ignore
 import type { GithubComFntelecomllcStudioBackendInternalModelsBulkOperationStatus } from '../models';
 // @ts-ignore
 import type { GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest } from '../models';
-// @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkResourceResponse } from '../models';
 /**
  * BulkOperationsApi - axios parameter creator
  * @export
@@ -420,7 +412,7 @@ export const BulkOperationsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkResourceResponse>> {
+        async allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['BulkOperationsApi.allocateBulkResources']?.[localVarOperationServerIndex]?.url;
@@ -433,7 +425,7 @@ export const BulkOperationsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsResponse>> {
+        async bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['BulkOperationsApi.bulkAnalyzeDomains']?.[localVarOperationServerIndex]?.url;
@@ -446,7 +438,7 @@ export const BulkOperationsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationResponse>> {
+        async bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['BulkOperationsApi.bulkGenerateDomains']?.[localVarOperationServerIndex]?.url;
@@ -531,7 +523,7 @@ export const BulkOperationsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async listBulkOperations(status?: ListBulkOperationsStatusEnum, type?: ListBulkOperationsTypeEnum, limit?: number, offset?: number, body?: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkOperationListResponse>> {
+        async listBulkOperations(status?: ListBulkOperationsStatusEnum, type?: ListBulkOperationsTypeEnum, limit?: number, offset?: number, body?: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.listBulkOperations(status, type, limit, offset, body, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['BulkOperationsApi.listBulkOperations']?.[localVarOperationServerIndex]?.url;
@@ -554,7 +546,7 @@ export const BulkOperationsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkResourceResponse> {
+        allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
             return localVarFp.allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -564,7 +556,7 @@ export const BulkOperationsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsResponse> {
+        bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
             return localVarFp.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -574,7 +566,7 @@ export const BulkOperationsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationResponse> {
+        bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
             return localVarFp.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -641,7 +633,7 @@ export const BulkOperationsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listBulkOperations(status?: ListBulkOperationsStatusEnum, type?: ListBulkOperationsTypeEnum, limit?: number, offset?: number, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkOperationListResponse> {
+        listBulkOperations(status?: ListBulkOperationsStatusEnum, type?: ListBulkOperationsTypeEnum, limit?: number, offset?: number, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
             return localVarFp.listBulkOperations(status, type, limit, offset, body, options).then((request) => request(axios, basePath));
         },
     };
@@ -661,7 +653,7 @@ export interface BulkOperationsApiInterface {
      * @throws {RequiredError}
      * @memberof BulkOperationsApiInterface
      */
-    allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkResourceResponse>;
+    allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Perform comprehensive analytics across multiple campaigns with advanced metrics and aggregation
@@ -671,7 +663,7 @@ export interface BulkOperationsApiInterface {
      * @throws {RequiredError}
      * @memberof BulkOperationsApiInterface
      */
-    bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsResponse>;
+    bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Generate large batches of domains with stealth-aware configuration and resource management
@@ -681,7 +673,7 @@ export interface BulkOperationsApiInterface {
      * @throws {RequiredError}
      * @memberof BulkOperationsApiInterface
      */
-    bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationResponse>;
+    bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Perform bulk DNS validation with stealth detection avoidance and resource optimization
@@ -748,7 +740,7 @@ export interface BulkOperationsApiInterface {
      * @throws {RequiredError}
      * @memberof BulkOperationsApiInterface
      */
-    listBulkOperations(status?: ListBulkOperationsStatusEnum, type?: ListBulkOperationsTypeEnum, limit?: number, offset?: number, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkOperationListResponse>;
+    listBulkOperations(status?: ListBulkOperationsStatusEnum, type?: ListBulkOperationsTypeEnum, limit?: number, offset?: number, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
 }
 

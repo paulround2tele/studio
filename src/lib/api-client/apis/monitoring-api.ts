@@ -24,7 +24,7 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 // @ts-ignore
 import type { ApiAPIResponse } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkOperationListResponse } from '../models';
+import type { BulkValidateDNS200Response } from '../models';
 // @ts-ignore
 import type { GithubComFntelecomllcStudioBackendInternalModelsBulkOperationStatus } from '../models';
 /**
@@ -160,7 +160,7 @@ export const MonitoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async listBulkOperations(status?: ListBulkOperationsStatusEnum, type?: ListBulkOperationsTypeEnum, limit?: number, offset?: number, body?: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkOperationListResponse>> {
+        async listBulkOperations(status?: ListBulkOperationsStatusEnum, type?: ListBulkOperationsTypeEnum, limit?: number, offset?: number, body?: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.listBulkOperations(status, type, limit, offset, body, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['MonitoringApi.listBulkOperations']?.[localVarOperationServerIndex]?.url;
@@ -198,7 +198,7 @@ export const MonitoringApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listBulkOperations(status?: ListBulkOperationsStatusEnum, type?: ListBulkOperationsTypeEnum, limit?: number, offset?: number, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkOperationListResponse> {
+        listBulkOperations(status?: ListBulkOperationsStatusEnum, type?: ListBulkOperationsTypeEnum, limit?: number, offset?: number, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
             return localVarFp.listBulkOperations(status, type, limit, offset, body, options).then((request) => request(axios, basePath));
         },
     };
@@ -233,7 +233,7 @@ export interface MonitoringApiInterface {
      * @throws {RequiredError}
      * @memberof MonitoringApiInterface
      */
-    listBulkOperations(status?: ListBulkOperationsStatusEnum, type?: ListBulkOperationsTypeEnum, limit?: number, offset?: number, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkOperationListResponse>;
+    listBulkOperations(status?: ListBulkOperationsStatusEnum, type?: ListBulkOperationsTypeEnum, limit?: number, offset?: number, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
 }
 

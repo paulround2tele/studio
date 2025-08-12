@@ -32,8 +32,8 @@ func NewBulkAnalyticsAPIHandler(orchestrator *application.CampaignOrchestrator) 
 // @Accept json
 // @Produce json
 // @Param request body models.BulkAnalyticsRequest true "Bulk analytics request"
-// @Success 200 {object} models.BulkAnalyticsResponse "Analytics completed successfully"
-// @Success 202 {object} models.BulkAnalyticsResponse "Analytics accepted and processing"
+// @Success 200 {object} APIResponse{data=models.BulkAnalyticsResponse} "Analytics completed successfully"
+// @Success 202 {object} APIResponse{data=models.BulkAnalyticsResponse} "Analytics accepted and processing"
 // @Failure 400 {object} APIResponse "Bad Request - Invalid configuration"
 // @Failure 429 {object} APIResponse "Rate Limited - Too many concurrent analytics"
 // @Failure 500 {object} APIResponse "Internal Server Error"
@@ -187,8 +187,8 @@ func (h *BulkAnalyticsAPIHandler) BulkAnalyzeDomains(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body models.BulkCampaignOperationRequest true "Bulk campaign operation request"
-// @Success 200 {object} models.BulkCampaignOperationResponse "Campaign operations completed successfully"
-// @Success 202 {object} models.BulkCampaignOperationResponse "Operations accepted and processing"
+// @Success 200 {object} APIResponse{data=models.BulkCampaignOperationResponse} "Campaign operations completed successfully"
+// @Success 202 {object} APIResponse{data=models.BulkCampaignOperationResponse} "Operations accepted and processing"
 // @Failure 400 {object} APIResponse "Bad Request - Invalid operation or campaign IDs"
 // @Failure 409 {object} APIResponse "Conflict - Campaign state conflicts"
 // @Failure 500 {object} APIResponse "Internal Server Error"

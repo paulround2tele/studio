@@ -15,9 +15,6 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { ApiBulkStatsMetadata } from './api-bulk-stats-metadata';
-// May contain unused imports in some cases
-// @ts-ignore
 import type { ApiDatabaseStats } from './api-database-stats';
 // May contain unused imports in some cases
 // @ts-ignore
@@ -27,7 +24,7 @@ import type { ApiSchemaStats } from './api-schema-stats';
 import type { ApiTableStats } from './api-table-stats';
 
 /**
- * Response containing database statistics with metadata
+ * Response containing database statistics
  * @export
  * @interface ApiBulkDatabaseStatsResponse
  */
@@ -38,12 +35,6 @@ export interface ApiBulkDatabaseStatsResponse {
      * @memberof ApiBulkDatabaseStatsResponse
      */
     'databaseStats'?: ApiDatabaseStats;
-    /**
-     * 
-     * @type {ApiBulkStatsMetadata}
-     * @memberof ApiBulkDatabaseStatsResponse
-     */
-    'metadata'?: ApiBulkStatsMetadata;
     /**
      * 
      * @type {{ [key: string]: ApiSchemaStats; }}

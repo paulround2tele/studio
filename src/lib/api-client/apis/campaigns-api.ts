@@ -32,10 +32,6 @@ import type { ApiPatternOffsetResponse } from '../models';
 // @ts-ignore
 import type { ApiPhaseConfigureRequest } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBackupErrorResponse } from '../models';
-// @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsErrorResponse } from '../models';
-// @ts-ignore
 import type { ServicesCreateLeadGenerationCampaignRequest } from '../models';
 /**
  * CampaignsApi - axios parameter creator

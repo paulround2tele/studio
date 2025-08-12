@@ -71,7 +71,7 @@ export default function AnalysisConfigModal({
       };
 
       // Use the generated API client method
-      await campaignsApi.configurePhaseStandalone(campaignId, 'analysis', configRequest);
+      await campaignsApi.configurePhaseStandalone(campaignId, 'analysis' as any, configRequest);
 
       toast({
         title: "Analysis Configuration Saved",

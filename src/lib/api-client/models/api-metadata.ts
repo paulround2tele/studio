@@ -15,6 +15,9 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
+import type { ApiBulkOperationInfo } from './api-bulk-operation-info';
+// May contain unused imports in some cases
+// @ts-ignore
 import type { ApiPageInfo } from './api-page-info';
 // May contain unused imports in some cases
 // @ts-ignore
@@ -29,6 +32,12 @@ import type { ApiRateLimitInfo } from './api-rate-limit-info';
  * @interface ApiMetadata
  */
 export interface ApiMetadata {
+    /**
+     * 
+     * @type {ApiBulkOperationInfo}
+     * @memberof ApiMetadata
+     */
+    'bulk'?: ApiBulkOperationInfo;
     /**
      * Additional metadata
      * @type {{ [key: string]: any; }}

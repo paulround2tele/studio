@@ -26,9 +26,9 @@ import type { ApiAPIResponse } from '../models';
 // @ts-ignore
 import type { ApiBulkResourceStatusResponse } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest } from '../models';
+import type { BulkValidateDNS200Response } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkResourceResponse } from '../models';
+import type { GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest } from '../models';
 /**
  * ResourcesApi - axios parameter creator
  * @export
@@ -126,7 +126,7 @@ export const ResourcesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkResourceResponse>> {
+        async allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ResourcesApi.allocateBulkResources']?.[localVarOperationServerIndex]?.url;
@@ -163,7 +163,7 @@ export const ResourcesApiFactory = function (configuration?: Configuration, base
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkResourceResponse> {
+        allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
             return localVarFp.allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -194,7 +194,7 @@ export interface ResourcesApiInterface {
      * @throws {RequiredError}
      * @memberof ResourcesApiInterface
      */
-    allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkResourceResponse>;
+    allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Get current status and utilization of allocated bulk resources

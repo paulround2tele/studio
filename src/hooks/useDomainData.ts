@@ -8,14 +8,15 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { campaignsApi } from '@/lib/api-client/client';
-import type { components } from '@/lib/api-client/types';
+import type { 
+  BulkEnrichedDataRequest,
+  EnrichedCampaignData,
+  GeneratedDomain,
+  BulkEnrichedDataResponse
+} from '@/lib/api-client/models';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
-// Type aliases for easier usage
-type BulkEnrichedDataRequest = components['schemas']['BulkEnrichedDataRequest'];
-type EnrichedCampaignData = components['schemas']['EnrichedCampaignData'];
-type GeneratedDomain = components['schemas']['GeneratedDomain'];
-type BulkEnrichedDataResponse = components['schemas']['BulkEnrichedDataResponse'];
+// Professional type imports using proper model references
 
 interface DomainStatusSummary {
   campaignId: string;

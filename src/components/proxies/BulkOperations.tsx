@@ -36,14 +36,12 @@ import {
   AlertTriangle,
   Loader2
 } from 'lucide-react';
-import type { components } from '@/lib/api-client/types';
-
-type Proxy = components['schemas']['Proxy'];
+import type { Proxy, UpdateProxyRequest } from '@/lib/api-client/models';
 import type { ApiResponse } from '@/lib/types';
 import { isResponseSuccess } from '@/lib/utils/apiResponseHelpers';
 
 type ProxyActionResponse = { status: 'success' | 'error'; message?: string };
-type UpdateProxyPayload = components['schemas']['UpdateProxyRequest'];
+type UpdateProxyPayload = UpdateProxyRequest;
 import {
   testProxy,
   cleanProxies,
@@ -97,7 +95,8 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
     if (allSelected) {
       setSelectedProxyIds(new Set());
     } else {
-      setSelectedProxyIds(new Set(proxies.map(p => p.id).filter((id): id is string => !!id)));
+      // Convert UUID types to strings for selection state
+      setSelectedProxyIds(new Set(proxies.map(p => p.id as string).filter(id => !!id)));
     }
   }, [allSelected, proxies]);
 
@@ -137,7 +136,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
         break;
     }
     
-    setSelectedProxyIds(new Set(filteredProxies.map(p => p.id).filter((id): id is string => !!id)));
+    setSelectedProxyIds(new Set(filteredProxies.map(p => p.id as string).filter(id => !!id)));
   }, [activeProxies, disabledProxies, failedProxies, enabledProxies]);
 
   /**

@@ -23,7 +23,7 @@ export const useCampaignOperations = (campaignId: string) => {
         throw new Error(campaignValidationResult.error || 'Invalid campaign ID');
       }
 
-      await campaignsApi.startPhaseStandalone(campaignId, phaseType);
+      await campaignsApi.startPhaseStandalone(campaignId, phaseType as any);
       
       toast({
         title: "Phase Started",

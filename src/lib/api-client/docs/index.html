@@ -1370,6 +1370,24 @@ ul.nav-tabs {
   },
   "description" : "A database value that can be string, number, boolean, or null"
 };
+    defs["api.ErrorDetail"] = {
+  "properties" : {
+    "code" : {
+      "type" : "string",
+      "description" : "Primary error code",
+      "x-enum-varnames" : [ "ErrorCodeBadRequest", "ErrorCodeUnauthorized", "ErrorCodeForbidden", "ErrorCodeNotFound", "ErrorCodeConflict", "ErrorCodeValidation", "ErrorCodeRequired", "ErrorCodeRateLimitExceeded", "ErrorCodeRequestTimeout", "ErrorCodeNotImplemented", "ErrorCodeInternalServer", "ErrorCodeDatabaseError", "ErrorCodeServiceUnavailable", "ErrorCodeGatewayTimeout", "ErrorCodeCampaignInProgress", "ErrorCodeQuotaExceeded", "ErrorCodeInvalidState" ]
+    },
+    "context" : { },
+    "field" : {
+      "type" : "string",
+      "description" : "Field that caused the error (for validation)"
+    },
+    "message" : {
+      "type" : "string",
+      "description" : "Human-readable error message"
+    }
+  }
+};
     defs["api.ErrorInfo"] = {
   "properties" : {
     "code" : {
@@ -1380,7 +1398,7 @@ ul.nav-tabs {
       "type" : "array",
       "description" : "Detailed error information",
       "items" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_api.ErrorDetail"
+        "$ref" : "#/components/schemas/api.ErrorDetail"
       }
     },
     "message" : {
@@ -1400,25 +1418,6 @@ ul.nav-tabs {
     }
   },
   "description" : "Detailed error information structure"
-};
-    defs["api.ErrorMeta"] = {
-  "properties" : {
-    "api_version" : {
-      "type" : "string"
-    },
-    "method" : {
-      "type" : "string"
-    },
-    "path" : {
-      "type" : "string"
-    },
-    "timestamp" : {
-      "type" : "string"
-    },
-    "user_agent" : {
-      "type" : "string"
-    }
-  }
 };
     defs["api.HTTPValidationConfig"] = {
   "required" : [ "personaIds" ],
@@ -2081,19 +2080,6 @@ ul.nav-tabs {
     }
   }
 };
-    defs["api.StandardErrorResponse"] = {
-  "properties" : {
-    "error" : {
-      "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_pkg_api.ErrorDetail"
-    },
-    "meta" : {
-      "$ref" : "#/components/schemas/api.ErrorMeta"
-    },
-    "trace_id" : {
-      "type" : "string"
-    }
-  }
-};
     defs["api.Status"] = {
   "properties" : {
     "message" : {
@@ -2205,19 +2191,6 @@ ul.nav-tabs {
       "type" : "boolean"
     },
     "username" : {
-      "type" : "string"
-    }
-  }
-};
-    defs["api.WebSocketErrorResponse"] = {
-  "properties" : {
-    "code" : {
-      "type" : "integer"
-    },
-    "error" : {
-      "type" : "string"
-    },
-    "message" : {
       "type" : "string"
     }
   }
@@ -2549,24 +2522,6 @@ ul.nav-tabs {
     }
   }
 };
-    defs["github_com_fntelecomllc_studio_backend_internal_api.ErrorDetail"] = {
-  "properties" : {
-    "code" : {
-      "type" : "string",
-      "description" : "Primary error code",
-      "x-enum-varnames" : [ "ErrorCodeBadRequest", "ErrorCodeUnauthorized", "ErrorCodeForbidden", "ErrorCodeNotFound", "ErrorCodeConflict", "ErrorCodeValidation", "ErrorCodeRequired", "ErrorCodeRateLimitExceeded", "ErrorCodeRequestTimeout", "ErrorCodeNotImplemented", "ErrorCodeInternalServer", "ErrorCodeDatabaseError", "ErrorCodeServiceUnavailable", "ErrorCodeGatewayTimeout", "ErrorCodeCampaignInProgress", "ErrorCodeQuotaExceeded", "ErrorCodeInvalidState" ]
-    },
-    "context" : { },
-    "field" : {
-      "type" : "string",
-      "description" : "Field that caused the error (for validation)"
-    },
-    "message" : {
-      "type" : "string",
-      "description" : "Human-readable error message"
-    }
-  }
-};
     defs["github_com_fntelecomllc_studio_backend_internal_models.AdvancedStealthPolicy"] = {
   "properties" : {
     "adaptiveThrottling" : {
@@ -2642,22 +2597,6 @@ ul.nav-tabs {
     },
     "totalLeads" : {
       "type" : "integer"
-    }
-  }
-};
-    defs["github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"] = {
-  "properties" : {
-    "code" : {
-      "type" : "integer",
-      "example" : 400
-    },
-    "message" : {
-      "type" : "string",
-      "example" : "Error message description"
-    },
-    "status" : {
-      "type" : "string",
-      "example" : "error"
     }
   }
 };
@@ -3478,22 +3417,6 @@ ul.nav-tabs {
     }
   }
 };
-    defs["github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"] = {
-  "properties" : {
-    "code" : {
-      "type" : "integer",
-      "example" : 400
-    },
-    "message" : {
-      "type" : "string",
-      "example" : "Error message description"
-    },
-    "status" : {
-      "type" : "string",
-      "example" : "error"
-    }
-  }
-};
     defs["github_com_fntelecomllc_studio_backend_internal_models.HTTPValidationOperation"] = {
   "required" : [ "campaignId", "personaIds" ],
   "properties" : {
@@ -4193,31 +4116,6 @@ ul.nav-tabs {
     "validationType" : {
       "type" : "string",
       "description" : "\"dns\", \"http\""
-    }
-  }
-};
-    defs["github_com_fntelecomllc_studio_backend_pkg_api.ErrorDetail"] = {
-  "properties" : {
-    "code" : {
-      "type" : "string"
-    },
-    "details" : {
-      "type" : "string"
-    },
-    "fields" : {
-      "additionalProperties" : {
-        "type" : "string"
-      }
-    },
-    "message" : {
-      "type" : "string"
-    },
-    "suggestions" : {
-      "uniqueItems" : false,
-      "type" : "array",
-      "items" : {
-        "type" : "string"
-      }
     }
   }
 };
@@ -5058,6 +4956,22 @@ ul.nav-tabs {
     }
   },
   "description" : "Pattern-based generation (most common)"
+};
+    defs["models.ErrorResponse"] = {
+  "properties" : {
+    "code" : {
+      "type" : "integer",
+      "example" : 400
+    },
+    "message" : {
+      "type" : "string",
+      "example" : "Error message description"
+    },
+    "status" : {
+      "type" : "string",
+      "example" : "error"
+    }
+  }
 };
     defs["models.GenerationConstraints"] = {
   "properties" : {
@@ -7272,7 +7186,7 @@ pub fn main() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/api.StandardErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -7348,7 +7262,7 @@ pub fn main() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/api.StandardErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -7424,7 +7338,7 @@ pub fn main() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/api.StandardErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -15517,7 +15431,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -15593,7 +15507,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -15669,7 +15583,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -16135,7 +16049,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -16211,7 +16125,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -16677,7 +16591,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -16753,7 +16667,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -17198,7 +17112,7 @@ Campaign ID (UUID)
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -17274,7 +17188,7 @@ Campaign ID (UUID)
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -17350,7 +17264,7 @@ Campaign ID (UUID)
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -17795,7 +17709,7 @@ Campaign ID (UUID)
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -17871,7 +17785,7 @@ Campaign ID (UUID)
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -17947,7 +17861,7 @@ Campaign ID (UUID)
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -18351,7 +18265,7 @@ pub fn main() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -18817,7 +18731,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -18893,7 +18807,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -19372,7 +19286,7 @@ Phase type
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -19448,7 +19362,7 @@ Phase type
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -19524,7 +19438,7 @@ Phase type
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -20003,7 +19917,7 @@ Phase name
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -20079,7 +19993,7 @@ Phase name
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -20155,7 +20069,7 @@ Phase name
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -20665,7 +20579,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"
+        "$ref" : "#/components/schemas/models.ErrorResponse"
       }
     }
   }
@@ -20741,7 +20655,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"
+        "$ref" : "#/components/schemas/models.ErrorResponse"
       }
     }
   }
@@ -20817,7 +20731,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"
+        "$ref" : "#/components/schemas/models.ErrorResponse"
       }
     }
   }
@@ -21324,7 +21238,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models_backup.ErrorResponse"
+        "$ref" : "#/components/schemas/models.ErrorResponse"
       }
     }
   }
@@ -21400,7 +21314,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"
+        "$ref" : "#/components/schemas/models.ErrorResponse"
       }
     }
   }
@@ -24037,7 +23951,7 @@ pub fn main() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/api.StandardErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -55353,7 +55267,7 @@ pub fn main() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -55803,7 +55717,7 @@ Campaign ID (UUID)
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -55879,7 +55793,7 @@ Campaign ID (UUID)
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -55955,7 +55869,7 @@ Campaign ID (UUID)
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -56364,7 +56278,7 @@ pub fn main() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -56440,7 +56354,7 @@ pub fn main() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -58269,7 +58183,7 @@ Session cookie for authentication
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/api.WebSocketErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -58345,7 +58259,7 @@ Session cookie for authentication
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/api.WebSocketErrorResponse"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }

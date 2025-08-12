@@ -22,13 +22,13 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
+import type { ApiAPIResponse } from '../models';
+// @ts-ignore
 import type { ApiHealthCheckResponse } from '../models';
 // @ts-ignore
 import type { ApiHealthStatus } from '../models';
 // @ts-ignore
 import type { ApiPingResponse } from '../models';
-// @ts-ignore
-import type { ApiStandardErrorResponse } from '../models';
 /**
  * HealthApi - axios parameter creator
  * @export
