@@ -49,6 +49,17 @@ export type { DNSValidationPhaseConfig } from './models';
 export type { HTTPKeywordValidationPhaseConfig } from './models';
 export type { ModelsDomainGenerationPhaseConfig as DomainGenerationPhaseConfig } from './models';
 
+// Campaign Phase Types - Using ACTUAL exported enums and types
+export type { CampaignCurrentPhaseEnum, CampaignPhaseStatusEnum } from './models/campaign';
+export type { CampaignPhase } from './models/campaign-phase';
+
+// Additional Configuration Types (if they exist)
+// export type { HTTPValidationConfig } from './models'; // May not exist, commenting out
+
+// Persona Configuration Types (need to verify these exist)
+// export type { HttpPersonaConfig } from './models';
+// export type { DnsPersonaConfig } from './models';
+
 // ===========================================================================================
 // PERSONA TYPES - Professional aliases for persona management
 // ===========================================================================================
