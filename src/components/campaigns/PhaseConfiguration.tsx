@@ -15,7 +15,7 @@ import { Form } from "@/components/ui/form";
 import { Loader2, CheckCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useCampaignFormData } from "@/lib/hooks/useCampaignFormData";
-import type { CampaignViewModel } from '@/lib/api-client/types-bridge';
+import type { Campaign } from '@/lib/api-client/models';
 import { campaignsApi } from '@/lib/api-client/client';
 import { isResponseSuccess, getResponseError } from '@/lib/utils/apiResponseHelpers';
 import { validateUUID } from '@/lib/utils/uuidValidation';
@@ -53,7 +53,7 @@ interface PhaseConfigurationProps {
   mode: PhaseConfigurationMode;
   isOpen: boolean;
   onClose: () => void;
-  sourceCampaign: CampaignViewModel;
+  sourceCampaign: Campaign;
   phaseType: string;
   onPhaseStarted: (campaignId: string) => void;
 }

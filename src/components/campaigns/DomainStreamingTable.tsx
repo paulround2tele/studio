@@ -4,9 +4,9 @@ import React, { useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ExternalLink, RefreshCw } from 'lucide-react';
 import type {
-  CampaignViewModel,
+  Campaign,
   CampaignValidationItem
-} from '@/lib/api-client/types-bridge';
+} from '@/lib/api-client/models';
 import type { GeneratedDomain } from '@/lib/api-client';
 import { ScrollArea } from '../ui/scroll-area';
 import { StatusBadge, type DomainActivityStatus } from '@/components/shared/StatusBadge';
@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { useDomainData, useDomainStatusSummary } from '@/hooks/useDomainData';
 
 interface DomainStreamingTableProps {
-  campaign: CampaignViewModel;
+  campaign: Campaign;
   // Legacy props for backward compatibility - no longer used
   generatedDomains?: GeneratedDomain[];
   dnsCampaignItems?: CampaignValidationItem[];
@@ -46,7 +46,7 @@ interface EnrichedDomain {
 }
 
 // Helper functions to safely extract domain data - AGGRESSIVE DEBUGGING
-const getCampaignDomainsPhaseAware = (campaign: CampaignViewModel): string[] => {
+const getCampaignDomainsPhaseAware = (campaign: Campaign): string[] => {
   console.log('🚨 [AGGRESSIVE DEBUG] Full campaign object inspection:', {
     campaignId: campaign.id,
     campaignName: campaign.name,
@@ -160,7 +160,7 @@ const convertStatus = (backendStatus?: string): DomainActivityStatus => {
 // Backend-driven status lookup - no fallbacks, trust API data completely
 const getDomainStatus = (
   domainName: string,
-  campaign: CampaignViewModel,
+  campaign: Campaign,
   generatedDomains: GeneratedDomain[],
   statusType: 'dns' | 'http' | 'lead'
 ): DomainActivityStatus => {
@@ -202,7 +202,7 @@ const getDomainStatus = (
 // Get lead score from domain object (UPDATED: handle both camelCase and snake_case)
 const getLeadScore = (
   domainName: string,
-  campaign: CampaignViewModel,
+  campaign: Campaign,
   generatedDomains: GeneratedDomain[]
 ): number => {
   console.log('🔍 [LEAD SCORE DEBUG] Looking for lead score for domain:', domainName);

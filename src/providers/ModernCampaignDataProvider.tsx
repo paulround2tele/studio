@@ -7,14 +7,14 @@ import React, { createContext, useContext, ReactNode } from 'react';
 import { useAppSelector } from '@/store/hooks';
 import { useGetCampaignsStandaloneQuery } from '@/store/api/campaignApi';
 import { transformCampaignToViewModel } from '@/lib/utils/campaignTransforms';
-import type { CampaignViewModel } from '@/lib/api-client/types-bridge';
+import type { Campaign } from '@/lib/api-client/models';
 
 interface ModernCampaignDataContextValue {
-  campaigns: CampaignViewModel[];
+  campaigns: Campaign[];
   loading: boolean;
   error: string | null;
   refetch: () => void;
-  getCampaign: (campaignId: string) => CampaignViewModel | undefined;
+  getCampaign: (campaignId: string) => Campaign | undefined;
 }
 
 const ModernCampaignDataContext = createContext<ModernCampaignDataContextValue | null>(null);
@@ -38,14 +38,14 @@ export const ModernCampaignDataProvider: React.FC<ModernCampaignDataProviderProp
   const apiCampaigns = apiResponse?.data || [];
   
   // Transform API data to view models (with type casting for legacy compatibility)
-  const campaigns: CampaignViewModel[] = Array.isArray(apiCampaigns) 
+  const campaigns: Campaign[] = Array.isArray(apiCampaigns) 
     ? apiCampaigns.map(campaign => transformCampaignToViewModel(campaign as any))
     : [];
 
   // Use Redux state for any additional state management
   const { selectedCampaignId } = useAppSelector((state) => state.campaign);
 
-  const getCampaign = (campaignId: string): CampaignViewModel | undefined => {
+  const getCampaign = (campaignId: string): Campaign | undefined => {
     return campaigns.find(campaign => campaign.id === campaignId);
   };
 

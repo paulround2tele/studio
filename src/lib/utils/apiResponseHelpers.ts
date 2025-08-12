@@ -6,7 +6,7 @@
  * BULK-ONLY STRATEGY: All responses must use unified envelope format
  */
 
-import type { ApiResponse } from '@/lib/api-client/types-bridge';
+import type { ApiResponse } from '@/lib/api-client/models';
 import type { ErrorInfo } from '@/lib/api-client/models/error-info';
 
 // ===================================================================

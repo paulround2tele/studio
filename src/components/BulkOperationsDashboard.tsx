@@ -31,7 +31,7 @@ import type {
   BulkHTTPValidationRequest,
   BulkAnalyticsRequest,
   BulkResourceRequest
-} from '@/lib/api-client/professional-types';
+} from '@/lib/api-client/models';
 import type { UUID } from '@/lib/api-client/uuid-types';
 
 /**

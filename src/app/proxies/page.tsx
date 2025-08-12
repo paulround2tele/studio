@@ -17,8 +17,8 @@ import type { components } from '@/lib/api-client/types';
 // CreateProxyRequestProtocolEnum removed - using direct string literals now
 
 type UpdateProxyPayload = any;
-import { apiClient } from '@/lib/api-client/client-bridge';
-import type { Proxy } from '@/lib/api-client/types-bridge';
+import { apiClient } from '@/lib/api-client/apis';
+import type { Proxy } from '@/lib/api-client/models';
 type FrontendProxy = any;
 
 // Keep using OpenAPI Proxy type for components, convert from FrontendProxy as needed

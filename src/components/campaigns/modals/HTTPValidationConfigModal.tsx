@@ -15,9 +15,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Import types and services - using the EXACT same pattern as campaign form
-import { apiClient } from '@/lib/api-client/client-bridge';
+import { apiClient } from '@/lib/api-client/apis';
 import { campaignsApi } from '@/lib/api-client/client';
-import type { HTTPValidationConfig, PhaseConfigureRequest, PersonaResponse } from '@/lib/api-client/professional-types';
+import type { HTTPValidationConfig, PhaseConfigureRequest, PersonaResponse } from '@/lib/api-client/models';
 import { ConfigurePhaseStandalonePhaseEnum } from '@/lib/api-client/apis/campaigns-api';
 // PhaseConfigureRequestPhaseTypeEnum removed - using direct string literals now
 

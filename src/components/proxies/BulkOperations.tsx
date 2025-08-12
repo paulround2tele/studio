@@ -36,8 +36,8 @@ import {
   AlertTriangle,
   Loader2
 } from 'lucide-react';
-import type { Proxy, UpdateProxyRequest } from '@/lib/api-client/professional-types';
-import type { ApiResponse } from '@/lib/api-client/types-bridge';
+import type { Proxy, UpdateProxyRequest } from '@/lib/api-client/models';
+import type { ApiResponse } from '@/lib/api-client/models';
 import { isResponseSuccess } from '@/lib/utils/apiResponseHelpers';
 
 type ProxyActionResponse = { status: 'success' | 'error'; message?: string };
@@ -48,8 +48,8 @@ import {
   updateProxy,
   deleteProxy,
 } from '@/store/api/proxyApi';
-import { apiClient } from '@/lib/api-client/client-bridge';
-import type { Proxy } from '@/lib/api-client/types-bridge';
+import { apiClient } from '@/lib/api-client/apis';
+import type { Proxy } from '@/lib/api-client/models';
 import { useToast } from '@/hooks/use-toast';
 
 export interface BulkOperationsProps {

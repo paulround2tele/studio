@@ -201,7 +201,7 @@ describe('Type Guards - `as any` Replacement Tests', () => {
   });
 
   describe('convertCampaignToLeadGeneration', () => {
-    it('should convert CampaignViewModel to LeadGenerationCampaign format', () => {
+    it('should convert Campaign to LeadGenerationCampaign format', () => {
       const campaignViewModel = {
         id: 'campaign-123',
         name: 'Test Campaign',

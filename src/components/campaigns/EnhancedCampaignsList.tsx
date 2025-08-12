@@ -15,7 +15,7 @@ import {
   PaginationPrevious 
 } from '@/components/ui/pagination';
 import { Search, Filter, SortAsc, SortDesc } from 'lucide-react';
-import type { CampaignViewModel } from '@/lib/api-client/types-bridge';
+import type { Campaign } from '@/lib/api-client/models';
 import CampaignListItem from './CampaignListItem';
 
 // Professional pagination context type (no fantasy imports)
@@ -23,7 +23,7 @@ type PaginationContext = 'dashboard' | 'full-page' | 'modal';
 const DEFAULT_PAGE_SIZE = 10;
 
 interface EnhancedCampaignsListProps {
-  campaigns: CampaignViewModel[];
+  campaigns: Campaign[];
   loading?: boolean;
   onDeleteCampaign: (campaignId: string) => void;
   onPauseCampaign?: (campaignId: string) => void;

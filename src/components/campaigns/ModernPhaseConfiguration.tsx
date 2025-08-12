@@ -14,7 +14,7 @@ import { PerformanceTuningSection } from './sections/PerformanceTuningSection';
 import { campaignsApi } from '@/lib/api-client/client';
 import { isResponseSuccess, getResponseError } from '@/lib/utils/apiResponseHelpers';
 import { validateUUID } from '@/lib/utils/uuidValidation';
-import type { CampaignViewModel } from '@/lib/api-client/types-bridge';
+import type { Campaign } from '@/lib/api-client/models';
 
 // Phase configuration form interface
 interface PhaseConfigurationFormValues {
@@ -34,7 +34,7 @@ interface PhaseConfigurationFormValues {
 interface ModernPhaseConfigurationProps {
   isOpen: boolean;
   onClose: () => void;
-  sourceCampaign: CampaignViewModel;
+  sourceCampaign: Campaign;
   phaseType: string;
   onPhaseStarted: (campaignId: string) => void;
 }

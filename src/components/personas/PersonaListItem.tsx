@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import type { Persona, HttpPersona, DnsPersona, PersonaStatus } from '@/lib/api-client/types-bridge';
+import type { Persona, HttpPersona, DnsPersona, PersonaStatus } from '@/lib/api-client/models';
 import { FilePenLine, Trash2, MoreVertical, Copy, Globe, Tag, Clock, Settings2, Wifi, TestTubeDiagonal, Power, PowerOff, FileJson, AlertCircle, CheckCircle, HelpCircle, Loader2 } from 'lucide-react';
 import {
   AlertDialog,

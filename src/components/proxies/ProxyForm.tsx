@@ -17,10 +17,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Proxy, UpdateProxyRequest } from '@/lib/api-client/professional-types';
+import type { Proxy, UpdateProxyRequest } from '@/lib/api-client/models';
 
 // Type aliases for better readability
-import { apiClient } from '@/lib/api-client/client-bridge';
+import { apiClient } from '@/lib/api-client/apis';
 import { useToast } from '@/hooks/use-toast';
 // THIN CLIENT: Removed AuthContext - backend handles auth
 import { Loader2 } from "lucide-react";

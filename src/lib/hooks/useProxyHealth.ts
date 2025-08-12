@@ -2,8 +2,8 @@
 // Advanced proxy health monitoring with branded types integration
 
 import { useState, useEffect, useCallback } from 'react';
-import { getProxies, testProxy, testAllProxies } from '@/lib/api-client/client-bridge';
-import type { ApiResponse } from '@/lib/api-client/types-bridge';
+import { getProxies, testProxy, testAllProxies } from '@/lib/api-client/apis';
+import type { ApiResponse } from '@/lib/api-client/models';
 import type { Proxy } from '@/lib/api-client/models';
 import { useToast } from '@/hooks/use-toast';
 

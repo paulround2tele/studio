@@ -7,15 +7,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, UserCheck, Percent, Link as LinkIcon, ExternalLink, Sparkles, Loader2 } from 'lucide-react';
-import type { CampaignViewModel, AnalyzeContentInput } from '@/lib/api-client/types-bridge';
-import type { ExtractedContentItem, LeadItem } from '@/lib/api-client/professional-types';
+import type { Campaign, AnalyzeContentInput } from '@/lib/api-client/models';
+import type { ExtractedContentItem, LeadItem } from '@/lib/api-client/models';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import React, { useState } from 'react';
 
 interface ContentSimilarityViewProps {
-  campaign: CampaignViewModel;
-  onAnalysisComplete?: (updatedCampaign: CampaignViewModel) => void; // Callback to update parent campaign state
+  campaign: Campaign;
+  onAnalysisComplete?: (updatedCampaign: Campaign) => void; // Callback to update parent campaign state
 }
 
 const getSimilarityBadgeVariant = (score: number) => {

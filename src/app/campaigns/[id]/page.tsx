@@ -19,7 +19,9 @@ import DomainStreamingTable from '@/components/campaigns/DomainStreamingTable';
 import PhaseDashboard from '@/components/campaigns/PhaseDashboard';
 
 // RTK Query data fetching
-import { useGetCampaignsStandaloneQuery } from '@/store/api/campaignApi';
+// ✅ PROFESSIONAL: Direct OpenAPI client usage
+import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
+import { Configuration } from '@/lib/api-client/configuration';
 import useCampaignOperations from '@/hooks/useCampaignOperations';
 
 // Types
@@ -42,7 +44,7 @@ export default function CampaignDetailsPage() {
   const campaign = campaigns.find((c: any) => c.id === campaignId);
 
   // Explicit type annotation to ensure proper transformation
-  const typedCampaign = campaign as import('@/lib/types').CampaignViewModel | null;
+  const typedCampaign = campaign as import('@/lib/types').Campaign | null;
 
   // Extract domain-related data from campaign (RTK Query consolidation)
   const generatedDomains = campaign?.domains || [];

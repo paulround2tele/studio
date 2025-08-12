@@ -1,10 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { CampaignViewModel } from '@/lib/api-client/types-bridge';
+import type { Campaign } from '@/lib/api-client/models';
 
 // State interface for campaign management
 export interface CampaignState {
   // Current campaign being viewed/edited
-  currentCampaign: CampaignViewModel | null;
+  currentCampaign: Campaign | null;
   
   // Phase transition state
   isTransitioning: boolean;
@@ -78,12 +78,12 @@ const campaignSlice = createSlice({
     },
     
     // Current campaign data
-    setCampaign: (state, action: PayloadAction<CampaignViewModel>) => {
+    setCampaign: (state, action: PayloadAction<Campaign>) => {
       state.currentCampaign = action.payload;
       state.lastUpdated = new Date().toISOString();
     },
     
-    updateCampaignField: (state, action: PayloadAction<{ field: keyof CampaignViewModel; value: any }>) => {
+    updateCampaignField: (state, action: PayloadAction<{ field: keyof Campaign; value: any }>) => {
       if (state.currentCampaign) {
         (state.currentCampaign as any)[action.payload.field] = action.payload.value;
         state.lastUpdated = new Date().toISOString();

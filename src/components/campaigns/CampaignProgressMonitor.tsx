@@ -5,12 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, CheckCircle, Clock, Pause } from 'lucide-react';
-import type { CampaignViewModel, CampaignPhase, CampaignPhaseStatusEnum } from '@/lib/api-client/types-bridge';
+import type { Campaign, CampaignPhase, CampaignPhaseStatusEnum } from '@/lib/api-client/models';
 import { normalizeStatus, getStatusColor } from '@/lib/utils/statusMapping';
 
 interface CampaignProgressMonitorProps {
-  campaign: CampaignViewModel;
-  onCampaignUpdate?: (updatedCampaign: Partial<CampaignViewModel>) => void;
+  campaign: Campaign;
+  onCampaignUpdate?: (updatedCampaign: Partial<Campaign>) => void;
   onDomainReceived?: (domain: string) => void;
 }
 

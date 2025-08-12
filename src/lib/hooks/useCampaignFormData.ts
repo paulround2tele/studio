@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { CampaignViewModel, PersonaResponse, Proxy } from '@/lib/api-client/types-bridge';
-import { apiClient } from '@/lib/api-client/client-bridge';
+import type { Campaign, PersonaResponse, Proxy } from '@/lib/api-client/models';
+import { apiClient } from '@/lib/api-client/apis';
 import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms';
 
 // Professional type definitions based on ACTUAL schema
@@ -11,7 +11,7 @@ interface CampaignFormData {
   httpPersonas: HttpPersona[];
   dnsPersonas: DnsPersona[];
   proxies: Proxy[];
-  sourceCampaigns: CampaignViewModel[];
+  sourceCampaigns: Campaign[];
   isLoading: boolean;
   error: string | null;
   refetch: () => Promise<void>;
@@ -25,7 +25,7 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
   const [httpPersonas, setHttpPersonas] = useState<HttpPersona[]>([]);
   const [dnsPersonas, setDnsPersonas] = useState<DnsPersona[]>([]);
   const [proxies, setProxies] = useState<Proxy[]>([]);
-  const [sourceCampaigns, setSourceCampaigns] = useState<CampaignViewModel[]>([]);
+  const [sourceCampaigns, setSourceCampaigns] = useState<Campaign[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -84,7 +84,7 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
       if (campaignsResult.status === 'fulfilled' && campaignsResult.value && campaignsResult.value.data) {
         // Handle wrapped response format: { success: true, data: { campaigns: [...] } }
         const responseData = campaignsResult.value.data;
-        let campaignsArray: CampaignViewModel[] = [];
+        let campaignsArray: Campaign[] = [];
         
         // Check if data is wrapped with campaigns property
         if (responseData && typeof responseData === 'object' && 'campaigns' in responseData) {
@@ -187,7 +187,7 @@ export function usePersonaSelectionOptions(personas: HttpPersona[] | DnsPersona[
  * Hook for getting memoized campaign selection options
  * Reduces re-renders when campaigns haven't changed
  */
-export function useCampaignSelectionOptions(campaigns: CampaignViewModel[]) {
+export function useCampaignSelectionOptions(campaigns: Campaign[]) {
   return useMemo(() => 
     campaigns.map(campaign => ({
       id: campaign.id,

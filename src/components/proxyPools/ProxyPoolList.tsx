@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import ProxyPoolForm from "./ProxyPoolForm";
 import { proxyPoolsApi } from "@/lib/api-client/client";
-import type { ProxyPool } from '@/lib/api-client/professional-types';
+import type { ProxyPool } from '@/lib/api-client/models';
 import {
   Dialog,
   DialogContent,

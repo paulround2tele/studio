@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { CheckCircle, Play, Pause, Square, Settings, RotateCcw, AlertTriangle } from 'lucide-react';
 import PhaseGateButton from './PhaseGateButton';
 import { PhaseConfiguration } from './PhaseConfiguration';
-import type { Campaign } from '@/lib/api-client/professional-types';
+import type { Campaign } from '@/lib/api-client/models';
 import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { useToast } from '@/hooks/use-toast';
 

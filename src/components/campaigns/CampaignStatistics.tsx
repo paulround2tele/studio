@@ -19,22 +19,14 @@ import {
   TrendingUp,
   Activity
 } from 'lucide-react';
-import type { CampaignViewModel } from '@/lib/api-client/types-bridge';
-import type { CampaignPhase } from '@/lib/api-client/professional-types';
+import type { Campaign } from '@/lib/api-client/models/campaign';
+import type { CampaignPhase } from '@/lib/api-client/models';
 import { cn } from '@/lib/utils';
 
 // Unified interfaces combining both original components
-export interface CampaignStatisticsProps {
-  campaign: CampaignViewModel;
-  totalDomains?: number;
-  streamingStats?: {
-    domainsPerSecond: number;
-    messagesReceived: number;
-    connectionStatus: 'connected' | 'disconnected' | 'reconnecting';
-  };
+interface CampaignStatisticsProps {
+  campaign: Campaign;
   className?: string;
-  showDetailedStats?: boolean;
-  variant?: 'default' | 'enhanced' | 'compact' | 'summary';
 }
 
 // Utility functions from both components

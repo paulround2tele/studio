@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import type { components } from '@/lib/api-client/types';
 import { PersonaResponse } from '@/lib/api-client/models/persona-response';
 import { Proxy } from '@/lib/api-client/models/proxy';
-import { apiClient } from '@/lib/api-client/client-bridge';
+import { apiClient } from '@/lib/api-client/apis';
 import { useConfigurePhaseStandaloneMutation } from '@/store/api/campaignApi';
 import type { DNSValidationConfig } from '@/lib/api-client/models/dnsvalidation-config';
 import type { PhaseConfigureRequest } from '@/lib/api-client/models/phase-configure-request';

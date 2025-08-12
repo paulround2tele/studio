@@ -4,7 +4,7 @@
 import type { components } from '@/lib/api-client/types';
 import type { UUID } from '@/lib/api-client/uuid-types';
 // Enum types removed - using direct string literals now
-import type { CampaignViewModel } from '@/lib/api-client/types-bridge';
+import type { Campaign } from '@/lib/api-client/models';
 
 type OpenAPICampaign = components['schemas']['LeadGenerationCampaign'];
 type CampaignPhase = 'domain_generation' | 'dns_validation' | 'http_keyword_validation' | 'analysis';
@@ -82,10 +82,10 @@ function mapToPhase(phase?: string): CampaignPhase {
 }
 
 /**
- * Transform OpenAPI Campaign to CampaignViewModel for UI consumption
+ * Transform OpenAPI Campaign to Campaign for UI consumption
  * Adds UI-specific computed properties and backwards compatibility fields
  */
-export function transformCampaignToViewModel(campaign: OpenAPICampaign): CampaignViewModel {
+export function transformCampaignToViewModel(campaign: OpenAPICampaign): Campaign {
   // Enhanced campaign ID handling with debugging but not breaking on missing ID
   let campaignId = campaign.id;
   
@@ -159,19 +159,19 @@ export function transformCampaignToViewModel(campaign: OpenAPICampaign): Campaig
 }
 
 /**
- * Transform array of OpenAPI Campaign objects to CampaignViewModel array
+ * Transform array of OpenAPI Campaign objects to Campaign array
  */
-export function transformCampaignsToViewModels(campaigns: OpenAPICampaign[]): CampaignViewModel[] {
+export function transformCampaignsToViewModels(campaigns: OpenAPICampaign[]): Campaign[] {
   return campaigns.map(transformCampaignToViewModel);
 }
 
 // These legacy mapping functions are no longer needed since we use OpenAPI schema directly
 
 /**
- * Extract UI-specific fields from CampaignViewModel back to Campaign
+ * Extract UI-specific fields from Campaign back to Campaign
  * Useful when sending data back to the API
  */
-export function extractCampaignFromViewModel(viewModel: CampaignViewModel): OpenAPICampaign {
+export function extractCampaignFromViewModel(viewModel: Campaign): OpenAPICampaign {
   return {
     id: viewModel.id || '00000000-0000-0000-0000-000000000000',
     name: viewModel.name || '',
@@ -203,12 +203,12 @@ export function extractCampaignFromViewModel(viewModel: CampaignViewModel): Open
 }
 
 /**
- * Safely merge Campaign API updates into CampaignViewModel without overriding UI-specific fields
+ * Safely merge Campaign API updates into Campaign without overriding UI-specific fields
  * This preserves UI state while updating API data
  */
-export function mergeCampaignApiUpdate(viewModel: CampaignViewModel, apiUpdate: Partial<OpenAPICampaign>): CampaignViewModel {
+export function mergeCampaignApiUpdate(viewModel: Campaign, apiUpdate: Partial<OpenAPICampaign>): Campaign {
   // Create a new ViewModel preserving existing UI-specific fields and updating with API data
-  const updatedViewModel: CampaignViewModel = { ...viewModel };
+  const updatedViewModel: Campaign = { ...viewModel };
   
   // Update core fields from API if provided (using OpenAPI types directly)
   if (apiUpdate.name !== undefined) {

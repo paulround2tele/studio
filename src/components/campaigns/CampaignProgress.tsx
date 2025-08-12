@@ -1,7 +1,7 @@
 "use client";
 
 import React, { memo, useMemo, useCallback } from 'react';
-import type { CampaignViewModel, CampaignPhase, CampaignPhaseStatusEnum } from '@/lib/api-client/types-bridge';
+import type { Campaign, CampaignPhase, CampaignPhaseStatusEnum } from '@/lib/api-client/models';
 import { CheckCircle, AlertTriangle, Clock, Loader2, WorkflowIcon, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/tooltip";
 
 interface CampaignProgressProps {
-  campaign: CampaignViewModel;
+  campaign: Campaign;
 }
 
 // PROFESSIONAL PHASE DISPLAY NAMES using ACTUAL ENUM VALUES
@@ -50,7 +50,7 @@ const PhaseItem = memo(({
   nodeStatus
 }: {
   phase: CampaignPhase;
-  campaign: CampaignViewModel;
+  campaign: Campaign;
   displayPhases: CampaignPhase[];
   operationalPhasesForType: CampaignPhase[];
   isActivePhaseNode: boolean;

@@ -10,10 +10,10 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Briefcase, RefreshCw, CheckCircle, AlertCircle, Clock, Pause, Play, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { CampaignViewModel, CampaignPhaseStatusEnum } from '@/lib/api-client/types-bridge';
+import type { Campaign, CampaignPhaseStatusEnum } from '@/lib/api-client/models';
 
 export interface CampaignHeaderProps {
-  campaign: CampaignViewModel;
+  campaign: Campaign;
   loading?: boolean;
   onRefresh?: () => void;
   totalDomains?: number;

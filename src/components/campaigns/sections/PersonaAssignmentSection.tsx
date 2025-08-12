@@ -6,7 +6,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Control } from 'react-hook-form';
-import type { DNSPersona, HTTPPersona } from '@/lib/api-client/professional-types';
+import type { DNSPersona, HTTPPersona } from '@/lib/api-client/models';
 
 // Define types for the other props that might be passed
 interface Persona {

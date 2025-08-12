@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiClient } from "@/lib/api-client/client-bridge";
 import type { CreatePersonaRequest, UpdatePersonaRequest } from "@/lib/api-client/types-bridge";
 // Import types from professional-types layer
-import type { HttpPersonaConfig, DnsPersonaConfig, PersonaResponse } from '@/lib/api-client/professional-types';
+import type { HttpPersonaConfig, DnsPersonaConfig, PersonaResponse } from '@/lib/api-client/models';
 
 // Create proper typed interfaces for personas with correct config types
 

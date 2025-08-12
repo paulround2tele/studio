@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import type { CampaignViewModel } from '@/lib/api-client/types-bridge';
+import type { Campaign } from '@/lib/api-client/models';
 import { ArrowRight, CalendarDays, CheckCircle, AlertTriangle, WorkflowIcon, Play, MoreVertical, FilePenLine, Trash2, PauseCircle, PlayCircle, StopCircle, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -31,7 +31,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { CAMPAIGN_PHASES_ORDERED, getNextPhase } from '@/lib/constants';
 
 interface CampaignListItemProps {
-  campaign: CampaignViewModel;
+  campaign: Campaign;
   // Action handlers
   onDeleteCampaign: (campaignId: string) => void;
   onPauseCampaign?: (campaignId: string) => void;
@@ -59,7 +59,7 @@ const formatDate = (dateString: string): string => {
 };
 
 // Memoized progress calculation function
-const getOverallCampaignProgress = (campaign: CampaignViewModel): number => {
+const getOverallCampaignProgress = (campaign: Campaign): number => {
   // All campaigns follow the same phase progression in phases-based architecture
   const allPhases = ['generation', 'dns_validation', 'http_keyword_validation', 'analysis'];
   if (allPhases.length === 0) return 0;
@@ -94,7 +94,7 @@ const getOverallCampaignProgress = (campaign: CampaignViewModel): number => {
 };
 
 // Memoized status badge info generation
-const getStatusBadgeInfo = (campaign: CampaignViewModel): { text: string, variant: "default" | "secondary" | "destructive" | "outline", icon: JSX.Element } => {
+const getStatusBadgeInfo = (campaign: Campaign): { text: string, variant: "default" | "secondary" | "destructive" | "outline", icon: JSX.Element } => {
   // Check if campaign is fully completed (completed analysis phase = campaign done)
   if (campaign.phaseStatus === "completed" && campaign.currentPhase === "analysis") {
     return { text: "Campaign Completed", variant: "default", icon: <CheckCircle className="h-4 w-4 text-green-500" /> };

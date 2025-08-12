@@ -337,7 +337,7 @@ export function extractDomainName(domain: unknown): string {
 
 /**
  * Safe campaign type converter
- * Converts CampaignViewModel to LeadGenerationCampaign compatible structure
+ * Converts Campaign to LeadGenerationCampaign compatible structure
  */
 export function convertCampaignToLeadGeneration(campaign: any): any {
   if (!campaign) return campaign;

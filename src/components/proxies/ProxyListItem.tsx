@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { Proxy, ProxyStatus } from '@/lib/api-client/types-bridge';
+import type { Proxy, ProxyStatus } from '@/lib/api-client/models';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
