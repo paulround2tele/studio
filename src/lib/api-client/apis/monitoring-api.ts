@@ -16,6 +16,8 @@
 import type { Configuration } from '../configuration';
 import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig } from 'axios';
 import globalAxios from 'axios';
+// Professional fix: Import conflicting enums from bulk-operations-api to avoid duplication
+import { ListBulkOperationsStatusEnum, ListBulkOperationsTypeEnum } from './bulk-operations-api';
 // Some imports not used depending on template conditions
 // @ts-ignore
 import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObject, setBearerAuthToObject, setOAuthToObject, setSearchParams, serializeDataIfNeeded, toPathString, createRequestFunction } from '../common';
@@ -278,20 +280,21 @@ export class MonitoringApi extends BaseAPI implements MonitoringApiInterface {
   * @export
   * @enum {string}
   */
-export enum ListBulkOperationsStatusEnum {
-    queued = 'queued',
-    running = 'running',
-    completed = 'completed',
-    failed = 'failed',
-    cancelled = 'cancelled'
-}
+// PROFESSIONAL FIX: Commented out conflicting enums that duplicate bulk-operations-api exports
+// export enum ListBulkOperationsStatusEnum {
+//     queued = 'queued',
+//     running = 'running',
+//     completed = 'completed',
+//     failed = 'failed',
+//     cancelled = 'cancelled'
+// }
 /**
   * @export
   * @enum {string}
   */
-export enum ListBulkOperationsTypeEnum {
-    domain_generation = 'domain_generation',
-    dns_validation = 'dns_validation',
-    http_validation = 'http_validation',
-    analytics = 'analytics'
-}
+// export enum ListBulkOperationsTypeEnum {
+//     domain_generation = 'domain_generation',
+//     dns_validation = 'dns_validation',
+//     http_validation = 'http_validation',
+//     analytics = 'analytics'
+// }

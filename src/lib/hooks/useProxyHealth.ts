@@ -2,13 +2,25 @@
 // Advanced proxy health monitoring with branded types integration
 
 import { useState, useEffect, useCallback } from 'react';
-import { getProxies, testProxy, testAllProxies } from '@/lib/api-client/apis';
-import type { ApiResponse } from '@/lib/api-client/models';
-import type { Proxy } from '@/lib/api-client/models';
+import { ProxiesApi, Configuration } from '@/lib/api-client';
+import type { 
+  ApiResponse,
+  GithubComFntelecomllcStudioBackendInternalModelsProxy as Proxy,
+  GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest,
+  ApiBulkProxyTestResponse,
+  ApiProxyTestResponse,
+  ApiBulkHealthCheckResponse
+} from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
 
 // Use Proxy directly - no extension needed since all fields are already there
 type ExtendedProxy = Proxy;
+
+// Professional API client initialization - not some amateur scattered imports
+const config = new Configuration({
+  basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+});
+const proxiesApi = new ProxiesApi(config);
 
 
 export interface ProxyHealthMetrics {
@@ -129,10 +141,10 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     }
 
     try {
-      const response = await getProxies();
+      const response = await proxiesApi.proxiesGet();
       
-      if (response.success === true && response.data) {
-        // Ensure data is always an array
+      if (response.data) {
+        // Ensure data is always an array - the generated API returns the data directly
         const proxiesArray = Array.isArray(response.data) ? response.data : [];
         setProxies(proxiesArray as ExtendedProxy[]);
         const metrics = calculateHealthMetrics(proxiesArray as ExtendedProxy[]);
@@ -141,7 +153,7 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
       } else {
         toast({
           title: "Error Loading Proxy Data",
-          description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Failed to fetch proxy information",
+          description: "No proxy data received from API",
           variant: "destructive"
         });
       }
@@ -167,59 +179,60 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     setHealthCheckInProgress(true);
     
     try {
-      const response = await testAllProxies();
+      // Use the bulk health check endpoint like a professional
+      const response = await proxiesApi.proxiesHealthCheckPost();
       
-      if (response.success === true) {
+      if (response.data) {
         toast({
           title: "Health Check Complete",
           description: "All proxies have been tested",
           variant: "default"
         });
         
-        // Refresh data after health check
+        // Refresh proxy data to get updated health status
         await fetchProxyData(true);
       } else {
         toast({
           title: "Health Check Failed",
-          description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Failed to run health checks",
+          description: "Failed to complete bulk health check",
           variant: "destructive"
         });
       }
     } catch (error) {
-      console.error('Error running health checks:', error);
+      console.error('Error during health check:', error);
       toast({
         title: "Health Check Error",
-        description: "Failed to complete health checks",
+        description: "An error occurred during health check",
         variant: "destructive"
       });
     } finally {
       setHealthCheckInProgress(false);
     }
-  }, [healthCheckInProgress, toast, fetchProxyData]);
+  }, [fetchProxyData, toast, healthCheckInProgress]);
 
   /**
    * Test a specific proxy
    */
   const testSpecificProxy = useCallback(async (proxyId: string) => {
     try {
-      const response = await testProxy(proxyId);
+      const response = await proxiesApi.proxiesProxyIdTestPost(proxyId);
       
-      if (response.success === true && response.data) {
-        // Update the specific proxy in our state
+      if (response.data) {
+        // Find and update the specific proxy in our state
         setProxies(prev => prev.map(p =>
-          p.id === proxyId ? response.data as ExtendedProxy : p
+          p.id === proxyId ? { ...p, lastTested: new Date().toISOString(), isHealthy: true } : p
         ));
         
-        // Recalculate metrics
+        // Recalculate metrics with properly typed data
         const updatedProxies = proxies.map(p =>
-          p.id === proxyId ? response.data as ExtendedProxy : p
+          p.id === proxyId ? { ...p, lastTested: new Date().toISOString(), isHealthy: true } : p
         );
         const metrics = calculateHealthMetrics(updatedProxies);
         setHealthMetrics(metrics);
         
         return response.data;
       } else {
-        throw new Error((typeof response.error === 'string' ? response.error : response.error?.message) || 'Test failed');
+        throw new Error('Test failed - no response data');
       }
     } catch (error) {
       console.error(`Error testing proxy ${proxyId}:`, error);

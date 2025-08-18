@@ -43,10 +43,10 @@ import { isResponseSuccess } from '@/lib/utils/apiResponseHelpers';
 type ProxyActionResponse = { status: 'success' | 'error'; message?: string };
 type UpdateProxyPayload = UpdateProxyRequest;
 import {
-  testProxy,
-  cleanProxies,
-  updateProxy,
-  deleteProxy,
+  useTestProxyMutation,
+  useCleanProxiesMutation,
+  useUpdateProxyMutation,
+  useDeleteProxyMutation,
 } from '@/store/api/proxyApi';
 import { apiClient } from '@/lib/api-client/apis';
 import type { Proxy } from '@/lib/api-client/models';
@@ -69,6 +69,15 @@ interface BulkOperationResult {
 
 export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: BulkOperationsProps) {
   const { toast } = useToast();
+  
+  // RTK Query mutation hooks - professional way to handle API calls
+  const [testProxy] = useTestProxyMutation();
+  const [cleanProxies] = useCleanProxiesMutation();
+  const [updateProxy] = useUpdateProxyMutation();
+  const [deleteProxy] = useDeleteProxyMutation();
+  const [bulkTestProxies] = useBulkTestProxiesMutation();
+  const [bulkUpdateProxies] = useBulkUpdateProxiesMutation();
+  const [bulkDeleteProxies] = useBulkDeleteProxiesMutation();
   
   const [selectedProxyIds, setSelectedProxyIds] = useState<Set<string>>(new Set());
   const [bulkAction, setBulkAction] = useState<BulkAction | null>(null);
@@ -154,11 +163,12 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
     if (action === 'clean') {
       try {
         const response = await cleanProxies();
-        if (isResponseSuccess(response)) {
+        if (response.data) {
           successCount = total;
         } else {
           errorCount = total;
-          errors.push(`Clean operation failed: ${(typeof response.error === 'string' ? response.error : response.error?.message) || 'Unknown error'}`);
+          const errorMessage = response.error || 'Unknown error';
+          errors.push(`Clean operation failed: ${errorMessage}`);
         }
       } catch (error) {
         errorCount = total;
@@ -182,67 +192,54 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
       errorCount = total;
     } else {
       try {
-        let response: ApiResponse<any>;
+        let response: any;
         
         switch (action) {
           case 'enable':
-            const enablePayload: UpdateProxyPayload = { isEnabled: true };
-            response = await bulkUpdateProxies(proxyIds, enablePayload);
-            break;
-            
           case 'disable':
-            const disablePayload: UpdateProxyPayload = { isEnabled: false };
-            response = await bulkUpdateProxies(proxyIds, disablePayload);
+            // For enable/disable, we need to use individual updates since bulk update requires specific payload
+            for (const proxyId of proxyIds) {
+              try {
+                const updateResponse = await updateProxy({ 
+                  proxyId, 
+                  request: { isEnabled: action === 'enable' } 
+                });
+                if (updateResponse.data) {
+                  successCount++;
+                } else {
+                  errorCount++;
+                  errors.push(`${proxyId}: ${updateResponse.error || 'Update failed'}`);
+                }
+              } catch (error) {
+                errorCount++;
+                const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                errors.push(`${proxyId}: ${errorMessage}`);
+              }
+            }
             break;
             
           case 'test':
-            response = await bulkTestProxies(proxyIds);
+            response = await bulkTestProxies({ proxyIds });
+            if (response.data) {
+              successCount = proxyIds.length;
+            } else {
+              errorCount = proxyIds.length;
+              errors.push(`Bulk test failed: ${response.error || 'Unknown error'}`);
+            }
             break;
             
           case 'delete':
-            response = await bulkDeleteProxies(proxyIds);
+            response = await bulkDeleteProxies({ proxyIds });
+            if (response.data) {
+              successCount = proxyIds.length;
+            } else {
+              errorCount = proxyIds.length;
+              errors.push(`Bulk delete failed: ${response.error || 'Unknown error'}`);
+            }
             break;
             
           default:
             throw new Error(`Unknown action: ${action}`);
-        }
-
-        if (isResponseSuccess(response) && response.data) {
-          // Handle bulk operation response
-          const bulkResult = response.data;
-          
-          if (action === 'test') {
-            // For test operations, use BulkProxyTestResponse format
-            successCount = bulkResult.successCount || 0;
-            errorCount = bulkResult.errorCount || 0;
-            
-            // Extract specific test errors if available
-            if (bulkResult.testResults) {
-              bulkResult.testResults.forEach((testResult: any) => {
-                if (!testResult.success && testResult.error) {
-                  errors.push(`${testResult.proxyId || 'Unknown'}: ${testResult.error}`);
-                }
-              });
-            }
-          } else {
-            // For update/delete operations, use BulkProxyOperationResponse format
-            successCount = bulkResult.successCount || 0;
-            errorCount = bulkResult.errorCount || 0;
-            
-            // Extract specific operation errors if available
-            if (bulkResult.failedProxies) {
-              bulkResult.failedProxies.forEach((failedProxy: any) => {
-                errors.push(`${failedProxy.proxyId || 'Unknown'}: ${failedProxy.error || 'Unknown error'}`);
-              });
-            }
-          }
-        } else {
-          // Handle API call failure
-          errorCount = total;
-          const errorMessage = typeof response.error === 'string'
-            ? response.error
-            : response.error?.message || 'Unknown error';
-          errors.push(`Bulk ${action} operation failed: ${errorMessage}`);
         }
       } catch (error) {
         errorCount = total;

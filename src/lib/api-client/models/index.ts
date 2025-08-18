@@ -65,6 +65,7 @@ export * from './api-update-keyword-set-request';
 export * from './api-update-persona-request';
 export * from './api-user-public-response';
 export * from './bulk-validate-dns200-response';
+export * from './campaign';
 export * from './config-auth-config';
 export * from './config-dnsvalidator-config-json';
 export * from './config-feature-flags';
