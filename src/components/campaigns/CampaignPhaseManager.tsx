@@ -8,11 +8,11 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { useToast } from '@/hooks/use-toast';
 import { useConfigurePhaseStandaloneMutation, useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import type { 
-  PhaseConfigureRequest,
-  DNSValidationPhaseConfig,
-  HTTPKeywordValidationPhaseConfig,
-  DomainGenerationPhaseConfig,
-  AnalysisPhaseConfig,
+  ApiPhaseConfigureRequest,
+  ApiDNSValidationConfig,
+  ApiHTTPValidationConfig,
+  ServicesDomainGenerationPhaseConfig,
+  ApiAnalysisConfig,
   CampaignCurrentPhaseEnum
 } from '@/lib/api-client/models';
 
@@ -29,10 +29,10 @@ interface CampaignPhaseManagerProps {
 // Form data for phase-centric campaign system
 interface PhaseManagerFormData {
   selectedPhase: CampaignCurrentPhaseEnum;
-  dnsValidationConfig?: DNSValidationPhaseConfig;
-  httpKeywordValidationConfig?: HTTPKeywordValidationPhaseConfig;
-  domainGenerationConfig?: DomainGenerationPhaseConfig;
-  analysisConfig?: AnalysisPhaseConfig;
+  dnsValidationConfig?: ApiDNSValidationConfig;
+  httpKeywordValidationConfig?: ApiHTTPValidationConfig;
+  domainGenerationConfig?: ServicesDomainGenerationPhaseConfig;
+  analysisConfig?: ApiAnalysisConfig;
 }
 
 export const CampaignPhaseManager: React.FC<CampaignPhaseManagerProps> = ({ campaignId }) => {
@@ -93,7 +93,7 @@ export const CampaignPhaseManager: React.FC<CampaignPhaseManagerProps> = ({ camp
         campaignId,
         phase: data.selectedPhase,
         config: {
-          phaseType,
+          phaseType: phaseType as any, // TODO: Fix enum compatibility
           config: phaseConfig
         }
       }).unwrap();

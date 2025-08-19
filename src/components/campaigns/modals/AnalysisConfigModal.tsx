@@ -16,8 +16,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 
 // Import types and services - using the new auto-generated API client
 import { campaignsApi } from '@/lib/api-client/client';
+import { ConfigurePhaseStandalonePhaseEnum } from '@/lib/api-client/apis/campaigns-api';
 import type { AnalysisConfig } from '@/lib/api-client/models/analysis-config';
-import type { PhaseConfigureRequest } from '@/lib/api-client/models/phase-configure-request';
+import type { ApiPhaseConfigureRequest } from '@/lib/api-client/models/api-phase-configure-request';
+import { ApiPhaseConfigureRequestPhaseTypeEnum } from '@/lib/api-client/models/api-phase-configure-request';
 
 interface AnalysisFormValues {
   analysisType: string;
@@ -65,13 +67,15 @@ export default function AnalysisConfigModal({
       };
 
       // Create the phase configuration request using auto-generated types
-      const configRequest: PhaseConfigureRequest = {
-        phaseType: 'analysis',
-        config: analysisConfig,
+      const configRequest: ApiPhaseConfigureRequest = {
+        phaseType: ApiPhaseConfigureRequestPhaseTypeEnum.analysis,
+        config: {
+          analysis: analysisConfig as any // TODO: Fix enum compatibility between AnalysisConfig and ApiAnalysisConfig
+        },
       };
 
       // Use the generated API client method
-      await campaignsApi.configurePhaseStandalone(campaignId, 'analysis' as any, configRequest);
+      await campaignsApi.configurePhaseStandalone(campaignId, ConfigurePhaseStandalonePhaseEnum.analysis, configRequest);
 
       toast({
         title: "Analysis Configuration Saved",

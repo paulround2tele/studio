@@ -6,7 +6,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Control } from 'react-hook-form';
-import type { DNSPersona, HTTPPersona } from '@/lib/api-client/models';
+import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 
 // Define types for the other props that might be passed
 interface Persona {
@@ -21,8 +21,8 @@ interface Proxy {
 
 interface PersonaAssignmentSectionProps {
   control: Control<any>;
-  dnsPersonas?: DNSPersona[] | Persona[];
-  httpPersonas?: HTTPPersona[] | Persona[];
+  dnsPersonas?: PersonaResponse[] | Persona[];
+  httpPersonas?: PersonaResponse[] | Persona[];
   proxies?: Proxy[];
   needsHttpPersona?: boolean;
   needsDnsPersona?: boolean;

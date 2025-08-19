@@ -1,27 +1,25 @@
 /**
- * LEGACY TYPES - DEPRECATED
+ * LEGACY Campaign Form Types
+ * 
+ * @deprecated Use SimpleCampaignFormTypes.ts for new campaign forms
  *
  * This file contains legacy form types that are being phased out in favor of
  * the new phase-centric architecture. These types are kept for backward
  * compatibility with existing legacy components that have not yet been migrated.
- *
- * For new development, use SimpleCampaignFormTypes.ts instead.
- *
- * @deprecated Use SimpleCampaignFormTypes.ts for new campaign forms
  */
 import type { 
-  CampaignCurrentPhaseEnum,
-  DNSValidationRequest as OpenAPIDNSValidationRequest,
-  HTTPKeywordValidationRequest as OpenAPIHTTPKeywordValidationRequest
+  CampaignCurrentPhaseEnum
 } from '@/lib/api-client/models';
+import type { HTTPKeywordValidationRequest } from '@/lib/api-client/models/httpkeyword-validation-request';
+import type { DNSValidationAPIRequest } from '@/lib/api-client/models/dnsvalidation-apirequest';
 
 export type DomainGenerationPattern = "prefix_variable" | "suffix_variable" | "both_variable";
 export type DomainSourceSelectionMode = "none" | "upload" | "campaign_output";
 export type CampaignPhase = CampaignCurrentPhaseEnum;
 
 // Import OpenAPI types for full sequence support (legacy)
-export type DNSValidationRequest = OpenAPIDNSValidationRequest;
-export type HTTPKeywordValidationRequest = OpenAPIHTTPKeywordValidationRequest;
+export type DNSValidationRequest = DNSValidationAPIRequest;
+export type HTTPKeywordValidationRequest_Legacy = HTTPKeywordValidationRequest;
 
 /**
  * LEGACY CampaignFormValues interface

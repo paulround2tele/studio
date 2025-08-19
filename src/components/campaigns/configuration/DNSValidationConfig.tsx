@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import type { DNSValidationPhaseConfig } from '@/lib/api-client/models';
+import type { DNSValidationPhaseConfig } from '@/lib/api-client/models/dnsvalidation-phase-config';
 
 interface DNSValidationConfigProps {
   control: Control<any>;

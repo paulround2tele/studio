@@ -13,18 +13,29 @@ import { Label } from '@/components/ui/label';
 // Only import icons that are actually used in the component
 import { Database, Server } from 'lucide-react';
 import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
-import { DatabaseApi } from '@/lib/api-client/apis/database-api';
-import type { DatabaseQueryResult } from '@/lib/api-client/models/database-query-result';
-import type { DatabaseStats } from '@/lib/api-client/models/database-stats';
+import { DatabaseApi, Configuration } from '@/lib/api-client';
+import type { 
+  ApiDatabaseQueryResult,
+  ApiDatabaseStats,
+  ApiBulkDatabaseStatsRequest,
+  ApiBulkDatabaseQueryRequest,
+  ApiDatabaseQuery
+} from '@/lib/api-client/models';
+
+// Professional API client initialization
+const config = new Configuration({
+  basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+});
+const databaseApi = new DatabaseApi(config);
 
 
 export default function DatabaseGUI() {
   const [sqlQuery, setSqlQuery] = useState('SELECT * FROM auth.users LIMIT 10;');
-  const [queryResult, setQueryResult] = useState<DatabaseQueryResult | null>(null);
+  const [queryResult, setQueryResult] = useState<ApiDatabaseQueryResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
-  const [dbStats, setDbStats] = useState<DatabaseStats | null>(null);
+  const [dbStats, setDbStats] = useState<ApiDatabaseStats | null>(null);
   const [authSuccess, setAuthSuccess] = useState(false);
   const { login } = useCachedAuth();
 
@@ -69,8 +80,18 @@ export default function DatabaseGUI() {
   // Load database statistics
   const loadDatabaseStats = async () => {
     try {
-      const stats = await databaseService.getStats();
-      setDbStats(stats);
+      const statsRequest: ApiBulkDatabaseStatsRequest = {
+        detailed: true
+      };
+      
+      const response = await databaseApi.apiV2DatabaseStatsPost(
+        'XMLHttpRequest', 
+        statsRequest
+      );
+      
+      if (response.data?.data) {
+        setDbStats(response.data.data as any);
+      }
     } catch (err) {
       console.error('Failed to load database stats:', err);
     }
@@ -84,8 +105,24 @@ export default function DatabaseGUI() {
     setError(null);
     
     try {
-      const result = await databaseService.query(sqlQuery);
-      setQueryResult(result);
+      const query: ApiDatabaseQuery = {
+        id: crypto.randomUUID(),
+        sql: sqlQuery
+      };
+      
+      const queryRequest: ApiBulkDatabaseQueryRequest = {
+        queries: [query],
+        limit: 1000
+      };
+      
+      const response = await databaseApi.apiV2DatabaseQueryPost(
+        'XMLHttpRequest', 
+        queryRequest
+      );
+      
+      if (response.data?.data) {
+        setQueryResult(response.data.data as any);
+      }
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);

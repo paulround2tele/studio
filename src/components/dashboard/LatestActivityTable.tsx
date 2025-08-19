@@ -4,14 +4,33 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import type { Campaign, LatestDomainActivity, CampaignPhase, DomainActivityStatus, CampaignSelectedType } from '@/lib/api-client/models';
+import type { Campaign } from '@/lib/api-client/models';
 import { CAMPAIGN_PHASES_ORDERED } from '@/lib/constants';
 import { ScrollArea } from '../ui/scroll-area';
 import { ExternalLink, Activity } from 'lucide-react';
 import Link from 'next/link';
 import { useRTKCampaignsList } from '@/providers/RTKCampaignDataProvider';
-import { StatusBadge } from '@/components/shared/StatusBadge';
+import { StatusBadge, type DomainActivityStatus } from '@/components/shared/StatusBadge';
 import { LeadScoreDisplay } from '@/components/shared/LeadScoreDisplay';
+
+// Local type definitions for activity data
+interface LatestDomainActivity {
+  id: string;
+  domain: string;
+  domainName: string;
+  campaignId: string;
+  campaignName: string;
+  phase: string;
+  status: DomainActivityStatus;
+  timestamp: string;
+  activity: string;
+  generatedDate: string;
+  dnsStatus: DomainActivityStatus;
+  httpStatus: DomainActivityStatus;
+  leadScanStatus: DomainActivityStatus;
+  leadScore?: number;
+  sourceUrl: string;
+}
 
 // ENTERPRISE FIX: Define enriched campaign data type
 type RichCampaignData = {

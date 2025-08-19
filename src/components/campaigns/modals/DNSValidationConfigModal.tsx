@@ -17,10 +17,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import type { components } from '@/lib/api-client/types';
 import { PersonaResponse } from '@/lib/api-client/models/persona-response';
 import { Proxy } from '@/lib/api-client/models/proxy';
-import { apiClient } from '@/lib/api-client/apis';
+import { campaignsApi, personasApi, proxiesApi } from '@/lib/api-client/client';
 import { useConfigurePhaseStandaloneMutation } from '@/store/api/campaignApi';
 import type { DNSValidationConfig } from '@/lib/api-client/models/dnsvalidation-config';
-import type { PhaseConfigureRequest } from '@/lib/api-client/models/phase-configure-request';
+import type { ApiPhaseConfigureRequest } from '@/lib/api-client/models/api-phase-configure-request';
+import { ApiPhaseConfigureRequestPhaseTypeEnum } from '@/lib/api-client/models/api-phase-configure-request';
 // PhaseConfigureRequestPhaseTypeEnum removed - using direct string literals now
 
 interface DNSValidationFormValues {
@@ -74,17 +75,13 @@ export default function DNSValidationConfigModal({
         
         // Load personas and proxies in parallel
         const [personasResponse, proxiesResponse] = await Promise.all([
-          getPersonas('dns'),
-          getProxies()
+          personasApi.personasGet(undefined, undefined, undefined, 'dns'),
+          proxiesApi.proxiesGet()
         ]);
         
-        // Extract data from API responses - same pattern as personas page
-        const personas = (personasResponse.success && personasResponse.data) 
-          ? Array.isArray(personasResponse.data) ? personasResponse.data : [] 
-          : [];
-        const proxies = (proxiesResponse.success && proxiesResponse.data) 
-          ? Array.isArray(proxiesResponse.data) ? proxiesResponse.data : [] 
-          : [];
+        // Extract data from API responses - using proper Axios response structure
+        const personas = Array.isArray(personasResponse.data) ? personasResponse.data : [];
+        const proxies = Array.isArray(proxiesResponse.data) ? proxiesResponse.data : [];
         
         // Filter for active DNS personas only
         const dnsPersonas = personas.filter((persona: any) => 
@@ -148,15 +145,15 @@ export default function DNSValidationConfigModal({
         name: data.name,
       };
 
-      const configRequest: PhaseConfigureRequest = {
-        phaseType: 'dns_validation',
-        config: dnsConfig,
+      const configRequest: ApiPhaseConfigureRequest = {
+        phaseType: ApiPhaseConfigureRequestPhaseTypeEnum.dns_validation,
+        config: { dnsValidation: dnsConfig },
       };
 
       // Use professional RTK Query mutation instead of amateur singleton API
       await configurePhase({
         campaignId,
-        phase: 'dns_validation' as any,
+        phase: ApiPhaseConfigureRequestPhaseTypeEnum.dns_validation,
         config: configRequest
       }).unwrap();
 

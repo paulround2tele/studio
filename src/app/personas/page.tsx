@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/shared/PageHeader';
 import PersonaListItem from '@/components/personas/PersonaListItem';
 import type { components } from '@/lib/api-client/types';
+import { ApiPersonaResponse } from '@/lib/api-client';
 
 // Use OpenAPI types directly - simplified for now
 type PersonaBase = any;
@@ -42,9 +43,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from '@/components/ui/input';
-import { apiClient } from '@/lib/api-client/apis'; // Professional API import
+import { PersonasApi, Configuration } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
+
+// Professional API client initialization
+const config = new Configuration({
+  basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+});
+const personasApi = new PersonasApi(config);
+
 // THIN CLIENT: Removed LoadingStore - backend handles loading state via WebSocket
 
 // Zod schemas for validating imported persona structures (remains the same)
@@ -126,9 +134,9 @@ function PersonasPageContent() {
     }
     
     try {
-      const response = await getPersonas(type);
+      const response = await personasApi.personasGet(undefined, undefined, undefined, type);
       
-      if (response.success && response.data) {
+      if (response.data) {
         // Handle PersonaListResponse - data is array directly from OpenAPI
         const personasData = Array.isArray(response.data) ? response.data : [];
         // Add missing status property for compatibility
@@ -143,11 +151,14 @@ function PersonasPageContent() {
         if (type === 'http') setHttpPersonas(personasWithStatus as HttpPersona[]);
         else setDnsPersonas(personasWithStatus as DnsPersona[]);
       } else {
-        const errorMessage = typeof response.error === 'string' ? response.error : response.error?.message || `Failed to load ${type.toUpperCase()} personas.`;
+        // If no data returned, treat as empty result rather than error
+        if (type === 'http') setHttpPersonas([]);
+        else setDnsPersonas([]);
+        
         toast({
-          title: `Error Loading ${type.toUpperCase()} Personas`,
-          description: errorMessage,
-          variant: "destructive"
+          title: `No ${type.toUpperCase()} Personas Found`,
+          description: `No ${type} personas available.`,
+          variant: "default"
         });
       }
     } catch (error: unknown) {
@@ -175,13 +186,12 @@ function PersonasPageContent() {
   const handleDeletePersona = async (personaId: string, personaType: 'http' | 'dns') => {
     setActionLoading(prev => ({ ...prev, [personaId]: 'delete' }));
     try {
-      const response = await deletePersona(personaId, personaType);
-      if (response.success) {
+      const response = await personasApi.personasIdDelete(personaId);
+      if (response.data) {
         toast({ title: "Persona Deleted", description: "Persona successfully deleted." });
         fetchPersonasData(personaType, false);
       } else {
-        const errorMessage = typeof response.error === 'string' ? response.error : response.error?.message || "Failed to delete persona.";
-        toast({ title: "Error Deleting Persona", description: errorMessage, variant: "destructive"});
+        toast({ title: "Error", description: "Failed to delete persona.", variant: "destructive" });
       }
     } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred while deleting persona.";
@@ -194,15 +204,15 @@ function PersonasPageContent() {
   const handleTestPersona = async (personaId: string, personaType: 'http' | 'dns') => {
     setActionLoading(prev => ({ ...prev, [personaId]: 'test' }));
     try {
-      const response = await testPersona(personaId, personaType);
-      if (response.success) {
+      const response = await personasApi.personasIdTestPost(personaId);
+      if (response.data) {
         // PersonaTestResult response data is directly available
         const testData = response.data;
         const personaName = testData?.personaId || 'Persona';
         toast({ title: "Persona Test Complete", description: `Test for ${personaName} completed.` });
         fetchPersonasData(personaType, false);
       } else {
-        toast({ title: "Persona Test Failed", description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Could not complete persona test.", variant: "destructive"});
+        toast({ title: "Persona Test Failed", description: "Could not complete persona test.", variant: "destructive"});
         fetchPersonasData(personaType, false); // Re-fetch even on failure to update potential status changes
       }
     } catch (error: unknown) {
@@ -221,12 +231,12 @@ function PersonasPageContent() {
     try {
       // Map status to isEnabled field which is what the backend accepts
       const isEnabled = newStatus === 'Active';
-      const response = await updatePersona(personaId, { isEnabled } as any, personaType);
-      if (response.success && response.data) {
+      const response = await personasApi.personasIdPut(personaId, { isEnabled } as any);
+      if (response.data) {
         toast({ title: `Persona Status Updated`, description: `${response.data.name} is now ${newStatus}.` });
         fetchPersonasData(personaType, false);
       } else {
-        toast({ title: "Error Updating Status", description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Could not update persona status.", variant: "destructive"});
+        toast({ title: "Error Updating Status", description: "Could not update persona status.", variant: "destructive"});
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "Failed to update persona status";
@@ -319,12 +329,12 @@ function PersonasPageContent() {
                     } as any,
                 };
             }
-            const response = await createPersona(createPayload as any);
-            if (response.success) {
+            const response = await personasApi.personasPost(createPayload as any);
+            if (response.data) {
               importedCount++;
             } else {
               errorCount++;
-              toast({ title: `Error Importing ${item.name || 'Persona'}`, description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Failed to import.", variant: "destructive" });
+              toast({ title: `Error Importing ${item.name || 'Persona'}`, description: "Failed to import persona.", variant: "destructive" });
             }
         }
         if (importedCount > 0) {
@@ -400,7 +410,7 @@ function PersonasPageContent() {
               return (
                 <PersonaListItem
                   key={personaId}
-                  persona={persona as import('@/lib/types').Persona}
+                  persona={persona as ApiPersonaResponse}
                   onDelete={handleDeletePersona}
                   onTest={handleTestPersona}
                   onToggleStatus={handleTogglePersonaStatus}

@@ -7,11 +7,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, UserCheck, Percent, Link as LinkIcon, ExternalLink, Sparkles, Loader2 } from 'lucide-react';
-import type { Campaign, AnalyzeContentInput } from '@/lib/api-client/models';
-import type { ExtractedContentItem, LeadItem } from '@/lib/api-client/models';
+import type { Campaign } from '@/lib/api-client/models';
+import type { ExtractedContentItem } from '@/lib/api-client/models/extracted-content-item';
+import type { LeadItem } from '@/lib/api-client/models/lead-item';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import React, { useState } from 'react';
+
+// Mock interface for content analysis (not using real API yet)
+interface AnalyzeContentInput {
+  urls: string[];
+  content: string;
+  keywords: string[];
+}
 
 interface ContentSimilarityViewProps {
   campaign: Campaign;

@@ -10,8 +10,14 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { PersonasApi } from '@/lib/api-client/apis/personas-api'; // Professional API import
+import { PersonasApi, Configuration } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
+
+// Professional API client initialization
+const config = new Configuration({
+  basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
+});
+const personasApi = new PersonasApi(config);
 
 function EditPersonaPageContent() {
   const params = useParams();
@@ -44,8 +50,19 @@ function EditPersonaPageContent() {
       setLoading(true);
       setError(null); 
       try {
-        const response = await getPersonaById(personaId, type);
-        if (response.success === true && response.data) {
+        let response;
+        
+        // Use type-specific API methods
+        if (type === 'dns') {
+          response = await personasApi.personasDnsIdGet(personaId);
+        } else if (type === 'http') {
+          response = await personasApi.personasHttpIdGet(personaId);
+        } else {
+          response = await personasApi.personasIdGet(personaId);
+        }
+        
+        if (response.data) {
+          // Check if the returned persona matches the expected type
           if (response.data.personaType !== type) {
             setError(`Mismatch: Persona ID '${personaId}' found, but it is a '${response.data.personaType}' persona, not '${type}'.`);
             setPersona(null);
@@ -54,10 +71,9 @@ function EditPersonaPageContent() {
             setPersona(response.data as any);
           }
         } else {
-          const errorMessage = typeof response.error === 'string' ? response.error : response.error?.message || "Persona not found.";
-          setError(errorMessage);
+          setError("Persona not found.");
           setPersona(null);
-          toast({ title: "Error Loading Persona", description: errorMessage, variant: "destructive" });
+          toast({ title: "Error Loading Persona", description: "Persona not found.", variant: "destructive" });
         }
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : "Failed to load persona data.";

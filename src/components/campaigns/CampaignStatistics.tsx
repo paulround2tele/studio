@@ -4,7 +4,7 @@
  * Provides real-time metrics, progress tracking, and multiple display variants
  */
 
-"use client";
+'use client';
 
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,13 +20,24 @@ import {
   Activity
 } from 'lucide-react';
 import type { Campaign } from '@/lib/api-client/models/campaign';
-import type { CampaignPhase } from '@/lib/api-client/models';
+import { CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
 import { cn } from '@/lib/utils';
+
+// Streaming statistics interface for real-time updates
+interface StreamingStats {
+  connectionStatus: 'connected' | 'disconnected' | 'reconnecting';
+  messagesReceived?: number;
+  domainsPerSecond: number;
+}
 
 // Unified interfaces combining both original components
 interface CampaignStatisticsProps {
   campaign: Campaign;
   className?: string;
+  totalDomains?: number;
+  streamingStats?: StreamingStats;
+  showDetailedStats?: boolean;
+  variant?: 'default' | 'compact' | 'summary' | 'enhanced';
 }
 
 // Utility functions from both components
@@ -348,7 +359,7 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
           )}
 
           {/* Phase-centric architecture: detailed configuration stored in phase records */}
-          {campaign.currentPhase === 'domain_generation' && (
+          {campaign.currentPhase === CampaignCurrentPhaseEnum.Generation && (
             <div className="pt-4 border-t">
               <div className="text-xs text-muted-foreground mb-2">Current Phase</div>
               <div className="grid grid-cols-2 gap-4 text-sm">

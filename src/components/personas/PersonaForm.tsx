@@ -13,18 +13,20 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-// THIN CLIENT: Removed AuthContext - backend handles auth
-import { apiClient } from "@/lib/api-client/client-bridge";
-import type { CreatePersonaRequest, UpdatePersonaRequest } from "@/lib/api-client/types-bridge";
-// Import types from professional-types layer
-import type { HttpPersonaConfig, DnsPersonaConfig, PersonaResponse } from '@/lib/api-client/models';
-
-// Create proper typed interfaces for personas with correct config types
+// Use proper API client instead of fictional bridge
+import { personasApi } from "@/lib/api-client/client";
+// Import types from proper models
+import type { ApiPersonaResponse } from '@/lib/api-client/models';
+import type { HTTPConfigDetails } from '@/lib/api-client/models/httpconfig-details';
+import type { DNSValidatorConfigJSON } from '@/lib/api-client/models/dnsvalidator-config-json';
+import type { DNSConfigDetails } from '@/lib/api-client/models/dnsconfig-details';
+import { ApiCreatePersonaRequestPersonaTypeEnum } from '@/lib/api-client/models/api-create-persona-request';
 
 // Type aliases for better readability
-type Persona = PersonaResponse;
-type HTTPConfigDetails = HttpPersonaConfig;
-type DNSConfigDetails = DnsPersonaConfig;
+type Persona = ApiPersonaResponse;
+// Using actual imported types instead of fictional ones
+type HTTPConfig = HTTPConfigDetails;
+type DNSConfig = DNSValidatorConfigJSON;
 
 // DNS Resolver Strategy options - aligned with OpenAPI schema
 type DnsResolverStrategy = "round_robin" | "random" | "weighted" | "priority";
@@ -192,7 +194,7 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
     };
 
     try {
-      const httpConfigDetails: HttpPersonaConfig = {
+      const httpConfigDetails = {
         userAgent: data.userAgent,
         headers: parseJsonOrUndefined<Record<string,string>>(data.headersJson || ""),
         headerOrder: parseStringToArray(data.headerOrderInput || ""),
@@ -215,30 +217,30 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
         fetchBodyForKeywords: data.fetchBodyForKeywords,
       };
 
-      const payload: CreatePersonaRequest = {
+      const payload = {
         ...commonPayloadData,
-        personaType: 'http',
+        personaType: ApiCreatePersonaRequestPersonaTypeEnum.PersonaTypeHTTP,
         isEnabled: true,
         configDetails: httpConfigDetails
       };
 
       let response;
       if (isEditing && persona && persona.id) {
-        const updatePayload: UpdatePersonaRequest = {
+        const updatePayload = {
           ...commonPayloadData,
           configDetails: httpConfigDetails
         };
-        response = await apiClient.personas.update(persona.id, updatePayload as any);
+        response = await personasApi.personasIdPut(persona.id, updatePayload as any);
       } else {
-        response = await apiClient.personas.create(payload as any);
+        response = await personasApi.personasPost(payload as any);
       }
 
-      if (response.success === true) {
+      if (response.status >= 200 && response.status < 300) {
         toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${response.data?.name}" has been successfully ${isEditing ? "updated" : "created"}.` });
         router.push("/personas");
         router.refresh();
       } else {
-        toast({ title: "Save Failed", description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Could not save persona.", variant: "destructive" });
+        toast({ title: "Save Failed", description: "Failed to save persona. Please try again.", variant: "destructive" });
       }
     } catch (error: unknown) {
       console.error("Failed to save persona:", error);
@@ -455,7 +457,7 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
     };
 
     try {
-      const dnsConfigDetails: DnsPersonaConfig = {
+      const dnsConfigDetails = {
           resolvers: parseStringToArray(data.config_resolversInput || ""),
           useSystemResolvers: data.config_useSystemResolvers,
           queryTimeoutSeconds: data.config_queryTimeoutSeconds,
@@ -471,30 +473,30 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
           rateLimitBurst: data.config_rateLimitBurst || 10,
       };
 
-      const payload: CreatePersonaRequest = {
+      const payload = {
           ...commonPayloadData,
-          personaType: 'dns',
+          personaType: ApiCreatePersonaRequestPersonaTypeEnum.PersonaTypeDNS,
           isEnabled: true,
           configDetails: dnsConfigDetails,
       };
 
       let response;
       if (isEditing && persona && persona.id) {
-        const updatePayload: UpdatePersonaRequest = {
+        const updatePayload = {
           ...commonPayloadData,
           configDetails: dnsConfigDetails
         };
-        response = await apiClient.personas.update(persona.id, updatePayload);
+        response = await personasApi.personasIdPut(persona.id, updatePayload);
       } else {
-        response = await apiClient.personas.create(payload);
+        response = await personasApi.personasPost(payload);
       }
 
-      if (response.success === true) {
+      if (response.status >= 200 && response.status < 300) {
         toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${response.data?.name}" has been successfully ${isEditing ? "updated" : "created"}.` });
         router.push("/personas");
         router.refresh();
       } else {
-        toast({ title: "Save Failed", description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Could not save persona.", variant: "destructive" });
+        toast({ title: "Save Failed", description: "Failed to save persona. Please try again.", variant: "destructive" });
       }
     } catch (error: unknown) {
       console.error("Failed to save persona:", error);

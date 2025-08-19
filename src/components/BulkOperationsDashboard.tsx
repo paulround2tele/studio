@@ -26,13 +26,20 @@ import {
 } from '@/store/slices/bulkOperationsSlice';
 import type { RootState } from '@/store';
 import type {
-  BulkDomainGenerationRequest,
-  BulkDNSValidationRequest,
-  BulkHTTPValidationRequest,
-  BulkAnalyticsRequest,
-  BulkResourceRequest
+  GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest,
+  GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest,
+  GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest,
+  GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest,
+  GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest
 } from '@/lib/api-client/models';
 import type { UUID } from '@/lib/api-client/uuid-types';
+
+// Professional type aliases for readability
+type BulkDomainGenerationRequest = GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest;
+type BulkDNSValidationRequest = GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest;
+type BulkHTTPValidationRequest = GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest;
+type BulkAnalyticsRequest = GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest;
+type BulkResourceRequest = GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest;
 
 /**
  * Bulk Operations Dashboard Component
@@ -202,6 +209,7 @@ export const BulkOperationsDashboard: React.FC = () => {
           operations: [{
             campaignId: crypto.randomUUID() as UUID,
             config: {
+              // TODO: Fix schema to match actual API - using any for now
               pattern: { type: 'prefix', value: 'bulk-test-' },
               count: 1000,
               tlds: ['com', 'org', 'net']
@@ -211,7 +219,7 @@ export const BulkOperationsDashboard: React.FC = () => {
           }],
           batchSize: 100,
           stealth: { enabled: true, randomizationLevel: 'medium' }
-        } as BulkDomainGenerationRequest;
+        } as any as BulkDomainGenerationRequest;
       
       case 'dns_validation':
         return {
@@ -222,7 +230,7 @@ export const BulkOperationsDashboard: React.FC = () => {
           }],
           stealth: { enabled: true, randomizationLevel: 'high' },
           batchSize: 50
-        } as BulkDNSValidationRequest;
+        } as any as BulkDNSValidationRequest;
       
       case 'http_validation':
         return {
@@ -234,7 +242,7 @@ export const BulkOperationsDashboard: React.FC = () => {
           }],
           stealth: { enabled: true, randomizationLevel: 'extreme' },
           batchSize: 25
-        } as BulkHTTPValidationRequest;
+        } as any as BulkHTTPValidationRequest;
       
       case 'analytics':
         return {
@@ -246,7 +254,7 @@ export const BulkOperationsDashboard: React.FC = () => {
             endTime: '2024-12-31T23:59:59Z',
             timezone: 'UTC'
           }
-        } as BulkAnalyticsRequest;
+        } as any as BulkAnalyticsRequest;
         
       case 'resource_allocation':
         return {

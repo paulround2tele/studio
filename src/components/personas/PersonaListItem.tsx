@@ -5,7 +5,12 @@ import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import type { Persona, HttpPersona, DnsPersona, PersonaStatus } from '@/lib/api-client/models';
+import type { ApiPersonaResponse } from '@/lib/api-client/models';
+import type { HTTPPersona } from '@/lib/api-client/models/httppersona';
+import type { DNSPersona } from '@/lib/api-client/models/dnspersona';
+
+// Type alias for persona status from the generated interface
+type PersonaStatus = 'Active' | 'Disabled' | 'Testing' | 'Failed';
 import { FilePenLine, Trash2, MoreVertical, Copy, Globe, Tag, Clock, Settings2, Wifi, TestTubeDiagonal, Power, PowerOff, FileJson, AlertCircle, CheckCircle, HelpCircle, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
@@ -25,7 +30,7 @@ import { cn } from '@/lib/utils';
 import { format, formatDistance } from 'date-fns';
 
 interface PersonaListItemProps {
-  persona: Persona;
+  persona: ApiPersonaResponse;
   onDelete: (personaId: string, personaType: 'http' | 'dns') => void;
   onTest: (personaId: string, personaType: 'http' | 'dns') => void;
   onToggleStatus: (personaId: string, personaType: 'http' | 'dns', newStatus: PersonaStatus) => void;
@@ -33,26 +38,20 @@ interface PersonaListItemProps {
   isTogglingStatus: boolean;
 }
 
-const getStatusBadgeInfo = (status: PersonaStatus | undefined): { variant: "default" | "secondary" | "destructive" | "outline", icon: JSX.Element, text: string } => {
-  status = status || 'Active'; // Default to Active if undefined for some reason
-  switch (status) {
-    case 'Active':
-      return { variant: 'default', icon: <CheckCircle className="h-3.5 w-3.5 text-green-500" />, text: 'Active' };
-    case 'Disabled':
-      return { variant: 'secondary', icon: <PowerOff className="h-3.5 w-3.5 text-muted-foreground" />, text: 'Disabled' };
-    case 'Testing':
-      return { variant: 'outline', icon: <Loader2 className="h-3.5 w-3.5 text-blue-500 animate-spin" />, text: 'Testing' };
-    case 'Failed':
-      return { variant: 'destructive', icon: <AlertCircle className="h-3.5 w-3.5 text-destructive" />, text: 'Test Failed' };
-    default:
-      return { variant: 'outline', icon: <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />, text: status };
+const getStatusBadgeInfo = (isEnabled: boolean | undefined): { variant: "default" | "secondary" | "destructive" | "outline", icon: JSX.Element, text: string } => {
+  if (isEnabled === true) {
+    return { variant: 'default', icon: <CheckCircle className="h-3.5 w-3.5 text-green-500" />, text: 'Active' };
+  } else if (isEnabled === false) {
+    return { variant: 'secondary', icon: <PowerOff className="h-3.5 w-3.5 text-muted-foreground" />, text: 'Disabled' };
+  } else {
+    return { variant: 'outline', icon: <HelpCircle className="h-3.5 w-3.5 text-muted-foreground" />, text: 'Unknown' };
   }
 };
 
 
 export default function PersonaListItem({ persona, onDelete, onTest, onToggleStatus, isTesting, isTogglingStatus }: PersonaListItemProps) {
   const { toast } = useToast();
-  const statusInfo = getStatusBadgeInfo(persona.status as PersonaStatus);
+  const statusInfo = getStatusBadgeInfo(persona.isEnabled);
 
   const handleDelete = () => {
     if (persona.id && persona.personaType) onDelete(persona.id, persona.personaType as "http" | "dns");
@@ -67,7 +66,7 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
       } else if (persona.personaType === 'dns') {
         // For DNS, the 'config' object is already structured as desired for export.
         // No need to flatten 'config' into the root of exportablePersona.
-        // We want to export the full DnsPersona structure including the nested config.
+        // We want to export the full DNSPersona structure including the nested config.
       }
 
 
@@ -101,7 +100,7 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
     });
   };
 
-  const renderHttpPersonaDetails = (p: HttpPersona) => {
+  const renderHttpPersonaDetails = (p: HTTPPersona) => {
     const config = (p.configDetails as unknown as import('@/lib/types').HTTPConfigDetails) || {
       userAgent: 'Not set',
       headers: {},
@@ -131,7 +130,7 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
     );
   };
 
-  const renderDnsPersonaDetails = (p: DnsPersona) => {
+  const renderDnsPersonaDetails = (p: DNSPersona) => {
     const config = p.configDetails as import('@/lib/types').DNSConfigDetails;
     return (
       <>
@@ -187,15 +186,15 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
                 <FilePenLine className="mr-2 h-4 w-4" /> Edit
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => persona.id && persona.personaType && onTest(persona.id, persona.personaType as "http" | "dns")} disabled={isActionDisabled || persona.status === 'Testing' || !persona.id || !persona.personaType}>
+            <DropdownMenuItem onClick={() => persona.id && persona.personaType && onTest(persona.id, persona.personaType as "http" | "dns")} disabled={isActionDisabled || !persona.id || !persona.personaType}>
               {isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <TestTubeDiagonal className="mr-2 h-4 w-4" />} Test Persona
             </DropdownMenuItem>
-            {persona.status !== 'Disabled' && (
-                <DropdownMenuItem onClick={() => persona.id && persona.personaType && onToggleStatus(persona.id, persona.personaType as "http" | "dns", 'Disabled')} disabled={isActionDisabled || persona.status === 'Testing' || !persona.id || !persona.personaType}>
+            {persona.isEnabled && (
+                <DropdownMenuItem onClick={() => persona.id && persona.personaType && onToggleStatus(persona.id, persona.personaType as "http" | "dns", 'Disabled')} disabled={isActionDisabled || !persona.id || !persona.personaType}>
                    {isTogglingStatus ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PowerOff className="mr-2 h-4 w-4" />} Disable Persona
                 </DropdownMenuItem>
             )}
-            {persona.status === 'Disabled' && (
+            {!persona.isEnabled && (
                  <DropdownMenuItem onClick={() => persona.id && persona.personaType && onToggleStatus(persona.id, persona.personaType as "http" | "dns", 'Active')} disabled={isActionDisabled || !persona.id || !persona.personaType}>
                     {isTogglingStatus ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Power className="mr-2 h-4 w-4" />} Enable Persona
                 </DropdownMenuItem>
@@ -239,25 +238,10 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
                 {statusInfo.icon}
                 <span className="ml-1">{statusInfo.text}</span>
             </Badge>
-            {persona.lastTested && (
-                <span className="text-muted-foreground">
-                    Tested: {formatDistance(new Date(persona.lastTested), new Date(), { addSuffix: true })}
-                </span>
-            )}
         </div>
-        {persona.lastError && <p className="text-xs text-destructive mb-1" title={persona.lastError}>Error: {persona.lastError.substring(0,50)}{persona.lastError.length > 50 ? '...' : ''}</p>}
 
-        {persona.personaType === 'http' ? renderHttpPersonaDetails(persona as HttpPersona) : renderDnsPersonaDetails(persona as DnsPersona)}
+        {persona.personaType === 'http' ? renderHttpPersonaDetails(persona as HTTPPersona) : renderDnsPersonaDetails(persona as DNSPersona)}
         
-        {persona.tags && persona.tags.length > 0 && (
-          <div className="mt-2">
-            <Separator className="my-2" />
-            <h4 className="font-semibold text-xs text-muted-foreground mb-1 flex items-center"><Tag className="mr-1 h-3 w-3"/>Tags:</h4>
-            <div className="flex flex-wrap gap-1">
-              {persona.tags.map((tag: string) => <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>)}
-            </div>
-          </div>
-        )}
       </CardContent>
       <CardFooter className="text-xs text-muted-foreground border-t pt-3">
         <div className="flex items-center">

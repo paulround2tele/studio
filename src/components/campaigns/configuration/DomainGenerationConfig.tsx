@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import type { DomainGenerationPhaseConfig } from '@/lib/api-client/models';
+import type { DomainGenerationPhaseConfig } from '@/lib/api-client/models/domain-generation-phase-config';
 
 interface DomainGenerationConfigProps {
   control: Control<any>;

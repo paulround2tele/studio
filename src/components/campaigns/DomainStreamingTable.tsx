@@ -4,10 +4,9 @@ import React, { useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ExternalLink, RefreshCw } from 'lucide-react';
 import type {
-  Campaign,
-  CampaignValidationItem
+  Campaign
 } from '@/lib/api-client/models';
-import type { GeneratedDomain } from '@/lib/api-client';
+import type { GeneratedDomain } from '@/lib/api-client/models/generated-domain';
 import { ScrollArea } from '../ui/scroll-area';
 import { StatusBadge, type DomainActivityStatus } from '@/components/shared/StatusBadge';
 import { LeadScoreDisplay } from '@/components/shared/LeadScoreDisplay';
@@ -16,10 +15,8 @@ import { useDomainData, useDomainStatusSummary } from '@/hooks/useDomainData';
 
 interface DomainStreamingTableProps {
   campaign: Campaign;
-  // Legacy props for backward compatibility - no longer used
+  // Legacy props for backward compatibility - removed unused props
   generatedDomains?: GeneratedDomain[];
-  dnsCampaignItems?: CampaignValidationItem[];
-  httpCampaignItems?: CampaignValidationItem[];
   totalDomains?: number;
   loading?: boolean;
   filters?: any;
@@ -358,7 +355,7 @@ export default function DomainStreamingTable({
     hasMore,
     loadMore,
     refresh
-  } = useDomainData(campaign.id, {
+  } = useDomainData(campaign.id || '', {
     limit: 100,
     enablePolling: true,
     pollingInterval: 10000 // Poll every 10 seconds for updates

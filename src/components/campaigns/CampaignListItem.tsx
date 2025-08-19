@@ -257,7 +257,7 @@ const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, on
               </DropdownMenu>
             </div>
           </div>
-          <CardDescription className="line-clamp-2">{campaign.description || "No description."}</CardDescription>
+          <CardDescription className="line-clamp-2">{campaign.errorMessage || `Campaign ${campaign.currentPhase || 'in progress'}`}</CardDescription>
         </CardHeader>
         <CardContent className="flex-grow space-y-3">
           <div>

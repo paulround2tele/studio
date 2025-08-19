@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, CheckCircle, Clock, Pause } from 'lucide-react';
-import type { Campaign, CampaignPhase, CampaignPhaseStatusEnum } from '@/lib/api-client/models';
+import type { Campaign, CampaignCurrentPhaseEnum, CampaignPhaseStatusEnum } from '@/lib/api-client/models';
 import { normalizeStatus, getStatusColor } from '@/lib/utils/statusMapping';
 
 interface CampaignProgressMonitorProps {
@@ -14,13 +14,18 @@ interface CampaignProgressMonitorProps {
   onDomainReceived?: (domain: string) => void;
 }
 
+interface PhaseInfo {
+  phase: CampaignCurrentPhaseEnum;
+  status: CampaignPhaseStatusEnum;
+}
+
 interface ProgressInfo {
-  phase: CampaignPhase;
+  phase: CampaignCurrentPhaseEnum;
   status: CampaignPhaseStatusEnum;
   progress: number;
-  normalizedStatus: string;
-  statusColor: string;
   icon: React.ReactNode;
+  statusColor: string;
+  normalizedStatus: string;
 }
 
 /**
@@ -44,7 +49,7 @@ const CampaignProgressMonitor = memo(({
 
   // Progress calculation logic
   const progressInfo = useMemo((): ProgressInfo => {
-    const phase = campaignKey.currentPhase as CampaignPhase;
+    const phase = campaignKey.currentPhase as CampaignCurrentPhaseEnum;
     const status = campaignKey.status as CampaignPhaseStatusEnum;
     const progress = campaign?.progressPercentage || 0;
     
@@ -81,7 +86,7 @@ const CampaignProgressMonitor = memo(({
   }, [campaignKey.currentPhase, campaignKey.status, campaign?.progressPercentage]);
 
   // Phase display names
-  const getPhaseDisplayName = (phase: CampaignPhase): string => {
+  const getPhaseDisplayName = (phase: CampaignCurrentPhaseEnum): string => {
     switch (phase) {
       case 'generation':
         return 'Domain Generation';

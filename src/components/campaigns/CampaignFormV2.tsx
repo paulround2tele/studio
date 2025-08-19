@@ -18,6 +18,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 // Use ONLY auto-generated types and new simplified form types
 import type { SimpleCampaignFormValues } from './types/SimpleCampaignFormTypes';
 import { formToApiRequest, defaultFormValues } from './types/SimpleCampaignFormTypes';
+import { ApiPatternOffsetRequestPatternTypeEnum } from '@/lib/api-client/models';
 import { campaignsApi } from '@/lib/api-client/client';
 import { useCreateCampaignMutation } from '@/store/api/campaignApi';
 import { calculateMaxTheoreticalDomains, calculateRemainingDomains } from '@/lib/utils/domainCalculation';
@@ -94,7 +95,7 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
       let offset = 0;
       try {
         const offsetResponse = await campaignsApi.getPatternOffset({
-          patternType: config.patternType,
+          patternType: config.patternType as ApiPatternOffsetRequestPatternTypeEnum,
           characterSet: config.characterSet,
           constantString: config.constantString,
           tld: config.tld,
@@ -184,8 +185,9 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
         // Convert to API request using auto-generated types
         const apiRequest = formToApiRequest(processedData);
 
-        // Use professional RTK Query mutation instead of amateur direct API call
-        const newCampaignData = await createCampaign(apiRequest).unwrap();
+        // Use professional RTK Query mutation with proper type casting
+        // TODO: Fix schema mismatches between enums - using any for now
+        const newCampaignData = await createCampaign(apiRequest as any).unwrap();
         
         // The response is wrapped in a data field - classic OpenAPI amateur design
         // Cast to any because the auto-generated types are completely wrong

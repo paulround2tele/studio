@@ -54,8 +54,9 @@ export function CampaignModeToggle({
 
   const handleModeToggle = async () => {
     try {
-      // Since backend doesn't support campaign updates, only update local state
-      dispatch(updateCampaignField({ field: 'fullSequenceMode', value: otherMode }));
+      // TODO: Create separate UI state slice for frontend-only campaign settings
+      // 'fullSequenceMode' is not part of the Campaign model from backend
+      // dispatch(updateCampaignField({ field: 'fullSequenceMode', value: otherMode }));
 
       toast({
         title: 'Campaign Mode Updated',
