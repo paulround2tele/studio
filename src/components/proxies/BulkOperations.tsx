@@ -36,8 +36,8 @@ import {
   AlertTriangle,
   Loader2
 } from 'lucide-react';
-import type { Proxy, UpdateProxyRequest } from '@/lib/api-client/models';
-import type { ApiResponse } from '@/lib/api-client/models';
+import type { GithubComFntelecomllcStudioBackendInternalModelsProxy as ProxyType } from '@/lib/api-client/models';
+import type { GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest as UpdateProxyRequest } from '@/lib/api-client/models';
 import { isResponseSuccess } from '@/lib/utils/apiResponseHelpers';
 
 type ProxyActionResponse = { status: 'success' | 'error'; message?: string };
@@ -47,13 +47,14 @@ import {
   useCleanProxiesMutation,
   useUpdateProxyMutation,
   useDeleteProxyMutation,
+  useBulkTestProxiesMutation,
+  useBulkUpdateProxiesMutation,
+  useBulkDeleteProxiesMutation,
 } from '@/store/api/proxyApi';
-import { apiClient } from '@/lib/api-client/apis';
-import type { Proxy } from '@/lib/api-client/models';
 import { useToast } from '@/hooks/use-toast';
 
 export interface BulkOperationsProps {
-  proxies: Proxy[];
+  proxies: ProxyType[];
   onProxiesUpdate: () => void;
   disabled?: boolean;
 }
@@ -127,7 +128,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
    * Select proxies by status
    */
   const selectByStatus = useCallback((status: 'active' | 'disabled' | 'Failed' | 'enabled') => {
-    let filteredProxies: Proxy[] = [];
+    let filteredProxies: ProxyType[] = [];
     
     switch (status) {
       case 'active':

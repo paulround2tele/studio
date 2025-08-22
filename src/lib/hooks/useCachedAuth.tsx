@@ -6,8 +6,8 @@ import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 import type { components } from '@/lib/api-client/types';
 
 // Type definitions using proper OpenAPI schema types
-type LoginRequest = components['schemas']['LoginRequest'];
-type User = components['schemas']['User'];
+type LoginRequest = components['schemas']['github_com_fntelecomllc_studio_backend_internal_models.LoginRequest'];
+type User = components['schemas']['github_com_fntelecomllc_studio_backend_internal_models.User'];
 
 type LoginResult =
   | { success: true }
@@ -221,7 +221,7 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
         password: credentials.password
       };
       
-      const response = await authApi.login(loginRequest);
+      const response = await authApi.loginUser(loginRequest);
       const loginData = extractResponseData(response);
       
       if (loginData) {
@@ -286,7 +286,7 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
   const logout = useCallback(async () => {
     setIsLogoutLoading(true);
     try {
-      await authApi.logout();
+      await authApi.logoutUser();
     } catch (error) {
       console.error('[useCachedAuth] Logout API failed:', error);
     } finally {

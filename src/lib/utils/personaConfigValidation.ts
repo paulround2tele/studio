@@ -4,8 +4,8 @@
 import { z } from 'zod';
 import type { components } from '@/lib/api-client/types';
 
-type DnsPersonaConfig = components['schemas']['DnsPersonaConfig'];
-type HttpPersonaConfig = components['schemas']['HttpPersonaConfig'];
+type DnsPersonaConfig = components['schemas']['config.DNSValidatorConfigJSON'];
+type HttpPersonaConfig = components['schemas']['config.HTTPValidatorConfigJSON'];
 
 // Validation schemas that match backend DnsPersonaConfig and HttpPersonaConfig
 export const dnsPersonaConfigSchema = z.object({

@@ -12,7 +12,7 @@ All URIs are relative to *http://localhost:8080/api/v2*
 |[**proxyPoolsPost**](#proxypoolspost) | **POST** /proxy-pools | Create proxy pool|
 
 # **listProxyPools**
-> Array<GithubComFntelecomllcStudioBackendInternalModelsProxyPool> listProxyPools()
+> Array<ModelsProxyPool> listProxyPools()
 
 Retrieve all proxy pools with their associated proxies
 
@@ -36,7 +36,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**Array<GithubComFntelecomllcStudioBackendInternalModelsProxyPool>**
+**Array<ModelsProxyPool>**
 
 ### Authorization
 
@@ -111,7 +111,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxyPoolsPoolIdProxiesPost**
-> GithubComFntelecomllcStudioBackendInternalModelsProxyPoolMembership proxyPoolsPoolIdProxiesPost(proxyPoolsPoolIdProxiesPostRequest)
+> ModelsProxyPoolMembership proxyPoolsPoolIdProxiesPost(proxyPoolsPoolIdProxiesPostRequest)
 
 Assign a proxy to a proxy pool with optional weight
 
@@ -146,7 +146,7 @@ const { status, data } = await apiInstance.proxyPoolsPoolIdProxiesPost(
 
 ### Return type
 
-**GithubComFntelecomllcStudioBackendInternalModelsProxyPoolMembership**
+**ModelsProxyPoolMembership**
 
 ### Authorization
 
@@ -225,7 +225,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxyPoolsPoolIdPut**
-> GithubComFntelecomllcStudioBackendInternalModelsProxyPool proxyPoolsPoolIdPut(apiProxyPoolRequest)
+> ModelsProxyPool proxyPoolsPoolIdPut(apiProxyPoolRequest)
 
 Update an existing proxy pool configuration
 
@@ -260,7 +260,7 @@ const { status, data } = await apiInstance.proxyPoolsPoolIdPut(
 
 ### Return type
 
-**GithubComFntelecomllcStudioBackendInternalModelsProxyPool**
+**ModelsProxyPool**
 
 ### Authorization
 
@@ -283,7 +283,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxyPoolsPost**
-> GithubComFntelecomllcStudioBackendInternalModelsProxyPool proxyPoolsPost(apiProxyPoolRequest)
+> ModelsProxyPool proxyPoolsPost(apiProxyPoolRequest)
 
 Create a new proxy pool with configuration settings
 
@@ -315,7 +315,7 @@ const { status, data } = await apiInstance.proxyPoolsPost(
 
 ### Return type
 
-**GithubComFntelecomllcStudioBackendInternalModelsProxyPool**
+**ModelsProxyPool**
 
 ### Authorization
 

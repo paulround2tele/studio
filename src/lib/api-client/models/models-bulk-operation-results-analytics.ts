@@ -15,10 +15,10 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsAggregatedAnalytics } from './github-com-fntelecomllc-studio-backend-internal-models-aggregated-analytics';
+import type { ModelsAggregatedAnalytics } from './models-aggregated-analytics';
 // May contain unused imports in some cases
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsCampaignAnalytics } from './github-com-fntelecomllc-studio-backend-internal-models-campaign-analytics';
+import type { ModelsCampaignAnalytics } from './models-campaign-analytics';
 
 /**
  * Analytics Results
@@ -28,16 +28,16 @@ import type { GithubComFntelecomllcStudioBackendInternalModelsCampaignAnalytics 
 export interface ModelsBulkOperationResultsAnalytics {
     /**
      * 
-     * @type {GithubComFntelecomllcStudioBackendInternalModelsAggregatedAnalytics}
+     * @type {ModelsAggregatedAnalytics}
      * @memberof ModelsBulkOperationResultsAnalytics
      */
-    'aggregatedMetrics'?: GithubComFntelecomllcStudioBackendInternalModelsAggregatedAnalytics;
+    'aggregatedMetrics'?: ModelsAggregatedAnalytics;
     /**
      * 
-     * @type {Array<GithubComFntelecomllcStudioBackendInternalModelsCampaignAnalytics>}
+     * @type {Array<ModelsCampaignAnalytics>}
      * @memberof ModelsBulkOperationResultsAnalytics
      */
-    'campaignSummaries'?: Array<GithubComFntelecomllcStudioBackendInternalModelsCampaignAnalytics>;
+    'campaignSummaries'?: Array<ModelsCampaignAnalytics>;
     /**
      * bytes
      * @type {number}

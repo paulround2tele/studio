@@ -19,7 +19,10 @@ import {
   TrendingUp,
   Activity
 } from 'lucide-react';
-import type { Campaign } from '@/lib/api-client/models/campaign';
+import type { components } from '@/lib/api-client/types';
+
+// Use the single source of truth
+type Campaign = components['schemas']['api.CampaignSummary'];
 import { CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
 import { cn } from '@/lib/utils';
 

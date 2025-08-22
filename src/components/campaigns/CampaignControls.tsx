@@ -18,7 +18,10 @@
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import type { Campaign } from '@/lib/api-client/models/campaign';
+import type { components } from '@/lib/api-client/types';
+
+// Use the single source of truth
+type Campaign = components['schemas']['api.CampaignSummary'];
 
 interface CampaignControlsProps {
   campaign: Campaign;

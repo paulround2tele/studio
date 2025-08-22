@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { PageInfo } from '@/lib/api-client/models';
+import type { PageInfo } from '@/lib/api-client/models/page-info';
 
 export interface InfiniteScrollState {
   isLoading: boolean;

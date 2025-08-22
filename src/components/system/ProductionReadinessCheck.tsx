@@ -213,7 +213,7 @@ export default function ProductionReadinessCheck() {
           name: 'API Backend',
           status: 'Failed',
           message: 'Backend API returned unhealthy status',
-          details: `Status: ${data.status} ${data.message || 'Check backend logs'} ${data.isCached ? '(Cached)' : ''}`,
+          details: `Status: ${data.status || 'Unknown'} ${data.isCached ? '(Cached)' : ''}`,
           icon: <Database className="h-4 w-4" />
         });
       }

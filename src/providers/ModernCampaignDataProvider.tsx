@@ -7,7 +7,10 @@ import React, { createContext, useContext, ReactNode } from 'react';
 import { useAppSelector } from '@/store/hooks';
 import { useGetCampaignsStandaloneQuery } from '@/store/api/campaignApi';
 import { transformCampaignToViewModel } from '@/lib/utils/campaignTransforms';
-import type { Campaign } from '@/lib/api-client/models';
+import type { components } from '@/lib/api-client/types';
+
+// Use the single source of truth
+type Campaign = components['schemas']['api.CampaignSummary'];
 
 interface ModernCampaignDataContextValue {
   campaigns: Campaign[];

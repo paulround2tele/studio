@@ -15,8 +15,13 @@ import { PersonaAssignmentSection } from './sections/PersonaAssignmentSection';
 import { PerformanceTuningSection } from './sections/PerformanceTuningSection';
 
 // Backend-driven data types (following the actual API schema)
-interface Campaign {
-  id?: string;
+// Use the single source of truth: OpenAPI generated types
+import type { components } from '@/lib/api-client/types';
+
+type Campaign = components['schemas']['api.CampaignSummary'];
+
+// Form data type - what the form collects vs what API expects
+type CampaignFormData = {
   name: string;
   description?: string;
   targetKeywords?: string;
@@ -28,7 +33,7 @@ interface Campaign {
   batchSize?: number;
   rotationInterval?: number;
   retryAttempts?: number;
-}
+};
 
 interface Persona {
   id: string;
@@ -92,20 +97,20 @@ export function CampaignDashboard({
   onSave,
   onSaveAndStart,
 }: CampaignDashboardProps) {
-  const form = useForm<Campaign>({
+  const form = useForm<CampaignFormData>({
     resolver: zodResolver(campaignSchema),
     defaultValues: {
       name: campaign?.name || '',
-      description: campaign?.description || '',
-      targetKeywords: campaign?.targetKeywords || '',
-      assignedHttpPersonaId: campaign?.assignedHttpPersonaId,
-      assignedDnsPersonaId: campaign?.assignedDnsPersonaId,
-      proxyAssignmentMode: campaign?.proxyAssignmentMode || 'none',
-      assignedProxyId: campaign?.assignedProxyId,
-      processingSpeed: campaign?.processingSpeed || 'medium',
-      batchSize: campaign?.batchSize || 10,
-      rotationInterval: campaign?.rotationInterval || 30,
-      retryAttempts: campaign?.retryAttempts || 3,
+      description: '', // API doesn't have description field
+      targetKeywords: '', // Form-specific field
+      assignedHttpPersonaId: undefined, // Form-specific field
+      assignedDnsPersonaId: undefined, // Form-specific field
+      proxyAssignmentMode: 'none',
+      assignedProxyId: undefined,
+      processingSpeed: 'medium',
+      batchSize: 10, // Form default, not from API
+      rotationInterval: 30, // Form default, not from API
+      retryAttempts: 3, // Form default, not from API
     },
   });
 
@@ -123,7 +128,7 @@ export function CampaignDashboard({
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">
-          {campaign?.id ? 'Edit Campaign' : 'Create Campaign'}
+          {campaign?.campaignId ? 'Edit Campaign' : 'Create Campaign'}
         </h1>
       </div>
 

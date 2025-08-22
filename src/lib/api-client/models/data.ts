@@ -15,7 +15,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkProxyOperationResponse } from './github-com-fntelecomllc-studio-backend-internal-models-bulk-proxy-operation-response';
+import type { ModelsBulkProxyOperationResponse } from './models-bulk-proxy-operation-response';
 
 /**
  * 
@@ -25,9 +25,9 @@ import type { GithubComFntelecomllcStudioBackendInternalModelsBulkProxyOperation
 export interface Data {
     /**
      * 
-     * @type {GithubComFntelecomllcStudioBackendInternalModelsBulkProxyOperationResponse}
+     * @type {ModelsBulkProxyOperationResponse}
      * @memberof Data
      */
-    'data'?: GithubComFntelecomllcStudioBackendInternalModelsBulkProxyOperationResponse;
+    'data'?: ModelsBulkProxyOperationResponse;
 }
 

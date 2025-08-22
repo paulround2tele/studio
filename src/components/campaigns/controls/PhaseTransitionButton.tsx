@@ -5,7 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Play, Pause, Square, ArrowRight } from 'lucide-react';
 import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { useToast } from '@/hooks/use-toast';
-import { CampaignCurrentPhaseEnum } from '@/lib/api-client/models/campaign';
+import type { components } from '@/lib/api-client/types';
+
+// Use enums from OpenAPI schema  
+type CampaignCurrentPhaseEnum = components['schemas']['api.CampaignSummary']['currentPhase'];
 
 interface PhaseTransitionButtonProps {
   campaignId: string;
@@ -61,7 +64,7 @@ export function PhaseTransitionButton({
       // Start the target phase - the backend handles phase progression
       await startPhase({
         campaignId,
-        phase: targetPhase as CampaignCurrentPhaseEnum,
+        phase: targetPhase as any, // Type mismatch between CampaignCurrentPhaseEnum and StartPhaseStandalonePhaseEnum
       }).unwrap();
       
       toast({

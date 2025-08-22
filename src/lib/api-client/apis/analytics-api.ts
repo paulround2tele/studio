@@ -26,7 +26,7 @@ import type { ApiAPIResponse } from '../models';
 // @ts-ignore
 import type { BulkValidateDNS200Response } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest } from '../models';
+import type { ModelsBulkAnalyticsRequest } from '../models';
 /**
  * AnalyticsApi - axios parameter creator
  * @export
@@ -36,13 +36,13 @@ export const AnalyticsApiAxiosParamCreator = function (configuration?: Configura
         /**
          * Perform comprehensive analytics across multiple campaigns with advanced metrics and aggregation
          * @summary Analyze domains in bulk with enterprise intelligence
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest} githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest Bulk analytics request
+         * @param {ModelsBulkAnalyticsRequest} modelsBulkAnalyticsRequest Bulk analytics request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkAnalyzeDomains: async (githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest' is not null or undefined
-            assertParamExists('bulkAnalyzeDomains', 'githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest', githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest)
+        bulkAnalyzeDomains: async (modelsBulkAnalyticsRequest: ModelsBulkAnalyticsRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'modelsBulkAnalyticsRequest' is not null or undefined
+            assertParamExists('bulkAnalyzeDomains', 'modelsBulkAnalyticsRequest', modelsBulkAnalyticsRequest)
             const localVarPath = `/campaigns/bulk/analytics/analyze`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -62,7 +62,7 @@ export const AnalyticsApiAxiosParamCreator = function (configuration?: Configura
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(modelsBulkAnalyticsRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -82,12 +82,12 @@ export const AnalyticsApiFp = function(configuration?: Configuration) {
         /**
          * Perform comprehensive analytics across multiple campaigns with advanced metrics and aggregation
          * @summary Analyze domains in bulk with enterprise intelligence
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest} githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest Bulk analytics request
+         * @param {ModelsBulkAnalyticsRequest} modelsBulkAnalyticsRequest Bulk analytics request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options);
+        async bulkAnalyzeDomains(modelsBulkAnalyticsRequest: ModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkAnalyzeDomains(modelsBulkAnalyticsRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AnalyticsApi.bulkAnalyzeDomains']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -105,12 +105,12 @@ export const AnalyticsApiFactory = function (configuration?: Configuration, base
         /**
          * Perform comprehensive analytics across multiple campaigns with advanced metrics and aggregation
          * @summary Analyze domains in bulk with enterprise intelligence
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest} githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest Bulk analytics request
+         * @param {ModelsBulkAnalyticsRequest} modelsBulkAnalyticsRequest Bulk analytics request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
-            return localVarFp.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options).then((request) => request(axios, basePath));
+        bulkAnalyzeDomains(modelsBulkAnalyticsRequest: ModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
+            return localVarFp.bulkAnalyzeDomains(modelsBulkAnalyticsRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -124,12 +124,12 @@ export interface AnalyticsApiInterface {
     /**
      * Perform comprehensive analytics across multiple campaigns with advanced metrics and aggregation
      * @summary Analyze domains in bulk with enterprise intelligence
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest} githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest Bulk analytics request
+     * @param {ModelsBulkAnalyticsRequest} modelsBulkAnalyticsRequest Bulk analytics request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AnalyticsApiInterface
      */
-    bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
+    bulkAnalyzeDomains(modelsBulkAnalyticsRequest: ModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
 }
 
@@ -143,13 +143,13 @@ export class AnalyticsApi extends BaseAPI implements AnalyticsApiInterface {
     /**
      * Perform comprehensive analytics across multiple campaigns with advanced metrics and aggregation
      * @summary Analyze domains in bulk with enterprise intelligence
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest} githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest Bulk analytics request
+     * @param {ModelsBulkAnalyticsRequest} modelsBulkAnalyticsRequest Bulk analytics request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AnalyticsApi
      */
-    public bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig) {
-        return AnalyticsApiFp(this.configuration).bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options).then((request) => request(this.axios, this.basePath));
+    public bulkAnalyzeDomains(modelsBulkAnalyticsRequest: ModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig) {
+        return AnalyticsApiFp(this.configuration).bulkAnalyzeDomains(modelsBulkAnalyticsRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

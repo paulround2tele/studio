@@ -4,13 +4,39 @@
  */
 
 import { useState, useMemo } from 'react';
-import type {
-  PaginationState,
-  PaginationActions,
-  PaginationHook,
-  PaginationContext
-} from '@/lib/api-client/models';
-import { getDefaultPageSize } from '@/lib/api-client/models';
+
+// Simple local pagination types
+interface PaginationState {
+  currentPage: number;
+  pageSize: number;
+  totalCount: number;
+}
+
+interface PaginationActions {
+  goToPage: (page: number) => void;
+  changePageSize: (size: number) => void;
+  reset: () => void;
+}
+
+interface PaginationHook {
+  state: PaginationState;
+  actions: PaginationActions;
+  params: {
+    current: number;
+    pageSize: number;
+    total: number;
+  };
+}
+
+type PaginationContext = 'table' | 'list' | 'default' | 'dashboard' | 'detail';
+
+function getDefaultPageSize(context?: PaginationContext): number {
+  switch (context) {
+    case 'table': return 50;
+    case 'list': return 25;
+    default: return 20;
+  }
+}
 
 // Base pagination hook
 export function usePagination(

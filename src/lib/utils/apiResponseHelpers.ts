@@ -6,7 +6,7 @@
  * BULK-ONLY STRATEGY: All responses must use unified envelope format
  */
 
-import type { ApiResponse } from '@/lib/api-client/models';
+import type { ApiAPIResponse } from '@/lib/api-client/models';
 import type { ErrorInfo } from '@/lib/api-client/models/error-info';
 
 // ===================================================================
@@ -190,7 +190,7 @@ export function getResponseError(response: unknown): string | null {
 /**
  * Transform any response to standardized ApiResponse format
  */
-export function toApiResponse<T>(response: unknown, defaultErrorMessage: string = 'Unknown error'): ApiResponse<T> {
+export function toApiResponse<T>(response: unknown, defaultErrorMessage: string = 'Unknown error'): { success: boolean; data?: T; error?: string; requestId: string } {
   const requestId = globalThis.crypto?.randomUUID?.() || Math.random().toString(36);
   
   try {
@@ -199,7 +199,7 @@ export function toApiResponse<T>(response: unknown, defaultErrorMessage: string 
       return {
         success: true,
         data: data!,
-        error: null,
+        error: undefined,
         requestId
       };
     } else {
@@ -262,7 +262,7 @@ export function handleApiError(error: unknown, context: string = 'API call'): ne
 export async function safeApiCall<T>(
   apiCall: () => Promise<unknown>,
   context: string = 'API call'
-): Promise<ApiResponse<T>> {
+): Promise<{ success: boolean; data?: T; error?: string; requestId: string }> {
   try {
     const response = await apiCall();
     return toApiResponse<T>(response);
@@ -286,7 +286,7 @@ export async function safeApiCall<T>(
 export function processBatchResponses<T>(
   responses: unknown[],
   context: string = 'Batch API call'
-): ApiResponse<T[]> {
+): { success: boolean; data?: T[]; error?: string; requestId: string } {
   const requestId = globalThis.crypto?.randomUUID?.() || Math.random().toString(36);
   const results: T[] = [];
   const errors: string[] = [];
@@ -314,7 +314,7 @@ export function processBatchResponses<T>(
   return {
     success: errors.length === 0,
     data: results,
-    error: errors.length > 0 ? errors.join('; ') : null,
+    error: errors.length > 0 ? errors.join('; ') : undefined,
     requestId
   };
 }

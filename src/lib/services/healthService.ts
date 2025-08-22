@@ -10,6 +10,7 @@ interface CachedHealthData extends ApiHealthStatus {
   isCached: boolean;
   cacheAge?: number; // seconds since cached
   cachedAt?: Date;
+  message?: string; // Optional override message for cached/error states
 }
 
 class HealthService {

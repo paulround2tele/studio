@@ -11,7 +11,7 @@ All URIs are relative to *http://localhost:8080/api/v2*
 |[**refreshSession**](#refreshsession) | **POST** /auth/refresh | Refresh user session|
 
 # **changePassword**
-> BulkValidateDNS200Response changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest)
+> BulkValidateDNS200Response changePassword(modelsChangePasswordRequest)
 
 Change password for the currently authenticated user
 
@@ -21,16 +21,16 @@ Change password for the currently authenticated user
 import {
     AuthenticationApi,
     Configuration,
-    GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest
+    ModelsChangePasswordRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new AuthenticationApi(configuration);
 
-let githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest: GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest; //Password change request
+let modelsChangePasswordRequest: ModelsChangePasswordRequest; //Password change request
 
 const { status, data } = await apiInstance.changePassword(
-    githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest
+    modelsChangePasswordRequest
 );
 ```
 
@@ -38,7 +38,7 @@ const { status, data } = await apiInstance.changePassword(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest** | **GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest**| Password change request | |
+| **modelsChangePasswordRequest** | **ModelsChangePasswordRequest**| Password change request | |
 
 
 ### Return type
@@ -66,7 +66,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **getCurrentUser**
-> GithubComFntelecomllcStudioBackendInternalModelsUser getCurrentUser()
+> ModelsUser getCurrentUser()
 
 Get information about the currently authenticated user
 
@@ -90,7 +90,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**GithubComFntelecomllcStudioBackendInternalModelsUser**
+**ModelsUser**
 
 ### Authorization
 
@@ -113,7 +113,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **loginUser**
-> BulkValidateDNS200Response loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest)
+> BulkValidateDNS200Response loginUser(modelsLoginRequest)
 
 Authenticate user credentials and create session
 
@@ -123,16 +123,16 @@ Authenticate user credentials and create session
 import {
     AuthenticationApi,
     Configuration,
-    GithubComFntelecomllcStudioBackendInternalModelsLoginRequest
+    ModelsLoginRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new AuthenticationApi(configuration);
 
-let githubComFntelecomllcStudioBackendInternalModelsLoginRequest: GithubComFntelecomllcStudioBackendInternalModelsLoginRequest; //Login credentials
+let modelsLoginRequest: ModelsLoginRequest; //Login credentials
 
 const { status, data } = await apiInstance.loginUser(
-    githubComFntelecomllcStudioBackendInternalModelsLoginRequest
+    modelsLoginRequest
 );
 ```
 
@@ -140,7 +140,7 @@ const { status, data } = await apiInstance.loginUser(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **githubComFntelecomllcStudioBackendInternalModelsLoginRequest** | **GithubComFntelecomllcStudioBackendInternalModelsLoginRequest**| Login credentials | |
+| **modelsLoginRequest** | **ModelsLoginRequest**| Login credentials | |
 
 
 ### Return type

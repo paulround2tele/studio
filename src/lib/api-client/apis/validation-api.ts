@@ -26,9 +26,9 @@ import type { ApiAPIResponse } from '../models';
 // @ts-ignore
 import type { BulkValidateDNS200Response } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest } from '../models';
+import type { ModelsBulkDNSValidationRequest } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest } from '../models';
+import type { ModelsBulkHTTPValidationRequest } from '../models';
 /**
  * ValidationApi - axios parameter creator
  * @export
@@ -38,13 +38,13 @@ export const ValidationApiAxiosParamCreator = function (configuration?: Configur
         /**
          * Perform bulk DNS validation with stealth detection avoidance and resource optimization
          * @summary Validate domains using bulk DNS validation with stealth
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest Bulk DNS validation request
+         * @param {ModelsBulkDNSValidationRequest} modelsBulkDNSValidationRequest Bulk DNS validation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkValidateDNS: async (githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest' is not null or undefined
-            assertParamExists('bulkValidateDNS', 'githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest', githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest)
+        bulkValidateDNS: async (modelsBulkDNSValidationRequest: ModelsBulkDNSValidationRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'modelsBulkDNSValidationRequest' is not null or undefined
+            assertParamExists('bulkValidateDNS', 'modelsBulkDNSValidationRequest', modelsBulkDNSValidationRequest)
             const localVarPath = `/api/v2/campaigns/bulk/domains/validate-dns`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -64,7 +64,7 @@ export const ValidationApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(modelsBulkDNSValidationRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -74,13 +74,13 @@ export const ValidationApiAxiosParamCreator = function (configuration?: Configur
         /**
          * Perform bulk HTTP validation with keyword extraction, stealth detection avoidance, and resource optimization
          * @summary Validate domains using bulk HTTP validation with stealth
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest Bulk HTTP validation request
+         * @param {ModelsBulkHTTPValidationRequest} modelsBulkHTTPValidationRequest Bulk HTTP validation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkValidateHTTP: async (githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest' is not null or undefined
-            assertParamExists('bulkValidateHTTP', 'githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest', githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest)
+        bulkValidateHTTP: async (modelsBulkHTTPValidationRequest: ModelsBulkHTTPValidationRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'modelsBulkHTTPValidationRequest' is not null or undefined
+            assertParamExists('bulkValidateHTTP', 'modelsBulkHTTPValidationRequest', modelsBulkHTTPValidationRequest)
             const localVarPath = `/api/v2/campaigns/bulk/domains/validate-http`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -100,7 +100,7 @@ export const ValidationApiAxiosParamCreator = function (configuration?: Configur
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(modelsBulkHTTPValidationRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -120,12 +120,12 @@ export const ValidationApiFp = function(configuration?: Configuration) {
         /**
          * Perform bulk DNS validation with stealth detection avoidance and resource optimization
          * @summary Validate domains using bulk DNS validation with stealth
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest Bulk DNS validation request
+         * @param {ModelsBulkDNSValidationRequest} modelsBulkDNSValidationRequest Bulk DNS validation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async bulkValidateDNS(githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkValidateDNS(githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest, options);
+        async bulkValidateDNS(modelsBulkDNSValidationRequest: ModelsBulkDNSValidationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkValidateDNS(modelsBulkDNSValidationRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ValidationApi.bulkValidateDNS']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -133,12 +133,12 @@ export const ValidationApiFp = function(configuration?: Configuration) {
         /**
          * Perform bulk HTTP validation with keyword extraction, stealth detection avoidance, and resource optimization
          * @summary Validate domains using bulk HTTP validation with stealth
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest Bulk HTTP validation request
+         * @param {ModelsBulkHTTPValidationRequest} modelsBulkHTTPValidationRequest Bulk HTTP validation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async bulkValidateHTTP(githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkValidateHTTP(githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest, options);
+        async bulkValidateHTTP(modelsBulkHTTPValidationRequest: ModelsBulkHTTPValidationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkValidateHTTP(modelsBulkHTTPValidationRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ValidationApi.bulkValidateHTTP']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -156,22 +156,22 @@ export const ValidationApiFactory = function (configuration?: Configuration, bas
         /**
          * Perform bulk DNS validation with stealth detection avoidance and resource optimization
          * @summary Validate domains using bulk DNS validation with stealth
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest Bulk DNS validation request
+         * @param {ModelsBulkDNSValidationRequest} modelsBulkDNSValidationRequest Bulk DNS validation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkValidateDNS(githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
-            return localVarFp.bulkValidateDNS(githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest, options).then((request) => request(axios, basePath));
+        bulkValidateDNS(modelsBulkDNSValidationRequest: ModelsBulkDNSValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
+            return localVarFp.bulkValidateDNS(modelsBulkDNSValidationRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Perform bulk HTTP validation with keyword extraction, stealth detection avoidance, and resource optimization
          * @summary Validate domains using bulk HTTP validation with stealth
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest Bulk HTTP validation request
+         * @param {ModelsBulkHTTPValidationRequest} modelsBulkHTTPValidationRequest Bulk HTTP validation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkValidateHTTP(githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
-            return localVarFp.bulkValidateHTTP(githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest, options).then((request) => request(axios, basePath));
+        bulkValidateHTTP(modelsBulkHTTPValidationRequest: ModelsBulkHTTPValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
+            return localVarFp.bulkValidateHTTP(modelsBulkHTTPValidationRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -185,22 +185,22 @@ export interface ValidationApiInterface {
     /**
      * Perform bulk DNS validation with stealth detection avoidance and resource optimization
      * @summary Validate domains using bulk DNS validation with stealth
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest Bulk DNS validation request
+     * @param {ModelsBulkDNSValidationRequest} modelsBulkDNSValidationRequest Bulk DNS validation request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ValidationApiInterface
      */
-    bulkValidateDNS(githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
+    bulkValidateDNS(modelsBulkDNSValidationRequest: ModelsBulkDNSValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Perform bulk HTTP validation with keyword extraction, stealth detection avoidance, and resource optimization
      * @summary Validate domains using bulk HTTP validation with stealth
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest Bulk HTTP validation request
+     * @param {ModelsBulkHTTPValidationRequest} modelsBulkHTTPValidationRequest Bulk HTTP validation request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ValidationApiInterface
      */
-    bulkValidateHTTP(githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
+    bulkValidateHTTP(modelsBulkHTTPValidationRequest: ModelsBulkHTTPValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
 }
 
@@ -214,25 +214,25 @@ export class ValidationApi extends BaseAPI implements ValidationApiInterface {
     /**
      * Perform bulk DNS validation with stealth detection avoidance and resource optimization
      * @summary Validate domains using bulk DNS validation with stealth
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest Bulk DNS validation request
+     * @param {ModelsBulkDNSValidationRequest} modelsBulkDNSValidationRequest Bulk DNS validation request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ValidationApi
      */
-    public bulkValidateDNS(githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest, options?: RawAxiosRequestConfig) {
-        return ValidationApiFp(this.configuration).bulkValidateDNS(githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest, options).then((request) => request(this.axios, this.basePath));
+    public bulkValidateDNS(modelsBulkDNSValidationRequest: ModelsBulkDNSValidationRequest, options?: RawAxiosRequestConfig) {
+        return ValidationApiFp(this.configuration).bulkValidateDNS(modelsBulkDNSValidationRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Perform bulk HTTP validation with keyword extraction, stealth detection avoidance, and resource optimization
      * @summary Validate domains using bulk HTTP validation with stealth
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest Bulk HTTP validation request
+     * @param {ModelsBulkHTTPValidationRequest} modelsBulkHTTPValidationRequest Bulk HTTP validation request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ValidationApi
      */
-    public bulkValidateHTTP(githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest, options?: RawAxiosRequestConfig) {
-        return ValidationApiFp(this.configuration).bulkValidateHTTP(githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest, options).then((request) => request(this.axios, this.basePath));
+    public bulkValidateHTTP(modelsBulkHTTPValidationRequest: ModelsBulkHTTPValidationRequest, options?: RawAxiosRequestConfig) {
+        return ValidationApiFp(this.configuration).bulkValidateHTTP(modelsBulkHTTPValidationRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

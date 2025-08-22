@@ -9,7 +9,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Play, Loader2 } from 'lucide-react';
-import { CampaignCurrentPhaseEnum } from '@/lib/api-client/models/campaign';
+import type { components } from '@/lib/api-client/types';
+
+// Use enums from OpenAPI schema
+type CampaignCurrentPhaseEnum = components['schemas']['api.CampaignSummary']['currentPhase'];
 
 interface ReduxPhaseTransitionButtonProps {
   campaignId: string;
@@ -41,7 +44,7 @@ export const ReduxPhaseTransitionButton: React.FC<ReduxPhaseTransitionButtonProp
       dispatch(startPhaseTransition(phaseType));
       
       // Call API
-      const result = await startPhase({ campaignId, phase: phaseType as CampaignCurrentPhaseEnum }).unwrap();
+      const result = await startPhase({ campaignId, phase: phaseType as any }).unwrap(); // Type mismatch between enum types
       
       // Update Redux state on success
       dispatch(completePhaseTransition());

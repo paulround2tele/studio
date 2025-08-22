@@ -1861,7 +1861,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.Proxy"][];
+                        "application/json": components["schemas"]["models.Proxy"][];
                     };
                 };
                 /** @description Failed to list proxies */
@@ -1892,7 +1892,7 @@ export interface paths {
             /** @description Proxy creation request */
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.CreateProxyRequest"];
+                    "application/json": components["schemas"]["models.CreateProxyRequest"];
                 };
             };
             responses: {
@@ -1902,7 +1902,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.Proxy"];
+                        "application/json": components["schemas"]["models.Proxy"];
                     };
                 };
                 /** @description Invalid request payload or validation failed */
@@ -1971,7 +1971,7 @@ export interface paths {
             /** @description Proxy update request */
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.UpdateProxyRequest"];
+                    "application/json": components["schemas"]["models.UpdateProxyRequest"];
                 };
             };
             responses: {
@@ -1981,7 +1981,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.Proxy"];
+                        "application/json": components["schemas"]["models.Proxy"];
                     };
                 };
                 /** @description Invalid request payload or validation failed */
@@ -2257,7 +2257,7 @@ export interface paths {
             /** @description Bulk proxy delete request */
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkDeleteProxiesRequest"];
+                    "application/json": components["schemas"]["models.BulkDeleteProxiesRequest"];
                 };
             };
             responses: {
@@ -2337,7 +2337,7 @@ export interface paths {
             /** @description Bulk proxy test request */
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkTestProxiesRequest"];
+                    "application/json": components["schemas"]["models.BulkTestProxiesRequest"];
                 };
             };
             responses: {
@@ -2402,7 +2402,7 @@ export interface paths {
             /** @description Bulk proxy update request */
             requestBody: {
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkUpdateProxiesRequest"];
+                    "application/json": components["schemas"]["models.BulkUpdateProxiesRequest"];
                 };
             };
             responses: {
@@ -2598,7 +2598,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ProxyPool"];
+                        "application/json": components["schemas"]["models.ProxyPool"];
                     };
                 };
                 /** @description Invalid request payload */
@@ -2666,7 +2666,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ProxyPool"];
+                        "application/json": components["schemas"]["models.ProxyPool"];
                     };
                 };
                 /** @description Invalid ID or request payload */
@@ -2811,7 +2811,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ProxyPoolMembership"];
+                        "application/json": components["schemas"]["models.ProxyPoolMembership"];
                     };
                 };
                 /** @description Invalid pool ID, payload, or proxy ID */
@@ -3917,14 +3917,23 @@ export interface components {
             campaignId?: string;
             /** @example 2024-01-15T10:30:00Z */
             createdAt?: string;
-            currentPhase?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.PhaseTypeEnum"];
+            currentPhase?: components["schemas"]["models.PhaseTypeEnum"];
             /** @example Enterprise Lead Generation */
             name?: string;
-            phaseStatus?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.PhaseStatusEnum"];
+            phaseStatus?: components["schemas"]["models.PhaseStatusEnum"];
             /** @example 1500 */
             totalItems?: number;
             /** @example 2024-01-15T15:45:30Z */
             updatedAt?: string;
+        };
+        /** @description Professional typed response for campaigns list with proper swagger generation */
+        "api.CampaignsListAPIResponse": {
+            data?: components["schemas"]["api.CampaignsListResponse"];
+            metadata?: components["schemas"]["api.Metadata"];
+            /** @example req_1234567890abcdef */
+            requestId?: string;
+            /** @example true */
+            success?: boolean;
         };
         /** @description List of all campaigns with phase-centric bulk data */
         "api.CampaignsListResponse": {
@@ -4106,7 +4115,7 @@ export interface components {
             contextChars?: number;
             isCaseSensitive?: boolean;
             pattern: string;
-            ruleType: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.KeywordRuleTypeEnum"];
+            ruleType: components["schemas"]["models.KeywordRuleTypeEnum"];
         };
         "api.KeywordSetDeleteResponse": {
             deleted?: boolean;
@@ -4120,7 +4129,7 @@ export interface components {
             isEnabled?: boolean;
             name?: string;
             ruleCount?: number;
-            rules?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.KeywordRule"][];
+            rules?: components["schemas"]["models.KeywordRule"][];
             updatedAt?: string;
         };
         /** @description Optional metadata attached to API responses */
@@ -4186,7 +4195,7 @@ export interface components {
             id?: string;
             isEnabled?: boolean;
             name?: string;
-            personaType?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.PersonaTypeEnum"];
+            personaType?: components["schemas"]["models.PersonaTypeEnum"];
             updatedAt?: string;
         };
         "api.PersonaTestResponse": {
@@ -4470,13 +4479,19 @@ export interface components {
             retryDelaySeconds?: number;
         };
         data: {
-            data?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse"];
+            data?: components["schemas"]["models.BulkProxyOperationResponse"];
         };
         error: {
             error?: components["schemas"]["api.ErrorInfo"];
         };
+        "keywordextractor.KeywordExtractionResult": {
+            category?: string;
+            contexts?: string[];
+            matchedPattern?: string;
+            matchedText?: string;
+        };
         /** @description Enterprise-grade enhancements for Day 3 */
-        "github_com_fntelecomllc_studio_backend_internal_models.AdvancedStealthPolicy": {
+        "models.AdvancedStealthPolicy": {
             adaptiveThrottling?: boolean;
             /** @description seconds */
             cooldownPeriods?: number[];
@@ -4488,16 +4503,16 @@ export interface components {
             requestBurstLimit?: number;
             timeZoneSimulation?: boolean;
         };
-        "github_com_fntelecomllc_studio_backend_internal_models.AggregatedAnalytics": {
+        "models.AggregatedAnalytics": {
             overallSuccessRate?: number;
-            resourceUtilization?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ResourceUtilizationMetrics"];
-            topPerformingPhases?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.PhasePerformance"][];
-            topPerformingTlds?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.TLDPerformance"][];
+            resourceUtilization?: components["schemas"]["models.ResourceUtilizationMetrics"];
+            topPerformingPhases?: components["schemas"]["models.PhasePerformance"][];
+            topPerformingTlds?: components["schemas"]["models.TLDPerformance"][];
             totalCampaigns?: number;
             totalDomains?: number;
             totalLeads?: number;
         };
-        "github_com_fntelecomllc_studio_backend_internal_models.BehavioralMimicryConfig": {
+        "models.BehavioralMimicryConfig": {
             /** @description Simulate real browser behavior */
             browserBehavior?: boolean;
             enabled?: boolean;
@@ -4515,518 +4530,6 @@ export interface components {
             socialMediaPatterns?: boolean;
             /** @description Human typing speed simulation */
             typingDelays?: boolean;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsRequest": {
-            campaignIds?: string[];
-            filters?: components["schemas"]["models.BulkAnalyticsFilters"];
-            /** @enum {string} */
-            granularity?: "hour" | "day" | "week" | "month";
-            /** @description ["campaign", "phase", "tld", "persona"] */
-            groupBy?: string[];
-            /** @description ["domains", "success_rate", "performance", "costs"] */
-            metrics: string[];
-            timeRange?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.TimeRangeFilter"];
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse": {
-            aggregatedData?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.AggregatedAnalytics"];
-            campaignMetrics?: {
-                [key: string]: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.CampaignAnalytics"];
-            };
-            dataPoints?: number;
-            metadata?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkMetadata"];
-            processingTimeMs?: number;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.BulkDNSValidationRequest": {
-            batchSize?: number;
-            operations: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.DNSValidationOperation"][];
-            stealth?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.StealthValidationConfig"];
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.BulkDeleteProxiesRequest": {
-            proxyIds: string[];
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationRequest": {
-            batchSize?: number;
-            operations: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.DomainGenerationOperation"][];
-            parallel?: boolean;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse": {
-            failedOps?: number;
-            operationId?: string;
-            operations?: {
-                [key: string]: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.DomainGenerationResult"];
-            };
-            processingTimeMs?: number;
-            /** @description "running", "completed", "failed", "partial" */
-            status?: string;
-            successfulOps?: number;
-            totalGenerated?: number;
-            totalRequested?: number;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.BulkHTTPValidationRequest": {
-            batchSize?: number;
-            concurrent?: number;
-            operations: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.HTTPValidationOperation"][];
-            stealth?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.StealthValidationConfig"];
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.BulkMetadata": {
-            debug?: components["schemas"]["models.BulkOperationDebugInfo"];
-            executionNode?: string;
-            requestId?: string;
-            timestamp?: string;
-            userId?: string;
-            version?: string;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.BulkOperationListResponse": {
-            metadata?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkMetadata"];
-            operations?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkOperationStatus"][];
-            totalCount?: number;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.BulkOperationStatus": {
-            durationMs?: number;
-            endTime?: string;
-            error?: string;
-            metadata?: components["schemas"]["models.BulkOperationMetadata"];
-            operationId?: string;
-            progress?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.OperationProgress"];
-            results?: components["schemas"]["models.BulkOperationResults"];
-            startTime?: string;
-            /** @description "queued", "running", "completed", "failed", "cancelled" */
-            status?: string;
-            /** @description "domain_generation", "dns_validation", "http_validation", "analytics" */
-            type?: string;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.BulkProxyError": {
-            error?: string;
-            proxyId?: string;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse": {
-            errorCount?: number;
-            failedProxies?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkProxyError"][];
-            /** @description For bulk update operations */
-            results?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.Proxy"][];
-            successCount?: number;
-            successfulProxies?: string[];
-            totalRequested?: number;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.BulkResourceRequest": {
-            maxDuration?: number;
-            operations: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ResourceOperation"][];
-            /** @enum {string} */
-            priority?: "low" | "normal" | "high" | "critical";
-            resourceLimits?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ResourceLimits"];
-            scheduledTime?: string;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse": {
-            allocationId?: string;
-            expirationTime?: string;
-            failedOps?: number;
-            operations?: {
-                [key: string]: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ResourceAllocationResult"];
-            };
-            processingTimeMs?: number;
-            successfulOps?: number;
-            totalAllocated?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ResourceUtilizationMetrics"];
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.BulkTestProxiesRequest": {
-            proxyIds: string[];
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.BulkUpdateProxiesRequest": {
-            proxyIds: string[];
-            updates: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.UpdateProxyRequest"];
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.BulkValidationDomainResult": {
-            content?: string;
-            dnsResolved?: boolean;
-            domainName?: string;
-            error?: string;
-            httpAccessible?: boolean;
-            keywords?: string[];
-            metadata?: components["schemas"]["models.BulkValidationDomainMetadata"];
-            responseTimeMs?: number;
-            /** @description "success", "failed", "timeout", "error" */
-            status?: string;
-            statusCode?: number;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.BulkValidationResponse": {
-            failedOps?: number;
-            operationId?: string;
-            operations?: {
-                [key: string]: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ValidationOperationResult"];
-            };
-            processingTimeMs?: number;
-            status?: string;
-            stealthMetrics?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.StealthOperationMetrics"];
-            successfulOps?: number;
-            totalFailed?: number;
-            totalProcessed?: number;
-            totalSuccessful?: number;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.CampaignAnalytics": {
-            avgResponseTimeMs?: number;
-            campaignId?: string;
-            costPerLead?: number;
-            domainsGenerated?: number;
-            domainsValidated?: number;
-            leadsGenerated?: number;
-            phaseBreakdown?: {
-                [key: string]: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.PhaseMetrics"];
-            };
-            successRate?: number;
-            timeSeriesData?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.TimeSeriesPoint"][];
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.CampaignOperationResult": {
-            campaignId?: string;
-            durationMs?: number;
-            error?: string;
-            newState?: string;
-            previousState?: string;
-            success?: boolean;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.ChangePasswordRequest": {
-            currentPassword: string;
-            newPassword: string;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.CreateProxyRequest": {
-            address: string;
-            countryCode?: string;
-            description?: string;
-            isEnabled?: boolean;
-            name: string;
-            notes?: string;
-            password?: string;
-            protocol?: string;
-            username?: string;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.DNSValidationOperation": {
-            campaignId: string;
-            domainFilter?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.DomainFilter"];
-            maxDomains?: number;
-            personaIds: string[];
-            retryAttempts?: number;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.DetectionEvasionConfig": {
-            antiAnalysisFeatures?: string[];
-            captchaBypass?: boolean;
-            enabled?: boolean;
-            fingerprintRandomization?: boolean;
-            honeypotDetection?: boolean;
-            httpHeaderRandomization?: boolean;
-            payloadObfuscation?: boolean;
-            rateLimitEvasion?: boolean;
-            requestOrderRandomization?: boolean;
-            timingAttackPrevention?: boolean;
-            tlsFingerprintRotation?: boolean;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.DomainFilter": {
-            /** @description Domains to exclude */
-            excludeList?: string[];
-            maxLength?: number;
-            minLength?: number;
-            /** @description Only retry failed domains */
-            onlyFailed?: boolean;
-            /** @description Regex pattern */
-            pattern?: string;
-            /** @description ["generated", "dns_validated", "http_validated"] */
-            status?: string[];
-            /** @description [".com", ".net", ".org"] */
-            tlds?: string[];
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.DomainGenerationOperation": {
-            campaignId: string;
-            config: components["schemas"]["models.DomainGenerationOperationConfig"];
-            maxDomains?: number;
-            startFrom?: number;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.DomainGenerationResult": {
-            campaignId?: string;
-            domainsGenerated?: number;
-            durationMs?: number;
-            endOffset?: number;
-            error?: string;
-            startOffset?: number;
-            success?: boolean;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.EnterpriseProxyStrategy": {
-            backupProxyPools?: string[];
-            failoverThreshold?: number;
-            geoTargeting?: boolean;
-            /** @description seconds */
-            healthCheckInterval?: number;
-            proxyPools?: string[];
-            proxyQualityFiltering?: boolean;
-            /** @enum {string} */
-            proxyRotationRate?: "per_request" | "per_domain" | "per_batch" | "adaptive";
-            /** @enum {string} */
-            strategy?: "round_robin" | "weighted_random" | "geographic" | "intelligent_failover";
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.HTTPValidationOperation": {
-            campaignId: string;
-            domainFilter?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.DomainFilter"];
-            keywordSetIds?: string[];
-            keywords?: string[];
-            maxDomains?: number;
-            personaIds: string[];
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.KeywordRule": {
-            category?: string;
-            contextChars?: number;
-            createdAt?: string;
-            id?: string;
-            isCaseSensitive?: boolean;
-            keywordSetId?: string;
-            pattern: string;
-            ruleType: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.KeywordRuleTypeEnum"];
-            updatedAt?: string;
-        };
-        /** @enum {string} */
-        "github_com_fntelecomllc_studio_backend_internal_models.KeywordRuleTypeEnum": "string" | "regex";
-        "github_com_fntelecomllc_studio_backend_internal_models.LoginRequest": {
-            captchaToken?: string;
-            email: string;
-            password: string;
-            rememberMe?: boolean;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.OperationProgress": {
-            currentPhase?: string;
-            estimatedTimeMs?: number;
-            failedItems?: number;
-            percentage?: number;
-            processedItems?: number;
-            remainingItems?: number;
-            successfulItems?: number;
-            totalItems?: number;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.PersonaTypeEnum": string;
-        "github_com_fntelecomllc_studio_backend_internal_models.PhaseMetrics": {
-            avgDurationMs?: number;
-            failureCount?: number;
-            itemsProcessed?: number;
-            phase?: string;
-            successCount?: number;
-            successRate?: number;
-            totalDurationMs?: number;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.PhasePerformance": {
-            avgDurationMs?: number;
-            campaigns?: number;
-            items?: number;
-            phase?: string;
-            successRate?: number;
-        };
-        /** @enum {string} */
-        "github_com_fntelecomllc_studio_backend_internal_models.PhaseStatusEnum": "not_started" | "in_progress" | "paused" | "completed" | "failed";
-        /** @enum {string} */
-        "github_com_fntelecomllc_studio_backend_internal_models.PhaseTypeEnum": "setup" | "domain_generation" | "dns_validation" | "http_keyword_validation" | "analysis";
-        /** @description Proxy server connection and authentication details */
-        "github_com_fntelecomllc_studio_backend_internal_models.Proxy": {
-            /** @description Full proxy address (e.g., 'http://user:pass@host:port') */
-            address: string;
-            city?: string;
-            countryCode?: string;
-            createdAt?: string;
-            description?: string;
-            /** @description Count of failed operations */
-            failureCount?: number;
-            /** @description Hostname or IP */
-            host?: string;
-            id?: string;
-            /** @description For API input, to be hashed into PasswordHash */
-            inputPassword?: string;
-            /** @description Fields for input/logic, not direct DB columns if already covered by Address or PasswordHash */
-            inputUsername?: string;
-            isEnabled?: boolean;
-            isHealthy?: boolean;
-            /** @description Timestamp of last health check */
-            lastCheckedAt?: string;
-            /** @description Last error message */
-            lastError?: string;
-            /** @description e.g., 'Active', 'Inactive', 'Error' */
-            lastStatus?: string;
-            /** @description Last test timestamp */
-            lastTested?: string;
-            /** @description Last measured latency */
-            latencyMs?: number;
-            name: string;
-            /** @description Proxy notes/comments */
-            notes?: string;
-            /** @description Port number */
-            port?: number;
-            protocol?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ProxyProtocolEnum"];
-            provider?: string;
-            status?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ProxyStatusEnum"];
-            /** @description Count of successful operations */
-            successCount?: number;
-            updatedAt?: string;
-            /** @description Username for proxy auth, from DB */
-            username?: string;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.ProxyPool": {
-            createdAt?: string;
-            description?: string;
-            healthCheckEnabled?: boolean;
-            healthCheckIntervalSeconds?: number;
-            id?: string;
-            isEnabled?: boolean;
-            maxRetries?: number;
-            name: string;
-            /** @description round_robin, random, weighted, failover */
-            poolStrategy?: string;
-            /** @description Computed fields (not stored in DB) */
-            proxies?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.Proxy"][];
-            timeoutSeconds?: number;
-            updatedAt?: string;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.ProxyPoolMembership": {
-            addedAt?: string;
-            isActive?: boolean;
-            poolId: string;
-            proxyId: string;
-            weight?: number;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.ProxyProtocolEnum": string;
-        /** @description Frontend-expected fields */
-        "github_com_fntelecomllc_studio_backend_internal_models.ProxyStatusEnum": string;
-        "github_com_fntelecomllc_studio_backend_internal_models.RequiredResources": {
-            cpuCores?: number;
-            memoryMB?: number;
-            networkMbps?: number;
-            personas?: number;
-            proxies?: number;
-            storageMB?: number;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.ResourceAllocationResult": {
-            allocatedResources?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.RequiredResources"];
-            allocationTime?: string;
-            campaignId?: string;
-            error?: string;
-            expirationTime?: string;
-            success?: boolean;
-            type?: string;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.ResourceLimits": {
-            maxConcurrent?: number;
-            maxCpuPercent?: number;
-            maxDiskIO?: number;
-            maxMemoryPercent?: number;
-            maxNetworkIO?: number;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.ResourceOperation": {
-            campaignId: string;
-            config?: components["schemas"]["models.BulkCampaignOperationConfig"];
-            /** @enum {string} */
-            priority?: "low" | "normal" | "high" | "critical";
-            resources?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.RequiredResources"];
-            /** @enum {string} */
-            type: "domain_generation" | "dns_validation" | "http_validation" | "analytics";
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.ResourceUtilizationMetrics": {
-            /** @description Percentage */
-            cpuUsage?: number;
-            /** @description Count */
-            databaseQueries?: number;
-            /** @description Percentage */
-            memoryUsage?: number;
-            /** @description Bytes */
-            networkIO?: number;
-            /** @description Count */
-            proxyRequests?: number;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.StealthOperationMetrics": {
-            /** @description milliseconds */
-            avgRequestSpacing?: number;
-            /** @description 0.0 = undetectable, 1.0 = highly detectable */
-            detectionScore?: number;
-            patternBreaks?: number;
-            proxyRotations?: number;
-            randomizationEvents?: number;
-            temporalJitterEvents?: number;
-            userAgentRotations?: number;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.StealthValidationConfig": {
-            advancedPolicy?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.AdvancedStealthPolicy"];
-            behavioralMimicry?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BehavioralMimicryConfig"];
-            detectionEvasion?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.DetectionEvasionConfig"];
-            detectionThreshold?: number;
-            enabled?: boolean;
-            patternAvoidance?: boolean;
-            proxyRotationForced?: boolean;
-            proxyStrategy?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.EnterpriseProxyStrategy"];
-            /** @enum {string} */
-            randomizationLevel?: "low" | "medium" | "high" | "extreme";
-            /** @description milliseconds */
-            requestSpacing?: number;
-            temporalJitter?: boolean;
-            userAgentRotation?: boolean;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.TLDPerformance": {
-            domains?: number;
-            leads?: number;
-            rank?: number;
-            successRate?: number;
-            tld?: string;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.TimeRangeFilter": {
-            /** @description ISO 8601 */
-            endTime: string;
-            /** @description ISO 8601 */
-            startTime: string;
-            /** @description "UTC", "America/New_York", etc. */
-            timezone?: string;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.TimeSeriesPoint": {
-            timestamp?: string;
-            values?: components["schemas"]["models.TimeSeriesMetricValues"];
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.UpdateProxyRequest": {
-            address?: string;
-            countryCode?: string;
-            description?: string;
-            isEnabled?: boolean;
-            name?: string;
-            notes?: string;
-            password?: string;
-            protocol?: string;
-            username?: string;
-        };
-        /** @description User account information */
-        "github_com_fntelecomllc_studio_backend_internal_models.User": {
-            avatarUrl?: string;
-            createdAt?: string;
-            email?: string;
-            emailVerified?: boolean;
-            firstName?: string;
-            id?: string;
-            isActive?: boolean;
-            isLocked?: boolean;
-            lastLoginAt?: string;
-            /** @example 192.168.1.1 */
-            lastLoginIp?: string;
-            lastName?: string;
-            /** @description MFA support fields */
-            mfaEnabled?: boolean;
-            mfaLastUsedAt?: string;
-            mustChangePassword?: boolean;
-            /** @description Computed fields (not stored in DB) */
-            name?: string;
-            updatedAt?: string;
-        };
-        "github_com_fntelecomllc_studio_backend_internal_models.ValidationOperationResult": {
-            campaignId?: string;
-            domainsFailed?: number;
-            domainsProcessed?: number;
-            domainsSuccessful?: number;
-            durationMs?: number;
-            error?: string;
-            results?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkValidationDomainResult"][];
-            success?: boolean;
-            /** @description "dns", "http" */
-            validationType?: string;
-        };
-        "keywordextractor.KeywordExtractionResult": {
-            category?: string;
-            contexts?: string[];
-            matchedPattern?: string;
-            matchedText?: string;
         };
         "models.BulkAnalyticsFilters": {
             /** @description Campaign-level filters */
@@ -5080,6 +4583,26 @@ export interface components {
             /** @description Filter by campaign owners */
             userIds?: string[];
         };
+        "models.BulkAnalyticsRequest": {
+            campaignIds?: string[];
+            filters?: components["schemas"]["models.BulkAnalyticsFilters"];
+            /** @enum {string} */
+            granularity?: "hour" | "day" | "week" | "month";
+            /** @description ["campaign", "phase", "tld", "persona"] */
+            groupBy?: string[];
+            /** @description ["domains", "success_rate", "performance", "costs"] */
+            metrics: string[];
+            timeRange?: components["schemas"]["models.TimeRangeFilter"];
+        };
+        "models.BulkAnalyticsResponse": {
+            aggregatedData?: components["schemas"]["models.AggregatedAnalytics"];
+            campaignMetrics?: {
+                [key: string]: components["schemas"]["models.CampaignAnalytics"];
+            };
+            dataPoints?: number;
+            metadata?: components["schemas"]["models.BulkMetadata"];
+            processingTimeMs?: number;
+        };
         "models.BulkCampaignOperationConfig": {
             /** @description DNS Validation Configuration */
             dnsValidation?: {
@@ -5110,6 +4633,46 @@ export interface components {
                 rotationIntervalSeconds?: number;
                 targetHttpPorts?: number[];
             };
+        };
+        "models.BulkDNSValidationRequest": {
+            batchSize?: number;
+            operations: components["schemas"]["models.DNSValidationOperation"][];
+            stealth?: components["schemas"]["models.StealthValidationConfig"];
+        };
+        "models.BulkDeleteProxiesRequest": {
+            proxyIds: string[];
+        };
+        "models.BulkDomainGenerationRequest": {
+            batchSize?: number;
+            operations: components["schemas"]["models.DomainGenerationOperation"][];
+            parallel?: boolean;
+        };
+        "models.BulkDomainGenerationResponse": {
+            failedOps?: number;
+            operationId?: string;
+            operations?: {
+                [key: string]: components["schemas"]["models.DomainGenerationResult"];
+            };
+            processingTimeMs?: number;
+            /** @description "running", "completed", "failed", "partial" */
+            status?: string;
+            successfulOps?: number;
+            totalGenerated?: number;
+            totalRequested?: number;
+        };
+        "models.BulkHTTPValidationRequest": {
+            batchSize?: number;
+            concurrent?: number;
+            operations: components["schemas"]["models.HTTPValidationOperation"][];
+            stealth?: components["schemas"]["models.StealthValidationConfig"];
+        };
+        "models.BulkMetadata": {
+            debug?: components["schemas"]["models.BulkOperationDebugInfo"];
+            executionNode?: string;
+            requestId?: string;
+            timestamp?: string;
+            userId?: string;
+            version?: string;
         };
         "models.BulkOperationDebugInfo": {
             buildVersion?: string;
@@ -5173,6 +4736,11 @@ export interface components {
             /** @description Error diagnostics */
             warningMessages?: string[];
         };
+        "models.BulkOperationListResponse": {
+            metadata?: components["schemas"]["models.BulkMetadata"];
+            operations?: components["schemas"]["models.BulkOperationStatus"][];
+            totalCount?: number;
+        };
         "models.BulkOperationMetadata": {
             /** @description milliseconds */
             avgResponseTime?: number;
@@ -5216,8 +4784,8 @@ export interface components {
         "models.BulkOperationResults": {
             /** @description Analytics Results */
             analytics?: {
-                aggregatedMetrics?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.AggregatedAnalytics"];
-                campaignSummaries?: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.CampaignAnalytics"][];
+                aggregatedMetrics?: components["schemas"]["models.AggregatedAnalytics"];
+                campaignSummaries?: components["schemas"]["models.CampaignAnalytics"][];
                 /** @description bytes */
                 exportedDataSize?: number;
             };
@@ -5227,7 +4795,7 @@ export interface components {
                 failedOperations?: string[];
                 /** @description detailed results per campaign */
                 operationResults?: {
-                    [key: string]: components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.CampaignOperationResult"];
+                    [key: string]: components["schemas"]["models.CampaignOperationResult"];
                 };
                 /** @description campaign IDs */
                 successfulOperations?: string[];
@@ -5265,6 +4833,59 @@ export interface components {
                 totalTested?: number;
             };
         };
+        "models.BulkOperationStatus": {
+            durationMs?: number;
+            endTime?: string;
+            error?: string;
+            metadata?: components["schemas"]["models.BulkOperationMetadata"];
+            operationId?: string;
+            progress?: components["schemas"]["models.OperationProgress"];
+            results?: components["schemas"]["models.BulkOperationResults"];
+            startTime?: string;
+            /** @description "queued", "running", "completed", "failed", "cancelled" */
+            status?: string;
+            /** @description "domain_generation", "dns_validation", "http_validation", "analytics" */
+            type?: string;
+        };
+        "models.BulkProxyError": {
+            error?: string;
+            proxyId?: string;
+        };
+        "models.BulkProxyOperationResponse": {
+            errorCount?: number;
+            failedProxies?: components["schemas"]["models.BulkProxyError"][];
+            /** @description For bulk update operations */
+            results?: components["schemas"]["models.Proxy"][];
+            successCount?: number;
+            successfulProxies?: string[];
+            totalRequested?: number;
+        };
+        "models.BulkResourceRequest": {
+            maxDuration?: number;
+            operations: components["schemas"]["models.ResourceOperation"][];
+            /** @enum {string} */
+            priority?: "low" | "normal" | "high" | "critical";
+            resourceLimits?: components["schemas"]["models.ResourceLimits"];
+            scheduledTime?: string;
+        };
+        "models.BulkResourceResponse": {
+            allocationId?: string;
+            expirationTime?: string;
+            failedOps?: number;
+            operations?: {
+                [key: string]: components["schemas"]["models.ResourceAllocationResult"];
+            };
+            processingTimeMs?: number;
+            successfulOps?: number;
+            totalAllocated?: components["schemas"]["models.ResourceUtilizationMetrics"];
+        };
+        "models.BulkTestProxiesRequest": {
+            proxyIds: string[];
+        };
+        "models.BulkUpdateProxiesRequest": {
+            proxyIds: string[];
+            updates: components["schemas"]["models.UpdateProxyRequest"];
+        };
         "models.BulkValidationDomainMetadata": {
             /** @description Error details */
             attemptCount?: number;
@@ -5301,6 +4922,69 @@ export interface components {
             /** @description User agent used */
             userAgent?: string;
         };
+        "models.BulkValidationDomainResult": {
+            content?: string;
+            dnsResolved?: boolean;
+            domainName?: string;
+            error?: string;
+            httpAccessible?: boolean;
+            keywords?: string[];
+            metadata?: components["schemas"]["models.BulkValidationDomainMetadata"];
+            responseTimeMs?: number;
+            /** @description "success", "failed", "timeout", "error" */
+            status?: string;
+            statusCode?: number;
+        };
+        "models.BulkValidationResponse": {
+            failedOps?: number;
+            operationId?: string;
+            operations?: {
+                [key: string]: components["schemas"]["models.ValidationOperationResult"];
+            };
+            processingTimeMs?: number;
+            status?: string;
+            stealthMetrics?: components["schemas"]["models.StealthOperationMetrics"];
+            successfulOps?: number;
+            totalFailed?: number;
+            totalProcessed?: number;
+            totalSuccessful?: number;
+        };
+        "models.CampaignAnalytics": {
+            avgResponseTimeMs?: number;
+            campaignId?: string;
+            costPerLead?: number;
+            domainsGenerated?: number;
+            domainsValidated?: number;
+            leadsGenerated?: number;
+            phaseBreakdown?: {
+                [key: string]: components["schemas"]["models.PhaseMetrics"];
+            };
+            successRate?: number;
+            timeSeriesData?: components["schemas"]["models.TimeSeriesPoint"][];
+        };
+        "models.CampaignOperationResult": {
+            campaignId?: string;
+            durationMs?: number;
+            error?: string;
+            newState?: string;
+            previousState?: string;
+            success?: boolean;
+        };
+        "models.ChangePasswordRequest": {
+            currentPassword: string;
+            newPassword: string;
+        };
+        "models.CreateProxyRequest": {
+            address: string;
+            countryCode?: string;
+            description?: string;
+            isEnabled?: boolean;
+            name: string;
+            notes?: string;
+            password?: string;
+            protocol?: string;
+            username?: string;
+        };
         /** @description Custom generation logic */
         "models.CustomDomainGenerationConfig": {
             constraints?: components["schemas"]["models.GenerationConstraints"];
@@ -5310,6 +4994,46 @@ export interface components {
                 [key: string]: string;
             };
             templates?: string[];
+        };
+        "models.DNSValidationOperation": {
+            campaignId: string;
+            domainFilter?: components["schemas"]["models.DomainFilter"];
+            maxDomains?: number;
+            personaIds: string[];
+            retryAttempts?: number;
+        };
+        "models.DetectionEvasionConfig": {
+            antiAnalysisFeatures?: string[];
+            captchaBypass?: boolean;
+            enabled?: boolean;
+            fingerprintRandomization?: boolean;
+            honeypotDetection?: boolean;
+            httpHeaderRandomization?: boolean;
+            payloadObfuscation?: boolean;
+            rateLimitEvasion?: boolean;
+            requestOrderRandomization?: boolean;
+            timingAttackPrevention?: boolean;
+            tlsFingerprintRotation?: boolean;
+        };
+        "models.DomainFilter": {
+            /** @description Domains to exclude */
+            excludeList?: string[];
+            maxLength?: number;
+            minLength?: number;
+            /** @description Only retry failed domains */
+            onlyFailed?: boolean;
+            /** @description Regex pattern */
+            pattern?: string;
+            /** @description ["generated", "dns_validated", "http_validated"] */
+            status?: string[];
+            /** @description [".com", ".net", ".org"] */
+            tlds?: string[];
+        };
+        "models.DomainGenerationOperation": {
+            campaignId: string;
+            config: components["schemas"]["models.DomainGenerationOperationConfig"];
+            maxDomains?: number;
+            startFrom?: number;
         };
         /** @description Domain Generation Configuration */
         "models.DomainGenerationOperationConfig": {
@@ -5338,11 +5062,247 @@ export interface components {
             /** @example 5 */
             variableLength: number;
         };
+        "models.DomainGenerationResult": {
+            campaignId?: string;
+            domainsGenerated?: number;
+            durationMs?: number;
+            endOffset?: number;
+            error?: string;
+            startOffset?: number;
+            success?: boolean;
+        };
+        "models.EnterpriseProxyStrategy": {
+            backupProxyPools?: string[];
+            failoverThreshold?: number;
+            geoTargeting?: boolean;
+            /** @description seconds */
+            healthCheckInterval?: number;
+            proxyPools?: string[];
+            proxyQualityFiltering?: boolean;
+            /** @enum {string} */
+            proxyRotationRate?: "per_request" | "per_domain" | "per_batch" | "adaptive";
+            /** @enum {string} */
+            strategy?: "round_robin" | "weighted_random" | "geographic" | "intelligent_failover";
+        };
         "models.GenerationConstraints": {
             excludeWords?: string[];
             maxLength?: number;
             minLength?: number;
             requireWords?: string[];
+        };
+        "models.HTTPValidationOperation": {
+            campaignId: string;
+            domainFilter?: components["schemas"]["models.DomainFilter"];
+            keywordSetIds?: string[];
+            keywords?: string[];
+            maxDomains?: number;
+            personaIds: string[];
+        };
+        "models.KeywordRule": {
+            category?: string;
+            contextChars?: number;
+            createdAt?: string;
+            id?: string;
+            isCaseSensitive?: boolean;
+            keywordSetId?: string;
+            pattern: string;
+            ruleType: components["schemas"]["models.KeywordRuleTypeEnum"];
+            updatedAt?: string;
+        };
+        /** @enum {string} */
+        "models.KeywordRuleTypeEnum": "string" | "regex";
+        "models.LoginRequest": {
+            captchaToken?: string;
+            email: string;
+            password: string;
+            rememberMe?: boolean;
+        };
+        "models.OperationProgress": {
+            currentPhase?: string;
+            estimatedTimeMs?: number;
+            failedItems?: number;
+            percentage?: number;
+            processedItems?: number;
+            remainingItems?: number;
+            successfulItems?: number;
+            totalItems?: number;
+        };
+        "models.PersonaTypeEnum": string;
+        "models.PhaseMetrics": {
+            avgDurationMs?: number;
+            failureCount?: number;
+            itemsProcessed?: number;
+            phase?: string;
+            successCount?: number;
+            successRate?: number;
+            totalDurationMs?: number;
+        };
+        "models.PhasePerformance": {
+            avgDurationMs?: number;
+            campaigns?: number;
+            items?: number;
+            phase?: string;
+            successRate?: number;
+        };
+        /** @enum {string} */
+        "models.PhaseStatusEnum": "not_started" | "in_progress" | "paused" | "completed" | "failed";
+        /** @enum {string} */
+        "models.PhaseTypeEnum": "setup" | "domain_generation" | "dns_validation" | "http_keyword_validation" | "analysis";
+        /** @description Proxy server connection and authentication details */
+        "models.Proxy": {
+            /** @description Full proxy address (e.g., 'http://user:pass@host:port') */
+            address: string;
+            city?: string;
+            countryCode?: string;
+            createdAt?: string;
+            description?: string;
+            /** @description Count of failed operations */
+            failureCount?: number;
+            /** @description Hostname or IP */
+            host?: string;
+            id?: string;
+            /** @description For API input, to be hashed into PasswordHash */
+            inputPassword?: string;
+            /** @description Fields for input/logic, not direct DB columns if already covered by Address or PasswordHash */
+            inputUsername?: string;
+            isEnabled?: boolean;
+            isHealthy?: boolean;
+            /** @description Timestamp of last health check */
+            lastCheckedAt?: string;
+            /** @description Last error message */
+            lastError?: string;
+            /** @description e.g., 'Active', 'Inactive', 'Error' */
+            lastStatus?: string;
+            /** @description Last test timestamp */
+            lastTested?: string;
+            /** @description Last measured latency */
+            latencyMs?: number;
+            name: string;
+            /** @description Proxy notes/comments */
+            notes?: string;
+            /** @description Port number */
+            port?: number;
+            protocol?: components["schemas"]["models.ProxyProtocolEnum"];
+            provider?: string;
+            status?: components["schemas"]["models.ProxyStatusEnum"];
+            /** @description Count of successful operations */
+            successCount?: number;
+            updatedAt?: string;
+            /** @description Username for proxy auth, from DB */
+            username?: string;
+        };
+        "models.ProxyPool": {
+            createdAt?: string;
+            description?: string;
+            healthCheckEnabled?: boolean;
+            healthCheckIntervalSeconds?: number;
+            id?: string;
+            isEnabled?: boolean;
+            maxRetries?: number;
+            name: string;
+            /** @description round_robin, random, weighted, failover */
+            poolStrategy?: string;
+            /** @description Computed fields (not stored in DB) */
+            proxies?: components["schemas"]["models.Proxy"][];
+            timeoutSeconds?: number;
+            updatedAt?: string;
+        };
+        "models.ProxyPoolMembership": {
+            addedAt?: string;
+            isActive?: boolean;
+            poolId: string;
+            proxyId: string;
+            weight?: number;
+        };
+        "models.ProxyProtocolEnum": string;
+        /** @description Frontend-expected fields */
+        "models.ProxyStatusEnum": string;
+        "models.RequiredResources": {
+            cpuCores?: number;
+            memoryMB?: number;
+            networkMbps?: number;
+            personas?: number;
+            proxies?: number;
+            storageMB?: number;
+        };
+        "models.ResourceAllocationResult": {
+            allocatedResources?: components["schemas"]["models.RequiredResources"];
+            allocationTime?: string;
+            campaignId?: string;
+            error?: string;
+            expirationTime?: string;
+            success?: boolean;
+            type?: string;
+        };
+        "models.ResourceLimits": {
+            maxConcurrent?: number;
+            maxCpuPercent?: number;
+            maxDiskIO?: number;
+            maxMemoryPercent?: number;
+            maxNetworkIO?: number;
+        };
+        "models.ResourceOperation": {
+            campaignId: string;
+            config?: components["schemas"]["models.BulkCampaignOperationConfig"];
+            /** @enum {string} */
+            priority?: "low" | "normal" | "high" | "critical";
+            resources?: components["schemas"]["models.RequiredResources"];
+            /** @enum {string} */
+            type: "domain_generation" | "dns_validation" | "http_validation" | "analytics";
+        };
+        "models.ResourceUtilizationMetrics": {
+            /** @description Percentage */
+            cpuUsage?: number;
+            /** @description Count */
+            databaseQueries?: number;
+            /** @description Percentage */
+            memoryUsage?: number;
+            /** @description Bytes */
+            networkIO?: number;
+            /** @description Count */
+            proxyRequests?: number;
+        };
+        "models.StealthOperationMetrics": {
+            /** @description milliseconds */
+            avgRequestSpacing?: number;
+            /** @description 0.0 = undetectable, 1.0 = highly detectable */
+            detectionScore?: number;
+            patternBreaks?: number;
+            proxyRotations?: number;
+            randomizationEvents?: number;
+            temporalJitterEvents?: number;
+            userAgentRotations?: number;
+        };
+        "models.StealthValidationConfig": {
+            advancedPolicy?: components["schemas"]["models.AdvancedStealthPolicy"];
+            behavioralMimicry?: components["schemas"]["models.BehavioralMimicryConfig"];
+            detectionEvasion?: components["schemas"]["models.DetectionEvasionConfig"];
+            detectionThreshold?: number;
+            enabled?: boolean;
+            patternAvoidance?: boolean;
+            proxyRotationForced?: boolean;
+            proxyStrategy?: components["schemas"]["models.EnterpriseProxyStrategy"];
+            /** @enum {string} */
+            randomizationLevel?: "low" | "medium" | "high" | "extreme";
+            /** @description milliseconds */
+            requestSpacing?: number;
+            temporalJitter?: boolean;
+            userAgentRotation?: boolean;
+        };
+        "models.TLDPerformance": {
+            domains?: number;
+            leads?: number;
+            rank?: number;
+            successRate?: number;
+            tld?: string;
+        };
+        "models.TimeRangeFilter": {
+            /** @description ISO 8601 */
+            endTime: string;
+            /** @description ISO 8601 */
+            startTime: string;
+            /** @description "UTC", "America/New_York", etc. */
+            timezone?: string;
         };
         "models.TimeSeriesMetricValues": {
             /** @description Performance metrics */
@@ -5372,6 +5332,55 @@ export interface components {
             timeoutRate?: number;
             totalCost?: number;
             validDomainRate?: number;
+        };
+        "models.TimeSeriesPoint": {
+            timestamp?: string;
+            values?: components["schemas"]["models.TimeSeriesMetricValues"];
+        };
+        "models.UpdateProxyRequest": {
+            address?: string;
+            countryCode?: string;
+            description?: string;
+            isEnabled?: boolean;
+            name?: string;
+            notes?: string;
+            password?: string;
+            protocol?: string;
+            username?: string;
+        };
+        /** @description User account information */
+        "models.User": {
+            avatarUrl?: string;
+            createdAt?: string;
+            email?: string;
+            emailVerified?: boolean;
+            firstName?: string;
+            id?: string;
+            isActive?: boolean;
+            isLocked?: boolean;
+            lastLoginAt?: string;
+            /** @example 192.168.1.1 */
+            lastLoginIp?: string;
+            lastName?: string;
+            /** @description MFA support fields */
+            mfaEnabled?: boolean;
+            mfaLastUsedAt?: string;
+            mustChangePassword?: boolean;
+            /** @description Computed fields (not stored in DB) */
+            name?: string;
+            updatedAt?: string;
+        };
+        "models.ValidationOperationResult": {
+            campaignId?: string;
+            domainsFailed?: number;
+            domainsProcessed?: number;
+            domainsSuccessful?: number;
+            durationMs?: number;
+            error?: string;
+            results?: components["schemas"]["models.BulkValidationDomainResult"][];
+            success?: boolean;
+            /** @description "dns", "http" */
+            validationType?: string;
         };
         "services.CreateLeadGenerationCampaignRequest": {
             description?: string;
@@ -5420,7 +5429,7 @@ export interface operations {
         /** @description Bulk DNS validation request */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkDNSValidationRequest"];
+                "application/json": components["schemas"]["models.BulkDNSValidationRequest"];
             };
         };
         responses: {
@@ -5511,7 +5520,7 @@ export interface operations {
         /** @description Bulk HTTP validation request */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkHTTPValidationRequest"];
+                "application/json": components["schemas"]["models.BulkHTTPValidationRequest"];
             };
         };
         responses: {
@@ -5602,7 +5611,7 @@ export interface operations {
         /** @description Password change request */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ChangePasswordRequest"];
+                "application/json": components["schemas"]["models.ChangePasswordRequest"];
             };
         };
         responses: {
@@ -5714,7 +5723,7 @@ export interface operations {
         /** @description Login credentials */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.LoginRequest"];
+                "application/json": components["schemas"]["models.LoginRequest"];
             };
         };
         responses: {
@@ -5914,7 +5923,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.User"];
+                    "application/json": components["schemas"]["models.User"];
                 };
             };
             /** @description Authentication required */
@@ -6044,22 +6053,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /** @description Response data (only present on success) */
-                        data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
-                        metadata?: components["schemas"]["api.Metadata"];
-                        /**
-                         * @description Unique request identifier for tracing
-                         * @example req_1234567890abcdef
-                         */
-                        requestId?: string;
-                        /**
-                         * @description Indicates if the request was successful
-                         * @example true
-                         */
-                        success?: boolean;
-                    } & components["schemas"]["data"];
+                    "application/json": components["schemas"]["api.CampaignsListAPIResponse"];
                 };
             };
             /** @description Internal Server Error */
@@ -6344,7 +6338,7 @@ export interface operations {
         /** @description Bulk analytics request */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsRequest"];
+                "application/json": components["schemas"]["models.BulkAnalyticsRequest"];
             };
         };
         responses: {
@@ -6435,7 +6429,7 @@ export interface operations {
         /** @description Bulk domain generation request */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationRequest"];
+                "application/json": components["schemas"]["models.BulkDomainGenerationRequest"];
             };
         };
         responses: {
@@ -6701,7 +6695,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkOperationStatus"];
+                    "application/json": components["schemas"]["models.BulkOperationStatus"];
                 };
             };
             /** @description Operation not found */
@@ -6734,7 +6728,7 @@ export interface operations {
         /** @description Bulk resource allocation request */
         requestBody: {
             content: {
-                "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.BulkResourceRequest"];
+                "application/json": components["schemas"]["models.BulkResourceRequest"];
             };
         };
         responses: {
@@ -7174,7 +7168,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["github_com_fntelecomllc_studio_backend_internal_models.ProxyPool"][];
+                    "application/json": components["schemas"]["models.ProxyPool"][];
                 };
             };
             /** @description Failed to list proxy pools */

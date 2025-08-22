@@ -8,12 +8,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { campaignsApi } from '@/lib/api-client/client';
-import type { 
-  BulkEnrichedDataRequest,
-  EnrichedCampaignData,
-  GeneratedDomain,
-  BulkEnrichedDataResponse
-} from '@/lib/api-client/models';
+import type { ApiBulkEnrichedDataRequest } from '@/lib/api-client/models';
+import type { EnrichedCampaignData } from '@/lib/api-client/models/enriched-campaign-data';
+import type { GeneratedDomain } from '@/lib/api-client/models/generated-domain';
+import type { BulkEnrichedDataResponse } from '@/lib/api-client/models/bulk-enriched-data-response';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 // Professional type imports using proper model references
@@ -91,7 +89,7 @@ export function useDomainData(
       setError(null);
 
       // Use existing bulk enriched data endpoint
-      const request: BulkEnrichedDataRequest = {
+      const request: ApiBulkEnrichedDataRequest = {
         campaignIds: [campaignId],
         limit: limit,
         offset: currentOffset
@@ -260,7 +258,7 @@ export function useDomainStatusSummary(
       setError(null);
 
       // Use existing bulk enriched data endpoint for status summary
-      const request: BulkEnrichedDataRequest = {
+      const request: ApiBulkEnrichedDataRequest = {
         campaignIds: [campaignId],
         limit: 1, // We only need summary, not actual domains
         offset: 0

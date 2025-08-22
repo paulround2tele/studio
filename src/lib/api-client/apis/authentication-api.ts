@@ -26,11 +26,11 @@ import type { ApiAPIResponse } from '../models';
 // @ts-ignore
 import type { BulkValidateDNS200Response } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest } from '../models';
+import type { ModelsChangePasswordRequest } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsLoginRequest } from '../models';
+import type { ModelsLoginRequest } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsUser } from '../models';
+import type { ModelsUser } from '../models';
 /**
  * AuthenticationApi - axios parameter creator
  * @export
@@ -40,13 +40,13 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
         /**
          * Change password for the currently authenticated user
          * @summary Change user password
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest} githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest Password change request
+         * @param {ModelsChangePasswordRequest} modelsChangePasswordRequest Password change request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        changePassword: async (githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest: GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest' is not null or undefined
-            assertParamExists('changePassword', 'githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest', githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest)
+        changePassword: async (modelsChangePasswordRequest: ModelsChangePasswordRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'modelsChangePasswordRequest' is not null or undefined
+            assertParamExists('changePassword', 'modelsChangePasswordRequest', modelsChangePasswordRequest)
             const localVarPath = `/auth/change-password`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -66,7 +66,7 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(modelsChangePasswordRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -106,13 +106,13 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
         /**
          * Authenticate user credentials and create session
          * @summary User login
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsLoginRequest} githubComFntelecomllcStudioBackendInternalModelsLoginRequest Login credentials
+         * @param {ModelsLoginRequest} modelsLoginRequest Login credentials
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        loginUser: async (githubComFntelecomllcStudioBackendInternalModelsLoginRequest: GithubComFntelecomllcStudioBackendInternalModelsLoginRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsLoginRequest' is not null or undefined
-            assertParamExists('loginUser', 'githubComFntelecomllcStudioBackendInternalModelsLoginRequest', githubComFntelecomllcStudioBackendInternalModelsLoginRequest)
+        loginUser: async (modelsLoginRequest: ModelsLoginRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'modelsLoginRequest' is not null or undefined
+            assertParamExists('loginUser', 'modelsLoginRequest', modelsLoginRequest)
             const localVarPath = `/auth/login`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -132,7 +132,7 @@ export const AuthenticationApiAxiosParamCreator = function (configuration?: Conf
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsLoginRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(modelsLoginRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -212,12 +212,12 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
         /**
          * Change password for the currently authenticated user
          * @summary Change user password
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest} githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest Password change request
+         * @param {ModelsChangePasswordRequest} modelsChangePasswordRequest Password change request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest: GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest, options);
+        async changePassword(modelsChangePasswordRequest: ModelsChangePasswordRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.changePassword(modelsChangePasswordRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.changePassword']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -228,7 +228,7 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getCurrentUser(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsUser>> {
+        async getCurrentUser(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ModelsUser>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getCurrentUser(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.getCurrentUser']?.[localVarOperationServerIndex]?.url;
@@ -237,12 +237,12 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
         /**
          * Authenticate user credentials and create session
          * @summary User login
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsLoginRequest} githubComFntelecomllcStudioBackendInternalModelsLoginRequest Login credentials
+         * @param {ModelsLoginRequest} modelsLoginRequest Login credentials
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest: GithubComFntelecomllcStudioBackendInternalModelsLoginRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest, options);
+        async loginUser(modelsLoginRequest: ModelsLoginRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.loginUser(modelsLoginRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.loginUser']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -284,12 +284,12 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
         /**
          * Change password for the currently authenticated user
          * @summary Change user password
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest} githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest Password change request
+         * @param {ModelsChangePasswordRequest} modelsChangePasswordRequest Password change request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest: GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
-            return localVarFp.changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest, options).then((request) => request(axios, basePath));
+        changePassword(modelsChangePasswordRequest: ModelsChangePasswordRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
+            return localVarFp.changePassword(modelsChangePasswordRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Get information about the currently authenticated user
@@ -297,18 +297,18 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getCurrentUser(options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsUser> {
+        getCurrentUser(options?: RawAxiosRequestConfig): AxiosPromise<ModelsUser> {
             return localVarFp.getCurrentUser(options).then((request) => request(axios, basePath));
         },
         /**
          * Authenticate user credentials and create session
          * @summary User login
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsLoginRequest} githubComFntelecomllcStudioBackendInternalModelsLoginRequest Login credentials
+         * @param {ModelsLoginRequest} modelsLoginRequest Login credentials
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest: GithubComFntelecomllcStudioBackendInternalModelsLoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
-            return localVarFp.loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest, options).then((request) => request(axios, basePath));
+        loginUser(modelsLoginRequest: ModelsLoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
+            return localVarFp.loginUser(modelsLoginRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Invalidate current user session and clear cookies
@@ -340,12 +340,12 @@ export interface AuthenticationApiInterface {
     /**
      * Change password for the currently authenticated user
      * @summary Change user password
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest} githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest Password change request
+     * @param {ModelsChangePasswordRequest} modelsChangePasswordRequest Password change request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AuthenticationApiInterface
      */
-    changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest: GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
+    changePassword(modelsChangePasswordRequest: ModelsChangePasswordRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Get information about the currently authenticated user
@@ -354,17 +354,17 @@ export interface AuthenticationApiInterface {
      * @throws {RequiredError}
      * @memberof AuthenticationApiInterface
      */
-    getCurrentUser(options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsUser>;
+    getCurrentUser(options?: RawAxiosRequestConfig): AxiosPromise<ModelsUser>;
 
     /**
      * Authenticate user credentials and create session
      * @summary User login
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsLoginRequest} githubComFntelecomllcStudioBackendInternalModelsLoginRequest Login credentials
+     * @param {ModelsLoginRequest} modelsLoginRequest Login credentials
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AuthenticationApiInterface
      */
-    loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest: GithubComFntelecomllcStudioBackendInternalModelsLoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
+    loginUser(modelsLoginRequest: ModelsLoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Invalidate current user session and clear cookies
@@ -396,13 +396,13 @@ export class AuthenticationApi extends BaseAPI implements AuthenticationApiInter
     /**
      * Change password for the currently authenticated user
      * @summary Change user password
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest} githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest Password change request
+     * @param {ModelsChangePasswordRequest} modelsChangePasswordRequest Password change request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AuthenticationApi
      */
-    public changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest: GithubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest, options?: RawAxiosRequestConfig) {
-        return AuthenticationApiFp(this.configuration).changePassword(githubComFntelecomllcStudioBackendInternalModelsChangePasswordRequest, options).then((request) => request(this.axios, this.basePath));
+    public changePassword(modelsChangePasswordRequest: ModelsChangePasswordRequest, options?: RawAxiosRequestConfig) {
+        return AuthenticationApiFp(this.configuration).changePassword(modelsChangePasswordRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -419,13 +419,13 @@ export class AuthenticationApi extends BaseAPI implements AuthenticationApiInter
     /**
      * Authenticate user credentials and create session
      * @summary User login
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsLoginRequest} githubComFntelecomllcStudioBackendInternalModelsLoginRequest Login credentials
+     * @param {ModelsLoginRequest} modelsLoginRequest Login credentials
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof AuthenticationApi
      */
-    public loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest: GithubComFntelecomllcStudioBackendInternalModelsLoginRequest, options?: RawAxiosRequestConfig) {
-        return AuthenticationApiFp(this.configuration).loginUser(githubComFntelecomllcStudioBackendInternalModelsLoginRequest, options).then((request) => request(this.axios, this.basePath));
+    public loginUser(modelsLoginRequest: ModelsLoginRequest, options?: RawAxiosRequestConfig) {
+        return AuthenticationApiFp(this.configuration).loginUser(modelsLoginRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

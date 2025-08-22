@@ -109,8 +109,16 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
         setCurrentOffset(0);
       }
 
-      // Calculate remaining domains
-      const remaining = calculateRemainingDomains(config, offset);
+      // Calculate remaining domains - transform to schema format
+      const schemaConfig = {
+        patternType: config.patternType,
+        characterSet: config.characterSet,
+        constantString: config.constantString,
+        tlds: [config.tld], // Convert singular tld to array for schema compatibility
+        variableLength: config.variableLength,
+        numDomainsToGenerate: config.numDomainsToGenerate || 1000
+      };
+      const remaining = calculateRemainingDomains(schemaConfig, offset);
       setTotalRemainingDomains(remaining);
 
     } catch (error) {

@@ -15,10 +15,10 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsPhaseStatusEnum } from './github-com-fntelecomllc-studio-backend-internal-models-phase-status-enum';
+import type { ModelsPhaseStatusEnum } from './models-phase-status-enum';
 // May contain unused imports in some cases
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsPhaseTypeEnum } from './github-com-fntelecomllc-studio-backend-internal-models-phase-type-enum';
+import type { ModelsPhaseTypeEnum } from './models-phase-type-enum';
 
 /**
  * Campaign summary with phase-centric bulk data
@@ -40,10 +40,10 @@ export interface ApiCampaignSummary {
     'createdAt'?: string;
     /**
      * 
-     * @type {GithubComFntelecomllcStudioBackendInternalModelsPhaseTypeEnum}
+     * @type {ModelsPhaseTypeEnum}
      * @memberof ApiCampaignSummary
      */
-    'currentPhase'?: GithubComFntelecomllcStudioBackendInternalModelsPhaseTypeEnum;
+    'currentPhase'?: ModelsPhaseTypeEnum;
     /**
      * 
      * @type {string}
@@ -52,10 +52,10 @@ export interface ApiCampaignSummary {
     'name'?: string;
     /**
      * 
-     * @type {GithubComFntelecomllcStudioBackendInternalModelsPhaseStatusEnum}
+     * @type {ModelsPhaseStatusEnum}
      * @memberof ApiCampaignSummary
      */
-    'phaseStatus'?: GithubComFntelecomllcStudioBackendInternalModelsPhaseStatusEnum;
+    'phaseStatus'?: ModelsPhaseStatusEnum;
     /**
      * 
      * @type {number}

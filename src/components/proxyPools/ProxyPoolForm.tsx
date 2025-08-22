@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { proxyPoolsApi } from "@/lib/api-client/client";
-import type { ProxyPool } from '@/lib/api-client/models';
+import type { GithubComFntelecomllcStudioBackendInternalModelsProxyPool as ProxyPoolType } from '@/lib/api-client/models';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
@@ -29,7 +29,7 @@ const poolSchema = z.object({
 type PoolFormValues = z.infer<typeof poolSchema>;
 
 interface ProxyPoolFormProps {
-  pool?: ProxyPool | null;
+  pool?: ProxyPoolType | null;
   onSuccess: () => void;
   onCancel: () => void;
 }

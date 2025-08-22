@@ -260,12 +260,12 @@ components:
           example: "2024-01-15T10:30:00Z"
           type: string
         currentPhase:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.PhaseTypeEnum'
+          $ref: '#/components/schemas/models.PhaseTypeEnum'
         name:
           example: Enterprise Lead Generation
           type: string
         phaseStatus:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.PhaseStatusEnum'
+          $ref: '#/components/schemas/models.PhaseStatusEnum'
         totalItems:
           example: 1500
           type: integer
@@ -646,7 +646,7 @@ components:
         pattern:
           type: string
         ruleType:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.KeywordRuleTypeEnum'
+          $ref: '#/components/schemas/models.KeywordRuleTypeEnum'
       required:
       - pattern
       - ruleType
@@ -676,7 +676,7 @@ components:
           type: integer
         rules:
           items:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.KeywordRule'
+            $ref: '#/components/schemas/models.KeywordRule'
           type: array
           uniqueItems: false
         updatedAt:
@@ -799,7 +799,7 @@ components:
         name:
           type: string
         personaType:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.PersonaTypeEnum'
+          $ref: '#/components/schemas/models.PersonaTypeEnum'
         updatedAt:
           type: string
       type: object
@@ -1319,14 +1319,28 @@ components:
     data:
       properties:
         data:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse'
+          $ref: '#/components/schemas/models.BulkProxyOperationResponse'
       type: object
     error:
       properties:
         error:
           $ref: '#/components/schemas/api.ErrorInfo'
       type: object
-    github_com_fntelecomllc_studio_backend_internal_models.AdvancedStealthPolicy:
+    keywordextractor.KeywordExtractionResult:
+      properties:
+        category:
+          type: string
+        contexts:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+        matchedPattern:
+          type: string
+        matchedText:
+          type: string
+      type: object
+    models.AdvancedStealthPolicy:
       description: Enterprise-grade enhancements for Day 3
       properties:
         adaptiveThrottling:
@@ -1364,20 +1378,20 @@ components:
         timeZoneSimulation:
           type: boolean
       type: object
-    github_com_fntelecomllc_studio_backend_internal_models.AggregatedAnalytics:
+    models.AggregatedAnalytics:
       properties:
         overallSuccessRate:
           type: number
         resourceUtilization:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ResourceUtilizationMetrics'
+          $ref: '#/components/schemas/models.ResourceUtilizationMetrics'
         topPerformingPhases:
           items:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.PhasePerformance'
+            $ref: '#/components/schemas/models.PhasePerformance'
           type: array
           uniqueItems: false
         topPerformingTlds:
           items:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.TLDPerformance'
+            $ref: '#/components/schemas/models.TLDPerformance'
           type: array
           uniqueItems: false
         totalCampaigns:
@@ -1387,7 +1401,7 @@ components:
         totalLeads:
           type: integer
       type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BehavioralMimicryConfig:
+    models.BehavioralMimicryConfig:
       properties:
         browserBehavior:
           description: Simulate real browser behavior
@@ -1421,1213 +1435,6 @@ components:
         typingDelays:
           description: Human typing speed simulation
           type: boolean
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsRequest:
-      properties:
-        campaignIds:
-          items:
-            type: string
-          maxItems: 1000
-          type: array
-          uniqueItems: false
-        filters:
-          $ref: '#/components/schemas/models.BulkAnalyticsFilters'
-        granularity:
-          enum:
-          - hour
-          - day
-          - week
-          - month
-          type: string
-        groupBy:
-          description: '["campaign", "phase", "tld", "persona"]'
-          items:
-            type: string
-          type: array
-          uniqueItems: false
-        metrics:
-          description: '["domains", "success_rate", "performance", "costs"]'
-          items:
-            type: string
-          minItems: 1
-          type: array
-          uniqueItems: false
-        timeRange:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.TimeRangeFilter'
-      required:
-      - metrics
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsResponse:
-      properties:
-        aggregatedData:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.AggregatedAnalytics'
-        campaignMetrics:
-          additionalProperties:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.CampaignAnalytics'
-          type: object
-        dataPoints:
-          type: integer
-        metadata:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkMetadata'
-        processingTimeMs:
-          type: integer
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BulkDNSValidationRequest:
-      properties:
-        batchSize:
-          maximum: 1000
-          type: integer
-        operations:
-          items:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.DNSValidationOperation'
-          maxItems: 50
-          minItems: 1
-          type: array
-          uniqueItems: false
-        stealth:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.StealthValidationConfig'
-      required:
-      - operations
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BulkDeleteProxiesRequest:
-      properties:
-        proxyIds:
-          items:
-            type: string
-          maxItems: 1000
-          minItems: 1
-          type: array
-          uniqueItems: false
-      required:
-      - proxyIds
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationRequest:
-      properties:
-        batchSize:
-          maximum: 10000
-          type: integer
-        operations:
-          items:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.DomainGenerationOperation'
-          maxItems: 100
-          minItems: 1
-          type: array
-          uniqueItems: false
-        parallel:
-          type: boolean
-      required:
-      - operations
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationResponse:
-      properties:
-        failedOps:
-          type: integer
-        operationId:
-          type: string
-        operations:
-          additionalProperties:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.DomainGenerationResult'
-          type: object
-        processingTimeMs:
-          type: integer
-        status:
-          description: '"running", "completed", "failed", "partial"'
-          type: string
-        successfulOps:
-          type: integer
-        totalGenerated:
-          type: integer
-        totalRequested:
-          type: integer
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BulkHTTPValidationRequest:
-      properties:
-        batchSize:
-          maximum: 500
-          type: integer
-        concurrent:
-          maximum: 50
-          type: integer
-        operations:
-          items:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.HTTPValidationOperation'
-          maxItems: 25
-          minItems: 1
-          type: array
-          uniqueItems: false
-        stealth:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.StealthValidationConfig'
-      required:
-      - operations
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BulkMetadata:
-      properties:
-        debug:
-          $ref: '#/components/schemas/models.BulkOperationDebugInfo'
-        executionNode:
-          type: string
-        requestId:
-          type: string
-        timestamp:
-          type: string
-        userId:
-          type: string
-        version:
-          type: string
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BulkOperationListResponse:
-      properties:
-        metadata:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkMetadata'
-        operations:
-          items:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkOperationStatus'
-          type: array
-          uniqueItems: false
-        totalCount:
-          type: integer
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BulkOperationStatus:
-      properties:
-        durationMs:
-          type: integer
-        endTime:
-          type: string
-        error:
-          type: string
-        metadata:
-          $ref: '#/components/schemas/models.BulkOperationMetadata'
-        operationId:
-          type: string
-        progress:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.OperationProgress'
-        results:
-          $ref: '#/components/schemas/models.BulkOperationResults'
-        startTime:
-          type: string
-        status:
-          description: '"queued", "running", "completed", "failed", "cancelled"'
-          type: string
-        type:
-          description: '"domain_generation", "dns_validation", "http_validation",
-            "analytics"'
-          type: string
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BulkProxyError:
-      properties:
-        error:
-          type: string
-        proxyId:
-          type: string
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BulkProxyOperationResponse:
-      properties:
-        errorCount:
-          type: integer
-        failedProxies:
-          items:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkProxyError'
-          type: array
-          uniqueItems: false
-        results:
-          description: For bulk update operations
-          items:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.Proxy'
-          type: array
-          uniqueItems: false
-        successCount:
-          type: integer
-        successfulProxies:
-          items:
-            type: string
-          type: array
-          uniqueItems: false
-        totalRequested:
-          type: integer
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BulkResourceRequest:
-      properties:
-        maxDuration:
-          type: integer
-        operations:
-          items:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ResourceOperation'
-          maxItems: 50
-          minItems: 1
-          type: array
-          uniqueItems: false
-        priority:
-          enum:
-          - low
-          - normal
-          - high
-          - critical
-          type: string
-        resourceLimits:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ResourceLimits'
-        scheduledTime:
-          type: string
-      required:
-      - operations
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BulkResourceResponse:
-      properties:
-        allocationId:
-          type: string
-        expirationTime:
-          type: string
-        failedOps:
-          type: integer
-        operations:
-          additionalProperties:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ResourceAllocationResult'
-          type: object
-        processingTimeMs:
-          type: integer
-        successfulOps:
-          type: integer
-        totalAllocated:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ResourceUtilizationMetrics'
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BulkTestProxiesRequest:
-      properties:
-        proxyIds:
-          items:
-            type: string
-          maxItems: 1000
-          minItems: 1
-          type: array
-          uniqueItems: false
-      required:
-      - proxyIds
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BulkUpdateProxiesRequest:
-      properties:
-        proxyIds:
-          items:
-            type: string
-          maxItems: 1000
-          minItems: 1
-          type: array
-          uniqueItems: false
-        updates:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.UpdateProxyRequest'
-      required:
-      - proxyIds
-      - updates
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BulkValidationDomainResult:
-      properties:
-        content:
-          type: string
-        dnsResolved:
-          type: boolean
-        domainName:
-          type: string
-        error:
-          type: string
-        httpAccessible:
-          type: boolean
-        keywords:
-          items:
-            type: string
-          type: array
-          uniqueItems: false
-        metadata:
-          $ref: '#/components/schemas/models.BulkValidationDomainMetadata'
-        responseTimeMs:
-          type: integer
-        status:
-          description: '"success", "failed", "timeout", "error"'
-          type: string
-        statusCode:
-          type: integer
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.BulkValidationResponse:
-      properties:
-        failedOps:
-          type: integer
-        operationId:
-          type: string
-        operations:
-          additionalProperties:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ValidationOperationResult'
-          type: object
-        processingTimeMs:
-          type: integer
-        status:
-          type: string
-        stealthMetrics:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.StealthOperationMetrics'
-        successfulOps:
-          type: integer
-        totalFailed:
-          type: integer
-        totalProcessed:
-          type: integer
-        totalSuccessful:
-          type: integer
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.CampaignAnalytics:
-      properties:
-        avgResponseTimeMs:
-          type: integer
-        campaignId:
-          type: string
-        costPerLead:
-          type: number
-        domainsGenerated:
-          type: integer
-        domainsValidated:
-          type: integer
-        leadsGenerated:
-          type: integer
-        phaseBreakdown:
-          additionalProperties:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.PhaseMetrics'
-          type: object
-        successRate:
-          type: number
-        timeSeriesData:
-          items:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.TimeSeriesPoint'
-          type: array
-          uniqueItems: false
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.CampaignOperationResult:
-      properties:
-        campaignId:
-          type: string
-        durationMs:
-          type: integer
-        error:
-          type: string
-        newState:
-          type: string
-        previousState:
-          type: string
-        success:
-          type: boolean
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.ChangePasswordRequest:
-      properties:
-        currentPassword:
-          type: string
-        newPassword:
-          minLength: 12
-          type: string
-      required:
-      - currentPassword
-      - newPassword
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.CreateProxyRequest:
-      properties:
-        address:
-          type: string
-        countryCode:
-          type: string
-        description:
-          type: string
-        isEnabled:
-          type: boolean
-        name:
-          maxLength: 255
-          minLength: 1
-          type: string
-        notes:
-          type: string
-        password:
-          type: string
-        protocol:
-          type: string
-          x-enum-comments:
-            ProxyProtocolHTTP: '@enum http'
-            ProxyProtocolHTTPS: '@enum https'
-            ProxyProtocolSOCKS4: '@enum socks4'
-            ProxyProtocolSOCKS5: '@enum socks5'
-          x-enum-varnames:
-          - ProxyProtocolHTTP
-          - ProxyProtocolHTTPS
-          - ProxyProtocolSOCKS5
-          - ProxyProtocolSOCKS4
-        username:
-          type: string
-      required:
-      - address
-      - name
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.DNSValidationOperation:
-      properties:
-        campaignId:
-          type: string
-        domainFilter:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.DomainFilter'
-        maxDomains:
-          maximum: 100000
-          type: integer
-        personaIds:
-          items:
-            type: string
-          minItems: 1
-          type: array
-          uniqueItems: false
-        retryAttempts:
-          maximum: 5
-          minimum: 0
-          type: integer
-      required:
-      - campaignId
-      - personaIds
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.DetectionEvasionConfig:
-      properties:
-        antiAnalysisFeatures:
-          items:
-            type: string
-          maxItems: 15
-          type: array
-          uniqueItems: false
-        captchaBypass:
-          type: boolean
-        enabled:
-          type: boolean
-        fingerprintRandomization:
-          type: boolean
-        honeypotDetection:
-          type: boolean
-        httpHeaderRandomization:
-          type: boolean
-        payloadObfuscation:
-          type: boolean
-        rateLimitEvasion:
-          type: boolean
-        requestOrderRandomization:
-          type: boolean
-        timingAttackPrevention:
-          type: boolean
-        tlsFingerprintRotation:
-          type: boolean
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.DomainFilter:
-      properties:
-        excludeList:
-          description: Domains to exclude
-          items:
-            type: string
-          maxItems: 10000
-          type: array
-          uniqueItems: false
-        maxLength:
-          maximum: 253
-          minimum: 1
-          type: integer
-        minLength:
-          maximum: 253
-          minimum: 1
-          type: integer
-        onlyFailed:
-          description: Only retry failed domains
-          type: boolean
-        pattern:
-          description: Regex pattern
-          type: string
-        status:
-          description: '["generated", "dns_validated", "http_validated"]'
-          items:
-            type: string
-          maxItems: 10
-          type: array
-          uniqueItems: false
-        tlds:
-          description: '[".com", ".net", ".org"]'
-          items:
-            type: string
-          maxItems: 100
-          type: array
-          uniqueItems: false
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.DomainGenerationOperation:
-      properties:
-        campaignId:
-          type: string
-        config:
-          $ref: '#/components/schemas/models.DomainGenerationOperationConfig'
-        maxDomains:
-          maximum: 1000000
-          type: integer
-        startFrom:
-          minimum: 0
-          type: integer
-      required:
-      - campaignId
-      - config
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.DomainGenerationResult:
-      properties:
-        campaignId:
-          type: string
-        domainsGenerated:
-          type: integer
-        durationMs:
-          type: integer
-        endOffset:
-          type: integer
-        error:
-          type: string
-        startOffset:
-          type: integer
-        success:
-          type: boolean
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.EnterpriseProxyStrategy:
-      properties:
-        backupProxyPools:
-          items:
-            type: string
-          maxItems: 5
-          type: array
-          uniqueItems: false
-        failoverThreshold:
-          type: number
-        geoTargeting:
-          type: boolean
-        healthCheckInterval:
-          description: seconds
-          maximum: 3600
-          minimum: 30
-          type: integer
-        proxyPools:
-          items:
-            type: string
-          maxItems: 10
-          type: array
-          uniqueItems: false
-        proxyQualityFiltering:
-          type: boolean
-        proxyRotationRate:
-          enum:
-          - per_request
-          - per_domain
-          - per_batch
-          - adaptive
-          type: string
-        strategy:
-          enum:
-          - round_robin
-          - weighted_random
-          - geographic
-          - intelligent_failover
-          type: string
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.HTTPValidationOperation:
-      properties:
-        campaignId:
-          type: string
-        domainFilter:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.DomainFilter'
-        keywordSetIds:
-          items:
-            type: string
-          maxItems: 100
-          type: array
-          uniqueItems: false
-        keywords:
-          items:
-            type: string
-          maxItems: 1000
-          type: array
-          uniqueItems: false
-        maxDomains:
-          maximum: 50000
-          type: integer
-        personaIds:
-          items:
-            type: string
-          minItems: 1
-          type: array
-          uniqueItems: false
-      required:
-      - campaignId
-      - personaIds
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.KeywordRule:
-      properties:
-        category:
-          type: string
-        contextChars:
-          minimum: 0
-          type: integer
-        createdAt:
-          type: string
-        id:
-          type: string
-        isCaseSensitive:
-          type: boolean
-        keywordSetId:
-          type: string
-        pattern:
-          type: string
-        ruleType:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.KeywordRuleTypeEnum'
-        updatedAt:
-          type: string
-      required:
-      - pattern
-      - ruleType
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.KeywordRuleTypeEnum:
-      enum:
-      - string
-      - regex
-      type: string
-      x-enum-varnames:
-      - KeywordRuleTypeString
-      - KeywordRuleTypeRegex
-    github_com_fntelecomllc_studio_backend_internal_models.LoginRequest:
-      properties:
-        captchaToken:
-          type: string
-        email:
-          type: string
-        password:
-          minLength: 6
-          type: string
-        rememberMe:
-          type: boolean
-      required:
-      - email
-      - password
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.OperationProgress:
-      properties:
-        currentPhase:
-          type: string
-        estimatedTimeMs:
-          type: integer
-        failedItems:
-          type: integer
-        percentage:
-          type: number
-        processedItems:
-          type: integer
-        remainingItems:
-          type: integer
-        successfulItems:
-          type: integer
-        totalItems:
-          type: integer
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.PersonaTypeEnum:
-      type: string
-      x-enum-comments:
-        PersonaTypeDNS: Lowercase to match frontend
-        PersonaTypeHTTP: Lowercase to match frontend
-      x-enum-varnames:
-      - PersonaTypeDNS
-      - PersonaTypeHTTP
-    github_com_fntelecomllc_studio_backend_internal_models.PhaseMetrics:
-      properties:
-        avgDurationMs:
-          type: integer
-        failureCount:
-          type: integer
-        itemsProcessed:
-          type: integer
-        phase:
-          type: string
-        successCount:
-          type: integer
-        successRate:
-          type: number
-        totalDurationMs:
-          type: integer
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.PhasePerformance:
-      properties:
-        avgDurationMs:
-          type: integer
-        campaigns:
-          type: integer
-        items:
-          type: integer
-        phase:
-          type: string
-        successRate:
-          type: number
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.PhaseStatusEnum:
-      enum:
-      - not_started
-      - in_progress
-      - paused
-      - completed
-      - failed
-      type: string
-      x-enum-comments:
-        PhaseStatusConfigured: Phase has been configured and ready to start
-        PhaseStatusReady: Phase is ready to be configured
-      x-enum-varnames:
-      - PhaseStatusNotStarted
-      - PhaseStatusReady
-      - PhaseStatusConfigured
-      - PhaseStatusInProgress
-      - PhaseStatusPaused
-      - PhaseStatusCompleted
-      - PhaseStatusFailed
-    github_com_fntelecomllc_studio_backend_internal_models.PhaseTypeEnum:
-      enum:
-      - setup
-      - domain_generation
-      - dns_validation
-      - http_keyword_validation
-      - analysis
-      type: string
-      x-enum-varnames:
-      - PhaseTypeDomainGeneration
-      - PhaseTypeDNSValidation
-      - PhaseTypeHTTPKeywordValidation
-      - PhaseTypeAnalysis
-    github_com_fntelecomllc_studio_backend_internal_models.Proxy:
-      description: Proxy server connection and authentication details
-      properties:
-        address:
-          description: Full proxy address (e.g., 'http://user:pass@host:port')
-          type: string
-        city:
-          type: string
-        countryCode:
-          type: string
-        createdAt:
-          type: string
-        description:
-          type: string
-        failureCount:
-          description: Count of failed operations
-          type: integer
-        host:
-          description: Hostname or IP
-          type: string
-        id:
-          type: string
-        inputPassword:
-          description: For API input, to be hashed into PasswordHash
-          type: string
-        inputUsername:
-          description: Fields for input/logic, not direct DB columns if already covered
-            by Address or PasswordHash
-          type: string
-        isEnabled:
-          type: boolean
-        isHealthy:
-          type: boolean
-        lastCheckedAt:
-          description: Timestamp of last health check
-          type: string
-        lastError:
-          description: Last error message
-          type: string
-        lastStatus:
-          description: e.g., 'Active', 'Inactive', 'Error'
-          type: string
-        lastTested:
-          description: Last test timestamp
-          type: string
-        latencyMs:
-          description: Last measured latency
-          type: integer
-        name:
-          type: string
-        notes:
-          description: Proxy notes/comments
-          type: string
-        port:
-          description: Port number
-          type: integer
-        protocol:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ProxyProtocolEnum'
-        provider:
-          type: string
-        status:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ProxyStatusEnum'
-        successCount:
-          description: Count of successful operations
-          type: integer
-        updatedAt:
-          type: string
-        username:
-          description: Username for proxy auth, from DB
-          type: string
-      required:
-      - address
-      - name
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.ProxyPool:
-      properties:
-        createdAt:
-          type: string
-        description:
-          type: string
-        healthCheckEnabled:
-          type: boolean
-        healthCheckIntervalSeconds:
-          type: integer
-        id:
-          type: string
-        isEnabled:
-          type: boolean
-        maxRetries:
-          type: integer
-        name:
-          type: string
-        poolStrategy:
-          description: round_robin, random, weighted, failover
-          type: string
-        proxies:
-          description: Computed fields (not stored in DB)
-          items:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.Proxy'
-          type: array
-          uniqueItems: false
-        timeoutSeconds:
-          type: integer
-        updatedAt:
-          type: string
-      required:
-      - name
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.ProxyPoolMembership:
-      properties:
-        addedAt:
-          type: string
-        isActive:
-          type: boolean
-        poolId:
-          type: string
-        proxyId:
-          type: string
-        weight:
-          type: integer
-      required:
-      - poolId
-      - proxyId
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.ProxyProtocolEnum:
-      type: string
-      x-enum-comments:
-        ProxyProtocolHTTP: '@enum http'
-        ProxyProtocolHTTPS: '@enum https'
-        ProxyProtocolSOCKS4: '@enum socks4'
-        ProxyProtocolSOCKS5: '@enum socks5'
-      x-enum-varnames:
-      - ProxyProtocolHTTP
-      - ProxyProtocolHTTPS
-      - ProxyProtocolSOCKS5
-      - ProxyProtocolSOCKS4
-    github_com_fntelecomllc_studio_backend_internal_models.ProxyStatusEnum:
-      description: Frontend-expected fields
-      type: string
-      x-enum-varnames:
-      - ProxyStatusActive
-      - ProxyStatusDisabled
-      - ProxyStatusTesting
-      - ProxyStatusFailed
-    github_com_fntelecomllc_studio_backend_internal_models.RequiredResources:
-      properties:
-        cpuCores:
-          maximum: 64
-          type: integer
-        memoryMB:
-          maximum: 65536
-          type: integer
-        networkMbps:
-          maximum: 10000
-          type: integer
-        personas:
-          maximum: 100
-          type: integer
-        proxies:
-          maximum: 1000
-          minimum: 0
-          type: integer
-        storageMB:
-          type: integer
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.ResourceAllocationResult:
-      properties:
-        allocatedResources:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.RequiredResources'
-        allocationTime:
-          type: string
-        campaignId:
-          type: string
-        error:
-          type: string
-        expirationTime:
-          type: string
-        success:
-          type: boolean
-        type:
-          type: string
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.ResourceLimits:
-      properties:
-        maxConcurrent:
-          maximum: 1000
-          type: integer
-        maxCpuPercent:
-          maximum: 100
-          type: number
-        maxDiskIO:
-          type: integer
-        maxMemoryPercent:
-          maximum: 100
-          type: number
-        maxNetworkIO:
-          type: integer
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.ResourceOperation:
-      properties:
-        campaignId:
-          type: string
-        config:
-          $ref: '#/components/schemas/models.BulkCampaignOperationConfig'
-        priority:
-          enum:
-          - low
-          - normal
-          - high
-          - critical
-          type: string
-        resources:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.RequiredResources'
-        type:
-          enum:
-          - domain_generation
-          - dns_validation
-          - http_validation
-          - analytics
-          type: string
-      required:
-      - campaignId
-      - type
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.ResourceUtilizationMetrics:
-      properties:
-        cpuUsage:
-          description: Percentage
-          type: number
-        databaseQueries:
-          description: Count
-          type: integer
-        memoryUsage:
-          description: Percentage
-          type: number
-        networkIO:
-          description: Bytes
-          type: integer
-        proxyRequests:
-          description: Count
-          type: integer
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.StealthOperationMetrics:
-      properties:
-        avgRequestSpacing:
-          description: milliseconds
-          type: integer
-        detectionScore:
-          description: 0.0 = undetectable, 1.0 = highly detectable
-          type: number
-        patternBreaks:
-          type: integer
-        proxyRotations:
-          type: integer
-        randomizationEvents:
-          type: integer
-        temporalJitterEvents:
-          type: integer
-        userAgentRotations:
-          type: integer
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.StealthValidationConfig:
-      properties:
-        advancedPolicy:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.AdvancedStealthPolicy'
-        behavioralMimicry:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BehavioralMimicryConfig'
-        detectionEvasion:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.DetectionEvasionConfig'
-        detectionThreshold:
-          type: number
-        enabled:
-          type: boolean
-        patternAvoidance:
-          type: boolean
-        proxyRotationForced:
-          type: boolean
-        proxyStrategy:
-          $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.EnterpriseProxyStrategy'
-        randomizationLevel:
-          enum:
-          - low
-          - medium
-          - high
-          - extreme
-          type: string
-        requestSpacing:
-          description: milliseconds
-          maximum: 30000
-          minimum: 100
-          type: integer
-        temporalJitter:
-          type: boolean
-        userAgentRotation:
-          type: boolean
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.TLDPerformance:
-      properties:
-        domains:
-          type: integer
-        leads:
-          type: integer
-        rank:
-          type: integer
-        successRate:
-          type: number
-        tld:
-          type: string
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.TimeRangeFilter:
-      properties:
-        endTime:
-          description: ISO 8601
-          type: string
-        startTime:
-          description: ISO 8601
-          type: string
-        timezone:
-          description: '"UTC", "America/New_York", etc.'
-          type: string
-      required:
-      - endTime
-      - startTime
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.TimeSeriesPoint:
-      properties:
-        timestamp:
-          type: string
-        values:
-          $ref: '#/components/schemas/models.TimeSeriesMetricValues'
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.UpdateProxyRequest:
-      properties:
-        address:
-          type: string
-        countryCode:
-          type: string
-        description:
-          type: string
-        isEnabled:
-          type: boolean
-        name:
-          maxLength: 255
-          minLength: 1
-          type: string
-        notes:
-          type: string
-        password:
-          type: string
-        protocol:
-          type: string
-          x-enum-comments:
-            ProxyProtocolHTTP: '@enum http'
-            ProxyProtocolHTTPS: '@enum https'
-            ProxyProtocolSOCKS4: '@enum socks4'
-            ProxyProtocolSOCKS5: '@enum socks5'
-          x-enum-varnames:
-          - ProxyProtocolHTTP
-          - ProxyProtocolHTTPS
-          - ProxyProtocolSOCKS5
-          - ProxyProtocolSOCKS4
-        username:
-          type: string
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.User:
-      description: User account information
-      properties:
-        avatarUrl:
-          type: string
-        createdAt:
-          type: string
-        email:
-          type: string
-        emailVerified:
-          type: boolean
-        firstName:
-          type: string
-        id:
-          type: string
-        isActive:
-          type: boolean
-        isLocked:
-          type: boolean
-        lastLoginAt:
-          type: string
-        lastLoginIp:
-          example: 192.168.1.1
-          type: string
-        lastName:
-          type: string
-        mfaEnabled:
-          description: MFA support fields
-          type: boolean
-        mfaLastUsedAt:
-          type: string
-        mustChangePassword:
-          type: boolean
-        name:
-          description: Computed fields (not stored in DB)
-          type: string
-        updatedAt:
-          type: string
-      type: object
-    github_com_fntelecomllc_studio_backend_internal_models.ValidationOperationResult:
-      properties:
-        campaignId:
-          type: string
-        domainsFailed:
-          type: integer
-        domainsProcessed:
-          type: integer
-        domainsSuccessful:
-          type: integer
-        durationMs:
-          type: integer
-        error:
-          type: string
-        results:
-          items:
-            $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkValidationDomainResult'
-          type: array
-          uniqueItems: false
-        success:
-          type: boolean
-        validationType:
-          description: '"dns", "http"'
-          type: string
-      type: object
-    keywordextractor.KeywordExtractionResult:
-      properties:
-        category:
-          type: string
-        contexts:
-          items:
-            type: string
-          type: array
-          uniqueItems: false
-        matchedPattern:
-          type: string
-        matchedText:
-          type: string
       type: object
     models.BulkAnalyticsFilters:
       properties:
@@ -2744,6 +1551,56 @@ components:
           type: array
           uniqueItems: false
       type: object
+    models.BulkAnalyticsRequest:
+      properties:
+        campaignIds:
+          items:
+            type: string
+          maxItems: 1000
+          type: array
+          uniqueItems: false
+        filters:
+          $ref: '#/components/schemas/models.BulkAnalyticsFilters'
+        granularity:
+          enum:
+          - hour
+          - day
+          - week
+          - month
+          type: string
+        groupBy:
+          description: '["campaign", "phase", "tld", "persona"]'
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+        metrics:
+          description: '["domains", "success_rate", "performance", "costs"]'
+          items:
+            type: string
+          minItems: 1
+          type: array
+          uniqueItems: false
+        timeRange:
+          $ref: '#/components/schemas/models.TimeRangeFilter'
+      required:
+      - metrics
+      type: object
+    models.BulkAnalyticsResponse:
+      properties:
+        aggregatedData:
+          $ref: '#/components/schemas/models.AggregatedAnalytics'
+        campaignMetrics:
+          additionalProperties:
+            $ref: '#/components/schemas/models.CampaignAnalytics'
+          type: object
+        dataPoints:
+          type: integer
+        metadata:
+          $ref: '#/components/schemas/models.BulkMetadata'
+        processingTimeMs:
+          type: integer
+      type: object
     models.BulkCampaignOperationConfig:
       properties:
         dnsValidation:
@@ -2813,6 +1670,109 @@ components:
               type: array
               uniqueItems: false
           type: object
+      type: object
+    models.BulkDNSValidationRequest:
+      properties:
+        batchSize:
+          maximum: 1000
+          type: integer
+        operations:
+          items:
+            $ref: '#/components/schemas/models.DNSValidationOperation'
+          maxItems: 50
+          minItems: 1
+          type: array
+          uniqueItems: false
+        stealth:
+          $ref: '#/components/schemas/models.StealthValidationConfig'
+      required:
+      - operations
+      type: object
+    models.BulkDeleteProxiesRequest:
+      properties:
+        proxyIds:
+          items:
+            type: string
+          maxItems: 1000
+          minItems: 1
+          type: array
+          uniqueItems: false
+      required:
+      - proxyIds
+      type: object
+    models.BulkDomainGenerationRequest:
+      properties:
+        batchSize:
+          maximum: 10000
+          type: integer
+        operations:
+          items:
+            $ref: '#/components/schemas/models.DomainGenerationOperation'
+          maxItems: 100
+          minItems: 1
+          type: array
+          uniqueItems: false
+        parallel:
+          type: boolean
+      required:
+      - operations
+      type: object
+    models.BulkDomainGenerationResponse:
+      properties:
+        failedOps:
+          type: integer
+        operationId:
+          type: string
+        operations:
+          additionalProperties:
+            $ref: '#/components/schemas/models.DomainGenerationResult'
+          type: object
+        processingTimeMs:
+          type: integer
+        status:
+          description: '"running", "completed", "failed", "partial"'
+          type: string
+        successfulOps:
+          type: integer
+        totalGenerated:
+          type: integer
+        totalRequested:
+          type: integer
+      type: object
+    models.BulkHTTPValidationRequest:
+      properties:
+        batchSize:
+          maximum: 500
+          type: integer
+        concurrent:
+          maximum: 50
+          type: integer
+        operations:
+          items:
+            $ref: '#/components/schemas/models.HTTPValidationOperation'
+          maxItems: 25
+          minItems: 1
+          type: array
+          uniqueItems: false
+        stealth:
+          $ref: '#/components/schemas/models.StealthValidationConfig'
+      required:
+      - operations
+      type: object
+    models.BulkMetadata:
+      properties:
+        debug:
+          $ref: '#/components/schemas/models.BulkOperationDebugInfo'
+        executionNode:
+          type: string
+        requestId:
+          type: string
+        timestamp:
+          type: string
+        userId:
+          type: string
+        version:
+          type: string
       type: object
     models.BulkOperationDebugInfo:
       properties:
@@ -2909,6 +1869,18 @@ components:
           type: array
           uniqueItems: false
       type: object
+    models.BulkOperationListResponse:
+      properties:
+        metadata:
+          $ref: '#/components/schemas/models.BulkMetadata'
+        operations:
+          items:
+            $ref: '#/components/schemas/models.BulkOperationStatus'
+          type: array
+          uniqueItems: false
+        totalCount:
+          type: integer
+      type: object
     models.BulkOperationMetadata:
       properties:
         avgResponseTime:
@@ -2993,10 +1965,10 @@ components:
           description: Analytics Results
           properties:
             aggregatedMetrics:
-              $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.AggregatedAnalytics'
+              $ref: '#/components/schemas/models.AggregatedAnalytics'
             campaignSummaries:
               items:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.CampaignAnalytics'
+                $ref: '#/components/schemas/models.CampaignAnalytics'
               type: array
               uniqueItems: false
             exportedDataSize:
@@ -3014,7 +1986,7 @@ components:
               uniqueItems: false
             operationResults:
               additionalProperties:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.CampaignOperationResult'
+                $ref: '#/components/schemas/models.CampaignOperationResult'
               description: detailed results per campaign
               type: object
             successfulOperations:
@@ -3097,6 +2069,135 @@ components:
               type: integer
           type: object
       type: object
+    models.BulkOperationStatus:
+      properties:
+        durationMs:
+          type: integer
+        endTime:
+          type: string
+        error:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/models.BulkOperationMetadata'
+        operationId:
+          type: string
+        progress:
+          $ref: '#/components/schemas/models.OperationProgress'
+        results:
+          $ref: '#/components/schemas/models.BulkOperationResults'
+        startTime:
+          type: string
+        status:
+          description: '"queued", "running", "completed", "failed", "cancelled"'
+          type: string
+        type:
+          description: '"domain_generation", "dns_validation", "http_validation",
+            "analytics"'
+          type: string
+      type: object
+    models.BulkProxyError:
+      properties:
+        error:
+          type: string
+        proxyId:
+          type: string
+      type: object
+    models.BulkProxyOperationResponse:
+      properties:
+        errorCount:
+          type: integer
+        failedProxies:
+          items:
+            $ref: '#/components/schemas/models.BulkProxyError'
+          type: array
+          uniqueItems: false
+        results:
+          description: For bulk update operations
+          items:
+            $ref: '#/components/schemas/models.Proxy'
+          type: array
+          uniqueItems: false
+        successCount:
+          type: integer
+        successfulProxies:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+        totalRequested:
+          type: integer
+      type: object
+    models.BulkResourceRequest:
+      properties:
+        maxDuration:
+          type: integer
+        operations:
+          items:
+            $ref: '#/components/schemas/models.ResourceOperation'
+          maxItems: 50
+          minItems: 1
+          type: array
+          uniqueItems: false
+        priority:
+          enum:
+          - low
+          - normal
+          - high
+          - critical
+          type: string
+        resourceLimits:
+          $ref: '#/components/schemas/models.ResourceLimits'
+        scheduledTime:
+          type: string
+      required:
+      - operations
+      type: object
+    models.BulkResourceResponse:
+      properties:
+        allocationId:
+          type: string
+        expirationTime:
+          type: string
+        failedOps:
+          type: integer
+        operations:
+          additionalProperties:
+            $ref: '#/components/schemas/models.ResourceAllocationResult'
+          type: object
+        processingTimeMs:
+          type: integer
+        successfulOps:
+          type: integer
+        totalAllocated:
+          $ref: '#/components/schemas/models.ResourceUtilizationMetrics'
+      type: object
+    models.BulkTestProxiesRequest:
+      properties:
+        proxyIds:
+          items:
+            type: string
+          maxItems: 1000
+          minItems: 1
+          type: array
+          uniqueItems: false
+      required:
+      - proxyIds
+      type: object
+    models.BulkUpdateProxiesRequest:
+      properties:
+        proxyIds:
+          items:
+            type: string
+          maxItems: 1000
+          minItems: 1
+          type: array
+          uniqueItems: false
+        updates:
+          $ref: '#/components/schemas/models.UpdateProxyRequest'
+      required:
+      - proxyIds
+      - updates
+      type: object
     models.BulkValidationDomainMetadata:
       properties:
         attemptCount:
@@ -3159,6 +2260,146 @@ components:
           description: User agent used
           type: string
       type: object
+    models.BulkValidationDomainResult:
+      properties:
+        content:
+          type: string
+        dnsResolved:
+          type: boolean
+        domainName:
+          type: string
+        error:
+          type: string
+        httpAccessible:
+          type: boolean
+        keywords:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+        metadata:
+          $ref: '#/components/schemas/models.BulkValidationDomainMetadata'
+        responseTimeMs:
+          type: integer
+        status:
+          description: '"success", "failed", "timeout", "error"'
+          type: string
+        statusCode:
+          type: integer
+      type: object
+    models.BulkValidationResponse:
+      properties:
+        failedOps:
+          type: integer
+        operationId:
+          type: string
+        operations:
+          additionalProperties:
+            $ref: '#/components/schemas/models.ValidationOperationResult'
+          type: object
+        processingTimeMs:
+          type: integer
+        status:
+          type: string
+        stealthMetrics:
+          $ref: '#/components/schemas/models.StealthOperationMetrics'
+        successfulOps:
+          type: integer
+        totalFailed:
+          type: integer
+        totalProcessed:
+          type: integer
+        totalSuccessful:
+          type: integer
+      type: object
+    models.CampaignAnalytics:
+      properties:
+        avgResponseTimeMs:
+          type: integer
+        campaignId:
+          type: string
+        costPerLead:
+          type: number
+        domainsGenerated:
+          type: integer
+        domainsValidated:
+          type: integer
+        leadsGenerated:
+          type: integer
+        phaseBreakdown:
+          additionalProperties:
+            $ref: '#/components/schemas/models.PhaseMetrics'
+          type: object
+        successRate:
+          type: number
+        timeSeriesData:
+          items:
+            $ref: '#/components/schemas/models.TimeSeriesPoint'
+          type: array
+          uniqueItems: false
+      type: object
+    models.CampaignOperationResult:
+      properties:
+        campaignId:
+          type: string
+        durationMs:
+          type: integer
+        error:
+          type: string
+        newState:
+          type: string
+        previousState:
+          type: string
+        success:
+          type: boolean
+      type: object
+    models.ChangePasswordRequest:
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          minLength: 12
+          type: string
+      required:
+      - currentPassword
+      - newPassword
+      type: object
+    models.CreateProxyRequest:
+      properties:
+        address:
+          type: string
+        countryCode:
+          type: string
+        description:
+          type: string
+        isEnabled:
+          type: boolean
+        name:
+          maxLength: 255
+          minLength: 1
+          type: string
+        notes:
+          type: string
+        password:
+          type: string
+        protocol:
+          type: string
+          x-enum-comments:
+            ProxyProtocolHTTP: '@enum http'
+            ProxyProtocolHTTPS: '@enum https'
+            ProxyProtocolSOCKS4: '@enum socks4'
+            ProxyProtocolSOCKS5: '@enum socks5'
+          x-enum-varnames:
+          - ProxyProtocolHTTP
+          - ProxyProtocolHTTPS
+          - ProxyProtocolSOCKS5
+          - ProxyProtocolSOCKS4
+        username:
+          type: string
+      required:
+      - address
+      - name
+      type: object
     models.CustomDomainGenerationConfig:
       description: Custom generation logic
       properties:
@@ -3181,6 +2422,112 @@ components:
           uniqueItems: false
       required:
       - generationType
+      type: object
+    models.DNSValidationOperation:
+      properties:
+        campaignId:
+          type: string
+        domainFilter:
+          $ref: '#/components/schemas/models.DomainFilter'
+        maxDomains:
+          maximum: 100000
+          type: integer
+        personaIds:
+          items:
+            type: string
+          minItems: 1
+          type: array
+          uniqueItems: false
+        retryAttempts:
+          maximum: 5
+          minimum: 0
+          type: integer
+      required:
+      - campaignId
+      - personaIds
+      type: object
+    models.DetectionEvasionConfig:
+      properties:
+        antiAnalysisFeatures:
+          items:
+            type: string
+          maxItems: 15
+          type: array
+          uniqueItems: false
+        captchaBypass:
+          type: boolean
+        enabled:
+          type: boolean
+        fingerprintRandomization:
+          type: boolean
+        honeypotDetection:
+          type: boolean
+        httpHeaderRandomization:
+          type: boolean
+        payloadObfuscation:
+          type: boolean
+        rateLimitEvasion:
+          type: boolean
+        requestOrderRandomization:
+          type: boolean
+        timingAttackPrevention:
+          type: boolean
+        tlsFingerprintRotation:
+          type: boolean
+      type: object
+    models.DomainFilter:
+      properties:
+        excludeList:
+          description: Domains to exclude
+          items:
+            type: string
+          maxItems: 10000
+          type: array
+          uniqueItems: false
+        maxLength:
+          maximum: 253
+          minimum: 1
+          type: integer
+        minLength:
+          maximum: 253
+          minimum: 1
+          type: integer
+        onlyFailed:
+          description: Only retry failed domains
+          type: boolean
+        pattern:
+          description: Regex pattern
+          type: string
+        status:
+          description: '["generated", "dns_validated", "http_validated"]'
+          items:
+            type: string
+          maxItems: 10
+          type: array
+          uniqueItems: false
+        tlds:
+          description: '[".com", ".net", ".org"]'
+          items:
+            type: string
+          maxItems: 100
+          type: array
+          uniqueItems: false
+      type: object
+    models.DomainGenerationOperation:
+      properties:
+        campaignId:
+          type: string
+        config:
+          $ref: '#/components/schemas/models.DomainGenerationOperationConfig'
+        maxDomains:
+          maximum: 1000000
+          type: integer
+        startFrom:
+          minimum: 0
+          type: integer
+      required:
+      - campaignId
+      - config
       type: object
     models.DomainGenerationOperationConfig:
       description: Domain Generation Configuration
@@ -3231,6 +2578,63 @@ components:
       - tlds
       - variableLength
       type: object
+    models.DomainGenerationResult:
+      properties:
+        campaignId:
+          type: string
+        domainsGenerated:
+          type: integer
+        durationMs:
+          type: integer
+        endOffset:
+          type: integer
+        error:
+          type: string
+        startOffset:
+          type: integer
+        success:
+          type: boolean
+      type: object
+    models.EnterpriseProxyStrategy:
+      properties:
+        backupProxyPools:
+          items:
+            type: string
+          maxItems: 5
+          type: array
+          uniqueItems: false
+        failoverThreshold:
+          type: number
+        geoTargeting:
+          type: boolean
+        healthCheckInterval:
+          description: seconds
+          maximum: 3600
+          minimum: 30
+          type: integer
+        proxyPools:
+          items:
+            type: string
+          maxItems: 10
+          type: array
+          uniqueItems: false
+        proxyQualityFiltering:
+          type: boolean
+        proxyRotationRate:
+          enum:
+          - per_request
+          - per_domain
+          - per_batch
+          - adaptive
+          type: string
+        strategy:
+          enum:
+          - round_robin
+          - weighted_random
+          - geographic
+          - intelligent_failover
+          type: string
+      type: object
     models.GenerationConstraints:
       properties:
         excludeWords:
@@ -3247,6 +2651,498 @@ components:
             type: string
           type: array
           uniqueItems: false
+      type: object
+    models.HTTPValidationOperation:
+      properties:
+        campaignId:
+          type: string
+        domainFilter:
+          $ref: '#/components/schemas/models.DomainFilter'
+        keywordSetIds:
+          items:
+            type: string
+          maxItems: 100
+          type: array
+          uniqueItems: false
+        keywords:
+          items:
+            type: string
+          maxItems: 1000
+          type: array
+          uniqueItems: false
+        maxDomains:
+          maximum: 50000
+          type: integer
+        personaIds:
+          items:
+            type: string
+          minItems: 1
+          type: array
+          uniqueItems: false
+      required:
+      - campaignId
+      - personaIds
+      type: object
+    models.KeywordRule:
+      properties:
+        category:
+          type: string
+        contextChars:
+          minimum: 0
+          type: integer
+        createdAt:
+          type: string
+        id:
+          type: string
+        isCaseSensitive:
+          type: boolean
+        keywordSetId:
+          type: string
+        pattern:
+          type: string
+        ruleType:
+          $ref: '#/components/schemas/models.KeywordRuleTypeEnum'
+        updatedAt:
+          type: string
+      required:
+      - pattern
+      - ruleType
+      type: object
+    models.KeywordRuleTypeEnum:
+      enum:
+      - string
+      - regex
+      type: string
+      x-enum-varnames:
+      - KeywordRuleTypeString
+      - KeywordRuleTypeRegex
+    models.LoginRequest:
+      properties:
+        captchaToken:
+          type: string
+        email:
+          type: string
+        password:
+          minLength: 6
+          type: string
+        rememberMe:
+          type: boolean
+      required:
+      - email
+      - password
+      type: object
+    models.OperationProgress:
+      properties:
+        currentPhase:
+          type: string
+        estimatedTimeMs:
+          type: integer
+        failedItems:
+          type: integer
+        percentage:
+          type: number
+        processedItems:
+          type: integer
+        remainingItems:
+          type: integer
+        successfulItems:
+          type: integer
+        totalItems:
+          type: integer
+      type: object
+    models.PersonaTypeEnum:
+      type: string
+      x-enum-comments:
+        PersonaTypeDNS: Lowercase to match frontend
+        PersonaTypeHTTP: Lowercase to match frontend
+      x-enum-varnames:
+      - PersonaTypeDNS
+      - PersonaTypeHTTP
+    models.PhaseMetrics:
+      properties:
+        avgDurationMs:
+          type: integer
+        failureCount:
+          type: integer
+        itemsProcessed:
+          type: integer
+        phase:
+          type: string
+        successCount:
+          type: integer
+        successRate:
+          type: number
+        totalDurationMs:
+          type: integer
+      type: object
+    models.PhasePerformance:
+      properties:
+        avgDurationMs:
+          type: integer
+        campaigns:
+          type: integer
+        items:
+          type: integer
+        phase:
+          type: string
+        successRate:
+          type: number
+      type: object
+    models.PhaseStatusEnum:
+      enum:
+      - not_started
+      - in_progress
+      - paused
+      - completed
+      - failed
+      type: string
+      x-enum-comments:
+        PhaseStatusConfigured: Phase has been configured and ready to start
+        PhaseStatusReady: Phase is ready to be configured
+      x-enum-varnames:
+      - PhaseStatusNotStarted
+      - PhaseStatusReady
+      - PhaseStatusConfigured
+      - PhaseStatusInProgress
+      - PhaseStatusPaused
+      - PhaseStatusCompleted
+      - PhaseStatusFailed
+    models.PhaseTypeEnum:
+      enum:
+      - setup
+      - domain_generation
+      - dns_validation
+      - http_keyword_validation
+      - analysis
+      type: string
+      x-enum-varnames:
+      - PhaseTypeDomainGeneration
+      - PhaseTypeDNSValidation
+      - PhaseTypeHTTPKeywordValidation
+      - PhaseTypeAnalysis
+    models.Proxy:
+      description: Proxy server connection and authentication details
+      properties:
+        address:
+          description: Full proxy address (e.g., 'http://user:pass@host:port')
+          type: string
+        city:
+          type: string
+        countryCode:
+          type: string
+        createdAt:
+          type: string
+        description:
+          type: string
+        failureCount:
+          description: Count of failed operations
+          type: integer
+        host:
+          description: Hostname or IP
+          type: string
+        id:
+          type: string
+        inputPassword:
+          description: For API input, to be hashed into PasswordHash
+          type: string
+        inputUsername:
+          description: Fields for input/logic, not direct DB columns if already covered
+            by Address or PasswordHash
+          type: string
+        isEnabled:
+          type: boolean
+        isHealthy:
+          type: boolean
+        lastCheckedAt:
+          description: Timestamp of last health check
+          type: string
+        lastError:
+          description: Last error message
+          type: string
+        lastStatus:
+          description: e.g., 'Active', 'Inactive', 'Error'
+          type: string
+        lastTested:
+          description: Last test timestamp
+          type: string
+        latencyMs:
+          description: Last measured latency
+          type: integer
+        name:
+          type: string
+        notes:
+          description: Proxy notes/comments
+          type: string
+        port:
+          description: Port number
+          type: integer
+        protocol:
+          $ref: '#/components/schemas/models.ProxyProtocolEnum'
+        provider:
+          type: string
+        status:
+          $ref: '#/components/schemas/models.ProxyStatusEnum'
+        successCount:
+          description: Count of successful operations
+          type: integer
+        updatedAt:
+          type: string
+        username:
+          description: Username for proxy auth, from DB
+          type: string
+      required:
+      - address
+      - name
+      type: object
+    models.ProxyPool:
+      properties:
+        createdAt:
+          type: string
+        description:
+          type: string
+        healthCheckEnabled:
+          type: boolean
+        healthCheckIntervalSeconds:
+          type: integer
+        id:
+          type: string
+        isEnabled:
+          type: boolean
+        maxRetries:
+          type: integer
+        name:
+          type: string
+        poolStrategy:
+          description: round_robin, random, weighted, failover
+          type: string
+        proxies:
+          description: Computed fields (not stored in DB)
+          items:
+            $ref: '#/components/schemas/models.Proxy'
+          type: array
+          uniqueItems: false
+        timeoutSeconds:
+          type: integer
+        updatedAt:
+          type: string
+      required:
+      - name
+      type: object
+    models.ProxyPoolMembership:
+      properties:
+        addedAt:
+          type: string
+        isActive:
+          type: boolean
+        poolId:
+          type: string
+        proxyId:
+          type: string
+        weight:
+          type: integer
+      required:
+      - poolId
+      - proxyId
+      type: object
+    models.ProxyProtocolEnum:
+      type: string
+      x-enum-comments:
+        ProxyProtocolHTTP: '@enum http'
+        ProxyProtocolHTTPS: '@enum https'
+        ProxyProtocolSOCKS4: '@enum socks4'
+        ProxyProtocolSOCKS5: '@enum socks5'
+      x-enum-varnames:
+      - ProxyProtocolHTTP
+      - ProxyProtocolHTTPS
+      - ProxyProtocolSOCKS5
+      - ProxyProtocolSOCKS4
+    models.ProxyStatusEnum:
+      description: Frontend-expected fields
+      type: string
+      x-enum-varnames:
+      - ProxyStatusActive
+      - ProxyStatusDisabled
+      - ProxyStatusTesting
+      - ProxyStatusFailed
+    models.RequiredResources:
+      properties:
+        cpuCores:
+          maximum: 64
+          type: integer
+        memoryMB:
+          maximum: 65536
+          type: integer
+        networkMbps:
+          maximum: 10000
+          type: integer
+        personas:
+          maximum: 100
+          type: integer
+        proxies:
+          maximum: 1000
+          minimum: 0
+          type: integer
+        storageMB:
+          type: integer
+      type: object
+    models.ResourceAllocationResult:
+      properties:
+        allocatedResources:
+          $ref: '#/components/schemas/models.RequiredResources'
+        allocationTime:
+          type: string
+        campaignId:
+          type: string
+        error:
+          type: string
+        expirationTime:
+          type: string
+        success:
+          type: boolean
+        type:
+          type: string
+      type: object
+    models.ResourceLimits:
+      properties:
+        maxConcurrent:
+          maximum: 1000
+          type: integer
+        maxCpuPercent:
+          maximum: 100
+          type: number
+        maxDiskIO:
+          type: integer
+        maxMemoryPercent:
+          maximum: 100
+          type: number
+        maxNetworkIO:
+          type: integer
+      type: object
+    models.ResourceOperation:
+      properties:
+        campaignId:
+          type: string
+        config:
+          $ref: '#/components/schemas/models.BulkCampaignOperationConfig'
+        priority:
+          enum:
+          - low
+          - normal
+          - high
+          - critical
+          type: string
+        resources:
+          $ref: '#/components/schemas/models.RequiredResources'
+        type:
+          enum:
+          - domain_generation
+          - dns_validation
+          - http_validation
+          - analytics
+          type: string
+      required:
+      - campaignId
+      - type
+      type: object
+    models.ResourceUtilizationMetrics:
+      properties:
+        cpuUsage:
+          description: Percentage
+          type: number
+        databaseQueries:
+          description: Count
+          type: integer
+        memoryUsage:
+          description: Percentage
+          type: number
+        networkIO:
+          description: Bytes
+          type: integer
+        proxyRequests:
+          description: Count
+          type: integer
+      type: object
+    models.StealthOperationMetrics:
+      properties:
+        avgRequestSpacing:
+          description: milliseconds
+          type: integer
+        detectionScore:
+          description: 0.0 = undetectable, 1.0 = highly detectable
+          type: number
+        patternBreaks:
+          type: integer
+        proxyRotations:
+          type: integer
+        randomizationEvents:
+          type: integer
+        temporalJitterEvents:
+          type: integer
+        userAgentRotations:
+          type: integer
+      type: object
+    models.StealthValidationConfig:
+      properties:
+        advancedPolicy:
+          $ref: '#/components/schemas/models.AdvancedStealthPolicy'
+        behavioralMimicry:
+          $ref: '#/components/schemas/models.BehavioralMimicryConfig'
+        detectionEvasion:
+          $ref: '#/components/schemas/models.DetectionEvasionConfig'
+        detectionThreshold:
+          type: number
+        enabled:
+          type: boolean
+        patternAvoidance:
+          type: boolean
+        proxyRotationForced:
+          type: boolean
+        proxyStrategy:
+          $ref: '#/components/schemas/models.EnterpriseProxyStrategy'
+        randomizationLevel:
+          enum:
+          - low
+          - medium
+          - high
+          - extreme
+          type: string
+        requestSpacing:
+          description: milliseconds
+          maximum: 30000
+          minimum: 100
+          type: integer
+        temporalJitter:
+          type: boolean
+        userAgentRotation:
+          type: boolean
+      type: object
+    models.TLDPerformance:
+      properties:
+        domains:
+          type: integer
+        leads:
+          type: integer
+        rank:
+          type: integer
+        successRate:
+          type: number
+        tld:
+          type: string
+      type: object
+    models.TimeRangeFilter:
+      properties:
+        endTime:
+          description: ISO 8601
+          type: string
+        startTime:
+          description: ISO 8601
+          type: string
+        timezone:
+          description: '"UTC", "America/New_York", etc.'
+          type: string
+      required:
+      - endTime
+      - startTime
       type: object
     models.TimeSeriesMetricValues:
       properties:
@@ -3298,6 +3194,110 @@ components:
           type: number
         validDomainRate:
           type: number
+      type: object
+    models.TimeSeriesPoint:
+      properties:
+        timestamp:
+          type: string
+        values:
+          $ref: '#/components/schemas/models.TimeSeriesMetricValues'
+      type: object
+    models.UpdateProxyRequest:
+      properties:
+        address:
+          type: string
+        countryCode:
+          type: string
+        description:
+          type: string
+        isEnabled:
+          type: boolean
+        name:
+          maxLength: 255
+          minLength: 1
+          type: string
+        notes:
+          type: string
+        password:
+          type: string
+        protocol:
+          type: string
+          x-enum-comments:
+            ProxyProtocolHTTP: '@enum http'
+            ProxyProtocolHTTPS: '@enum https'
+            ProxyProtocolSOCKS4: '@enum socks4'
+            ProxyProtocolSOCKS5: '@enum socks5'
+          x-enum-varnames:
+          - ProxyProtocolHTTP
+          - ProxyProtocolHTTPS
+          - ProxyProtocolSOCKS5
+          - ProxyProtocolSOCKS4
+        username:
+          type: string
+      type: object
+    models.User:
+      description: User account information
+      properties:
+        avatarUrl:
+          type: string
+        createdAt:
+          type: string
+        email:
+          type: string
+        emailVerified:
+          type: boolean
+        firstName:
+          type: string
+        id:
+          type: string
+        isActive:
+          type: boolean
+        isLocked:
+          type: boolean
+        lastLoginAt:
+          type: string
+        lastLoginIp:
+          example: 192.168.1.1
+          type: string
+        lastName:
+          type: string
+        mfaEnabled:
+          description: MFA support fields
+          type: boolean
+        mfaLastUsedAt:
+          type: string
+        mustChangePassword:
+          type: boolean
+        name:
+          description: Computed fields (not stored in DB)
+          type: string
+        updatedAt:
+          type: string
+      type: object
+    models.ValidationOperationResult:
+      properties:
+        campaignId:
+          type: string
+        domainsFailed:
+          type: integer
+        domainsProcessed:
+          type: integer
+        domainsSuccessful:
+          type: integer
+        durationMs:
+          type: integer
+        error:
+          type: string
+        results:
+          items:
+            $ref: '#/components/schemas/models.BulkValidationDomainResult'
+          type: array
+          uniqueItems: false
+        success:
+          type: boolean
+        validationType:
+          description: '"dns", "http"'
+          type: string
       type: object
     services.CreateLeadGenerationCampaignRequest:
       properties:
@@ -3385,7 +3385,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkDNSValidationRequest'
+              $ref: '#/components/schemas/models.BulkDNSValidationRequest'
         description: Bulk DNS validation request
         required: true
       responses:
@@ -3470,7 +3470,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkHTTPValidationRequest'
+              $ref: '#/components/schemas/models.BulkHTTPValidationRequest'
         description: Bulk HTTP validation request
         required: true
       responses:
@@ -3786,7 +3786,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ChangePasswordRequest'
+              $ref: '#/components/schemas/models.ChangePasswordRequest'
         description: Password change request
         required: true
       responses:
@@ -3901,7 +3901,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.LoginRequest'
+              $ref: '#/components/schemas/models.LoginRequest'
         description: Login credentials
         required: true
       responses:
@@ -4100,7 +4100,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.User'
+                $ref: '#/components/schemas/models.User'
           description: Current user information
         "401":
           content:
@@ -4469,7 +4469,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkAnalyticsRequest'
+              $ref: '#/components/schemas/models.BulkAnalyticsRequest'
         description: Bulk analytics request
         required: true
       responses:
@@ -4554,7 +4554,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkDomainGenerationRequest'
+              $ref: '#/components/schemas/models.BulkDomainGenerationRequest'
         description: Bulk domain generation request
         required: true
       responses:
@@ -4820,7 +4820,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkOperationStatus'
+                $ref: '#/components/schemas/models.BulkOperationStatus'
           description: Operation status retrieved successfully
         "404":
           content:
@@ -4847,7 +4847,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkResourceRequest'
+              $ref: '#/components/schemas/models.BulkResourceRequest'
         description: Bulk resource allocation request
         required: true
       responses:
@@ -5863,7 +5863,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.Proxy'
+                  $ref: '#/components/schemas/models.Proxy'
                 type: array
           description: List of proxies
         "500":
@@ -5883,7 +5883,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.CreateProxyRequest'
+              $ref: '#/components/schemas/models.CreateProxyRequest'
         description: Proxy creation request
         required: true
       responses:
@@ -5891,7 +5891,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.Proxy'
+                $ref: '#/components/schemas/models.Proxy'
           description: Created proxy
         "400":
           content:
@@ -5973,7 +5973,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.UpdateProxyRequest'
+              $ref: '#/components/schemas/models.UpdateProxyRequest'
         description: Proxy update request
         required: true
       responses:
@@ -5981,7 +5981,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.Proxy'
+                $ref: '#/components/schemas/models.Proxy'
           description: Updated proxy
         "400":
           content:
@@ -6105,7 +6105,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkDeleteProxiesRequest'
+              $ref: '#/components/schemas/models.BulkDeleteProxiesRequest'
         description: Bulk proxy delete request
         required: true
       responses:
@@ -6160,7 +6160,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkTestProxiesRequest'
+              $ref: '#/components/schemas/models.BulkTestProxiesRequest'
         description: Bulk proxy test request
         required: true
       responses:
@@ -6196,7 +6196,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.BulkUpdateProxiesRequest'
+              $ref: '#/components/schemas/models.BulkUpdateProxiesRequest'
         description: Bulk proxy update request
         required: true
       responses:
@@ -6296,7 +6296,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ProxyPool'
+                  $ref: '#/components/schemas/models.ProxyPool'
                 type: array
           description: List of proxy pools
         "500":
@@ -6324,7 +6324,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ProxyPool'
+                $ref: '#/components/schemas/models.ProxyPool'
           description: Created proxy pool
         "400":
           content:
@@ -6412,7 +6412,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ProxyPool'
+                $ref: '#/components/schemas/models.ProxyPool'
           description: Updated proxy pool
         "400":
           content:
@@ -6468,7 +6468,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/github_com_fntelecomllc_studio_backend_internal_models.ProxyPoolMembership'
+                $ref: '#/components/schemas/models.ProxyPoolMembership'
           description: Created membership
         "400":
           content:

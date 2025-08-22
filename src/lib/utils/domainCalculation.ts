@@ -4,12 +4,12 @@
 
 import type { components } from '@/lib/api-client/types';
 
-// Use backend OpenAPI type - no frontend duplication
-type DomainGenerationParams = components['schemas']['DomainGenerationParams'];
+// Use backend OpenAPI type - the one that ACTUALLY exists
+type DomainGenerationParams = components['schemas']['models.DomainGenerationPhaseConfig'];
 
 /**
  * Calculate maximum theoretical domains for a given configuration
- * Uses backend-defined types exclusively
+ * Uses backend-defined types exclusively (when they exist)
  */
 export function calculateMaxTheoreticalDomains(config: DomainGenerationParams): number {
   if (!config) return 0;
@@ -66,8 +66,8 @@ export function validateDomainConfig(config: DomainGenerationParams): {
     errors.push('Variable length must be at least 1');
   }
 
-  if (!config.tld?.trim()) {
-    errors.push('TLD is required');
+  if (!config.tlds?.length || !config.tlds.some(tld => tld.trim())) {
+    errors.push('At least one valid TLD is required');
   }
 
   if (!['prefix', 'suffix', 'both'].includes(config.patternType)) {

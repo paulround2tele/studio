@@ -15,7 +15,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsCampaignOperationResult } from './github-com-fntelecomllc-studio-backend-internal-models-campaign-operation-result';
+import type { ModelsCampaignOperationResult } from './models-campaign-operation-result';
 
 /**
  * Campaign Operation Results
@@ -31,10 +31,10 @@ export interface ModelsBulkOperationResultsCampaignOperations {
     'failedOperations'?: Array<string>;
     /**
      * detailed results per campaign
-     * @type {{ [key: string]: GithubComFntelecomllcStudioBackendInternalModelsCampaignOperationResult; }}
+     * @type {{ [key: string]: ModelsCampaignOperationResult; }}
      * @memberof ModelsBulkOperationResultsCampaignOperations
      */
-    'operationResults'?: { [key: string]: GithubComFntelecomllcStudioBackendInternalModelsCampaignOperationResult; };
+    'operationResults'?: { [key: string]: ModelsCampaignOperationResult; };
     /**
      * campaign IDs
      * @type {Array<string>}

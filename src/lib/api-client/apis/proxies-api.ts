@@ -34,17 +34,17 @@ import type { ApiProxyTestResponse } from '../models';
 // @ts-ignore
 import type { BulkValidateDNS200Response } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest } from '../models';
+import type { ModelsBulkDeleteProxiesRequest } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest } from '../models';
+import type { ModelsBulkTestProxiesRequest } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest } from '../models';
+import type { ModelsBulkUpdateProxiesRequest } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest } from '../models';
+import type { ModelsCreateProxyRequest } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsProxy } from '../models';
+import type { ModelsProxy } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest } from '../models';
+import type { ModelsUpdateProxyRequest } from '../models';
 /**
  * ProxiesApi - axios parameter creator
  * @export
@@ -54,13 +54,13 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Delete multiple proxy configurations simultaneously
          * @summary Bulk delete proxies
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest Bulk proxy delete request
+         * @param {ModelsBulkDeleteProxiesRequest} modelsBulkDeleteProxiesRequest Bulk proxy delete request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesBulkDeleteDelete: async (githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest' is not null or undefined
-            assertParamExists('proxiesBulkDeleteDelete', 'githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest', githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest)
+        proxiesBulkDeleteDelete: async (modelsBulkDeleteProxiesRequest: ModelsBulkDeleteProxiesRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'modelsBulkDeleteProxiesRequest' is not null or undefined
+            assertParamExists('proxiesBulkDeleteDelete', 'modelsBulkDeleteProxiesRequest', modelsBulkDeleteProxiesRequest)
             const localVarPath = `/proxies/bulk/delete`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -80,7 +80,7 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(modelsBulkDeleteProxiesRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -90,13 +90,13 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Test multiple proxy configurations simultaneously
          * @summary Bulk test proxies
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest} githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest Bulk proxy test request
+         * @param {ModelsBulkTestProxiesRequest} modelsBulkTestProxiesRequest Bulk proxy test request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesBulkTestPost: async (githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest' is not null or undefined
-            assertParamExists('proxiesBulkTestPost', 'githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest', githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest)
+        proxiesBulkTestPost: async (modelsBulkTestProxiesRequest: ModelsBulkTestProxiesRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'modelsBulkTestProxiesRequest' is not null or undefined
+            assertParamExists('proxiesBulkTestPost', 'modelsBulkTestProxiesRequest', modelsBulkTestProxiesRequest)
             const localVarPath = `/proxies/bulk/test`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -116,7 +116,7 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(modelsBulkTestProxiesRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -126,13 +126,13 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Update multiple proxy configurations simultaneously
          * @summary Bulk update proxies
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest} githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest Bulk proxy update request
+         * @param {ModelsBulkUpdateProxiesRequest} modelsBulkUpdateProxiesRequest Bulk proxy update request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesBulkUpdatePut: async (githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest' is not null or undefined
-            assertParamExists('proxiesBulkUpdatePut', 'githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest', githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest)
+        proxiesBulkUpdatePut: async (modelsBulkUpdateProxiesRequest: ModelsBulkUpdateProxiesRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'modelsBulkUpdateProxiesRequest' is not null or undefined
+            assertParamExists('proxiesBulkUpdatePut', 'modelsBulkUpdateProxiesRequest', modelsBulkUpdateProxiesRequest)
             const localVarPath = `/proxies/bulk/update`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -152,7 +152,7 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(modelsBulkUpdateProxiesRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -247,13 +247,13 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Add a new proxy configuration
          * @summary Create proxy
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest} githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest Proxy creation request
+         * @param {ModelsCreateProxyRequest} modelsCreateProxyRequest Proxy creation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesPost: async (githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest: GithubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest' is not null or undefined
-            assertParamExists('proxiesPost', 'githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest', githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest)
+        proxiesPost: async (modelsCreateProxyRequest: ModelsCreateProxyRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'modelsCreateProxyRequest' is not null or undefined
+            assertParamExists('proxiesPost', 'modelsCreateProxyRequest', modelsCreateProxyRequest)
             const localVarPath = `/proxies`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -273,7 +273,7 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(modelsCreateProxyRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -352,15 +352,15 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
          * Update an existing proxy configuration
          * @summary Update proxy
          * @param {string} proxyId Proxy ID
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest} githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest Proxy update request
+         * @param {ModelsUpdateProxyRequest} modelsUpdateProxyRequest Proxy update request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesProxyIdPut: async (proxyId: string, githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest: GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        proxiesProxyIdPut: async (proxyId: string, modelsUpdateProxyRequest: ModelsUpdateProxyRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'proxyId' is not null or undefined
             assertParamExists('proxiesProxyIdPut', 'proxyId', proxyId)
-            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest' is not null or undefined
-            assertParamExists('proxiesProxyIdPut', 'githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest', githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest)
+            // verify required parameter 'modelsUpdateProxyRequest' is not null or undefined
+            assertParamExists('proxiesProxyIdPut', 'modelsUpdateProxyRequest', modelsUpdateProxyRequest)
             const localVarPath = `/proxies/{proxyId}`
                 .replace(`{${"proxyId"}}`, encodeURIComponent(String(proxyId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
@@ -381,7 +381,7 @@ export const ProxiesApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(modelsUpdateProxyRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -465,12 +465,12 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
         /**
          * Delete multiple proxy configurations simultaneously
          * @summary Bulk delete proxies
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest Bulk proxy delete request
+         * @param {ModelsBulkDeleteProxiesRequest} modelsBulkDeleteProxiesRequest Bulk proxy delete request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest, options);
+        async proxiesBulkDeleteDelete(modelsBulkDeleteProxiesRequest: ModelsBulkDeleteProxiesRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesBulkDeleteDelete(modelsBulkDeleteProxiesRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesBulkDeleteDelete']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -478,12 +478,12 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
         /**
          * Test multiple proxy configurations simultaneously
          * @summary Bulk test proxies
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest} githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest Bulk proxy test request
+         * @param {ModelsBulkTestProxiesRequest} modelsBulkTestProxiesRequest Bulk proxy test request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesBulkTestPost(githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiBulkProxyTestResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesBulkTestPost(githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest, options);
+        async proxiesBulkTestPost(modelsBulkTestProxiesRequest: ModelsBulkTestProxiesRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiBulkProxyTestResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesBulkTestPost(modelsBulkTestProxiesRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesBulkTestPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -491,12 +491,12 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
         /**
          * Update multiple proxy configurations simultaneously
          * @summary Bulk update proxies
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest} githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest Bulk proxy update request
+         * @param {ModelsBulkUpdateProxiesRequest} modelsBulkUpdateProxiesRequest Bulk proxy update request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest, options);
+        async proxiesBulkUpdatePut(modelsBulkUpdateProxiesRequest: ModelsBulkUpdateProxiesRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesBulkUpdatePut(modelsBulkUpdateProxiesRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesBulkUpdatePut']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -512,7 +512,7 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesGet(limit?: number, offset?: number, protocol?: string, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<GithubComFntelecomllcStudioBackendInternalModelsProxy>>> {
+        async proxiesGet(limit?: number, offset?: number, protocol?: string, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ModelsProxy>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesGet(limit, offset, protocol, isEnabled, isHealthy, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesGet']?.[localVarOperationServerIndex]?.url;
@@ -533,12 +533,12 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
         /**
          * Add a new proxy configuration
          * @summary Create proxy
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest} githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest Proxy creation request
+         * @param {ModelsCreateProxyRequest} modelsCreateProxyRequest Proxy creation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesPost(githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest: GithubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxy>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesPost(githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest, options);
+        async proxiesPost(modelsCreateProxyRequest: ModelsCreateProxyRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ModelsProxy>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesPost(modelsCreateProxyRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -573,12 +573,12 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * Update an existing proxy configuration
          * @summary Update proxy
          * @param {string} proxyId Proxy ID
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest} githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest Proxy update request
+         * @param {ModelsUpdateProxyRequest} modelsUpdateProxyRequest Proxy update request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesProxyIdPut(proxyId: string, githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest: GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxy>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesProxyIdPut(proxyId, githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest, options);
+        async proxiesProxyIdPut(proxyId: string, modelsUpdateProxyRequest: ModelsUpdateProxyRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ModelsProxy>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesProxyIdPut(proxyId, modelsUpdateProxyRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesProxyIdPut']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -621,32 +621,32 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
         /**
          * Delete multiple proxy configurations simultaneously
          * @summary Bulk delete proxies
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest Bulk proxy delete request
+         * @param {ModelsBulkDeleteProxiesRequest} modelsBulkDeleteProxiesRequest Bulk proxy delete request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
-            return localVarFp.proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest, options).then((request) => request(axios, basePath));
+        proxiesBulkDeleteDelete(modelsBulkDeleteProxiesRequest: ModelsBulkDeleteProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
+            return localVarFp.proxiesBulkDeleteDelete(modelsBulkDeleteProxiesRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Test multiple proxy configurations simultaneously
          * @summary Bulk test proxies
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest} githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest Bulk proxy test request
+         * @param {ModelsBulkTestProxiesRequest} modelsBulkTestProxiesRequest Bulk proxy test request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesBulkTestPost(githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiBulkProxyTestResponse> {
-            return localVarFp.proxiesBulkTestPost(githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest, options).then((request) => request(axios, basePath));
+        proxiesBulkTestPost(modelsBulkTestProxiesRequest: ModelsBulkTestProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiBulkProxyTestResponse> {
+            return localVarFp.proxiesBulkTestPost(modelsBulkTestProxiesRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Update multiple proxy configurations simultaneously
          * @summary Bulk update proxies
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest} githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest Bulk proxy update request
+         * @param {ModelsBulkUpdateProxiesRequest} modelsBulkUpdateProxiesRequest Bulk proxy update request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
-            return localVarFp.proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest, options).then((request) => request(axios, basePath));
+        proxiesBulkUpdatePut(modelsBulkUpdateProxiesRequest: ModelsBulkUpdateProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
+            return localVarFp.proxiesBulkUpdatePut(modelsBulkUpdateProxiesRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Retrieve a list of proxies with optional filtering by protocol, status, and health
@@ -659,7 +659,7 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesGet(limit?: number, offset?: number, protocol?: string, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<Array<GithubComFntelecomllcStudioBackendInternalModelsProxy>> {
+        proxiesGet(limit?: number, offset?: number, protocol?: string, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<Array<ModelsProxy>> {
             return localVarFp.proxiesGet(limit, offset, protocol, isEnabled, isHealthy, options).then((request) => request(axios, basePath));
         },
         /**
@@ -674,12 +674,12 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
         /**
          * Add a new proxy configuration
          * @summary Create proxy
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest} githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest Proxy creation request
+         * @param {ModelsCreateProxyRequest} modelsCreateProxyRequest Proxy creation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesPost(githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest: GithubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxy> {
-            return localVarFp.proxiesPost(githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest, options).then((request) => request(axios, basePath));
+        proxiesPost(modelsCreateProxyRequest: ModelsCreateProxyRequest, options?: RawAxiosRequestConfig): AxiosPromise<ModelsProxy> {
+            return localVarFp.proxiesPost(modelsCreateProxyRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Delete a proxy configuration
@@ -705,12 +705,12 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * Update an existing proxy configuration
          * @summary Update proxy
          * @param {string} proxyId Proxy ID
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest} githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest Proxy update request
+         * @param {ModelsUpdateProxyRequest} modelsUpdateProxyRequest Proxy update request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesProxyIdPut(proxyId: string, githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest: GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxy> {
-            return localVarFp.proxiesProxyIdPut(proxyId, githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest, options).then((request) => request(axios, basePath));
+        proxiesProxyIdPut(proxyId: string, modelsUpdateProxyRequest: ModelsUpdateProxyRequest, options?: RawAxiosRequestConfig): AxiosPromise<ModelsProxy> {
+            return localVarFp.proxiesProxyIdPut(proxyId, modelsUpdateProxyRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Test a proxy configuration to verify it works correctly
@@ -743,32 +743,32 @@ export interface ProxiesApiInterface {
     /**
      * Delete multiple proxy configurations simultaneously
      * @summary Bulk delete proxies
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest Bulk proxy delete request
+     * @param {ModelsBulkDeleteProxiesRequest} modelsBulkDeleteProxiesRequest Bulk proxy delete request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
+    proxiesBulkDeleteDelete(modelsBulkDeleteProxiesRequest: ModelsBulkDeleteProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Test multiple proxy configurations simultaneously
      * @summary Bulk test proxies
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest} githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest Bulk proxy test request
+     * @param {ModelsBulkTestProxiesRequest} modelsBulkTestProxiesRequest Bulk proxy test request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesBulkTestPost(githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiBulkProxyTestResponse>;
+    proxiesBulkTestPost(modelsBulkTestProxiesRequest: ModelsBulkTestProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiBulkProxyTestResponse>;
 
     /**
      * Update multiple proxy configurations simultaneously
      * @summary Bulk update proxies
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest} githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest Bulk proxy update request
+     * @param {ModelsBulkUpdateProxiesRequest} modelsBulkUpdateProxiesRequest Bulk proxy update request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
+    proxiesBulkUpdatePut(modelsBulkUpdateProxiesRequest: ModelsBulkUpdateProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Retrieve a list of proxies with optional filtering by protocol, status, and health
@@ -782,7 +782,7 @@ export interface ProxiesApiInterface {
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesGet(limit?: number, offset?: number, protocol?: string, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<Array<GithubComFntelecomllcStudioBackendInternalModelsProxy>>;
+    proxiesGet(limit?: number, offset?: number, protocol?: string, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<Array<ModelsProxy>>;
 
     /**
      * Force health checks on all registered proxies
@@ -796,12 +796,12 @@ export interface ProxiesApiInterface {
     /**
      * Add a new proxy configuration
      * @summary Create proxy
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest} githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest Proxy creation request
+     * @param {ModelsCreateProxyRequest} modelsCreateProxyRequest Proxy creation request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesPost(githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest: GithubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxy>;
+    proxiesPost(modelsCreateProxyRequest: ModelsCreateProxyRequest, options?: RawAxiosRequestConfig): AxiosPromise<ModelsProxy>;
 
     /**
      * Delete a proxy configuration
@@ -827,12 +827,12 @@ export interface ProxiesApiInterface {
      * Update an existing proxy configuration
      * @summary Update proxy
      * @param {string} proxyId Proxy ID
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest} githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest Proxy update request
+     * @param {ModelsUpdateProxyRequest} modelsUpdateProxyRequest Proxy update request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesProxyIdPut(proxyId: string, githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest: GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxy>;
+    proxiesProxyIdPut(proxyId: string, modelsUpdateProxyRequest: ModelsUpdateProxyRequest, options?: RawAxiosRequestConfig): AxiosPromise<ModelsProxy>;
 
     /**
      * Test a proxy configuration to verify it works correctly
@@ -865,37 +865,37 @@ export class ProxiesApi extends BaseAPI implements ProxiesApiInterface {
     /**
      * Delete multiple proxy configurations simultaneously
      * @summary Bulk delete proxies
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest Bulk proxy delete request
+     * @param {ModelsBulkDeleteProxiesRequest} modelsBulkDeleteProxiesRequest Bulk proxy delete request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApi
      */
-    public proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest, options?: RawAxiosRequestConfig) {
-        return ProxiesApiFp(this.configuration).proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest, options).then((request) => request(this.axios, this.basePath));
+    public proxiesBulkDeleteDelete(modelsBulkDeleteProxiesRequest: ModelsBulkDeleteProxiesRequest, options?: RawAxiosRequestConfig) {
+        return ProxiesApiFp(this.configuration).proxiesBulkDeleteDelete(modelsBulkDeleteProxiesRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Test multiple proxy configurations simultaneously
      * @summary Bulk test proxies
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest} githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest Bulk proxy test request
+     * @param {ModelsBulkTestProxiesRequest} modelsBulkTestProxiesRequest Bulk proxy test request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApi
      */
-    public proxiesBulkTestPost(githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest, options?: RawAxiosRequestConfig) {
-        return ProxiesApiFp(this.configuration).proxiesBulkTestPost(githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest, options).then((request) => request(this.axios, this.basePath));
+    public proxiesBulkTestPost(modelsBulkTestProxiesRequest: ModelsBulkTestProxiesRequest, options?: RawAxiosRequestConfig) {
+        return ProxiesApiFp(this.configuration).proxiesBulkTestPost(modelsBulkTestProxiesRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Update multiple proxy configurations simultaneously
      * @summary Bulk update proxies
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest} githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest Bulk proxy update request
+     * @param {ModelsBulkUpdateProxiesRequest} modelsBulkUpdateProxiesRequest Bulk proxy update request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApi
      */
-    public proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest, options?: RawAxiosRequestConfig) {
-        return ProxiesApiFp(this.configuration).proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest, options).then((request) => request(this.axios, this.basePath));
+    public proxiesBulkUpdatePut(modelsBulkUpdateProxiesRequest: ModelsBulkUpdateProxiesRequest, options?: RawAxiosRequestConfig) {
+        return ProxiesApiFp(this.configuration).proxiesBulkUpdatePut(modelsBulkUpdateProxiesRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -928,13 +928,13 @@ export class ProxiesApi extends BaseAPI implements ProxiesApiInterface {
     /**
      * Add a new proxy configuration
      * @summary Create proxy
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest} githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest Proxy creation request
+     * @param {ModelsCreateProxyRequest} modelsCreateProxyRequest Proxy creation request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApi
      */
-    public proxiesPost(githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest: GithubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest, options?: RawAxiosRequestConfig) {
-        return ProxiesApiFp(this.configuration).proxiesPost(githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest, options).then((request) => request(this.axios, this.basePath));
+    public proxiesPost(modelsCreateProxyRequest: ModelsCreateProxyRequest, options?: RawAxiosRequestConfig) {
+        return ProxiesApiFp(this.configuration).proxiesPost(modelsCreateProxyRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -965,13 +965,13 @@ export class ProxiesApi extends BaseAPI implements ProxiesApiInterface {
      * Update an existing proxy configuration
      * @summary Update proxy
      * @param {string} proxyId Proxy ID
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest} githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest Proxy update request
+     * @param {ModelsUpdateProxyRequest} modelsUpdateProxyRequest Proxy update request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ProxiesApi
      */
-    public proxiesProxyIdPut(proxyId: string, githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest: GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest, options?: RawAxiosRequestConfig) {
-        return ProxiesApiFp(this.configuration).proxiesProxyIdPut(proxyId, githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest, options).then((request) => request(this.axios, this.basePath));
+    public proxiesProxyIdPut(proxyId: string, modelsUpdateProxyRequest: ModelsUpdateProxyRequest, options?: RawAxiosRequestConfig) {
+        return ProxiesApiFp(this.configuration).proxiesProxyIdPut(proxyId, modelsUpdateProxyRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

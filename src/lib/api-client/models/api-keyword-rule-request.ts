@@ -15,7 +15,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsKeywordRuleTypeEnum } from './github-com-fntelecomllc-studio-backend-internal-models-keyword-rule-type-enum';
+import type { ModelsKeywordRuleTypeEnum } from './models-keyword-rule-type-enum';
 
 /**
  * 
@@ -49,10 +49,10 @@ export interface ApiKeywordRuleRequest {
     'pattern': string;
     /**
      * 
-     * @type {GithubComFntelecomllcStudioBackendInternalModelsKeywordRuleTypeEnum}
+     * @type {ModelsKeywordRuleTypeEnum}
      * @memberof ApiKeywordRuleRequest
      */
-    'ruleType': GithubComFntelecomllcStudioBackendInternalModelsKeywordRuleTypeEnum;
+    'ruleType': ModelsKeywordRuleTypeEnum;
 }
 
 

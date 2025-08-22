@@ -17,10 +17,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Proxy, UpdateProxyRequest } from '@/lib/api-client/models';
+import type { GithubComFntelecomllcStudioBackendInternalModelsProxy as ProxyType } from '@/lib/api-client/models';
+import type { GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest as UpdateProxyRequest } from '@/lib/api-client/models';
 
 // Type aliases for better readability
-import { apiClient } from '@/lib/api-client/apis';
+import { useUpdateProxyMutation } from '@/store/api/proxyApi';
 import { useToast } from '@/hooks/use-toast';
 // THIN CLIENT: Removed AuthContext - backend handles auth
 import { Loader2 } from "lucide-react";
@@ -48,13 +49,14 @@ const proxyFormSchema = z.object({
 type ProxyFormValues = z.infer<typeof proxyFormSchema>;
 
 interface ProxyFormProps {
-  proxyToEdit?: Proxy | null;
+  proxyToEdit?: ProxyType | null;
   onSaveSuccess: () => void;
   onCancel: () => void;
 }
 
 export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: ProxyFormProps) {
   const { toast } = useToast();
+  const [updateProxy] = useUpdateProxyMutation();
   // THIN CLIENT: Removed useAuth - backend handles authentication
   const user = null; // Backend provides user data when needed
   const isEditing = !!proxyToEdit;
@@ -111,31 +113,25 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
           toast({ title: "Error", description: "Invalid proxy ID", variant: "destructive" });
           return;
         }
-        response = await updateProxy(proxyToEdit.id, payload);
+        response = await updateProxy({ proxyId: proxyToEdit.id, request: payload });
       } else {
-        if (!data.name?.trim()) {
-          toast({ title: "Error", description: "Name is required", variant: "destructive" });
-          return;
-        }
-        const payload = {
-          name: data.name.trim(),
-          description: data.description,
-          address: data.address,
-          protocol: data.protocol,
-          username: data.username,
-          password: data.password,
-          countryCode: data.countryCode,
-          notes: data.notes,
-          isEnabled: data.userEnabled,
-          initialStatus: data.initialStatus || 'Disabled',
-        };
-        response = await createProxy(payload);
+        // CREATE FUNCTIONALITY NOT IMPLEMENTED
+        toast({ 
+          title: "Feature Not Available", 
+          description: "Proxy creation is not yet implemented. Please use the API directly.", 
+          variant: "destructive" 
+        });
+        return;
       }
 
-      if (response.success === true && response.data) {
+      if (response && 'data' in response) {
         onSaveSuccess();
       } else {
-        toast({ title: `Error ${isEditing ? "Updating" : "Creating"} Proxy`, description: (typeof response.error === 'string' ? response.error : response.error?.message) || "Operation failed.", variant: "destructive" });
+        toast({ 
+          title: `Error ${isEditing ? "Updating" : "Creating"} Proxy`, 
+          description: "Operation failed. Please try again.", 
+          variant: "destructive" 
+        });
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";

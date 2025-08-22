@@ -7,7 +7,7 @@
 import type { components } from '@/lib/api-client/types';
 
 // Use backend OpenAPI type - no frontend duplication
-type DomainGenerationParams = components['schemas']['DomainGenerationParams'];
+type DomainGenerationParams = components['schemas']['models.DomainGenerationPhaseConfig'];
 
 // Constants for SLD validation
 const MAX_SLD_LENGTH = 63;
@@ -24,7 +24,7 @@ export function getDomainGenerationPhaseConfigHash(config: DomainGenerationParam
     pt: config.patternType,
     cs: config.constantString,
     charset: Array.from(new Set((config.characterSet || '').split(''))).sort().join(''),
-    tld: config.tld,
+    tlds: config.tlds?.sort() || [],
     vl: config.variableLength || 0,
     ndtg: config.numDomainsToGenerate || 0
   };
@@ -160,5 +160,7 @@ export function domainFromIndex(index: number, config: DomainGenerationParams): 
     // Validate the SLD
     if (!isValidSld(sld)) return null;
     
-    return sld + config.tld;
+    // Use the first TLD if available, otherwise return just the SLD
+    const tld = config.tlds?.[0] || '.com';
+    return sld + tld;
 }

@@ -1,7 +1,10 @@
 
 "use client";
 
-import type { Proxy, ProxyStatus } from '@/lib/api-client/models';
+import type { GithubComFntelecomllcStudioBackendInternalModelsProxy as ProxyType } from '@/lib/api-client/models';
+
+// Define proxy status type based on common proxy states
+type ProxyStatus = 'Active' | 'Disabled' | 'Failed' | 'Testing';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,11 +15,11 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 interface ProxyListItemProps {
-  proxy: Proxy;
-  onEdit: (proxy: Proxy) => void;
-  onDelete: (proxy: Proxy) => void;
+  proxy: ProxyType;
+  onEdit: (proxy: ProxyType) => void;
+  onDelete: (proxy: ProxyType) => void;
   onTest: (proxyId: string) => void;
-  onToggleStatus: (proxy: Proxy, newStatus: 'Active' | 'Disabled') => void;
+  onToggleStatus: (proxy: ProxyType, newStatus: 'Active' | 'Disabled') => void;
   isLoading?: boolean;
 }
 

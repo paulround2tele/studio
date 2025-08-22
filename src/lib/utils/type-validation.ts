@@ -5,11 +5,11 @@
 import type { components } from '@/lib/api-client/types';
 
 // Use OpenAPI types exclusively - no manual duplications
-type Campaign = components['schemas']['LeadGenerationCampaign'];
-type User = components['schemas']['User'];
-type GeneratedDomain = components['schemas']['GeneratedDomain'];
-type DNSValidationResult = components['schemas']['DNSValidationResult'];
-type HTTPKeywordResult = components['schemas']['HTTPKeywordResult'];
+type Campaign = components['schemas']['api.CampaignSummary'];
+type User = components['schemas']['api.UserPublicResponse'];
+type GeneratedDomain = components['schemas']['github_com_fntelecomllc_studio_backend_internal_models.DomainGenerationResult'];
+type DNSValidationResult = components['schemas']['github_com_fntelecomllc_studio_backend_internal_models.DNSValidationOperation'];
+type HTTPKeywordResult = components['schemas']['github_com_fntelecomllc_studio_backend_internal_models.HTTPValidationOperation'];
 
 // Extract union types from OpenAPI for validation
 type CampaignPhase = NonNullable<Campaign['currentPhase']>;
@@ -18,7 +18,8 @@ type PersonaType = 'dns' | 'http'; // From OpenAPI PersonaResponse
 type ProxyProtocol = 'http' | 'https' | 'socks5' | 'socks4'; // From OpenAPI Proxy
 
 // Use OpenAPI types if available, otherwise minimal types for validation only
-type Session = components['schemas']['Session'] | components['schemas']['SessionData'] | {
+// Session types - use API response types
+type Session = components['schemas']['api.SessionResponse'] | {
   id: string;
   userId: string;
   isActive: boolean;

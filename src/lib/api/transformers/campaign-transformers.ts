@@ -1,7 +1,7 @@
 // Campaign transformer functions for API responses
 import type { components } from '@/lib/api-client/types';
 
-type Campaign = components['schemas']['LeadGenerationCampaign'];
+type Campaign = components['schemas']['api.CampaignSummary'];
 
 /**
  * Transforms a single campaign response from API format
@@ -13,9 +13,6 @@ export function transformCampaignResponse(campaign: any): Campaign {
   return {
     ...campaign,
     totalItems: campaign.totalItems ? Number(campaign.totalItems) : undefined,
-    completedItems: campaign.completedItems ? Number(campaign.completedItems) : undefined,
-    pendingItems: campaign.pendingItems ? Number(campaign.pendingItems) : undefined,
-    errorItems: campaign.errorItems ? Number(campaign.errorItems) : undefined,
   };
 }
 

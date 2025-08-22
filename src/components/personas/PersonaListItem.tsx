@@ -6,11 +6,17 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { ApiPersonaResponse } from '@/lib/api-client/models';
+import type { HTTPConfigDetails } from '@/lib/api-client/models/httpconfig-details';
+import type { DNSConfigDetails } from '@/lib/api-client/models/dnsconfig-details';
+
+// Type for the actual persona data we receive from the API
+type PersonaItem = ApiPersonaResponse;
+
+// Status type derived from the API
+type PersonaStatus = 'Active' | 'Disabled' | 'Testing' | 'Failed';
 import type { HTTPPersona } from '@/lib/api-client/models/httppersona';
 import type { DNSPersona } from '@/lib/api-client/models/dnspersona';
 
-// Type alias for persona status from the generated interface
-type PersonaStatus = 'Active' | 'Disabled' | 'Testing' | 'Failed';
 import { FilePenLine, Trash2, MoreVertical, Copy, Globe, Tag, Clock, Settings2, Wifi, TestTubeDiagonal, Power, PowerOff, FileJson, AlertCircle, CheckCircle, HelpCircle, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
@@ -31,11 +37,11 @@ import { format, formatDistance } from 'date-fns';
 
 interface PersonaListItemProps {
   persona: ApiPersonaResponse;
-  onDelete: (personaId: string, personaType: 'http' | 'dns') => void;
-  onTest: (personaId: string, personaType: 'http' | 'dns') => void;
-  onToggleStatus: (personaId: string, personaType: 'http' | 'dns', newStatus: PersonaStatus) => void;
-  isTesting: boolean;
-  isTogglingStatus: boolean;
+  onDelete: (id: string, personaType: 'http' | 'dns') => void;
+  onTest: (id: string, personaType: 'http' | 'dns') => void;
+  onToggleStatus: (id: string, personaType: 'http' | 'dns', newStatus: PersonaStatus | undefined) => void;
+  isTesting?: boolean;
+  isTogglingStatus?: boolean;
 }
 
 const getStatusBadgeInfo = (isEnabled: boolean | undefined): { variant: "default" | "secondary" | "destructive" | "outline", icon: JSX.Element, text: string } => {
@@ -49,9 +55,10 @@ const getStatusBadgeInfo = (isEnabled: boolean | undefined): { variant: "default
 };
 
 
-export default function PersonaListItem({ persona, onDelete, onTest, onToggleStatus, isTesting, isTogglingStatus }: PersonaListItemProps) {
+export default function PersonaListItem({ persona, onDelete, onTest, onToggleStatus, isTesting = false, isTogglingStatus = false }: PersonaListItemProps) {
   const { toast } = useToast();
   const statusInfo = getStatusBadgeInfo(persona.isEnabled);
+  const isActionDisabled = isTesting || isTogglingStatus;
 
   const handleDelete = () => {
     if (persona.id && persona.personaType) onDelete(persona.id, persona.personaType as "http" | "dns");
@@ -100,11 +107,12 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
     });
   };
 
-  const renderHttpPersonaDetails = (p: HTTPPersona) => {
-    const config = (p.configDetails as unknown as import('@/lib/types').HTTPConfigDetails) || {
+  const renderHttpPersonaDetails = (p: PersonaItem) => {
+    // Type assert the configDetails to HTTPConfigDetails since we know this is an HTTP persona
+    const config = (p.configDetails as HTTPConfigDetails) || {
       userAgent: 'Not set',
       headers: {},
-      timeout: 30000,
+      requestTimeoutSeconds: 30,
       followRedirects: true,
       maxRedirects: 5
     };
@@ -130,8 +138,9 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
     );
   };
 
-  const renderDnsPersonaDetails = (p: DNSPersona) => {
-    const config = p.configDetails as import('@/lib/types').DNSConfigDetails;
+  const renderDnsPersonaDetails = (p: PersonaItem) => {
+    // Type assert the configDetails to DNSConfigDetails since we know this is a DNS persona
+    const config = p.configDetails as DNSConfigDetails;
     return (
       <>
         <div className="text-sm space-y-1 mb-3">
@@ -161,8 +170,6 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
     );
   };
 
-  const isActionDisabled = isTesting || isTogglingStatus;
-
   return (
     <Card className="shadow-md hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
       <CardHeader className="flex flex-row items-start justify-between gap-2 pb-3">
@@ -186,16 +193,16 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
                 <FilePenLine className="mr-2 h-4 w-4" /> Edit
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => persona.id && persona.personaType && onTest(persona.id, persona.personaType as "http" | "dns")} disabled={isActionDisabled || !persona.id || !persona.personaType}>
+            <DropdownMenuItem onClick={() => onTest(persona.id!, persona.personaType as 'http' | 'dns')} disabled={isActionDisabled || !persona.id || !persona.personaType}>
               {isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <TestTubeDiagonal className="mr-2 h-4 w-4" />} Test Persona
             </DropdownMenuItem>
             {persona.isEnabled && (
-                <DropdownMenuItem onClick={() => persona.id && persona.personaType && onToggleStatus(persona.id, persona.personaType as "http" | "dns", 'Disabled')} disabled={isActionDisabled || !persona.id || !persona.personaType}>
+                <DropdownMenuItem onClick={() => onToggleStatus(persona.id!, persona.personaType as 'http' | 'dns', 'Disabled')} disabled={isActionDisabled || !persona.id || !persona.personaType}>
                    {isTogglingStatus ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PowerOff className="mr-2 h-4 w-4" />} Disable Persona
                 </DropdownMenuItem>
             )}
             {!persona.isEnabled && (
-                 <DropdownMenuItem onClick={() => persona.id && persona.personaType && onToggleStatus(persona.id, persona.personaType as "http" | "dns", 'Active')} disabled={isActionDisabled || !persona.id || !persona.personaType}>
+                 <DropdownMenuItem onClick={() => onToggleStatus(persona.id!, persona.personaType as 'http' | 'dns', 'Active')} disabled={isActionDisabled || !persona.id || !persona.personaType}>
                     {isTogglingStatus ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Power className="mr-2 h-4 w-4" />} Enable Persona
                 </DropdownMenuItem>
             )}
@@ -240,7 +247,7 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
             </Badge>
         </div>
 
-        {persona.personaType === 'http' ? renderHttpPersonaDetails(persona as HTTPPersona) : renderDnsPersonaDetails(persona as DNSPersona)}
+        {persona.personaType === 'http' ? renderHttpPersonaDetails(persona as any) : renderDnsPersonaDetails(persona as any)}
         
       </CardContent>
       <CardFooter className="text-xs text-muted-foreground border-t pt-3">

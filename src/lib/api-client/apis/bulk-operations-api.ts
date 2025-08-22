@@ -30,17 +30,17 @@ import type { ApiOperationCancellationResponse } from '../models';
 // @ts-ignore
 import type { BulkValidateDNS200Response } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest } from '../models';
+import type { ModelsBulkAnalyticsRequest } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest } from '../models';
+import type { ModelsBulkDNSValidationRequest } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest } from '../models';
+import type { ModelsBulkDomainGenerationRequest } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest } from '../models';
+import type { ModelsBulkHTTPValidationRequest } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkOperationStatus } from '../models';
+import type { ModelsBulkOperationStatus } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest } from '../models';
+import type { ModelsBulkResourceRequest } from '../models';
 /**
  * BulkOperationsApi - axios parameter creator
  * @export
@@ -50,13 +50,13 @@ export const BulkOperationsApiAxiosParamCreator = function (configuration?: Conf
         /**
          * Allocate compute, network, and storage resources for bulk campaign operations with priority scheduling
          * @summary Allocate bulk resources for enterprise operations
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest} githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest Bulk resource allocation request
+         * @param {ModelsBulkResourceRequest} modelsBulkResourceRequest Bulk resource allocation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        allocateBulkResources: async (githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest' is not null or undefined
-            assertParamExists('allocateBulkResources', 'githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest', githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest)
+        allocateBulkResources: async (modelsBulkResourceRequest: ModelsBulkResourceRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'modelsBulkResourceRequest' is not null or undefined
+            assertParamExists('allocateBulkResources', 'modelsBulkResourceRequest', modelsBulkResourceRequest)
             const localVarPath = `/campaigns/bulk/resources/allocate`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -76,7 +76,7 @@ export const BulkOperationsApiAxiosParamCreator = function (configuration?: Conf
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(modelsBulkResourceRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -86,13 +86,13 @@ export const BulkOperationsApiAxiosParamCreator = function (configuration?: Conf
         /**
          * Perform comprehensive analytics across multiple campaigns with advanced metrics and aggregation
          * @summary Analyze domains in bulk with enterprise intelligence
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest} githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest Bulk analytics request
+         * @param {ModelsBulkAnalyticsRequest} modelsBulkAnalyticsRequest Bulk analytics request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkAnalyzeDomains: async (githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest' is not null or undefined
-            assertParamExists('bulkAnalyzeDomains', 'githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest', githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest)
+        bulkAnalyzeDomains: async (modelsBulkAnalyticsRequest: ModelsBulkAnalyticsRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'modelsBulkAnalyticsRequest' is not null or undefined
+            assertParamExists('bulkAnalyzeDomains', 'modelsBulkAnalyticsRequest', modelsBulkAnalyticsRequest)
             const localVarPath = `/campaigns/bulk/analytics/analyze`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -112,7 +112,7 @@ export const BulkOperationsApiAxiosParamCreator = function (configuration?: Conf
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(modelsBulkAnalyticsRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -122,13 +122,13 @@ export const BulkOperationsApiAxiosParamCreator = function (configuration?: Conf
         /**
          * Generate large batches of domains with stealth-aware configuration and resource management
          * @summary Generate domains in bulk using orchestrator
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest Bulk domain generation request
+         * @param {ModelsBulkDomainGenerationRequest} modelsBulkDomainGenerationRequest Bulk domain generation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkGenerateDomains: async (githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest' is not null or undefined
-            assertParamExists('bulkGenerateDomains', 'githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest', githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest)
+        bulkGenerateDomains: async (modelsBulkDomainGenerationRequest: ModelsBulkDomainGenerationRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'modelsBulkDomainGenerationRequest' is not null or undefined
+            assertParamExists('bulkGenerateDomains', 'modelsBulkDomainGenerationRequest', modelsBulkDomainGenerationRequest)
             const localVarPath = `/campaigns/bulk/domains/generate`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -148,7 +148,7 @@ export const BulkOperationsApiAxiosParamCreator = function (configuration?: Conf
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(modelsBulkDomainGenerationRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -158,13 +158,13 @@ export const BulkOperationsApiAxiosParamCreator = function (configuration?: Conf
         /**
          * Perform bulk DNS validation with stealth detection avoidance and resource optimization
          * @summary Validate domains using bulk DNS validation with stealth
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest Bulk DNS validation request
+         * @param {ModelsBulkDNSValidationRequest} modelsBulkDNSValidationRequest Bulk DNS validation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkValidateDNS: async (githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest' is not null or undefined
-            assertParamExists('bulkValidateDNS', 'githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest', githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest)
+        bulkValidateDNS: async (modelsBulkDNSValidationRequest: ModelsBulkDNSValidationRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'modelsBulkDNSValidationRequest' is not null or undefined
+            assertParamExists('bulkValidateDNS', 'modelsBulkDNSValidationRequest', modelsBulkDNSValidationRequest)
             const localVarPath = `/api/v2/campaigns/bulk/domains/validate-dns`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -184,7 +184,7 @@ export const BulkOperationsApiAxiosParamCreator = function (configuration?: Conf
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(modelsBulkDNSValidationRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -194,13 +194,13 @@ export const BulkOperationsApiAxiosParamCreator = function (configuration?: Conf
         /**
          * Perform bulk HTTP validation with keyword extraction, stealth detection avoidance, and resource optimization
          * @summary Validate domains using bulk HTTP validation with stealth
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest Bulk HTTP validation request
+         * @param {ModelsBulkHTTPValidationRequest} modelsBulkHTTPValidationRequest Bulk HTTP validation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkValidateHTTP: async (githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest' is not null or undefined
-            assertParamExists('bulkValidateHTTP', 'githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest', githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest)
+        bulkValidateHTTP: async (modelsBulkHTTPValidationRequest: ModelsBulkHTTPValidationRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'modelsBulkHTTPValidationRequest' is not null or undefined
+            assertParamExists('bulkValidateHTTP', 'modelsBulkHTTPValidationRequest', modelsBulkHTTPValidationRequest)
             const localVarPath = `/api/v2/campaigns/bulk/domains/validate-http`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -220,7 +220,7 @@ export const BulkOperationsApiAxiosParamCreator = function (configuration?: Conf
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(modelsBulkHTTPValidationRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -408,12 +408,12 @@ export const BulkOperationsApiFp = function(configuration?: Configuration) {
         /**
          * Allocate compute, network, and storage resources for bulk campaign operations with priority scheduling
          * @summary Allocate bulk resources for enterprise operations
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest} githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest Bulk resource allocation request
+         * @param {ModelsBulkResourceRequest} modelsBulkResourceRequest Bulk resource allocation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options);
+        async allocateBulkResources(modelsBulkResourceRequest: ModelsBulkResourceRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.allocateBulkResources(modelsBulkResourceRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['BulkOperationsApi.allocateBulkResources']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -421,12 +421,12 @@ export const BulkOperationsApiFp = function(configuration?: Configuration) {
         /**
          * Perform comprehensive analytics across multiple campaigns with advanced metrics and aggregation
          * @summary Analyze domains in bulk with enterprise intelligence
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest} githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest Bulk analytics request
+         * @param {ModelsBulkAnalyticsRequest} modelsBulkAnalyticsRequest Bulk analytics request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options);
+        async bulkAnalyzeDomains(modelsBulkAnalyticsRequest: ModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkAnalyzeDomains(modelsBulkAnalyticsRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['BulkOperationsApi.bulkAnalyzeDomains']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -434,12 +434,12 @@ export const BulkOperationsApiFp = function(configuration?: Configuration) {
         /**
          * Generate large batches of domains with stealth-aware configuration and resource management
          * @summary Generate domains in bulk using orchestrator
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest Bulk domain generation request
+         * @param {ModelsBulkDomainGenerationRequest} modelsBulkDomainGenerationRequest Bulk domain generation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options);
+        async bulkGenerateDomains(modelsBulkDomainGenerationRequest: ModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkGenerateDomains(modelsBulkDomainGenerationRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['BulkOperationsApi.bulkGenerateDomains']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -447,12 +447,12 @@ export const BulkOperationsApiFp = function(configuration?: Configuration) {
         /**
          * Perform bulk DNS validation with stealth detection avoidance and resource optimization
          * @summary Validate domains using bulk DNS validation with stealth
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest Bulk DNS validation request
+         * @param {ModelsBulkDNSValidationRequest} modelsBulkDNSValidationRequest Bulk DNS validation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async bulkValidateDNS(githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkValidateDNS(githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest, options);
+        async bulkValidateDNS(modelsBulkDNSValidationRequest: ModelsBulkDNSValidationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkValidateDNS(modelsBulkDNSValidationRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['BulkOperationsApi.bulkValidateDNS']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -460,12 +460,12 @@ export const BulkOperationsApiFp = function(configuration?: Configuration) {
         /**
          * Perform bulk HTTP validation with keyword extraction, stealth detection avoidance, and resource optimization
          * @summary Validate domains using bulk HTTP validation with stealth
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest Bulk HTTP validation request
+         * @param {ModelsBulkHTTPValidationRequest} modelsBulkHTTPValidationRequest Bulk HTTP validation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async bulkValidateHTTP(githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkValidateHTTP(githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest, options);
+        async bulkValidateHTTP(modelsBulkHTTPValidationRequest: ModelsBulkHTTPValidationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkValidateHTTP(modelsBulkHTTPValidationRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['BulkOperationsApi.bulkValidateHTTP']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -492,7 +492,7 @@ export const BulkOperationsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getBulkOperationStatus(operationId: string, body?: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkOperationStatus>> {
+        async getBulkOperationStatus(operationId: string, body?: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ModelsBulkOperationStatus>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getBulkOperationStatus(operationId, body, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['BulkOperationsApi.getBulkOperationStatus']?.[localVarOperationServerIndex]?.url;
@@ -542,52 +542,52 @@ export const BulkOperationsApiFactory = function (configuration?: Configuration,
         /**
          * Allocate compute, network, and storage resources for bulk campaign operations with priority scheduling
          * @summary Allocate bulk resources for enterprise operations
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest} githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest Bulk resource allocation request
+         * @param {ModelsBulkResourceRequest} modelsBulkResourceRequest Bulk resource allocation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
-            return localVarFp.allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options).then((request) => request(axios, basePath));
+        allocateBulkResources(modelsBulkResourceRequest: ModelsBulkResourceRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
+            return localVarFp.allocateBulkResources(modelsBulkResourceRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Perform comprehensive analytics across multiple campaigns with advanced metrics and aggregation
          * @summary Analyze domains in bulk with enterprise intelligence
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest} githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest Bulk analytics request
+         * @param {ModelsBulkAnalyticsRequest} modelsBulkAnalyticsRequest Bulk analytics request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
-            return localVarFp.bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options).then((request) => request(axios, basePath));
+        bulkAnalyzeDomains(modelsBulkAnalyticsRequest: ModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
+            return localVarFp.bulkAnalyzeDomains(modelsBulkAnalyticsRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Generate large batches of domains with stealth-aware configuration and resource management
          * @summary Generate domains in bulk using orchestrator
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest Bulk domain generation request
+         * @param {ModelsBulkDomainGenerationRequest} modelsBulkDomainGenerationRequest Bulk domain generation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
-            return localVarFp.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options).then((request) => request(axios, basePath));
+        bulkGenerateDomains(modelsBulkDomainGenerationRequest: ModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
+            return localVarFp.bulkGenerateDomains(modelsBulkDomainGenerationRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Perform bulk DNS validation with stealth detection avoidance and resource optimization
          * @summary Validate domains using bulk DNS validation with stealth
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest Bulk DNS validation request
+         * @param {ModelsBulkDNSValidationRequest} modelsBulkDNSValidationRequest Bulk DNS validation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkValidateDNS(githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
-            return localVarFp.bulkValidateDNS(githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest, options).then((request) => request(axios, basePath));
+        bulkValidateDNS(modelsBulkDNSValidationRequest: ModelsBulkDNSValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
+            return localVarFp.bulkValidateDNS(modelsBulkDNSValidationRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Perform bulk HTTP validation with keyword extraction, stealth detection avoidance, and resource optimization
          * @summary Validate domains using bulk HTTP validation with stealth
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest Bulk HTTP validation request
+         * @param {ModelsBulkHTTPValidationRequest} modelsBulkHTTPValidationRequest Bulk HTTP validation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkValidateHTTP(githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
-            return localVarFp.bulkValidateHTTP(githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest, options).then((request) => request(axios, basePath));
+        bulkValidateHTTP(modelsBulkHTTPValidationRequest: ModelsBulkHTTPValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
+            return localVarFp.bulkValidateHTTP(modelsBulkHTTPValidationRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Cancel running bulk operations and release allocated resources
@@ -608,7 +608,7 @@ export const BulkOperationsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getBulkOperationStatus(operationId: string, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkOperationStatus> {
+        getBulkOperationStatus(operationId: string, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<ModelsBulkOperationStatus> {
             return localVarFp.getBulkOperationStatus(operationId, body, options).then((request) => request(axios, basePath));
         },
         /**
@@ -648,52 +648,52 @@ export interface BulkOperationsApiInterface {
     /**
      * Allocate compute, network, and storage resources for bulk campaign operations with priority scheduling
      * @summary Allocate bulk resources for enterprise operations
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest} githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest Bulk resource allocation request
+     * @param {ModelsBulkResourceRequest} modelsBulkResourceRequest Bulk resource allocation request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof BulkOperationsApiInterface
      */
-    allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
+    allocateBulkResources(modelsBulkResourceRequest: ModelsBulkResourceRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Perform comprehensive analytics across multiple campaigns with advanced metrics and aggregation
      * @summary Analyze domains in bulk with enterprise intelligence
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest} githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest Bulk analytics request
+     * @param {ModelsBulkAnalyticsRequest} modelsBulkAnalyticsRequest Bulk analytics request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof BulkOperationsApiInterface
      */
-    bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
+    bulkAnalyzeDomains(modelsBulkAnalyticsRequest: ModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Generate large batches of domains with stealth-aware configuration and resource management
      * @summary Generate domains in bulk using orchestrator
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest Bulk domain generation request
+     * @param {ModelsBulkDomainGenerationRequest} modelsBulkDomainGenerationRequest Bulk domain generation request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof BulkOperationsApiInterface
      */
-    bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
+    bulkGenerateDomains(modelsBulkDomainGenerationRequest: ModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Perform bulk DNS validation with stealth detection avoidance and resource optimization
      * @summary Validate domains using bulk DNS validation with stealth
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest Bulk DNS validation request
+     * @param {ModelsBulkDNSValidationRequest} modelsBulkDNSValidationRequest Bulk DNS validation request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof BulkOperationsApiInterface
      */
-    bulkValidateDNS(githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
+    bulkValidateDNS(modelsBulkDNSValidationRequest: ModelsBulkDNSValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Perform bulk HTTP validation with keyword extraction, stealth detection avoidance, and resource optimization
      * @summary Validate domains using bulk HTTP validation with stealth
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest Bulk HTTP validation request
+     * @param {ModelsBulkHTTPValidationRequest} modelsBulkHTTPValidationRequest Bulk HTTP validation request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof BulkOperationsApiInterface
      */
-    bulkValidateHTTP(githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
+    bulkValidateHTTP(modelsBulkHTTPValidationRequest: ModelsBulkHTTPValidationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Cancel running bulk operations and release allocated resources
@@ -715,7 +715,7 @@ export interface BulkOperationsApiInterface {
      * @throws {RequiredError}
      * @memberof BulkOperationsApiInterface
      */
-    getBulkOperationStatus(operationId: string, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsBulkOperationStatus>;
+    getBulkOperationStatus(operationId: string, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<ModelsBulkOperationStatus>;
 
     /**
      * Get current status and utilization of allocated bulk resources
@@ -754,61 +754,61 @@ export class BulkOperationsApi extends BaseAPI implements BulkOperationsApiInter
     /**
      * Allocate compute, network, and storage resources for bulk campaign operations with priority scheduling
      * @summary Allocate bulk resources for enterprise operations
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest} githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest Bulk resource allocation request
+     * @param {ModelsBulkResourceRequest} modelsBulkResourceRequest Bulk resource allocation request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof BulkOperationsApi
      */
-    public allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options?: RawAxiosRequestConfig) {
-        return BulkOperationsApiFp(this.configuration).allocateBulkResources(githubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest, options).then((request) => request(this.axios, this.basePath));
+    public allocateBulkResources(modelsBulkResourceRequest: ModelsBulkResourceRequest, options?: RawAxiosRequestConfig) {
+        return BulkOperationsApiFp(this.configuration).allocateBulkResources(modelsBulkResourceRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Perform comprehensive analytics across multiple campaigns with advanced metrics and aggregation
      * @summary Analyze domains in bulk with enterprise intelligence
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest} githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest Bulk analytics request
+     * @param {ModelsBulkAnalyticsRequest} modelsBulkAnalyticsRequest Bulk analytics request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof BulkOperationsApi
      */
-    public bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig) {
-        return BulkOperationsApiFp(this.configuration).bulkAnalyzeDomains(githubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest, options).then((request) => request(this.axios, this.basePath));
+    public bulkAnalyzeDomains(modelsBulkAnalyticsRequest: ModelsBulkAnalyticsRequest, options?: RawAxiosRequestConfig) {
+        return BulkOperationsApiFp(this.configuration).bulkAnalyzeDomains(modelsBulkAnalyticsRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Generate large batches of domains with stealth-aware configuration and resource management
      * @summary Generate domains in bulk using orchestrator
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest Bulk domain generation request
+     * @param {ModelsBulkDomainGenerationRequest} modelsBulkDomainGenerationRequest Bulk domain generation request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof BulkOperationsApi
      */
-    public bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig) {
-        return BulkOperationsApiFp(this.configuration).bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options).then((request) => request(this.axios, this.basePath));
+    public bulkGenerateDomains(modelsBulkDomainGenerationRequest: ModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig) {
+        return BulkOperationsApiFp(this.configuration).bulkGenerateDomains(modelsBulkDomainGenerationRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Perform bulk DNS validation with stealth detection avoidance and resource optimization
      * @summary Validate domains using bulk DNS validation with stealth
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest Bulk DNS validation request
+     * @param {ModelsBulkDNSValidationRequest} modelsBulkDNSValidationRequest Bulk DNS validation request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof BulkOperationsApi
      */
-    public bulkValidateDNS(githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest, options?: RawAxiosRequestConfig) {
-        return BulkOperationsApiFp(this.configuration).bulkValidateDNS(githubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest, options).then((request) => request(this.axios, this.basePath));
+    public bulkValidateDNS(modelsBulkDNSValidationRequest: ModelsBulkDNSValidationRequest, options?: RawAxiosRequestConfig) {
+        return BulkOperationsApiFp(this.configuration).bulkValidateDNS(modelsBulkDNSValidationRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * Perform bulk HTTP validation with keyword extraction, stealth detection avoidance, and resource optimization
      * @summary Validate domains using bulk HTTP validation with stealth
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest Bulk HTTP validation request
+     * @param {ModelsBulkHTTPValidationRequest} modelsBulkHTTPValidationRequest Bulk HTTP validation request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof BulkOperationsApi
      */
-    public bulkValidateHTTP(githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest, options?: RawAxiosRequestConfig) {
-        return BulkOperationsApiFp(this.configuration).bulkValidateHTTP(githubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest, options).then((request) => request(this.axios, this.basePath));
+    public bulkValidateHTTP(modelsBulkHTTPValidationRequest: ModelsBulkHTTPValidationRequest, options?: RawAxiosRequestConfig) {
+        return BulkOperationsApiFp(this.configuration).bulkValidateHTTP(modelsBulkHTTPValidationRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

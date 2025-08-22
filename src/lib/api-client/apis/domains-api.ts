@@ -26,7 +26,7 @@ import type { ApiAPIResponse } from '../models';
 // @ts-ignore
 import type { BulkValidateDNS200Response } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest } from '../models';
+import type { ModelsBulkDomainGenerationRequest } from '../models';
 /**
  * DomainsApi - axios parameter creator
  * @export
@@ -36,13 +36,13 @@ export const DomainsApiAxiosParamCreator = function (configuration?: Configurati
         /**
          * Generate large batches of domains with stealth-aware configuration and resource management
          * @summary Generate domains in bulk using orchestrator
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest Bulk domain generation request
+         * @param {ModelsBulkDomainGenerationRequest} modelsBulkDomainGenerationRequest Bulk domain generation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkGenerateDomains: async (githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest' is not null or undefined
-            assertParamExists('bulkGenerateDomains', 'githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest', githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest)
+        bulkGenerateDomains: async (modelsBulkDomainGenerationRequest: ModelsBulkDomainGenerationRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'modelsBulkDomainGenerationRequest' is not null or undefined
+            assertParamExists('bulkGenerateDomains', 'modelsBulkDomainGenerationRequest', modelsBulkDomainGenerationRequest)
             const localVarPath = `/campaigns/bulk/domains/generate`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -62,7 +62,7 @@ export const DomainsApiAxiosParamCreator = function (configuration?: Configurati
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(modelsBulkDomainGenerationRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -82,12 +82,12 @@ export const DomainsApiFp = function(configuration?: Configuration) {
         /**
          * Generate large batches of domains with stealth-aware configuration and resource management
          * @summary Generate domains in bulk using orchestrator
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest Bulk domain generation request
+         * @param {ModelsBulkDomainGenerationRequest} modelsBulkDomainGenerationRequest Bulk domain generation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options);
+        async bulkGenerateDomains(modelsBulkDomainGenerationRequest: ModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkGenerateDomains(modelsBulkDomainGenerationRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DomainsApi.bulkGenerateDomains']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -105,12 +105,12 @@ export const DomainsApiFactory = function (configuration?: Configuration, basePa
         /**
          * Generate large batches of domains with stealth-aware configuration and resource management
          * @summary Generate domains in bulk using orchestrator
-         * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest Bulk domain generation request
+         * @param {ModelsBulkDomainGenerationRequest} modelsBulkDomainGenerationRequest Bulk domain generation request
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
-            return localVarFp.bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options).then((request) => request(axios, basePath));
+        bulkGenerateDomains(modelsBulkDomainGenerationRequest: ModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
+            return localVarFp.bulkGenerateDomains(modelsBulkDomainGenerationRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -124,12 +124,12 @@ export interface DomainsApiInterface {
     /**
      * Generate large batches of domains with stealth-aware configuration and resource management
      * @summary Generate domains in bulk using orchestrator
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest Bulk domain generation request
+     * @param {ModelsBulkDomainGenerationRequest} modelsBulkDomainGenerationRequest Bulk domain generation request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DomainsApiInterface
      */
-    bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
+    bulkGenerateDomains(modelsBulkDomainGenerationRequest: ModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
 }
 
@@ -143,13 +143,13 @@ export class DomainsApi extends BaseAPI implements DomainsApiInterface {
     /**
      * Generate large batches of domains with stealth-aware configuration and resource management
      * @summary Generate domains in bulk using orchestrator
-     * @param {GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest} githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest Bulk domain generation request
+     * @param {ModelsBulkDomainGenerationRequest} modelsBulkDomainGenerationRequest Bulk domain generation request
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DomainsApi
      */
-    public bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig) {
-        return DomainsApiFp(this.configuration).bulkGenerateDomains(githubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest, options).then((request) => request(this.axios, this.basePath));
+    public bulkGenerateDomains(modelsBulkDomainGenerationRequest: ModelsBulkDomainGenerationRequest, options?: RawAxiosRequestConfig) {
+        return DomainsApiFp(this.configuration).bulkGenerateDomains(modelsBulkDomainGenerationRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

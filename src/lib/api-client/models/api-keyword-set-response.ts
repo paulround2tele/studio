@@ -15,7 +15,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsKeywordRule } from './github-com-fntelecomllc-studio-backend-internal-models-keyword-rule';
+import type { ModelsKeywordRule } from './models-keyword-rule';
 
 /**
  * 
@@ -61,10 +61,10 @@ export interface ApiKeywordSetResponse {
     'ruleCount'?: number;
     /**
      * 
-     * @type {Array<GithubComFntelecomllcStudioBackendInternalModelsKeywordRule>}
+     * @type {Array<ModelsKeywordRule>}
      * @memberof ApiKeywordSetResponse
      */
-    'rules'?: Array<GithubComFntelecomllcStudioBackendInternalModelsKeywordRule>;
+    'rules'?: Array<ModelsKeywordRule>;
     /**
      * 
      * @type {string}

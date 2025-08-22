@@ -17,7 +17,7 @@ All URIs are relative to *http://localhost:8080/api/v2*
 |[**proxiesStatusGet**](#proxiesstatusget) | **GET** /proxies/status | Get proxy statuses|
 
 # **proxiesBulkDeleteDelete**
-> BulkValidateDNS200Response proxiesBulkDeleteDelete(githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest)
+> BulkValidateDNS200Response proxiesBulkDeleteDelete(modelsBulkDeleteProxiesRequest)
 
 Delete multiple proxy configurations simultaneously
 
@@ -27,16 +27,16 @@ Delete multiple proxy configurations simultaneously
 import {
     ProxiesApi,
     Configuration,
-    GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest
+    ModelsBulkDeleteProxiesRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-let githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest; //Bulk proxy delete request
+let modelsBulkDeleteProxiesRequest: ModelsBulkDeleteProxiesRequest; //Bulk proxy delete request
 
 const { status, data } = await apiInstance.proxiesBulkDeleteDelete(
-    githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest
+    modelsBulkDeleteProxiesRequest
 );
 ```
 
@@ -44,7 +44,7 @@ const { status, data } = await apiInstance.proxiesBulkDeleteDelete(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **githubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest** | **GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest**| Bulk proxy delete request | |
+| **modelsBulkDeleteProxiesRequest** | **ModelsBulkDeleteProxiesRequest**| Bulk proxy delete request | |
 
 
 ### Return type
@@ -71,7 +71,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesBulkTestPost**
-> ApiBulkProxyTestResponse proxiesBulkTestPost(githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest)
+> ApiBulkProxyTestResponse proxiesBulkTestPost(modelsBulkTestProxiesRequest)
 
 Test multiple proxy configurations simultaneously
 
@@ -81,16 +81,16 @@ Test multiple proxy configurations simultaneously
 import {
     ProxiesApi,
     Configuration,
-    GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest
+    ModelsBulkTestProxiesRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-let githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest; //Bulk proxy test request
+let modelsBulkTestProxiesRequest: ModelsBulkTestProxiesRequest; //Bulk proxy test request
 
 const { status, data } = await apiInstance.proxiesBulkTestPost(
-    githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest
+    modelsBulkTestProxiesRequest
 );
 ```
 
@@ -98,7 +98,7 @@ const { status, data } = await apiInstance.proxiesBulkTestPost(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **githubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest** | **GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest**| Bulk proxy test request | |
+| **modelsBulkTestProxiesRequest** | **ModelsBulkTestProxiesRequest**| Bulk proxy test request | |
 
 
 ### Return type
@@ -125,7 +125,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesBulkUpdatePut**
-> BulkValidateDNS200Response proxiesBulkUpdatePut(githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest)
+> BulkValidateDNS200Response proxiesBulkUpdatePut(modelsBulkUpdateProxiesRequest)
 
 Update multiple proxy configurations simultaneously
 
@@ -135,16 +135,16 @@ Update multiple proxy configurations simultaneously
 import {
     ProxiesApi,
     Configuration,
-    GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest
+    ModelsBulkUpdateProxiesRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-let githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest: GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest; //Bulk proxy update request
+let modelsBulkUpdateProxiesRequest: ModelsBulkUpdateProxiesRequest; //Bulk proxy update request
 
 const { status, data } = await apiInstance.proxiesBulkUpdatePut(
-    githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest
+    modelsBulkUpdateProxiesRequest
 );
 ```
 
@@ -152,7 +152,7 @@ const { status, data } = await apiInstance.proxiesBulkUpdatePut(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **githubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest** | **GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest**| Bulk proxy update request | |
+| **modelsBulkUpdateProxiesRequest** | **ModelsBulkUpdateProxiesRequest**| Bulk proxy update request | |
 
 
 ### Return type
@@ -179,7 +179,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesGet**
-> Array<GithubComFntelecomllcStudioBackendInternalModelsProxy> proxiesGet()
+> Array<ModelsProxy> proxiesGet()
 
 Retrieve a list of proxies with optional filtering by protocol, status, and health
 
@@ -222,7 +222,7 @@ const { status, data } = await apiInstance.proxiesGet(
 
 ### Return type
 
-**Array<GithubComFntelecomllcStudioBackendInternalModelsProxy>**
+**Array<ModelsProxy>**
 
 ### Authorization
 
@@ -288,7 +288,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesPost**
-> GithubComFntelecomllcStudioBackendInternalModelsProxy proxiesPost(githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest)
+> ModelsProxy proxiesPost(modelsCreateProxyRequest)
 
 Add a new proxy configuration
 
@@ -298,16 +298,16 @@ Add a new proxy configuration
 import {
     ProxiesApi,
     Configuration,
-    GithubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest
+    ModelsCreateProxyRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-let githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest: GithubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest; //Proxy creation request
+let modelsCreateProxyRequest: ModelsCreateProxyRequest; //Proxy creation request
 
 const { status, data } = await apiInstance.proxiesPost(
-    githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest
+    modelsCreateProxyRequest
 );
 ```
 
@@ -315,12 +315,12 @@ const { status, data } = await apiInstance.proxiesPost(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **githubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest** | **GithubComFntelecomllcStudioBackendInternalModelsCreateProxyRequest**| Proxy creation request | |
+| **modelsCreateProxyRequest** | **ModelsCreateProxyRequest**| Proxy creation request | |
 
 
 ### Return type
 
-**GithubComFntelecomllcStudioBackendInternalModelsProxy**
+**ModelsProxy**
 
 ### Authorization
 
@@ -451,7 +451,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesProxyIdPut**
-> GithubComFntelecomllcStudioBackendInternalModelsProxy proxiesProxyIdPut(githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest)
+> ModelsProxy proxiesProxyIdPut(modelsUpdateProxyRequest)
 
 Update an existing proxy configuration
 
@@ -461,18 +461,18 @@ Update an existing proxy configuration
 import {
     ProxiesApi,
     Configuration,
-    GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest
+    ModelsUpdateProxyRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
 let proxyId: string; //Proxy ID (default to undefined)
-let githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest: GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest; //Proxy update request
+let modelsUpdateProxyRequest: ModelsUpdateProxyRequest; //Proxy update request
 
 const { status, data } = await apiInstance.proxiesProxyIdPut(
     proxyId,
-    githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest
+    modelsUpdateProxyRequest
 );
 ```
 
@@ -480,13 +480,13 @@ const { status, data } = await apiInstance.proxiesProxyIdPut(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **githubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest** | **GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest**| Proxy update request | |
+| **modelsUpdateProxyRequest** | **ModelsUpdateProxyRequest**| Proxy update request | |
 | **proxyId** | [**string**] | Proxy ID | defaults to undefined|
 
 
 ### Return type
 
-**GithubComFntelecomllcStudioBackendInternalModelsProxy**
+**ModelsProxy**
 
 ### Authorization
 

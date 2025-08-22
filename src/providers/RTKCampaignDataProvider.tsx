@@ -1,7 +1,10 @@
 "use client";
 
 import React, { createContext, useContext, useMemo, ReactNode } from 'react';
-import { useGetCampaignsStandaloneQuery, useGetBulkEnrichedCampaignDataQuery } from '@/store/api/campaignApi';
+import { campaignApi } from '@/store/api/campaignApi';
+
+// Destructure hooks from the API
+const { useGetCampaignsStandaloneQuery, useGetBulkEnrichedCampaignDataQuery } = campaignApi;
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 import type { BulkEnrichedDataResponse } from '@/lib/api-client/models';
 

@@ -31,13 +31,13 @@ import {
   Activity,
   Loader2
 } from 'lucide-react';
-import type { Proxy } from '@/lib/api-client/models';
-import { apiClient } from '@/lib/api-client/apis';
+import type { GithubComFntelecomllcStudioBackendInternalModelsProxy as ProxyType } from '@/lib/api-client/models';
+import { useTestProxyMutation } from '@/store/api/proxyApi';
 import { useToast } from '@/hooks/use-toast';
 import { useProxyHealth } from '@/lib/hooks/useProxyHealth';
 
 export interface ProxyTestingProps {
-  proxies: Proxy[];
+  proxies: ProxyType[];
   onProxiesUpdate: () => void;
   disabled?: boolean;
 }
@@ -64,6 +64,7 @@ interface TestSession {
 
 export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: ProxyTestingProps) {
   const { toast } = useToast();
+  const [testProxy] = useTestProxyMutation();
   const { 
     healthMetrics, 
     runHealthChecks,
@@ -164,7 +165,7 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
   /**
    * Test a single proxy
    */
-  const testSingleProxy = useCallback(async (proxy: Proxy, sessionId: string): Promise<void> => {
+  const testSingleProxy = useCallback(async (proxy: ProxyType, sessionId: string): Promise<void> => {
     const startTime = Date.now();
     
     try {
@@ -174,9 +175,9 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
       
       const result: TestResult = {
         proxyId: proxy.id || '',
-        success: response.success === true,
+        success: 'data' in response && !response.error,
         responseTime,
-        error: response.success === false ? (typeof response.error === 'string' ? response.error : response.error?.message) : undefined,
+        error: 'error' in response && response.error ? 'Test failed' : undefined,
         timestamp: new Date()
       };
 

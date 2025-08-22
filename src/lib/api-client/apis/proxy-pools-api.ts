@@ -26,9 +26,9 @@ import type { ApiProxyPoolMembershipResponse } from '../models';
 // @ts-ignore
 import type { ApiProxyPoolRequest } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsProxyPool } from '../models';
+import type { ModelsProxyPool } from '../models';
 // @ts-ignore
-import type { GithubComFntelecomllcStudioBackendInternalModelsProxyPoolMembership } from '../models';
+import type { ModelsProxyPoolMembership } from '../models';
 // @ts-ignore
 import type { ProxyPoolsPoolIdProxiesPostRequest } from '../models';
 /**
@@ -271,7 +271,7 @@ export const ProxyPoolsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async listProxyPools(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<GithubComFntelecomllcStudioBackendInternalModelsProxyPool>>> {
+        async listProxyPools(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ModelsProxyPool>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.listProxyPools(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxyPoolsApi.listProxyPools']?.[localVarOperationServerIndex]?.url;
@@ -298,7 +298,7 @@ export const ProxyPoolsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxyPoolsPoolIdProxiesPost(poolId: string, proxyPoolsPoolIdProxiesPostRequest: ProxyPoolsPoolIdProxiesPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxyPoolMembership>> {
+        async proxyPoolsPoolIdProxiesPost(poolId: string, proxyPoolsPoolIdProxiesPostRequest: ProxyPoolsPoolIdProxiesPostRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ModelsProxyPoolMembership>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.proxyPoolsPoolIdProxiesPost(poolId, proxyPoolsPoolIdProxiesPostRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxyPoolsApi.proxyPoolsPoolIdProxiesPost']?.[localVarOperationServerIndex]?.url;
@@ -326,7 +326,7 @@ export const ProxyPoolsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxyPoolsPoolIdPut(poolId: string, apiProxyPoolRequest: ApiProxyPoolRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxyPool>> {
+        async proxyPoolsPoolIdPut(poolId: string, apiProxyPoolRequest: ApiProxyPoolRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ModelsProxyPool>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.proxyPoolsPoolIdPut(poolId, apiProxyPoolRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxyPoolsApi.proxyPoolsPoolIdPut']?.[localVarOperationServerIndex]?.url;
@@ -339,7 +339,7 @@ export const ProxyPoolsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxyPoolsPost(apiProxyPoolRequest: ApiProxyPoolRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxyPool>> {
+        async proxyPoolsPost(apiProxyPoolRequest: ApiProxyPoolRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ModelsProxyPool>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.proxyPoolsPost(apiProxyPoolRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxyPoolsApi.proxyPoolsPost']?.[localVarOperationServerIndex]?.url;
@@ -361,7 +361,7 @@ export const ProxyPoolsApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        listProxyPools(options?: RawAxiosRequestConfig): AxiosPromise<Array<GithubComFntelecomllcStudioBackendInternalModelsProxyPool>> {
+        listProxyPools(options?: RawAxiosRequestConfig): AxiosPromise<Array<ModelsProxyPool>> {
             return localVarFp.listProxyPools(options).then((request) => request(axios, basePath));
         },
         /**
@@ -382,7 +382,7 @@ export const ProxyPoolsApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxyPoolsPoolIdProxiesPost(poolId: string, proxyPoolsPoolIdProxiesPostRequest: ProxyPoolsPoolIdProxiesPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxyPoolMembership> {
+        proxyPoolsPoolIdProxiesPost(poolId: string, proxyPoolsPoolIdProxiesPostRequest: ProxyPoolsPoolIdProxiesPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ModelsProxyPoolMembership> {
             return localVarFp.proxyPoolsPoolIdProxiesPost(poolId, proxyPoolsPoolIdProxiesPostRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -404,7 +404,7 @@ export const ProxyPoolsApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxyPoolsPoolIdPut(poolId: string, apiProxyPoolRequest: ApiProxyPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxyPool> {
+        proxyPoolsPoolIdPut(poolId: string, apiProxyPoolRequest: ApiProxyPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<ModelsProxyPool> {
             return localVarFp.proxyPoolsPoolIdPut(poolId, apiProxyPoolRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -414,7 +414,7 @@ export const ProxyPoolsApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxyPoolsPost(apiProxyPoolRequest: ApiProxyPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxyPool> {
+        proxyPoolsPost(apiProxyPoolRequest: ApiProxyPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<ModelsProxyPool> {
             return localVarFp.proxyPoolsPost(apiProxyPoolRequest, options).then((request) => request(axios, basePath));
         },
     };
@@ -433,7 +433,7 @@ export interface ProxyPoolsApiInterface {
      * @throws {RequiredError}
      * @memberof ProxyPoolsApiInterface
      */
-    listProxyPools(options?: RawAxiosRequestConfig): AxiosPromise<Array<GithubComFntelecomllcStudioBackendInternalModelsProxyPool>>;
+    listProxyPools(options?: RawAxiosRequestConfig): AxiosPromise<Array<ModelsProxyPool>>;
 
     /**
      * Delete a proxy pool
@@ -454,7 +454,7 @@ export interface ProxyPoolsApiInterface {
      * @throws {RequiredError}
      * @memberof ProxyPoolsApiInterface
      */
-    proxyPoolsPoolIdProxiesPost(poolId: string, proxyPoolsPoolIdProxiesPostRequest: ProxyPoolsPoolIdProxiesPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxyPoolMembership>;
+    proxyPoolsPoolIdProxiesPost(poolId: string, proxyPoolsPoolIdProxiesPostRequest: ProxyPoolsPoolIdProxiesPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<ModelsProxyPoolMembership>;
 
     /**
      * Remove a proxy from a specific proxy pool
@@ -476,7 +476,7 @@ export interface ProxyPoolsApiInterface {
      * @throws {RequiredError}
      * @memberof ProxyPoolsApiInterface
      */
-    proxyPoolsPoolIdPut(poolId: string, apiProxyPoolRequest: ApiProxyPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxyPool>;
+    proxyPoolsPoolIdPut(poolId: string, apiProxyPoolRequest: ApiProxyPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<ModelsProxyPool>;
 
     /**
      * Create a new proxy pool with configuration settings
@@ -486,7 +486,7 @@ export interface ProxyPoolsApiInterface {
      * @throws {RequiredError}
      * @memberof ProxyPoolsApiInterface
      */
-    proxyPoolsPost(apiProxyPoolRequest: ApiProxyPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<GithubComFntelecomllcStudioBackendInternalModelsProxyPool>;
+    proxyPoolsPost(apiProxyPoolRequest: ApiProxyPoolRequest, options?: RawAxiosRequestConfig): AxiosPromise<ModelsProxyPool>;
 
 }
 

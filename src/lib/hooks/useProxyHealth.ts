@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ProxiesApi, Configuration } from '@/lib/api-client';
 import type { 
-  ApiResponse,
+  ApiAPIResponse,
   GithubComFntelecomllcStudioBackendInternalModelsProxy as Proxy,
   GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest,
   ApiBulkProxyTestResponse,
