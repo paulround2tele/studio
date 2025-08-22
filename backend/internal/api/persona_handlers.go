@@ -24,14 +24,14 @@ type CreatePersonaRequest struct {
 	Name          string                 `json:"name" validate:"required,min=1,max=255"`
 	PersonaType   models.PersonaTypeEnum `json:"personaType" validate:"required,oneof=dns http"`
 	Description   string                 `json:"description,omitempty"`
-	ConfigDetails interface{}            `json:"configDetails" validate:"required" swaggertype:"object"` // Accept structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig
+	ConfigDetails interface{}            `json:"configDetails" validate:"required" swaggertype:"object"` // Accept structured config as JSON - can be HTTPConfigDetails or DNSConfigDetails
 	IsEnabled     *bool                  `json:"isEnabled,omitempty"`
 }
 
 type UpdatePersonaRequest struct {
 	Name          *string     `json:"name,omitempty" validate:"omitempty,min=1,max=255"`
 	Description   *string     `json:"description,omitempty"`
-	ConfigDetails interface{} `json:"configDetails,omitempty" swaggertype:"object"` // Accept structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig
+	ConfigDetails interface{} `json:"configDetails,omitempty" swaggertype:"object"` // Accept structured config as JSON - can be HTTPConfigDetails or DNSConfigDetails
 	IsEnabled     *bool       `json:"isEnabled,omitempty"`
 }
 
@@ -42,7 +42,7 @@ type PersonaResponse struct {
 	Name          string                 `json:"name"`
 	PersonaType   models.PersonaTypeEnum `json:"personaType"`
 	Description   string                 `json:"description,omitempty"`
-	ConfigDetails interface{}            `json:"configDetails" swaggertype:"object"` // Return structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig
+	ConfigDetails interface{}            `json:"configDetails" swaggertype:"object"` // Return structured config as JSON - can be HTTPConfigDetails or DNSConfigDetails
 	IsEnabled     bool                   `json:"isEnabled"`
 	CreatedAt     time.Time              `json:"createdAt"`
 	UpdatedAt     time.Time              `json:"updatedAt"`
@@ -71,7 +71,7 @@ func toPersonaResponse(p *models.Persona) PersonaResponse {
 func parseConfigDetails(personaType models.PersonaTypeEnum, configDetails json.RawMessage) (json.RawMessage, error) {
 	switch personaType {
 	case models.PersonaTypeHTTP:
-		var httpConfig models.HttpPersonaConfig
+		var httpConfig models.HTTPConfigDetails
 		if err := json.Unmarshal(configDetails, &httpConfig); err != nil {
 			return nil, fmt.Errorf("invalid HTTP persona configuration: %w", err)
 		}
@@ -82,7 +82,7 @@ func parseConfigDetails(personaType models.PersonaTypeEnum, configDetails json.R
 		}
 		return validated, nil
 	case models.PersonaTypeDNS:
-		var dnsConfig models.DnsPersonaConfig
+		var dnsConfig models.DNSConfigDetails
 		if err := json.Unmarshal(configDetails, &dnsConfig); err != nil {
 			return nil, fmt.Errorf("invalid DNS persona configuration: %w", err)
 		}

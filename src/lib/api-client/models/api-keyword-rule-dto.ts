@@ -15,57 +15,63 @@
 
 
 /**
- * API response containing persona details
+ * 
  * @export
- * @interface ApiPersonaResponse
+ * @interface ApiKeywordRuleDTO
  */
-export interface ApiPersonaResponse {
-    /**
-     * Return structured config as JSON - can be HTTPConfigDetails or DNSConfigDetails
-     * @type {object}
-     * @memberof ApiPersonaResponse
-     */
-    'configDetails'?: object;
+export interface ApiKeywordRuleDTO {
     /**
      * 
      * @type {string}
-     * @memberof ApiPersonaResponse
+     * @memberof ApiKeywordRuleDTO
+     */
+    'category'?: string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiKeywordRuleDTO
+     */
+    'contextChars'?: number;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiKeywordRuleDTO
      */
     'createdAt'?: string;
     /**
      * 
      * @type {string}
-     * @memberof ApiPersonaResponse
-     */
-    'description'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiPersonaResponse
+     * @memberof ApiKeywordRuleDTO
      */
     'id'?: string;
     /**
      * 
      * @type {boolean}
-     * @memberof ApiPersonaResponse
+     * @memberof ApiKeywordRuleDTO
      */
-    'isEnabled'?: boolean;
+    'isCaseSensitive'?: boolean;
     /**
      * 
      * @type {string}
-     * @memberof ApiPersonaResponse
+     * @memberof ApiKeywordRuleDTO
      */
-    'name'?: string;
+    'keywordSetId'?: string;
     /**
      * 
      * @type {string}
-     * @memberof ApiPersonaResponse
+     * @memberof ApiKeywordRuleDTO
      */
-    'personaType'?: string;
+    'pattern'?: string;
     /**
      * 
      * @type {string}
-     * @memberof ApiPersonaResponse
+     * @memberof ApiKeywordRuleDTO
+     */
+    'ruleType'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiKeywordRuleDTO
      */
     'updatedAt'?: string;
 }

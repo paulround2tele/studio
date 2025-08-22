@@ -21,7 +21,7 @@
  */
 export interface ApiCreatePersonaRequest {
     /**
-     * Accept structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig
+     * Accept structured config as JSON - can be HTTPConfigDetails or DNSConfigDetails
      * @type {object}
      * @memberof ApiCreatePersonaRequest
      */

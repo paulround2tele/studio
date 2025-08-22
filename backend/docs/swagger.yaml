@@ -321,8 +321,8 @@ components:
     api.CreatePersonaRequest:
       properties:
         configDetails:
-          description: Accept structured config as JSON - can be HttpPersonaConfig
-            or DnsPersonaConfig
+          description: Accept structured config as JSON - can be HTTPConfigDetails
+            or DNSConfigDetails
           type: object
         description:
           type: string
@@ -593,28 +593,40 @@ components:
     api.KeywordExtractionAPIResult:
       properties:
         dnsPersonaIdUsed:
-          description: String UUID of persona used
           type: string
         error:
           type: string
         finalUrl:
           type: string
         httpPersonaIdUsed:
-          description: String UUID of persona used
           type: string
         keywordSetIdUsed:
           type: string
         matches:
           items:
-            $ref: '#/components/schemas/keywordextractor.KeywordExtractionResult'
+            $ref: '#/components/schemas/api.KeywordExtractionMatch'
           type: array
           uniqueItems: false
         proxyIdUsed:
-          description: String UUID of proxy used
           type: string
         statusCode:
           type: integer
         url:
+          type: string
+      type: object
+    api.KeywordExtractionMatch:
+      description: Keyword match result from content extraction
+      properties:
+        category:
+          type: string
+        contexts:
+          items:
+            type: string
+          type: array
+          uniqueItems: false
+        matchedPattern:
+          type: string
+        matchedText:
           type: string
       type: object
     api.KeywordExtractionRequestItem:
@@ -633,6 +645,27 @@ components:
       required:
       - keywordSetId
       - url
+      type: object
+    api.KeywordRuleDTO:
+      properties:
+        category:
+          type: string
+        contextChars:
+          type: integer
+        createdAt:
+          type: string
+        id:
+          type: string
+        isCaseSensitive:
+          type: boolean
+        keywordSetId:
+          type: string
+        pattern:
+          type: string
+        ruleType:
+          type: string
+        updatedAt:
+          type: string
       type: object
     api.KeywordRuleRequest:
       properties:
@@ -676,7 +709,7 @@ components:
           type: integer
         rules:
           items:
-            $ref: '#/components/schemas/models.KeywordRule'
+            $ref: '#/components/schemas/api.KeywordRuleDTO'
           type: array
           uniqueItems: false
         updatedAt:
@@ -785,8 +818,8 @@ components:
       description: API response containing persona details
       properties:
         configDetails:
-          description: Return structured config as JSON - can be HttpPersonaConfig
-            or DnsPersonaConfig
+          description: Return structured config as JSON - can be HTTPConfigDetails
+            or DNSConfigDetails
           type: object
         createdAt:
           type: string
@@ -1093,8 +1126,8 @@ components:
     api.UpdatePersonaRequest:
       properties:
         configDetails:
-          description: Accept structured config as JSON - can be HttpPersonaConfig
-            or DnsPersonaConfig
+          description: Accept structured config as JSON - can be HTTPConfigDetails
+            or DNSConfigDetails
           type: object
         description:
           type: string
@@ -1325,20 +1358,6 @@ components:
       properties:
         error:
           $ref: '#/components/schemas/api.ErrorInfo'
-      type: object
-    keywordextractor.KeywordExtractionResult:
-      properties:
-        category:
-          type: string
-        contexts:
-          items:
-            type: string
-          type: array
-          uniqueItems: false
-        matchedPattern:
-          type: string
-        matchedText:
-          type: string
       type: object
     models.AdvancedStealthPolicy:
       description: Enterprise-grade enhancements for Day 3
@@ -2383,17 +2402,7 @@ components:
         password:
           type: string
         protocol:
-          type: string
-          x-enum-comments:
-            ProxyProtocolHTTP: '@enum http'
-            ProxyProtocolHTTPS: '@enum https'
-            ProxyProtocolSOCKS4: '@enum socks4'
-            ProxyProtocolSOCKS5: '@enum socks5'
-          x-enum-varnames:
-          - ProxyProtocolHTTP
-          - ProxyProtocolHTTPS
-          - ProxyProtocolSOCKS5
-          - ProxyProtocolSOCKS4
+          $ref: '#/components/schemas/models.ProxyProtocolEnum'
         username:
           type: string
       required:
@@ -2683,31 +2692,6 @@ components:
       - campaignId
       - personaIds
       type: object
-    models.KeywordRule:
-      properties:
-        category:
-          type: string
-        contextChars:
-          minimum: 0
-          type: integer
-        createdAt:
-          type: string
-        id:
-          type: string
-        isCaseSensitive:
-          type: boolean
-        keywordSetId:
-          type: string
-        pattern:
-          type: string
-        ruleType:
-          $ref: '#/components/schemas/models.KeywordRuleTypeEnum'
-        updatedAt:
-          type: string
-      required:
-      - pattern
-      - ruleType
-      type: object
     models.KeywordRuleTypeEnum:
       enum:
       - string
@@ -2877,7 +2861,17 @@ components:
           description: Port number
           type: integer
         protocol:
-          $ref: '#/components/schemas/models.ProxyProtocolEnum'
+          type: string
+          x-enum-comments:
+            ProxyProtocolHTTP: '@enum http'
+            ProxyProtocolHTTPS: '@enum https'
+            ProxyProtocolSOCKS4: '@enum socks4'
+            ProxyProtocolSOCKS5: '@enum socks5'
+          x-enum-varnames:
+          - ProxyProtocolHTTP
+          - ProxyProtocolHTTPS
+          - ProxyProtocolSOCKS5
+          - ProxyProtocolSOCKS4
         provider:
           type: string
         status:
@@ -2893,56 +2887,6 @@ components:
       required:
       - address
       - name
-      type: object
-    models.ProxyPool:
-      properties:
-        createdAt:
-          type: string
-        description:
-          type: string
-        healthCheckEnabled:
-          type: boolean
-        healthCheckIntervalSeconds:
-          type: integer
-        id:
-          type: string
-        isEnabled:
-          type: boolean
-        maxRetries:
-          type: integer
-        name:
-          type: string
-        poolStrategy:
-          description: round_robin, random, weighted, failover
-          type: string
-        proxies:
-          description: Computed fields (not stored in DB)
-          items:
-            $ref: '#/components/schemas/models.Proxy'
-          type: array
-          uniqueItems: false
-        timeoutSeconds:
-          type: integer
-        updatedAt:
-          type: string
-      required:
-      - name
-      type: object
-    models.ProxyPoolMembership:
-      properties:
-        addedAt:
-          type: string
-        isActive:
-          type: boolean
-        poolId:
-          type: string
-        proxyId:
-          type: string
-        weight:
-          type: integer
-      required:
-      - poolId
-      - proxyId
       type: object
     models.ProxyProtocolEnum:
       type: string
@@ -3233,45 +3177,6 @@ components:
           - ProxyProtocolSOCKS5
           - ProxyProtocolSOCKS4
         username:
-          type: string
-      type: object
-    models.User:
-      description: User account information
-      properties:
-        avatarUrl:
-          type: string
-        createdAt:
-          type: string
-        email:
-          type: string
-        emailVerified:
-          type: boolean
-        firstName:
-          type: string
-        id:
-          type: string
-        isActive:
-          type: boolean
-        isLocked:
-          type: boolean
-        lastLoginAt:
-          type: string
-        lastLoginIp:
-          example: 192.168.1.1
-          type: string
-        lastName:
-          type: string
-        mfaEnabled:
-          description: MFA support fields
-          type: boolean
-        mfaLastUsedAt:
-          type: string
-        mustChangePassword:
-          type: boolean
-        name:
-          description: Computed fields (not stored in DB)
-          type: string
-        updatedAt:
           type: string
       type: object
     models.ValidationOperationResult:
@@ -4100,7 +4005,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/models.User'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Current user information
         "401":
           content:
@@ -4820,7 +4725,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/models.BulkOperationStatus'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Operation status retrieved successfully
         "404":
           content:
@@ -5149,8 +5054,25 @@ paths:
           content:
             application/json:
               schema:
-                additionalProperties:
-                  type: string
+                allOf:
+                - $ref: '#/components/schemas/data'
+                description: Standard API response envelope used by all endpoints
+                properties:
+                  data:
+                    description: Response data (only present on success)
+                    type: object
+                  error:
+                    $ref: '#/components/schemas/api.ErrorInfo'
+                  metadata:
+                    $ref: '#/components/schemas/api.Metadata'
+                  requestId:
+                    description: Unique request identifier for tracing
+                    example: req_1234567890abcdef
+                    type: string
+                  success:
+                    description: Indicates if the request was successful
+                    example: true
+                    type: boolean
                 type: object
           description: Invalid request body or validation failed
       summary: Batch keyword extraction
@@ -5863,7 +5785,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/models.Proxy'
+                  $ref: '#/components/schemas/api.ProxyDetailsResponse'
                 type: array
           description: List of proxies
         "500":
@@ -5891,7 +5813,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/models.Proxy'
+                $ref: '#/components/schemas/api.ProxyDetailsResponse'
           description: Created proxy
         "400":
           content:
@@ -5981,7 +5903,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/models.Proxy'
+                $ref: '#/components/schemas/api.ProxyDetailsResponse'
           description: Updated proxy
         "400":
           content:
@@ -6296,7 +6218,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/models.ProxyPool'
+                  $ref: '#/components/schemas/api.APIResponse'
                 type: array
           description: List of proxy pools
         "500":
@@ -6324,7 +6246,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/models.ProxyPool'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Created proxy pool
         "400":
           content:
@@ -6412,7 +6334,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/models.ProxyPool'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Updated proxy pool
         "400":
           content:
@@ -6468,7 +6390,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/models.ProxyPoolMembership'
+                $ref: '#/components/schemas/api.APIResponse'
           description: Created membership
         "400":
           content:

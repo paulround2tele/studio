@@ -1,6 +1,5 @@
 .gitignore
 .npmignore
-.openapi-generator-ignore
 api.ts
 apis/analytics-api.ts
 apis/authentication-api.ts
@@ -56,7 +55,9 @@ docs/ApiHTTPValidationConfig.md
 docs/ApiHealthCheckResponse.md
 docs/ApiHealthStatus.md
 docs/ApiKeywordExtractionAPIResult.md
+docs/ApiKeywordExtractionMatch.md
 docs/ApiKeywordExtractionRequestItem.md
+docs/ApiKeywordRuleDTO.md
 docs/ApiKeywordRuleRequest.md
 docs/ApiKeywordSetDeleteResponse.md
 docs/ApiKeywordSetResponse.md
@@ -112,7 +113,6 @@ docs/FeatureFlagsApi.md
 docs/HealthApi.md
 docs/KeywordExtractionApi.md
 docs/KeywordSetsApi.md
-docs/KeywordextractorKeywordExtractionResult.md
 docs/ManagementApi.md
 docs/ModelsAdvancedStealthPolicy.md
 docs/ModelsAggregatedAnalytics.md
@@ -169,7 +169,6 @@ docs/ModelsDomainGenerationResult.md
 docs/ModelsEnterpriseProxyStrategy.md
 docs/ModelsGenerationConstraints.md
 docs/ModelsHTTPValidationOperation.md
-docs/ModelsKeywordRule.md
 docs/ModelsKeywordRuleTypeEnum.md
 docs/ModelsLoginRequest.md
 docs/ModelsOperationProgress.md
@@ -178,8 +177,6 @@ docs/ModelsPhasePerformance.md
 docs/ModelsPhaseStatusEnum.md
 docs/ModelsPhaseTypeEnum.md
 docs/ModelsProxy.md
-docs/ModelsProxyPool.md
-docs/ModelsProxyPoolMembership.md
 docs/ModelsRequiredResources.md
 docs/ModelsResourceAllocationResult.md
 docs/ModelsResourceLimits.md
@@ -192,7 +189,6 @@ docs/ModelsTimeRangeFilter.md
 docs/ModelsTimeSeriesMetricValues.md
 docs/ModelsTimeSeriesPoint.md
 docs/ModelsUpdateProxyRequest.md
-docs/ModelsUser.md
 docs/ModelsValidationOperationResult.md
 docs/MonitoringApi.md
 docs/PersonasApi.md
@@ -238,7 +234,9 @@ models/api-health-check-response.ts
 models/api-health-status.ts
 models/api-httpvalidation-config.ts
 models/api-keyword-extraction-apiresult.ts
+models/api-keyword-extraction-match.ts
 models/api-keyword-extraction-request-item.ts
+models/api-keyword-rule-dto.ts
 models/api-keyword-rule-request.ts
 models/api-keyword-set-delete-response.ts
 models/api-keyword-set-response.ts
@@ -285,7 +283,6 @@ models/config-rate-limiter-config.ts
 models/config-worker-config.ts
 models/data.ts
 models/index.ts
-models/keywordextractor-keyword-extraction-result.ts
 models/model-error.ts
 models/models-advanced-stealth-policy.ts
 models/models-aggregated-analytics.ts
@@ -343,15 +340,12 @@ models/models-enterprise-proxy-strategy.ts
 models/models-generation-constraints.ts
 models/models-httpvalidation-operation.ts
 models/models-keyword-rule-type-enum.ts
-models/models-keyword-rule.ts
 models/models-login-request.ts
 models/models-operation-progress.ts
 models/models-phase-metrics.ts
 models/models-phase-performance.ts
 models/models-phase-status-enum.ts
 models/models-phase-type-enum.ts
-models/models-proxy-pool-membership.ts
-models/models-proxy-pool.ts
 models/models-proxy.ts
 models/models-required-resources.ts
 models/models-resource-allocation-result.ts
@@ -365,7 +359,6 @@ models/models-time-series-metric-values.ts
 models/models-time-series-point.ts
 models/models-tldperformance.ts
 models/models-update-proxy-request.ts
-models/models-user.ts
 models/models-validation-operation-result.ts
 models/proxy-pools-pool-id-proxies-post-request.ts
 models/services-create-lead-generation-campaign-request.ts

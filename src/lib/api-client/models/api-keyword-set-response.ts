@@ -15,7 +15,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { ModelsKeywordRule } from './models-keyword-rule';
+import type { ApiKeywordRuleDTO } from './api-keyword-rule-dto';
 
 /**
  * 
@@ -61,10 +61,10 @@ export interface ApiKeywordSetResponse {
     'ruleCount'?: number;
     /**
      * 
-     * @type {Array<ModelsKeywordRule>}
+     * @type {Array<ApiKeywordRuleDTO>}
      * @memberof ApiKeywordSetResponse
      */
-    'rules'?: Array<ModelsKeywordRule>;
+    'rules'?: Array<ApiKeywordRuleDTO>;
     /**
      * 
      * @type {string}

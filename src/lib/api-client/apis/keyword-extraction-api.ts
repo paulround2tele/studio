@@ -25,6 +25,8 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 import type { ApiBatchKeywordExtractionRequest } from '../models';
 // @ts-ignore
 import type { ApiBatchKeywordExtractionResponse } from '../models';
+// @ts-ignore
+import type { BulkValidateDNS200Response } from '../models';
 /**
  * KeywordExtractionApi - axios parameter creator
  * @export

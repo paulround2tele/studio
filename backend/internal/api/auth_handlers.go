@@ -206,7 +206,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 // @Tags authentication
 // @ID getCurrentUser
 // @Produce json
-// @Success 200 {object} models.User "Current user information"
+// @Success 200 {object} api.APIResponse "Current user information"
 // @Failure 401 {object} api.APIResponse "Authentication required"
 // @Failure 404 {object} api.APIResponse "User not found"
 // @Failure 500 {object} api.APIResponse "Internal server error"
@@ -260,8 +260,15 @@ func (h *AuthHandler) Me(c *gin.Context) {
 		}
 	}
 
-	// Return simplified user information (no roles/permissions)
-	respondWithJSONGin(c, http.StatusOK, user.PublicUser())
+	// Return simplified user information explicitly as API DTO
+	pub := user.PublicUser()
+	resp := UserPublicResponse{
+		ID:       pub.ID.String(),
+		Username: pub.Name,
+		Email:    pub.Email,
+		IsActive: pub.IsActive,
+	}
+	respondWithJSONGin(c, http.StatusOK, resp)
 }
 
 // ChangePassword handles password change requests.

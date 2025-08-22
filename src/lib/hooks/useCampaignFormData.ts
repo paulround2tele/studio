@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { Campaign, ApiPersonaResponse } from '@/lib/api-client/models';
-import type { GithubComFntelecomllcStudioBackendInternalModelsProxy } from '@/lib/api-client/models';
+import type { components } from '@/lib/api-client/types';
 import { apiClient } from '@/lib/api-client/client';
 // import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms'; // DISABLED during cleanup
 

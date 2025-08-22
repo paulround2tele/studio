@@ -29,8 +29,6 @@ import type { BulkValidateDNS200Response } from '../models';
 import type { ModelsChangePasswordRequest } from '../models';
 // @ts-ignore
 import type { ModelsLoginRequest } from '../models';
-// @ts-ignore
-import type { ModelsUser } from '../models';
 /**
  * AuthenticationApi - axios parameter creator
  * @export
@@ -228,7 +226,7 @@ export const AuthenticationApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getCurrentUser(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ModelsUser>> {
+        async getCurrentUser(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiAPIResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getCurrentUser(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthenticationApi.getCurrentUser']?.[localVarOperationServerIndex]?.url;
@@ -297,7 +295,7 @@ export const AuthenticationApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getCurrentUser(options?: RawAxiosRequestConfig): AxiosPromise<ModelsUser> {
+        getCurrentUser(options?: RawAxiosRequestConfig): AxiosPromise<ApiAPIResponse> {
             return localVarFp.getCurrentUser(options).then((request) => request(axios, basePath));
         },
         /**
@@ -354,7 +352,7 @@ export interface AuthenticationApiInterface {
      * @throws {RequiredError}
      * @memberof AuthenticationApiInterface
      */
-    getCurrentUser(options?: RawAxiosRequestConfig): AxiosPromise<ModelsUser>;
+    getCurrentUser(options?: RawAxiosRequestConfig): AxiosPromise<ApiAPIResponse>;
 
     /**
      * Authenticate user credentials and create session

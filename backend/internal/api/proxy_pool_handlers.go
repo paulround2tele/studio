@@ -31,7 +31,7 @@ type ProxyPoolRequest struct {
 // @Tags proxy-pools
 // @ID listProxyPools
 // @Produce json
-// @Success 200 {array} models.ProxyPool "List of proxy pools"
+// @Success 200 {array} APIResponse "List of proxy pools"
 // @Failure 500 {object} map[string]string "Failed to list proxy pools"
 // @Router /proxy-pools [get]
 func (h *APIHandler) ListProxyPoolsGin(c *gin.Context) {
@@ -60,7 +60,7 @@ func (h *APIHandler) ListProxyPoolsGin(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body ProxyPoolRequest true "Proxy pool creation request"
-// @Success 201 {object} models.ProxyPool "Created proxy pool"
+// @Success 201 {object} APIResponse "Created proxy pool"
 // @Failure 400 {object} map[string]string "Invalid request payload"
 // @Failure 500 {object} map[string]string "Failed to create pool"
 // @Router /proxy-pools [post]
@@ -120,7 +120,7 @@ func (h *APIHandler) CreateProxyPoolGin(c *gin.Context) {
 // @Produce json
 // @Param poolId path string true "Proxy pool ID"
 // @Param request body ProxyPoolRequest true "Proxy pool update request"
-// @Success 200 {object} models.ProxyPool "Updated proxy pool"
+// @Success 200 {object} APIResponse "Updated proxy pool"
 // @Failure 400 {object} map[string]string "Invalid ID or request payload"
 // @Failure 404 {object} map[string]string "Pool not found"
 // @Failure 500 {object} map[string]string "Failed to update pool"
@@ -231,7 +231,7 @@ func (h *APIHandler) DeleteProxyPoolGin(c *gin.Context) {
 // @Produce json
 // @Param poolId path string true "Proxy pool ID"
 // @Param request body object{proxyId=string,weight=int} true "Proxy assignment request"
-// @Success 201 {object} models.ProxyPoolMembership "Created membership"
+// @Success 201 {object} APIResponse "Created membership"
 // @Failure 400 {object} map[string]string "Invalid pool ID, payload, or proxy ID"
 // @Failure 500 {object} map[string]string "Failed to add proxy"
 // @Router /proxy-pools/{poolId}/proxies [post]

@@ -241,7 +241,7 @@ func (h *BulkResourcesAPIHandler) CancelBulkOperation(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param operationId path string true "Bulk operation ID"
-// @Success 200 {object} models.BulkOperationStatus "Operation status retrieved successfully"
+// @Success 200 {object} APIResponse "Operation status retrieved successfully"
 // @Failure 404 {object} APIResponse "Operation not found"
 // @Failure 500 {object} APIResponse "Internal Server Error"
 // @Router /campaigns/bulk/operations/{operationId}/status [get]

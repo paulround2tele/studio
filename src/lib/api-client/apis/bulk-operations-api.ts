@@ -38,8 +38,6 @@ import type { ModelsBulkDomainGenerationRequest } from '../models';
 // @ts-ignore
 import type { ModelsBulkHTTPValidationRequest } from '../models';
 // @ts-ignore
-import type { ModelsBulkOperationStatus } from '../models';
-// @ts-ignore
 import type { ModelsBulkResourceRequest } from '../models';
 /**
  * BulkOperationsApi - axios parameter creator
@@ -492,7 +490,7 @@ export const BulkOperationsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getBulkOperationStatus(operationId: string, body?: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ModelsBulkOperationStatus>> {
+        async getBulkOperationStatus(operationId: string, body?: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiAPIResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getBulkOperationStatus(operationId, body, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['BulkOperationsApi.getBulkOperationStatus']?.[localVarOperationServerIndex]?.url;
@@ -608,7 +606,7 @@ export const BulkOperationsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getBulkOperationStatus(operationId: string, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<ModelsBulkOperationStatus> {
+        getBulkOperationStatus(operationId: string, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<ApiAPIResponse> {
             return localVarFp.getBulkOperationStatus(operationId, body, options).then((request) => request(axios, basePath));
         },
         /**
@@ -715,7 +713,7 @@ export interface BulkOperationsApiInterface {
      * @throws {RequiredError}
      * @memberof BulkOperationsApiInterface
      */
-    getBulkOperationStatus(operationId: string, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<ModelsBulkOperationStatus>;
+    getBulkOperationStatus(operationId: string, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<ApiAPIResponse>;
 
     /**
      * Get current status and utilization of allocated bulk resources

@@ -179,7 +179,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesGet**
-> Array<ModelsProxy> proxiesGet()
+> Array<ApiProxyDetailsResponse> proxiesGet()
 
 Retrieve a list of proxies with optional filtering by protocol, status, and health
 
@@ -222,7 +222,7 @@ const { status, data } = await apiInstance.proxiesGet(
 
 ### Return type
 
-**Array<ModelsProxy>**
+**Array<ApiProxyDetailsResponse>**
 
 ### Authorization
 
@@ -288,7 +288,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesPost**
-> ModelsProxy proxiesPost(modelsCreateProxyRequest)
+> ApiProxyDetailsResponse proxiesPost(modelsCreateProxyRequest)
 
 Add a new proxy configuration
 
@@ -320,7 +320,7 @@ const { status, data } = await apiInstance.proxiesPost(
 
 ### Return type
 
-**ModelsProxy**
+**ApiProxyDetailsResponse**
 
 ### Authorization
 
@@ -451,7 +451,7 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesProxyIdPut**
-> ModelsProxy proxiesProxyIdPut(modelsUpdateProxyRequest)
+> ApiProxyDetailsResponse proxiesProxyIdPut(modelsUpdateProxyRequest)
 
 Update an existing proxy configuration
 
@@ -486,7 +486,7 @@ const { status, data } = await apiInstance.proxiesProxyIdPut(
 
 ### Return type
 
-**ModelsProxy**
+**ApiProxyDetailsResponse**
 
 ### Authorization
 

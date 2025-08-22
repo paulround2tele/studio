@@ -15,34 +15,34 @@
 
 
 /**
- * 
+ * Keyword match result from content extraction
  * @export
- * @interface ApiUpdatePersonaRequest
+ * @interface ApiKeywordExtractionMatch
  */
-export interface ApiUpdatePersonaRequest {
-    /**
-     * Accept structured config as JSON - can be HTTPConfigDetails or DNSConfigDetails
-     * @type {object}
-     * @memberof ApiUpdatePersonaRequest
-     */
-    'configDetails'?: object;
+export interface ApiKeywordExtractionMatch {
     /**
      * 
      * @type {string}
-     * @memberof ApiUpdatePersonaRequest
+     * @memberof ApiKeywordExtractionMatch
      */
-    'description'?: string;
+    'category'?: string;
     /**
      * 
-     * @type {boolean}
-     * @memberof ApiUpdatePersonaRequest
+     * @type {Array<string>}
+     * @memberof ApiKeywordExtractionMatch
      */
-    'isEnabled'?: boolean;
+    'contexts'?: Array<string>;
     /**
      * 
      * @type {string}
-     * @memberof ApiUpdatePersonaRequest
+     * @memberof ApiKeywordExtractionMatch
      */
-    'name'?: string;
+    'matchedPattern'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiKeywordExtractionMatch
+     */
+    'matchedText'?: string;
 }
 

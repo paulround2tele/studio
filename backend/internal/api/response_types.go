@@ -2,6 +2,7 @@
 package api
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -35,20 +36,20 @@ const (
 
 // ErrorDetail provides detailed information about a specific error
 type ErrorDetail struct {
-	Field   string      `json:"field,omitempty"`   // Field that caused the error (for validation)
-	Code    ErrorCode   `json:"code"`              // Error code
-	Message string      `json:"message"`           // Human-readable error message
-	Context interface{} `json:"context,omitempty"` // Additional context data
+	Field   string                 `json:"field,omitempty"`   // Field that caused the error (for validation)
+	Code    ErrorCode              `json:"code"`              // Error code
+	Message string                 `json:"message"`           // Human-readable error message
+	Context map[string]interface{} `json:"context,omitempty"` // Additional context data (object)
 }
 
 // APIResponse represents the unified response format for all API endpoints
 // @Description Standard API response envelope used by all endpoints
 type APIResponse struct {
-	Success   bool        `json:"success" example:"true"`                   // Indicates if the request was successful
-	Data      interface{} `json:"data,omitempty" swaggertype:"object"`      // Response data (only present on success)
-	Error     *ErrorInfo  `json:"error,omitempty"`                          // Error information (only present on failure)
-	Metadata  *Metadata   `json:"metadata,omitempty"`                       // Optional metadata
-	RequestID string      `json:"requestId" example:"req_1234567890abcdef"` // Unique request identifier for tracing
+	Success   bool            `json:"success" example:"true"`                   // Indicates if the request was successful
+	Data      json.RawMessage `json:"data,omitempty" swaggertype:"object"`     // Response data (only present on success)
+	Error     *ErrorInfo      `json:"error,omitempty"`                          // Error information (only present on failure)
+	Metadata  *Metadata       `json:"metadata,omitempty"`                       // Optional metadata
+	RequestID string          `json:"requestId" example:"req_1234567890abcdef"` // Unique request identifier for tracing
 }
 
 // ErrorInfo contains comprehensive error information
@@ -68,7 +69,7 @@ type Metadata struct {
 	RateLimit  *RateLimitInfo         `json:"rateLimit,omitempty"`  // Rate limiting info
 	Processing *ProcessingInfo        `json:"processing,omitempty"` // Processing time info
 	Bulk       *BulkOperationInfo     `json:"bulk,omitempty"`       // Bulk operation metadata
-	Extra      map[string]interface{} `json:"extra,omitempty"`      // Additional metadata
+	Extra      map[string]interface{} `json:"extra,omitempty"`      // Additional metadata (object)
 }
 
 // PageInfo contains pagination metadata
@@ -104,9 +105,15 @@ type BulkOperationInfo struct {
 
 // NewSuccessResponse creates a successful API response
 func NewSuccessResponse(data interface{}, requestID string) *APIResponse {
+	var raw json.RawMessage
+	if data != nil {
+		if b, err := json.Marshal(data); err == nil {
+			raw = b
+		}
+	}
 	return &APIResponse{
 		Success:   true,
-		Data:      data,
+		Data:      raw,
 		RequestID: requestID,
 	}
 }

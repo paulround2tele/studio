@@ -25,8 +25,6 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 import type { ApiAPIResponse } from '../models';
 // @ts-ignore
 import type { BulkValidateDNS200Response } from '../models';
-// @ts-ignore
-import type { ModelsBulkOperationStatus } from '../models';
 /**
  * MonitoringApi - axios parameter creator
  * @export
@@ -143,7 +141,7 @@ export const MonitoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async getBulkOperationStatus(operationId: string, body?: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ModelsBulkOperationStatus>> {
+        async getBulkOperationStatus(operationId: string, body?: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiAPIResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.getBulkOperationStatus(operationId, body, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['MonitoringApi.getBulkOperationStatus']?.[localVarOperationServerIndex]?.url;
@@ -184,7 +182,7 @@ export const MonitoringApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        getBulkOperationStatus(operationId: string, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<ModelsBulkOperationStatus> {
+        getBulkOperationStatus(operationId: string, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<ApiAPIResponse> {
             return localVarFp.getBulkOperationStatus(operationId, body, options).then((request) => request(axios, basePath));
         },
         /**
@@ -219,7 +217,7 @@ export interface MonitoringApiInterface {
      * @throws {RequiredError}
      * @memberof MonitoringApiInterface
      */
-    getBulkOperationStatus(operationId: string, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<ModelsBulkOperationStatus>;
+    getBulkOperationStatus(operationId: string, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<ApiAPIResponse>;
 
     /**
      * Get a list of bulk operations with optional filtering by status, type, and time range

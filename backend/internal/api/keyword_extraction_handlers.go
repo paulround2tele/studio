@@ -23,13 +23,13 @@ import (
 // @Summary Batch keyword extraction
 // @Description Extract keywords from multiple URLs using specified keyword sets and personas
 // @Tags keyword-extraction
-// @ID batchExtractKeywords
+// @ID keywordExtractionBatch
 // @Accept json
 // @Produce json
 // @Param request body BatchKeywordExtractionRequest true "Batch extraction request"
 // @Success 200 {object} BatchKeywordExtractionResponse "Extraction results"
-// @Failure 400 {object} map[string]string "Invalid request body or validation failed"
-// @Router /keyword-extraction/batch [post]
+// @Failure 400 {object} APIResponse{error=ErrorInfo} "Invalid request body or validation failed"
+// @Router /api/v2/extract/keywords [post]
 func (h *APIHandler) BatchExtractKeywordsGin(c *gin.Context) {
 	var req BatchKeywordExtractionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -171,7 +171,16 @@ func (h *APIHandler) BatchExtractKeywordsGin(c *gin.Context) {
 					}
 					itemResult.Error += fmt.Sprintf("Keyword extraction error: %v", kwErr)
 				} else if len(kws) > 0 {
-					itemResult.Matches = kws
+					matches := make([]KeywordExtractionMatch, 0, len(kws))
+					for _, m := range kws {
+						matches = append(matches, KeywordExtractionMatch{
+							MatchedPattern: m.MatchedPattern,
+							MatchedText:    m.MatchedText,
+							Category:       m.Category,
+							Contexts:       m.Contexts,
+						})
+					}
+					itemResult.Matches = matches
 				}
 			} else {
 				if itemResult.Error == "" {
@@ -194,7 +203,7 @@ sendResponseGin:
 // @Summary Stream keyword extraction
 // @Description Extract keywords from a single URL with real-time streaming results
 // @Tags keyword-extraction
-// @ID streamExtractKeywords
+// @ID keywordExtractionStream
 // @Produce text/event-stream
 // @Param url query string true "URL to extract keywords from"
 // @Param keywordSetId query string true "Keyword set ID to use for extraction"
@@ -202,7 +211,7 @@ sendResponseGin:
 // @Param dnsPersonaId query string false "DNS persona ID for DNS customization"
 // @Success 200 {string} string "Server-sent events stream with extraction results"
 // @Failure 400 {object} map[string]string "Invalid query parameters"
-// @Router /keyword-extraction/stream [get]
+// @Router /api/v2/extract/keywords/stream [get]
 func (h *APIHandler) StreamExtractKeywordsGin(c *gin.Context) {
 	flusher, ok := c.Writer.(http.Flusher)
 	if !ok {
@@ -304,13 +313,17 @@ func (h *APIHandler) StreamExtractKeywordsGin(c *gin.Context) {
 
 	if len(body) > 0 && fetchErr == nil {
 		kws, kwErr := keywordextractor.ExtractKeywords(body, ksetRules)
-		if kwErr != nil {
-			if itemResult.Error != "" {
-				itemResult.Error += "; "
+		if kwErr == nil && len(kws) > 0 {
+			matches := make([]KeywordExtractionMatch, 0, len(kws))
+			for _, m := range kws {
+				matches = append(matches, KeywordExtractionMatch{
+					MatchedPattern: m.MatchedPattern,
+					MatchedText:    m.MatchedText,
+					Category:       m.Category,
+					Contexts:       m.Contexts,
+				})
 			}
-			itemResult.Error += fmt.Sprintf("Keyword extraction error: %v", kwErr)
-		} else if len(kws) > 0 {
-			itemResult.Matches = kws
+			itemResult.Matches = matches
 		}
 	} else if fetchErr == nil && itemResult.Error == "" {
 		itemResult.Error = "No content fetched"

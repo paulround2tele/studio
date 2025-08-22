@@ -1249,7 +1249,7 @@ ul.nav-tabs {
   "properties" : {
     "configDetails" : {
       "type" : "object",
-      "description" : "Accept structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig"
+      "description" : "Accept structured config as JSON - can be HTTPConfigDetails or DNSConfigDetails"
     },
     "description" : {
       "type" : "string"
@@ -1526,8 +1526,7 @@ ul.nav-tabs {
     defs["api.KeywordExtractionAPIResult"] = {
   "properties" : {
     "dnsPersonaIdUsed" : {
-      "type" : "string",
-      "description" : "String UUID of persona used"
+      "type" : "string"
     },
     "error" : {
       "type" : "string"
@@ -1536,8 +1535,7 @@ ul.nav-tabs {
       "type" : "string"
     },
     "httpPersonaIdUsed" : {
-      "type" : "string",
-      "description" : "String UUID of persona used"
+      "type" : "string"
     },
     "keywordSetIdUsed" : {
       "type" : "string"
@@ -1546,12 +1544,11 @@ ul.nav-tabs {
       "uniqueItems" : false,
       "type" : "array",
       "items" : {
-        "$ref" : "#/components/schemas/keywordextractor.KeywordExtractionResult"
+        "$ref" : "#/components/schemas/api.KeywordExtractionMatch"
       }
     },
     "proxyIdUsed" : {
-      "type" : "string",
-      "description" : "String UUID of proxy used"
+      "type" : "string"
     },
     "statusCode" : {
       "type" : "integer"
@@ -1560,6 +1557,27 @@ ul.nav-tabs {
       "type" : "string"
     }
   }
+};
+    defs["api.KeywordExtractionMatch"] = {
+  "properties" : {
+    "category" : {
+      "type" : "string"
+    },
+    "contexts" : {
+      "uniqueItems" : false,
+      "type" : "array",
+      "items" : {
+        "type" : "string"
+      }
+    },
+    "matchedPattern" : {
+      "type" : "string"
+    },
+    "matchedText" : {
+      "type" : "string"
+    }
+  },
+  "description" : "Keyword match result from content extraction"
 };
     defs["api.KeywordExtractionRequestItem"] = {
   "required" : [ "keywordSetId", "url" ],
@@ -1577,6 +1595,37 @@ ul.nav-tabs {
       "description" : "Required: string representation of UUID"
     },
     "url" : {
+      "type" : "string"
+    }
+  }
+};
+    defs["api.KeywordRuleDTO"] = {
+  "properties" : {
+    "category" : {
+      "type" : "string"
+    },
+    "contextChars" : {
+      "type" : "integer"
+    },
+    "createdAt" : {
+      "type" : "string"
+    },
+    "id" : {
+      "type" : "string"
+    },
+    "isCaseSensitive" : {
+      "type" : "boolean"
+    },
+    "keywordSetId" : {
+      "type" : "string"
+    },
+    "pattern" : {
+      "type" : "string"
+    },
+    "ruleType" : {
+      "type" : "string"
+    },
+    "updatedAt" : {
       "type" : "string"
     }
   }
@@ -1639,7 +1688,7 @@ ul.nav-tabs {
       "uniqueItems" : false,
       "type" : "array",
       "items" : {
-        "$ref" : "#/components/schemas/models.KeywordRule"
+        "$ref" : "#/components/schemas/api.KeywordRuleDTO"
       }
     },
     "updatedAt" : {
@@ -1777,7 +1826,7 @@ ul.nav-tabs {
   "properties" : {
     "configDetails" : {
       "type" : "object",
-      "description" : "Return structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig"
+      "description" : "Return structured config as JSON - can be HTTPConfigDetails or DNSConfigDetails"
     },
     "createdAt" : {
       "type" : "string"
@@ -2202,7 +2251,7 @@ ul.nav-tabs {
   "properties" : {
     "configDetails" : {
       "type" : "object",
-      "description" : "Accept structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig"
+      "description" : "Accept structured config as JSON - can be HTTPConfigDetails or DNSConfigDetails"
     },
     "description" : {
       "type" : "string"
@@ -2557,26 +2606,6 @@ ul.nav-tabs {
   "properties" : {
     "error" : {
       "$ref" : "#/components/schemas/api.ErrorInfo"
-    }
-  }
-};
-    defs["keywordextractor.KeywordExtractionResult"] = {
-  "properties" : {
-    "category" : {
-      "type" : "string"
-    },
-    "contexts" : {
-      "uniqueItems" : false,
-      "type" : "array",
-      "items" : {
-        "type" : "string"
-      }
-    },
-    "matchedPattern" : {
-      "type" : "string"
-    },
-    "matchedText" : {
-      "type" : "string"
     }
   }
 };
@@ -3996,14 +4025,7 @@ ul.nav-tabs {
       "type" : "string"
     },
     "protocol" : {
-      "type" : "string",
-      "x-enum-comments" : {
-        "ProxyProtocolHTTP" : "@enum http",
-        "ProxyProtocolHTTPS" : "@enum https",
-        "ProxyProtocolSOCKS4" : "@enum socks4",
-        "ProxyProtocolSOCKS5" : "@enum socks5"
-      },
-      "x-enum-varnames" : [ "ProxyProtocolHTTP", "ProxyProtocolHTTPS", "ProxyProtocolSOCKS5", "ProxyProtocolSOCKS4" ]
+      "$ref" : "#/components/schemas/models.ProxyProtocolEnum"
     },
     "username" : {
       "type" : "string"
@@ -4356,39 +4378,6 @@ ul.nav-tabs {
     }
   }
 };
-    defs["models.KeywordRule"] = {
-  "required" : [ "pattern", "ruleType" ],
-  "properties" : {
-    "category" : {
-      "type" : "string"
-    },
-    "contextChars" : {
-      "minimum" : 0,
-      "type" : "integer"
-    },
-    "createdAt" : {
-      "type" : "string"
-    },
-    "id" : {
-      "type" : "string"
-    },
-    "isCaseSensitive" : {
-      "type" : "boolean"
-    },
-    "keywordSetId" : {
-      "type" : "string"
-    },
-    "pattern" : {
-      "type" : "string"
-    },
-    "ruleType" : {
-      "$ref" : "#/components/schemas/models.KeywordRuleTypeEnum"
-    },
-    "updatedAt" : {
-      "type" : "string"
-    }
-  }
-};
     defs["models.KeywordRuleTypeEnum"] = {
   "type" : "string",
   "enum" : [ "string", "regex" ],
@@ -4574,7 +4563,14 @@ ul.nav-tabs {
       "description" : "Port number"
     },
     "protocol" : {
-      "$ref" : "#/components/schemas/models.ProxyProtocolEnum"
+      "type" : "string",
+      "x-enum-comments" : {
+        "ProxyProtocolHTTP" : "@enum http",
+        "ProxyProtocolHTTPS" : "@enum https",
+        "ProxyProtocolSOCKS4" : "@enum socks4",
+        "ProxyProtocolSOCKS5" : "@enum socks5"
+      },
+      "x-enum-varnames" : [ "ProxyProtocolHTTP", "ProxyProtocolHTTPS", "ProxyProtocolSOCKS5", "ProxyProtocolSOCKS4" ]
     },
     "provider" : {
       "type" : "string"
@@ -4595,73 +4591,6 @@ ul.nav-tabs {
     }
   },
   "description" : "Proxy server connection and authentication details"
-};
-    defs["models.ProxyPool"] = {
-  "required" : [ "name" ],
-  "properties" : {
-    "createdAt" : {
-      "type" : "string"
-    },
-    "description" : {
-      "type" : "string"
-    },
-    "healthCheckEnabled" : {
-      "type" : "boolean"
-    },
-    "healthCheckIntervalSeconds" : {
-      "type" : "integer"
-    },
-    "id" : {
-      "type" : "string"
-    },
-    "isEnabled" : {
-      "type" : "boolean"
-    },
-    "maxRetries" : {
-      "type" : "integer"
-    },
-    "name" : {
-      "type" : "string"
-    },
-    "poolStrategy" : {
-      "type" : "string",
-      "description" : "round_robin, random, weighted, failover"
-    },
-    "proxies" : {
-      "uniqueItems" : false,
-      "type" : "array",
-      "description" : "Computed fields (not stored in DB)",
-      "items" : {
-        "$ref" : "#/components/schemas/models.Proxy"
-      }
-    },
-    "timeoutSeconds" : {
-      "type" : "integer"
-    },
-    "updatedAt" : {
-      "type" : "string"
-    }
-  }
-};
-    defs["models.ProxyPoolMembership"] = {
-  "required" : [ "poolId", "proxyId" ],
-  "properties" : {
-    "addedAt" : {
-      "type" : "string"
-    },
-    "isActive" : {
-      "type" : "boolean"
-    },
-    "poolId" : {
-      "type" : "string"
-    },
-    "proxyId" : {
-      "type" : "string"
-    },
-    "weight" : {
-      "type" : "integer"
-    }
-  }
 };
     defs["models.RequiredResources"] = {
   "properties" : {
@@ -5013,62 +4942,6 @@ ul.nav-tabs {
       "type" : "string"
     }
   }
-};
-    defs["models.User"] = {
-  "properties" : {
-    "avatarUrl" : {
-      "type" : "string"
-    },
-    "createdAt" : {
-      "type" : "string"
-    },
-    "email" : {
-      "type" : "string"
-    },
-    "emailVerified" : {
-      "type" : "boolean"
-    },
-    "firstName" : {
-      "type" : "string"
-    },
-    "id" : {
-      "type" : "string"
-    },
-    "isActive" : {
-      "type" : "boolean"
-    },
-    "isLocked" : {
-      "type" : "boolean"
-    },
-    "lastLoginAt" : {
-      "type" : "string"
-    },
-    "lastLoginIp" : {
-      "type" : "string",
-      "example" : "192.168.1.1"
-    },
-    "lastName" : {
-      "type" : "string"
-    },
-    "mfaEnabled" : {
-      "type" : "boolean",
-      "description" : "MFA support fields"
-    },
-    "mfaLastUsedAt" : {
-      "type" : "string"
-    },
-    "mustChangePassword" : {
-      "type" : "boolean"
-    },
-    "name" : {
-      "type" : "string",
-      "description" : "Computed fields (not stored in DB)"
-    },
-    "updatedAt" : {
-      "type" : "string"
-    }
-  },
-  "description" : "User account information"
 };
     defs["models.ValidationOperationResult"] = {
   "properties" : {
@@ -6917,7 +6790,7 @@ public class AuthenticationApiExample {
         AuthenticationApi apiInstance = new AuthenticationApi();
 
         try {
-            models.User result = apiInstance.getCurrentUser();
+            api.APIResponse result = apiInstance.getCurrentUser();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling AuthenticationApi#getCurrentUser");
@@ -6952,7 +6825,7 @@ public class AuthenticationApiExample {
         AuthenticationApi apiInstance = new AuthenticationApi();
 
         try {
-            models.User result = apiInstance.getCurrentUser();
+            api.APIResponse result = apiInstance.getCurrentUser();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling AuthenticationApi#getCurrentUser");
@@ -6973,7 +6846,7 @@ AuthenticationApi *apiInstance = [[AuthenticationApi alloc] init];
 
 // Get current user
 [apiInstance getCurrentUserWithCompletionHandler: 
-              ^(models.User output, NSError* error) {
+              ^(api.APIResponse output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -7022,7 +6895,7 @@ namespace Example
 
             try {
                 // Get current user
-                models.User result = apiInstance.getCurrentUser();
+                api.APIResponse result = apiInstance.getCurrentUser();
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling AuthenticationApi.getCurrentUser: " + e.Message );
@@ -7146,7 +7019,7 @@ pub fn main() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/models.User"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -13187,7 +13060,7 @@ public class BulkOperationsApiExample {
         Object body = Object; // Object | 
 
         try {
-            models.BulkOperationStatus result = apiInstance.getBulkOperationStatus(operationId, body);
+            api.APIResponse result = apiInstance.getBulkOperationStatus(operationId, body);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling BulkOperationsApi#getBulkOperationStatus");
@@ -13226,7 +13099,7 @@ public class BulkOperationsApiExample {
         Object body = Object; // Object | 
 
         try {
-            models.BulkOperationStatus result = apiInstance.getBulkOperationStatus(operationId, body);
+            api.APIResponse result = apiInstance.getBulkOperationStatus(operationId, body);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling BulkOperationsApi#getBulkOperationStatus");
@@ -13250,7 +13123,7 @@ Object *body = Object; //  (optional)
 // Get bulk operation status by ID
 [apiInstance getBulkOperationStatusWith:operationId
     body:body
-              completionHandler: ^(models.BulkOperationStatus output, NSError* error) {
+              completionHandler: ^(api.APIResponse output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -13306,7 +13179,7 @@ namespace Example
 
             try {
                 // Get bulk operation status by ID
-                models.BulkOperationStatus result = apiInstance.getBulkOperationStatus(operationId, body);
+                api.APIResponse result = apiInstance.getBulkOperationStatus(operationId, body);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling BulkOperationsApi.getBulkOperationStatus: " + e.Message );
@@ -13515,7 +13388,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/models.BulkOperationStatus"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -24784,9 +24657,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "additionalProperties" : {
-          "type" : "string"
-        }
+        "$ref" : "#/components/schemas/bulkValidateDNS_200_response"
       }
     }
   }
@@ -30531,7 +30402,7 @@ public class MonitoringApiExample {
         Object body = Object; // Object | 
 
         try {
-            models.BulkOperationStatus result = apiInstance.getBulkOperationStatus(operationId, body);
+            api.APIResponse result = apiInstance.getBulkOperationStatus(operationId, body);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling MonitoringApi#getBulkOperationStatus");
@@ -30570,7 +30441,7 @@ public class MonitoringApiExample {
         Object body = Object; // Object | 
 
         try {
-            models.BulkOperationStatus result = apiInstance.getBulkOperationStatus(operationId, body);
+            api.APIResponse result = apiInstance.getBulkOperationStatus(operationId, body);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling MonitoringApi#getBulkOperationStatus");
@@ -30594,7 +30465,7 @@ Object *body = Object; //  (optional)
 // Get bulk operation status by ID
 [apiInstance getBulkOperationStatusWith:operationId
     body:body
-              completionHandler: ^(models.BulkOperationStatus output, NSError* error) {
+              completionHandler: ^(api.APIResponse output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -30650,7 +30521,7 @@ namespace Example
 
             try {
                 // Get bulk operation status by ID
-                models.BulkOperationStatus result = apiInstance.getBulkOperationStatus(operationId, body);
+                api.APIResponse result = apiInstance.getBulkOperationStatus(operationId, body);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling MonitoringApi.getBulkOperationStatus: " + e.Message );
@@ -30859,7 +30730,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/models.BulkOperationStatus"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -38421,7 +38292,7 @@ public class ProxiesApiExample {
         Boolean isHealthy = true; // Boolean | Filter by health status
 
         try {
-            array[models.Proxy] result = apiInstance.proxiesGet(limit, offset, protocol, isEnabled, isHealthy);
+            array[api.ProxyDetailsResponse] result = apiInstance.proxiesGet(limit, offset, protocol, isEnabled, isHealthy);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxiesApi#proxiesGet");
@@ -38466,7 +38337,7 @@ public class ProxiesApiExample {
         Boolean isHealthy = true; // Boolean | Filter by health status
 
         try {
-            array[models.Proxy] result = apiInstance.proxiesGet(limit, offset, protocol, isEnabled, isHealthy);
+            array[api.ProxyDetailsResponse] result = apiInstance.proxiesGet(limit, offset, protocol, isEnabled, isHealthy);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxiesApi#proxiesGet");
@@ -38496,7 +38367,7 @@ Boolean *isHealthy = true; // Filter by health status (optional) (default to nul
     protocol:protocol
     isEnabled:isEnabled
     isHealthy:isHealthy
-              completionHandler: ^(array[models.Proxy] output, NSError* error) {
+              completionHandler: ^(array[api.ProxyDetailsResponse] output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -38558,7 +38429,7 @@ namespace Example
 
             try {
                 // List proxies
-                array[models.Proxy] result = apiInstance.proxiesGet(limit, offset, protocol, isEnabled, isHealthy);
+                array[api.ProxyDetailsResponse] result = apiInstance.proxiesGet(limit, offset, protocol, isEnabled, isHealthy);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ProxiesApi.proxiesGet: " + e.Message );
@@ -38811,7 +38682,7 @@ Filter by health status
       "schema" : {
         "type" : "array",
         "items" : {
-          "$ref" : "#/components/schemas/models.Proxy"
+          "$ref" : "#/components/schemas/api.ProxyDetailsResponse"
         }
       }
     }
@@ -39398,7 +39269,7 @@ public class ProxiesApiExample {
         ModelsCreateProxyRequest modelsCreateProxyRequest = ; // ModelsCreateProxyRequest | 
 
         try {
-            models.Proxy result = apiInstance.proxiesPost(modelsCreateProxyRequest);
+            api.ProxyDetailsResponse result = apiInstance.proxiesPost(modelsCreateProxyRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxiesApi#proxiesPost");
@@ -39435,7 +39306,7 @@ public class ProxiesApiExample {
         ModelsCreateProxyRequest modelsCreateProxyRequest = ; // ModelsCreateProxyRequest | 
 
         try {
-            models.Proxy result = apiInstance.proxiesPost(modelsCreateProxyRequest);
+            api.ProxyDetailsResponse result = apiInstance.proxiesPost(modelsCreateProxyRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxiesApi#proxiesPost");
@@ -39457,7 +39328,7 @@ ModelsCreateProxyRequest *modelsCreateProxyRequest = ; //
 
 // Create proxy
 [apiInstance proxiesPostWith:modelsCreateProxyRequest
-              completionHandler: ^(models.Proxy output, NSError* error) {
+              completionHandler: ^(api.ProxyDetailsResponse output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -39509,7 +39380,7 @@ namespace Example
 
             try {
                 // Create proxy
-                models.Proxy result = apiInstance.proxiesPost(modelsCreateProxyRequest);
+                api.ProxyDetailsResponse result = apiInstance.proxiesPost(modelsCreateProxyRequest);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ProxiesApi.proxiesPost: " + e.Message );
@@ -39686,7 +39557,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/models.Proxy"
+        "$ref" : "#/components/schemas/api.ProxyDetailsResponse"
       }
     }
   }
@@ -41208,7 +41079,7 @@ public class ProxiesApiExample {
         ModelsUpdateProxyRequest modelsUpdateProxyRequest = ; // ModelsUpdateProxyRequest | 
 
         try {
-            models.Proxy result = apiInstance.proxiesProxyIdPut(proxyId, modelsUpdateProxyRequest);
+            api.ProxyDetailsResponse result = apiInstance.proxiesProxyIdPut(proxyId, modelsUpdateProxyRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxiesApi#proxiesProxyIdPut");
@@ -41247,7 +41118,7 @@ public class ProxiesApiExample {
         ModelsUpdateProxyRequest modelsUpdateProxyRequest = ; // ModelsUpdateProxyRequest | 
 
         try {
-            models.Proxy result = apiInstance.proxiesProxyIdPut(proxyId, modelsUpdateProxyRequest);
+            api.ProxyDetailsResponse result = apiInstance.proxiesProxyIdPut(proxyId, modelsUpdateProxyRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxiesApi#proxiesProxyIdPut");
@@ -41271,7 +41142,7 @@ ModelsUpdateProxyRequest *modelsUpdateProxyRequest = ; //
 // Update proxy
 [apiInstance proxiesProxyIdPutWith:proxyId
     modelsUpdateProxyRequest:modelsUpdateProxyRequest
-              completionHandler: ^(models.Proxy output, NSError* error) {
+              completionHandler: ^(api.ProxyDetailsResponse output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -41325,7 +41196,7 @@ namespace Example
 
             try {
                 // Update proxy
-                models.Proxy result = apiInstance.proxiesProxyIdPut(proxyId, modelsUpdateProxyRequest);
+                api.ProxyDetailsResponse result = apiInstance.proxiesProxyIdPut(proxyId, modelsUpdateProxyRequest);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ProxiesApi.proxiesProxyIdPut: " + e.Message );
@@ -41536,7 +41407,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/models.Proxy"
+        "$ref" : "#/components/schemas/api.ProxyDetailsResponse"
       }
     }
   }
@@ -42881,7 +42752,7 @@ public class ProxyPoolsApiExample {
         ProxyPoolsApi apiInstance = new ProxyPoolsApi();
 
         try {
-            array[models.ProxyPool] result = apiInstance.listProxyPools();
+            array[api.APIResponse] result = apiInstance.listProxyPools();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxyPoolsApi#listProxyPools");
@@ -42916,7 +42787,7 @@ public class ProxyPoolsApiExample {
         ProxyPoolsApi apiInstance = new ProxyPoolsApi();
 
         try {
-            array[models.ProxyPool] result = apiInstance.listProxyPools();
+            array[api.APIResponse] result = apiInstance.listProxyPools();
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxyPoolsApi#listProxyPools");
@@ -42937,7 +42808,7 @@ ProxyPoolsApi *apiInstance = [[ProxyPoolsApi alloc] init];
 
 // List proxy pools
 [apiInstance listProxyPoolsWithCompletionHandler: 
-              ^(array[models.ProxyPool] output, NSError* error) {
+              ^(array[api.APIResponse] output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -42986,7 +42857,7 @@ namespace Example
 
             try {
                 // List proxy pools
-                array[models.ProxyPool] result = apiInstance.listProxyPools();
+                array[api.APIResponse] result = apiInstance.listProxyPools();
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ProxyPoolsApi.listProxyPools: " + e.Message );
@@ -43112,7 +42983,7 @@ pub fn main() {
       "schema" : {
         "type" : "array",
         "items" : {
-          "$ref" : "#/components/schemas/models.ProxyPool"
+          "$ref" : "#/components/schemas/api.APIResponse"
         }
       }
     }
@@ -43899,7 +43770,7 @@ public class ProxyPoolsApiExample {
         ProxyPoolsPoolIdProxiesPostRequest proxyPoolsPoolIdProxiesPostRequest = ; // ProxyPoolsPoolIdProxiesPostRequest | 
 
         try {
-            models.ProxyPoolMembership result = apiInstance.proxyPoolsPoolIdProxiesPost(poolId, proxyPoolsPoolIdProxiesPostRequest);
+            api.APIResponse result = apiInstance.proxyPoolsPoolIdProxiesPost(poolId, proxyPoolsPoolIdProxiesPostRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxyPoolsApi#proxyPoolsPoolIdProxiesPost");
@@ -43938,7 +43809,7 @@ public class ProxyPoolsApiExample {
         ProxyPoolsPoolIdProxiesPostRequest proxyPoolsPoolIdProxiesPostRequest = ; // ProxyPoolsPoolIdProxiesPostRequest | 
 
         try {
-            models.ProxyPoolMembership result = apiInstance.proxyPoolsPoolIdProxiesPost(poolId, proxyPoolsPoolIdProxiesPostRequest);
+            api.APIResponse result = apiInstance.proxyPoolsPoolIdProxiesPost(poolId, proxyPoolsPoolIdProxiesPostRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxyPoolsApi#proxyPoolsPoolIdProxiesPost");
@@ -43962,7 +43833,7 @@ ProxyPoolsPoolIdProxiesPostRequest *proxyPoolsPoolIdProxiesPostRequest = ; //
 // Add proxy to pool
 [apiInstance proxyPoolsPoolIdProxiesPostWith:poolId
     proxyPoolsPoolIdProxiesPostRequest:proxyPoolsPoolIdProxiesPostRequest
-              completionHandler: ^(models.ProxyPoolMembership output, NSError* error) {
+              completionHandler: ^(api.APIResponse output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -44016,7 +43887,7 @@ namespace Example
 
             try {
                 // Add proxy to pool
-                models.ProxyPoolMembership result = apiInstance.proxyPoolsPoolIdProxiesPost(poolId, proxyPoolsPoolIdProxiesPostRequest);
+                api.APIResponse result = apiInstance.proxyPoolsPoolIdProxiesPost(poolId, proxyPoolsPoolIdProxiesPostRequest);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ProxyPoolsApi.proxyPoolsPoolIdProxiesPost: " + e.Message );
@@ -44227,7 +44098,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/models.ProxyPoolMembership"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -45123,7 +44994,7 @@ public class ProxyPoolsApiExample {
         ApiProxyPoolRequest apiProxyPoolRequest = ; // ApiProxyPoolRequest | 
 
         try {
-            models.ProxyPool result = apiInstance.proxyPoolsPoolIdPut(poolId, apiProxyPoolRequest);
+            api.APIResponse result = apiInstance.proxyPoolsPoolIdPut(poolId, apiProxyPoolRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxyPoolsApi#proxyPoolsPoolIdPut");
@@ -45162,7 +45033,7 @@ public class ProxyPoolsApiExample {
         ApiProxyPoolRequest apiProxyPoolRequest = ; // ApiProxyPoolRequest | 
 
         try {
-            models.ProxyPool result = apiInstance.proxyPoolsPoolIdPut(poolId, apiProxyPoolRequest);
+            api.APIResponse result = apiInstance.proxyPoolsPoolIdPut(poolId, apiProxyPoolRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxyPoolsApi#proxyPoolsPoolIdPut");
@@ -45186,7 +45057,7 @@ ApiProxyPoolRequest *apiProxyPoolRequest = ; //
 // Update proxy pool
 [apiInstance proxyPoolsPoolIdPutWith:poolId
     apiProxyPoolRequest:apiProxyPoolRequest
-              completionHandler: ^(models.ProxyPool output, NSError* error) {
+              completionHandler: ^(api.APIResponse output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -45240,7 +45111,7 @@ namespace Example
 
             try {
                 // Update proxy pool
-                models.ProxyPool result = apiInstance.proxyPoolsPoolIdPut(poolId, apiProxyPoolRequest);
+                api.APIResponse result = apiInstance.proxyPoolsPoolIdPut(poolId, apiProxyPoolRequest);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ProxyPoolsApi.proxyPoolsPoolIdPut: " + e.Message );
@@ -45451,7 +45322,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/models.ProxyPool"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }
@@ -45787,7 +45658,7 @@ public class ProxyPoolsApiExample {
         ApiProxyPoolRequest apiProxyPoolRequest = ; // ApiProxyPoolRequest | 
 
         try {
-            models.ProxyPool result = apiInstance.proxyPoolsPost(apiProxyPoolRequest);
+            api.APIResponse result = apiInstance.proxyPoolsPost(apiProxyPoolRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxyPoolsApi#proxyPoolsPost");
@@ -45824,7 +45695,7 @@ public class ProxyPoolsApiExample {
         ApiProxyPoolRequest apiProxyPoolRequest = ; // ApiProxyPoolRequest | 
 
         try {
-            models.ProxyPool result = apiInstance.proxyPoolsPost(apiProxyPoolRequest);
+            api.APIResponse result = apiInstance.proxyPoolsPost(apiProxyPoolRequest);
             System.out.println(result);
         } catch (ApiException e) {
             System.err.println("Exception when calling ProxyPoolsApi#proxyPoolsPost");
@@ -45846,7 +45717,7 @@ ApiProxyPoolRequest *apiProxyPoolRequest = ; //
 
 // Create proxy pool
 [apiInstance proxyPoolsPostWith:apiProxyPoolRequest
-              completionHandler: ^(models.ProxyPool output, NSError* error) {
+              completionHandler: ^(api.APIResponse output, NSError* error) {
     if (output) {
         NSLog(@"%@", output);
     }
@@ -45898,7 +45769,7 @@ namespace Example
 
             try {
                 // Create proxy pool
-                models.ProxyPool result = apiInstance.proxyPoolsPost(apiProxyPoolRequest);
+                api.APIResponse result = apiInstance.proxyPoolsPost(apiProxyPoolRequest);
                 Debug.WriteLine(result);
             } catch (Exception e) {
                 Debug.Print("Exception when calling ProxyPoolsApi.proxyPoolsPost: " + e.Message );
@@ -46075,7 +45946,7 @@ $(document).ready(function() {
   "content" : {
     "application/json" : {
       "schema" : {
-        "$ref" : "#/components/schemas/models.ProxyPool"
+        "$ref" : "#/components/schemas/api.APIResponse"
       }
     }
   }

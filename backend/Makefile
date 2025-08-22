@@ -59,7 +59,7 @@ generate-mocks:
 # Generate OpenAPI specification with swaggo
 openapi: ## Generate OpenAPI 3.1 specification with professional swaggo v2
 	@echo "Generating OpenAPI 3.1 specification with swaggo v2..."
-	export PATH=$$PATH:$(HOME)/go/bin && swag init --v3.1 -g cmd/apiserver/main.go --output docs --outputTypes yaml,json
+	export PATH=$$PATH:$(HOME)/go/bin && swag init --v3.1 -g main.go -d cmd/apiserver,internal/api,internal/models,internal/config,internal/services --exclude internal/api/swagger_examples.go --exclude internal/api/contracts.go --output docs --outputTypes go,yaml,json
 	@echo "OpenAPI 3.1 specification generated: backend/docs/swagger.yaml and swagger.json"
 	@echo "✅ Professional OpenAPI 3.1 generation complete with proper type safety!"
 

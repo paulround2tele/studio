@@ -45,27 +45,60 @@ type UpdateKeywordSetRequest struct {
 
 // KeywordSetResponse formats a KeywordSet with its rules for API responses
 type KeywordSetResponse struct {
-	ID          uuid.UUID            `json:"id"`
-	Name        string               `json:"name"`
-	Description string               `json:"description,omitempty"`
-	IsEnabled   bool                 `json:"isEnabled"`
-	CreatedAt   time.Time            `json:"createdAt"`
-	UpdatedAt   time.Time            `json:"updatedAt"`
-	Rules       []models.KeywordRule `json:"rules,omitempty"`
-	RuleCount   int                  `json:"ruleCount"`
+	ID          uuid.UUID        `json:"id"`
+	Name        string           `json:"name"`
+	Description string           `json:"description,omitempty"`
+	IsEnabled   bool             `json:"isEnabled"`
+	CreatedAt   time.Time        `json:"createdAt"`
+	UpdatedAt   time.Time        `json:"updatedAt"`
+	Rules       []KeywordRuleDTO `json:"rules,omitempty"`
+	RuleCount   int              `json:"ruleCount"`
+}
+
+// KeywordRuleDTO is the API-safe representation of a keyword rule
+type KeywordRuleDTO struct {
+	ID              uuid.UUID `json:"id"`
+	KeywordSetID    uuid.UUID `json:"keywordSetId,omitempty"`
+	Pattern         string    `json:"pattern"`
+	RuleType        string    `json:"ruleType"`
+	IsCaseSensitive bool      `json:"isCaseSensitive"`
+	Category        string    `json:"category,omitempty"`
+	ContextChars    int       `json:"contextChars,omitempty"`
+	CreatedAt       time.Time `json:"createdAt"`
+	UpdatedAt       time.Time `json:"updatedAt"`
+}
+
+func toKeywordRuleDTO(r models.KeywordRule) KeywordRuleDTO {
+	return KeywordRuleDTO{
+		ID:              r.ID,
+		KeywordSetID:    r.KeywordSetID,
+		Pattern:         r.Pattern,
+		RuleType:        string(r.RuleType),
+		IsCaseSensitive: r.IsCaseSensitive,
+		Category:        r.Category.String,
+		ContextChars:    r.ContextChars,
+		CreatedAt:       r.CreatedAt,
+		UpdatedAt:       r.UpdatedAt,
+	}
 }
 
 func toKeywordSetResponse(ks *models.KeywordSet, rules []models.KeywordRule) KeywordSetResponse {
-	return KeywordSetResponse{
+	out := KeywordSetResponse{
 		ID:          ks.ID,
 		Name:        ks.Name,
 		Description: ks.Description.String,
 		IsEnabled:   ks.IsEnabled,
 		CreatedAt:   ks.CreatedAt,
 		UpdatedAt:   ks.UpdatedAt,
-		Rules:       rules,
 		RuleCount:   len(rules),
 	}
+	if len(rules) > 0 {
+		out.Rules = make([]KeywordRuleDTO, len(rules))
+		for i, r := range rules {
+			out.Rules[i] = toKeywordRuleDTO(r)
+		}
+	}
+	return out
 }
 
 // --- Gin Handlers for KeywordSets ---

@@ -1861,7 +1861,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["models.Proxy"][];
+                        "application/json": components["schemas"]["api.ProxyDetailsResponse"][];
                     };
                 };
                 /** @description Failed to list proxies */
@@ -1902,7 +1902,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["models.Proxy"];
+                        "application/json": components["schemas"]["api.ProxyDetailsResponse"];
                     };
                 };
                 /** @description Invalid request payload or validation failed */
@@ -1981,7 +1981,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["models.Proxy"];
+                        "application/json": components["schemas"]["api.ProxyDetailsResponse"];
                     };
                 };
                 /** @description Invalid request payload or validation failed */
@@ -2598,7 +2598,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["models.ProxyPool"];
+                        "application/json": components["schemas"]["api.APIResponse"];
                     };
                 };
                 /** @description Invalid request payload */
@@ -2666,7 +2666,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["models.ProxyPool"];
+                        "application/json": components["schemas"]["api.APIResponse"];
                     };
                 };
                 /** @description Invalid ID or request payload */
@@ -2811,7 +2811,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["models.ProxyPoolMembership"];
+                        "application/json": components["schemas"]["api.APIResponse"];
                     };
                 };
                 /** @description Invalid pool ID, payload, or proxy ID */
@@ -3948,7 +3948,7 @@ export interface components {
             rules?: components["schemas"]["api.KeywordRuleRequest"][];
         };
         "api.CreatePersonaRequest": {
-            /** @description Accept structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig */
+            /** @description Accept structured config as JSON - can be HTTPConfigDetails or DNSConfigDetails */
             configDetails: Record<string, never>;
             description?: string;
             isEnabled?: boolean;
@@ -4088,18 +4088,22 @@ export interface components {
             version?: string;
         };
         "api.KeywordExtractionAPIResult": {
-            /** @description String UUID of persona used */
             dnsPersonaIdUsed?: string;
             error?: string;
             finalUrl?: string;
-            /** @description String UUID of persona used */
             httpPersonaIdUsed?: string;
             keywordSetIdUsed?: string;
-            matches?: components["schemas"]["keywordextractor.KeywordExtractionResult"][];
-            /** @description String UUID of proxy used */
+            matches?: components["schemas"]["api.KeywordExtractionMatch"][];
             proxyIdUsed?: string;
             statusCode?: number;
             url?: string;
+        };
+        /** @description Keyword match result from content extraction */
+        "api.KeywordExtractionMatch": {
+            category?: string;
+            contexts?: string[];
+            matchedPattern?: string;
+            matchedText?: string;
         };
         "api.KeywordExtractionRequestItem": {
             /** @description Optional: string representation of UUID */
@@ -4109,6 +4113,17 @@ export interface components {
             /** @description Required: string representation of UUID */
             keywordSetId: string;
             url: string;
+        };
+        "api.KeywordRuleDTO": {
+            category?: string;
+            contextChars?: number;
+            createdAt?: string;
+            id?: string;
+            isCaseSensitive?: boolean;
+            keywordSetId?: string;
+            pattern?: string;
+            ruleType?: string;
+            updatedAt?: string;
         };
         "api.KeywordRuleRequest": {
             category?: string;
@@ -4129,7 +4144,7 @@ export interface components {
             isEnabled?: boolean;
             name?: string;
             ruleCount?: number;
-            rules?: components["schemas"]["models.KeywordRule"][];
+            rules?: components["schemas"]["api.KeywordRuleDTO"][];
             updatedAt?: string;
         };
         /** @description Optional metadata attached to API responses */
@@ -4188,7 +4203,7 @@ export interface components {
         };
         /** @description API response containing persona details */
         "api.PersonaResponse": {
-            /** @description Return structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig */
+            /** @description Return structured config as JSON - can be HTTPConfigDetails or DNSConfigDetails */
             configDetails?: Record<string, never>;
             createdAt?: string;
             description?: string;
@@ -4360,7 +4375,7 @@ export interface components {
             rules?: components["schemas"]["api.KeywordRuleRequest"][];
         };
         "api.UpdatePersonaRequest": {
-            /** @description Accept structured config as JSON - can be HttpPersonaConfig or DnsPersonaConfig */
+            /** @description Accept structured config as JSON - can be HTTPConfigDetails or DNSConfigDetails */
             configDetails?: Record<string, never>;
             description?: string;
             isEnabled?: boolean;
@@ -4483,12 +4498,6 @@ export interface components {
         };
         error: {
             error?: components["schemas"]["api.ErrorInfo"];
-        };
-        "keywordextractor.KeywordExtractionResult": {
-            category?: string;
-            contexts?: string[];
-            matchedPattern?: string;
-            matchedText?: string;
         };
         /** @description Enterprise-grade enhancements for Day 3 */
         "models.AdvancedStealthPolicy": {
@@ -4982,7 +4991,7 @@ export interface components {
             name: string;
             notes?: string;
             password?: string;
-            protocol?: string;
+            protocol?: components["schemas"]["models.ProxyProtocolEnum"];
             username?: string;
         };
         /** @description Custom generation logic */
@@ -5098,17 +5107,6 @@ export interface components {
             maxDomains?: number;
             personaIds: string[];
         };
-        "models.KeywordRule": {
-            category?: string;
-            contextChars?: number;
-            createdAt?: string;
-            id?: string;
-            isCaseSensitive?: boolean;
-            keywordSetId?: string;
-            pattern: string;
-            ruleType: components["schemas"]["models.KeywordRuleTypeEnum"];
-            updatedAt?: string;
-        };
         /** @enum {string} */
         "models.KeywordRuleTypeEnum": "string" | "regex";
         "models.LoginRequest": {
@@ -5182,7 +5180,7 @@ export interface components {
             notes?: string;
             /** @description Port number */
             port?: number;
-            protocol?: components["schemas"]["models.ProxyProtocolEnum"];
+            protocol?: string;
             provider?: string;
             status?: components["schemas"]["models.ProxyStatusEnum"];
             /** @description Count of successful operations */
@@ -5190,29 +5188,6 @@ export interface components {
             updatedAt?: string;
             /** @description Username for proxy auth, from DB */
             username?: string;
-        };
-        "models.ProxyPool": {
-            createdAt?: string;
-            description?: string;
-            healthCheckEnabled?: boolean;
-            healthCheckIntervalSeconds?: number;
-            id?: string;
-            isEnabled?: boolean;
-            maxRetries?: number;
-            name: string;
-            /** @description round_robin, random, weighted, failover */
-            poolStrategy?: string;
-            /** @description Computed fields (not stored in DB) */
-            proxies?: components["schemas"]["models.Proxy"][];
-            timeoutSeconds?: number;
-            updatedAt?: string;
-        };
-        "models.ProxyPoolMembership": {
-            addedAt?: string;
-            isActive?: boolean;
-            poolId: string;
-            proxyId: string;
-            weight?: number;
         };
         "models.ProxyProtocolEnum": string;
         /** @description Frontend-expected fields */
@@ -5347,28 +5322,6 @@ export interface components {
             password?: string;
             protocol?: string;
             username?: string;
-        };
-        /** @description User account information */
-        "models.User": {
-            avatarUrl?: string;
-            createdAt?: string;
-            email?: string;
-            emailVerified?: boolean;
-            firstName?: string;
-            id?: string;
-            isActive?: boolean;
-            isLocked?: boolean;
-            lastLoginAt?: string;
-            /** @example 192.168.1.1 */
-            lastLoginIp?: string;
-            lastName?: string;
-            /** @description MFA support fields */
-            mfaEnabled?: boolean;
-            mfaLastUsedAt?: string;
-            mustChangePassword?: boolean;
-            /** @description Computed fields (not stored in DB) */
-            name?: string;
-            updatedAt?: string;
         };
         "models.ValidationOperationResult": {
             campaignId?: string;
@@ -5923,7 +5876,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["models.User"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Authentication required */
@@ -6695,7 +6648,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["models.BulkOperationStatus"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
             /** @description Operation not found */
@@ -7106,8 +7059,21 @@ export interface operations {
                 };
                 content: {
                     "application/json": {
-                        [key: string]: string;
-                    };
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ErrorInfo"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["data"];
                 };
             };
         };
@@ -7168,7 +7134,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["models.ProxyPool"][];
+                    "application/json": components["schemas"]["api.APIResponse"][];
                 };
             };
             /** @description Failed to list proxy pools */

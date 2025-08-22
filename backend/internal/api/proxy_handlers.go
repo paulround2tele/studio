@@ -55,9 +55,30 @@ func toProxyResponse(p *models.Proxy) *models.Proxy {
 	return p
 }
 
-func toListProxyResponse(proxies []*models.Proxy) []*models.Proxy {
-	// Return slice of pointers directly as models.Proxy is already JSON-marshalable
-	return proxies
+func toProxyDetailsResponse(p *models.Proxy) ProxyDetailsResponse {
+	resp := ProxyDetailsResponse{
+		Host: p.Host.String,
+		Port: int(p.Port.Int32),
+		Protocol: func() string {
+			if p.Protocol != nil {
+				return string(*p.Protocol)
+			}
+			return ""
+		}(),
+		Username: p.Username.String,
+	}
+	return resp
+}
+
+func toListProxyDetailsResponse(proxies []*models.Proxy) []ProxyDetailsResponse {
+	out := make([]ProxyDetailsResponse, 0, len(proxies))
+	for _, p := range proxies {
+		if p == nil {
+			continue
+		}
+		out = append(out, toProxyDetailsResponse(p))
+	}
+	return out
 }
 
 // --- Gin Handlers for Proxies ---
@@ -72,7 +93,7 @@ func toListProxyResponse(proxies []*models.Proxy) []*models.Proxy {
 // @Param protocol query string false "Filter by protocol (http, https, socks4, socks5)"
 // @Param isEnabled query bool false "Filter by enabled status"
 // @Param isHealthy query bool false "Filter by health status"
-// @Success 200 {array} models.Proxy "List of proxies"
+// @Success 200 {array} ProxyDetailsResponse "List of proxies"
 // @Failure 500 {object} map[string]string "Failed to list proxies"
 // @Router /proxies [get]
 func (h *APIHandler) ListProxiesGin(c *gin.Context) {
@@ -123,7 +144,7 @@ func (h *APIHandler) ListProxiesGin(c *gin.Context) {
 		}
 		return proxies[i].Name < proxies[j].Name
 	})
-	respondWithJSONGin(c, http.StatusOK, toListProxyResponse(proxies))
+	respondWithJSONGin(c, http.StatusOK, toListProxyDetailsResponse(proxies))
 }
 
 // AddProxyGin adds a new proxy.
@@ -133,7 +154,7 @@ func (h *APIHandler) ListProxiesGin(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param request body models.CreateProxyRequest true "Proxy creation request"
-// @Success 201 {object} models.Proxy "Created proxy"
+// @Success 201 {object} ProxyDetailsResponse "Created proxy"
 // @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
 // @Failure 409 {object} map[string]string "Proxy with address already exists"
 // @Failure 500 {object} map[string]string "Failed to create proxy"
@@ -252,7 +273,7 @@ func (h *APIHandler) AddProxyGin(c *gin.Context) {
 	websocket.BroadcastProxyCreated(proxy.ID.String(), proxy)
 	log.Printf("Proxy created and broadcasted: %s", proxy.ID)
 
-	respondWithJSONGin(c, http.StatusCreated, toProxyResponse(proxy))
+	respondWithJSONGin(c, http.StatusCreated, toProxyDetailsResponse(proxy))
 }
 
 // UpdateProxyGin updates a proxy.
@@ -263,7 +284,7 @@ func (h *APIHandler) AddProxyGin(c *gin.Context) {
 // @Produce json
 // @Param proxyId path string true "Proxy ID"
 // @Param request body models.UpdateProxyRequest true "Proxy update request"
-// @Success 200 {object} models.Proxy "Updated proxy"
+// @Success 200 {object} ProxyDetailsResponse "Updated proxy"
 // @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
 // @Failure 404 {object} map[string]string "Proxy not found"
 // @Failure 500 {object} map[string]string "Failed to update proxy"
@@ -411,7 +432,7 @@ func (h *APIHandler) UpdateProxyGin(c *gin.Context) {
 	websocket.BroadcastProxyUpdated(existingProxy.ID.String(), existingProxy)
 	log.Printf("Proxy updated and broadcasted: %s", existingProxy.ID)
 
-	respondWithJSONGin(c, http.StatusOK, toProxyResponse(existingProxy))
+	respondWithJSONGin(c, http.StatusOK, toProxyDetailsResponse(existingProxy))
 }
 
 // DeleteProxyGin deletes a proxy.

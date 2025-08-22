@@ -15,7 +15,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { KeywordextractorKeywordExtractionResult } from './keywordextractor-keyword-extraction-result';
+import type { ApiKeywordExtractionMatch } from './api-keyword-extraction-match';
 
 /**
  * 
@@ -24,7 +24,7 @@ import type { KeywordextractorKeywordExtractionResult } from './keywordextractor
  */
 export interface ApiKeywordExtractionAPIResult {
     /**
-     * String UUID of persona used
+     * 
      * @type {string}
      * @memberof ApiKeywordExtractionAPIResult
      */
@@ -42,7 +42,7 @@ export interface ApiKeywordExtractionAPIResult {
      */
     'finalUrl'?: string;
     /**
-     * String UUID of persona used
+     * 
      * @type {string}
      * @memberof ApiKeywordExtractionAPIResult
      */
@@ -55,12 +55,12 @@ export interface ApiKeywordExtractionAPIResult {
     'keywordSetIdUsed'?: string;
     /**
      * 
-     * @type {Array<KeywordextractorKeywordExtractionResult>}
+     * @type {Array<ApiKeywordExtractionMatch>}
      * @memberof ApiKeywordExtractionAPIResult
      */
-    'matches'?: Array<KeywordextractorKeywordExtractionResult>;
+    'matches'?: Array<ApiKeywordExtractionMatch>;
     /**
-     * String UUID of proxy used
+     * 
      * @type {string}
      * @memberof ApiKeywordExtractionAPIResult
      */
