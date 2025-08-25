@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - 'backend/**'
-      - 'backend/docs/openapi-3.yaml'
+      - 'backend/openapi/openapi.yaml'
   push:
     branches:
       - main
@@ -24,26 +24,23 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '20.19.0'
           cache: 'npm'
-          
-      - name: Setup Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.21'
-          
+      
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
+
       - name: Install dependencies
         run: npm ci
         
-      - name: Build backend (validate compilation)
+      - name: Validate OpenAPI (kin-openapi + Redocly)
+        run: bash scripts/validate-openapi-spec.sh
+
+      - name: Fossils check
         run: |
-          cd backend
-          go mod tidy
-          go build ./cmd/apiserver
-          
-      - name: Validate API contracts
-        run: npm run api:validate
-        
+          set -euo pipefail
+          if rg -n "swaggo|swagger|backend/docs" -S backend || rg -n "swaggo|swagger|backend/docs" -S .github; then echo "Swagger fossils detected" >&2; exit 1; fi
+
       - name: Comment on PR (if validation fails)
         if: failure() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
@@ -53,43 +50,5 @@ jobs:
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '❌ **API Contract Validation Failed**\n\nThe backend API changes don\'t match the committed OpenAPI specification.\n\nPlease run `npm run api:generate` to update the contracts, or revert unintended backend changes.\n\nSee the CI logs for detailed differences.'
+              body: '❌ API Contract Validation Failed (OpenAPI 3.1). Fix errors from kin-openapi/Redocly and ensure no swagger fossils.'
             });
-            
-  generate-client-check:
-    runs-on: ubuntu-latest
-    name: Verify Generated Client is Up-to-Date
-    needs: validate-contracts
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          
-      - name: Setup Java (for OpenAPI generator)
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-          
-      - name: Install dependencies
-        run: npm ci
-        
-      - name: Generate fresh TypeScript client
-        run: npm run api:generate-client
-        
-      - name: Check if generated client differs
-        run: |
-          if git diff --exit-code src/lib/api-client/; then
-            echo "✅ Generated TypeScript client is up-to-date"
-          else
-            echo "❌ Generated TypeScript client differs from committed version"
-            echo "Please run 'npm run api:generate' and commit the changes"
-            git diff src/lib/api-client/
-            exit 1
-          fi

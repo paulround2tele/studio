@@ -87,6 +87,12 @@ const (
 )
 
 func main() {
+	// Check for route dumping flag
+	if len(os.Args) > 1 && os.Args[1] == "--dump-routes" {
+		dumpRoutes()
+		return
+	}
+
 	log.Println("Starting DomainFlow API Server...")
 
 	// Load .env file from project root with multiple path attempts
@@ -983,6 +989,150 @@ type (
 	BulkOperationListResponse     = models.BulkOperationListResponse
 	BulkDomainGenerationRequest   = models.BulkDomainGenerationRequest
 	BulkDomainGenerationResponse  = models.BulkDomainGenerationResponse
+
+// dumpRoutes creates a minimal router and dumps all registered routes
+func dumpRoutes() {
+	gin.SetMode(gin.ReleaseMode)
+	router := gin.New()
+	
+	// Initialize minimal handlers (we only need the route registration, not functionality)
+	authHandler := &api.AuthHandler{}
+	apiHandler := &api.APIHandler{}
+	healthCheckHandler := &api.HealthCheckHandler{}
+	databaseHandler := &api.DatabaseHandler{}
+	
+	// Mock handlers for routes that need them
+	campaignOrchestratorAPIHandler := &api.CampaignOrchestratorAPIHandler{}
+	monitoringAPIHandler := &api.MonitoringHandlers{}
+	bulkDomainsAPIHandler := &api.BulkDomainsAPIHandler{}
+	bulkValidationAPIHandler := &api.BulkValidationAPIHandler{}
+	bulkAnalyticsAPIHandler := &api.BulkAnalyticsAPIHandler{}
+	bulkResourcesAPIHandler := &api.BulkResourcesAPIHandler{}
+	sseService := &services.SSEService{}
+	
+	// Register all routes exactly as in main()
+	router.GET("/ping", func(c *gin.Context) {})
+	
+	// Auth routes
+	authRoutesV2 := router.Group("/api/v2/auth")
+	authRoutesV2.POST("/login", authHandler.Login)
+	authRoutesV2.POST("/logout", authHandler.Logout) 
+	authRoutesV2.POST("/refresh", authHandler.RefreshSession)
+	authRoutesV2.GET("/me", authHandler.Me)
+	authRoutesV2.POST("/change-password", authHandler.ChangePassword)
+	
+	// Health routes
+	router.GET("/api/v2/health", healthCheckHandler.HandleHealthCheck)
+	router.GET("/api/v2/health/ready", healthCheckHandler.HandleReadinessCheck)
+	router.GET("/api/v2/health/live", healthCheckHandler.HandleLivenessCheck)
+	
+	// Protected API v2 routes
+	apiV2 := router.Group("/api/v2")
+	
+	// Personas
+	personaGroup := apiV2.Group("/personas")
+	personaGroup.GET("", apiHandler.ListAllPersonasGin)
+	personaGroup.POST("", apiHandler.CreatePersonaGin)
+	personaGroup.GET("/:id", apiHandler.GetPersonaByIDGin)
+	personaGroup.PUT("/:id", apiHandler.UpdatePersonaGin)
+	personaGroup.DELETE("/:id", apiHandler.DeletePersonaGin)
+	personaGroup.POST("/:id/test", apiHandler.TestPersonaGin)
+	personaGroup.GET("/http/:id", apiHandler.GetHttpPersonaByIDGin)
+	personaGroup.GET("/dns/:id", apiHandler.GetDnsPersonaByIDGin)
+	
+	// Proxies
+	proxyGroup := apiV2.Group("/proxies")
+	proxyGroup.GET("", apiHandler.ListProxiesGin)
+	proxyGroup.POST("", apiHandler.AddProxyGin)
+	proxyGroup.GET("/status", apiHandler.GetProxyStatusesGin)
+	proxyGroup.PUT("/:proxyId", apiHandler.UpdateProxyGin)
+	proxyGroup.DELETE("/:proxyId", apiHandler.DeleteProxyGin)
+	proxyGroup.POST("/:proxyId/test", apiHandler.BulkTestProxiesGin)
+	proxyGroup.POST("/:proxyId/health-check", apiHandler.ForceCheckSingleProxyGin)
+	proxyGroup.POST("/health-check", apiHandler.ForceCheckAllProxiesGin)
+	
+	// Proxy bulk operations
+	bulkProxyGroup := proxyGroup.Group("/bulk")
+	bulkProxyGroup.PUT("/update", apiHandler.BulkUpdateProxiesGin)
+	bulkProxyGroup.DELETE("/delete", apiHandler.BulkDeleteProxiesGin)
+	bulkProxyGroup.POST("/test", apiHandler.BulkTestProxiesGin)
+	
+	// Proxy pools
+	proxyPoolGroup := apiV2.Group("/proxy-pools")
+	proxyPoolGroup.GET("", apiHandler.ListProxyPoolsGin)
+	proxyPoolGroup.POST("", apiHandler.CreateProxyPoolGin)
+	proxyPoolGroup.PUT("/:poolId", apiHandler.UpdateProxyPoolGin)
+	proxyPoolGroup.DELETE("/:poolId", apiHandler.DeleteProxyPoolGin)
+	proxyPoolGroup.POST("/:poolId/proxies", apiHandler.AddProxyToPoolGin)
+	proxyPoolGroup.DELETE("/:poolId/proxies/:proxyId", apiHandler.RemoveProxyFromPoolGin)
+	
+	// Config routes
+	configGroup := apiV2.Group("/config")
+	configGroup.GET("/dns", apiHandler.GetDNSConfigGin)
+	configGroup.PUT("/dns", apiHandler.UpdateDNSConfigGin)
+	configGroup.GET("/http", apiHandler.GetHTTPConfigGin)
+	configGroup.PUT("/http", apiHandler.UpdateHTTPConfigGin)
+	configGroup.GET("/worker", apiHandler.GetWorkerConfigGin)
+	configGroup.PUT("/worker", apiHandler.UpdateWorkerConfigGin)
+	configGroup.GET("/rate-limit", apiHandler.GetRateLimiterConfigGin)
+	configGroup.PUT("/rate-limit", apiHandler.UpdateRateLimiterConfigGin)
+	configGroup.GET("/auth", apiHandler.GetAuthConfigGin)
+	configGroup.PUT("/auth", apiHandler.UpdateAuthConfigGin)
+	configGroup.GET("/logging", apiHandler.GetLoggingConfigGin)
+	configGroup.PUT("/logging", apiHandler.UpdateLoggingConfigGin)
+	configGroup.GET("/proxy-manager", apiHandler.GetProxyManagerConfigGin)
+	configGroup.PUT("/proxy-manager", apiHandler.UpdateProxyManagerConfigGin)
+	configGroup.GET("/server", apiHandler.GetServerConfigGin)
+	configGroup.PUT("/server", apiHandler.UpdateServerConfigGin)
+	configGroup.GET("/features", apiHandler.GetFeatureFlagsGin)
+	configGroup.PUT("/features", apiHandler.UpdateFeatureFlagsGin)
+	
+	// Keyword sets
+	keywordSetGroup := apiV2.Group("/keyword-sets")
+	keywordSetGroup.POST("", apiHandler.CreateKeywordSetGin)
+	keywordSetGroup.GET("", apiHandler.ListKeywordSetsGin)
+	keywordSetGroup.GET("/:setId", apiHandler.GetKeywordSetGin)
+	keywordSetGroup.PUT("/:setId", apiHandler.UpdateKeywordSetGin)
+	keywordSetGroup.DELETE("/:setId", apiHandler.DeleteKeywordSetGin)
+	keywordSetGroup.GET("/:setId/rules", apiHandler.GetKeywordSetWithRulesGin)
+	
+	// Keyword rules
+	keywordRulesGroup := apiV2.Group("/keyword-rules")
+	keywordRulesGroup.GET("", apiHandler.QueryKeywordRulesGin)
+	
+	// Keyword extraction
+	extractGroup := apiV2.Group("/extract/keywords")
+	extractGroup.POST("", apiHandler.BatchExtractKeywordsGin)
+	extractGroup.GET("/stream", apiHandler.StreamExtractKeywordsGin)
+	
+	// Database
+	databaseGroup := apiV2.Group("/database")
+	databaseGroup.POST("/query", databaseHandler.HandleBulkDatabaseQuery)
+	databaseGroup.POST("/stats", databaseHandler.HandleBulkDatabaseStats)
+	
+	// Campaigns
+	campaignApiV2 := apiV2.Group("/campaigns")
+	campaignOrchestratorAPIHandler.RegisterCampaignOrchestrationRoutes(campaignApiV2, nil)
+	
+	// SSE routes
+	sseHandler := api.NewSSEHandler(sseService)
+	sseRoutesGroup := apiV2.Group("/sse")
+	sseHandler.RegisterSSERoutes(sseRoutesGroup, nil)
+	
+	// Monitoring routes
+	monitoringRoutesGroup := apiV2.Group("/monitoring")
+	monitoringAPIHandler.RegisterMonitoringRoutes(monitoringRoutesGroup)
+	
+	// Bulk operations routes
+	bulkRoutesGroup := campaignApiV2.Group("/bulk")
+	registerBulkOperationRoutes(bulkRoutesGroup, bulkDomainsAPIHandler, bulkValidationAPIHandler, bulkAnalyticsAPIHandler, bulkResourcesAPIHandler)
+	
+	// Dump all routes
+	routes := router.Routes()
+	for _, route := range routes {
+		fmt.Printf("%-7s %s\n", route.Method, route.Path)
+	}
+}
 	BulkAnalyticsRequest          = models.BulkAnalyticsRequest
 	BulkAnalyticsResponse         = models.BulkAnalyticsResponse
 	BulkCampaignOperationRequest  = models.BulkCampaignOperationRequest

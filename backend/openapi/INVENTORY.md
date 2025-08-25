@@ -45,3 +45,11 @@
   - Spec source: backend/openapi/openapi.yaml only
   - Swagger fossils purged (imports, UI route, backend/docs/*)
   - CI: scripts/validate-openapi-spec.sh runs kin-openapi + redocly; PRs fail on warnings/errors
+
+# Contract Inventory and Decisions
+
+## Lint Policy
+- All Redocly warnings are targeted for zero. Any temporary tolerated items are listed here with justification.
+
+### Temporarily tolerated
+- None. Current spec aims for zero warnings. If any reappear (e.g., dev server localhost), ensure a production server URL remains present to silence the rule.

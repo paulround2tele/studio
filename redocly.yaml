@@ -1,0 +1,7 @@
+extends:
+  - recommended
+rules:
+  no-ambiguous-paths: off
+  no-server-example.com: warn
+  operation-4xx-response: warn
+  struct: off
