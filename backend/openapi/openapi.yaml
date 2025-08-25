@@ -1286,6 +1286,285 @@ components:
         hasPrev: { type: boolean }
       required: [page, limit, total, totalPages, hasNext, hasPrev]
 
+    # ==============================
+    # MONITORING SCHEMAS
+    # ==============================
+    SystemHealthResponse:
+      type: object
+      properties:
+        overallStatus:
+          type: string
+          enum: [healthy, degraded, unhealthy, critical]
+        resourceStatus:
+          type: string
+          enum: [healthy, warning, critical]
+        performanceStatus:
+          type: string
+          enum: [healthy, warning, critical]
+        lastUpdated:
+          type: string
+          format: date-time
+        activeOperations:
+          type: integer
+          minimum: 0
+        resourceUsage:
+          $ref: '#/components/schemas/ResourceUsage'
+        issues:
+          type: array
+          items:
+            type: object
+            properties:
+              severity: { type: string, enum: [info, warning, critical] }
+              message: { type: string }
+              component: { type: string }
+              timestamp: { type: string, format: date-time }
+        uptime:
+          type: object
+          properties:
+            seconds: { type: integer }
+            humanReadable: { type: string }
+      required: [overallStatus, resourceStatus, performanceStatus, lastUpdated, activeOperations]
+
+    MonitoringStatsResponse:
+      type: object
+      properties:
+        systemHealth:
+          $ref: '#/components/schemas/SystemHealthResponse'
+        currentResourceUsage:
+          $ref: '#/components/schemas/ResourceUsage'
+        resourceHistory:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResourceUsage'
+        recentMetrics:
+          type: array
+          items:
+            $ref: '#/components/schemas/PerformanceMetric'
+        performanceSummaries:
+          type: array
+          items:
+            $ref: '#/components/schemas/PerformanceSummary'
+        activeOperations:
+          type: array
+          items:
+            type: object
+            properties:
+              operationId: { type: string, format: uuid }
+              type: { type: string }
+              startedAt: { type: string, format: date-time }
+              progress: { type: number, format: float, minimum: 0, maximum: 100 }
+        lastUpdated:
+          type: string
+          format: date-time
+      required: [systemHealth, currentResourceUsage, lastUpdated]
+
+    PerformanceMetric:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        operationType:
+          type: string
+          enum: [domain_generation, dns_validation, http_validation, analytics]
+        durationMs:
+          type: number
+          format: float
+          minimum: 0
+        throughputPerSecond:
+          type: number
+          format: float
+          minimum: 0
+        errorRate:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+        successCount:
+          type: integer
+          minimum: 0
+        errorCount:
+          type: integer
+          minimum: 0
+        campaignId:
+          type: string
+          format: uuid
+          nullable: true
+        resourceUsage:
+          type: object
+          properties:
+            cpuPercent: { type: number, format: float }
+            memoryMB: { type: number, format: float }
+            networkKbps: { type: number, format: float }
+      required: [timestamp, operationType, durationMs, throughputPerSecond, errorRate, successCount, errorCount]
+
+    PerformanceSummary:
+      type: object
+      properties:
+        operationType:
+          type: string
+          enum: [domain_generation, dns_validation, http_validation, analytics]
+        period:
+          type: object
+          properties:
+            start: { type: string, format: date-time }
+            end: { type: string, format: date-time }
+            durationHours: { type: number, format: float }
+        metrics:
+          type: object
+          properties:
+            totalOperations: { type: integer, minimum: 0 }
+            successfulOperations: { type: integer, minimum: 0 }
+            failedOperations: { type: integer, minimum: 0 }
+            averageResponseTime: { type: number, format: float }
+            averageThroughput: { type: number, format: float }
+            successRate: { type: number, format: float, minimum: 0, maximum: 100 }
+            errorRate: { type: number, format: float, minimum: 0, maximum: 100 }
+        trends:
+          type: object
+          properties:
+            responseTimeTrend: { type: string, enum: [improving, stable, degrading] }
+            throughputTrend: { type: string, enum: [increasing, stable, decreasing] }
+            errorRateTrend: { type: string, enum: [improving, stable, worsening] }
+      required: [operationType, period, metrics]
+
+    ResourceUsage:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        cpu:
+          type: object
+          properties:
+            percent: { type: number, format: float, minimum: 0, maximum: 100 }
+            cores: { type: integer, minimum: 1 }
+            load: { type: number, format: float, minimum: 0 }
+        memory:
+          type: object
+          properties:
+            percent: { type: number, format: float, minimum: 0, maximum: 100 }
+            usedBytes: { type: integer, minimum: 0 }
+            totalBytes: { type: integer, minimum: 0 }
+            availableBytes: { type: integer, minimum: 0 }
+        disk:
+          type: object
+          properties:
+            percent: { type: number, format: float, minimum: 0, maximum: 100 }
+            usedBytes: { type: integer, minimum: 0 }
+            totalBytes: { type: integer, minimum: 0 }
+            availableBytes: { type: integer, minimum: 0 }
+        network:
+          type: object
+          properties:
+            inboundKbps: { type: number, format: float, minimum: 0 }
+            outboundKbps: { type: number, format: float, minimum: 0 }
+            connectionsActive: { type: integer, minimum: 0 }
+            connectionsTotal: { type: integer, minimum: 0 }
+      required: [timestamp, cpu, memory, disk]
+
+    SystemResourcesResponse:
+      type: object
+      properties:
+        current:
+          $ref: '#/components/schemas/ResourceUsage'
+        alerts:
+          type: array
+          items:
+            type: object
+            properties:
+              level: { type: string, enum: [info, warning, critical] }
+              resource: { type: string, enum: [cpu, memory, disk, network] }
+              message: { type: string }
+              threshold: { type: number, format: float }
+              currentValue: { type: number, format: float }
+              timestamp: { type: string, format: date-time }
+        thresholds:
+          type: object
+          properties:
+            cpu: { type: object, properties: { warning: { type: number }, critical: { type: number } } }
+            memory: { type: object, properties: { warning: { type: number }, critical: { type: number } } }
+            disk: { type: object, properties: { warning: { type: number }, critical: { type: number } } }
+      required: [current]
+
+    DashboardSummaryResponse:
+      type: object
+      properties:
+        systemHealth:
+          $ref: '#/components/schemas/SystemHealthResponse'
+        keyMetrics:
+          type: object
+          properties:
+            activeCampaigns: { type: integer, minimum: 0 }
+            totalOperationsToday: { type: integer, minimum: 0 }
+            averageResponseTime: { type: number, format: float }
+            systemUptime: { type: string }
+            errorRate: { type: number, format: float, minimum: 0, maximum: 100 }
+        recentActivity:
+          type: array
+          items:
+            type: object
+            properties:
+              timestamp: { type: string, format: date-time }
+              type: { type: string }
+              message: { type: string }
+              severity: { type: string, enum: [info, warning, error] }
+        resourceSummary:
+          type: object
+          properties:
+            cpu: { type: number, format: float, minimum: 0, maximum: 100 }
+            memory: { type: number, format: float, minimum: 0, maximum: 100 }
+            disk: { type: number, format: float, minimum: 0, maximum: 100 }
+            status: { type: string, enum: [healthy, warning, critical] }
+      required: [systemHealth, keyMetrics]
+
+    CampaignHealthResponse:
+      type: object
+      properties:
+        campaignId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy, failed]
+        phase:
+          type: string
+          enum: [domain_generation, dns_validation, http_validation, analysis]
+          nullable: true
+        progress:
+          type: object
+          properties:
+            percentage: { type: number, format: float, minimum: 0, maximum: 100 }
+            currentPhase: { type: string, nullable: true }
+            itemsProcessed: { type: integer, minimum: 0 }
+            itemsTotal: { type: integer, minimum: 0 }
+        performance:
+          type: object
+          properties:
+            averageResponseTime: { type: number, format: float }
+            throughput: { type: number, format: float }
+            errorRate: { type: number, format: float, minimum: 0, maximum: 100 }
+            successRate: { type: number, format: float, minimum: 0, maximum: 100 }
+        resourceUsage:
+          $ref: '#/components/schemas/ResourceUsage'
+        issues:
+          type: array
+          items:
+            type: object
+            properties:
+              severity: { type: string, enum: [info, warning, critical] }
+              message: { type: string }
+              timestamp: { type: string, format: date-time }
+              phase: { type: string, nullable: true }
+        timeline:
+          type: object
+          properties:
+            createdAt: { type: string, format: date-time }
+            startedAt: { type: string, format: date-time, nullable: true }
+            lastUpdated: { type: string, format: date-time }
+            estimatedCompletion: { type: string, format: date-time, nullable: true }
+      required: [campaignId, status, progress, performance]
+
     # Extraction (request/response defined roughly)
     BatchKeywordExtractionRequest:
       type: object
@@ -4468,5 +4747,1965 @@ paths:
                         $ref: '#/components/schemas/BulkResourceAllocationResponse'
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  # ==============================
+  # MONITORING - MINIMAL SET
+  # ==============================
+  /monitoring/health:
+    get:
+      tags: [monitoring]
+      summary: System health check
+      description: Get overall system health status including resource and performance metrics
+      operationId: getSystemHealth
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: System health retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SystemHealthResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /monitoring/stats:
+    get:
+      tags: [monitoring]
+      summary: Comprehensive monitoring statistics
+      description: Get comprehensive monitoring statistics including system health, resources, and performance
+      operationId: getMonitoringStats
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Monitoring statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/MonitoringStatsResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /monitoring/performance/metrics:
+    get:
+      tags: [monitoring]
+      summary: Performance metrics
+      description: Get recent performance metrics for operations with response times, throughput, and error rates
+      operationId: getPerformanceMetrics
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+          description: Maximum number of metrics to return
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [domain_generation, dns_validation, http_validation, analytics]
+          description: Filter by operation type
+        - name: hours
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 168
+            default: 24
+          description: Number of hours of data to retrieve
+      responses:
+        '200':
+          description: Performance metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          metrics:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/PerformanceMetric'
+                          summary:
+                            $ref: '#/components/schemas/PerformanceSummary'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /monitoring/resources/system:
+    get:
+      tags: [monitoring]
+      summary: System resource usage
+      description: Get current system resource usage including CPU, memory, and disk utilization
+      operationId: getSystemResources
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: System resources retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SystemResourcesResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /monitoring/dashboard/summary:
+    get:
+      tags: [monitoring]
+      summary: Dashboard summary
+      description: Get system health summary for dashboard display with key metrics and status indicators
+      operationId: getDashboardSummary
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard summary retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DashboardSummaryResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /monitoring/campaigns/{campaignId}/health:
+    get:
+      tags: [monitoring]
+      summary: Campaign health check
+      description: Get health status for a specific campaign including resource usage and performance metrics
+      operationId: getCampaignHealth
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Campaign ID to check health for
+      responses:
+        '200':
+          description: Campaign health retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CampaignHealthResponse'
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  # Additional Monitoring Endpoints
+  /monitoring/resources/history:
+    get:
+      tags: [monitoring]
+      summary: Resource usage history
+      description: Get historical resource usage data with configurable time range
+      operationId: getResourceHistory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: hours
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 168
+            default: 24
+          description: Number of hours of history to retrieve
+        - name: interval
+          in: query
+          schema:
+            type: string
+            enum: [1m, 5m, 15m, 1h]
+            default: 5m
+          description: Data interval granularity
+      responses:
+        '200':
+          description: Resource history retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          history:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/ResourceUsage'
+                          summary:
+                            type: object
+                            properties:
+                              totalDataPoints: { type: integer }
+                              timeRange: { type: object, properties: { start: { type: string, format: date-time }, end: { type: string, format: date-time } } }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /monitoring/resources/alerts:
+    get:
+      tags: [monitoring]
+      summary: Active resource alerts
+      description: Get current active resource alerts and warnings
+      operationId: getResourceAlerts
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [info, warning, critical]
+          description: Filter alerts by severity level
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          description: Maximum number of alerts to return
+      responses:
+        '200':
+          description: Resource alerts retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          alerts:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id: { type: string, format: uuid }
+                                severity: { type: string, enum: [info, warning, critical] }
+                                resource: { type: string, enum: [cpu, memory, disk, network] }
+                                message: { type: string }
+                                threshold: { type: number, format: float }
+                                currentValue: { type: number, format: float }
+                                timestamp: { type: string, format: date-time }
+                                resolved: { type: boolean }
+                          summary:
+                            type: object
+                            properties:
+                              total: { type: integer }
+                              critical: { type: integer }
+                              warning: { type: integer }
+                              info: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /monitoring/performance/summary:
+    get:
+      tags: [monitoring]
+      summary: Performance summary
+      description: Get performance summary for operation types with aggregated metrics
+      operationId: getPerformanceSummary
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [1h, 6h, 24h, 7d, 30d]
+            default: 24h
+          description: Time period for summary
+      responses:
+        '200':
+          description: Performance summary retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          summaries:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/PerformanceSummary'
+                          overall:
+                            type: object
+                            properties:
+                              totalOperations: { type: integer }
+                              averageResponseTime: { type: number, format: float }
+                              overallSuccessRate: { type: number, format: float }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /monitoring/performance/active:
+    get:
+      tags: [monitoring]
+      summary: Active operations
+      description: Get currently active operations with real-time progress
+      operationId: getActiveOperations
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Active operations retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          operations:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                operationId: { type: string, format: uuid }
+                                type: { type: string }
+                                startedAt: { type: string, format: date-time }
+                                progress: { type: number, format: float, minimum: 0, maximum: 100 }
+                                estimatedCompletion: { type: string, format: date-time, nullable: true }
+                                campaignId: { type: string, format: uuid, nullable: true }
+                                resourceUsage: { $ref: '#/components/schemas/ResourceUsage' }
+                          summary:
+                            type: object
+                            properties:
+                              total: { type: integer }
+                              byType: { type: object, additionalProperties: { type: integer } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /monitoring/performance/slow:
+    get:
+      tags: [monitoring]
+      summary: Slow operations
+      description: Get operations with response times above thresholds
+      operationId: getSlowOperations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: threshold
+          in: query
+          schema:
+            type: number
+            format: float
+            minimum: 0
+            default: 5000
+          description: Response time threshold in milliseconds
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          description: Maximum number of slow operations to return
+      responses:
+        '200':
+          description: Slow operations retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          operations:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/PerformanceMetric'
+                          threshold: { type: number, format: float }
+                          summary:
+                            type: object
+                            properties:
+                              total: { type: integer }
+                              averageResponseTime: { type: number, format: float }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /monitoring/performance/failed:
+    get:
+      tags: [monitoring]
+      summary: Failed operations
+      description: Get operations that have failed with error details
+      operationId: getFailedOperations
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: hours
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 168
+            default: 24
+          description: Number of hours to look back for failed operations
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+          description: Maximum number of failed operations to return
+      responses:
+        '200':
+          description: Failed operations retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          operations:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                operationId: { type: string, format: uuid }
+                                type: { type: string }
+                                timestamp: { type: string, format: date-time }
+                                error: { type: string }
+                                durationMs: { type: number, format: float }
+                                campaignId: { type: string, format: uuid, nullable: true }
+                          summary:
+                            type: object
+                            properties:
+                              total: { type: integer }
+                              byType: { type: object, additionalProperties: { type: integer } }
+                              byError: { type: object, additionalProperties: { type: integer } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /monitoring/dashboard/trends:
+    get:
+      tags: [monitoring]
+      summary: Dashboard trends
+      description: Get trending data for dashboard displays including throughput and performance trends
+      operationId: getDashboardTrends
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [1h, 6h, 24h, 7d]
+            default: 24h
+          description: Time period for trend analysis
+      responses:
+        '200':
+          description: Dashboard trends retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          throughputTrend:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                timestamp: { type: string, format: date-time }
+                                operationsPerSecond: { type: number, format: float }
+                          responseTrend:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                timestamp: { type: string, format: date-time }
+                                averageResponseTime: { type: number, format: float }
+                          errorRateTrend:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                timestamp: { type: string, format: date-time }
+                                errorRate: { type: number, format: float }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /monitoring/cleanup/stats:
+    get:
+      tags: [monitoring]
+      summary: Cleanup statistics
+      description: Get cleanup service statistics including campaigns cleaned and resources freed
+      operationId: getCleanupStats
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Cleanup statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          totalCampaignsCleaned: { type: integer }
+                          resourcesFreed:
+                            type: object
+                            properties:
+                              memoryMB: { type: number, format: float }
+                              diskMB: { type: number, format: float }
+                          lastCleanup: { type: string, format: date-time }
+                          nextScheduledCleanup: { type: string, format: date-time }
+                          cleanupRules:
+                            type: object
+                            properties:
+                              retentionDays: { type: integer }
+                              autoCleanupEnabled: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /monitoring/cleanup/campaigns/{campaignId}:
+    get:
+      tags: [monitoring]
+      summary: Campaign cleanup info
+      description: Get cleanup information for a specific campaign
+      operationId: getCampaignCleanupInfo
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Campaign ID to get cleanup info for
+      responses:
+        '200':
+          description: Campaign cleanup info retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          campaignId: { type: string, format: uuid }
+                          eligibleForCleanup: { type: boolean }
+                          scheduledCleanup: { type: string, format: date-time, nullable: true }
+                          retentionEnd: { type: string, format: date-time, nullable: true }
+                          resourceUsage:
+                            type: object
+                            properties:
+                              memoryMB: { type: number, format: float }
+                              diskMB: { type: number, format: float }
+                              records: { type: integer }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /monitoring/cleanup/campaigns/{campaignId}/force:
+    post:
+      tags: [monitoring]
+      summary: Force campaign cleanup
+      description: Force immediate cleanup of a specific campaign
+      operationId: forceCleanupCampaign
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Campaign ID to force cleanup for
+      responses:
+        '200':
+          description: Campaign cleanup initiated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          campaignId: { type: string, format: uuid }
+                          cleanupInitiated: { type: boolean }
+                          estimatedCompletion: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /monitoring/campaigns/{campaignId}/resources:
+    get:
+      tags: [monitoring]
+      summary: Campaign resource usage
+      description: Get detailed resource usage for a specific campaign
+      operationId: getCampaignResources
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Campaign ID to get resource usage for
+      responses:
+        '200':
+          description: Campaign resources retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          campaignId: { type: string, format: uuid }
+                          current: { $ref: '#/components/schemas/ResourceUsage' }
+                          peak: { $ref: '#/components/schemas/ResourceUsage' }
+                          average: { $ref: '#/components/schemas/ResourceUsage' }
+                          limits:
+                            type: object
+                            properties:
+                              maxMemoryMB: { type: number, format: float }
+                              maxCpuPercent: { type: number, format: float }
+                              maxDiskMB: { type: number, format: float }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /monitoring/campaigns/{campaignId}/performance:
+    get:
+      tags: [monitoring]
+      summary: Campaign performance metrics
+      description: Get performance metrics for a specific campaign
+      operationId: getCampaignPerformance
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Campaign ID to get performance metrics for
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+          description: Maximum number of metrics to return
+      responses:
+        '200':
+          description: Campaign performance retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          campaignId: { type: string, format: uuid }
+                          metrics:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/PerformanceMetric'
+                          summary:
+                            type: object
+                            properties:
+                              averageResponseTime: { type: number, format: float }
+                              totalOperations: { type: integer }
+                              successRate: { type: number, format: float }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /monitoring/campaigns/{campaignId}/limits:
+    post:
+      tags: [monitoring]
+      summary: Set campaign resource limits
+      description: Set resource limits for a specific campaign
+      operationId: setCampaignLimits
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Campaign ID to set limits for
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                limits:
+                  type: object
+                  properties:
+                    maxMemoryMB: { type: number, format: float, minimum: 0 }
+                    maxCpuPercent: { type: number, format: float, minimum: 0, maximum: 100 }
+                    maxDiskMB: { type: number, format: float, minimum: 0 }
+                    maxNetworkKbps: { type: number, format: float, minimum: 0 }
+                  additionalProperties: false
+              required: [limits]
+      responses:
+        '200':
+          description: Campaign limits set successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          campaignId: { type: string, format: uuid }
+                          limits:
+                            type: object
+                            properties:
+                              maxMemoryMB: { type: number, format: float }
+                              maxCpuPercent: { type: number, format: float }
+                              maxDiskMB: { type: number, format: float }
+                              maxNetworkKbps: { type: number, format: float }
+                          appliedAt: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  # ==============================
+  # SSE (Server-Sent Events) - REAL-TIME
+  # ==============================
+  /sse/campaigns/{campaignId}/events:
+    get:
+      tags: [sse]
+      summary: Campaign event stream
+      description: Subscribe to real-time events for a specific campaign via Server-Sent Events
+      operationId: getCampaignEventStream
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Campaign ID to stream events for
+        - name: eventTypes
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [progress, phase_change, error, completion, status_update]
+          style: form
+          explode: false
+          description: Filter events by type
+      responses:
+        '200':
+          description: SSE stream established successfully
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-sent event stream with campaign updates
+              examples:
+                progress_event:
+                  value: |
+                    data: {"eventType":"progress","campaignId":"123e4567-e89b-12d3-a456-426614174000","timestamp":"2024-01-01T12:00:00Z","data":{"phase":"dns_validation","progress":45.5,"itemsProcessed":455,"itemsTotal":1000}}
+                    
+                phase_change_event:
+                  value: |
+                    data: {"eventType":"phase_change","campaignId":"123e4567-e89b-12d3-a456-426614174000","timestamp":"2024-01-01T12:00:00Z","data":{"fromPhase":"dns_validation","toPhase":"http_validation","progress":66.7}}
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /sse/events:
+    get:
+      tags: [sse]
+      summary: Global event stream
+      description: Subscribe to all system events via Server-Sent Events
+      operationId: getGlobalEventStream
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: eventTypes
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [campaign_created, campaign_completed, system_alert, resource_warning, performance_degradation]
+          style: form
+          explode: false
+          description: Filter events by type
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [low, normal, high, critical]
+            default: normal
+          description: Minimum event priority level
+      responses:
+        '200':
+          description: SSE stream established successfully
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: Server-sent event stream with global system updates
+              examples:
+                system_alert:
+                  value: |
+                    data: {"eventType":"system_alert","timestamp":"2024-01-01T12:00:00Z","priority":"high","data":{"alertType":"high_cpu_usage","message":"CPU usage above 85% for 5 minutes","currentValue":87.3,"threshold":85}}
+                    
+                campaign_completed:
+                  value: |
+                    data: {"eventType":"campaign_completed","timestamp":"2024-01-01T12:00:00Z","priority":"normal","data":{"campaignId":"123e4567-e89b-12d3-a456-426614174000","totalDomains":1000,"successfulDomains":923,"duration":"00:45:32"}}
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /sse/events/stats:
+    get:
+      tags: [sse]
+      summary: SSE connection statistics
+      description: Get statistics about active SSE connections and event throughput
+      operationId: getSSEStats
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: SSE statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          activeConnections:
+                            type: object
+                            properties:
+                              total: { type: integer }
+                              campaign: { type: integer }
+                              global: { type: integer }
+                          eventThroughput:
+                            type: object
+                            properties:
+                              eventsPerSecond: { type: number, format: float }
+                              eventsLast5Min: { type: integer }
+                              eventsLast1Hour: { type: integer }
+                          connectionStats:
+                            type: object
+                            properties:
+                              averageDuration: { type: string }
+                              longestConnection: { type: string }
+                              totalConnectionsToday: { type: integer }
+                          lastUpdated: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  # ============================================================================
+  # KEYWORD SETS & RULES ENDPOINTS
+  # ============================================================================
+  
+  /api/v1/keyword-sets:
+    get:
+      tags: [Keyword Sets]
+      summary: List keyword sets
+      description: Retrieve all keyword sets with their associated rules and metadata
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 100 }
+          description: Maximum number of sets to return
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+          description: Number of sets to skip for pagination
+        - name: search
+          in: query
+          schema: { type: string }
+          description: Search sets by name or description
+        - name: tag
+          in: query
+          schema: { type: string }
+          description: Filter sets by tag
+      responses:
+        '200':
+          description: Keyword sets retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          sets:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id: { type: string, format: uuid }
+                                name: { type: string }
+                                description: { type: string }
+                                tags: 
+                                  type: array
+                                  items: { type: string }
+                                ruleCount: { type: integer, minimum: 0 }
+                                createdAt: { type: string, format: date-time }
+                                updatedAt: { type: string, format: date-time }
+                                lastUsed: { type: string, format: date-time, nullable: true }
+                          total: { type: integer, minimum: 0 }
+                          hasMore: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+    
+    post:
+      tags: [Keyword Sets]
+      summary: Create keyword set
+      description: Create a new keyword set with rules and metadata
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 255 }
+                description: { type: string, maxLength: 1000 }
+                tags:
+                  type: array
+                  items: { type: string, minLength: 1, maxLength: 50 }
+                  maxItems: 20
+                rules:
+                  type: array
+                  items:
+                    type: object
+                    required: [type, pattern]
+                    properties:
+                      type: { type: string, enum: [exact, partial, regex, wildcard] }
+                      pattern: { type: string, minLength: 1 }
+                      caseSensitive: { type: boolean, default: false }
+                      weight: { type: number, minimum: 0, maximum: 1, default: 1.0 }
+                  maxItems: 1000
+      responses:
+        '201':
+          description: Keyword set created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id: { type: string, format: uuid }
+                          name: { type: string }
+                          description: { type: string }
+                          tags: 
+                            type: array
+                            items: { type: string }
+                          ruleCount: { type: integer, minimum: 0 }
+                          createdAt: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': 
+          description: Keyword set name already exists
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorEnvelope'
+                  - type: object
+                    properties:
+                      error:
+                        type: object
+                        properties:
+                          code: { type: string, example: "DUPLICATE_NAME" }
+                          details:
+                            type: object
+                            properties:
+                              existingSetId: { type: string, format: uuid }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /api/v1/keyword-sets/{setId}:
+    get:
+      tags: [Keyword Sets]
+      summary: Get keyword set details
+      description: Retrieve detailed information about a specific keyword set including all rules
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: setId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: Unique identifier of the keyword set
+        - name: includeRules
+          in: query
+          schema: { type: boolean, default: true }
+          description: Whether to include full rule details
+        - name: includeStats
+          in: query
+          schema: { type: boolean, default: false }
+          description: Whether to include usage statistics
+      responses:
+        '200':
+          description: Keyword set details retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id: { type: string, format: uuid }
+                          name: { type: string }
+                          description: { type: string }
+                          tags: 
+                            type: array
+                            items: { type: string }
+                          rules:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id: { type: string, format: uuid }
+                                type: { type: string, enum: [exact, partial, regex, wildcard] }
+                                pattern: { type: string }
+                                caseSensitive: { type: boolean }
+                                weight: { type: number, minimum: 0, maximum: 1 }
+                                matchCount: { type: integer, minimum: 0 }
+                                lastMatch: { type: string, format: date-time, nullable: true }
+                                createdAt: { type: string, format: date-time }
+                          stats:
+                            type: object
+                            nullable: true
+                            properties:
+                              totalMatches: { type: integer, minimum: 0 }
+                              uniqueMatches: { type: integer, minimum: 0 }
+                              avgMatchesPerRule: { type: number, minimum: 0 }
+                              topRules:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    ruleId: { type: string, format: uuid }
+                                    pattern: { type: string }
+                                    matchCount: { type: integer, minimum: 0 }
+                              recentActivity:
+                                type: object
+                                properties:
+                                  last24h: { type: integer, minimum: 0 }
+                                  last7d: { type: integer, minimum: 0 }
+                                  last30d: { type: integer, minimum: 0 }
+                          createdAt: { type: string, format: date-time }
+                          updatedAt: { type: string, format: date-time }
+                          lastUsed: { type: string, format: date-time, nullable: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+    
+    put:
+      tags: [Keyword Sets]
+      summary: Update keyword set
+      description: Update keyword set metadata and rules (full replacement)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: setId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: Unique identifier of the keyword set
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 255 }
+                description: { type: string, maxLength: 1000 }
+                tags:
+                  type: array
+                  items: { type: string, minLength: 1, maxLength: 50 }
+                  maxItems: 20
+                rules:
+                  type: array
+                  items:
+                    type: object
+                    required: [type, pattern]
+                    properties:
+                      id: { type: string, format: uuid }
+                      type: { type: string, enum: [exact, partial, regex, wildcard] }
+                      pattern: { type: string, minLength: 1 }
+                      caseSensitive: { type: boolean, default: false }
+                      weight: { type: number, minimum: 0, maximum: 1, default: 1.0 }
+                  maxItems: 1000
+      responses:
+        '200':
+          description: Keyword set updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id: { type: string, format: uuid }
+                          name: { type: string }
+                          description: { type: string }
+                          tags: 
+                            type: array
+                            items: { type: string }
+                          ruleCount: { type: integer, minimum: 0 }
+                          updatedAt: { type: string, format: date-time }
+                          rulesChanged: { type: boolean }
+                          addedRules: { type: integer, minimum: 0 }
+                          modifiedRules: { type: integer, minimum: 0 }
+                          removedRules: { type: integer, minimum: 0 }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Update would cause conflict
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorEnvelope'
+                  - type: object
+                    properties:
+                      error:
+                        type: object
+                        properties:
+                          code: { type: string, example: "SET_IN_USE" }
+                          details:
+                            type: object
+                            properties:
+                              activeCampaigns: 
+                                type: array
+                                items: { type: string, format: uuid }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+    
+    delete:
+      tags: [Keyword Sets]
+      summary: Delete keyword set
+      description: Delete a keyword set and all associated rules
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: setId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: Unique identifier of the keyword set
+        - name: force
+          in: query
+          schema: { type: boolean, default: false }
+          description: Force deletion even if set is in use by active campaigns
+      responses:
+        '204':
+          description: Keyword set deleted successfully
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Cannot delete set in use
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorEnvelope'
+                  - type: object
+                    properties:
+                      error:
+                        type: object
+                        properties:
+                          code: { type: string, example: "SET_IN_USE" }
+                          details:
+                            type: object
+                            properties:
+                              activeCampaigns: 
+                                type: array
+                                items: { type: string, format: uuid }
+                              suggestForce: { type: boolean, default: true }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /api/v1/personas/{personaId}/test:
+    post:
+      tags: [Personas]
+      summary: Test persona
+      description: Test a persona's behavior against a sample URL to validate configuration
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: personaId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: Unique identifier of the persona
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [testUrl]
+              properties:
+                testUrl: { type: string, format: uri }
+                options:
+                  type: object
+                  properties:
+                    followRedirects: { type: boolean, default: true }
+                    timeout: { type: integer, minimum: 1000, maximum: 60000, default: 30000 }
+                    validateCertificates: { type: boolean, default: true }
+      responses:
+        '200':
+          description: Persona test completed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          testId: { type: string, format: uuid }
+                          personaId: { type: string, format: uuid }
+                          testUrl: { type: string, format: uri }
+                          result:
+                            type: object
+                            properties:
+                              success: { type: boolean }
+                              httpStatus: { type: integer, minimum: 100, maximum: 599 }
+                              responseTime: { type: number, minimum: 0 }
+                              contentLength: { type: integer, minimum: 0 }
+                              contentType: { type: string }
+                              finalUrl: { type: string, format: uri }
+                              redirectCount: { type: integer, minimum: 0 }
+                              headers:
+                                type: object
+                                additionalProperties: { type: string }
+                          analysis:
+                            type: object
+                            properties:
+                              personaDetected: { type: boolean }
+                              botDetectionSignals:
+                                type: array
+                                items: { type: string }
+                              recommendations:
+                                type: array
+                                items:
+                                  type: object
+                                  properties:
+                                    type: { type: string, enum: [warning, optimization, security] }
+                                    message: { type: string }
+                                    suggestion: { type: string }
+                          performance:
+                            type: object
+                            properties:
+                              dnsTime: { type: number, minimum: 0 }
+                              connectTime: { type: number, minimum: 0 }
+                              tlsTime: { type: number, minimum: 0 }
+                              responseTime: { type: number, minimum: 0 }
+                              totalTime: { type: number, minimum: 0 }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /api/v1/personas/{personaId}/clone:
+    post:
+      tags: [Personas]
+      summary: Clone persona
+      description: Create a copy of an existing persona with optional modifications
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: personaId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: Unique identifier of the persona to clone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 255 }
+                description: { type: string, maxLength: 1000 }
+                modifications:
+                  type: object
+                  properties:
+                    category: { type: string, enum: [web_scraper, social_media, e_commerce, news, academic, general] }
+                    userAgent: { type: string, minLength: 10, maxLength: 500 }
+                    headers:
+                      type: object
+                      additionalProperties: { type: string }
+                    behaviors:
+                      type: object
+                      properties:
+                        respectRobots: { type: boolean }
+                        delayRange:
+                          type: object
+                          properties:
+                            min: { type: integer, minimum: 0, maximum: 30000 }
+                            max: { type: integer, minimum: 0, maximum: 60000 }
+                        maxRetries: { type: integer, minimum: 0, maximum: 10 }
+                        followRedirects: { type: boolean }
+                        timeout: { type: integer, minimum: 1000, maximum: 300000 }
+                        cookieHandling: { type: string, enum: [none, session, persistent] }
+                        javascriptEnabled: { type: boolean }
+                isActive: { type: boolean, default: true }
+      responses:
+        '201':
+          description: Persona cloned successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id: { type: string, format: uuid }
+                          name: { type: string }
+                          sourcePersonaId: { type: string, format: uuid }
+                          modificationsApplied:
+                            type: array
+                            items: { type: string }
+                          createdAt: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Persona name already exists
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorEnvelope'
+                  - type: object
+                    properties:
+                      error:
+                        type: object
+                        properties:
+                          code: { type: string, example: "DUPLICATE_NAME" }
+                          details:
+                            type: object
+                            properties:
+                              existingPersonaId: { type: string, format: uuid }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  # ============================================================================
+  # EXTRACTION ENDPOINTS
+  # ============================================================================
+  
+  /api/v1/extraction/validate:
+    post:
+      tags: [Extraction]
+      summary: Validate extraction rules
+      description: Validate extraction rules against sample data without executing full extraction
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rules, sampleData]
+              properties:
+                rules:
+                  type: array
+                  items:
+                    type: object
+                    required: [name, type, pattern]
+                    properties:
+                      name: { type: string, minLength: 1, maxLength: 100 }
+                      type: { type: string, enum: [regex, xpath, css, json_path] }
+                      pattern: { type: string, minLength: 1 }
+                      required: { type: boolean, default: false }
+                      defaultValue: { type: string }
+                      transform:
+                        type: object
+                        properties:
+                          type: { type: string, enum: [uppercase, lowercase, trim, regex_replace] }
+                          config: { type: object }
+                  maxItems: 50
+                sampleData:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      content: { type: string }
+                      contentType: { type: string, enum: [html, xml, json, text] }
+                      url: { type: string, format: uri }
+                  maxItems: 10
+                validateOnly: { type: boolean, default: true }
+      responses:
+        '200':
+          description: Extraction rules validated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          validationResults:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                ruleName: { type: string }
+                                isValid: { type: boolean }
+                                errors:
+                                  type: array
+                                  items: { type: string }
+                                warnings:
+                                  type: array
+                                  items: { type: string }
+                                sampleMatches:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      sampleIndex: { type: integer, minimum: 0 }
+                                      matched: { type: boolean }
+                                      extractedValue: { type: string }
+                                      confidence: { type: number, minimum: 0, maximum: 1 }
+                          overallValid: { type: boolean }
+                          performance:
+                            type: object
+                            properties:
+                              avgProcessingTime: { type: number, minimum: 0 }
+                              maxProcessingTime: { type: number, minimum: 0 }
+                              rulesPerSecond: { type: number, minimum: 0 }
+                          recommendations:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                type: { type: string, enum: [optimization, error, warning] }
+                                ruleName: { type: string }
+                                message: { type: string }
+                                suggestion: { type: string }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /api/v1/extraction/test:
+    post:
+      tags: [Extraction]
+      summary: Test extraction on live data
+      description: Execute extraction rules against live data sources for testing and validation
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rules, targets]
+              properties:
+                rules:
+                  type: array
+                  items:
+                    type: object
+                    required: [name, type, pattern]
+                    properties:
+                      name: { type: string, minLength: 1, maxLength: 100 }
+                      type: { type: string, enum: [regex, xpath, css, json_path] }
+                      pattern: { type: string, minLength: 1 }
+                      required: { type: boolean, default: false }
+                      defaultValue: { type: string }
+                      transform:
+                        type: object
+                        properties:
+                          type: { type: string, enum: [uppercase, lowercase, trim, regex_replace] }
+                          config: { type: object }
+                  maxItems: 50
+                targets:
+                  type: array
+                  items:
+                    type: object
+                    required: [url]
+                    properties:
+                      url: { type: string, format: uri }
+                      method: { type: string, enum: [GET, POST], default: "GET" }
+                      headers: 
+                        type: object
+                        additionalProperties: { type: string }
+                      timeout: { type: integer, minimum: 1, maximum: 60, default: 30 }
+                  maxItems: 5
+                options:
+                  type: object
+                  properties:
+                    respectRobots: { type: boolean, default: true }
+                    userAgent: { type: string, maxLength: 200 }
+                    concurrent: { type: boolean, default: false }
+                    retryCount: { type: integer, minimum: 0, maximum: 3, default: 1 }
+                    followRedirects: { type: boolean, default: true }
+      responses:
+        '200':
+          description: Extraction test completed successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          testId: { type: string, format: uuid }
+                          results:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                targetUrl: { type: string, format: uri }
+                                status: { type: string, enum: [success, partial, failed] }
+                                httpStatus: { type: integer, minimum: 100, maximum: 599 }
+                                responseTime: { type: number, minimum: 0 }
+                                contentLength: { type: integer, minimum: 0 }
+                                extractedData:
+                                  type: object
+                                  additionalProperties:
+                                    type: object
+                                    properties:
+                                      value: { type: string }
+                                      confidence: { type: number, minimum: 0, maximum: 1 }
+                                      processingTime: { type: number, minimum: 0 }
+                                errors:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      ruleName: { type: string }
+                                      error: { type: string }
+                                      type: { type: string, enum: [pattern_error, transformation_error, network_error] }
+                          summary:
+                            type: object
+                            properties:
+                              totalTargets: { type: integer, minimum: 0 }
+                              successfulTargets: { type: integer, minimum: 0 }
+                              failedTargets: { type: integer, minimum: 0 }
+                              totalRules: { type: integer, minimum: 0 }
+                              successfulExtractions: { type: integer, minimum: 0 }
+                              failedExtractions: { type: integer, minimum: 0 }
+                              avgResponseTime: { type: number, minimum: 0 }
+                              totalDataExtracted: { type: integer, minimum: 0 }
+                          performance:
+                            type: object
+                            properties:
+                              testDuration: { type: number, minimum: 0 }
+                              avgExtractionTime: { type: number, minimum: 0 }
+                              rulesPerSecond: { type: number, minimum: 0 }
+                              recommendedConcurrency: { type: integer, minimum: 1 }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  # ============================================================================
+  # PERSONAS ENDPOINTS
+  # ============================================================================
+  
+  /api/v1/personas:
+    get:
+      tags: [Personas]
+      summary: List personas
+      description: Retrieve all available personas with their configurations and metadata
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 1000, default: 100 }
+          description: Maximum number of personas to return
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+          description: Number of personas to skip for pagination
+        - name: category
+          in: query
+          schema: { type: string, enum: [web_scraper, social_media, e_commerce, news, academic, general] }
+          description: Filter personas by category
+        - name: active
+          in: query
+          schema: { type: boolean }
+          description: Filter by active status
+        - name: search
+          in: query
+          schema: { type: string }
+          description: Search personas by name or description
+      responses:
+        '200':
+          description: Personas retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          personas:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id: { type: string, format: uuid }
+                                name: { type: string }
+                                description: { type: string }
+                                category: { type: string, enum: [web_scraper, social_media, e_commerce, news, academic, general] }
+                                isActive: { type: boolean }
+                                userAgent: { type: string }
+                                headers:
+                                  type: object
+                                  additionalProperties: { type: string }
+                                behaviors:
+                                  type: object
+                                  properties:
+                                    respectRobots: { type: boolean }
+                                    delayRange: 
+                                      type: object
+                                      properties:
+                                        min: { type: integer, minimum: 0 }
+                                        max: { type: integer, minimum: 0 }
+                                    maxRetries: { type: integer, minimum: 0 }
+                                usageCount: { type: integer, minimum: 0 }
+                                successRate: { type: number, minimum: 0, maximum: 1 }
+                                lastUsed: { type: string, format: date-time, nullable: true }
+                                createdAt: { type: string, format: date-time }
+                                updatedAt: { type: string, format: date-time }
+                          total: { type: integer, minimum: 0 }
+                          hasMore: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+    
+    post:
+      tags: [Personas]
+      summary: Create persona
+      description: Create a new persona with custom browser behavior and headers
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, category, userAgent]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 255 }
+                description: { type: string, maxLength: 1000 }
+                category: { type: string, enum: [web_scraper, social_media, e_commerce, news, academic, general] }
+                userAgent: { type: string, minLength: 10, maxLength: 500 }
+                headers:
+                  type: object
+                  additionalProperties: { type: string }
+                  maxProperties: 50
+                behaviors:
+                  type: object
+                  properties:
+                    respectRobots: { type: boolean, default: true }
+                    delayRange:
+                      type: object
+                      properties:
+                        min: { type: integer, minimum: 0, maximum: 30000 }
+                        max: { type: integer, minimum: 0, maximum: 60000 }
+                    maxRetries: { type: integer, minimum: 0, maximum: 10, default: 3 }
+                    followRedirects: { type: boolean, default: true }
+                    timeout: { type: integer, minimum: 1000, maximum: 300000, default: 30000 }
+                    cookieHandling: { type: string, enum: [none, session, persistent], default: "session" }
+                    javascriptEnabled: { type: boolean, default: false }
+                isActive: { type: boolean, default: true }
+      responses:
+        '201':
+          description: Persona created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id: { type: string, format: uuid }
+                          name: { type: string }
+                          description: { type: string }
+                          category: { type: string }
+                          userAgent: { type: string }
+                          isActive: { type: boolean }
+                          createdAt: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409':
+          description: Persona name already exists
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorEnvelope'
+                  - type: object
+                    properties:
+                      error:
+                        type: object
+                        properties:
+                          code: { type: string, example: "DUPLICATE_NAME" }
+                          details:
+                            type: object
+                            properties:
+                              existingPersonaId: { type: string, format: uuid }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimitExceeded' }
+        '500': { $ref: '#/components/responses/InternalServerError' }
+
+  /api/v1/personas/{personaId}:
+    get:
+      tags: [Personas]
+      summary: Get persona details
+      description: Retrieve detailed information about a specific persona including usage statistics
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: personaId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+          description: Unique identifier of the persona
+        - name: includeStats
+          in: query
+          schema: { type: boolean, default: false }
+          description: Whether to include usage statistics
+      responses:
+        '200':
+          description: Persona details retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id: { type: string, format: uuid }
+                          name: { type: string }
+                          description: { type: string }
+                          category: { type: string, enum: [web_scraper, social_media, e_commerce, news, academic, general] }
+                          userAgent: { type: string }
+                          headers:
+                            type: object
+                            additionalProperties: { type: string }
+                          behaviors:
+                            type: object
+                            properties:
+                              respectRobots: { type: boolean }
+                              delayRange:
+                                type: object
+                                properties:
+                                  min: { type: integer, minimum: 0 }
+                                  max: { type: integer, minimum: 0 }
+                              maxRetries: { type: integer, minimum: 0 }
+                              followRedirects: { type: boolean }
+                              timeout: { type: integer, minimum: 0 }
+                              cookieHandling: { type: string, enum: [none, session, persistent] }
+                              javascriptEnabled: { type: boolean }
+                          isActive: { type: boolean }
+                          stats:
+                            type: object
+                            nullable: true
+                            properties:
+                              usageCount: { type: integer, minimum: 0 }
+                              successRate: { type: number, minimum: 0, maximum: 1 }
+                              avgResponseTime: { type: number, minimum: 0 }
+                              totalRequests: { type: integer, minimum: 0 }
+                              successfulRequests: { type: integer, minimum: 0 }
+                              failedRequests: { type: integer, minimum: 0 }
+                              recentActivity:
+                                type: object
+                                properties:
+                                  last24h: { type: integer, minimum: 0 }
+                                  last7d: { type: integer, minimum: 0 }
+                                  last30d: { type: integer, minimum: 0 }
+                              errorBreakdown:
+                                type: object
+                                additionalProperties: { type: integer, minimum: 0 }
+                          createdAt: { type: string, format: date-time }
+                          updatedAt: { type: string, format: date-time }
+                          lastUsed: { type: string, format: date-time, nullable: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
         '429': { $ref: '#/components/responses/RateLimitExceeded' }
         '500': { $ref: '#/components/responses/InternalServerError' }
