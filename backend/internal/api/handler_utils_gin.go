@@ -122,12 +122,23 @@ func respondWithJSONGin(c *gin.Context, code int, payload interface{}) {
 	}
 
 	requestID := getRequestID(c)
+
+	// Guard against double-wrapping: if payload is already an APIResponse, pass through unchanged
+	if apiResp, ok := payload.(*APIResponse); ok {
+		c.Header("X-Request-ID", apiResp.RequestID)
+		c.JSON(code, apiResp)
+		log.Printf("DEBUG [respondWithJSONGin]: APIResponse passthrough - code: %d, requestId: %s", code, apiResp.RequestID)
+		return
+	}
+
 	response := NewSuccessResponse(payload, requestID)
 
-	// DEBUG: Log response structure for API mismatch analysis
-	log.Printf("DEBUG [respondWithJSONGin]: Wrapping response in APIResponse structure")
-	log.Printf("DEBUG [respondWithJSONGin]: Original payload type: %T", payload)
-	log.Printf("DEBUG [respondWithJSONGin]: Final response structure: {success: true, data: %T, requestId: %s}", payload, requestID)
+	// Optional debug logs for envelope wrapping, gated by Gin mode
+	if gin.Mode() == gin.DebugMode {
+		log.Printf("DEBUG [respondWithJSONGin]: Wrapping response in APIResponse structure")
+		log.Printf("DEBUG [respondWithJSONGin]: Original payload type: %T", payload)
+		log.Printf("DEBUG [respondWithJSONGin]: Final response structure: {success: true, data: %T, requestId: %s}", payload, requestID)
+	}
 
 	// Add rate limit info if available
 	if limit := c.GetHeader("X-RateLimit-Limit"); limit != "" {
@@ -154,7 +165,7 @@ func respondWithJSONGin(c *gin.Context, code int, payload interface{}) {
 // streamErrorEventGin sends an error event for SSE using Gin
 func streamErrorEventGin(c *gin.Context, flusher http.Flusher, errorMessage string) {
 	select {
-	case <-c.Writer.CloseNotify():
+	case <-c.Request.Context().Done():
 		log.Printf("streamErrorEventGin: Client disconnected before sending error: %s", errorMessage)
 		return
 	default:

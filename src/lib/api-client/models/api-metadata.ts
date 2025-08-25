@@ -39,7 +39,7 @@ export interface ApiMetadata {
      */
     'bulk'?: ApiBulkOperationInfo;
     /**
-     * Additional metadata
+     * Additional metadata (object)
      * @type {{ [key: string]: any; }}
      * @memberof ApiMetadata
      */

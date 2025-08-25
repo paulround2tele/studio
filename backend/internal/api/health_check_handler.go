@@ -63,7 +63,7 @@ func NewHealthCheckHandler(db *sql.DB) *HealthCheckHandler {
 // @Tags health
 // @ID healthCheck
 // @Produce json
-// @Success 200 {object} HealthStatus "System health status"
+// @Success 200 {object} APIResponse{data=HealthStatus} "System health status"
 // @Router /health [get]
 func (h *HealthCheckHandler) HandleHealthCheck(c *gin.Context) {
 	status := HealthStatus{
@@ -100,8 +100,8 @@ func (h *HealthCheckHandler) HandleHealthCheck(c *gin.Context) {
 // @Tags health
 // @ID healthReadiness
 // @Produce json
-// @Success 200 {object} HealthCheckResponse "Service is ready"
-// @Failure 503 {object} api.APIResponse "Service not ready"
+// @Success 200 {object} APIResponse{data=HealthCheckResponse} "Service is ready"
+// @Failure 503 {object} APIResponse "Service not ready"
 // @Router /health/ready [get]
 func (h *HealthCheckHandler) HandleReadinessCheck(c *gin.Context) {
 	// Check if database is ready
@@ -122,7 +122,7 @@ func (h *HealthCheckHandler) HandleReadinessCheck(c *gin.Context) {
 // @Tags health
 // @ID healthLiveness
 // @Produce json
-// @Success 200 {object} HealthCheckResponse "Service is alive"
+// @Success 200 {object} APIResponse{data=HealthCheckResponse} "Service is alive"
 // @Router /health/live [get]
 func (h *HealthCheckHandler) HandleLivenessCheck(c *gin.Context) {
 	// For liveness, we just check if the service is running

@@ -4,25 +4,25 @@ All URIs are relative to *http://localhost:8080/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**serverAuthConfigGet**](#serverauthconfigget) | **GET** /server/auth-config | Get authentication configuration|
-|[**serverAuthConfigPut**](#serverauthconfigput) | **PUT** /server/auth-config | Update authentication configuration|
-|[**serverConfigGet**](#serverconfigget) | **GET** /server/config | Get server configuration|
-|[**serverConfigPut**](#serverconfigput) | **PUT** /server/config | Update server configuration|
-|[**serverDnsConfigGet**](#serverdnsconfigget) | **GET** /server/dns-config | Get DNS configuration|
-|[**serverDnsConfigPut**](#serverdnsconfigput) | **PUT** /server/dns-config | Update DNS configuration|
-|[**serverHttpConfigGet**](#serverhttpconfigget) | **GET** /server/http-config | Get HTTP configuration|
-|[**serverHttpConfigPut**](#serverhttpconfigput) | **PUT** /server/http-config | Update HTTP configuration|
-|[**serverLoggingConfigGet**](#serverloggingconfigget) | **GET** /server/logging-config | Get logging configuration|
-|[**serverLoggingConfigPut**](#serverloggingconfigput) | **PUT** /server/logging-config | Update logging configuration|
-|[**serverProxyManagerConfigGet**](#serverproxymanagerconfigget) | **GET** /server/proxy-manager-config | Get proxy manager configuration|
-|[**serverProxyManagerConfigPut**](#serverproxymanagerconfigput) | **PUT** /server/proxy-manager-config | Update proxy manager configuration|
-|[**serverRateLimiterConfigGet**](#serverratelimiterconfigget) | **GET** /server/rate-limiter-config | Get rate limiter configuration|
-|[**serverRateLimiterConfigPut**](#serverratelimiterconfigput) | **PUT** /server/rate-limiter-config | Update rate limiter configuration|
-|[**serverWorkerConfigGet**](#serverworkerconfigget) | **GET** /server/worker-config | Get worker configuration|
-|[**serverWorkerConfigPut**](#serverworkerconfigput) | **PUT** /server/worker-config | Update worker configuration|
+|[**getAuthConfig**](#getauthconfig) | **GET** /server/auth-config | Get authentication configuration|
+|[**getDNSConfig**](#getdnsconfig) | **GET** /server/dns-config | Get DNS configuration|
+|[**getHTTPConfig**](#gethttpconfig) | **GET** /server/http-config | Get HTTP configuration|
+|[**getLoggingConfig**](#getloggingconfig) | **GET** /server/logging-config | Get logging configuration|
+|[**getProxyManagerConfig**](#getproxymanagerconfig) | **GET** /server/proxy-manager-config | Get proxy manager configuration|
+|[**getRateLimiterConfig**](#getratelimiterconfig) | **GET** /server/rate-limiter-config | Get rate limiter configuration|
+|[**getServerConfig**](#getserverconfig) | **GET** /server/config | Get server configuration|
+|[**getWorkerConfig**](#getworkerconfig) | **GET** /server/worker-config | Get worker configuration|
+|[**updateAuthConfig**](#updateauthconfig) | **PUT** /server/auth-config | Update authentication configuration|
+|[**updateDNSConfig**](#updatednsconfig) | **PUT** /server/dns-config | Update DNS configuration|
+|[**updateHTTPConfig**](#updatehttpconfig) | **PUT** /server/http-config | Update HTTP configuration|
+|[**updateLoggingConfig**](#updateloggingconfig) | **PUT** /server/logging-config | Update logging configuration|
+|[**updateProxyManagerConfig**](#updateproxymanagerconfig) | **PUT** /server/proxy-manager-config | Update proxy manager configuration|
+|[**updateRateLimiterConfig**](#updateratelimiterconfig) | **PUT** /server/rate-limiter-config | Update rate limiter configuration|
+|[**updateServerConfig**](#updateserverconfig) | **PUT** /server/config | Update server configuration|
+|[**updateWorkerConfig**](#updateworkerconfig) | **PUT** /server/worker-config | Update worker configuration|
 
-# **serverAuthConfigGet**
-> ConfigAuthConfig serverAuthConfigGet()
+# **getAuthConfig**
+> ConfigAuthConfig getAuthConfig()
 
 Retrieve the current authentication configuration settings
 
@@ -37,7 +37,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-const { status, data } = await apiInstance.serverAuthConfigGet();
+const { status, data } = await apiInstance.getAuthConfig();
 ```
 
 ### Parameters
@@ -66,8 +66,320 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **serverAuthConfigPut**
-> ConfigAuthConfig serverAuthConfigPut(configAuthConfig)
+# **getDNSConfig**
+> ConfigDNSValidatorConfigJSON getDNSConfig()
+
+Retrieve default DNS validator configuration
+
+### Example
+
+```typescript
+import {
+    ServerSettingsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ServerSettingsApi(configuration);
+
+const { status, data } = await apiInstance.getDNSConfig();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**ConfigDNSValidatorConfigJSON**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | DNS validator configuration |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getHTTPConfig**
+> ConfigHTTPValidatorConfigJSON getHTTPConfig()
+
+Retrieve default HTTP validator configuration
+
+### Example
+
+```typescript
+import {
+    ServerSettingsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ServerSettingsApi(configuration);
+
+const { status, data } = await apiInstance.getHTTPConfig();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**ConfigHTTPValidatorConfigJSON**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | HTTP validator configuration |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getLoggingConfig**
+> ConfigLoggingConfig getLoggingConfig()
+
+Retrieve the current logging configuration settings
+
+### Example
+
+```typescript
+import {
+    ServerSettingsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ServerSettingsApi(configuration);
+
+const { status, data } = await apiInstance.getLoggingConfig();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**ConfigLoggingConfig**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Logging configuration |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getProxyManagerConfig**
+> ConfigProxyManagerConfigJSON getProxyManagerConfig()
+
+Retrieve the current proxy manager configuration settings
+
+### Example
+
+```typescript
+import {
+    ServerSettingsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ServerSettingsApi(configuration);
+
+const { status, data } = await apiInstance.getProxyManagerConfig();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**ConfigProxyManagerConfigJSON**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Proxy manager configuration |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getRateLimiterConfig**
+> ConfigRateLimiterConfig getRateLimiterConfig()
+
+Retrieve the current rate limiter configuration settings
+
+### Example
+
+```typescript
+import {
+    ServerSettingsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ServerSettingsApi(configuration);
+
+const { status, data } = await apiInstance.getRateLimiterConfig();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**ConfigRateLimiterConfig**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Rate limiter configuration |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getServerConfig**
+> ApiServerConfigResponse getServerConfig()
+
+Retrieve current server-wide configuration settings
+
+### Example
+
+```typescript
+import {
+    ServerSettingsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ServerSettingsApi(configuration);
+
+const { status, data } = await apiInstance.getServerConfig();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**ApiServerConfigResponse**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Server configuration |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getWorkerConfig**
+> ConfigWorkerConfig getWorkerConfig()
+
+Retrieve the current worker configuration settings
+
+### Example
+
+```typescript
+import {
+    ServerSettingsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ServerSettingsApi(configuration);
+
+const { status, data } = await apiInstance.getWorkerConfig();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**ConfigWorkerConfig**
+
+### Authorization
+
+No authorization required
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Worker configuration |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **updateAuthConfig**
+> ConfigAuthConfig updateAuthConfig(configAuthConfig)
 
 Update the authentication configuration settings
 
@@ -85,7 +397,7 @@ const apiInstance = new ServerSettingsApi(configuration);
 
 let configAuthConfig: ConfigAuthConfig; //Authentication configuration
 
-const { status, data } = await apiInstance.serverAuthConfigPut(
+const { status, data } = await apiInstance.updateAuthConfig(
     configAuthConfig
 );
 ```
@@ -120,150 +432,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **serverConfigGet**
-> ApiServerConfigResponse serverConfigGet()
-
-Retrieve current server-wide configuration settings
-
-### Example
-
-```typescript
-import {
-    ServerSettingsApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ServerSettingsApi(configuration);
-
-const { status, data } = await apiInstance.serverConfigGet();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**ApiServerConfigResponse**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Server configuration |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **serverConfigPut**
-> ApiServerConfigResponse serverConfigPut(apiServerConfigUpdateRequest)
-
-Update server-wide configuration settings
-
-### Example
-
-```typescript
-import {
-    ServerSettingsApi,
-    Configuration,
-    ApiServerConfigUpdateRequest
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ServerSettingsApi(configuration);
-
-let apiServerConfigUpdateRequest: ApiServerConfigUpdateRequest; //Server configuration update
-
-const { status, data } = await apiInstance.serverConfigPut(
-    apiServerConfigUpdateRequest
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **apiServerConfigUpdateRequest** | **ApiServerConfigUpdateRequest**| Server configuration update | |
-
-
-### Return type
-
-**ApiServerConfigResponse**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Updated server configuration |  -  |
-|**400** | Invalid request payload |  -  |
-|**500** | Failed to save server configuration |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **serverDnsConfigGet**
-> ConfigDNSValidatorConfigJSON serverDnsConfigGet()
-
-Retrieve default DNS validator configuration
-
-### Example
-
-```typescript
-import {
-    ServerSettingsApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ServerSettingsApi(configuration);
-
-const { status, data } = await apiInstance.serverDnsConfigGet();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**ConfigDNSValidatorConfigJSON**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | DNS validator configuration |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **serverDnsConfigPut**
-> ConfigDNSValidatorConfigJSON serverDnsConfigPut(configDNSValidatorConfigJSON)
+# **updateDNSConfig**
+> ConfigDNSValidatorConfigJSON updateDNSConfig(configDNSValidatorConfigJSON)
 
 Update default DNS validator configuration
 
@@ -281,7 +451,7 @@ const apiInstance = new ServerSettingsApi(configuration);
 
 let configDNSValidatorConfigJSON: ConfigDNSValidatorConfigJSON; //DNS validator configuration
 
-const { status, data } = await apiInstance.serverDnsConfigPut(
+const { status, data } = await apiInstance.updateDNSConfig(
     configDNSValidatorConfigJSON
 );
 ```
@@ -316,52 +486,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **serverHttpConfigGet**
-> ConfigHTTPValidatorConfigJSON serverHttpConfigGet()
-
-Retrieve default HTTP validator configuration
-
-### Example
-
-```typescript
-import {
-    ServerSettingsApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ServerSettingsApi(configuration);
-
-const { status, data } = await apiInstance.serverHttpConfigGet();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**ConfigHTTPValidatorConfigJSON**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | HTTP validator configuration |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **serverHttpConfigPut**
-> ConfigHTTPValidatorConfigJSON serverHttpConfigPut(configHTTPValidatorConfigJSON)
+# **updateHTTPConfig**
+> ConfigHTTPValidatorConfigJSON updateHTTPConfig(configHTTPValidatorConfigJSON)
 
 Update default HTTP validator configuration
 
@@ -379,7 +505,7 @@ const apiInstance = new ServerSettingsApi(configuration);
 
 let configHTTPValidatorConfigJSON: ConfigHTTPValidatorConfigJSON; //HTTP validator configuration
 
-const { status, data } = await apiInstance.serverHttpConfigPut(
+const { status, data } = await apiInstance.updateHTTPConfig(
     configHTTPValidatorConfigJSON
 );
 ```
@@ -414,53 +540,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **serverLoggingConfigGet**
-> ConfigLoggingConfig serverLoggingConfigGet()
-
-Retrieve the current logging configuration settings
-
-### Example
-
-```typescript
-import {
-    ServerSettingsApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ServerSettingsApi(configuration);
-
-const { status, data } = await apiInstance.serverLoggingConfigGet();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**ConfigLoggingConfig**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Logging configuration |  -  |
-|**500** | Internal Server Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **serverLoggingConfigPut**
-> ConfigLoggingConfig serverLoggingConfigPut(configLoggingConfig)
+# **updateLoggingConfig**
+> ConfigLoggingConfig updateLoggingConfig(configLoggingConfig)
 
 Update the logging configuration settings
 
@@ -478,7 +559,7 @@ const apiInstance = new ServerSettingsApi(configuration);
 
 let configLoggingConfig: ConfigLoggingConfig; //Logging configuration
 
-const { status, data } = await apiInstance.serverLoggingConfigPut(
+const { status, data } = await apiInstance.updateLoggingConfig(
     configLoggingConfig
 );
 ```
@@ -513,53 +594,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **serverProxyManagerConfigGet**
-> ConfigProxyManagerConfigJSON serverProxyManagerConfigGet()
-
-Retrieve the current proxy manager configuration settings
-
-### Example
-
-```typescript
-import {
-    ServerSettingsApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ServerSettingsApi(configuration);
-
-const { status, data } = await apiInstance.serverProxyManagerConfigGet();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**ConfigProxyManagerConfigJSON**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Proxy manager configuration |  -  |
-|**500** | Internal Server Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **serverProxyManagerConfigPut**
-> ConfigProxyManagerConfigJSON serverProxyManagerConfigPut(configProxyManagerConfigJSON)
+# **updateProxyManagerConfig**
+> ConfigProxyManagerConfigJSON updateProxyManagerConfig(configProxyManagerConfigJSON)
 
 Update the proxy manager configuration settings
 
@@ -577,7 +613,7 @@ const apiInstance = new ServerSettingsApi(configuration);
 
 let configProxyManagerConfigJSON: ConfigProxyManagerConfigJSON; //Proxy manager configuration
 
-const { status, data } = await apiInstance.serverProxyManagerConfigPut(
+const { status, data } = await apiInstance.updateProxyManagerConfig(
     configProxyManagerConfigJSON
 );
 ```
@@ -612,53 +648,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **serverRateLimiterConfigGet**
-> ConfigRateLimiterConfig serverRateLimiterConfigGet()
-
-Retrieve the current rate limiter configuration settings
-
-### Example
-
-```typescript
-import {
-    ServerSettingsApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ServerSettingsApi(configuration);
-
-const { status, data } = await apiInstance.serverRateLimiterConfigGet();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**ConfigRateLimiterConfig**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Rate limiter configuration |  -  |
-|**500** | Internal Server Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **serverRateLimiterConfigPut**
-> ConfigRateLimiterConfig serverRateLimiterConfigPut(configRateLimiterConfig)
+# **updateRateLimiterConfig**
+> ConfigRateLimiterConfig updateRateLimiterConfig(configRateLimiterConfig)
 
 Update the rate limiter configuration settings
 
@@ -676,7 +667,7 @@ const apiInstance = new ServerSettingsApi(configuration);
 
 let configRateLimiterConfig: ConfigRateLimiterConfig; //Rate limiter configuration
 
-const { status, data } = await apiInstance.serverRateLimiterConfigPut(
+const { status, data } = await apiInstance.updateRateLimiterConfig(
     configRateLimiterConfig
 );
 ```
@@ -711,32 +702,40 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **serverWorkerConfigGet**
-> ConfigWorkerConfig serverWorkerConfigGet()
+# **updateServerConfig**
+> ApiServerConfigResponse updateServerConfig(apiServerConfigUpdateRequest)
 
-Retrieve the current worker configuration settings
+Update server-wide configuration settings
 
 ### Example
 
 ```typescript
 import {
     ServerSettingsApi,
-    Configuration
+    Configuration,
+    ApiServerConfigUpdateRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-const { status, data } = await apiInstance.serverWorkerConfigGet();
+let apiServerConfigUpdateRequest: ApiServerConfigUpdateRequest; //Server configuration update
+
+const { status, data } = await apiInstance.updateServerConfig(
+    apiServerConfigUpdateRequest
+);
 ```
 
 ### Parameters
-This endpoint does not have any parameters.
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **apiServerConfigUpdateRequest** | **ApiServerConfigUpdateRequest**| Server configuration update | |
 
 
 ### Return type
 
-**ConfigWorkerConfig**
+**ApiServerConfigResponse**
 
 ### Authorization
 
@@ -744,20 +743,21 @@ No authorization required
 
 ### HTTP request headers
 
- - **Content-Type**: Not defined
+ - **Content-Type**: application/json
  - **Accept**: application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Worker configuration |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | Updated server configuration |  -  |
+|**400** | Invalid request payload |  -  |
+|**500** | Failed to save server configuration |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **serverWorkerConfigPut**
-> ConfigWorkerConfig serverWorkerConfigPut(configWorkerConfig)
+# **updateWorkerConfig**
+> ConfigWorkerConfig updateWorkerConfig(configWorkerConfig)
 
 Update the worker configuration settings
 
@@ -775,7 +775,7 @@ const apiInstance = new ServerSettingsApi(configuration);
 
 let configWorkerConfig: ConfigWorkerConfig; //Worker configuration
 
-const { status, data } = await apiInstance.serverWorkerConfigPut(
+const { status, data } = await apiInstance.updateWorkerConfig(
     configWorkerConfig
 );
 ```

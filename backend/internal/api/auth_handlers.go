@@ -46,11 +46,11 @@ func NewAuthHandler(sessionService *services.SessionService, sessionConfig *conf
 // @Produce json
 // @Param request body models.LoginRequest true "Login credentials"
 // @Success 200 {object} APIResponse{data=SessionResponse} "Login successful with user and session info"
-// @Failure 400 {object} APIResponse{error=ErrorInfo} "Invalid request format"
-// @Failure 401 {object} APIResponse{error=ErrorInfo} "Invalid credentials"
-// @Failure 423 {object} APIResponse{error=ErrorInfo} "Account locked"
-// @Failure 403 {object} APIResponse{error=ErrorInfo} "Account inactive"
-// @Failure 500 {object} APIResponse{error=ErrorInfo} "Internal server error"
+// @Failure 400 {object} APIResponse{error=ApiError} "Invalid request format"
+// @Failure 401 {object} APIResponse{error=ApiError} "Invalid credentials"
+// @Failure 423 {object} APIResponse{error=ApiError} "Account locked"
+// @Failure 403 {object} APIResponse{error=ApiError} "Account inactive"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal server error"
 // @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	fmt.Println("DEBUG: Login handler started")
@@ -206,10 +206,10 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 // @Tags authentication
 // @ID getCurrentUser
 // @Produce json
-// @Success 200 {object} api.APIResponse "Current user information"
-// @Failure 401 {object} api.APIResponse "Authentication required"
-// @Failure 404 {object} api.APIResponse "User not found"
-// @Failure 500 {object} api.APIResponse "Internal server error"
+// @Success 200 {object} APIResponse{data=models.User} "Current user information"
+// @Failure 401 {object} APIResponse "Authentication required"
+// @Failure 404 {object} APIResponse "User not found"
+// @Failure 500 {object} APIResponse "Internal server error"
 // @Router /auth/me [get]
 func (h *AuthHandler) Me(c *gin.Context) {
 	// Get security context from middleware
@@ -280,9 +280,9 @@ func (h *AuthHandler) Me(c *gin.Context) {
 // @Produce json
 // @Param request body models.ChangePasswordRequest true "Password change request"
 // @Success 200 {object} APIResponse{data=SuccessMessageResponse} "Password changed successfully"
-// @Failure 400 {object} APIResponse{error=ErrorInfo} "Invalid request format"
-// @Failure 401 {object} APIResponse{error=ErrorInfo} "Authentication required"
-// @Failure 501 {object} APIResponse{error=ErrorInfo} "Not implemented"
+// @Failure 400 {object} APIResponse{error=ApiError} "Invalid request format"
+// @Failure 401 {object} APIResponse{error=ApiError} "Authentication required"
+// @Failure 501 {object} APIResponse{error=ApiError} "Not implemented"
 // @Router /auth/change-password [post]
 func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	var req models.ChangePasswordRequest
@@ -302,8 +302,8 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 // @ID refreshSession
 // @Produce json
 // @Success 200 {object} APIResponse{data=SessionRefreshResponse} "Session refreshed with new expiry"
-// @Failure 401 {object} APIResponse{error=ErrorInfo} "Invalid or expired session"
-// @Failure 500 {object} APIResponse{error=ErrorInfo} "Failed to refresh session"
+// @Failure 401 {object} APIResponse{error=ApiError} "Invalid or expired session"
+// @Failure 500 {object} APIResponse{error=ApiError} "Failed to refresh session"
 // @Router /auth/refresh [post]
 func (h *AuthHandler) RefreshSession(c *gin.Context) {
 	// Get session ID from cookie

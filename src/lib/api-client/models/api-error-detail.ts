@@ -27,11 +27,11 @@ export interface ApiErrorDetail {
      */
     'code'?: string;
     /**
-     * 
-     * @type {any}
+     * Additional context data (object)
+     * @type {{ [key: string]: any; }}
      * @memberof ApiErrorDetail
      */
-    'context'?: any;
+    'context'?: { [key: string]: any; };
     /**
      * Field that caused the error (for validation)
      * @type {string}

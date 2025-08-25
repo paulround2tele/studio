@@ -44,316 +44,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v2/database/query": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Execute bulk database queries
-         * @description Execute multiple SQL queries against the database with security restrictions for enterprise operations
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header: {
-                    /** @description Must be XMLHttpRequest */
-                    "X-Requested-With": string;
-                };
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Bulk query request */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["api.BulkDatabaseQueryRequest"];
-                };
-            };
-            responses: {
-                /** @description Queries executed successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @description Response data (only present on success) */
-                            data?: Record<string, never>;
-                            error?: components["schemas"]["api.ErrorInfo"];
-                            metadata?: components["schemas"]["api.Metadata"];
-                            /**
-                             * @description Unique request identifier for tracing
-                             * @example req_1234567890abcdef
-                             */
-                            requestId?: string;
-                            /**
-                             * @description Indicates if the request was successful
-                             * @example true
-                             */
-                            success?: boolean;
-                        } & components["schemas"]["data"];
-                    };
-                };
-                /** @description Bad request or invalid queries */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.APIResponse"];
-                    };
-                };
-                /** @description Forbidden query detected */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.APIResponse"];
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.APIResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v2/database/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Get bulk database statistics
-         * @description Retrieve comprehensive database statistics including schema and table-level details for enterprise monitoring
-         */
-        post: {
-            parameters: {
-                query?: never;
-                header: {
-                    /** @description Must be XMLHttpRequest */
-                    "X-Requested-With": string;
-                };
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Bulk stats request */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["api.BulkDatabaseStatsRequest"];
-                };
-            };
-            responses: {
-                /** @description Statistics retrieved successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @description Response data (only present on success) */
-                            data?: Record<string, never>;
-                            error?: components["schemas"]["api.ErrorInfo"];
-                            metadata?: components["schemas"]["api.Metadata"];
-                            /**
-                             * @description Unique request identifier for tracing
-                             * @example req_1234567890abcdef
-                             */
-                            requestId?: string;
-                            /**
-                             * @description Indicates if the request was successful
-                             * @example true
-                             */
-                            success?: boolean;
-                        } & components["schemas"]["data"];
-                    };
-                };
-                /** @description Bad request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.APIResponse"];
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.APIResponse"];
-                    };
-                };
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v2/keyword-rules": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Query keyword rules with advanced filtering
-         * @description Advanced querying for keyword rule management across sets with multiple filter options
-         */
-        get: {
-            parameters: {
-                query?: {
-                    /** @description Filter by keyword set ID */
-                    keyword_set_id?: string;
-                    /** @description Filter by rule type */
-                    rule_type?: "string" | "regex";
-                    /** @description Filter by category */
-                    category?: string;
-                    /** @description Filter by case sensitivity */
-                    is_case_sensitive?: boolean;
-                    /** @description Search pattern in rule patterns (partial match) */
-                    pattern?: string;
-                    /** @description Maximum number of results */
-                    limit?: number;
-                    /** @description Number of results to skip */
-                    offset?: number;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.APIResponse"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.APIResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.APIResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v2/keyword-sets/{id}/rules": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get keyword set with high-performance rules loading
-         * @description Optimized endpoint for Phase 3 HTTP keyword validation scanning using JSONB rules column
-         */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Keyword Set ID */
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.APIResponse"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.APIResponse"];
-                    };
-                };
-                /** @description Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.APIResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.APIResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/auth/change-password": {
         parameters: {
             query?: never;
@@ -774,6 +464,86 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/database/query": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Execute bulk database queries
+         * @description Execute multiple SQL queries against the database with security restrictions for enterprise operations
+         */
+        post: operations["bulkDatabaseQuery"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/database/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get bulk database statistics
+         * @description Retrieve comprehensive database statistics including schema and table-level details for enterprise monitoring
+         */
+        post: operations["bulkDatabaseStats"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/extract/keywords": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Batch keyword extraction
+         * @description Extract keywords from multiple URLs using specified keyword sets and personas
+         */
+        post: operations["keywordExtractionBatch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/extract/keywords/stream": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stream keyword extraction
+         * @description Extract keywords from a single URL with real-time streaming results
+         */
+        get: operations["keywordExtractionStream"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/feature-flags": {
         parameters: {
             query?: never;
@@ -858,27 +628,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/keyword-extraction/batch": {
+    "/keyword-rules": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
         /**
-         * Batch keyword extraction
-         * @description Extract keywords from multiple URLs using specified keyword sets and personas
+         * Query keyword rules with advanced filtering
+         * @description Advanced querying for keyword rule management across sets with multiple filter options
          */
-        post: operations["batchExtractKeywords"];
+        get: operations["listKeywordRules"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
         patch?: never;
         trace?: never;
     };
-    "/keyword-extraction/stream": {
+    "/keyword-sets/{id}/rules": {
         parameters: {
             query?: never;
             header?: never;
@@ -886,10 +656,10 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Stream keyword extraction
-         * @description Extract keywords from a single URL with real-time streaming results
+         * Get keyword set with high-performance rules loading
+         * @description Optimized endpoint for Phase 3 HTTP keyword validation scanning using JSONB rules column
          */
-        get: operations["streamExtractKeywords"];
+        get: operations["getKeywordSetRules"];
         put?: never;
         post?: never;
         delete?: never;
@@ -909,109 +679,13 @@ export interface paths {
          * List keyword sets
          * @description Retrieve a list of keyword sets with optional filtering
          */
-        get: {
-            parameters: {
-                query?: {
-                    /** @description Maximum number of results */
-                    limit?: number;
-                    /** @description Number of results to skip */
-                    offset?: number;
-                    /** @description Include rules in response */
-                    includeRules?: boolean;
-                    /** @description Filter by enabled status */
-                    isEnabled?: boolean;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of keyword sets */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.KeywordSetResponse"][];
-                    };
-                };
-                /** @description Failed to list keyword sets */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        get: operations["listKeywordSets"];
         put?: never;
         /**
          * Create keyword set
          * @description Create a new keyword set with optional rules
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Keyword set creation request */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["api.CreateKeywordSetRequest"];
-                };
-            };
-            responses: {
-                /** @description Created keyword set */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.KeywordSetResponse"];
-                    };
-                };
-                /** @description Invalid request payload or validation failed */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Keyword set with name already exists */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Failed to create keyword set */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        post: operations["createKeywordSet"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1029,199 +703,18 @@ export interface paths {
          * Get keyword set
          * @description Retrieve a specific keyword set by ID including its rules
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Keyword set ID */
-                    setId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Keyword set with rules */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.KeywordSetResponse"];
-                    };
-                };
-                /** @description Invalid keyword set ID format */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Keyword set not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Failed to fetch keyword set */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        get: operations["getKeywordSet"];
         /**
          * Update keyword set
          * @description Update an existing keyword set and its rules
          */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Keyword set ID */
-                    setId: string;
-                };
-                cookie?: never;
-            };
-            /** @description Keyword set update request */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["api.UpdateKeywordSetRequest"];
-                };
-            };
-            responses: {
-                /** @description Updated keyword set */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.KeywordSetResponse"];
-                    };
-                };
-                /** @description Invalid request payload or validation failed */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Keyword set not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Keyword set name already exists */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Failed to update keyword set */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        put: operations["updateKeywordSet"];
         post?: never;
         /**
          * Delete keyword set
          * @description Delete a keyword set by ID
          */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Keyword Set ID (UUID) */
-                    setId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Keyword set deleted successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.KeywordSetDeleteResponse"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Keyword set not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        delete: operations["deleteKeywordSet"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1238,120 +731,13 @@ export interface paths {
          * List all personas
          * @description Retrieve a list of all personas with optional filtering by type and status
          */
-        get: {
-            parameters: {
-                query?: {
-                    /** @description Maximum number of results */
-                    limit?: number;
-                    /** @description Number of results to skip */
-                    offset?: number;
-                    /** @description Filter by enabled status */
-                    isEnabled?: boolean;
-                    /** @description Filter by persona type (dns, http) */
-                    personaType?: string;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of personas */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.PersonaResponse"][];
-                    };
-                };
-                /** @description Invalid personaType parameter */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Failed to list personas */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        get: operations["listPersonas"];
         put?: never;
         /**
          * Create persona
          * @description Create a new persona (DNS or HTTP) with configuration details
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Persona creation request */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["api.CreatePersonaRequest"];
-                };
-            };
-            responses: {
-                /** @description Created persona */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.PersonaResponse"];
-                    };
-                };
-                /** @description Invalid request payload or configuration */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Persona with name and type already exists */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Failed to create persona */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        post: operations["createPersona"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1369,188 +755,18 @@ export interface paths {
          * Get persona by ID
          * @description Retrieve a specific persona by ID regardless of type
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Persona ID */
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Persona details */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.PersonaResponse"];
-                    };
-                };
-                /** @description Invalid persona ID format */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Persona not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Failed to fetch persona */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        get: operations["getPersona"];
         /**
          * Update persona
          * @description Update an existing persona's configuration by ID
          */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Persona ID (UUID) */
-                    id: string;
-                };
-                cookie?: never;
-            };
-            /** @description Persona update request */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["api.UpdatePersonaRequest"];
-                };
-            };
-            responses: {
-                /** @description Persona updated successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.PersonaResponse"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Persona not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        put: operations["updatePersona"];
         post?: never;
         /**
          * Delete persona
          * @description Delete a persona by ID
          */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Persona ID (UUID) */
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Persona deleted successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.PersonaDeleteResponse"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Persona not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        delete: operations["deletePersona"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1569,62 +785,7 @@ export interface paths {
          * Test persona
          * @description Test a persona configuration to verify it works correctly
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Persona ID (UUID) */
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Persona test results */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.PersonaTestResponse"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Persona not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        post: operations["testPersona"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1642,66 +803,7 @@ export interface paths {
          * Get DNS persona by ID
          * @description Retrieve a specific DNS persona configuration by its unique identifier
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description DNS Persona ID */
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: {
-                content: {
-                    "application/json": Record<string, never>;
-                };
-            };
-            responses: {
-                /** @description DNS persona retrieved successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.PersonaResponse"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Persona Not Found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        get: operations["getDnsPersona"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1721,62 +823,7 @@ export interface paths {
          * Get HTTP persona by ID
          * @description Retrieve a specific HTTP persona by ID
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description HTTP Persona ID */
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description HTTP persona details */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.PersonaResponse"];
-                    };
-                };
-                /** @description Invalid persona ID format or not HTTP persona */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description HTTP persona not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Failed to fetch HTTP persona */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        get: operations["getHttpPersona"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1796,26 +843,7 @@ export interface paths {
          * Ping server
          * @description Simple ping endpoint to verify server is responding
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Pong response with timestamp */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.PingResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["ping"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1835,111 +863,13 @@ export interface paths {
          * List proxies
          * @description Retrieve a list of proxies with optional filtering by protocol, status, and health
          */
-        get: {
-            parameters: {
-                query?: {
-                    /** @description Maximum number of results */
-                    limit?: number;
-                    /** @description Number of results to skip */
-                    offset?: number;
-                    /** @description Filter by protocol (http, https, socks4, socks5) */
-                    protocol?: string;
-                    /** @description Filter by enabled status */
-                    isEnabled?: boolean;
-                    /** @description Filter by health status */
-                    isHealthy?: boolean;
-                };
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of proxies */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.ProxyDetailsResponse"][];
-                    };
-                };
-                /** @description Failed to list proxies */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        get: operations["listProxies"];
         put?: never;
         /**
          * Create proxy
          * @description Add a new proxy configuration
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Proxy creation request */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["models.CreateProxyRequest"];
-                };
-            };
-            responses: {
-                /** @description Created proxy */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.ProxyDetailsResponse"];
-                    };
-                };
-                /** @description Invalid request payload or validation failed */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Proxy with address already exists */
-                409: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Failed to create proxy */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        post: operations["createProxy"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1958,126 +888,13 @@ export interface paths {
          * Update proxy
          * @description Update an existing proxy configuration
          */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Proxy ID */
-                    proxyId: string;
-                };
-                cookie?: never;
-            };
-            /** @description Proxy update request */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["models.UpdateProxyRequest"];
-                };
-            };
-            responses: {
-                /** @description Updated proxy */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.ProxyDetailsResponse"];
-                    };
-                };
-                /** @description Invalid request payload or validation failed */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Proxy not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Failed to update proxy */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        put: operations["updateProxy"];
         post?: never;
         /**
          * Delete proxy
-         * @description Delete a proxy configuration
+         * @description Delete a proxy by ID
          */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Proxy ID */
-                    proxyId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Proxy deleted successfully */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                /** @description Invalid proxy ID format */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Proxy not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Failed to delete proxy */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        delete: operations["deleteProxy"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2093,65 +910,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Force proxy health check
-         * @description Force a health check on a specific proxy
+         * Health check single proxy
+         * @description Force a health check for a specific proxy
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Proxy ID (UUID) */
-                    proxyId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Health check completed */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.ProxyHealthCheckResponse"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Proxy not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        post: operations["healthCheckProxy"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2169,64 +931,9 @@ export interface paths {
         put?: never;
         /**
          * Test proxy
-         * @description Test a proxy configuration to verify it works correctly
+         * @description Test a proxy configuration
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Proxy ID (UUID) */
-                    proxyId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Proxy test results */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.ProxyTestResponse"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Proxy not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        post: operations["testProxy"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2245,70 +952,9 @@ export interface paths {
         post?: never;
         /**
          * Bulk delete proxies
-         * @description Delete multiple proxy configurations simultaneously
+         * @description Delete multiple proxies in one request
          */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Bulk proxy delete request */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["models.BulkDeleteProxiesRequest"];
-                };
-            };
-            responses: {
-                /** @description Bulk operation results */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @description Response data (only present on success) */
-                            data?: Record<string, never>;
-                            error?: components["schemas"]["api.ErrorInfo"];
-                            metadata?: components["schemas"]["api.Metadata"];
-                            /**
-                             * @description Unique request identifier for tracing
-                             * @example req_1234567890abcdef
-                             */
-                            requestId?: string;
-                            /**
-                             * @description Indicates if the request was successful
-                             * @example true
-                             */
-                            success?: boolean;
-                        } & components["schemas"]["data"];
-                    };
-                };
-                /** @description Invalid request payload or validation failed */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        delete: operations["bulkDeleteProxies"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2325,55 +971,9 @@ export interface paths {
         put?: never;
         /**
          * Bulk test proxies
-         * @description Test multiple proxy configurations simultaneously
+         * @description Test multiple proxies in one request
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Bulk proxy test request */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["models.BulkTestProxiesRequest"];
-                };
-            };
-            responses: {
-                /** @description Bulk test results */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.BulkProxyTestResponse"];
-                    };
-                };
-                /** @description Invalid request payload or validation failed */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        post: operations["bulkTestProxies"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2390,70 +990,9 @@ export interface paths {
         get?: never;
         /**
          * Bulk update proxies
-         * @description Update multiple proxy configurations simultaneously
+         * @description Update multiple proxies in one request
          */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Bulk proxy update request */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["models.BulkUpdateProxiesRequest"];
-                };
-            };
-            responses: {
-                /** @description Bulk operation results */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            /** @description Response data (only present on success) */
-                            data?: Record<string, never>;
-                            error?: components["schemas"]["api.ErrorInfo"];
-                            metadata?: components["schemas"]["api.Metadata"];
-                            /**
-                             * @description Unique request identifier for tracing
-                             * @example req_1234567890abcdef
-                             */
-                            requestId?: string;
-                            /**
-                             * @description Indicates if the request was successful
-                             * @example true
-                             */
-                            success?: boolean;
-                        } & components["schemas"]["data"];
-                    };
-                };
-                /** @description Invalid request payload or validation failed */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Internal server error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        put: operations["bulkUpdateProxies"];
         post?: never;
         delete?: never;
         options?: never;
@@ -2471,40 +1010,10 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Force health check on all proxies
-         * @description Force health checks on all registered proxies
+         * Health check all proxies
+         * @description Force health checks for all proxies
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Health checks completed */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.BulkHealthCheckResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        post: operations["healthCheckAllProxies"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2520,39 +1029,9 @@ export interface paths {
         };
         /**
          * Get proxy statuses
-         * @description Retrieve health status information for all proxies
+         * @description Retrieve the current status of all proxies
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Proxy status information */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.ProxyStatusResponse"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        get: operations["listProxyStatuses"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2578,53 +1057,7 @@ export interface paths {
          * Create proxy pool
          * @description Create a new proxy pool with configuration settings
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Proxy pool creation request */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["api.ProxyPoolRequest"];
-                };
-            };
-            responses: {
-                /** @description Created proxy pool */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.APIResponse"];
-                    };
-                };
-                /** @description Invalid request payload */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Failed to create pool */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        post: operations["createProxyPool"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2643,130 +1076,13 @@ export interface paths {
          * Update proxy pool
          * @description Update an existing proxy pool configuration
          */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Proxy pool ID */
-                    poolId: string;
-                };
-                cookie?: never;
-            };
-            /** @description Proxy pool update request */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["api.ProxyPoolRequest"];
-                };
-            };
-            responses: {
-                /** @description Updated proxy pool */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.APIResponse"];
-                    };
-                };
-                /** @description Invalid ID or request payload */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Pool not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Failed to update pool */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        put: operations["updateProxyPool"];
         post?: never;
         /**
          * Delete proxy pool
          * @description Delete a proxy pool
          */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Proxy pool ID */
-                    poolId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Deletion confirmation */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: boolean;
-                        };
-                    };
-                };
-                /** @description Invalid ID */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Failed to delete pool */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Failed to delete pool */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        delete: operations["deleteProxyPool"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2785,59 +1101,7 @@ export interface paths {
          * Add proxy to pool
          * @description Assign a proxy to a proxy pool with optional weight
          */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Proxy pool ID */
-                    poolId: string;
-                };
-                cookie?: never;
-            };
-            /** @description Proxy assignment request */
-            requestBody: {
-                content: {
-                    "application/json": {
-                        proxyId?: string;
-                        weight?: number;
-                    };
-                };
-            };
-            responses: {
-                /** @description Created membership */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.APIResponse"];
-                    };
-                };
-                /** @description Invalid pool ID, payload, or proxy ID */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Failed to add proxy */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        post: operations["addProxyToPool"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2858,64 +1122,7 @@ export interface paths {
          * Remove proxy from pool
          * @description Remove a proxy from a specific proxy pool
          */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    /** @description Pool ID (UUID) */
-                    poolId: string;
-                    /** @description Proxy ID (UUID) */
-                    proxyId: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Proxy removed from pool successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.ProxyPoolMembershipResponse"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Pool or proxy not found */
-                404: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        delete: operations["removeProxyFromPool"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2932,88 +1139,12 @@ export interface paths {
          * Get authentication configuration
          * @description Retrieve the current authentication configuration settings
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Authentication configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["config.AuthConfig"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        get: operations["getAuthConfig"];
         /**
          * Update authentication configuration
          * @description Update the authentication configuration settings
          */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Authentication configuration */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["config.AuthConfig"];
-                };
-            };
-            responses: {
-                /** @description Updated authentication configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["config.AuthConfig"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        put: operations["updateAuthConfig"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3032,77 +1163,12 @@ export interface paths {
          * Get server configuration
          * @description Retrieve current server-wide configuration settings
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Server configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.ServerConfigResponse"];
-                    };
-                };
-            };
-        };
+        get: operations["getServerConfig"];
         /**
          * Update server configuration
          * @description Update server-wide configuration settings
          */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Server configuration update */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["api.ServerConfigUpdateRequest"];
-                };
-            };
-            responses: {
-                /** @description Updated server configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["api.ServerConfigResponse"];
-                    };
-                };
-                /** @description Invalid request payload */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Failed to save server configuration */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        put: operations["updateServerConfig"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3121,77 +1187,12 @@ export interface paths {
          * Get DNS configuration
          * @description Retrieve default DNS validator configuration
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description DNS validator configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["config.DNSValidatorConfigJSON"];
-                    };
-                };
-            };
-        };
+        get: operations["getDNSConfig"];
         /**
          * Update DNS configuration
          * @description Update default DNS validator configuration
          */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description DNS validator configuration */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["config.DNSValidatorConfigJSON"];
-                };
-            };
-            responses: {
-                /** @description Updated DNS configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["config.DNSValidatorConfigJSON"];
-                    };
-                };
-                /** @description Invalid request body or validation failed */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Failed to save DNS configuration */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        put: operations["updateDNSConfig"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3210,77 +1211,12 @@ export interface paths {
          * Get HTTP configuration
          * @description Retrieve default HTTP validator configuration
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description HTTP validator configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["config.HTTPValidatorConfigJSON"];
-                    };
-                };
-            };
-        };
+        get: operations["getHTTPConfig"];
         /**
          * Update HTTP configuration
          * @description Update default HTTP validator configuration
          */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description HTTP validator configuration */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["config.HTTPValidatorConfigJSON"];
-                };
-            };
-            responses: {
-                /** @description Updated HTTP configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["config.HTTPValidatorConfigJSON"];
-                    };
-                };
-                /** @description Invalid request body or validation failed */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Failed to save HTTP configuration */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        put: operations["updateHTTPConfig"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3299,88 +1235,12 @@ export interface paths {
          * Get logging configuration
          * @description Retrieve the current logging configuration settings
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Logging configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["config.LoggingConfig"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        get: operations["getLoggingConfig"];
         /**
          * Update logging configuration
          * @description Update the logging configuration settings
          */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Logging configuration */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["config.LoggingConfig"];
-                };
-            };
-            responses: {
-                /** @description Updated logging configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["config.LoggingConfig"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        put: operations["updateLoggingConfig"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3399,88 +1259,12 @@ export interface paths {
          * Get proxy manager configuration
          * @description Retrieve the current proxy manager configuration settings
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Proxy manager configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["config.ProxyManagerConfigJSON"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        get: operations["getProxyManagerConfig"];
         /**
          * Update proxy manager configuration
          * @description Update the proxy manager configuration settings
          */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Proxy manager configuration */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["config.ProxyManagerConfigJSON"];
-                };
-            };
-            responses: {
-                /** @description Updated proxy manager configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["config.ProxyManagerConfigJSON"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        put: operations["updateProxyManagerConfig"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3499,88 +1283,12 @@ export interface paths {
          * Get rate limiter configuration
          * @description Retrieve the current rate limiter configuration settings
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Rate limiter configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["config.RateLimiterConfig"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        get: operations["getRateLimiterConfig"];
         /**
          * Update rate limiter configuration
          * @description Update the rate limiter configuration settings
          */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Rate limiter configuration */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["config.RateLimiterConfig"];
-                };
-            };
-            responses: {
-                /** @description Updated rate limiter configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["config.RateLimiterConfig"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        put: operations["updateRateLimiterConfig"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3599,88 +1307,12 @@ export interface paths {
          * Get worker configuration
          * @description Retrieve the current worker configuration settings
          */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Worker configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["config.WorkerConfig"];
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        get: operations["getWorkerConfig"];
         /**
          * Update worker configuration
          * @description Update the worker configuration settings
          */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            /** @description Worker configuration */
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["config.WorkerConfig"];
-                };
-            };
-            responses: {
-                /** @description Updated worker configuration */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["config.WorkerConfig"];
-                    };
-                };
-                /** @description Bad Request */
-                400: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-                /** @description Internal Server Error */
-                500: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": {
-                            [key: string]: string;
-                        };
-                    };
-                };
-            };
-        };
+        put: operations["updateWorkerConfig"];
         post?: never;
         delete?: never;
         options?: never;
@@ -3776,7 +1408,7 @@ export interface components {
         "api.APIResponse": {
             /** @description Response data (only present on success) */
             data?: Record<string, never>;
-            error?: components["schemas"]["api.ErrorInfo"];
+            error?: components["schemas"]["api.ApiError"];
             metadata?: components["schemas"]["api.Metadata"];
             /**
              * @description Unique request identifier for tracing
@@ -3788,7 +1420,11 @@ export interface components {
              * @example true
              */
             success?: boolean;
-        } & components["schemas"]["data"];
+        } & components["schemas"]["error"];
+        "api.AddProxyToPoolRequest": {
+            proxyId: string;
+            weight?: number;
+        };
         /** @description Configuration for analysis phase */
         "api.AnalysisConfig": {
             /**
@@ -3805,6 +1441,27 @@ export interface components {
             generateReport?: boolean;
             /** @example true */
             includeScreenshots?: boolean;
+        };
+        /** @description Detailed error information structure */
+        "api.ApiError": {
+            code?: components["schemas"]["api.ErrorCode"];
+            /** @description Detailed error information */
+            details?: components["schemas"]["api.ErrorDetail"][];
+            /**
+             * @description Primary error message
+             * @example Invalid input parameters
+             */
+            message?: string;
+            /**
+             * @description API path that generated the error
+             * @example /campaigns/validate
+             */
+            path?: string;
+            /**
+             * @description When the error occurred
+             * @example 2023-01-01T12:00:00Z
+             */
+            timestamp?: string;
         };
         "api.BatchKeywordExtractionRequest": {
             items: components["schemas"]["api.KeywordExtractionRequestItem"][];
@@ -4018,6 +1675,11 @@ export interface components {
             rawValue?: string;
             stringValue?: string;
         };
+        "api.DeletionResponse": {
+            id?: string;
+            message?: string;
+            success?: boolean;
+        };
         /**
          * @description Primary error code
          * @example VALIDATION_ERROR
@@ -4026,33 +1688,14 @@ export interface components {
         "api.ErrorDetail": {
             /** @description Primary error code */
             code?: string;
-            /** @description Additional context data */
-            context?: unknown;
+            /** @description Additional context data (object) */
+            context?: {
+                [key: string]: unknown;
+            };
             /** @description Field that caused the error (for validation) */
             field?: string;
             /** @description Human-readable error message */
             message?: string;
-        };
-        /** @description Detailed error information structure */
-        "api.ErrorInfo": {
-            code?: components["schemas"]["api.ErrorCode"];
-            /** @description Detailed error information */
-            details?: components["schemas"]["api.ErrorDetail"][];
-            /**
-             * @description Primary error message
-             * @example Invalid input parameters
-             */
-            message?: string;
-            /**
-             * @description API path that generated the error
-             * @example /api/v2/campaigns/validate
-             */
-            path?: string;
-            /**
-             * @description When the error occurred
-             * @example 2023-01-01T12:00:00Z
-             */
-            timestamp?: string;
         };
         /** @description Configuration for HTTP keyword validation phase - all technical parameters derived from persona ConfigDetails */
         "api.HTTPValidationConfig": {
@@ -4150,7 +1793,7 @@ export interface components {
         /** @description Optional metadata attached to API responses */
         "api.Metadata": {
             bulk?: components["schemas"]["api.BulkOperationInfo"];
-            /** @description Additional metadata */
+            /** @description Additional metadata (object) */
             extra?: {
                 [key: string]: unknown;
             };
@@ -4270,6 +1913,11 @@ export interface components {
             status?: string;
             success?: boolean;
             timestamp?: string;
+        };
+        "api.ProxyPoolDeleteResponse": {
+            deleted?: boolean;
+            message?: string;
+            poolId?: string;
         };
         "api.ProxyPoolMembershipResponse": {
             added?: boolean;
@@ -4494,10 +2142,10 @@ export interface components {
             retryDelaySeconds?: number;
         };
         data: {
-            data?: components["schemas"]["models.BulkProxyOperationResponse"];
+            data?: components["schemas"]["api.ProxyPoolMembershipResponse"];
         };
         error: {
-            error?: components["schemas"]["api.ErrorInfo"];
+            error?: components["schemas"]["api.ApiError"];
         };
         /** @description Enterprise-grade enhancements for Day 3 */
         "models.AdvancedStealthPolicy": {
@@ -5189,6 +2837,29 @@ export interface components {
             /** @description Username for proxy auth, from DB */
             username?: string;
         };
+        "models.ProxyPool": {
+            createdAt?: string;
+            description?: string;
+            healthCheckEnabled?: boolean;
+            healthCheckIntervalSeconds?: number;
+            id?: string;
+            isEnabled?: boolean;
+            maxRetries?: number;
+            name: string;
+            /** @description round_robin, random, weighted, failover */
+            poolStrategy?: string;
+            /** @description Computed fields (not stored in DB) */
+            proxies?: components["schemas"]["models.Proxy"][];
+            timeoutSeconds?: number;
+            updatedAt?: string;
+        };
+        "models.ProxyPoolMembership": {
+            addedAt?: string;
+            isActive?: boolean;
+            poolId: string;
+            proxyId: string;
+            weight?: number;
+        };
         "models.ProxyProtocolEnum": string;
         /** @description Frontend-expected fields */
         "models.ProxyStatusEnum": string;
@@ -5395,7 +3066,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -5407,7 +3078,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Validation accepted and processing */
@@ -5419,7 +3090,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -5431,7 +3102,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Bad Request - Invalid domains or configuration */
@@ -5486,7 +3157,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -5498,7 +3169,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Validation accepted and processing */
@@ -5510,7 +3181,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -5522,7 +3193,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Bad Request - Invalid domains or configuration */
@@ -5577,7 +3248,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -5589,7 +3260,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Invalid request format */
@@ -5601,7 +3272,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -5613,7 +3284,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Authentication required */
@@ -5625,7 +3296,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -5637,7 +3308,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Not implemented */
@@ -5649,7 +3320,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -5661,7 +3332,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
         };
@@ -5689,7 +3360,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -5701,7 +3372,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Invalid request format */
@@ -5713,7 +3384,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -5725,7 +3396,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Invalid credentials */
@@ -5737,7 +3408,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -5749,7 +3420,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Account inactive */
@@ -5761,7 +3432,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -5773,7 +3444,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Account locked */
@@ -5785,7 +3456,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -5797,7 +3468,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Internal server error */
@@ -5809,7 +3480,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -5821,7 +3492,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
         };
@@ -5844,7 +3515,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -5856,7 +3527,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
         };
@@ -5926,7 +3597,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -5938,7 +3609,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Invalid or expired session */
@@ -5950,7 +3621,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -5962,7 +3633,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Failed to refresh session */
@@ -5974,7 +3645,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -5986,7 +3657,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
         };
@@ -6304,7 +3975,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -6316,7 +3987,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Analytics accepted and processing */
@@ -6328,7 +3999,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -6340,7 +4011,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Bad Request - Invalid configuration */
@@ -6395,7 +4066,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -6407,7 +4078,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Operation accepted and processing */
@@ -6419,7 +4090,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -6431,7 +4102,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Bad Request - Invalid configuration */
@@ -6537,7 +4208,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -6549,7 +4220,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Bad Request - Invalid parameters */
@@ -6694,7 +4365,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -6706,7 +4377,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Resource allocation accepted and processing */
@@ -6718,7 +4389,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -6730,7 +4401,7 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Bad Request - Invalid resource configuration */
@@ -6893,6 +4564,227 @@ export interface operations {
             };
         };
     };
+    bulkDatabaseQuery: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be XMLHttpRequest */
+                "X-Requested-With": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Bulk query request */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["api.BulkDatabaseQueryRequest"];
+            };
+        };
+        responses: {
+            /** @description Queries executed successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Bad request or invalid queries */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.APIResponse"];
+                };
+            };
+            /** @description Forbidden query detected */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.APIResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.APIResponse"];
+                };
+            };
+        };
+    };
+    bulkDatabaseStats: {
+        parameters: {
+            query?: never;
+            header: {
+                /** @description Must be XMLHttpRequest */
+                "X-Requested-With": string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Bulk stats request */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["api.BulkDatabaseStatsRequest"];
+            };
+        };
+        responses: {
+            /** @description Statistics retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Bad request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.APIResponse"];
+                };
+            };
+            /** @description Internal server error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.APIResponse"];
+                };
+            };
+        };
+    };
+    keywordExtractionBatch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Batch extraction request */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["api.BatchKeywordExtractionRequest"];
+            };
+        };
+        responses: {
+            /** @description Extraction results */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.BatchKeywordExtractionResponse"];
+                };
+            };
+            /** @description Invalid request body or validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    keywordExtractionStream: {
+        parameters: {
+            query: {
+                /** @description URL to extract keywords from */
+                url: string;
+                /** @description Keyword set ID to use for extraction */
+                keywordSetId: string;
+                /** @description HTTP persona ID for request customization */
+                httpPersonaId?: string;
+                /** @description DNS persona ID for DNS customization */
+                dnsPersonaId?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Server-sent events stream with extraction results */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string;
+                    "text/event-stream": string;
+                };
+            };
+            /** @description Invalid query parameters */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
     getFeatureFlags: {
         parameters: {
             query?: never;
@@ -7029,31 +4921,123 @@ export interface operations {
             };
         };
     };
-    batchExtractKeywords: {
+    listKeywordRules: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Page size */
+                limit?: number;
+                /** @description Offset */
+                offset?: number;
+                /** @description Filter by set ID */
+                setId?: string;
+                /** @description Filter by pattern contains */
+                pattern?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** @description Batch extraction request */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["api.BatchKeywordExtractionRequest"];
-            };
-        };
+        requestBody?: never;
         responses: {
-            /** @description Extraction results */
+            /** @description Rules list */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.BatchKeywordExtractionResponse"];
+                    "application/json": components["schemas"]["api.APIResponse"];
                 };
             };
-            /** @description Invalid request body or validation failed */
+            /** @description Bad Request */
             400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.APIResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.APIResponse"];
+                };
+            };
+        };
+    };
+    getKeywordSetRules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Keyword Set ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Keyword set rules */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.APIResponse"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.APIResponse"];
+                };
+            };
+            /** @description Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.APIResponse"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.APIResponse"];
+                };
+            };
+        };
+    };
+    listKeywordSets: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of results */
+                limit?: number;
+                /** @description Number of results to skip */
+                offset?: number;
+                /** @description Include rules in response */
+                includeRules?: boolean;
+                /** @description Filter by enabled status */
+                isEnabled?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of keyword sets */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -7061,7 +5045,7 @@ export interface operations {
                     "application/json": {
                         /** @description Response data (only present on success) */
                         data?: Record<string, never>;
-                        error?: components["schemas"]["api.ErrorInfo"];
+                        error?: components["schemas"]["api.ApiError"];
                         metadata?: components["schemas"]["api.Metadata"];
                         /**
                          * @description Unique request identifier for tracing
@@ -7073,22 +5057,517 @@ export interface operations {
                          * @example true
                          */
                         success?: boolean;
-                    } & components["schemas"]["data"];
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Failed to list keyword sets */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
                 };
             };
         };
     };
-    streamExtractKeywords: {
+    createKeywordSet: {
         parameters: {
-            query: {
-                /** @description URL to extract keywords from */
-                url: string;
-                /** @description Keyword set ID to use for extraction */
-                keywordSetId: string;
-                /** @description HTTP persona ID for request customization */
-                httpPersonaId?: string;
-                /** @description DNS persona ID for DNS customization */
-                dnsPersonaId?: string;
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Keyword set creation request */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["api.CreateKeywordSetRequest"];
+            };
+        };
+        responses: {
+            /** @description Created keyword set */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Invalid request payload or validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Keyword set with name already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Failed to create keyword set */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    getKeywordSet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Keyword set ID */
+                setId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Keyword set with rules */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Invalid keyword set ID format */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Keyword set not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Failed to fetch keyword set */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    updateKeywordSet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Keyword set ID */
+                setId: string;
+            };
+            cookie?: never;
+        };
+        /** @description Keyword set update request */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["api.UpdateKeywordSetRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated keyword set */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Invalid request payload or validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Keyword set not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Keyword set name already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Failed to update keyword set */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    deleteKeywordSet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Keyword set ID */
+                setId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Keyword set deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Invalid keyword set ID format */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Keyword set not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Failed to delete keyword set */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    listPersonas: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of results */
+                limit?: number;
+                /** @description Number of results to skip */
+                offset?: number;
+                /** @description Filter by enabled status */
+                isEnabled?: boolean;
+                /** @description Filter by persona type (dns, http) */
+                personaType?: string;
             };
             header?: never;
             path?: never;
@@ -7096,25 +5575,1886 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Server-sent events stream with extraction results */
+            /** @description List of personas */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": string;
-                    "text/event-stream": string;
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
                 };
             };
-            /** @description Invalid query parameters */
+            /** @description Invalid personaType parameter */
             400: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": {
-                        [key: string]: string;
-                    };
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Failed to list personas */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    createPersona: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Persona creation request */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["api.CreatePersonaRequest"];
+            };
+        };
+        responses: {
+            /** @description Created persona */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Invalid request payload or configuration */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Persona with name and type already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Failed to create persona */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    getPersona: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Persona ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Persona details */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Invalid persona ID format */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Persona not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Failed to fetch persona */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    updatePersona: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Persona ID (UUID) */
+                id: string;
+            };
+            cookie?: never;
+        };
+        /** @description Persona update request */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["api.UpdatePersonaRequest"];
+            };
+        };
+        responses: {
+            /** @description Persona updated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Persona not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    deletePersona: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Persona ID (UUID) */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Persona deleted successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Persona not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    testPersona: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Persona ID (UUID) */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Persona test results */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Persona not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    getDnsPersona: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description DNS Persona ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": Record<string, never>;
+            };
+        };
+        responses: {
+            /** @description DNS persona retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Persona Not Found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    getHttpPersona: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description HTTP Persona ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description HTTP persona details */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Invalid persona ID format or not HTTP persona */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description HTTP persona not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Failed to fetch HTTP persona */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    ping: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Pong response with timestamp */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.PingResponse"];
+                };
+            };
+        };
+    };
+    listProxies: {
+        parameters: {
+            query?: {
+                /** @description Maximum number of results */
+                limit?: number;
+                /** @description Number of results to skip */
+                offset?: number;
+                /** @description Filter by protocol (http, https, socks4, socks5) */
+                protocol?: string;
+                /** @description Filter by enabled status */
+                isEnabled?: boolean;
+                /** @description Filter by health status */
+                isHealthy?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description List of proxies */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Failed to list proxies */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    createProxy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Proxy creation request */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["models.CreateProxyRequest"];
+            };
+        };
+        responses: {
+            /** @description Created proxy */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Invalid request payload or validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Proxy with address already exists */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Failed to create proxy */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    updateProxy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Proxy ID */
+                proxyId: string;
+            };
+            cookie?: never;
+        };
+        /** @description Proxy update request */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["models.UpdateProxyRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated proxy */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Invalid request payload or validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Proxy not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Failed to update proxy */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    deleteProxy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Proxy ID */
+                proxyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Proxy deleted successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Invalid proxy ID format */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Proxy not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Failed to delete proxy */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    healthCheckProxy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Proxy ID */
+                proxyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Health check completed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Proxy not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    testProxy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Proxy ID */
+                proxyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Test results */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Proxy not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    bulkDeleteProxies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Bulk delete request */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["models.BulkDeleteProxiesRequest"];
+            };
+        };
+        responses: {
+            /** @description Bulk operation results */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    bulkTestProxies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Bulk test request */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["models.BulkTestProxiesRequest"];
+            };
+        };
+        responses: {
+            /** @description Bulk test results */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    bulkUpdateProxies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Bulk update request */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["models.BulkUpdateProxiesRequest"];
+            };
+        };
+        responses: {
+            /** @description Bulk operation results */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    healthCheckAllProxies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Health checks completed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    listProxyStatuses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Proxy status information */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
                 };
             };
         };
@@ -7134,10 +7474,1145 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["api.APIResponse"][];
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
                 };
             };
             /** @description Failed to list proxy pools */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    createProxyPool: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Proxy pool creation request */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["api.ProxyPoolRequest"];
+            };
+        };
+        responses: {
+            /** @description Created proxy pool */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Invalid request payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Failed to create pool */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    updateProxyPool: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Proxy pool ID */
+                poolId: string;
+            };
+            cookie?: never;
+        };
+        /** @description Proxy pool update request */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["api.ProxyPoolRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated proxy pool */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Invalid ID or request payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Pool not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Failed to update pool */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    deleteProxyPool: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Proxy pool ID */
+                poolId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deletion confirmation */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Invalid ID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Failed to delete pool */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Failed to delete pool */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    addProxyToPool: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Proxy pool ID */
+                poolId: string;
+            };
+            cookie?: never;
+        };
+        /** @description Proxy assignment request */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["api.AddProxyToPoolRequest"];
+            };
+        };
+        responses: {
+            /** @description Created membership */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Invalid pool ID, payload, or proxy ID */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Failed to add proxy */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    removeProxyFromPool: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Pool ID (UUID) */
+                poolId: string;
+                /** @description Proxy ID (UUID) */
+                proxyId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Proxy removed from pool successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Pool or proxy not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        /** @description Response data (only present on success) */
+                        data?: Record<string, never>;
+                        error?: components["schemas"]["api.ApiError"];
+                        metadata?: components["schemas"]["api.Metadata"];
+                        /**
+                         * @description Unique request identifier for tracing
+                         * @example req_1234567890abcdef
+                         */
+                        requestId?: string;
+                        /**
+                         * @description Indicates if the request was successful
+                         * @example true
+                         */
+                        success?: boolean;
+                    } & components["schemas"]["error"];
+                };
+            };
+        };
+    };
+    getAuthConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authentication configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["config.AuthConfig"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    updateAuthConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Authentication configuration */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["config.AuthConfig"];
+            };
+        };
+        responses: {
+            /** @description Updated authentication configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["config.AuthConfig"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    getServerConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Server configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.ServerConfigResponse"];
+                };
+            };
+        };
+    };
+    updateServerConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Server configuration update */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["api.ServerConfigUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated server configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["api.ServerConfigResponse"];
+                };
+            };
+            /** @description Invalid request payload */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Failed to save server configuration */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    getDNSConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description DNS validator configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["config.DNSValidatorConfigJSON"];
+                };
+            };
+        };
+    };
+    updateDNSConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description DNS validator configuration */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["config.DNSValidatorConfigJSON"];
+            };
+        };
+        responses: {
+            /** @description Updated DNS configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["config.DNSValidatorConfigJSON"];
+                };
+            };
+            /** @description Invalid request body or validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Failed to save DNS configuration */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    getHTTPConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description HTTP validator configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["config.HTTPValidatorConfigJSON"];
+                };
+            };
+        };
+    };
+    updateHTTPConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description HTTP validator configuration */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["config.HTTPValidatorConfigJSON"];
+            };
+        };
+        responses: {
+            /** @description Updated HTTP configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["config.HTTPValidatorConfigJSON"];
+                };
+            };
+            /** @description Invalid request body or validation failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Failed to save HTTP configuration */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    getLoggingConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Logging configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["config.LoggingConfig"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    updateLoggingConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Logging configuration */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["config.LoggingConfig"];
+            };
+        };
+        responses: {
+            /** @description Updated logging configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["config.LoggingConfig"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    getProxyManagerConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Proxy manager configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["config.ProxyManagerConfigJSON"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    updateProxyManagerConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Proxy manager configuration */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["config.ProxyManagerConfigJSON"];
+            };
+        };
+        responses: {
+            /** @description Updated proxy manager configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["config.ProxyManagerConfigJSON"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    getRateLimiterConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Rate limiter configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["config.RateLimiterConfig"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    updateRateLimiterConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Rate limiter configuration */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["config.RateLimiterConfig"];
+            };
+        };
+        responses: {
+            /** @description Updated rate limiter configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["config.RateLimiterConfig"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    getWorkerConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Worker configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["config.WorkerConfig"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    updateWorkerConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Worker configuration */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["config.WorkerConfig"];
+            };
+        };
+        responses: {
+            /** @description Updated worker configuration */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["config.WorkerConfig"];
+                };
+            };
+            /** @description Bad Request */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Internal Server Error */
             500: {
                 headers: {
                     [name: string]: unknown;

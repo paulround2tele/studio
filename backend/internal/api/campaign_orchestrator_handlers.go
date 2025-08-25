@@ -181,9 +181,8 @@ func (h *CampaignOrchestratorAPIHandler) createLeadGenerationCampaign(c *gin.Con
 	// Broadcast campaign creation to WebSocket clients
 	websocket.BroadcastCampaignCreated(campaign.ID.String(), campaign)
 
-	// Use unified APIResponse format
-	response := NewSuccessResponse(campaign, getRequestID(c))
-	respondWithJSONGin(c, http.StatusCreated, response)
+	// Use unified response emission pattern
+	respondWithJSONGin(c, http.StatusCreated, campaign)
 }
 
 // configurePhaseStandalone configures a specific phase for a campaign using standalone services
@@ -263,12 +262,12 @@ func (h *CampaignOrchestratorAPIHandler) configurePhaseStandalone(c *gin.Context
 		return
 	}
 
-	response := NewSuccessResponse(map[string]interface{}{
+	payload := map[string]interface{}{
 		"message":    fmt.Sprintf("Phase %s configured successfully", phase),
 		"campaignId": campaignID.String(),
 		"phase":      phase,
-	}, getRequestID(c))
-	respondWithJSONGin(c, http.StatusOK, response)
+	}
+	respondWithJSONGin(c, http.StatusOK, payload)
 }
 
 // startPhaseStandalone starts a specific phase using standalone services
@@ -318,12 +317,12 @@ func (h *CampaignOrchestratorAPIHandler) startPhaseStandalone(c *gin.Context) {
 		return
 	}
 
-	response := NewSuccessResponse(map[string]interface{}{
+	payload := map[string]interface{}{
 		"message":    fmt.Sprintf("Phase %s started successfully", phase),
 		"campaignId": campaignID.String(),
 		"phase":      phase,
-	}, getRequestID(c))
-	respondWithJSONGin(c, http.StatusOK, response)
+	}
+	respondWithJSONGin(c, http.StatusOK, payload)
 }
 
 // getPhaseStatusStandalone gets status for a specific phase using standalone services
@@ -461,8 +460,7 @@ func (h *CampaignOrchestratorAPIHandler) getPhaseStatusStandalone(c *gin.Context
 		}
 	}
 
-	response := NewSuccessResponse(phaseStatus, getRequestID(c))
-	respondWithJSONGin(c, http.StatusOK, response)
+	respondWithJSONGin(c, http.StatusOK, phaseStatus)
 }
 
 // getCampaignProgressStandalone gets campaign progress using standalone services
@@ -564,8 +562,7 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignProgressStandalone(c *gin.Co
 		progress["dnsValidatedDomains"] = *campaign.DNSValidatedDomains
 	}
 
-	response := NewSuccessResponse(progress, getRequestID(c))
-	respondWithJSONGin(c, http.StatusOK, response)
+	respondWithJSONGin(c, http.StatusOK, progress)
 }
 
 // getCampaignsStandalone lists all campaigns using standalone services
@@ -574,7 +571,7 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignProgressStandalone(c *gin.Co
 // @Tags campaigns
 // @ID getCampaignsStandalone
 // @Produce json
-// @Success 200 {object} CampaignsListAPIResponse "Campaigns retrieved successfully"
+// @Success 200 {object} APIResponse{data=CampaignsListAPIResponse} "Campaigns retrieved successfully"
 // @Failure 500 {object} APIResponse "Internal Server Error"
 // @Router /campaigns [get]
 func (h *CampaignOrchestratorAPIHandler) getCampaignsStandalone(c *gin.Context) {
@@ -817,8 +814,7 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 		TotalCount: len(enrichedCampaigns),
 	}
 
-	apiResponse := NewSuccessResponse(response, getRequestID(c))
-	respondWithJSONGin(c, http.StatusOK, apiResponse)
+	respondWithJSONGin(c, http.StatusOK, response)
 }
 
 // getPatternOffset gets the current pattern offset for domain generation
@@ -829,9 +825,9 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 // @Accept json
 // @Produce json
 // @Param request body PatternOffsetRequest true "Pattern offset request"
-// @Success 200 {object} PatternOffsetResponse "Pattern offset retrieved successfully"
-// @Failure 400 {object} api.APIResponse "Bad Request"
-// @Failure 500 {object} api.APIResponse "Internal Server Error"
+// @Success 200 {object} APIResponse{data=PatternOffsetResponse} "Pattern offset retrieved successfully"
+// @Failure 400 {object} APIResponse "Bad Request"
+// @Failure 500 {object} APIResponse "Internal Server Error"
 // @Router /campaigns/domain-generation/pattern-offset [post]
 func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
 	var req PatternOffsetRequest
@@ -1023,8 +1019,7 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignDomainsStatus(c *gin.Context
 		}
 	}
 
-	apiResponse := NewSuccessResponse(statusSummary, getRequestID(c))
-	respondWithJSONGin(c, http.StatusOK, apiResponse)
+	respondWithJSONGin(c, http.StatusOK, statusSummary)
 }
 
 // Helper function to filter domains based on status and phase

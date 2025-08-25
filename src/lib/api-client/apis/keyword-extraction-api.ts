@@ -40,10 +40,10 @@ export const KeywordExtractionApiAxiosParamCreator = function (configuration?: C
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        batchExtractKeywords: async (apiBatchKeywordExtractionRequest: ApiBatchKeywordExtractionRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        keywordExtractionBatch: async (apiBatchKeywordExtractionRequest: ApiBatchKeywordExtractionRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'apiBatchKeywordExtractionRequest' is not null or undefined
-            assertParamExists('batchExtractKeywords', 'apiBatchKeywordExtractionRequest', apiBatchKeywordExtractionRequest)
-            const localVarPath = `/keyword-extraction/batch`;
+            assertParamExists('keywordExtractionBatch', 'apiBatchKeywordExtractionRequest', apiBatchKeywordExtractionRequest)
+            const localVarPath = `/extract/keywords`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -79,12 +79,12 @@ export const KeywordExtractionApiAxiosParamCreator = function (configuration?: C
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        streamExtractKeywords: async (url: string, keywordSetId: string, httpPersonaId?: string, dnsPersonaId?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        keywordExtractionStream: async (url: string, keywordSetId: string, httpPersonaId?: string, dnsPersonaId?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'url' is not null or undefined
-            assertParamExists('streamExtractKeywords', 'url', url)
+            assertParamExists('keywordExtractionStream', 'url', url)
             // verify required parameter 'keywordSetId' is not null or undefined
-            assertParamExists('streamExtractKeywords', 'keywordSetId', keywordSetId)
-            const localVarPath = `/keyword-extraction/stream`;
+            assertParamExists('keywordExtractionStream', 'keywordSetId', keywordSetId)
+            const localVarPath = `/extract/keywords/stream`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -140,10 +140,10 @@ export const KeywordExtractionApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async batchExtractKeywords(apiBatchKeywordExtractionRequest: ApiBatchKeywordExtractionRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiBatchKeywordExtractionResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.batchExtractKeywords(apiBatchKeywordExtractionRequest, options);
+        async keywordExtractionBatch(apiBatchKeywordExtractionRequest: ApiBatchKeywordExtractionRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiBatchKeywordExtractionResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.keywordExtractionBatch(apiBatchKeywordExtractionRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['KeywordExtractionApi.batchExtractKeywords']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['KeywordExtractionApi.keywordExtractionBatch']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -156,10 +156,10 @@ export const KeywordExtractionApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async streamExtractKeywords(url: string, keywordSetId: string, httpPersonaId?: string, dnsPersonaId?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.streamExtractKeywords(url, keywordSetId, httpPersonaId, dnsPersonaId, options);
+        async keywordExtractionStream(url: string, keywordSetId: string, httpPersonaId?: string, dnsPersonaId?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.keywordExtractionStream(url, keywordSetId, httpPersonaId, dnsPersonaId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['KeywordExtractionApi.streamExtractKeywords']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['KeywordExtractionApi.keywordExtractionStream']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -179,8 +179,8 @@ export const KeywordExtractionApiFactory = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        batchExtractKeywords(apiBatchKeywordExtractionRequest: ApiBatchKeywordExtractionRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiBatchKeywordExtractionResponse> {
-            return localVarFp.batchExtractKeywords(apiBatchKeywordExtractionRequest, options).then((request) => request(axios, basePath));
+        keywordExtractionBatch(apiBatchKeywordExtractionRequest: ApiBatchKeywordExtractionRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiBatchKeywordExtractionResponse> {
+            return localVarFp.keywordExtractionBatch(apiBatchKeywordExtractionRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Extract keywords from a single URL with real-time streaming results
@@ -192,8 +192,8 @@ export const KeywordExtractionApiFactory = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        streamExtractKeywords(url: string, keywordSetId: string, httpPersonaId?: string, dnsPersonaId?: string, options?: RawAxiosRequestConfig): AxiosPromise<string> {
-            return localVarFp.streamExtractKeywords(url, keywordSetId, httpPersonaId, dnsPersonaId, options).then((request) => request(axios, basePath));
+        keywordExtractionStream(url: string, keywordSetId: string, httpPersonaId?: string, dnsPersonaId?: string, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.keywordExtractionStream(url, keywordSetId, httpPersonaId, dnsPersonaId, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -212,7 +212,7 @@ export interface KeywordExtractionApiInterface {
      * @throws {RequiredError}
      * @memberof KeywordExtractionApiInterface
      */
-    batchExtractKeywords(apiBatchKeywordExtractionRequest: ApiBatchKeywordExtractionRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiBatchKeywordExtractionResponse>;
+    keywordExtractionBatch(apiBatchKeywordExtractionRequest: ApiBatchKeywordExtractionRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiBatchKeywordExtractionResponse>;
 
     /**
      * Extract keywords from a single URL with real-time streaming results
@@ -225,7 +225,7 @@ export interface KeywordExtractionApiInterface {
      * @throws {RequiredError}
      * @memberof KeywordExtractionApiInterface
      */
-    streamExtractKeywords(url: string, keywordSetId: string, httpPersonaId?: string, dnsPersonaId?: string, options?: RawAxiosRequestConfig): AxiosPromise<string>;
+    keywordExtractionStream(url: string, keywordSetId: string, httpPersonaId?: string, dnsPersonaId?: string, options?: RawAxiosRequestConfig): AxiosPromise<string>;
 
 }
 
@@ -244,8 +244,8 @@ export class KeywordExtractionApi extends BaseAPI implements KeywordExtractionAp
      * @throws {RequiredError}
      * @memberof KeywordExtractionApi
      */
-    public batchExtractKeywords(apiBatchKeywordExtractionRequest: ApiBatchKeywordExtractionRequest, options?: RawAxiosRequestConfig) {
-        return KeywordExtractionApiFp(this.configuration).batchExtractKeywords(apiBatchKeywordExtractionRequest, options).then((request) => request(this.axios, this.basePath));
+    public keywordExtractionBatch(apiBatchKeywordExtractionRequest: ApiBatchKeywordExtractionRequest, options?: RawAxiosRequestConfig) {
+        return KeywordExtractionApiFp(this.configuration).keywordExtractionBatch(apiBatchKeywordExtractionRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -259,8 +259,8 @@ export class KeywordExtractionApi extends BaseAPI implements KeywordExtractionAp
      * @throws {RequiredError}
      * @memberof KeywordExtractionApi
      */
-    public streamExtractKeywords(url: string, keywordSetId: string, httpPersonaId?: string, dnsPersonaId?: string, options?: RawAxiosRequestConfig) {
-        return KeywordExtractionApiFp(this.configuration).streamExtractKeywords(url, keywordSetId, httpPersonaId, dnsPersonaId, options).then((request) => request(this.axios, this.basePath));
+    public keywordExtractionStream(url: string, keywordSetId: string, httpPersonaId?: string, dnsPersonaId?: string, options?: RawAxiosRequestConfig) {
+        return KeywordExtractionApiFp(this.configuration).keywordExtractionStream(url, keywordSetId, httpPersonaId, dnsPersonaId, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

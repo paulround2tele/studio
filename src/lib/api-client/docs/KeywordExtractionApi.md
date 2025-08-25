@@ -4,11 +4,11 @@ All URIs are relative to *http://localhost:8080/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**batchExtractKeywords**](#batchextractkeywords) | **POST** /keyword-extraction/batch | Batch keyword extraction|
-|[**streamExtractKeywords**](#streamextractkeywords) | **GET** /keyword-extraction/stream | Stream keyword extraction|
+|[**keywordExtractionBatch**](#keywordextractionbatch) | **POST** /extract/keywords | Batch keyword extraction|
+|[**keywordExtractionStream**](#keywordextractionstream) | **GET** /extract/keywords/stream | Stream keyword extraction|
 
-# **batchExtractKeywords**
-> ApiBatchKeywordExtractionResponse batchExtractKeywords(apiBatchKeywordExtractionRequest)
+# **keywordExtractionBatch**
+> ApiBatchKeywordExtractionResponse keywordExtractionBatch(apiBatchKeywordExtractionRequest)
 
 Extract keywords from multiple URLs using specified keyword sets and personas
 
@@ -26,7 +26,7 @@ const apiInstance = new KeywordExtractionApi(configuration);
 
 let apiBatchKeywordExtractionRequest: ApiBatchKeywordExtractionRequest; //Batch extraction request
 
-const { status, data } = await apiInstance.batchExtractKeywords(
+const { status, data } = await apiInstance.keywordExtractionBatch(
     apiBatchKeywordExtractionRequest
 );
 ```
@@ -60,8 +60,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **streamExtractKeywords**
-> string streamExtractKeywords()
+# **keywordExtractionStream**
+> string keywordExtractionStream()
 
 Extract keywords from a single URL with real-time streaming results
 
@@ -81,7 +81,7 @@ let keywordSetId: string; //Keyword set ID to use for extraction (default to und
 let httpPersonaId: string; //HTTP persona ID for request customization (optional) (default to undefined)
 let dnsPersonaId: string; //DNS persona ID for DNS customization (optional) (default to undefined)
 
-const { status, data } = await apiInstance.streamExtractKeywords(
+const { status, data } = await apiInstance.keywordExtractionStream(
     url,
     keywordSetId,
     httpPersonaId,

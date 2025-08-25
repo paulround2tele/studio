@@ -7,7 +7,7 @@ All URIs are relative to *http://localhost:8080/api/v2*
 |[**healthCheck**](#healthcheck) | **GET** /health | Health check|
 |[**healthLiveness**](#healthliveness) | **GET** /health/live | Liveness check|
 |[**healthReadiness**](#healthreadiness) | **GET** /health/ready | Readiness check|
-|[**pingGet**](#pingget) | **GET** /ping | Ping server|
+|[**ping**](#ping) | **GET** /ping | Ping server|
 
 # **healthCheck**
 > ApiHealthStatus healthCheck()
@@ -142,8 +142,8 @@ No authorization required
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **pingGet**
-> ApiPingResponse pingGet()
+# **ping**
+> ApiPingResponse ping()
 
 Simple ping endpoint to verify server is responding
 
@@ -158,7 +158,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new HealthApi(configuration);
 
-const { status, data } = await apiInstance.pingGet();
+const { status, data } = await apiInstance.ping();
 ```
 
 ### Parameters

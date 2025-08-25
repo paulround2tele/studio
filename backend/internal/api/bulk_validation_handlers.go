@@ -38,7 +38,7 @@ func NewBulkValidationAPIHandler(orchestrator *application.CampaignOrchestrator,
 // @Failure 400 {object} APIResponse "Bad Request - Invalid domains or configuration"
 // @Failure 429 {object} APIResponse "Rate Limited - Too many concurrent validations"
 // @Failure 500 {object} APIResponse "Internal Server Error"
-// @Router /api/v2/campaigns/bulk/domains/validate-dns [post]
+// @Router /campaigns/bulk/domains/validate-dns [post]
 func (h *BulkValidationAPIHandler) BulkValidateDNS(c *gin.Context) {
 	var request models.BulkDNSValidationRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -203,8 +203,19 @@ func (h *BulkValidationAPIHandler) BulkValidateDNS(c *gin.Context) {
 		StealthMetrics:  stealthMetrics,
 	}
 
-	// Use unified APIResponse envelope for consistency
-	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
+	// Use envelope-level metadata for consistency with database handlers
+	bulkInfo := &BulkOperationInfo{
+		ProcessedItems:   int(totalProcessed),
+		SkippedItems:     int(totalFailed),
+		ProcessingTimeMs: time.Since(startTime).Milliseconds(),
+	}
+
+	requestID := getRequestID(c)
+	envelope := NewSuccessResponse(response, requestID).WithMetadata(&Metadata{
+		Bulk: bulkInfo,
+	})
+	c.Header("X-Request-ID", requestID)
+	c.JSON(http.StatusOK, envelope)
 }
 
 // @Summary Validate domains using bulk HTTP validation with stealth
@@ -219,7 +230,7 @@ func (h *BulkValidationAPIHandler) BulkValidateDNS(c *gin.Context) {
 // @Failure 400 {object} APIResponse "Bad Request - Invalid domains or configuration"
 // @Failure 429 {object} APIResponse "Rate Limited - Too many concurrent validations"
 // @Failure 500 {object} APIResponse "Internal Server Error"
-// @Router /api/v2/campaigns/bulk/domains/validate-http [post]
+// @Router /campaigns/bulk/domains/validate-http [post]
 func (h *BulkValidationAPIHandler) BulkValidateHTTP(c *gin.Context) {
 	var request models.BulkHTTPValidationRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -382,8 +393,19 @@ func (h *BulkValidationAPIHandler) BulkValidateHTTP(c *gin.Context) {
 		StealthMetrics:  stealthMetrics,
 	}
 
-	// Use unified APIResponse envelope for consistency
-	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
+	// Use envelope-level metadata for consistency with database handlers
+	bulkInfo := &BulkOperationInfo{
+		ProcessedItems:   int(totalProcessed),
+		SkippedItems:     int(totalFailed),
+		ProcessingTimeMs: time.Since(startTime).Milliseconds(),
+	}
+
+	requestID := getRequestID(c)
+	envelope := NewSuccessResponse(response, requestID).WithMetadata(&Metadata{
+		Bulk: bulkInfo,
+	})
+	c.Header("X-Request-ID", requestID)
+	c.JSON(http.StatusOK, envelope)
 }
 
 // applyEnterpriseStealthConfig applies advanced enterprise stealth configuration to operation config

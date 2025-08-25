@@ -4,9 +4,7 @@ OpenAPI/doc mismatch: Your annotations don’t match reality. Example: handlers 
 
 Swagger file serving is brittle: You serve “backend/docs/swagger.*” via relative paths. That breaks the moment your CWD changes or you ship a binary. Either embed the files or serve via the generated docs package and lock it down in prod. Public Swagger in production is an enumeration gift.
 
-CSRF sitting duck: Session-only auth + SameSite=Lax + no CSRF protection on POST/PUT/DELETE = cross-site request party. Add CSRF tokens or move auth to Authorization headers for state-changing endpoints. Basic security. Try it sometime.
 
-CORS is “development forever”: You globally apply “EnhancedCORS” with no clear prod gating. Lock origins, allowCredentials only when necessary, and handle SSE/WS properly. Otherwise you’ll leak cookies across origins and cry about it later.
 
 Batch extraction DoS vector: Your timeout scales with len(items) in minutes. One fat request can pin the server for hours. Cap batch size, cap concurrency, and use per-item timeouts with a hard upper bound.
 

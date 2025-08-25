@@ -46,20 +46,20 @@ type ErrorDetail struct {
 // @Description Standard API response envelope used by all endpoints
 type APIResponse struct {
 	Success   bool            `json:"success" example:"true"`                   // Indicates if the request was successful
-	Data      json.RawMessage `json:"data,omitempty" swaggertype:"object"`     // Response data (only present on success)
-	Error     *ErrorInfo      `json:"error,omitempty"`                          // Error information (only present on failure)
+	Data      json.RawMessage `json:"data,omitempty" swaggertype:"object"`      // Response data (only present on success)
+	Error     *ApiError       `json:"error,omitempty"`                          // Error information (only present on failure)
 	Metadata  *Metadata       `json:"metadata,omitempty"`                       // Optional metadata
 	RequestID string          `json:"requestId" example:"req_1234567890abcdef"` // Unique request identifier for tracing
 }
 
-// ErrorInfo contains comprehensive error information
+// ApiError contains comprehensive error information
 // @Description Detailed error information structure
-type ErrorInfo struct {
-	Code      ErrorCode     `json:"code" example:"VALIDATION_ERROR"`                     // Primary error code
-	Message   string        `json:"message" example:"Invalid input parameters"`          // Primary error message
-	Details   []ErrorDetail `json:"details,omitempty"`                                   // Detailed error information
-	Timestamp time.Time     `json:"timestamp" example:"2023-01-01T12:00:00Z"`            // When the error occurred
-	Path      string        `json:"path,omitempty" example:"/api/v2/campaigns/validate"` // API path that generated the error
+type ApiError struct {
+	Code      ErrorCode     `json:"code" example:"VALIDATION_ERROR"`              // Primary error code
+	Message   string        `json:"message" example:"Invalid input parameters"`   // Primary error message
+	Details   []ErrorDetail `json:"details,omitempty"`                            // Detailed error information
+	Timestamp time.Time     `json:"timestamp" example:"2023-01-01T12:00:00Z"`     // When the error occurred
+	Path      string        `json:"path,omitempty" example:"/campaigns/validate"` // API path that generated the error
 }
 
 // Metadata contains optional response metadata
@@ -122,7 +122,7 @@ func NewSuccessResponse(data interface{}, requestID string) *APIResponse {
 func NewErrorResponse(code ErrorCode, message string, requestID string, path string) *APIResponse {
 	return &APIResponse{
 		Success: false,
-		Error: &ErrorInfo{
+		Error: &ApiError{
 			Code:      code,
 			Message:   message,
 			Timestamp: time.Now().UTC(),
@@ -136,7 +136,7 @@ func NewErrorResponse(code ErrorCode, message string, requestID string, path str
 func NewValidationErrorResponse(errors []ErrorDetail, requestID string, path string) *APIResponse {
 	return &APIResponse{
 		Success: false,
-		Error: &ErrorInfo{
+		Error: &ApiError{
 			Code:      ErrorCodeValidation,
 			Message:   "Validation failed",
 			Details:   errors,

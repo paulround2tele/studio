@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 )
 
 // DatabaseHandler provides bulk database query and statistics endpoints for enterprise operations
@@ -30,22 +29,22 @@ func NewDatabaseHandler(apiHandler *APIHandler) *DatabaseHandler {
 // @Tags database
 // @Accept json
 // @Produce json
+// @ID bulkDatabaseQuery
 // @Param X-Requested-With header string true "Must be XMLHttpRequest"
 // @Param request body BulkDatabaseQueryRequest true "Bulk query request"
 // @Success 200 {object} APIResponse{data=BulkDatabaseQueryResponse} "Queries executed successfully"
 // @Failure 400 {object} APIResponse "Bad request or invalid queries"
 // @Failure 403 {object} APIResponse "Forbidden query detected"
 // @Failure 500 {object} APIResponse "Internal server error"
-// @Router /api/v2/database/query [post]
+// @Router /database/query [post]
 func (h *DatabaseHandler) HandleBulkDatabaseQuery(c *gin.Context) {
 	startTime := time.Now()
-	requestID := uuid.New().String()
+	requestID := getRequestID(c)
 
 	// Verify this is a legitimate request
 	xRequestedWith := c.GetHeader("X-Requested-With")
 	if xRequestedWith != "XMLHttpRequest" {
-		response := NewErrorResponse(ErrorCodeBadRequest, "Invalid request", requestID, c.Request.URL.Path)
-		c.JSON(http.StatusBadRequest, response)
+		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request")
 		return
 	}
 
@@ -57,8 +56,7 @@ func (h *DatabaseHandler) HandleBulkDatabaseQuery(c *gin.Context) {
 			Code:    ErrorCodeValidation,
 			Message: "Invalid request payload: " + err.Error(),
 		})
-		response := NewValidationErrorResponse(validationErrors, requestID, c.Request.URL.Path)
-		c.JSON(http.StatusBadRequest, response)
+		respondWithValidationErrorGin(c, validationErrors)
 		return
 	}
 
@@ -70,23 +68,20 @@ func (h *DatabaseHandler) HandleBulkDatabaseQuery(c *gin.Context) {
 				Code:    ErrorCodeValidation,
 				Message: "Validation failed: " + err.Error(),
 			})
-			response := NewValidationErrorResponse(validationErrors, requestID, c.Request.URL.Path)
-			c.JSON(http.StatusBadRequest, response)
+			respondWithValidationErrorGin(c, validationErrors)
 			return
 		}
 	}
 
 	// Validate queries list
 	if len(req.Queries) == 0 {
-		response := NewErrorResponse(ErrorCodeValidation, "Queries list cannot be empty", requestID, c.Request.URL.Path)
-		c.JSON(http.StatusBadRequest, response)
+		respondWithErrorGin(c, http.StatusBadRequest, "Queries list cannot be empty")
 		return
 	}
 
 	const maxBatchSize = 50
 	if len(req.Queries) > maxBatchSize {
-		response := NewErrorResponse(ErrorCodeValidation, fmt.Sprintf("Maximum %d queries allowed per request", maxBatchSize), requestID, c.Request.URL.Path)
-		c.JSON(http.StatusBadRequest, response)
+		respondWithErrorGin(c, http.StatusBadRequest, fmt.Sprintf("Maximum %d queries allowed per request", maxBatchSize))
 		return
 	}
 
@@ -165,10 +160,13 @@ func (h *DatabaseHandler) HandleBulkDatabaseQuery(c *gin.Context) {
 	// Set processing time and create unified metadata
 	bulkInfo.ProcessingTimeMs = time.Since(startTime).Milliseconds()
 
-	apiResponse := NewSuccessResponse(response, requestID).WithMetadata(&Metadata{
+	// Use respondWithJSONGin with metadata attachment
+	response.TotalCount = len(req.Queries)
+	envelope := NewSuccessResponse(response, requestID).WithMetadata(&Metadata{
 		Bulk: bulkInfo,
 	})
-	c.JSON(http.StatusOK, apiResponse)
+	c.Header("X-Request-ID", requestID)
+	c.JSON(http.StatusOK, envelope)
 }
 
 // HandleBulkDatabaseStats returns database statistics for enterprise monitoring
@@ -177,21 +175,21 @@ func (h *DatabaseHandler) HandleBulkDatabaseQuery(c *gin.Context) {
 // @Tags database
 // @Accept json
 // @Produce json
+// @ID bulkDatabaseStats
 // @Param X-Requested-With header string true "Must be XMLHttpRequest"
 // @Param request body BulkDatabaseStatsRequest true "Bulk stats request"
 // @Success 200 {object} APIResponse{data=BulkDatabaseStatsResponse} "Statistics retrieved successfully"
 // @Failure 400 {object} APIResponse "Bad request"
 // @Failure 500 {object} APIResponse "Internal server error"
-// @Router /api/v2/database/stats [post]
+// @Router /database/stats [post]
 func (h *DatabaseHandler) HandleBulkDatabaseStats(c *gin.Context) {
 	startTime := time.Now()
-	requestID := uuid.New().String()
+	requestID := getRequestID(c)
 
 	// Verify this is a legitimate request
 	xRequestedWith := c.GetHeader("X-Requested-With")
 	if xRequestedWith != "XMLHttpRequest" {
-		response := NewErrorResponse(ErrorCodeBadRequest, "Invalid request", requestID, c.Request.URL.Path)
-		c.JSON(http.StatusBadRequest, response)
+		respondWithErrorGin(c, http.StatusBadRequest, "Invalid request")
 		return
 	}
 
@@ -203,8 +201,7 @@ func (h *DatabaseHandler) HandleBulkDatabaseStats(c *gin.Context) {
 			Code:    ErrorCodeValidation,
 			Message: "Invalid request payload: " + err.Error(),
 		})
-		response := NewValidationErrorResponse(validationErrors, requestID, c.Request.URL.Path)
-		c.JSON(http.StatusBadRequest, response)
+		respondWithValidationErrorGin(c, validationErrors)
 		return
 	}
 
@@ -216,8 +213,7 @@ func (h *DatabaseHandler) HandleBulkDatabaseStats(c *gin.Context) {
 				Code:    ErrorCodeValidation,
 				Message: "Validation failed: " + err.Error(),
 			})
-			response := NewValidationErrorResponse(validationErrors, requestID, c.Request.URL.Path)
-			c.JSON(http.StatusBadRequest, response)
+			respondWithValidationErrorGin(c, validationErrors)
 			return
 		}
 	}
@@ -258,12 +254,17 @@ func (h *DatabaseHandler) HandleBulkDatabaseStats(c *gin.Context) {
 			stats, err := h.getSchemaStats(schemaName)
 			if err != nil {
 				bulkInfo.SkippedItems++
-				bulkInfo.FailedItems = append(bulkInfo.FailedItems, schemaName)
-			} else {
-				response.SchemaStats[schemaName] = *stats
-				bulkInfo.ProcessedItems++
-				response.TotalCount++
+				response.SchemaStats[schemaName] = SchemaStats{
+					Name:       schemaName,
+					TableCount: 0,
+					TotalRows:  0,
+					TotalSize:  "0",
+				}
+				continue
 			}
+			response.SchemaStats[schemaName] = *stats
+			bulkInfo.ProcessedItems++
+			response.TotalCount++
 		}
 	}
 
@@ -291,10 +292,15 @@ func (h *DatabaseHandler) HandleBulkDatabaseStats(c *gin.Context) {
 	// Set processing time and create unified metadata
 	bulkInfo.ProcessingTimeMs = time.Since(startTime).Milliseconds()
 
-	apiResponse := NewSuccessResponse(response, requestID).WithMetadata(&Metadata{
+	envelope := NewSuccessResponse(response, requestID).WithMetadata(&Metadata{
+		Processing: &ProcessingInfo{
+			Duration: time.Since(startTime).String(),
+			Version:  "v2",
+		},
 		Bulk: bulkInfo,
 	})
-	c.JSON(http.StatusOK, apiResponse)
+	c.Header("X-Request-ID", requestID)
+	c.JSON(http.StatusOK, envelope)
 }
 
 // isQuerySafe checks if a SQL query is safe to execute

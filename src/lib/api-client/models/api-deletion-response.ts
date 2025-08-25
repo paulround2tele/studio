@@ -13,21 +13,30 @@
  */
 
 
-// May contain unused imports in some cases
-// @ts-ignore
-import type { ApiApiError } from './api-api-error';
 
 /**
  * 
  * @export
- * @interface ModelError
+ * @interface ApiDeletionResponse
  */
-export interface ModelError {
+export interface ApiDeletionResponse {
     /**
      * 
-     * @type {ApiApiError}
-     * @memberof ModelError
+     * @type {string}
+     * @memberof ApiDeletionResponse
      */
-    'error'?: ApiApiError;
+    'id'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiDeletionResponse
+     */
+    'message'?: string;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ApiDeletionResponse
+     */
+    'success'?: boolean;
 }
 

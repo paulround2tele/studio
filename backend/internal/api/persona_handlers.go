@@ -21,11 +21,11 @@ import (
 // --- DTOs for Persona API ---
 
 type CreatePersonaRequest struct {
-	Name          string                 `json:"name" validate:"required,min=1,max=255"`
-	PersonaType   models.PersonaTypeEnum `json:"personaType" validate:"required,oneof=dns http"`
-	Description   string                 `json:"description,omitempty"`
-	ConfigDetails interface{}            `json:"configDetails" validate:"required" swaggertype:"object"` // Accept structured config as JSON - can be HTTPConfigDetails or DNSConfigDetails
-	IsEnabled     *bool                  `json:"isEnabled,omitempty"`
+    Name          string      `json:"name" validate:"required,min=1,max=255"`
+    PersonaType   PersonaType `json:"personaType" validate:"required,oneof=dns http"`
+    Description   string      `json:"description,omitempty"`
+    ConfigDetails interface{} `json:"configDetails" validate:"required" swaggertype:"object"` // Accept structured config as JSON - can be HTTPConfigDetails or DNSConfigDetails
+    IsEnabled     *bool       `json:"isEnabled,omitempty"`
 }
 
 type UpdatePersonaRequest struct {
@@ -38,14 +38,14 @@ type UpdatePersonaRequest struct {
 // PersonaResponse formats a persona for API responses.
 // @Description API response containing persona details
 type PersonaResponse struct {
-	ID            uuid.UUID              `json:"id"`
-	Name          string                 `json:"name"`
-	PersonaType   models.PersonaTypeEnum `json:"personaType"`
-	Description   string                 `json:"description,omitempty"`
-	ConfigDetails interface{}            `json:"configDetails" swaggertype:"object"` // Return structured config as JSON - can be HTTPConfigDetails or DNSConfigDetails
-	IsEnabled     bool                   `json:"isEnabled"`
-	CreatedAt     time.Time              `json:"createdAt"`
-	UpdatedAt     time.Time              `json:"updatedAt"`
+    ID            uuid.UUID   `json:"id"`
+    Name          string      `json:"name"`
+    PersonaType   PersonaType `json:"personaType"`
+    Description   string      `json:"description,omitempty"`
+    ConfigDetails interface{} `json:"configDetails" swaggertype:"object"` // Return structured config as JSON - can be HTTPConfigDetails or DNSConfigDetails
+    IsEnabled     bool        `json:"isEnabled"`
+    CreatedAt     time.Time   `json:"createdAt"`
+    UpdatedAt     time.Time   `json:"updatedAt"`
 }
 
 func toPersonaResponse(p *models.Persona) PersonaResponse {
@@ -55,16 +55,16 @@ func toPersonaResponse(p *models.Persona) PersonaResponse {
 		json.Unmarshal(p.ConfigDetails, &configDetails)
 	}
 
-	return PersonaResponse{
-		ID:            p.ID,
-		Name:          p.Name,
-		PersonaType:   p.PersonaType,
-		Description:   p.Description.String,
-		ConfigDetails: configDetails, // Convert JSON to proper object for OpenAPI
-		IsEnabled:     p.IsEnabled,
-		CreatedAt:     p.CreatedAt,
-		UpdatedAt:     p.UpdatedAt,
-	}
+    return PersonaResponse{
+        ID:            p.ID,
+        Name:          p.Name,
+        PersonaType:   PersonaType(p.PersonaType),
+        Description:   p.Description.String,
+        ConfigDetails: configDetails, // Convert JSON to proper object for OpenAPI
+        IsEnabled:     p.IsEnabled,
+        CreatedAt:     p.CreatedAt,
+        UpdatedAt:     p.UpdatedAt,
+    }
 }
 
 // parseConfigDetails parses and validates configuration based on persona type
@@ -103,14 +103,15 @@ func parseConfigDetails(personaType models.PersonaTypeEnum, configDetails json.R
 // @Summary List all personas
 // @Description Retrieve a list of all personas with optional filtering by type and status
 // @Tags personas
+// @ID listPersonas
 // @Produce json
 // @Param limit query int false "Maximum number of results" default(20)
 // @Param offset query int false "Number of results to skip" default(0)
 // @Param isEnabled query bool false "Filter by enabled status"
 // @Param personaType query string false "Filter by persona type (dns, http)"
-// @Success 200 {array} PersonaResponse "List of personas"
-// @Failure 400 {object} map[string]string "Invalid personaType parameter"
-// @Failure 500 {object} map[string]string "Failed to list personas"
+// @Success 200 {object} APIResponse{data=[]PersonaResponse} "List of personas"
+// @Failure 400 {object} APIResponse{error=ApiError} "Invalid personaType parameter"
+// @Failure 500 {object} APIResponse{error=ApiError} "Failed to list personas"
 // @Router /personas [get]
 func (h *APIHandler) ListAllPersonasGin(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
@@ -171,13 +172,14 @@ func (h *APIHandler) ListAllPersonasGin(c *gin.Context) {
 // @Summary Create persona
 // @Description Create a new persona (DNS or HTTP) with configuration details
 // @Tags personas
+// @ID createPersona
 // @Accept json
 // @Produce json
 // @Param request body CreatePersonaRequest true "Persona creation request"
-// @Success 201 {object} PersonaResponse "Created persona"
-// @Failure 400 {object} map[string]string "Invalid request payload or configuration"
-// @Failure 409 {object} map[string]string "Persona with name and type already exists"
-// @Failure 500 {object} map[string]string "Failed to create persona"
+// @Success 201 {object} APIResponse{data=PersonaResponse} "Created persona"
+// @Failure 400 {object} APIResponse{error=ApiError} "Invalid request payload or configuration"
+// @Failure 409 {object} APIResponse{error=ApiError} "Persona with name and type already exists"
+// @Failure 500 {object} APIResponse{error=ApiError} "Failed to create persona"
 // @Router /personas [post]
 func (h *APIHandler) CreatePersonaGin(c *gin.Context) {
 	var req CreatePersonaRequest
@@ -188,13 +190,13 @@ func (h *APIHandler) CreatePersonaGin(c *gin.Context) {
 	}
 
 	// Validate persona type
-	switch req.PersonaType {
-	case models.PersonaTypeDNS, models.PersonaTypeHTTP:
-		// Valid types
-	default:
-		respondWithErrorGin(c, http.StatusBadRequest, "Invalid personaType. Must be 'dns' or 'http'")
-		return
-	}
+    switch req.PersonaType {
+    case PersonaTypeDNS, PersonaTypeHTTP:
+        // Valid types
+    default:
+        respondWithErrorGin(c, http.StatusBadRequest, "Invalid personaType. Must be 'dns' or 'http'")
+        return
+    }
 
 	// Convert ConfigDetails from interface{} to json.RawMessage
 	var configDetails json.RawMessage
@@ -223,16 +225,16 @@ func (h *APIHandler) CreatePersonaGin(c *gin.Context) {
 
 	// Create the persona model from the request
 	now := time.Now()
-	persona := &models.Persona{
-		ID:            uuid.New(),
-		Name:          req.Name,
-		PersonaType:   req.PersonaType,
-		Description:   sql.NullString{String: req.Description, Valid: req.Description != ""},
-		ConfigDetails: configJSON,
-		IsEnabled:     req.IsEnabled != nil && *req.IsEnabled, // Default to false if not specified
-		CreatedAt:     now,
-		UpdatedAt:     now,
-	}
+    persona := &models.Persona{
+        ID:            uuid.New(),
+        Name:          req.Name,
+        PersonaType:   models.PersonaTypeEnum(req.PersonaType),
+        Description:   sql.NullString{String: req.Description, Valid: req.Description != ""},
+        ConfigDetails: configJSON,
+        IsEnabled:     req.IsEnabled != nil && *req.IsEnabled, // Default to false if not specified
+        CreatedAt:     now,
+        UpdatedAt:     now,
+    }
 
 	// Use database transaction if available
 	var querier store.Querier
@@ -264,12 +266,13 @@ func (h *APIHandler) CreatePersonaGin(c *gin.Context) {
 // @Summary Get persona by ID
 // @Description Retrieve a specific persona by ID regardless of type
 // @Tags personas
+// @ID getPersona
 // @Produce json
 // @Param id path string true "Persona ID"
-// @Success 200 {object} PersonaResponse "Persona details"
-// @Failure 400 {object} map[string]string "Invalid persona ID format"
-// @Failure 404 {object} map[string]string "Persona not found"
-// @Failure 500 {object} map[string]string "Failed to fetch persona"
+// @Success 200 {object} APIResponse{data=PersonaResponse} "Persona details"
+// @Failure 400 {object} APIResponse{error=ApiError} "Invalid persona ID format"
+// @Failure 404 {object} APIResponse{error=ApiError} "Persona not found"
+// @Failure 500 {object} APIResponse{error=ApiError} "Failed to fetch persona"
 // @Router /personas/{id} [get]
 func (h *APIHandler) GetPersonaByIDGin(c *gin.Context) {
 	personaIDStr := c.Param("id")
@@ -304,12 +307,13 @@ func (h *APIHandler) GetPersonaByIDGin(c *gin.Context) {
 // @Summary Get HTTP persona by ID
 // @Description Retrieve a specific HTTP persona by ID
 // @Tags personas
+// @ID getHttpPersona
 // @Produce json
 // @Param id path string true "HTTP Persona ID"
-// @Success 200 {object} PersonaResponse "HTTP persona details"
-// @Failure 400 {object} map[string]string "Invalid persona ID format or not HTTP persona"
-// @Failure 404 {object} map[string]string "HTTP persona not found"
-// @Failure 500 {object} map[string]string "Failed to fetch HTTP persona"
+// @Success 200 {object} APIResponse{data=PersonaResponse} "HTTP persona details"
+// @Failure 400 {object} APIResponse{error=ApiError} "Invalid persona ID format or not HTTP persona"
+// @Failure 404 {object} APIResponse{error=ApiError} "HTTP persona not found"
+// @Failure 500 {object} APIResponse{error=ApiError} "Failed to fetch HTTP persona"
 // @Router /personas/http/{id} [get]
 func (h *APIHandler) GetHttpPersonaByIDGin(c *gin.Context) {
 	personaIDStr := c.Param("id")
@@ -349,13 +353,14 @@ func (h *APIHandler) GetHttpPersonaByIDGin(c *gin.Context) {
 // @Summary Get DNS persona by ID
 // @Description Retrieve a specific DNS persona configuration by its unique identifier
 // @Tags personas
+// @ID getDnsPersona
 // @Accept json
 // @Produce json
 // @Param id path string true "DNS Persona ID" format(uuid)
-// @Success 200 {object} PersonaResponse "DNS persona retrieved successfully"
-// @Failure 400 {object} map[string]string "Bad Request"
-// @Failure 404 {object} map[string]string "Persona Not Found"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Success 200 {object} APIResponse{data=PersonaResponse} "DNS persona retrieved successfully"
+// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
+// @Failure 404 {object} APIResponse{error=ApiError} "Persona Not Found"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /personas/dns/{id} [get]
 func (h *APIHandler) GetDnsPersonaByIDGin(c *gin.Context) {
 	personaIDStr := c.Param("id")
@@ -396,14 +401,15 @@ func (h *APIHandler) GetDnsPersonaByIDGin(c *gin.Context) {
 // @Summary Update persona
 // @Description Update an existing persona's configuration by ID
 // @Tags personas
+// @ID updatePersona
 // @Accept json
 // @Produce json
 // @Param id path string true "Persona ID (UUID)"
 // @Param request body UpdatePersonaRequest true "Persona update request"
-// @Success 200 {object} PersonaResponse "Persona updated successfully"
-// @Failure 400 {object} map[string]string "Bad Request"
-// @Failure 404 {object} map[string]string "Persona not found"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Success 200 {object} APIResponse{data=PersonaResponse} "Persona updated successfully"
+// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
+// @Failure 404 {object} APIResponse{error=ApiError} "Persona not found"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /personas/{id} [put]
 func (h *APIHandler) UpdatePersonaGin(c *gin.Context) {
 	personaIDStr := c.Param("id")
@@ -498,12 +504,13 @@ func (h *APIHandler) UpdatePersonaGin(c *gin.Context) {
 // @Summary Delete persona
 // @Description Delete a persona by ID
 // @Tags personas
+// @ID deletePersona
 // @Produce json
 // @Param id path string true "Persona ID (UUID)"
-// @Success 200 {object} PersonaDeleteResponse "Persona deleted successfully"
-// @Failure 400 {object} map[string]string "Bad Request"
-// @Failure 404 {object} map[string]string "Persona not found"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Success 200 {object} APIResponse{data=PersonaDeleteResponse} "Persona deleted successfully"
+// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
+// @Failure 404 {object} APIResponse{error=ApiError} "Persona not found"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /personas/{id} [delete]
 func (h *APIHandler) DeletePersonaGin(c *gin.Context) {
 	personaIDStr := c.Param("id")
@@ -552,12 +559,13 @@ func (h *APIHandler) DeletePersonaGin(c *gin.Context) {
 // @Summary Test persona
 // @Description Test a persona configuration to verify it works correctly
 // @Tags personas
+// @ID testPersona
 // @Produce json
 // @Param id path string true "Persona ID (UUID)"
-// @Success 200 {object} PersonaTestResponse "Persona test results"
-// @Failure 400 {object} map[string]string "Bad Request"
-// @Failure 404 {object} map[string]string "Persona not found"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Success 200 {object} APIResponse{data=PersonaTestResponse} "Persona test results"
+// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
+// @Failure 404 {object} APIResponse{error=ApiError} "Persona not found"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /personas/{id}/test [post]
 func (h *APIHandler) TestPersonaGin(c *gin.Context) {
 	personaIDStr := c.Param("id")

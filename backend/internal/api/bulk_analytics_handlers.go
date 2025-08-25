@@ -154,30 +154,28 @@ func (h *BulkAnalyticsAPIHandler) BulkAnalyzeDomains(c *gin.Context) {
 		},
 	}
 
-	// Build metadata
-	metadata := &models.BulkMetadata{
-		RequestID:     uuid.New().String(),
-		Timestamp:     time.Now().Format(time.RFC3339),
-		Version:       "2.0.0",
-		ExecutionNode: "analytics-node-01",
-		Debug: &models.BulkOperationDebugInfo{
-			ConfigSnapshot: map[string]string{
-				"metrics_requested": fmt.Sprintf("%v", request.Metrics),
-				"granularity":       request.Granularity,
-				"group_by":          fmt.Sprintf("%v", request.GroupBy),
-			},
-		},
-	}
+	requestID := getRequestID(c)
 
 	response := models.BulkAnalyticsResponse{
 		CampaignMetrics: campaignMetrics,
 		AggregatedData:  aggregatedData,
 		ProcessingTime:  time.Since(startTime).Milliseconds(),
 		DataPoints:      len(request.CampaignIDs) * 3, // 3 time series points per campaign
-		Metadata:        metadata,
+		// Metadata removed from response data - now using envelope-level metadata
 	}
 
-	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
+	// Use envelope-level metadata for consistency with database handlers
+	bulkInfo := &BulkOperationInfo{
+		ProcessedItems:   len(request.CampaignIDs),
+		SkippedItems:     0, // TODO: Track actual skipped items
+		ProcessingTimeMs: time.Since(startTime).Milliseconds(),
+	}
+
+	envelope := NewSuccessResponse(response, requestID).WithMetadata(&Metadata{
+		Bulk: bulkInfo,
+	})
+	c.Header("X-Request-ID", requestID)
+	c.JSON(http.StatusOK, envelope)
 }
 
 // @Summary Manage bulk campaign operations

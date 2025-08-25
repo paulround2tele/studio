@@ -26,7 +26,9 @@ common.ts
 configuration.ts
 docs/AnalyticsApi.md
 docs/ApiAPIResponse.md
+docs/ApiAddProxyToPoolRequest.md
 docs/ApiAnalysisConfig.md
+docs/ApiApiError.md
 docs/ApiBatchKeywordExtractionRequest.md
 docs/ApiBatchKeywordExtractionResponse.md
 docs/ApiBulkDatabaseQueryRequest.md
@@ -49,8 +51,8 @@ docs/ApiDatabaseQuery.md
 docs/ApiDatabaseQueryResult.md
 docs/ApiDatabaseStats.md
 docs/ApiDatabaseValue.md
+docs/ApiDeletionResponse.md
 docs/ApiErrorDetail.md
-docs/ApiErrorInfo.md
 docs/ApiHTTPValidationConfig.md
 docs/ApiHealthCheckResponse.md
 docs/ApiHealthStatus.md
@@ -76,6 +78,7 @@ docs/ApiPingResponse.md
 docs/ApiProcessingInfo.md
 docs/ApiProxyDetailsResponse.md
 docs/ApiProxyHealthCheckResponse.md
+docs/ApiProxyPoolDeleteResponse.md
 docs/ApiProxyPoolMembershipResponse.md
 docs/ApiProxyPoolRequest.md
 docs/ApiProxyStatusResponse.md
@@ -177,6 +180,8 @@ docs/ModelsPhasePerformance.md
 docs/ModelsPhaseStatusEnum.md
 docs/ModelsPhaseTypeEnum.md
 docs/ModelsProxy.md
+docs/ModelsProxyPool.md
+docs/ModelsProxyPoolMembership.md
 docs/ModelsRequiredResources.md
 docs/ModelsResourceAllocationResult.md
 docs/ModelsResourceLimits.md
@@ -194,7 +199,6 @@ docs/MonitoringApi.md
 docs/PersonasApi.md
 docs/ProxiesApi.md
 docs/ProxyPoolsApi.md
-docs/ProxyPoolsPoolIdProxiesPostRequest.md
 docs/ResourcesApi.md
 docs/ServerSettingsApi.md
 docs/ServicesCreateLeadGenerationCampaignRequest.md
@@ -204,7 +208,9 @@ docs/ValidationApi.md
 docs/WebsocketApi.md
 git_push.sh
 index.ts
+models/api-add-proxy-to-pool-request.ts
 models/api-analysis-config.ts
+models/api-api-error.ts
 models/api-apiresponse.ts
 models/api-batch-keyword-extraction-request.ts
 models/api-batch-keyword-extraction-response.ts
@@ -227,9 +233,9 @@ models/api-database-query-result.ts
 models/api-database-query.ts
 models/api-database-stats.ts
 models/api-database-value.ts
+models/api-deletion-response.ts
 models/api-dnsvalidation-config.ts
 models/api-error-detail.ts
-models/api-error-info.ts
 models/api-health-check-response.ts
 models/api-health-status.ts
 models/api-httpvalidation-config.ts
@@ -255,6 +261,7 @@ models/api-ping-response.ts
 models/api-processing-info.ts
 models/api-proxy-details-response.ts
 models/api-proxy-health-check-response.ts
+models/api-proxy-pool-delete-response.ts
 models/api-proxy-pool-membership-response.ts
 models/api-proxy-pool-request.ts
 models/api-proxy-status-response.ts
@@ -346,6 +353,8 @@ models/models-phase-metrics.ts
 models/models-phase-performance.ts
 models/models-phase-status-enum.ts
 models/models-phase-type-enum.ts
+models/models-proxy-pool-membership.ts
+models/models-proxy-pool.ts
 models/models-proxy.ts
 models/models-required-resources.ts
 models/models-resource-allocation-result.ts
@@ -360,6 +369,5 @@ models/models-time-series-point.ts
 models/models-tldperformance.ts
 models/models-update-proxy-request.ts
 models/models-validation-operation-result.ts
-models/proxy-pools-pool-id-proxies-post-request.ts
 models/services-create-lead-generation-campaign-request.ts
 models/services-domain-generation-phase-config.ts

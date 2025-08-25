@@ -148,14 +148,25 @@ func (h *BulkDomainsAPIHandler) BulkGenerateDomains(c *gin.Context) {
 		Status:         status,
 	}
 
-	// Return appropriate HTTP status with unified envelope
+	// Use envelope-level metadata for consistency with database handlers
+	bulkInfo := &BulkOperationInfo{
+		ProcessedItems:   len(request.Operations),
+		SkippedItems:     failedOps,
+		ProcessingTimeMs: time.Since(startTime).Milliseconds(),
+	}
+
+	requestID := getRequestID(c)
+	envelope := NewSuccessResponse(response, requestID).WithMetadata(&Metadata{
+		Bulk: bulkInfo,
+	})
+
+	// Return appropriate HTTP status with unified envelope (no more 206 abuse!)
 	if status == "failed" {
-		c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrorCodeInternalServer,
-			"Domain generation operation failed", getRequestID(c), c.Request.URL.Path))
-	} else if status == "partial" {
-		c.JSON(http.StatusPartialContent, NewSuccessResponse(response, getRequestID(c)))
+		respondWithErrorGin(c, http.StatusInternalServerError, "Domain generation operation failed")
 	} else {
-		c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
+		// Use 200 OK for both partial and complete success, status is in the response body
+		c.Header("X-Request-ID", requestID)
+		c.JSON(http.StatusOK, envelope)
 	}
 }
 

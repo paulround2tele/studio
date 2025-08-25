@@ -19,6 +19,13 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	maxKeywordBatchItems   = 100
+	maxKeywordConcurrency  = 10
+	maxKeywordBatchTimeout = 10 * time.Minute
+	perItemTimeout         = 30 * time.Second
+)
+
 // BatchExtractKeywordsGin performs batch keyword extraction on multiple URLs.
 // @Summary Batch keyword extraction
 // @Description Extract keywords from multiple URLs using specified keyword sets and personas
@@ -27,9 +34,9 @@ import (
 // @Accept json
 // @Produce json
 // @Param request body BatchKeywordExtractionRequest true "Batch extraction request"
-// @Success 200 {object} BatchKeywordExtractionResponse "Extraction results"
-// @Failure 400 {object} APIResponse{error=ErrorInfo} "Invalid request body or validation failed"
-// @Router /api/v2/extract/keywords [post]
+// @Success 200 {object} APIResponse{data=BatchKeywordExtractionResponse} "Extraction results"
+// @Failure 400 {object} APIResponse{error=ApiError} "Invalid request body or validation failed"
+// @Router /extract/keywords [post]
 func (h *APIHandler) BatchExtractKeywordsGin(c *gin.Context) {
 	var req BatchKeywordExtractionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -46,6 +53,10 @@ func (h *APIHandler) BatchExtractKeywordsGin(c *gin.Context) {
 		respondWithErrorGin(c, http.StatusBadRequest, "No items provided for extraction")
 		return
 	}
+	if len(req.Items) > maxKeywordBatchItems {
+		respondWithErrorGin(c, http.StatusBadRequest, fmt.Sprintf("Too many items: max %d", maxKeywordBatchItems))
+		return
+	}
 
 	log.Printf("BatchExtractKeywordsGin: Received %d items for keyword extraction.", len(req.Items))
 
@@ -53,17 +64,21 @@ func (h *APIHandler) BatchExtractKeywordsGin(c *gin.Context) {
 	results := make([]KeywordExtractionAPIResult, len(req.Items))
 	var wg sync.WaitGroup
 
-	concurrency := h.Config.Worker.NumWorkers // Use configured worker num as concurrency limit for batch
+	concurrency := h.Config.Worker.NumWorkers // Use configured worker num as starting point
 	if concurrency <= 0 {
 		concurrency = 5 // Fallback concurrency
 	}
-	semaphore := make(chan struct{}, concurrency)
-	batchTimeout := time.Duration(len(req.Items)*h.Config.Worker.JobProcessingTimeoutMinutes) * time.Minute // Use configured timeout
-	if batchTimeout <= 0 {
-		batchTimeout = time.Duration(len(req.Items)*15) * time.Minute // Fallback timeout
+	if concurrency > maxKeywordConcurrency {
+		concurrency = maxKeywordConcurrency
 	}
+	semaphore := make(chan struct{}, concurrency)
 
-	ctx, cancel := context.WithTimeout(c.Request.Context(), batchTimeout)
+	// Bound the overall batch timeout
+	calc := time.Duration(len(req.Items)*h.Config.Worker.JobProcessingTimeoutMinutes) * time.Minute
+	if calc <= 0 || calc > maxKeywordBatchTimeout {
+		calc = maxKeywordBatchTimeout
+	}
+	ctx, cancel := context.WithTimeout(c.Request.Context(), calc)
 	defer cancel()
 
 	for i, item := range req.Items {
@@ -87,7 +102,10 @@ func (h *APIHandler) BatchExtractKeywordsGin(c *gin.Context) {
 			defer wg.Done()
 			defer func() { <-semaphore }()
 
-			jobCtx := ctx // Use the batch context, could also create per-item sub-context with shorter timeout
+			// Per-item timeout guard within overall batch context
+			jobCtx, itemCancel := context.WithTimeout(ctx, perItemTimeout)
+			defer itemCancel()
+
 			itemResult := KeywordExtractionAPIResult{
 				URL:              currentItem.URL,
 				KeywordSetIDUsed: currentItem.KeywordSetID,
@@ -210,8 +228,8 @@ sendResponseGin:
 // @Param httpPersonaId query string false "HTTP persona ID for request customization"
 // @Param dnsPersonaId query string false "DNS persona ID for DNS customization"
 // @Success 200 {string} string "Server-sent events stream with extraction results"
-// @Failure 400 {object} map[string]string "Invalid query parameters"
-// @Router /api/v2/extract/keywords/stream [get]
+// @Failure 400 {object} APIResponse "Invalid query parameters"
+// @Router /extract/keywords/stream [get]
 func (h *APIHandler) StreamExtractKeywordsGin(c *gin.Context) {
 	flusher, ok := c.Writer.(http.Flusher)
 	if !ok {
@@ -337,24 +355,24 @@ func (h *APIHandler) StreamExtractKeywordsGin(c *gin.Context) {
 // streamResultEventGin sends a single KeywordExtractionAPIResult as an SSE event using Gin.
 func streamResultEventGin(c *gin.Context, flusher http.Flusher, eventID string, result KeywordExtractionAPIResult) {
 	// Check if client is still connected before attempting to write
-	select {
-	case <-c.Writer.CloseNotify():
-		log.Printf("streamResultEventGin: Client disconnected for eventID %s, URL %s", eventID, result.URL)
-		return
-	default:
-	}
+    select {
+    case <-c.Request.Context().Done():
+        log.Printf("streamResultEventGin: Client disconnected for eventID %s, URL %s", eventID, result.URL)
+        return
+    default:
+    }
 	c.SSEvent("keyword_extraction_result", result)
 	flusher.Flush()
 }
 
 // streamDoneEventGin sends the done event for SSE using Gin.
 func streamDoneEventGin(c *gin.Context, flusher http.Flusher, message string) {
-	select {
-	case <-c.Writer.CloseNotify():
-		log.Printf("streamDoneEventGin: Client disconnected before sending done event.")
-		return
-	default:
-	}
+    select {
+    case <-c.Request.Context().Done():
+        log.Printf("streamDoneEventGin: Client disconnected before sending done event.")
+        return
+    default:
+    }
 	c.SSEvent("done", SuccessMessageResponse{Message: message})
 	flusher.Flush()
 }

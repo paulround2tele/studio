@@ -13,21 +13,30 @@
  */
 
 
-// May contain unused imports in some cases
-// @ts-ignore
-import type { ApiApiError } from './api-api-error';
 
 /**
  * 
  * @export
- * @interface ModelError
+ * @interface ApiProxyPoolDeleteResponse
  */
-export interface ModelError {
+export interface ApiProxyPoolDeleteResponse {
     /**
      * 
-     * @type {ApiApiError}
-     * @memberof ModelError
+     * @type {boolean}
+     * @memberof ApiProxyPoolDeleteResponse
      */
-    'error'?: ApiApiError;
+    'deleted'?: boolean;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiProxyPoolDeleteResponse
+     */
+    'message'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiProxyPoolDeleteResponse
+     */
+    'poolId'?: string;
 }
 

@@ -12,8 +12,9 @@ import (
 // @Summary Ping server
 // @Description Simple ping endpoint to verify server is responding
 // @Tags health
+// @ID ping
 // @Produce json
-// @Success 200 {object} PingResponse "Pong response with timestamp"
+// @Success 200 {object} APIResponse{data=PingResponse} "Pong response with timestamp"
 // @Router /ping [get]
 func PingHandlerGin(c *gin.Context) {
 	pingResponse := PingResponse{

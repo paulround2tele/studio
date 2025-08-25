@@ -51,8 +51,218 @@ export const ServerSettingsApiAxiosParamCreator = function (configuration?: Conf
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        serverAuthConfigGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        getAuthConfig: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/server/auth-config`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Retrieve default DNS validator configuration
+         * @summary Get DNS configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getDNSConfig: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/server/dns-config`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Retrieve default HTTP validator configuration
+         * @summary Get HTTP configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getHTTPConfig: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/server/http-config`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Retrieve the current logging configuration settings
+         * @summary Get logging configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getLoggingConfig: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/server/logging-config`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Retrieve the current proxy manager configuration settings
+         * @summary Get proxy manager configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getProxyManagerConfig: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/server/proxy-manager-config`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Retrieve the current rate limiter configuration settings
+         * @summary Get rate limiter configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getRateLimiterConfig: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/server/rate-limiter-config`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Retrieve current server-wide configuration settings
+         * @summary Get server configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getServerConfig: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/server/config`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Retrieve the current worker configuration settings
+         * @summary Get worker configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getWorkerConfig: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/server/worker-config`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -82,9 +292,9 @@ export const ServerSettingsApiAxiosParamCreator = function (configuration?: Conf
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        serverAuthConfigPut: async (configAuthConfig: ConfigAuthConfig, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateAuthConfig: async (configAuthConfig: ConfigAuthConfig, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'configAuthConfig' is not null or undefined
-            assertParamExists('serverAuthConfigPut', 'configAuthConfig', configAuthConfig)
+            assertParamExists('updateAuthConfig', 'configAuthConfig', configAuthConfig)
             const localVarPath = `/server/auth-config`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -112,111 +322,15 @@ export const ServerSettingsApiAxiosParamCreator = function (configuration?: Conf
             };
         },
         /**
-         * Retrieve current server-wide configuration settings
-         * @summary Get server configuration
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        serverConfigGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/server/config`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * Update server-wide configuration settings
-         * @summary Update server configuration
-         * @param {ApiServerConfigUpdateRequest} apiServerConfigUpdateRequest Server configuration update
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        serverConfigPut: async (apiServerConfigUpdateRequest: ApiServerConfigUpdateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'apiServerConfigUpdateRequest' is not null or undefined
-            assertParamExists('serverConfigPut', 'apiServerConfigUpdateRequest', apiServerConfigUpdateRequest)
-            const localVarPath = `/server/config`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-    
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(apiServerConfigUpdateRequest, localVarRequestOptions, configuration)
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
-         * Retrieve default DNS validator configuration
-         * @summary Get DNS configuration
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        serverDnsConfigGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/server/dns-config`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
          * Update default DNS validator configuration
          * @summary Update DNS configuration
          * @param {ConfigDNSValidatorConfigJSON} configDNSValidatorConfigJSON DNS validator configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        serverDnsConfigPut: async (configDNSValidatorConfigJSON: ConfigDNSValidatorConfigJSON, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateDNSConfig: async (configDNSValidatorConfigJSON: ConfigDNSValidatorConfigJSON, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'configDNSValidatorConfigJSON' is not null or undefined
-            assertParamExists('serverDnsConfigPut', 'configDNSValidatorConfigJSON', configDNSValidatorConfigJSON)
+            assertParamExists('updateDNSConfig', 'configDNSValidatorConfigJSON', configDNSValidatorConfigJSON)
             const localVarPath = `/server/dns-config`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -244,45 +358,15 @@ export const ServerSettingsApiAxiosParamCreator = function (configuration?: Conf
             };
         },
         /**
-         * Retrieve default HTTP validator configuration
-         * @summary Get HTTP configuration
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        serverHttpConfigGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/server/http-config`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
          * Update default HTTP validator configuration
          * @summary Update HTTP configuration
          * @param {ConfigHTTPValidatorConfigJSON} configHTTPValidatorConfigJSON HTTP validator configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        serverHttpConfigPut: async (configHTTPValidatorConfigJSON: ConfigHTTPValidatorConfigJSON, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateHTTPConfig: async (configHTTPValidatorConfigJSON: ConfigHTTPValidatorConfigJSON, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'configHTTPValidatorConfigJSON' is not null or undefined
-            assertParamExists('serverHttpConfigPut', 'configHTTPValidatorConfigJSON', configHTTPValidatorConfigJSON)
+            assertParamExists('updateHTTPConfig', 'configHTTPValidatorConfigJSON', configHTTPValidatorConfigJSON)
             const localVarPath = `/server/http-config`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -310,45 +394,15 @@ export const ServerSettingsApiAxiosParamCreator = function (configuration?: Conf
             };
         },
         /**
-         * Retrieve the current logging configuration settings
-         * @summary Get logging configuration
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        serverLoggingConfigGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/server/logging-config`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
          * Update the logging configuration settings
          * @summary Update logging configuration
          * @param {ConfigLoggingConfig} configLoggingConfig Logging configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        serverLoggingConfigPut: async (configLoggingConfig: ConfigLoggingConfig, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateLoggingConfig: async (configLoggingConfig: ConfigLoggingConfig, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'configLoggingConfig' is not null or undefined
-            assertParamExists('serverLoggingConfigPut', 'configLoggingConfig', configLoggingConfig)
+            assertParamExists('updateLoggingConfig', 'configLoggingConfig', configLoggingConfig)
             const localVarPath = `/server/logging-config`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -376,45 +430,15 @@ export const ServerSettingsApiAxiosParamCreator = function (configuration?: Conf
             };
         },
         /**
-         * Retrieve the current proxy manager configuration settings
-         * @summary Get proxy manager configuration
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        serverProxyManagerConfigGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/server/proxy-manager-config`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
          * Update the proxy manager configuration settings
          * @summary Update proxy manager configuration
          * @param {ConfigProxyManagerConfigJSON} configProxyManagerConfigJSON Proxy manager configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        serverProxyManagerConfigPut: async (configProxyManagerConfigJSON: ConfigProxyManagerConfigJSON, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateProxyManagerConfig: async (configProxyManagerConfigJSON: ConfigProxyManagerConfigJSON, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'configProxyManagerConfigJSON' is not null or undefined
-            assertParamExists('serverProxyManagerConfigPut', 'configProxyManagerConfigJSON', configProxyManagerConfigJSON)
+            assertParamExists('updateProxyManagerConfig', 'configProxyManagerConfigJSON', configProxyManagerConfigJSON)
             const localVarPath = `/server/proxy-manager-config`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -442,45 +466,15 @@ export const ServerSettingsApiAxiosParamCreator = function (configuration?: Conf
             };
         },
         /**
-         * Retrieve the current rate limiter configuration settings
-         * @summary Get rate limiter configuration
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        serverRateLimiterConfigGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/server/rate-limiter-config`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
-        /**
          * Update the rate limiter configuration settings
          * @summary Update rate limiter configuration
          * @param {ConfigRateLimiterConfig} configRateLimiterConfig Rate limiter configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        serverRateLimiterConfigPut: async (configRateLimiterConfig: ConfigRateLimiterConfig, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateRateLimiterConfig: async (configRateLimiterConfig: ConfigRateLimiterConfig, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'configRateLimiterConfig' is not null or undefined
-            assertParamExists('serverRateLimiterConfigPut', 'configRateLimiterConfig', configRateLimiterConfig)
+            assertParamExists('updateRateLimiterConfig', 'configRateLimiterConfig', configRateLimiterConfig)
             const localVarPath = `/server/rate-limiter-config`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -508,13 +502,16 @@ export const ServerSettingsApiAxiosParamCreator = function (configuration?: Conf
             };
         },
         /**
-         * Retrieve the current worker configuration settings
-         * @summary Get worker configuration
+         * Update server-wide configuration settings
+         * @summary Update server configuration
+         * @param {ApiServerConfigUpdateRequest} apiServerConfigUpdateRequest Server configuration update
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        serverWorkerConfigGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/server/worker-config`;
+        updateServerConfig: async (apiServerConfigUpdateRequest: ApiServerConfigUpdateRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiServerConfigUpdateRequest' is not null or undefined
+            assertParamExists('updateServerConfig', 'apiServerConfigUpdateRequest', apiServerConfigUpdateRequest)
+            const localVarPath = `/server/config`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -522,15 +519,18 @@ export const ServerSettingsApiAxiosParamCreator = function (configuration?: Conf
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
 
     
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiServerConfigUpdateRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -544,9 +544,9 @@ export const ServerSettingsApiAxiosParamCreator = function (configuration?: Conf
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        serverWorkerConfigPut: async (configWorkerConfig: ConfigWorkerConfig, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        updateWorkerConfig: async (configWorkerConfig: ConfigWorkerConfig, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'configWorkerConfig' is not null or undefined
-            assertParamExists('serverWorkerConfigPut', 'configWorkerConfig', configWorkerConfig)
+            assertParamExists('updateWorkerConfig', 'configWorkerConfig', configWorkerConfig)
             const localVarPath = `/server/worker-config`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -589,10 +589,94 @@ export const ServerSettingsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async serverAuthConfigGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigAuthConfig>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.serverAuthConfigGet(options);
+        async getAuthConfig(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigAuthConfig>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getAuthConfig(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.serverAuthConfigGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.getAuthConfig']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Retrieve default DNS validator configuration
+         * @summary Get DNS configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getDNSConfig(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigDNSValidatorConfigJSON>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getDNSConfig(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.getDNSConfig']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Retrieve default HTTP validator configuration
+         * @summary Get HTTP configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getHTTPConfig(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigHTTPValidatorConfigJSON>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getHTTPConfig(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.getHTTPConfig']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Retrieve the current logging configuration settings
+         * @summary Get logging configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getLoggingConfig(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigLoggingConfig>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getLoggingConfig(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.getLoggingConfig']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Retrieve the current proxy manager configuration settings
+         * @summary Get proxy manager configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getProxyManagerConfig(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigProxyManagerConfigJSON>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getProxyManagerConfig(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.getProxyManagerConfig']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Retrieve the current rate limiter configuration settings
+         * @summary Get rate limiter configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getRateLimiterConfig(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigRateLimiterConfig>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getRateLimiterConfig(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.getRateLimiterConfig']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Retrieve current server-wide configuration settings
+         * @summary Get server configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getServerConfig(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiServerConfigResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getServerConfig(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.getServerConfig']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Retrieve the current worker configuration settings
+         * @summary Get worker configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async getWorkerConfig(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigWorkerConfig>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.getWorkerConfig(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.getWorkerConfig']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -602,47 +686,10 @@ export const ServerSettingsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async serverAuthConfigPut(configAuthConfig: ConfigAuthConfig, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigAuthConfig>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.serverAuthConfigPut(configAuthConfig, options);
+        async updateAuthConfig(configAuthConfig: ConfigAuthConfig, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigAuthConfig>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateAuthConfig(configAuthConfig, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.serverAuthConfigPut']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * Retrieve current server-wide configuration settings
-         * @summary Get server configuration
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async serverConfigGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiServerConfigResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.serverConfigGet(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.serverConfigGet']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * Update server-wide configuration settings
-         * @summary Update server configuration
-         * @param {ApiServerConfigUpdateRequest} apiServerConfigUpdateRequest Server configuration update
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async serverConfigPut(apiServerConfigUpdateRequest: ApiServerConfigUpdateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiServerConfigResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.serverConfigPut(apiServerConfigUpdateRequest, options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.serverConfigPut']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * Retrieve default DNS validator configuration
-         * @summary Get DNS configuration
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async serverDnsConfigGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigDNSValidatorConfigJSON>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.serverDnsConfigGet(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.serverDnsConfigGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.updateAuthConfig']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -652,22 +699,10 @@ export const ServerSettingsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async serverDnsConfigPut(configDNSValidatorConfigJSON: ConfigDNSValidatorConfigJSON, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigDNSValidatorConfigJSON>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.serverDnsConfigPut(configDNSValidatorConfigJSON, options);
+        async updateDNSConfig(configDNSValidatorConfigJSON: ConfigDNSValidatorConfigJSON, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigDNSValidatorConfigJSON>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateDNSConfig(configDNSValidatorConfigJSON, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.serverDnsConfigPut']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * Retrieve default HTTP validator configuration
-         * @summary Get HTTP configuration
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async serverHttpConfigGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigHTTPValidatorConfigJSON>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.serverHttpConfigGet(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.serverHttpConfigGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.updateDNSConfig']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -677,22 +712,10 @@ export const ServerSettingsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async serverHttpConfigPut(configHTTPValidatorConfigJSON: ConfigHTTPValidatorConfigJSON, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigHTTPValidatorConfigJSON>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.serverHttpConfigPut(configHTTPValidatorConfigJSON, options);
+        async updateHTTPConfig(configHTTPValidatorConfigJSON: ConfigHTTPValidatorConfigJSON, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigHTTPValidatorConfigJSON>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateHTTPConfig(configHTTPValidatorConfigJSON, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.serverHttpConfigPut']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * Retrieve the current logging configuration settings
-         * @summary Get logging configuration
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async serverLoggingConfigGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigLoggingConfig>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.serverLoggingConfigGet(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.serverLoggingConfigGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.updateHTTPConfig']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -702,22 +725,10 @@ export const ServerSettingsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async serverLoggingConfigPut(configLoggingConfig: ConfigLoggingConfig, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigLoggingConfig>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.serverLoggingConfigPut(configLoggingConfig, options);
+        async updateLoggingConfig(configLoggingConfig: ConfigLoggingConfig, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigLoggingConfig>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateLoggingConfig(configLoggingConfig, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.serverLoggingConfigPut']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * Retrieve the current proxy manager configuration settings
-         * @summary Get proxy manager configuration
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async serverProxyManagerConfigGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigProxyManagerConfigJSON>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.serverProxyManagerConfigGet(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.serverProxyManagerConfigGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.updateLoggingConfig']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -727,22 +738,10 @@ export const ServerSettingsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async serverProxyManagerConfigPut(configProxyManagerConfigJSON: ConfigProxyManagerConfigJSON, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigProxyManagerConfigJSON>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.serverProxyManagerConfigPut(configProxyManagerConfigJSON, options);
+        async updateProxyManagerConfig(configProxyManagerConfigJSON: ConfigProxyManagerConfigJSON, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigProxyManagerConfigJSON>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateProxyManagerConfig(configProxyManagerConfigJSON, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.serverProxyManagerConfigPut']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * Retrieve the current rate limiter configuration settings
-         * @summary Get rate limiter configuration
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async serverRateLimiterConfigGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigRateLimiterConfig>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.serverRateLimiterConfigGet(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.serverRateLimiterConfigGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.updateProxyManagerConfig']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -752,22 +751,23 @@ export const ServerSettingsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async serverRateLimiterConfigPut(configRateLimiterConfig: ConfigRateLimiterConfig, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigRateLimiterConfig>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.serverRateLimiterConfigPut(configRateLimiterConfig, options);
+        async updateRateLimiterConfig(configRateLimiterConfig: ConfigRateLimiterConfig, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigRateLimiterConfig>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateRateLimiterConfig(configRateLimiterConfig, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.serverRateLimiterConfigPut']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.updateRateLimiterConfig']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * Retrieve the current worker configuration settings
-         * @summary Get worker configuration
+         * Update server-wide configuration settings
+         * @summary Update server configuration
+         * @param {ApiServerConfigUpdateRequest} apiServerConfigUpdateRequest Server configuration update
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async serverWorkerConfigGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigWorkerConfig>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.serverWorkerConfigGet(options);
+        async updateServerConfig(apiServerConfigUpdateRequest: ApiServerConfigUpdateRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiServerConfigResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateServerConfig(apiServerConfigUpdateRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.serverWorkerConfigGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.updateServerConfig']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -777,10 +777,10 @@ export const ServerSettingsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async serverWorkerConfigPut(configWorkerConfig: ConfigWorkerConfig, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigWorkerConfig>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.serverWorkerConfigPut(configWorkerConfig, options);
+        async updateWorkerConfig(configWorkerConfig: ConfigWorkerConfig, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigWorkerConfig>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.updateWorkerConfig(configWorkerConfig, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.serverWorkerConfigPut']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.updateWorkerConfig']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -799,8 +799,71 @@ export const ServerSettingsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        serverAuthConfigGet(options?: RawAxiosRequestConfig): AxiosPromise<ConfigAuthConfig> {
-            return localVarFp.serverAuthConfigGet(options).then((request) => request(axios, basePath));
+        getAuthConfig(options?: RawAxiosRequestConfig): AxiosPromise<ConfigAuthConfig> {
+            return localVarFp.getAuthConfig(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Retrieve default DNS validator configuration
+         * @summary Get DNS configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getDNSConfig(options?: RawAxiosRequestConfig): AxiosPromise<ConfigDNSValidatorConfigJSON> {
+            return localVarFp.getDNSConfig(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Retrieve default HTTP validator configuration
+         * @summary Get HTTP configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getHTTPConfig(options?: RawAxiosRequestConfig): AxiosPromise<ConfigHTTPValidatorConfigJSON> {
+            return localVarFp.getHTTPConfig(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Retrieve the current logging configuration settings
+         * @summary Get logging configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getLoggingConfig(options?: RawAxiosRequestConfig): AxiosPromise<ConfigLoggingConfig> {
+            return localVarFp.getLoggingConfig(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Retrieve the current proxy manager configuration settings
+         * @summary Get proxy manager configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getProxyManagerConfig(options?: RawAxiosRequestConfig): AxiosPromise<ConfigProxyManagerConfigJSON> {
+            return localVarFp.getProxyManagerConfig(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Retrieve the current rate limiter configuration settings
+         * @summary Get rate limiter configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getRateLimiterConfig(options?: RawAxiosRequestConfig): AxiosPromise<ConfigRateLimiterConfig> {
+            return localVarFp.getRateLimiterConfig(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Retrieve current server-wide configuration settings
+         * @summary Get server configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getServerConfig(options?: RawAxiosRequestConfig): AxiosPromise<ApiServerConfigResponse> {
+            return localVarFp.getServerConfig(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Retrieve the current worker configuration settings
+         * @summary Get worker configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        getWorkerConfig(options?: RawAxiosRequestConfig): AxiosPromise<ConfigWorkerConfig> {
+            return localVarFp.getWorkerConfig(options).then((request) => request(axios, basePath));
         },
         /**
          * Update the authentication configuration settings
@@ -809,36 +872,8 @@ export const ServerSettingsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        serverAuthConfigPut(configAuthConfig: ConfigAuthConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigAuthConfig> {
-            return localVarFp.serverAuthConfigPut(configAuthConfig, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * Retrieve current server-wide configuration settings
-         * @summary Get server configuration
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        serverConfigGet(options?: RawAxiosRequestConfig): AxiosPromise<ApiServerConfigResponse> {
-            return localVarFp.serverConfigGet(options).then((request) => request(axios, basePath));
-        },
-        /**
-         * Update server-wide configuration settings
-         * @summary Update server configuration
-         * @param {ApiServerConfigUpdateRequest} apiServerConfigUpdateRequest Server configuration update
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        serverConfigPut(apiServerConfigUpdateRequest: ApiServerConfigUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiServerConfigResponse> {
-            return localVarFp.serverConfigPut(apiServerConfigUpdateRequest, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * Retrieve default DNS validator configuration
-         * @summary Get DNS configuration
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        serverDnsConfigGet(options?: RawAxiosRequestConfig): AxiosPromise<ConfigDNSValidatorConfigJSON> {
-            return localVarFp.serverDnsConfigGet(options).then((request) => request(axios, basePath));
+        updateAuthConfig(configAuthConfig: ConfigAuthConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigAuthConfig> {
+            return localVarFp.updateAuthConfig(configAuthConfig, options).then((request) => request(axios, basePath));
         },
         /**
          * Update default DNS validator configuration
@@ -847,17 +882,8 @@ export const ServerSettingsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        serverDnsConfigPut(configDNSValidatorConfigJSON: ConfigDNSValidatorConfigJSON, options?: RawAxiosRequestConfig): AxiosPromise<ConfigDNSValidatorConfigJSON> {
-            return localVarFp.serverDnsConfigPut(configDNSValidatorConfigJSON, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * Retrieve default HTTP validator configuration
-         * @summary Get HTTP configuration
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        serverHttpConfigGet(options?: RawAxiosRequestConfig): AxiosPromise<ConfigHTTPValidatorConfigJSON> {
-            return localVarFp.serverHttpConfigGet(options).then((request) => request(axios, basePath));
+        updateDNSConfig(configDNSValidatorConfigJSON: ConfigDNSValidatorConfigJSON, options?: RawAxiosRequestConfig): AxiosPromise<ConfigDNSValidatorConfigJSON> {
+            return localVarFp.updateDNSConfig(configDNSValidatorConfigJSON, options).then((request) => request(axios, basePath));
         },
         /**
          * Update default HTTP validator configuration
@@ -866,17 +892,8 @@ export const ServerSettingsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        serverHttpConfigPut(configHTTPValidatorConfigJSON: ConfigHTTPValidatorConfigJSON, options?: RawAxiosRequestConfig): AxiosPromise<ConfigHTTPValidatorConfigJSON> {
-            return localVarFp.serverHttpConfigPut(configHTTPValidatorConfigJSON, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * Retrieve the current logging configuration settings
-         * @summary Get logging configuration
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        serverLoggingConfigGet(options?: RawAxiosRequestConfig): AxiosPromise<ConfigLoggingConfig> {
-            return localVarFp.serverLoggingConfigGet(options).then((request) => request(axios, basePath));
+        updateHTTPConfig(configHTTPValidatorConfigJSON: ConfigHTTPValidatorConfigJSON, options?: RawAxiosRequestConfig): AxiosPromise<ConfigHTTPValidatorConfigJSON> {
+            return localVarFp.updateHTTPConfig(configHTTPValidatorConfigJSON, options).then((request) => request(axios, basePath));
         },
         /**
          * Update the logging configuration settings
@@ -885,17 +902,8 @@ export const ServerSettingsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        serverLoggingConfigPut(configLoggingConfig: ConfigLoggingConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigLoggingConfig> {
-            return localVarFp.serverLoggingConfigPut(configLoggingConfig, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * Retrieve the current proxy manager configuration settings
-         * @summary Get proxy manager configuration
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        serverProxyManagerConfigGet(options?: RawAxiosRequestConfig): AxiosPromise<ConfigProxyManagerConfigJSON> {
-            return localVarFp.serverProxyManagerConfigGet(options).then((request) => request(axios, basePath));
+        updateLoggingConfig(configLoggingConfig: ConfigLoggingConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigLoggingConfig> {
+            return localVarFp.updateLoggingConfig(configLoggingConfig, options).then((request) => request(axios, basePath));
         },
         /**
          * Update the proxy manager configuration settings
@@ -904,17 +912,8 @@ export const ServerSettingsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        serverProxyManagerConfigPut(configProxyManagerConfigJSON: ConfigProxyManagerConfigJSON, options?: RawAxiosRequestConfig): AxiosPromise<ConfigProxyManagerConfigJSON> {
-            return localVarFp.serverProxyManagerConfigPut(configProxyManagerConfigJSON, options).then((request) => request(axios, basePath));
-        },
-        /**
-         * Retrieve the current rate limiter configuration settings
-         * @summary Get rate limiter configuration
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        serverRateLimiterConfigGet(options?: RawAxiosRequestConfig): AxiosPromise<ConfigRateLimiterConfig> {
-            return localVarFp.serverRateLimiterConfigGet(options).then((request) => request(axios, basePath));
+        updateProxyManagerConfig(configProxyManagerConfigJSON: ConfigProxyManagerConfigJSON, options?: RawAxiosRequestConfig): AxiosPromise<ConfigProxyManagerConfigJSON> {
+            return localVarFp.updateProxyManagerConfig(configProxyManagerConfigJSON, options).then((request) => request(axios, basePath));
         },
         /**
          * Update the rate limiter configuration settings
@@ -923,17 +922,18 @@ export const ServerSettingsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        serverRateLimiterConfigPut(configRateLimiterConfig: ConfigRateLimiterConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigRateLimiterConfig> {
-            return localVarFp.serverRateLimiterConfigPut(configRateLimiterConfig, options).then((request) => request(axios, basePath));
+        updateRateLimiterConfig(configRateLimiterConfig: ConfigRateLimiterConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigRateLimiterConfig> {
+            return localVarFp.updateRateLimiterConfig(configRateLimiterConfig, options).then((request) => request(axios, basePath));
         },
         /**
-         * Retrieve the current worker configuration settings
-         * @summary Get worker configuration
+         * Update server-wide configuration settings
+         * @summary Update server configuration
+         * @param {ApiServerConfigUpdateRequest} apiServerConfigUpdateRequest Server configuration update
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        serverWorkerConfigGet(options?: RawAxiosRequestConfig): AxiosPromise<ConfigWorkerConfig> {
-            return localVarFp.serverWorkerConfigGet(options).then((request) => request(axios, basePath));
+        updateServerConfig(apiServerConfigUpdateRequest: ApiServerConfigUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiServerConfigResponse> {
+            return localVarFp.updateServerConfig(apiServerConfigUpdateRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Update the worker configuration settings
@@ -942,8 +942,8 @@ export const ServerSettingsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        serverWorkerConfigPut(configWorkerConfig: ConfigWorkerConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigWorkerConfig> {
-            return localVarFp.serverWorkerConfigPut(configWorkerConfig, options).then((request) => request(axios, basePath));
+        updateWorkerConfig(configWorkerConfig: ConfigWorkerConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigWorkerConfig> {
+            return localVarFp.updateWorkerConfig(configWorkerConfig, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -961,7 +961,70 @@ export interface ServerSettingsApiInterface {
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    serverAuthConfigGet(options?: RawAxiosRequestConfig): AxiosPromise<ConfigAuthConfig>;
+    getAuthConfig(options?: RawAxiosRequestConfig): AxiosPromise<ConfigAuthConfig>;
+
+    /**
+     * Retrieve default DNS validator configuration
+     * @summary Get DNS configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ServerSettingsApiInterface
+     */
+    getDNSConfig(options?: RawAxiosRequestConfig): AxiosPromise<ConfigDNSValidatorConfigJSON>;
+
+    /**
+     * Retrieve default HTTP validator configuration
+     * @summary Get HTTP configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ServerSettingsApiInterface
+     */
+    getHTTPConfig(options?: RawAxiosRequestConfig): AxiosPromise<ConfigHTTPValidatorConfigJSON>;
+
+    /**
+     * Retrieve the current logging configuration settings
+     * @summary Get logging configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ServerSettingsApiInterface
+     */
+    getLoggingConfig(options?: RawAxiosRequestConfig): AxiosPromise<ConfigLoggingConfig>;
+
+    /**
+     * Retrieve the current proxy manager configuration settings
+     * @summary Get proxy manager configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ServerSettingsApiInterface
+     */
+    getProxyManagerConfig(options?: RawAxiosRequestConfig): AxiosPromise<ConfigProxyManagerConfigJSON>;
+
+    /**
+     * Retrieve the current rate limiter configuration settings
+     * @summary Get rate limiter configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ServerSettingsApiInterface
+     */
+    getRateLimiterConfig(options?: RawAxiosRequestConfig): AxiosPromise<ConfigRateLimiterConfig>;
+
+    /**
+     * Retrieve current server-wide configuration settings
+     * @summary Get server configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ServerSettingsApiInterface
+     */
+    getServerConfig(options?: RawAxiosRequestConfig): AxiosPromise<ApiServerConfigResponse>;
+
+    /**
+     * Retrieve the current worker configuration settings
+     * @summary Get worker configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ServerSettingsApiInterface
+     */
+    getWorkerConfig(options?: RawAxiosRequestConfig): AxiosPromise<ConfigWorkerConfig>;
 
     /**
      * Update the authentication configuration settings
@@ -971,35 +1034,7 @@ export interface ServerSettingsApiInterface {
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    serverAuthConfigPut(configAuthConfig: ConfigAuthConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigAuthConfig>;
-
-    /**
-     * Retrieve current server-wide configuration settings
-     * @summary Get server configuration
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ServerSettingsApiInterface
-     */
-    serverConfigGet(options?: RawAxiosRequestConfig): AxiosPromise<ApiServerConfigResponse>;
-
-    /**
-     * Update server-wide configuration settings
-     * @summary Update server configuration
-     * @param {ApiServerConfigUpdateRequest} apiServerConfigUpdateRequest Server configuration update
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ServerSettingsApiInterface
-     */
-    serverConfigPut(apiServerConfigUpdateRequest: ApiServerConfigUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiServerConfigResponse>;
-
-    /**
-     * Retrieve default DNS validator configuration
-     * @summary Get DNS configuration
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ServerSettingsApiInterface
-     */
-    serverDnsConfigGet(options?: RawAxiosRequestConfig): AxiosPromise<ConfigDNSValidatorConfigJSON>;
+    updateAuthConfig(configAuthConfig: ConfigAuthConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigAuthConfig>;
 
     /**
      * Update default DNS validator configuration
@@ -1009,16 +1044,7 @@ export interface ServerSettingsApiInterface {
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    serverDnsConfigPut(configDNSValidatorConfigJSON: ConfigDNSValidatorConfigJSON, options?: RawAxiosRequestConfig): AxiosPromise<ConfigDNSValidatorConfigJSON>;
-
-    /**
-     * Retrieve default HTTP validator configuration
-     * @summary Get HTTP configuration
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ServerSettingsApiInterface
-     */
-    serverHttpConfigGet(options?: RawAxiosRequestConfig): AxiosPromise<ConfigHTTPValidatorConfigJSON>;
+    updateDNSConfig(configDNSValidatorConfigJSON: ConfigDNSValidatorConfigJSON, options?: RawAxiosRequestConfig): AxiosPromise<ConfigDNSValidatorConfigJSON>;
 
     /**
      * Update default HTTP validator configuration
@@ -1028,16 +1054,7 @@ export interface ServerSettingsApiInterface {
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    serverHttpConfigPut(configHTTPValidatorConfigJSON: ConfigHTTPValidatorConfigJSON, options?: RawAxiosRequestConfig): AxiosPromise<ConfigHTTPValidatorConfigJSON>;
-
-    /**
-     * Retrieve the current logging configuration settings
-     * @summary Get logging configuration
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ServerSettingsApiInterface
-     */
-    serverLoggingConfigGet(options?: RawAxiosRequestConfig): AxiosPromise<ConfigLoggingConfig>;
+    updateHTTPConfig(configHTTPValidatorConfigJSON: ConfigHTTPValidatorConfigJSON, options?: RawAxiosRequestConfig): AxiosPromise<ConfigHTTPValidatorConfigJSON>;
 
     /**
      * Update the logging configuration settings
@@ -1047,16 +1064,7 @@ export interface ServerSettingsApiInterface {
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    serverLoggingConfigPut(configLoggingConfig: ConfigLoggingConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigLoggingConfig>;
-
-    /**
-     * Retrieve the current proxy manager configuration settings
-     * @summary Get proxy manager configuration
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ServerSettingsApiInterface
-     */
-    serverProxyManagerConfigGet(options?: RawAxiosRequestConfig): AxiosPromise<ConfigProxyManagerConfigJSON>;
+    updateLoggingConfig(configLoggingConfig: ConfigLoggingConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigLoggingConfig>;
 
     /**
      * Update the proxy manager configuration settings
@@ -1066,16 +1074,7 @@ export interface ServerSettingsApiInterface {
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    serverProxyManagerConfigPut(configProxyManagerConfigJSON: ConfigProxyManagerConfigJSON, options?: RawAxiosRequestConfig): AxiosPromise<ConfigProxyManagerConfigJSON>;
-
-    /**
-     * Retrieve the current rate limiter configuration settings
-     * @summary Get rate limiter configuration
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ServerSettingsApiInterface
-     */
-    serverRateLimiterConfigGet(options?: RawAxiosRequestConfig): AxiosPromise<ConfigRateLimiterConfig>;
+    updateProxyManagerConfig(configProxyManagerConfigJSON: ConfigProxyManagerConfigJSON, options?: RawAxiosRequestConfig): AxiosPromise<ConfigProxyManagerConfigJSON>;
 
     /**
      * Update the rate limiter configuration settings
@@ -1085,16 +1084,17 @@ export interface ServerSettingsApiInterface {
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    serverRateLimiterConfigPut(configRateLimiterConfig: ConfigRateLimiterConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigRateLimiterConfig>;
+    updateRateLimiterConfig(configRateLimiterConfig: ConfigRateLimiterConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigRateLimiterConfig>;
 
     /**
-     * Retrieve the current worker configuration settings
-     * @summary Get worker configuration
+     * Update server-wide configuration settings
+     * @summary Update server configuration
+     * @param {ApiServerConfigUpdateRequest} apiServerConfigUpdateRequest Server configuration update
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    serverWorkerConfigGet(options?: RawAxiosRequestConfig): AxiosPromise<ConfigWorkerConfig>;
+    updateServerConfig(apiServerConfigUpdateRequest: ApiServerConfigUpdateRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiServerConfigResponse>;
 
     /**
      * Update the worker configuration settings
@@ -1104,7 +1104,7 @@ export interface ServerSettingsApiInterface {
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    serverWorkerConfigPut(configWorkerConfig: ConfigWorkerConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigWorkerConfig>;
+    updateWorkerConfig(configWorkerConfig: ConfigWorkerConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigWorkerConfig>;
 
 }
 
@@ -1122,8 +1122,85 @@ export class ServerSettingsApi extends BaseAPI implements ServerSettingsApiInter
      * @throws {RequiredError}
      * @memberof ServerSettingsApi
      */
-    public serverAuthConfigGet(options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).serverAuthConfigGet(options).then((request) => request(this.axios, this.basePath));
+    public getAuthConfig(options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).getAuthConfig(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Retrieve default DNS validator configuration
+     * @summary Get DNS configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ServerSettingsApi
+     */
+    public getDNSConfig(options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).getDNSConfig(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Retrieve default HTTP validator configuration
+     * @summary Get HTTP configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ServerSettingsApi
+     */
+    public getHTTPConfig(options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).getHTTPConfig(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Retrieve the current logging configuration settings
+     * @summary Get logging configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ServerSettingsApi
+     */
+    public getLoggingConfig(options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).getLoggingConfig(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Retrieve the current proxy manager configuration settings
+     * @summary Get proxy manager configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ServerSettingsApi
+     */
+    public getProxyManagerConfig(options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).getProxyManagerConfig(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Retrieve the current rate limiter configuration settings
+     * @summary Get rate limiter configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ServerSettingsApi
+     */
+    public getRateLimiterConfig(options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).getRateLimiterConfig(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Retrieve current server-wide configuration settings
+     * @summary Get server configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ServerSettingsApi
+     */
+    public getServerConfig(options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).getServerConfig(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Retrieve the current worker configuration settings
+     * @summary Get worker configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ServerSettingsApi
+     */
+    public getWorkerConfig(options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).getWorkerConfig(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1134,42 +1211,8 @@ export class ServerSettingsApi extends BaseAPI implements ServerSettingsApiInter
      * @throws {RequiredError}
      * @memberof ServerSettingsApi
      */
-    public serverAuthConfigPut(configAuthConfig: ConfigAuthConfig, options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).serverAuthConfigPut(configAuthConfig, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * Retrieve current server-wide configuration settings
-     * @summary Get server configuration
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ServerSettingsApi
-     */
-    public serverConfigGet(options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).serverConfigGet(options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * Update server-wide configuration settings
-     * @summary Update server configuration
-     * @param {ApiServerConfigUpdateRequest} apiServerConfigUpdateRequest Server configuration update
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ServerSettingsApi
-     */
-    public serverConfigPut(apiServerConfigUpdateRequest: ApiServerConfigUpdateRequest, options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).serverConfigPut(apiServerConfigUpdateRequest, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * Retrieve default DNS validator configuration
-     * @summary Get DNS configuration
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ServerSettingsApi
-     */
-    public serverDnsConfigGet(options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).serverDnsConfigGet(options).then((request) => request(this.axios, this.basePath));
+    public updateAuthConfig(configAuthConfig: ConfigAuthConfig, options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).updateAuthConfig(configAuthConfig, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1180,19 +1223,8 @@ export class ServerSettingsApi extends BaseAPI implements ServerSettingsApiInter
      * @throws {RequiredError}
      * @memberof ServerSettingsApi
      */
-    public serverDnsConfigPut(configDNSValidatorConfigJSON: ConfigDNSValidatorConfigJSON, options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).serverDnsConfigPut(configDNSValidatorConfigJSON, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * Retrieve default HTTP validator configuration
-     * @summary Get HTTP configuration
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ServerSettingsApi
-     */
-    public serverHttpConfigGet(options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).serverHttpConfigGet(options).then((request) => request(this.axios, this.basePath));
+    public updateDNSConfig(configDNSValidatorConfigJSON: ConfigDNSValidatorConfigJSON, options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).updateDNSConfig(configDNSValidatorConfigJSON, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1203,19 +1235,8 @@ export class ServerSettingsApi extends BaseAPI implements ServerSettingsApiInter
      * @throws {RequiredError}
      * @memberof ServerSettingsApi
      */
-    public serverHttpConfigPut(configHTTPValidatorConfigJSON: ConfigHTTPValidatorConfigJSON, options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).serverHttpConfigPut(configHTTPValidatorConfigJSON, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * Retrieve the current logging configuration settings
-     * @summary Get logging configuration
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ServerSettingsApi
-     */
-    public serverLoggingConfigGet(options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).serverLoggingConfigGet(options).then((request) => request(this.axios, this.basePath));
+    public updateHTTPConfig(configHTTPValidatorConfigJSON: ConfigHTTPValidatorConfigJSON, options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).updateHTTPConfig(configHTTPValidatorConfigJSON, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1226,19 +1247,8 @@ export class ServerSettingsApi extends BaseAPI implements ServerSettingsApiInter
      * @throws {RequiredError}
      * @memberof ServerSettingsApi
      */
-    public serverLoggingConfigPut(configLoggingConfig: ConfigLoggingConfig, options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).serverLoggingConfigPut(configLoggingConfig, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * Retrieve the current proxy manager configuration settings
-     * @summary Get proxy manager configuration
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ServerSettingsApi
-     */
-    public serverProxyManagerConfigGet(options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).serverProxyManagerConfigGet(options).then((request) => request(this.axios, this.basePath));
+    public updateLoggingConfig(configLoggingConfig: ConfigLoggingConfig, options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).updateLoggingConfig(configLoggingConfig, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1249,19 +1259,8 @@ export class ServerSettingsApi extends BaseAPI implements ServerSettingsApiInter
      * @throws {RequiredError}
      * @memberof ServerSettingsApi
      */
-    public serverProxyManagerConfigPut(configProxyManagerConfigJSON: ConfigProxyManagerConfigJSON, options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).serverProxyManagerConfigPut(configProxyManagerConfigJSON, options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * Retrieve the current rate limiter configuration settings
-     * @summary Get rate limiter configuration
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof ServerSettingsApi
-     */
-    public serverRateLimiterConfigGet(options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).serverRateLimiterConfigGet(options).then((request) => request(this.axios, this.basePath));
+    public updateProxyManagerConfig(configProxyManagerConfigJSON: ConfigProxyManagerConfigJSON, options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).updateProxyManagerConfig(configProxyManagerConfigJSON, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1272,19 +1271,20 @@ export class ServerSettingsApi extends BaseAPI implements ServerSettingsApiInter
      * @throws {RequiredError}
      * @memberof ServerSettingsApi
      */
-    public serverRateLimiterConfigPut(configRateLimiterConfig: ConfigRateLimiterConfig, options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).serverRateLimiterConfigPut(configRateLimiterConfig, options).then((request) => request(this.axios, this.basePath));
+    public updateRateLimiterConfig(configRateLimiterConfig: ConfigRateLimiterConfig, options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).updateRateLimiterConfig(configRateLimiterConfig, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
-     * Retrieve the current worker configuration settings
-     * @summary Get worker configuration
+     * Update server-wide configuration settings
+     * @summary Update server configuration
+     * @param {ApiServerConfigUpdateRequest} apiServerConfigUpdateRequest Server configuration update
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ServerSettingsApi
      */
-    public serverWorkerConfigGet(options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).serverWorkerConfigGet(options).then((request) => request(this.axios, this.basePath));
+    public updateServerConfig(apiServerConfigUpdateRequest: ApiServerConfigUpdateRequest, options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).updateServerConfig(apiServerConfigUpdateRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1295,8 +1295,8 @@ export class ServerSettingsApi extends BaseAPI implements ServerSettingsApiInter
      * @throws {RequiredError}
      * @memberof ServerSettingsApi
      */
-    public serverWorkerConfigPut(configWorkerConfig: ConfigWorkerConfig, options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).serverWorkerConfigPut(configWorkerConfig, options).then((request) => request(this.axios, this.basePath));
+    public updateWorkerConfig(configWorkerConfig: ConfigWorkerConfig, options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).updateWorkerConfig(configWorkerConfig, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

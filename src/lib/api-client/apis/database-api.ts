@@ -43,12 +43,12 @@ export const DatabaseApiAxiosParamCreator = function (configuration?: Configurat
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2DatabaseQueryPost: async (xRequestedWith: string, apiBulkDatabaseQueryRequest: ApiBulkDatabaseQueryRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        bulkDatabaseQuery: async (xRequestedWith: string, apiBulkDatabaseQueryRequest: ApiBulkDatabaseQueryRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'xRequestedWith' is not null or undefined
-            assertParamExists('apiV2DatabaseQueryPost', 'xRequestedWith', xRequestedWith)
+            assertParamExists('bulkDatabaseQuery', 'xRequestedWith', xRequestedWith)
             // verify required parameter 'apiBulkDatabaseQueryRequest' is not null or undefined
-            assertParamExists('apiV2DatabaseQueryPost', 'apiBulkDatabaseQueryRequest', apiBulkDatabaseQueryRequest)
-            const localVarPath = `/api/v2/database/query`;
+            assertParamExists('bulkDatabaseQuery', 'apiBulkDatabaseQueryRequest', apiBulkDatabaseQueryRequest)
+            const localVarPath = `/database/query`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -85,12 +85,12 @@ export const DatabaseApiAxiosParamCreator = function (configuration?: Configurat
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2DatabaseStatsPost: async (xRequestedWith: string, apiBulkDatabaseStatsRequest: ApiBulkDatabaseStatsRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        bulkDatabaseStats: async (xRequestedWith: string, apiBulkDatabaseStatsRequest: ApiBulkDatabaseStatsRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'xRequestedWith' is not null or undefined
-            assertParamExists('apiV2DatabaseStatsPost', 'xRequestedWith', xRequestedWith)
+            assertParamExists('bulkDatabaseStats', 'xRequestedWith', xRequestedWith)
             // verify required parameter 'apiBulkDatabaseStatsRequest' is not null or undefined
-            assertParamExists('apiV2DatabaseStatsPost', 'apiBulkDatabaseStatsRequest', apiBulkDatabaseStatsRequest)
-            const localVarPath = `/api/v2/database/stats`;
+            assertParamExists('bulkDatabaseStats', 'apiBulkDatabaseStatsRequest', apiBulkDatabaseStatsRequest)
+            const localVarPath = `/database/stats`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -137,10 +137,10 @@ export const DatabaseApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV2DatabaseQueryPost(xRequestedWith: string, apiBulkDatabaseQueryRequest: ApiBulkDatabaseQueryRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2DatabaseQueryPost(xRequestedWith, apiBulkDatabaseQueryRequest, options);
+        async bulkDatabaseQuery(xRequestedWith: string, apiBulkDatabaseQueryRequest: ApiBulkDatabaseQueryRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkDatabaseQuery(xRequestedWith, apiBulkDatabaseQueryRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DatabaseApi.apiV2DatabaseQueryPost']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DatabaseApi.bulkDatabaseQuery']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -151,10 +151,10 @@ export const DatabaseApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiV2DatabaseStatsPost(xRequestedWith: string, apiBulkDatabaseStatsRequest: ApiBulkDatabaseStatsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiV2DatabaseStatsPost(xRequestedWith, apiBulkDatabaseStatsRequest, options);
+        async bulkDatabaseStats(xRequestedWith: string, apiBulkDatabaseStatsRequest: ApiBulkDatabaseStatsRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkValidateDNS200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.bulkDatabaseStats(xRequestedWith, apiBulkDatabaseStatsRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DatabaseApi.apiV2DatabaseStatsPost']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DatabaseApi.bulkDatabaseStats']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -175,8 +175,8 @@ export const DatabaseApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2DatabaseQueryPost(xRequestedWith: string, apiBulkDatabaseQueryRequest: ApiBulkDatabaseQueryRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
-            return localVarFp.apiV2DatabaseQueryPost(xRequestedWith, apiBulkDatabaseQueryRequest, options).then((request) => request(axios, basePath));
+        bulkDatabaseQuery(xRequestedWith: string, apiBulkDatabaseQueryRequest: ApiBulkDatabaseQueryRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
+            return localVarFp.bulkDatabaseQuery(xRequestedWith, apiBulkDatabaseQueryRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * Retrieve comprehensive database statistics including schema and table-level details for enterprise monitoring
@@ -186,8 +186,8 @@ export const DatabaseApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiV2DatabaseStatsPost(xRequestedWith: string, apiBulkDatabaseStatsRequest: ApiBulkDatabaseStatsRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
-            return localVarFp.apiV2DatabaseStatsPost(xRequestedWith, apiBulkDatabaseStatsRequest, options).then((request) => request(axios, basePath));
+        bulkDatabaseStats(xRequestedWith: string, apiBulkDatabaseStatsRequest: ApiBulkDatabaseStatsRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response> {
+            return localVarFp.bulkDatabaseStats(xRequestedWith, apiBulkDatabaseStatsRequest, options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -207,7 +207,7 @@ export interface DatabaseApiInterface {
      * @throws {RequiredError}
      * @memberof DatabaseApiInterface
      */
-    apiV2DatabaseQueryPost(xRequestedWith: string, apiBulkDatabaseQueryRequest: ApiBulkDatabaseQueryRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
+    bulkDatabaseQuery(xRequestedWith: string, apiBulkDatabaseQueryRequest: ApiBulkDatabaseQueryRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
     /**
      * Retrieve comprehensive database statistics including schema and table-level details for enterprise monitoring
@@ -218,7 +218,7 @@ export interface DatabaseApiInterface {
      * @throws {RequiredError}
      * @memberof DatabaseApiInterface
      */
-    apiV2DatabaseStatsPost(xRequestedWith: string, apiBulkDatabaseStatsRequest: ApiBulkDatabaseStatsRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
+    bulkDatabaseStats(xRequestedWith: string, apiBulkDatabaseStatsRequest: ApiBulkDatabaseStatsRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkValidateDNS200Response>;
 
 }
 
@@ -238,8 +238,8 @@ export class DatabaseApi extends BaseAPI implements DatabaseApiInterface {
      * @throws {RequiredError}
      * @memberof DatabaseApi
      */
-    public apiV2DatabaseQueryPost(xRequestedWith: string, apiBulkDatabaseQueryRequest: ApiBulkDatabaseQueryRequest, options?: RawAxiosRequestConfig) {
-        return DatabaseApiFp(this.configuration).apiV2DatabaseQueryPost(xRequestedWith, apiBulkDatabaseQueryRequest, options).then((request) => request(this.axios, this.basePath));
+    public bulkDatabaseQuery(xRequestedWith: string, apiBulkDatabaseQueryRequest: ApiBulkDatabaseQueryRequest, options?: RawAxiosRequestConfig) {
+        return DatabaseApiFp(this.configuration).bulkDatabaseQuery(xRequestedWith, apiBulkDatabaseQueryRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -251,8 +251,8 @@ export class DatabaseApi extends BaseAPI implements DatabaseApiInterface {
      * @throws {RequiredError}
      * @memberof DatabaseApi
      */
-    public apiV2DatabaseStatsPost(xRequestedWith: string, apiBulkDatabaseStatsRequest: ApiBulkDatabaseStatsRequest, options?: RawAxiosRequestConfig) {
-        return DatabaseApiFp(this.configuration).apiV2DatabaseStatsPost(xRequestedWith, apiBulkDatabaseStatsRequest, options).then((request) => request(this.axios, this.basePath));
+    public bulkDatabaseStats(xRequestedWith: string, apiBulkDatabaseStatsRequest: ApiBulkDatabaseStatsRequest, options?: RawAxiosRequestConfig) {
+        return DatabaseApiFp(this.configuration).bulkDatabaseStats(xRequestedWith, apiBulkDatabaseStatsRequest, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

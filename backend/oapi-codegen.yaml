@@ -1,0 +1,13 @@
+# oapi-codegen v2 configuration for generating Chi server stubs and types
+package: gen
+generate:
+  chi-server: true
+  strict-server: true
+  models: true
+
+output: internal/api/gen/server.gen.go
+
+# Optional output options
+output-options:
+  skip-prune: false
+  # include-tags: [ ]

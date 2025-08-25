@@ -108,3 +108,15 @@ openapi-generator-cli*.jar
 # Generated backend artifacts
 backend/generate-openapi
 backend/*.log
+
+# Security hygiene: never commit cookies or proxy dumps
+cookies.txt
+scripts/cookies.txt
+backend/cookies.txt
+proxyscrape_*.*
+backend/proxyscrape_*.*
+
+# Purge swagger fossils
+backend/docs/
+backend/.swagrc
+backend/cmd/printspec/

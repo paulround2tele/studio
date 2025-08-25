@@ -131,7 +131,7 @@ export const HealthApiAxiosParamCreator = function (configuration?: Configuratio
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        pingGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        ping: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/ping`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -207,10 +207,10 @@ export const HealthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async pingGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiPingResponse>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.pingGet(options);
+        async ping(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiPingResponse>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.ping(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['HealthApi.pingGet']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['HealthApi.ping']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
@@ -256,8 +256,8 @@ export const HealthApiFactory = function (configuration?: Configuration, basePat
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        pingGet(options?: RawAxiosRequestConfig): AxiosPromise<ApiPingResponse> {
-            return localVarFp.pingGet(options).then((request) => request(axios, basePath));
+        ping(options?: RawAxiosRequestConfig): AxiosPromise<ApiPingResponse> {
+            return localVarFp.ping(options).then((request) => request(axios, basePath));
         },
     };
 };
@@ -302,7 +302,7 @@ export interface HealthApiInterface {
      * @throws {RequiredError}
      * @memberof HealthApiInterface
      */
-    pingGet(options?: RawAxiosRequestConfig): AxiosPromise<ApiPingResponse>;
+    ping(options?: RawAxiosRequestConfig): AxiosPromise<ApiPingResponse>;
 
 }
 
@@ -353,8 +353,8 @@ export class HealthApi extends BaseAPI implements HealthApiInterface {
      * @throws {RequiredError}
      * @memberof HealthApi
      */
-    public pingGet(options?: RawAxiosRequestConfig) {
-        return HealthApiFp(this.configuration).pingGet(options).then((request) => request(this.axios, this.basePath));
+    public ping(options?: RawAxiosRequestConfig) {
+        return HealthApiFp(this.configuration).ping(options).then((request) => request(this.axios, this.basePath));
     }
 }
 

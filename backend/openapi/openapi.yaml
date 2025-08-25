@@ -1,0 +1,1909 @@
+openapi: 3.1.0
+$schema: "https://spec.openapis.org/oas/3.1/dialect/base"
+info:
+  title: Domain Flow API
+  version: 2.0.0
+  description: API defined from server handlers. Source of truth is code under backend/internal/api.
+servers:
+  - url: http://localhost:8080/api/v2
+    description: Local development server
+security:
+  - cookieAuth: []
+tags:
+  - name: health
+  - name: authentication
+  - name: personas
+  - name: proxies
+  - name: proxy-pools
+  - name: server-settings
+  - name: keyword-sets
+  - name: keyword-rules
+  - name: keyword-extraction
+  - name: database
+  - name: campaigns
+  - name: sse
+  - name: monitoring
+  - name: feature-flags
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: domainflow_session
+      description: |
+        Session cookie. Flags: HttpOnly=true, Secure=true (in production), SameSite=Lax. Domain set per environment.
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Page size (items per page)
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 500
+        default: 50
+    Offset:
+      name: offset
+      in: query
+      description: Zero-based offset
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    Page:
+      name: page
+      in: query
+      description: One-based page number (alternative to offset)
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: pageSize
+      in: query
+      description: Items per page (alternative to limit)
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 500
+        default: 50
+    Sort:
+      name: sort
+      in: query
+      description: Sort expression, e.g. "createdAt:desc,name:asc"
+      required: false
+      schema:
+        type: string
+    XRequestedWith:
+      name: X-Requested-With
+      in: header
+      description: Required by certain database endpoints to mitigate CSRF and clearly identify XHR calls.
+      required: true
+      schema:
+        type: string
+        enum: [XMLHttpRequest]
+    IncludeRules:
+      name: includeRules
+      in: query
+      description: Include rules payload inline with keyword sets
+      required: false
+      schema:
+        type: boolean
+        default: false
+    IsEnabled:
+      name: isEnabled
+      in: query
+      description: Filter by enabled state
+      required: false
+      schema:
+        type: boolean
+    PersonaTypeFilter:
+      name: personaType
+      in: query
+      description: Filter by persona type
+      required: false
+      schema:
+        $ref: '#/components/schemas/PersonaType'
+    ProxyCountry:
+      name: countryCode
+      in: query
+      description: Filter proxies by ISO country code
+      required: false
+      schema:
+        type: string
+    ProxyProtocol:
+      name: protocol
+      in: query
+      description: Filter proxies by protocol
+      required: false
+      schema:
+        $ref: '#/components/schemas/ProxyProtocol'
+    IsHealthy:
+      name: isHealthy
+      in: query
+      description: Filter by health status
+      required: false
+      schema:
+        type: boolean
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ValidationError:
+      description: Validation Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    RateLimitExceeded:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ServiceUnavailable:
+      description: Service Unavailable
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+  schemas:
+    # Locked envelopes
+    SuccessEnvelope:
+      type: object
+      properties:
+        success:
+          type: boolean
+          const: true
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        requestId:
+          type: string
+      required: [success, requestId]
+    ErrorEnvelope:
+      type: object
+      properties:
+        success:
+          type: boolean
+          const: false
+        error:
+          $ref: '#/components/schemas/ApiError'
+        requestId:
+          type: string
+      required: [success, error, requestId]
+    APIResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          description: Arbitrary success payload
+        error:
+          $ref: '#/components/schemas/ApiError'
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        requestId:
+          type: string
+      required: [success, requestId]
+      unevaluatedProperties: true
+    ErrorCode:
+      type: string
+      description: Stable error code space
+      enum:
+        - BAD_REQUEST
+        - UNAUTHORIZED
+        - FORBIDDEN
+        - NOT_FOUND
+        - CONFLICT
+        - VALIDATION_ERROR
+        - REQUIRED_FIELD
+        - RATE_LIMIT_EXCEEDED
+        - REQUEST_TIMEOUT
+        - NOT_IMPLEMENTED
+        - INTERNAL_SERVER_ERROR
+        - DATABASE_ERROR
+        - SERVICE_UNAVAILABLE
+        - GATEWAY_TIMEOUT
+        - CAMPAIGN_IN_PROGRESS
+        - QUOTA_EXCEEDED
+        - INVALID_STATE
+    ApiError:
+      type: object
+      properties:
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: JSON pointer or field path
+              code:
+                $ref: '#/components/schemas/ErrorCode'
+              message:
+                type: string
+              context:
+                type: object
+                additionalProperties: true
+            required: [code, message]
+        timestamp:
+          type: string
+          format: date-time
+        path:
+          type: string
+      required: [code, message, timestamp]
+    Metadata:
+      type: object
+      properties:
+        page:
+          $ref: '#/components/schemas/Pagination'
+        rateLimit:
+          $ref: '#/components/schemas/RateLimitInfo'
+        processing:
+          $ref: '#/components/schemas/ProcessingInfo'
+        bulk:
+          $ref: '#/components/schemas/BulkOperationInfo'
+        extra:
+          type: object
+          additionalProperties: {}
+    Pagination:
+      type: object
+      properties:
+        current: { type: integer }
+        total: { type: integer }
+        pageSize: { type: integer }
+        count: { type: integer }
+    RateLimitInfo:
+      type: object
+      properties:
+        limit: { type: integer }
+        remaining: { type: integer }
+        reset: { type: string, format: date-time }
+    ProcessingInfo:
+      type: object
+      properties:
+        duration: { type: string }
+        version: { type: string }
+    BulkOperationInfo:
+      type: object
+      properties:
+        processedItems: { type: integer }
+        skippedItems: { type: integer }
+        failedItems:
+          type: array
+          items: { type: string }
+        processingTimeMs: { type: integer, format: int64 }
+        totalRowsReturned: { type: integer, format: int64 }
+        type: { type: string }
+    # Public enums (from public_types.go)
+    PersonaType:
+      type: string
+      enum: [dns, http]
+    ProxyProtocol:
+      type: string
+      enum: [http, https, socks5, socks4]
+    PhaseType:
+      type: string
+      enum: [domain_generation, dns_validation, http_keyword_validation, analysis, setup]
+    PhaseStatus:
+      type: string
+      enum: [not_started, ready, configured, in_progress, paused, completed, failed]
+    KeywordRuleType:
+      type: string
+      enum: [string, regex]
+    # Auth
+    LoginRequest:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+      required: [email, password]
+    ChangePasswordRequest:
+      type: object
+      properties:
+        oldPassword: { type: string }
+        newPassword: { type: string }
+      required: [oldPassword, newPassword]
+    SessionResponse:
+      type: object
+      properties:
+        user: { $ref: '#/components/schemas/UserPublicResponse' }
+        token: { type: string }
+        refreshToken: { type: string }
+        expiresAt: { type: string, format: date-time }
+      required: [user, token, expiresAt]
+    UserPublicResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        username: { type: string }
+        email: { type: string, format: email }
+        isActive: { type: boolean }
+      required: [id, username, email, isActive]
+    # Personas
+    CreatePersonaRequest:
+      type: object
+      properties:
+        name: { type: string }
+        personaType: { $ref: '#/components/schemas/PersonaType' }
+        description: { type: string }
+        configDetails:
+          description: HTTP or DNS persona configuration object
+          type: object
+          additionalProperties: {}
+        isEnabled: { type: boolean }
+      required: [name, personaType, configDetails]
+    UpdatePersonaRequest:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        configDetails:
+          type: object
+          additionalProperties: {}
+        isEnabled: { type: boolean }
+    PersonaResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        personaType: { $ref: '#/components/schemas/PersonaType' }
+        description: { type: string }
+        configDetails: { type: object, additionalProperties: {} }
+        isEnabled: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, name, personaType, isEnabled, createdAt, updatedAt]
+    PersonaTestResponse:
+      type: object
+      properties:
+        personaId: { type: string }
+        personaType: { type: string }
+        personaName: { type: string }
+        success: { type: boolean }
+        testPassed: { type: boolean }
+        message: { type: string }
+        testResults: { type: object }
+        results: { type: object }
+        timestamp: { type: string }
+    PersonaDeleteResponse:
+      type: object
+      properties:
+        personaId: { type: string, format: uuid }
+        deleted: { type: boolean }
+        message: { type: string }
+      required: [personaId, deleted]
+    # Proxies
+    CreateProxyRequestAPI:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        address: { type: string }
+        protocol: { $ref: '#/components/schemas/ProxyProtocol' }
+        username: { type: string }
+        password: { type: string }
+        countryCode: { type: string }
+        isEnabled: { type: boolean }
+        notes: { type: string }
+      required: [name, address]
+    UpdateProxyRequestAPI:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        address: { type: string }
+        protocol: { $ref: '#/components/schemas/ProxyProtocol' }
+        username: { type: string }
+        password: { type: string }
+        countryCode: { type: string }
+        isEnabled: { type: boolean }
+        notes: { type: string }
+    ProxyDetailsResponse:
+      type: object
+      properties:
+        host: { type: string }
+        port: { type: integer }
+        protocol: { type: string }
+        username: { type: string }
+    ProxyHealthCheckRequest:
+      type: object
+      properties:
+        ids:
+          type: array
+          items: { type: string, format: uuid }
+    ProxyTestResponse:
+      type: object
+      properties:
+        proxyId: { type: string, format: uuid }
+        success: { type: boolean }
+        statusCode: { type: integer }
+        responseTime: { type: integer, format: int64 }
+        error: { type: string }
+    BulkProxyTestResponse:
+      type: object
+      properties:
+        totalRequested: { type: integer }
+        successCount: { type: integer }
+        errorCount: { type: integer }
+        testResults:
+          type: array
+          items: { $ref: '#/components/schemas/ProxyTestResponse' }
+    # Proxy Pools
+    ProxyPool:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        isEnabled: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, name, isEnabled, createdAt, updatedAt]
+    ProxyPoolRequest:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        isEnabled: { type: boolean }
+        poolStrategy: { type: string }
+        healthCheckEnabled: { type: boolean }
+        healthCheckIntervalSeconds: { type: integer }
+        maxRetries: { type: integer }
+        timeoutSeconds: { type: integer }
+      required: [name]
+    ProxyPoolMembership:
+      type: object
+      properties:
+        poolId: { type: string, format: uuid }
+        proxyId: { type: string, format: uuid }
+        weight: { type: integer }
+        isActive: { type: boolean }
+        addedAt: { type: string, format: date-time }
+      required: [poolId, proxyId]
+    AddProxyToPoolRequest:
+      type: object
+      properties:
+        proxyId: { type: string, format: uuid }
+        weight: { type: integer }
+      required: [proxyId]
+    ProxyPoolMembershipResponse:
+      type: object
+      properties:
+        poolId: { type: string }
+        proxyId: { type: string }
+        added: { type: boolean }
+        removed: { type: boolean }
+        message: { type: string }
+    # Keyword sets / rules
+    KeywordRuleRequest:
+      type: object
+      properties:
+        pattern: { type: string }
+        ruleType: { $ref: '#/components/schemas/KeywordRuleType' }
+        isCaseSensitive: { type: boolean }
+        category: { type: string }
+        contextChars: { type: integer }
+      required: [pattern, ruleType]
+    CreateKeywordSetRequest:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        isEnabled: { type: boolean }
+        rules:
+          type: array
+          items: { $ref: '#/components/schemas/KeywordRuleRequest' }
+      required: [name]
+    UpdateKeywordSetRequest:
+      type: object
+      properties:
+        name: { type: string }
+        description: { type: string }
+        isEnabled: { type: boolean }
+        rules:
+          type: array
+          items: { $ref: '#/components/schemas/KeywordRuleRequest' }
+    KeywordRuleDTO:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        keywordSetId: { type: string, format: uuid }
+        pattern: { type: string }
+        ruleType: { type: string }
+        isCaseSensitive: { type: boolean }
+        category: { type: string }
+        contextChars: { type: integer }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    KeywordSetResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        description: { type: string }
+        isEnabled: { type: boolean }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        rules:
+          type: array
+          items: { $ref: '#/components/schemas/KeywordRuleDTO' }
+        ruleCount: { type: integer }
+      required: [id, name, isEnabled, createdAt, updatedAt, ruleCount]
+    # Extraction (request/response defined roughly)
+    BatchKeywordExtractionRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              url: { type: string, format: uri }
+              keywordSetId: { type: string, format: uuid }
+              httpPersonaId: { type: string, format: uuid }
+              dnsPersonaId: { type: string, format: uuid }
+            required: [url, keywordSetId]
+      required: [items]
+    BatchKeywordExtractionResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              url: { type: string, format: uri }
+              keywordSetIdUsed: { type: string, format: uuid }
+              httpPersonaIdUsed: { type: string, format: uuid }
+              dnsPersonaIdUsed: { type: string, format: uuid }
+              proxyIdUsed: { type: string, format: uuid }
+              finalURL: { type: string, format: uri }
+              statusCode: { type: integer }
+              matches:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    matchedPattern: { type: string }
+                    matchedText: { type: string }
+                    category: { type: string }
+                    contexts:
+                      type: array
+                      items: { type: string }
+              error: { type: string }
+    # Database bulk
+    BulkDatabaseQueryRequest:
+      type: object
+      properties:
+        queries:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              sql: { type: string }
+            required: [id, sql]
+        limit: { type: integer }
+        timeout: { type: integer }
+      required: [queries]
+    BulkDatabaseQueryResponse:
+      type: object
+      properties:
+        results:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              columns: { type: array, items: { type: string } }
+              rows:
+                type: array
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DatabaseValue'
+              rowCount: { type: integer }
+              executionTime: { type: integer, format: int64 }
+              success: { type: boolean }
+              error: { type: string }
+        totalCount: { type: integer }
+    DatabaseValue:
+      type: object
+      properties:
+        stringValue: { type: string }
+        intValue: { type: integer, format: int64 }
+        floatValue: { type: number }
+        boolValue: { type: boolean }
+        isNull: { type: boolean }
+        rawValue: { type: string }
+    # Database stats
+    BulkDatabaseStatsRequest:
+      type: object
+      properties:
+        schemas:
+          type: array
+          items: { type: string }
+        tables:
+          type: array
+          items: { type: string }
+        includeIndexes: { type: boolean }
+        includeSize: { type: boolean }
+      additionalProperties: false
+    BulkDatabaseStatsResponse:
+      type: object
+      properties:
+        databaseStats: { $ref: '#/components/schemas/DatabaseStats' }
+        schemaStats:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/SchemaStats'
+        tableStats:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/TableStats'
+        totalCount: { type: integer }
+    DatabaseStats:
+      description: Overall database statistics
+      type: object
+      properties:
+        totalTables: { type: integer }
+        totalUsers: { type: integer }
+        totalSessions: { type: integer }
+        databaseSize: { type: string }
+        schemaVersion: { type: string }
+        uptime: { type: string }
+        version: { type: string }
+        isHealthy: { type: boolean }
+    SchemaStats:
+      description: Statistics for a specific database schema
+      type: object
+      properties:
+        name: { type: string }
+        tableCount: { type: integer }
+        totalRows: { type: integer }
+        totalSize: { type: string }
+    TableStats:
+      description: Statistics for a specific table
+      type: object
+      properties:
+        name: { type: string }
+        rowCount: { type: integer }
+        size: { type: string }
+        indexes: { type: array, items: { type: string } }
+    # Campaigns (subset)
+    LeadGenerationCampaignResponse:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        currentPhase: { $ref: '#/components/schemas/PhaseType' }
+        phaseStatus: { $ref: '#/components/schemas/PhaseStatus' }
+        totalPhases: { type: integer }
+        completedPhases: { type: integer }
+        overallProgress: { type: number, nullable: true }
+        startedAt: { type: string, format: date-time, nullable: true }
+        completedAt: { type: string, format: date-time, nullable: true }
+      required: [id, name]
+    PhaseConfigureRequest:
+      type: object
+      properties:
+        phaseType: { type: string }
+        config:
+          type: object
+          additionalProperties: {}
+    # Server/config types (backend/internal/config)
+    LoggingConfig:
+      type: object
+      properties:
+        level: { type: string }
+        enableFileLogging: { type: boolean }
+        logDirectory: { type: string }
+        maxFileSize: { type: integer }
+        maxBackups: { type: integer }
+        maxAge: { type: integer }
+        enableJSONFormat: { type: boolean }
+        enableRequestLogging: { type: boolean }
+        enablePerformanceLogging: { type: boolean }
+    WorkerConfig:
+      type: object
+      properties:
+        numWorkers: { type: integer }
+        pollIntervalSeconds: { type: integer }
+        errorRetryDelaySeconds: { type: integer }
+        maxJobRetries: { type: integer }
+        jobProcessingTimeoutMinutes: { type: integer }
+        batchSize: { type: integer }
+        maxRetries: { type: integer }
+        retryDelaySeconds: { type: integer }
+        dnsSubtaskConcurrency: { type: integer }
+        httpKeywordSubtaskConcurrency: { type: integer }
+    RateLimiterConfig:
+      type: object
+      properties:
+        maxRequests: { type: integer }
+        windowSeconds: { type: integer }
+    DNSValidatorConfigJSON:
+      type: object
+      properties:
+        resolvers: { type: array, items: { type: string } }
+        useSystemResolvers: { type: boolean }
+        queryTimeoutSeconds: { type: integer }
+        maxDomainsPerRequest: { type: integer }
+        resolverStrategy: { type: string }
+        resolversWeighted:
+          type: object
+          additionalProperties: { type: integer }
+        resolversPreferredOrder: { type: array, items: { type: string } }
+        concurrentQueriesPerDomain: { type: integer }
+        queryDelayMinMs: { type: integer }
+        queryDelayMaxMs: { type: integer }
+        maxConcurrentGoroutines: { type: integer }
+        rateLimitDps: { type: number }
+        rateLimitBurst: { type: integer }
+    HTTPValidatorConfigJSON:
+      type: object
+      properties:
+        defaultUserAgent: { type: string }
+        userAgents: { type: array, items: { type: string } }
+        defaultHeaders:
+          type: object
+          additionalProperties: { type: string }
+        requestTimeoutSeconds: { type: integer }
+        maxRedirects: { type: integer }
+        followRedirects: { type: boolean }
+        maxDomainsPerRequest: { type: integer }
+        allowInsecureTLS: { type: boolean }
+        maxConcurrentGoroutines: { type: integer }
+        rateLimitDps: { type: number }
+        rateLimitBurst: { type: integer }
+        maxBodyReadBytes: { type: integer, format: int64 }
+    ProxyManagerConfigJSON:
+      type: object
+      properties:
+        testTimeoutSeconds: { type: integer }
+        testUrl: { type: string, format: uri }
+        initialHealthCheckTimeoutSeconds: { type: integer }
+        maxConcurrentInitialChecks: { type: integer }
+    AuthConfig:
+      type: object
+      properties:
+        bcryptCost: { type: integer }
+        pepperKey:
+          type: string
+          writeOnly: true
+        passwordMinLength: { type: integer }
+        sessionDuration: { type: string }
+        sessionIdleTimeout: { type: string }
+        sessionCookieName: { type: string }
+        sessionCookieDomain: { type: string }
+        sessionCookieSecure: { type: boolean }
+        resetTokenExpiry: { type: string }
+        maxFailedAttempts: { type: integer }
+        accountLockDuration: { type: string }
+        rateLimitWindow: { type: string }
+        maxLoginAttempts: { type: integer }
+        maxPasswordResetAttempts: { type: integer }
+        recaptchaSiteKey: { type: string }
+        recaptchaSecretKey:
+          type: string
+          writeOnly: true
+        captchaThreshold: { type: integer }
+        smtpHost: { type: string }
+        smtpPort: { type: integer }
+        smtpUsername: { type: string }
+        smtpPassword:
+          type: string
+          writeOnly: true
+        fromEmail: { type: string }
+        fromName: { type: string }
+    ServerConfigResponse:
+      type: object
+      properties:
+        port: { type: string }
+        streamChunkSize: { type: integer }
+        ginMode: { type: string }
+    ServerConfigUpdateRequest:
+      type: object
+      properties:
+        streamChunkSize: { type: integer }
+        ginMode: { type: string }
+    FeatureFlags:
+      type: object
+      properties:
+        enableRealTimeUpdates: { type: boolean }
+        enableOfflineMode: { type: boolean }
+        enableAnalytics: { type: boolean }
+        enableDebugMode: { type: boolean }
+paths:
+  /auth/login:
+    post:
+      tags: [authentication]
+      summary: User login
+      operationId: auth_login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/SessionResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '423':
+          description: Account locked
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+  /auth/logout:
+    post:
+      tags: [authentication]
+      summary: User logout
+      operationId: auth_logout
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          message: { type: string }
+  /auth/refresh:
+    post:
+      tags: [authentication]
+      summary: Refresh session
+      operationId: auth_refresh
+      responses:
+        '200':
+          description: Refreshed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          message: { type: string }
+                          expiresAt: { type: string, format: date-time }
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+  /auth/me:
+    get:
+      tags: [authentication]
+      summary: Get current user
+      operationId: auth_me
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/UserPublicResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+  /health:
+    get:
+      tags: [health]
+      summary: Health check
+      operationId: health_check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          status: { type: string }
+  /ping:
+    get:
+      tags: [health]
+      summary: Ping server
+      operationId: ping
+      responses:
+        '200':
+          description: Pong
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          message: { type: string }
+                          timestamp: { type: string, format: date-time }
+  /health/ready:
+    get:
+      tags: [health]
+      summary: Readiness check
+      operationId: health_ready
+      responses:
+        '200':
+          description: Ready
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          status: { type: string }
+        '503':
+          description: Not ready
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+  /health/live:
+    get:
+      tags: [health]
+      summary: Liveness check
+      operationId: health_live
+      responses:
+        '200':
+          description: Alive
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          status: { type: string }
+  # Config endpoints
+  /config/dns:
+    get:
+      tags: [server-settings]
+      security:
+        - cookieAuth: []
+      summary: Get DNS configuration
+      operationId: config_get_dns
+      responses:
+        '200':
+          description: DNS config
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/DNSValidatorConfigJSON' }
+    put:
+      tags: [server-settings]
+      security:
+        - cookieAuth: []
+      summary: Update DNS configuration
+      operationId: config_update_dns
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DNSValidatorConfigJSON' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/DNSValidatorConfigJSON' }
+  /config/http:
+    get:
+      tags: [server-settings]
+      security:
+        - cookieAuth: []
+      summary: Get HTTP configuration
+      operationId: config_get_http
+      responses:
+        '200':
+          description: HTTP config
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/HTTPValidatorConfigJSON' }
+    put:
+      tags: [server-settings]
+      security:
+        - cookieAuth: []
+      summary: Update HTTP configuration
+      operationId: config_update_http
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/HTTPValidatorConfigJSON' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/HTTPValidatorConfigJSON' }
+  /config/worker:
+    get:
+      tags: [server-settings]
+      security:
+        - cookieAuth: []
+      summary: Get worker configuration
+      operationId: config_get_worker
+      responses:
+        '200':
+          description: Worker config
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/WorkerConfig' }
+    put:
+      tags: [server-settings]
+      security:
+        - cookieAuth: []
+      summary: Update worker configuration
+      operationId: config_update_worker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/WorkerConfig' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/WorkerConfig' }
+  /config/rate-limit:
+    get:
+      tags: [server-settings]
+      security:
+        - cookieAuth: []
+      summary: Get rate limiter configuration
+      operationId: config_get_rate_limiter
+      responses:
+        '200':
+          description: Rate limiter config
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/RateLimiterConfig' }
+    put:
+      tags: [server-settings]
+      security:
+        - cookieAuth: []
+      summary: Update rate limiter configuration
+      operationId: config_update_rate_limiter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RateLimiterConfig' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/RateLimiterConfig' }
+  /config/auth:
+    get:
+      tags: [server-settings]
+      security:
+        - cookieAuth: []
+      summary: Get authentication configuration
+      operationId: config_get_auth
+      responses:
+        '200':
+          description: Auth config
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/AuthConfig' }
+    put:
+      tags: [server-settings]
+      security:
+        - cookieAuth: []
+      summary: Update authentication configuration
+      operationId: config_update_auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AuthConfig' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/AuthConfig' }
+  /config/logging:
+    get:
+      tags: [server-settings]
+      security:
+        - cookieAuth: []
+      summary: Get logging configuration
+      operationId: config_get_logging
+      responses:
+        '200':
+          description: Logging config
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/LoggingConfig' }
+    put:
+      tags: [server-settings]
+      security:
+        - cookieAuth: []
+      summary: Update logging configuration
+      operationId: config_update_logging
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoggingConfig' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/LoggingConfig' }
+  /config/proxy-manager:
+    get:
+      tags: [server-settings]
+      security:
+        - cookieAuth: []
+      summary: Get proxy manager configuration
+      operationId: config_get_proxy_manager
+      responses:
+        '200':
+          description: Proxy manager config
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/ProxyManagerConfigJSON' }
+    put:
+      tags: [server-settings]
+      security:
+        - cookieAuth: []
+      summary: Update proxy manager configuration
+      operationId: config_update_proxy_manager
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProxyManagerConfigJSON' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/ProxyManagerConfigJSON' }
+  /config/server:
+    get:
+      tags: [server-settings]
+      security:
+        - cookieAuth: []
+      summary: Get server configuration
+      operationId: config_get_server
+      responses:
+        '200':
+          description: Server config
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/ServerConfigResponse' }
+    put:
+      tags: [server-settings]
+      security:
+        - cookieAuth: []
+      summary: Update server configuration
+      operationId: config_update_server
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServerConfigUpdateRequest' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/ServerConfigResponse' }
+  /config/features:
+    get:
+      tags: [feature-flags]
+      security:
+        - cookieAuth: []
+      summary: Get feature flags
+      operationId: feature_flags_get
+      responses:
+        '200':
+          description: Feature flags
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/FeatureFlags' }
+    post:
+      tags: [feature-flags]
+      security:
+        - cookieAuth: []
+      summary: Update feature flags
+      operationId: feature_flags_update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FeatureFlags' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/FeatureFlags' }
+  # Keyword rules
+  /keyword-rules:
+    get:
+      tags: [keyword-rules]
+      security:
+        - cookieAuth: []
+      summary: Query keyword rules
+      operationId: keyword_rules_query
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+        - name: offset
+          in: query
+          schema: { type: integer, default: 0 }
+        - name: keyword_set_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: rule_type
+          in: query
+          schema: { $ref: '#/components/schemas/KeywordRuleType' }
+        - name: category
+          in: query
+          schema: { type: string }
+        - name: is_case_sensitive
+          in: query
+          schema: { type: boolean }
+        - name: pattern
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/KeywordRuleDTO' }
+  # Extraction
+  /extract/keywords:
+    post:
+      tags: [keyword-extraction]
+      security:
+        - cookieAuth: []
+      summary: Batch keyword extraction
+      operationId: keyword_extract_batch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BatchKeywordExtractionRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data: { $ref: '#/components/schemas/BatchKeywordExtractionResponse' }
+  /extract/keywords/stream:
+    get:
+      tags: [keyword-extraction]
+      security:
+        - cookieAuth: []
+      summary: Stream keyword extraction
+      operationId: keyword_extract_stream
+      parameters:
+        - name: url
+          in: query
+          required: true
+          schema: { type: string, format: uri }
+        - name: keywordSetId
+          in: query
+          required: true
+          schema: { type: string, format: uuid }
+        - name: httpPersonaId
+          in: query
+          schema: { type: string, format: uuid }
+        - name: dnsPersonaId
+          in: query
+          schema: { type: string, format: uuid }
+      description: |
+        Server-Sent Events stream. Clients SHOULD handle heartbeats and reconnection hints.
+        Heartbeat events are sent periodically:
+        - see example SseHeartbeat; clients SHOULD keep the connection alive.
+        The server MAY suggest a retry delay with an SSE control line (see SseRetry example).
+      responses:
+        '200':
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema: { type: string }
+              examples:
+                heartbeat: { $ref: '#/components/examples/SseHeartbeat' }
+                retry: { $ref: '#/components/examples/SseRetry' }
+                progress:
+                  summary: Example extraction progress event
+                  value: |
+                    event: extraction_progress
+                    data: {"url":"https://example.com","progress":0.5}
+  # SSE events
+  /sse/events:
+    get:
+      tags: [sse]
+      security:
+        - cookieAuth: []
+      summary: Stream campaign events
+      operationId: sse_events_all
+      responses:
+        '200':
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema: { type: string }
+              examples:
+                message:
+                  summary: Example event
+                  value: |
+                    event: campaign_progress
+                    data: {"campaignId":"c1","progress":42.5,"status":"running"}
+
+  /sse/campaigns/{campaignId}/events:
+    get:
+      tags: [sse]
+      security:
+        - cookieAuth: []
+      summary: Stream campaign events (specific campaign)
+      operationId: sse_events_campaign
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema: { type: string }
+              examples:
+                message:
+                  summary: Example event
+                  value: |
+                    event: campaign_progress
+                    data: {"campaignId":"00000000-0000-0000-0000-000000000000","progress":75.0,"status":"in_progress"}
+  # Personas
+  /personas:
+    get:
+      tags: [personas]
+      security:
+        - cookieAuth: []
+      summary: List personas
+      operationId: personas_list
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - $ref: '#/components/parameters/IsEnabled'
+        - $ref: '#/components/parameters/PersonaTypeFilter'
+      responses:
+        '200':
+          description: List
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/PersonaResponse' }
+    post:
+      tags: [personas]
+      security:
+        - cookieAuth: []
+      summary: Create persona
+      operationId: personas_create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreatePersonaRequest' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PersonaResponse'
+  /personas/{id}:
+    get:
+      tags: [personas]
+      security:
+        - cookieAuth: []
+      summary: Get persona by ID
+      operationId: personas_get
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Persona
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PersonaResponse'
+    put:
+      tags: [personas]
+      security:
+        - cookieAuth: []
+      summary: Update persona
+      operationId: personas_update
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdatePersonaRequest' }
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PersonaResponse'
+    delete:
+      tags: [personas]
+      security:
+        - cookieAuth: []
+      summary: Delete persona
+      operationId: personas_delete
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PersonaDeleteResponse'
+  /personas/{id}/test:
+    post:
+      tags: [personas]
+      security:
+        - cookieAuth: []
+      summary: Test persona
+      operationId: personas_test
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Test result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PersonaTestResponse'
+  /proxies:
+    get:
+      tags: [proxies]
+      security:
+        - cookieAuth: []
+      summary: List proxies
+      operationId: proxies_list
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - $ref: '#/components/parameters/ProxyProtocol'
+        - $ref: '#/components/parameters/ProxyCountry'
+        - $ref: '#/components/parameters/IsEnabled'
+        - $ref: '#/components/parameters/IsHealthy'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/ProxyDetailsResponse' }
+    post:
+      tags: [proxies]
+      security:
+        - cookieAuth: []
+      summary: Create proxy
+      operationId: proxies_create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateProxyRequestAPI' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProxyDetailsResponse'
+  /proxies/{proxyId}/test:
+    post:
+      tags: [proxies]
+      security:
+        - cookieAuth: []
+      summary: Test proxy
+      operationId: proxies_test
+      parameters:
+        - name: proxyId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProxyTestResponse'
+  /keyword-sets:
+    get:
+      tags: [keyword-sets]
+      security:
+        - cookieAuth: []
+      summary: List keyword sets
+      operationId: keyword_sets_list
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - $ref: '#/components/parameters/IncludeRules'
+        - $ref: '#/components/parameters/IsEnabled'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: '#/components/schemas/KeywordSetResponse' }
+    post:
+      tags: [keyword-sets]
+      security:
+        - cookieAuth: []
+      summary: Create keyword set
+      operationId: keyword_sets_create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateKeywordSetRequest' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/KeywordSetResponse'
+  /database/query:
+    post:
+      tags: [database]
+      security:
+        - cookieAuth: []
+      summary: Execute bulk database queries
+      operationId: db_bulk_query
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BulkDatabaseQueryRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/BulkDatabaseQueryResponse'
+  /database/stats:
+    post:
+      tags: [database]
+      security:
+        - cookieAuth: []
+      summary: Get bulk database statistics
+      description: Retrieve comprehensive database statistics including schema and table-level details
+      operationId: db_bulk_stats
+      parameters:
+        - $ref: '#/components/parameters/XRequestedWith'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BulkDatabaseStatsRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/BulkDatabaseStatsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }

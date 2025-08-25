@@ -33,20 +33,20 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Go
+      - name: Set up Go (pinned)
         uses: actions/setup-go@v3
         with:
-          go-version: '1.18'
+          go-version: '1.23.10'
           cache: true
           cache-dependency-path: backend/go.sum
 
       - name: Install dependencies
         run: cd backend && go mod download
 
-      - name: Run golangci-lint
+      - name: Run golangci-lint (pinned)
         uses: golangci/golangci-lint-action@v3
         with:
-          version: latest
+          version: v1.59.1
           working-directory: backend
           args: --timeout=5m --config=.golangci.yml
 
@@ -73,6 +73,32 @@ jobs:
           name: coverage-report
           path: backend/coverage_report.json
 
+      - name: Set up Node (pinned)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.0'
+          cache: 'npm'
+
+      - name: Install frontend tooling
+        run: npm ci
+
+      - name: Validate OpenAPI 3.1 spec
+        run: |
+          set -euo pipefail
+          bash scripts/validate-openapi-spec.sh
+
+      - name: Contract hygiene checks
+        run: |
+          set -euo pipefail
+          SPEC=backend/openapi/openapi.yaml
+          echo "Checking for empty or missing operationIds..."
+          if rg -n "^\s*operationId:\s*$" "$SPEC"; then echo "Empty operationId entries" >&2; exit 1; fi
+          if ! rg -n "^\s*operationId:\s+" "$SPEC" > /dev/null; then echo "No operationIds found" >&2; exit 1; fi
+          echo "Checking for SuccessEnvelope usage..."
+          if ! rg -n "SuccessEnvelope" "$SPEC" > /dev/null; then echo "SuccessEnvelope not referenced" >&2; exit 1; fi
+          echo "Ensuring swaggo fossils are gone..."
+          if rg -n "swaggo|swagger|backend/docs" -S backend || rg -n "swaggo|swagger|backend/docs" -S .github; then echo "Swagger fossils detected" >&2; exit 1; fi
+
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -81,10 +107,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Go
+      - name: Set up Go (pinned)
         uses: actions/setup-go@v3
         with:
-          go-version: '1.18'
+          go-version: '1.23.10'
           cache: true
           cache-dependency-path: backend/go.sum
 
@@ -92,7 +118,7 @@ jobs:
         run: cd backend && go build -v ./...
 
       - name: Build binary
-        run: cd backend && go build -o domainflow-apiserver cmd/api/main.go
+        run: cd backend && go build -o domainflow-apiserver cmd/apiserver/main.go
 
       - name: Upload binary
         uses: actions/upload-artifact@v3

@@ -43,8 +43,8 @@ func (h *SSEHandler) RegisterSSERoutes(group *gin.RouterGroup, authMiddleware *m
 // @ID streamEvents
 // @Produce text/event-stream
 // @Success 200 {string} string "SSE event stream"
-// @Failure 401 {object} api.APIResponse "Unauthorized"
-// @Failure 500 {object} api.APIResponse "Internal Server Error"
+// @Failure 401 {object} APIResponse "Unauthorized"
+// @Failure 500 {object} APIResponse "Internal Server Error"
 // @Router /sse/events [get]
 func (h *SSEHandler) streamEvents(c *gin.Context) {
 	// Get user ID from auth middleware
@@ -80,9 +80,9 @@ func (h *SSEHandler) streamEvents(c *gin.Context) {
 // @Produce text/event-stream
 // @Param campaignId path string true "Campaign ID (UUID)"
 // @Success 200 {string} string "SSE event stream"
-// @Failure 400 {object} api.APIResponse "Bad Request"
-// @Failure 401 {object} api.APIResponse "Unauthorized"
-// @Failure 500 {object} api.APIResponse "Internal Server Error"
+// @Failure 400 {object} APIResponse "Bad Request"
+// @Failure 401 {object} APIResponse "Unauthorized"
+// @Failure 500 {object} APIResponse "Internal Server Error"
 // @Router /sse/campaigns/{campaignId}/events [get]
 func (h *SSEHandler) streamCampaignEvents(c *gin.Context) {
 	// Get user ID from auth middleware
@@ -132,7 +132,7 @@ func (h *SSEHandler) streamCampaignEvents(c *gin.Context) {
 // @ID getSSEStats
 // @Produce json
 // @Success 200 {object} APIResponse "SSE statistics"
-// @Failure 401 {object} api.APIResponse "Unauthorized"
+// @Failure 401 {object} APIResponse "Unauthorized"
 // @Router /sse/events/stats [get]
 func (h *SSEHandler) getSSEStats(c *gin.Context) {
 	// Get user ID from auth middleware
@@ -149,6 +149,5 @@ func (h *SSEHandler) getSSEStats(c *gin.Context) {
 		"server_time":   strconv.FormatInt(time.Now().Unix(), 10),
 	}
 
-	response := NewSuccessResponse(stats, getRequestID(c))
-	respondWithJSONGin(c, http.StatusOK, response)
+	respondWithJSONGin(c, http.StatusOK, stats)
 }

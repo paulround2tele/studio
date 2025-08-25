@@ -15,22 +15,19 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { ApiErrorInfo } from './api-error-info';
+import type { ApiApiError } from './api-api-error';
 // May contain unused imports in some cases
 // @ts-ignore
 import type { ApiMetadata } from './api-metadata';
 // May contain unused imports in some cases
 // @ts-ignore
-import type { Data } from './data';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { ModelsBulkProxyOperationResponse } from './models-bulk-proxy-operation-response';
+import type { ModelError } from './model-error';
 
 /**
  * @type ApiAPIResponse
  * Standard API response envelope used by all endpoints
  * @export
  */
-export type ApiAPIResponse = Data;
+export type ApiAPIResponse = ModelError;
 
 

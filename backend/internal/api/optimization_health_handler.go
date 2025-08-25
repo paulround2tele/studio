@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/gin-gonic/gin"
@@ -42,7 +43,7 @@ func (h *OptimizationHealthHandler) HandleOptimizationHealth(c *gin.Context) {
 		if cachingEnabled, exists := phases["caching"]; exists && cachingEnabled {
 			if cacheAvailable, ok := healthStatus["cache_available"].(bool); !ok || !cacheAvailable {
 				status = "degraded"
-				httpCode = http.StatusPartialContent
+				httpCode = http.StatusOK // Return 200 with degraded status, not 206
 			}
 		}
 	}
@@ -50,10 +51,10 @@ func (h *OptimizationHealthHandler) HandleOptimizationHealth(c *gin.Context) {
 	responseData := map[string]interface{}{
 		"status":       status,
 		"optimization": healthStatus,
-		"timestamp":    "2025-01-29T12:51:00Z",
+		"timestamp":    time.Now().UTC().Format(time.RFC3339),
 	}
 
-	c.JSON(httpCode, NewSuccessResponse(responseData, getRequestID(c)))
+	respondWithJSONGin(c, httpCode, responseData)
 }
 
 // HandleOptimizationMetrics provides optimization performance metrics
@@ -72,7 +73,7 @@ func (h *OptimizationHealthHandler) HandleOptimizationMetrics(c *gin.Context) {
 		"identifier":          identifier,
 	}
 
-	c.JSON(http.StatusOK, NewSuccessResponse(responseData, getRequestID(c)))
+	respondWithJSONGin(c, http.StatusOK, responseData)
 }
 
 // HandleFeatureFlagStatus provides feature flag configuration status
@@ -96,7 +97,7 @@ func (h *OptimizationHealthHandler) HandleFeatureFlagStatus(c *gin.Context) {
 		"rollout_percentage": featureFlagService.GetRolloutPercentage(),
 	}
 
-	c.JSON(http.StatusOK, NewSuccessResponse(responseData, getRequestID(c)))
+	respondWithJSONGin(c, http.StatusOK, responseData)
 }
 
 // HandleOptimizationTest tests optimization features for a given identifier
@@ -117,5 +118,5 @@ func (h *OptimizationHealthHandler) HandleOptimizationTest(c *gin.Context) {
 		"optimization_level":      optimizationLevel,
 	}
 
-	c.JSON(http.StatusOK, NewSuccessResponse(responseData, getRequestID(c)))
+	respondWithJSONGin(c, http.StatusOK, responseData)
 }

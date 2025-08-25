@@ -15,7 +15,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { ApiApiError } from './api-api-error';
+import type { ApiErrorInfo } from './api-error-info';
 // May contain unused imports in some cases
 // @ts-ignore
 import type { ApiMetadata } from './api-metadata';
@@ -24,10 +24,10 @@ import type { ApiMetadata } from './api-metadata';
 import type { ModelError } from './model-error';
 
 /**
- * @type BulkValidateDNS200Response
+ * @type ChangePassword200Response
  * Standard API response envelope used by all endpoints
  * @export
  */
-export type BulkValidateDNS200Response = ModelError;
+export type ChangePassword200Response = ModelError;
 
 

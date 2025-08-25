@@ -56,12 +56,16 @@ generate-mocks:
 	@echo "Generating mocks..."
 	go generate ./...
 
-# Generate OpenAPI specification with swaggo
-openapi: ## Generate OpenAPI 3.1 specification with professional swaggo v2
-	@echo "Generating OpenAPI 3.1 specification with swaggo v2..."
-	export PATH=$$PATH:$(HOME)/go/bin && swag init --v3.1 -g main.go -d cmd/apiserver,internal/api,internal/models,internal/config,internal/services --exclude internal/api/swagger_examples.go --exclude internal/api/contracts.go --output docs --outputTypes go,yaml,json
-	@echo "OpenAPI 3.1 specification generated: backend/docs/swagger.yaml and swagger.json"
-	@echo "✅ Professional OpenAPI 3.1 generation complete with proper type safety!"
+# Generate OpenAPI server/types using oapi-codegen (OpenAPI 3.1, Chi)
+openapi: ## Generate server and types from OpenAPI 3.1 spec using oapi-codegen (Chi)
+	@echo "Installing oapi-codegen (v2) CLI if not present..."
+	GO111MODULE=on GOBIN=$(HOME)/go/bin go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.5.0
+	@echo "Validating OpenAPI 3.1 spec with kin-openapi..."
+	cd cmd/spec-validate && go run . ../../backend/openapi/openapi.yaml
+	@echo "Generating Chi server and types from backend/openapi/openapi.yaml..."
+	mkdir -p internal/api/gen
+	export PATH=$$PATH:$(HOME)/go/bin && oapi-codegen -config oapi-codegen.yaml openapi/openapi.yaml
+	@echo "✅ oapi-codegen generation complete: backend/internal/api/gen/*.go"
 
 # Default target
 .DEFAULT_GOAL := help
@@ -79,7 +83,7 @@ help:
 	@echo "  deps              - Install dependencies"
 	@echo "  dev-tools         - Install development tools"
 	@echo "  generate-mocks    - Generate mock implementations"
-	@echo "  openapi           - Generate OpenAPI 3.0.3 specification"
+	@echo "  openapi           - Generate Chi server + types from OpenAPI 3.1 spec (oapi-codegen)"
 	@echo "  help              - Show this help message"
 	@echo ""
 	@echo "OpenAPI workflow:"

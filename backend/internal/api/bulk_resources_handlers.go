@@ -146,7 +146,19 @@ func (h *BulkResourcesAPIHandler) AllocateBulkResources(c *gin.Context) {
 		ProcessingTime: time.Since(startTime).Milliseconds(),
 	}
 
-	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
+	// Use envelope-level metadata for consistency with database handlers
+	bulkInfo := &BulkOperationInfo{
+		ProcessedItems:   len(request.Operations),
+		SkippedItems:     failedOps,
+		ProcessingTimeMs: time.Since(startTime).Milliseconds(),
+	}
+
+	requestID := getRequestID(c)
+	envelope := NewSuccessResponse(response, requestID).WithMetadata(&Metadata{
+		Bulk: bulkInfo,
+	})
+	c.Header("X-Request-ID", requestID)
+	c.JSON(http.StatusOK, envelope)
 }
 
 // @Summary Get bulk resource allocation status
@@ -156,7 +168,7 @@ func (h *BulkResourcesAPIHandler) AllocateBulkResources(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param allocationId path string true "Resource allocation ID"
-// @Success 200 {object} BulkResourceStatusResponse "Resource status retrieved successfully"
+// @Success 200 {object} APIResponse{data=BulkResourceStatusResponse} "Resource status retrieved successfully"
 // @Failure 404 {object} APIResponse "Resource allocation not found"
 // @Failure 500 {object} APIResponse "Internal Server Error"
 // @Router /campaigns/bulk/resources/status/{allocationId} [get]
@@ -190,7 +202,7 @@ func (h *BulkResourcesAPIHandler) GetBulkResourceStatus(c *gin.Context) {
 		},
 	}
 
-	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
+	respondWithJSONGin(c, http.StatusOK, response)
 }
 
 // @Summary Cancel bulk operations
@@ -200,7 +212,7 @@ func (h *BulkResourcesAPIHandler) GetBulkResourceStatus(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param operationId path string true "Bulk operation ID to cancel"
-// @Success 200 {object} OperationCancellationResponse "Operation cancelled successfully"
+// @Success 200 {object} APIResponse{data=OperationCancellationResponse} "Operation cancelled successfully"
 // @Failure 404 {object} APIResponse "Operation not found"
 // @Failure 409 {object} APIResponse "Operation cannot be cancelled (already completed)"
 // @Failure 500 {object} APIResponse "Internal Server Error"
@@ -231,7 +243,7 @@ func (h *BulkResourcesAPIHandler) CancelBulkOperation(c *gin.Context) {
 		CancellationTime: time.Now().Format(time.RFC3339),
 	}
 
-	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
+	respondWithJSONGin(c, http.StatusOK, response)
 }
 
 // @Summary Get bulk operation status by ID
@@ -286,7 +298,7 @@ func (h *BulkResourcesAPIHandler) GetBulkOperationStatus(c *gin.Context) {
 		},
 	}
 
-	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
+	respondWithJSONGin(c, http.StatusOK, response)
 }
 
 // @Summary List bulk operations with filtering
@@ -386,8 +398,9 @@ func (h *BulkResourcesAPIHandler) ListBulkOperations(c *gin.Context) {
 
 	paginatedOps := filteredOps[start:end]
 
+	requestID := getRequestID(c)
 	metadata := &models.BulkMetadata{
-		RequestID: uuid.New().String(),
+		RequestID: requestID,
 		Timestamp: time.Now().Format(time.RFC3339),
 		Version:   "2.0.0",
 		Debug: &models.BulkOperationDebugInfo{
@@ -409,5 +422,5 @@ func (h *BulkResourcesAPIHandler) ListBulkOperations(c *gin.Context) {
 		Metadata:   metadata,
 	}
 
-	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
+	respondWithJSONGin(c, http.StatusOK, response)
 }

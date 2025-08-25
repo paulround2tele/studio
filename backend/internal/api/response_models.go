@@ -314,8 +314,8 @@ type LeadGenerationCampaignResponse struct {
 	CompletedAt  *string `json:"completedAt,omitempty" description:"Campaign completion timestamp"`
 
 	// Phase management
-	CurrentPhase    *models.PhaseTypeEnum   `json:"currentPhase,omitempty" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
-	PhaseStatus     *models.PhaseStatusEnum `json:"phaseStatus,omitempty" enums:"not_started,ready,configured,in_progress,paused,completed,failed"`
+	CurrentPhase    *PhaseType   `json:"currentPhase,omitempty" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
+	PhaseStatus     *PhaseStatus `json:"phaseStatus,omitempty" enums:"not_started,ready,configured,in_progress,paused,completed,failed"`
 	TotalPhases     int                     `json:"totalPhases" example:"4" description:"Total number of phases (always 4)"`
 	CompletedPhases int                     `json:"completedPhases" example:"2" description:"Number of completed phases"`
 	OverallProgress *float64                `json:"overallProgress,omitempty" example:"75.5" description:"Overall campaign progress (0-100)"`
@@ -339,8 +339,8 @@ type LeadGenerationCampaignResponse struct {
 // PhaseProgressResponse represents progress information for a single phase
 // @Description Progress and status information for a campaign phase
 type PhaseProgressResponse struct {
-	PhaseType       models.PhaseTypeEnum   `json:"phaseType" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
-	Status          models.PhaseStatusEnum `json:"status" enums:"not_started,ready,configured,in_progress,paused,completed,failed"`
+	PhaseType       PhaseType   `json:"phaseType" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
+	Status          PhaseStatus `json:"status" enums:"not_started,ready,configured,in_progress,paused,completed,failed"`
 	Progress        float64                `json:"progress" example:"85.5" description:"Phase progress percentage (0-100)"`
 	ProcessedItems  int64                  `json:"processedItems" example:"850" description:"Items processed in this phase"`
 	TotalItems      int64                  `json:"totalItems" example:"1000" description:"Total items to process in this phase"`
@@ -356,8 +356,8 @@ type PhaseProgressResponse struct {
 type CampaignProgressResponse struct {
 	CampaignID             string                  `json:"campaignId"`
 	OverallProgress        float64                 `json:"overallProgress" example:"75.5" description:"Overall campaign progress (0-100)"`
-	CurrentPhase           models.PhaseTypeEnum    `json:"currentPhase" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
-	PhaseStatus            models.PhaseStatusEnum  `json:"phaseStatus" enums:"not_started,ready,configured,in_progress,paused,completed,failed"`
+	CurrentPhase           PhaseType    `json:"currentPhase" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
+	PhaseStatus            PhaseStatus  `json:"phaseStatus" enums:"not_started,ready,configured,in_progress,paused,completed,failed"`
 	Phases                 []PhaseProgressResponse `json:"phases" description:"Progress for each phase"`
 	EstimatedTimeRemaining *string                 `json:"estimatedTimeRemaining,omitempty" description:"Estimated time to completion"`
 }
@@ -374,11 +374,11 @@ type CampaignData struct {
 	// Phases-based architecture fields
 	// @Description Current phase of campaign execution
 	// @Example "domain_generation"
-	CurrentPhase *models.PhaseTypeEnum `json:"currentPhase,omitempty" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
+	CurrentPhase *PhaseType `json:"currentPhase,omitempty" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
 
 	// @Description Status of the current phase
 	// @Example "in_progress"
-	PhaseStatus *models.PhaseStatusEnum `json:"phaseStatus,omitempty" enums:"not_started,ready,configured,in_progress,paused,completed,failed"`
+	PhaseStatus *PhaseStatus `json:"phaseStatus,omitempty" enums:"not_started,ready,configured,in_progress,paused,completed,failed"`
 
 	// @Description Phase-specific progress information
 	Progress PhaseProgressData `json:"progress,omitempty" description:"Phase-specific progress information"`
@@ -831,8 +831,8 @@ type OperationCancellationResponse struct {
 type CampaignSummary struct {
 	CampaignID   string                  `json:"campaignId" example:"550e8400-e29b-41d4-a716-446655440000" description:"Campaign UUID"`
 	Name         string                  `json:"name" example:"Enterprise Lead Generation" description:"Campaign name"`
-	CurrentPhase *models.PhaseTypeEnum   `json:"currentPhase,omitempty" enums:"setup,domain_generation,dns_validation,http_keyword_validation,analysis"`
-	PhaseStatus  *models.PhaseStatusEnum `json:"phaseStatus,omitempty" enums:"not_started,in_progress,paused,completed,failed"`
+    CurrentPhase *PhaseType   `json:"currentPhase,omitempty" enums:"setup,domain_generation,dns_validation,http_keyword_validation,analysis"`
+    PhaseStatus  *PhaseStatus `json:"phaseStatus,omitempty" enums:"not_started,in_progress,paused,completed,failed"`
 	TotalItems   int                     `json:"totalItems" example:"1500" description:"Total items across all phases"`
 	CreatedAt    string                  `json:"createdAt" example:"2024-01-15T10:30:00Z" description:"Campaign creation timestamp"`
 	UpdatedAt    string                  `json:"updatedAt" example:"2024-01-15T15:45:30Z" description:"Last update timestamp"`

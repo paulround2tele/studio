@@ -14,7 +14,8 @@ import (
 // @Description Retrieve current server-wide configuration settings
 // @Tags server-settings
 // @Produce json
-// @Success 200 {object} ServerConfigResponse "Server configuration"
+// @ID getServerConfig
+// @Success 200 {object} APIResponse{data=ServerConfigResponse} "Server configuration"
 // @Router /server/config [get]
 func (h *APIHandler) GetServerConfigGin(c *gin.Context) {
 	h.configMutex.RLock()
@@ -39,10 +40,11 @@ func (h *APIHandler) GetServerConfigGin(c *gin.Context) {
 // @Tags server-settings
 // @Accept json
 // @Produce json
+// @ID updateServerConfig
 // @Param request body ServerConfigUpdateRequest true "Server configuration update"
-// @Success 200 {object} ServerConfigResponse "Updated server configuration"
-// @Failure 400 {object} map[string]string "Invalid request payload"
-// @Failure 500 {object} map[string]string "Failed to save server configuration"
+// @Success 200 {object} APIResponse{data=ServerConfigResponse} "Updated server configuration"
+// @Failure 400 {object} APIResponse{error=ApiError} "Invalid request payload"
+// @Failure 500 {object} APIResponse{error=ApiError} "Failed to save server configuration"
 // @Router /server/config [put]
 func (h *APIHandler) UpdateServerConfigGin(c *gin.Context) {
 	var reqServerConfigUpdate ServerConfigUpdateRequest
@@ -105,7 +107,8 @@ func (h *APIHandler) UpdateServerConfigGin(c *gin.Context) {
 // @Description Retrieve default DNS validator configuration
 // @Tags server-settings
 // @Produce json
-// @Success 200 {object} config.DNSValidatorConfigJSON "DNS validator configuration"
+// @ID getDNSConfig
+// @Success 200 {object} APIResponse{data=config.DNSValidatorConfigJSON} "DNS validator configuration"
 // @Router /server/dns-config [get]
 func (h *APIHandler) GetDNSConfigGin(c *gin.Context) {
 	h.configMutex.RLock()
@@ -121,10 +124,11 @@ func (h *APIHandler) GetDNSConfigGin(c *gin.Context) {
 // @Tags server-settings
 // @Accept json
 // @Produce json
+// @ID updateDNSConfig
 // @Param request body config.DNSValidatorConfigJSON true "DNS validator configuration"
-// @Success 200 {object} config.DNSValidatorConfigJSON "Updated DNS configuration"
-// @Failure 400 {object} map[string]string "Invalid request body or validation failed"
-// @Failure 500 {object} map[string]string "Failed to save DNS configuration"
+// @Success 200 {object} APIResponse{data=config.DNSValidatorConfigJSON} "Updated DNS configuration"
+// @Failure 400 {object} APIResponse{error=ApiError} "Invalid request body or validation failed"
+// @Failure 500 {object} APIResponse{error=ApiError} "Failed to save DNS configuration"
 // @Router /server/dns-config [put]
 func (h *APIHandler) UpdateDNSConfigGin(c *gin.Context) {
 	var reqJSON config.DNSValidatorConfigJSON
@@ -164,7 +168,8 @@ func (h *APIHandler) UpdateDNSConfigGin(c *gin.Context) {
 // @Description Retrieve default HTTP validator configuration
 // @Tags server-settings
 // @Produce json
-// @Success 200 {object} config.HTTPValidatorConfigJSON "HTTP validator configuration"
+// @ID getHTTPConfig
+// @Success 200 {object} APIResponse{data=config.HTTPValidatorConfigJSON} "HTTP validator configuration"
 // @Router /server/http-config [get]
 func (h *APIHandler) GetHTTPConfigGin(c *gin.Context) {
 	h.configMutex.RLock()
@@ -179,10 +184,11 @@ func (h *APIHandler) GetHTTPConfigGin(c *gin.Context) {
 // @Tags server-settings
 // @Accept json
 // @Produce json
+// @ID updateHTTPConfig
 // @Param request body config.HTTPValidatorConfigJSON true "HTTP validator configuration"
-// @Success 200 {object} config.HTTPValidatorConfigJSON "Updated HTTP configuration"
-// @Failure 400 {object} map[string]string "Invalid request body or validation failed"
-// @Failure 500 {object} map[string]string "Failed to save HTTP configuration"
+// @Success 200 {object} APIResponse{data=config.HTTPValidatorConfigJSON} "Updated HTTP configuration"
+// @Failure 400 {object} APIResponse{error=ApiError} "Invalid request body or validation failed"
+// @Failure 500 {object} APIResponse{error=ApiError} "Failed to save HTTP configuration"
 // @Router /server/http-config [put]
 func (h *APIHandler) UpdateHTTPConfigGin(c *gin.Context) {
 	var reqJSON config.HTTPValidatorConfigJSON
@@ -216,8 +222,9 @@ func (h *APIHandler) UpdateHTTPConfigGin(c *gin.Context) {
 // @Description Retrieve the current logging configuration settings
 // @Tags server-settings
 // @Produce json
-// @Success 200 {object} config.LoggingConfig "Logging configuration"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @ID getLoggingConfig
+// @Success 200 {object} APIResponse{data=config.LoggingConfig} "Logging configuration"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /server/logging-config [get]
 func (h *APIHandler) GetLoggingConfigGin(c *gin.Context) {
 	h.configMutex.RLock()
@@ -232,10 +239,11 @@ func (h *APIHandler) GetLoggingConfigGin(c *gin.Context) {
 // @Tags server-settings
 // @Accept json
 // @Produce json
+// @ID updateLoggingConfig
 // @Param request body config.LoggingConfig true "Logging configuration"
-// @Success 200 {object} config.LoggingConfig "Updated logging configuration"
-// @Failure 400 {object} map[string]string "Bad Request"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Success 200 {object} APIResponse{data=config.LoggingConfig} "Updated logging configuration"
+// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /server/logging-config [put]
 func (h *APIHandler) UpdateLoggingConfigGin(c *gin.Context) {
 	var reqLogging config.LoggingConfig
@@ -269,8 +277,9 @@ func (h *APIHandler) UpdateLoggingConfigGin(c *gin.Context) {
 // @Description Retrieve the current worker configuration settings
 // @Tags server-settings
 // @Produce json
-// @Success 200 {object} config.WorkerConfig "Worker configuration"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @ID getWorkerConfig
+// @Success 200 {object} APIResponse{data=config.WorkerConfig} "Worker configuration"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /server/worker-config [get]
 func (h *APIHandler) GetWorkerConfigGin(c *gin.Context) {
 	h.configMutex.RLock()
@@ -285,10 +294,11 @@ func (h *APIHandler) GetWorkerConfigGin(c *gin.Context) {
 // @Tags server-settings
 // @Accept json
 // @Produce json
+// @ID updateWorkerConfig
 // @Param request body config.WorkerConfig true "Worker configuration"
-// @Success 200 {object} config.WorkerConfig "Updated worker configuration"
-// @Failure 400 {object} map[string]string "Bad Request"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Success 200 {object} APIResponse{data=config.WorkerConfig} "Updated worker configuration"
+// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /server/worker-config [put]
 func (h *APIHandler) UpdateWorkerConfigGin(c *gin.Context) {
 	var req config.WorkerConfig
@@ -312,8 +322,9 @@ func (h *APIHandler) UpdateWorkerConfigGin(c *gin.Context) {
 // @Description Retrieve the current rate limiter configuration settings
 // @Tags server-settings
 // @Produce json
-// @Success 200 {object} config.RateLimiterConfig "Rate limiter configuration"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @ID getRateLimiterConfig
+// @Success 200 {object} APIResponse{data=config.RateLimiterConfig} "Rate limiter configuration"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /server/rate-limiter-config [get]
 func (h *APIHandler) GetRateLimiterConfigGin(c *gin.Context) {
 	h.configMutex.RLock()
@@ -328,10 +339,11 @@ func (h *APIHandler) GetRateLimiterConfigGin(c *gin.Context) {
 // @Tags server-settings
 // @Accept json
 // @Produce json
+// @ID updateRateLimiterConfig
 // @Param request body config.RateLimiterConfig true "Rate limiter configuration"
-// @Success 200 {object} config.RateLimiterConfig "Updated rate limiter configuration"
-// @Failure 400 {object} map[string]string "Bad Request"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Success 200 {object} APIResponse{data=config.RateLimiterConfig} "Updated rate limiter configuration"
+// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /server/rate-limiter-config [put]
 func (h *APIHandler) UpdateRateLimiterConfigGin(c *gin.Context) {
 	var req config.RateLimiterConfig
@@ -355,8 +367,9 @@ func (h *APIHandler) UpdateRateLimiterConfigGin(c *gin.Context) {
 // @Description Retrieve the current authentication configuration settings
 // @Tags server-settings
 // @Produce json
-// @Success 200 {object} config.AuthConfig "Authentication configuration"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @ID getAuthConfig
+// @Success 200 {object} APIResponse{data=config.AuthConfig} "Authentication configuration"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /server/auth-config [get]
 func (h *APIHandler) GetAuthConfigGin(c *gin.Context) {
 	h.configMutex.RLock()
@@ -375,10 +388,11 @@ func (h *APIHandler) GetAuthConfigGin(c *gin.Context) {
 // @Tags server-settings
 // @Accept json
 // @Produce json
+// @ID updateAuthConfig
 // @Param request body config.AuthConfig true "Authentication configuration"
-// @Success 200 {object} config.AuthConfig "Updated authentication configuration"
-// @Failure 400 {object} map[string]string "Bad Request"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Success 200 {object} APIResponse{data=config.AuthConfig} "Updated authentication configuration"
+// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /server/auth-config [put]
 func (h *APIHandler) UpdateAuthConfigGin(c *gin.Context) {
 	var req config.AuthConfig
@@ -401,8 +415,9 @@ func (h *APIHandler) UpdateAuthConfigGin(c *gin.Context) {
 // @Description Retrieve the current proxy manager configuration settings
 // @Tags server-settings
 // @Produce json
-// @Success 200 {object} config.ProxyManagerConfigJSON "Proxy manager configuration"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @ID getProxyManagerConfig
+// @Success 200 {object} APIResponse{data=config.ProxyManagerConfigJSON} "Proxy manager configuration"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /server/proxy-manager-config [get]
 func (h *APIHandler) GetProxyManagerConfigGin(c *gin.Context) {
 	h.configMutex.RLock()
@@ -417,10 +432,11 @@ func (h *APIHandler) GetProxyManagerConfigGin(c *gin.Context) {
 // @Tags server-settings
 // @Accept json
 // @Produce json
+// @ID updateProxyManagerConfig
 // @Param request body config.ProxyManagerConfigJSON true "Proxy manager configuration"
-// @Success 200 {object} config.ProxyManagerConfigJSON "Updated proxy manager configuration"
-// @Failure 400 {object} map[string]string "Bad Request"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Success 200 {object} APIResponse{data=config.ProxyManagerConfigJSON} "Updated proxy manager configuration"
+// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /server/proxy-manager-config [put]
 func (h *APIHandler) UpdateProxyManagerConfigGin(c *gin.Context) {
 	var req config.ProxyManagerConfig

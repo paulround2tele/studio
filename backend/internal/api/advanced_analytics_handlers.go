@@ -70,7 +70,7 @@ func (h *AdvancedBulkAnalyticsAPIHandler) AdvancedBulkAnalyze(c *gin.Context) {
 	response.ProcessingTime = time.Since(startTime).Milliseconds()
 
 	// Return unified APIResponse envelope
-	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
+	respondWithJSONGin(c, http.StatusOK, response)
 }
 
 // ExportAnalytics - POST /api/v1/bulk/analytics/export
@@ -93,7 +93,7 @@ func (h *AdvancedBulkAnalyticsAPIHandler) ExportAnalytics(c *gin.Context) {
 	// Generate analytics data first
 	response, err := h.generateAdvancedAnalytics(ctx, &request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrorCodeInternalServer, 
+		c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrorCodeInternalServer,
 			"Failed to generate analytics for export: "+err.Error(), getRequestID(c), c.Request.URL.Path))
 		return
 	}
@@ -101,7 +101,7 @@ func (h *AdvancedBulkAnalyticsAPIHandler) ExportAnalytics(c *gin.Context) {
 	// Generate export
 	exportInfo, err := h.exportService.ExportAnalytics(ctx, response, request.ExportFormat)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrorCodeInternalServer, 
+		c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrorCodeInternalServer,
 			"Export generation failed: "+err.Error(), getRequestID(c), c.Request.URL.Path))
 		return
 	}
@@ -109,7 +109,7 @@ func (h *AdvancedBulkAnalyticsAPIHandler) ExportAnalytics(c *gin.Context) {
 	response.ExportInfo = exportInfo
 	response.ProcessingTime = time.Since(startTime).Milliseconds()
 
-	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
+	respondWithJSONGin(c, http.StatusOK, response)
 }
 
 // GetVisualizationData - GET /api/v1/bulk/analytics/visualization/{campaignId}
@@ -120,7 +120,7 @@ func (h *AdvancedBulkAnalyticsAPIHandler) GetVisualizationData(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest, 
+		c.JSON(http.StatusBadRequest, NewErrorResponse(ErrorCodeBadRequest,
 			"Invalid campaign ID format", getRequestID(c), c.Request.URL.Path))
 		return
 	}
@@ -132,7 +132,7 @@ func (h *AdvancedBulkAnalyticsAPIHandler) GetVisualizationData(c *gin.Context) {
 
 	visualizationData, err := h.analyticsEngine.GenerateVisualizationData(ctx, campaignID, chartType, timeRange, granularity)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrorCodeInternalServer, 
+		c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrorCodeInternalServer,
 			"Visualization data generation failed: "+err.Error(), getRequestID(c), c.Request.URL.Path))
 		return
 	}
@@ -143,7 +143,7 @@ func (h *AdvancedBulkAnalyticsAPIHandler) GetVisualizationData(c *gin.Context) {
 		"generatedAt":   time.Now(),
 	}
 
-	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
+	respondWithJSONGin(c, http.StatusOK, response)
 }
 
 // GetAnalyticsAlerts - GET /api/v1/bulk/analytics/alerts
@@ -161,7 +161,7 @@ func (h *AdvancedBulkAnalyticsAPIHandler) GetAnalyticsAlerts(c *gin.Context) {
 
 	alerts, err := h.alertService.GetActiveAlerts(ctx, severityFilter, limit)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrorCodeInternalServer, 
+		c.JSON(http.StatusInternalServerError, NewErrorResponse(ErrorCodeInternalServer,
 			"Failed to retrieve alerts: "+err.Error(), getRequestID(c), c.Request.URL.Path))
 		return
 	}
@@ -172,7 +172,7 @@ func (h *AdvancedBulkAnalyticsAPIHandler) GetAnalyticsAlerts(c *gin.Context) {
 		"retrievedAt": time.Now(),
 	}
 
-	c.JSON(http.StatusOK, NewSuccessResponse(response, getRequestID(c)))
+	respondWithJSONGin(c, http.StatusOK, response)
 }
 
 // validateAdvancedAnalyticsRequest - Validates advanced analytics request

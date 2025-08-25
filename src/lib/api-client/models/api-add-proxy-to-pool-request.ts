@@ -13,21 +13,24 @@
  */
 
 
-// May contain unused imports in some cases
-// @ts-ignore
-import type { ApiApiError } from './api-api-error';
 
 /**
  * 
  * @export
- * @interface ModelError
+ * @interface ApiAddProxyToPoolRequest
  */
-export interface ModelError {
+export interface ApiAddProxyToPoolRequest {
     /**
      * 
-     * @type {ApiApiError}
-     * @memberof ModelError
+     * @type {string}
+     * @memberof ApiAddProxyToPoolRequest
      */
-    'error'?: ApiApiError;
+    'proxyId': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof ApiAddProxyToPoolRequest
+     */
+    'weight'?: number;
 }
 

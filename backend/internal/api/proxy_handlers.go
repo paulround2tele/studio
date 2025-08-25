@@ -28,6 +28,32 @@ import (
 // --- DTOs for Proxy API ---
 // Using DTOs from models package to get correct schema names without api. prefix
 
+// CreateProxyRequestAPI documents the public request schema without leaking internal enums.
+type CreateProxyRequestAPI struct {
+    Name        string         `json:"name" validate:"required,min=1,max=255"`
+    Description string         `json:"description,omitempty"`
+    Address     string         `json:"address" validate:"required"`
+    Protocol    ProxyProtocol  `json:"protocol,omitempty"`
+    Username    string         `json:"username,omitempty"`
+    Password    string         `json:"password,omitempty"`
+    CountryCode string         `json:"countryCode,omitempty"`
+    IsEnabled   *bool          `json:"isEnabled,omitempty"`
+    Notes       string         `json:"notes,omitempty"`
+}
+
+// UpdateProxyRequestAPI documents the public update schema without internal enums.
+type UpdateProxyRequestAPI struct {
+    Name        *string        `json:"name,omitempty" validate:"omitempty,min=1,max=255"`
+    Description *string        `json:"description,omitempty"`
+    Address     *string        `json:"address,omitempty"`
+    Protocol    *ProxyProtocol `json:"protocol,omitempty"`
+    Username    *string        `json:"username,omitempty"`
+    Password    *string        `json:"password,omitempty"`
+    CountryCode *string        `json:"countryCode,omitempty"`
+    IsEnabled   *bool          `json:"isEnabled,omitempty"`
+    Notes       *string        `json:"notes,omitempty"`
+}
+
 // Helper to convert models.Proxy to config.ProxyConfigEntry
 func proxyToProxyConfigEntry(p *models.Proxy) config.ProxyConfigEntry {
 	if p == nil {
@@ -87,14 +113,15 @@ func toListProxyDetailsResponse(proxies []*models.Proxy) []ProxyDetailsResponse 
 // @Summary List proxies
 // @Description Retrieve a list of proxies with optional filtering by protocol, status, and health
 // @Tags proxies
+// @ID listProxies
 // @Produce json
 // @Param limit query int false "Maximum number of results" default(100)
 // @Param offset query int false "Number of results to skip" default(0)
 // @Param protocol query string false "Filter by protocol (http, https, socks4, socks5)"
 // @Param isEnabled query bool false "Filter by enabled status"
 // @Param isHealthy query bool false "Filter by health status"
-// @Success 200 {array} ProxyDetailsResponse "List of proxies"
-// @Failure 500 {object} map[string]string "Failed to list proxies"
+// @Success 200 {object} APIResponse{data=[]ProxyDetailsResponse} "List of proxies"
+// @Failure 500 {object} APIResponse{error=ApiError} "Failed to list proxies"
 // @Router /proxies [get]
 func (h *APIHandler) ListProxiesGin(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "100"))
@@ -151,13 +178,14 @@ func (h *APIHandler) ListProxiesGin(c *gin.Context) {
 // @Summary Create proxy
 // @Description Add a new proxy configuration
 // @Tags proxies
+// @ID createProxy
 // @Accept json
 // @Produce json
-// @Param request body models.CreateProxyRequest true "Proxy creation request"
-// @Success 201 {object} ProxyDetailsResponse "Created proxy"
-// @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
-// @Failure 409 {object} map[string]string "Proxy with address already exists"
-// @Failure 500 {object} map[string]string "Failed to create proxy"
+// @Param request body CreateProxyRequestAPI true "Proxy creation request"
+// @Success 201 {object} APIResponse{data=ProxyDetailsResponse} "Created proxy"
+// @Failure 400 {object} APIResponse{error=ApiError} "Invalid request payload or validation failed"
+// @Failure 409 {object} APIResponse{error=ApiError} "Proxy with address already exists"
+// @Failure 500 {object} APIResponse{error=ApiError} "Failed to create proxy"
 // @Router /proxies [post]
 func (h *APIHandler) AddProxyGin(c *gin.Context) {
 	var req models.CreateProxyRequest
@@ -280,14 +308,15 @@ func (h *APIHandler) AddProxyGin(c *gin.Context) {
 // @Summary Update proxy
 // @Description Update an existing proxy configuration
 // @Tags proxies
+// @ID updateProxy
 // @Accept json
 // @Produce json
 // @Param proxyId path string true "Proxy ID"
-// @Param request body models.UpdateProxyRequest true "Proxy update request"
-// @Success 200 {object} ProxyDetailsResponse "Updated proxy"
-// @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
-// @Failure 404 {object} map[string]string "Proxy not found"
-// @Failure 500 {object} map[string]string "Failed to update proxy"
+// @Param request body UpdateProxyRequestAPI true "Proxy update request"
+// @Success 200 {object} APIResponse{data=ProxyDetailsResponse} "Updated proxy"
+// @Failure 400 {object} APIResponse{error=ApiError} "Invalid request payload or validation failed"
+// @Failure 404 {object} APIResponse{error=ApiError} "Proxy not found"
+// @Failure 500 {object} APIResponse{error=ApiError} "Failed to update proxy"
 // @Router /proxies/{proxyId} [put]
 func (h *APIHandler) UpdateProxyGin(c *gin.Context) {
 	proxyIDStr := c.Param("proxyId")
@@ -437,13 +466,14 @@ func (h *APIHandler) UpdateProxyGin(c *gin.Context) {
 
 // DeleteProxyGin deletes a proxy.
 // @Summary Delete proxy
-// @Description Delete a proxy configuration
+// @Description Delete a proxy by ID
 // @Tags proxies
+// @ID deleteProxy
 // @Param proxyId path string true "Proxy ID"
-// @Success 204 "Proxy deleted successfully"
-// @Failure 400 {object} map[string]string "Invalid proxy ID format"
-// @Failure 404 {object} map[string]string "Proxy not found"
-// @Failure 500 {object} map[string]string "Failed to delete proxy"
+// @Success 200 {object} APIResponse{data=DeletionResponse} "Proxy deleted successfully"
+// @Failure 400 {object} APIResponse{error=ApiError} "Invalid proxy ID format"
+// @Failure 404 {object} APIResponse{error=ApiError} "Proxy not found"
+// @Failure 500 {object} APIResponse{error=ApiError} "Failed to delete proxy"
 // @Router /proxies/{proxyId} [delete]
 func (h *APIHandler) DeleteProxyGin(c *gin.Context) {
 	proxyIDStr := c.Param("proxyId")
@@ -535,13 +565,14 @@ func (h *APIHandler) DeleteProxyGin(c *gin.Context) {
 	})
 }
 
-// GetProxyStatusesGin gets proxy statuses.
+// GetProxyStatusesGin returns proxy statuses.
 // @Summary Get proxy statuses
-// @Description Retrieve health status information for all proxies
+// @Description Retrieve the current status of all proxies
 // @Tags proxies
+// @ID listProxyStatuses
 // @Produce json
-// @Success 200 {object} ProxyStatusResponse "Proxy status information"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Success 200 {object} APIResponse{data=[]ProxyStatusResponse} "Proxy status information"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /proxies/status [get]
 func (h *APIHandler) GetProxyStatusesGin(c *gin.Context) {
 	if h.ProxyMgr == nil {
@@ -553,16 +584,17 @@ func (h *APIHandler) GetProxyStatusesGin(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusOK, statuses)
 }
 
-// ForceCheckSingleProxyGin forces a health check on a single proxy.
-// @Summary Force proxy health check
-// @Description Force a health check on a specific proxy
+// ForceCheckSingleProxyGin triggers health check for single proxy.
+// @Summary Health check single proxy
+// @Description Force a health check for a specific proxy
 // @Tags proxies
+// @ID healthCheckProxy
 // @Produce json
-// @Param proxyId path string true "Proxy ID (UUID)"
-// @Success 200 {object} ProxyHealthCheckResponse "Health check completed"
-// @Failure 400 {object} map[string]string "Bad Request"
-// @Failure 404 {object} map[string]string "Proxy not found"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Param proxyId path string true "Proxy ID"
+// @Success 200 {object} APIResponse{data=ProxyHealthCheckResponse} "Health check completed"
+// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
+// @Failure 404 {object} APIResponse{error=ApiError} "Proxy not found"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /proxies/{proxyId}/health-check [post]
 func (h *APIHandler) ForceCheckSingleProxyGin(c *gin.Context) {
 	if h.ProxyMgr == nil {
@@ -587,13 +619,14 @@ func (h *APIHandler) ForceCheckSingleProxyGin(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusOK, updatedStatus)
 }
 
-// ForceCheckAllProxiesGin forces a health check on all proxies.
-// @Summary Force health check on all proxies
-// @Description Force health checks on all registered proxies
+// ForceCheckAllProxiesGin triggers health checks for all proxies.
+// @Summary Health check all proxies
+// @Description Force health checks for all proxies
 // @Tags proxies
+// @ID healthCheckAllProxies
 // @Produce json
-// @Success 200 {object} BulkHealthCheckResponse "Health checks completed"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Success 200 {object} APIResponse{data=BulkHealthCheckResponse} "Health checks completed"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /proxies/health-check [post]
 func (h *APIHandler) ForceCheckAllProxiesGin(c *gin.Context) {
 	if h.ProxyMgr == nil {
@@ -625,14 +658,15 @@ func (h *APIHandler) ForceCheckAllProxiesGin(c *gin.Context) {
 
 // TestProxyGin tests a proxy.
 // @Summary Test proxy
-// @Description Test a proxy configuration to verify it works correctly
+// @Description Test a proxy configuration
 // @Tags proxies
+// @ID testProxy
 // @Produce json
-// @Param proxyId path string true "Proxy ID (UUID)"
-// @Success 200 {object} ProxyTestResponse "Proxy test results"
-// @Failure 400 {object} map[string]string "Bad Request"
-// @Failure 404 {object} map[string]string "Proxy not found"
-// @Failure 500 {object} map[string]string "Internal Server Error"
+// @Param proxyId path string true "Proxy ID"
+// @Success 200 {object} APIResponse{data=ProxyTestResponse} "Test results"
+// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
+// @Failure 404 {object} APIResponse{error=ApiError} "Proxy not found"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /proxies/{proxyId}/test [post]
 func (h *APIHandler) TestProxyGin(c *gin.Context) {
 	proxyIDStr := c.Param("proxyId")
@@ -667,16 +701,17 @@ func (h *APIHandler) TestProxyGin(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusOK, testResult)
 }
 
-// BulkUpdateProxiesGin updates multiple proxies at once.
+// BulkUpdateProxiesGin updates proxies in bulk.
 // @Summary Bulk update proxies
-// @Description Update multiple proxy configurations simultaneously
+// @Description Update multiple proxies in one request
 // @Tags proxies
+// @ID bulkUpdateProxies
 // @Accept json
 // @Produce json
-// @Param request body models.BulkUpdateProxiesRequest true "Bulk proxy update request"
+// @Param request body models.BulkUpdateProxiesRequest true "Bulk update request"
 // @Success 200 {object} APIResponse{data=models.BulkProxyOperationResponse} "Bulk operation results"
-// @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
-// @Failure 500 {object} map[string]string "Internal server error"
+// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /proxies/bulk/update [put]
 func (h *APIHandler) BulkUpdateProxiesGin(c *gin.Context) {
 	var req models.BulkUpdateProxiesRequest
@@ -843,16 +878,17 @@ func (h *APIHandler) BulkUpdateProxiesGin(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusOK, response)
 }
 
-// BulkDeleteProxiesGin deletes multiple proxies at once.
+// BulkDeleteProxiesGin deletes proxies in bulk.
 // @Summary Bulk delete proxies
-// @Description Delete multiple proxy configurations simultaneously
+// @Description Delete multiple proxies in one request
 // @Tags proxies
+// @ID bulkDeleteProxies
 // @Accept json
 // @Produce json
-// @Param request body models.BulkDeleteProxiesRequest true "Bulk proxy delete request"
+// @Param request body models.BulkDeleteProxiesRequest true "Bulk delete request"
 // @Success 200 {object} APIResponse{data=models.BulkProxyOperationResponse} "Bulk operation results"
-// @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
-// @Failure 500 {object} map[string]string "Internal server error"
+// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /proxies/bulk/delete [delete]
 func (h *APIHandler) BulkDeleteProxiesGin(c *gin.Context) {
 	var req models.BulkDeleteProxiesRequest
@@ -971,16 +1007,17 @@ func (h *APIHandler) BulkDeleteProxiesGin(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusOK, response)
 }
 
-// BulkTestProxiesGin tests multiple proxies at once.
+// BulkTestProxiesGin tests proxies in bulk.
 // @Summary Bulk test proxies
-// @Description Test multiple proxy configurations simultaneously
+// @Description Test multiple proxies in one request
 // @Tags proxies
+// @ID bulkTestProxies
 // @Accept json
 // @Produce json
-// @Param request body models.BulkTestProxiesRequest true "Bulk proxy test request"
-// @Success 200 {object} BulkProxyTestResponse "Bulk test results"
-// @Failure 400 {object} map[string]string "Invalid request payload or validation failed"
-// @Failure 500 {object} map[string]string "Internal server error"
+// @Param request body models.BulkTestProxiesRequest true "Bulk test request"
+// @Success 200 {object} APIResponse{data=BulkProxyTestResponse} "Bulk test results"
+// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
+// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
 // @Router /proxies/bulk/test [post]
 func (h *APIHandler) BulkTestProxiesGin(c *gin.Context) {
 	var req models.BulkTestProxiesRequest
