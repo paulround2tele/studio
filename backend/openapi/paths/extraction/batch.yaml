@@ -1,17 +1,14 @@
 post:
-  tags: [database]
+  tags: [keyword-extraction]
   security:
     - cookieAuth: []
-  summary: Get bulk database statistics
-  description: Retrieve comprehensive database statistics including schema and table-level details
-  operationId: db_bulk_stats
-  parameters:
-    - $ref: '../../components/parameters.yaml#/XRequestedWith'
+  summary: Batch keyword extraction
+  operationId: keyword_extract_batch
   requestBody:
     required: true
     content:
       application/json:
-  schema: { $ref: '../../components/schemas/all.yaml#/BulkDatabaseStatsRequest' }
+  schema: { $ref: '../../components/schemas/all.yaml#/BatchKeywordExtractionRequest' }
   responses:
     '200':
       description: OK
@@ -22,7 +19,7 @@ post:
               - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/BulkDatabaseStatsResponse' }
+                  data: { $ref: '../../components/schemas/all.yaml#/BatchKeywordExtractionResponse' }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }

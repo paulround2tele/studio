@@ -11,15 +11,15 @@ get:
         application/json:
           schema:
             allOf:
-              - $ref: '#/components/schemas/SuccessEnvelope'
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
                   data:
                     type: array
-                    items: { $ref: '#/components/schemas/ProxyPool' }
-    '401': { $ref: '#/components/responses/Unauthorized' }
-    '403': { $ref: '#/components/responses/Forbidden' }
-    '500': { $ref: '#/components/responses/InternalServerError' }
+                    items: { $ref: '../../components/schemas/all.yaml#/ProxyPool' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
 post:
   tags: [proxy-pools]
   security:
@@ -30,7 +30,7 @@ post:
     required: true
     content:
       application/json:
-        schema: { $ref: '#/components/schemas/ProxyPoolRequest' }
+  schema: { $ref: '../../components/schemas/all.yaml#/ProxyPoolRequest' }
   responses:
     '201':
       description: Created
@@ -38,9 +38,9 @@ post:
         application/json:
           schema:
             allOf:
-              - $ref: '#/components/schemas/SuccessEnvelope'
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
-                  data: { $ref: '#/components/schemas/ProxyPool' }
-    '400': { $ref: '#/components/responses/BadRequest' }
-    '500': { $ref: '#/components/responses/InternalServerError' }
+                  data: { $ref: '../../components/schemas/all.yaml#/ProxyPool' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

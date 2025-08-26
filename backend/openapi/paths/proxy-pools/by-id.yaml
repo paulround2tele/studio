@@ -13,7 +13,7 @@ put:
     required: true
     content:
       application/json:
-        schema: { $ref: '#/components/schemas/ProxyPoolRequest' }
+  schema: { $ref: '../../components/schemas/all.yaml#/ProxyPoolRequest' }
   responses:
     '200':
       description: OK
@@ -21,13 +21,13 @@ put:
         application/json:
           schema:
             allOf:
-              - $ref: '#/components/schemas/SuccessEnvelope'
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
-                  data: { $ref: '#/components/schemas/ProxyPool' }
-    '400': { $ref: '#/components/responses/BadRequest' }
-    '404': { $ref: '#/components/responses/NotFound' }
-    '500': { $ref: '#/components/responses/InternalServerError' }
+                  data: { $ref: '../../components/schemas/all.yaml#/ProxyPool' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
 delete:
   tags: [proxy-pools]
   security:
@@ -46,10 +46,10 @@ delete:
         application/json:
           schema:
             allOf:
-              - $ref: '#/components/schemas/SuccessEnvelope'
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
-                  data: { $ref: '#/components/schemas/ProxyPoolDeleteResponse' }
-    '400': { $ref: '#/components/responses/BadRequest' }
-    '404': { $ref: '#/components/responses/NotFound' }
-    '500': { $ref: '#/components/responses/InternalServerError' }
+                  data: { $ref: '../../components/schemas/all.yaml#/ProxyPoolDeleteResponse' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

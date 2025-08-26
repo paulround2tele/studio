@@ -5,10 +5,10 @@ get:
   summary: List keyword sets
   operationId: keyword_sets_list
   parameters:
-    - $ref: '#/components/parameters/Limit'
-    - $ref: '#/components/parameters/Offset'
-    - $ref: '#/components/parameters/IncludeRules'
-    - $ref: '#/components/parameters/IsEnabled'
+  - $ref: '../../components/parameters.yaml#/Limit'
+  - $ref: '../../components/parameters.yaml#/Offset'
+  - $ref: '../../components/parameters.yaml#/IncludeRules'
+  - $ref: '../../components/parameters.yaml#/IsEnabled'
   responses:
     '200':
       description: OK
@@ -16,16 +16,16 @@ get:
         application/json:
           schema:
             allOf:
-              - $ref: '#/components/schemas/SuccessEnvelope'
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
                   data:
                     type: array
-                    items: { $ref: '#/components/schemas/KeywordSetResponse' }
-    '401': { $ref: '#/components/responses/Unauthorized' }
-    '403': { $ref: '#/components/responses/Forbidden' }
-    '429': { $ref: '#/components/responses/RateLimitExceeded' }
-    '500': { $ref: '#/components/responses/InternalServerError' }
+                    items: { $ref: '../../components/schemas/all.yaml#/KeywordSetResponse' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
 post:
   tags: [keyword-sets]
   security:
@@ -36,7 +36,7 @@ post:
     required: true
     content:
       application/json:
-        schema: { $ref: '#/components/schemas/CreateKeywordSetRequest' }
+  schema: { $ref: '../../components/schemas/all.yaml#/CreateKeywordSetRequest' }
   responses:
     '201':
       description: Created
@@ -44,15 +44,14 @@ post:
         application/json:
           schema:
             allOf:
-              - $ref: '#/components/schemas/SuccessEnvelope'
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
-                  data:
-                    $ref: '#/components/schemas/KeywordSetResponse'
-    '400': { $ref: '#/components/responses/BadRequest' }
-    '401': { $ref: '#/components/responses/Unauthorized' }
-    '403': { $ref: '#/components/responses/Forbidden' }
-    '409': { $ref: '#/components/responses/Conflict' }
-    '422': { $ref: '#/components/responses/ValidationError' }
-    '429': { $ref: '#/components/responses/RateLimitExceeded' }
-    '500': { $ref: '#/components/responses/InternalServerError' }
+                  data: { $ref: '../../components/schemas/all.yaml#/KeywordSetResponse' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '409': { $ref: '../../components/responses.yaml#/Conflict' }
+    '422': { $ref: '../../components/responses.yaml#/ValidationError' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

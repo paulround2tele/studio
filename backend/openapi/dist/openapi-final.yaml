@@ -1,0 +1,2612 @@
+openapi: 3.1.0
+info:
+  title: Domain Flow API
+  version: 2.0.0
+servers:
+  - url: https://api.domainflow.dev/api/v2
+    description: Production server
+  - url: http://localhost:8080/api/v2
+    description: Local development server
+security:
+  - cookieAuth: []
+tags:
+  - name: health
+    description: Health and readiness probes
+  - name: personas
+    description: Manage personas used for browsing and extraction
+  - name: proxies
+    description: Manage proxies and run health checks
+  - name: proxy-pools
+    description: Group proxies into pools with weights and timeouts
+  - name: server-settings
+    description: Server configuration surfaces (auth, logging, worker, rate limit, proxy manager, server)
+  - name: keyword-sets
+    description: Define and retrieve sets of keywords
+  - name: database
+    description: Database utilities and bulk queries
+  - name: sse
+    description: Server-sent event streams for realtime updates
+paths:
+  /health:
+    get:
+      tags:
+        - health
+      summary: Health check
+      operationId: health_check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /ping:
+    get:
+      tags:
+        - health
+      summary: Ping server
+      operationId: ping
+      responses:
+        '200':
+          description: Pong
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /health/ready:
+    get:
+      tags:
+        - health
+      summary: Readiness check
+      operationId: health_ready
+      responses:
+        '200':
+          description: Ready
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /health/live:
+    get:
+      tags:
+        - health
+      summary: Liveness check
+      operationId: health_live
+      responses:
+        '200':
+          description: Alive
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /sse/events:
+    get:
+      tags:
+        - sse
+      security:
+        - cookieAuth: []
+      summary: Stream campaign events
+      operationId: sse_events_all
+      responses:
+        '200':
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              examples:
+                message:
+                  summary: Example event
+                  value: |
+                    event: campaign_progress
+                    data: {"campaignId":"c1","progress":42.5,"status":"running"}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /sse/campaigns/{campaignId}/events:
+    get:
+      tags:
+        - sse
+      security:
+        - cookieAuth: []
+      summary: Stream campaign events (specific campaign)
+      operationId: sse_events_campaign
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: SSE stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              examples:
+                message:
+                  summary: Example event
+                  value: |
+                    event: campaign_progress
+                    data: {"campaignId":"00000000-0000-0000-0000-000000000000","progress":75.0,"status":"in_progress"}
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /sse/events/stats:
+    get:
+      tags:
+        - sse
+      security:
+        - cookieAuth: []
+      summary: Get SSE connection statistics
+      operationId: sse_events_stats
+      responses:
+        '200':
+          description: SSE statistics
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          activeConnections:
+                            type: integer
+                            description: Number of active SSE connections
+                          totalEventsSent:
+                            type: integer
+                            description: Total events sent since server start
+                          uptime:
+                            type: string
+                            description: Server uptime
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /personas:
+    get:
+      tags:
+        - personas
+      security:
+        - cookieAuth: []
+      summary: List personas
+      operationId: personas_list
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - $ref: '#/components/parameters/IsEnabled'
+        - $ref: '#/components/parameters/PersonaTypeFilter'
+      responses:
+        '200':
+          description: List
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/PersonaResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - personas
+      security:
+        - cookieAuth: []
+      summary: Create persona
+      operationId: personas_create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePersonaRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PersonaResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /personas/{id}:
+    get:
+      tags:
+        - personas
+      security:
+        - cookieAuth: []
+      summary: Get persona by ID
+      operationId: personas_get
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Persona
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PersonaResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - personas
+      security:
+        - cookieAuth: []
+      summary: Update persona
+      operationId: personas_update
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePersonaRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PersonaResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - personas
+      security:
+        - cookieAuth: []
+      summary: Delete persona
+      operationId: personas_delete
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PersonaDeleteResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /personas/{id}/test:
+    post:
+      tags:
+        - personas
+      security:
+        - cookieAuth: []
+      summary: Test persona
+      operationId: personas_test
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Test result
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PersonaTestResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /proxies:
+    get:
+      tags:
+        - proxies
+      security:
+        - cookieAuth: []
+      summary: List proxies
+      operationId: proxies_list
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - $ref: '#/components/parameters/ProxyProtocol'
+        - $ref: '#/components/parameters/ProxyCountry'
+        - $ref: '#/components/parameters/IsEnabled'
+        - $ref: '#/components/parameters/IsHealthy'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProxyDetailsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - proxies
+      security:
+        - cookieAuth: []
+      summary: Create proxy
+      operationId: proxies_create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProxyRequestAPI'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProxyDetailsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /proxies/{proxyId}:
+    put:
+      tags:
+        - proxies
+      security:
+        - cookieAuth: []
+      summary: Update proxy
+      operationId: proxies_update
+      parameters:
+        - name: proxyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProxyRequestAPI'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProxyDetailsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - proxies
+      security:
+        - cookieAuth: []
+      summary: Delete proxy
+      operationId: proxies_delete
+      parameters:
+        - name: proxyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /proxies/{proxyId}/test:
+    post:
+      tags:
+        - proxies
+      security:
+        - cookieAuth: []
+      summary: Test proxy
+      operationId: proxies_test
+      parameters:
+        - name: proxyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProxyTestResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /proxies/status:
+    get:
+      tags:
+        - proxies
+      security:
+        - cookieAuth: []
+      summary: Get proxy statuses
+      operationId: proxies_status
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProxyStatusResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /proxies/{proxyId}/health-check:
+    post:
+      tags:
+        - proxies
+      security:
+        - cookieAuth: []
+      summary: Health check single proxy
+      operationId: proxies_health_check_single
+      parameters:
+        - name: proxyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProxyHealthCheckResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /proxies/health-check:
+    post:
+      tags:
+        - proxies
+      security:
+        - cookieAuth: []
+      summary: Health check all proxies
+      operationId: proxies_health_check_all
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/BulkHealthCheckResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /proxies/bulk/update:
+    put:
+      tags:
+        - proxies
+      security:
+        - cookieAuth: []
+      summary: Bulk update proxies
+      operationId: proxies_bulk_update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkUpdateProxiesRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/BulkProxyOperationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /proxies/bulk/delete:
+    delete:
+      tags:
+        - proxies
+      security:
+        - cookieAuth: []
+      summary: Bulk delete proxies
+      operationId: proxies_bulk_delete
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkDeleteProxiesRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/BulkProxyOperationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /proxies/bulk/test:
+    post:
+      tags:
+        - proxies
+      security:
+        - cookieAuth: []
+      summary: Bulk test proxies
+      operationId: proxies_bulk_test
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                proxyIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+              required:
+                - proxyIds
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/BulkProxyTestResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /proxy-pools:
+    get:
+      tags:
+        - proxy-pools
+      security:
+        - cookieAuth: []
+      summary: List proxy pools
+      operationId: proxy_pools_list
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ProxyPool'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - proxy-pools
+      security:
+        - cookieAuth: []
+      summary: Create proxy pool
+      operationId: proxy_pools_create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProxyPoolRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProxyPool'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /proxy-pools/{poolId}:
+    put:
+      tags:
+        - proxy-pools
+      security:
+        - cookieAuth: []
+      summary: Update proxy pool
+      operationId: proxy_pools_update
+      parameters:
+        - name: poolId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProxyPoolRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProxyPool'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - proxy-pools
+      security:
+        - cookieAuth: []
+      summary: Delete proxy pool
+      operationId: proxy_pools_delete
+      parameters:
+        - name: poolId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProxyPoolDeleteResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /proxy-pools/{poolId}/proxies:
+    post:
+      tags:
+        - proxy-pools
+      security:
+        - cookieAuth: []
+      summary: Add proxy to pool
+      operationId: proxy_pools_add_proxy
+      parameters:
+        - name: poolId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                proxyId:
+                  type: string
+                  format: uuid
+                weight:
+                  type: integer
+              required:
+                - proxyId
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProxyPoolMembership'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /proxy-pools/{poolId}/proxies/{proxyId}:
+    delete:
+      tags:
+        - proxy-pools
+      security:
+        - cookieAuth: []
+      summary: Remove proxy from pool
+      operationId: proxy_pools_remove_proxy
+      parameters:
+        - name: poolId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: proxyId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ProxyPoolMembershipResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /keyword-sets:
+    get:
+      tags:
+        - keyword-sets
+      security:
+        - cookieAuth: []
+      summary: List keyword sets
+      operationId: keyword_sets_list
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - $ref: '#/components/parameters/IncludeRules'
+        - $ref: '#/components/parameters/IsEnabled'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/KeywordSetResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - keyword-sets
+      security:
+        - cookieAuth: []
+      summary: Create keyword set
+      operationId: keyword_sets_create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateKeywordSetRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/KeywordSetResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /keyword-sets/{setId}:
+    get:
+      tags:
+        - keyword-sets
+      security:
+        - cookieAuth: []
+      summary: Get keyword set
+      operationId: keyword_sets_get
+      parameters:
+        - name: setId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/KeywordSetResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - keyword-sets
+      security:
+        - cookieAuth: []
+      summary: Update keyword set
+      operationId: keyword_sets_update
+      parameters:
+        - name: setId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateKeywordSetRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/KeywordSetResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - keyword-sets
+      security:
+        - cookieAuth: []
+      summary: Delete keyword set
+      operationId: keyword_sets_delete
+      parameters:
+        - name: setId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: No Content
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /keyword-sets/{setId}/rules:
+    get:
+      tags:
+        - keyword-sets
+      security:
+        - cookieAuth: []
+      summary: List rules for a keyword set
+      operationId: keyword_sets_rules_list
+      parameters:
+        - name: setId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/KeywordRule'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - keyword-sets
+      security:
+        - cookieAuth: []
+      summary: Add a rule to a keyword set
+      operationId: keyword_sets_rules_add
+      parameters:
+        - name: setId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeywordRuleRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/KeywordRule'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /database/query:
+    post:
+      tags:
+        - database
+      security:
+        - cookieAuth: []
+      summary: Execute bulk database queries
+      operationId: db_bulk_query
+      parameters:
+        - $ref: '#/components/parameters/XRequestedWith'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkDatabaseQueryRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/BulkDatabaseQueryResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /database/stats:
+    post:
+      tags:
+        - database
+      security:
+        - cookieAuth: []
+      summary: Get bulk database statistics
+      description: Retrieve comprehensive database statistics including schema and table-level details
+      operationId: db_bulk_stats
+      parameters:
+        - $ref: '#/components/parameters/XRequestedWith'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkDatabaseStatsRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/BulkDatabaseStatsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /extract/keywords:
+    $ref: ./extraction/batch.yaml
+  /extract/keywords/stream:
+    $ref: ./extraction/stream.yaml
+  /config/auth:
+    $ref: ./config/auth.yaml
+  /config/logging:
+    $ref: ./config/logging.yaml
+  /config/worker:
+    get:
+      tags:
+        - server-settings
+      security:
+        - cookieAuth: []
+      summary: Get worker configuration
+      operationId: config_get_worker
+      responses:
+        '200':
+          description: Worker config
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/WorkerConfig'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - server-settings
+      security:
+        - cookieAuth: []
+      summary: Update worker configuration
+      operationId: config_update_worker
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkerConfig'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/WorkerConfig'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /config/proxy-manager:
+    $ref: ./config/proxy-manager.yaml
+  /config/rate-limit:
+    $ref: ./config/rate-limiter.yaml
+  /config/server:
+    $ref: ./config/server.yaml
+components:
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    Conflict:
+      description: Conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    ValidationError:
+      description: Validation Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    RateLimitExceeded:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Page size (items per page)
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 500
+        default: 50
+    Offset:
+      name: offset
+      in: query
+      description: Zero-based offset
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    XRequestedWith:
+      name: X-Requested-With
+      in: header
+      description: CSRF/XHR sentinel header. Must be exactly "XMLHttpRequest" for browser-initiated unsafe requests.
+      required: false
+      schema:
+        type: string
+        enum:
+          - XMLHttpRequest
+    IsEnabled:
+      name: isEnabled
+      in: query
+      description: Filter by enabled state
+      required: false
+      schema:
+        type: boolean
+    PersonaTypeFilter:
+      name: personaType
+      in: query
+      description: Filter by persona type
+      required: false
+      schema:
+        $ref: '#/components/schemas/PersonaType'
+    ProxyCountry:
+      name: countryCode
+      in: query
+      description: Filter proxies by ISO country code
+      required: false
+      schema:
+        type: string
+    ProxyProtocol:
+      name: protocol
+      in: query
+      description: Filter proxies by protocol
+      required: false
+      schema:
+        $ref: '#/components/schemas/ProxyProtocol'
+    IsHealthy:
+      name: isHealthy
+      in: query
+      description: Filter by health status
+      required: false
+      schema:
+        type: boolean
+    IncludeRules:
+      name: includeRules
+      in: query
+      description: If true, include rules array in keyword-sets list items
+      required: false
+      schema:
+        type: boolean
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: domainflow_session
+      description: |
+        Session cookie. Flags: HttpOnly=true, Secure=true (in production), SameSite=Lax. Domain set per environment.
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+  examples:
+    message:
+      summary: Example event
+      value: |
+        event: campaign_progress
+        data: {"campaignId":"c1","progress":42.5,"status":"running"}
+    heartbeat:
+      summary: Server heartbeat
+      value: |
+        event: heartbeat
+        data: {"ts":"2025-01-01T00:00:00Z","alive":true}
+    retry:
+      summary: Retry guidance
+      value: |
+        retry: 5000
+  schemas:
+    SuccessEnvelope:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - true
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        requestId:
+          type: string
+      required:
+        - success
+        - requestId
+    ErrorEnvelope:
+      type: object
+      properties:
+        success:
+          type: boolean
+          enum:
+            - false
+        error:
+          $ref: '#/components/schemas/ApiError'
+        requestId:
+          type: string
+      required:
+        - success
+        - error
+        - requestId
+    ErrorCode:
+      type: string
+      description: Stable error code space
+      enum:
+        - BAD_REQUEST
+        - UNAUTHORIZED
+        - FORBIDDEN
+        - NOT_FOUND
+        - CONFLICT
+        - VALIDATION_ERROR
+        - REQUIRED_FIELD
+        - RATE_LIMIT_EXCEEDED
+        - REQUEST_TIMEOUT
+        - NOT_IMPLEMENTED
+        - INTERNAL_SERVER_ERROR
+        - DATABASE_ERROR
+        - SERVICE_UNAVAILABLE
+        - GATEWAY_TIMEOUT
+        - CAMPAIGN_IN_PROGRESS
+        - QUOTA_EXCEEDED
+        - INVALID_STATE
+    ApiError:
+      type: object
+      properties:
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: JSON pointer or field path
+              code:
+                $ref: '#/components/schemas/ErrorCode'
+              message:
+                type: string
+              context:
+                type: object
+                additionalProperties: true
+            required:
+              - code
+              - message
+        timestamp:
+          type: string
+          format: date-time
+        path:
+          type: string
+      required:
+        - code
+        - message
+        - timestamp
+    Metadata:
+      type: object
+      properties:
+        page:
+          $ref: '#/components/schemas/Pagination'
+        rateLimit:
+          $ref: '#/components/schemas/RateLimitInfo'
+        processing:
+          $ref: '#/components/schemas/ProcessingInfo'
+        bulk:
+          $ref: '#/components/schemas/BulkOperationInfo'
+        extra:
+          type: object
+          additionalProperties: {}
+    Pagination:
+      type: object
+      properties:
+        current:
+          type: integer
+        total:
+          type: integer
+        pageSize:
+          type: integer
+        count:
+          type: integer
+    RateLimitInfo:
+      type: object
+      properties:
+        limit:
+          type: integer
+        remaining:
+          type: integer
+        reset:
+          type: string
+          format: date-time
+    ProcessingInfo:
+      type: object
+      properties:
+        duration:
+          type: string
+        version:
+          type: string
+    BulkOperationInfo:
+      type: object
+      properties:
+        processedItems:
+          type: integer
+        skippedItems:
+          type: integer
+        failedItems:
+          type: array
+          items:
+            type: string
+        processingTimeMs:
+          type: integer
+          format: int64
+        totalRowsReturned:
+          type: integer
+          format: int64
+        type:
+          type: string
+    PersonaType:
+      type: string
+      enum:
+        - dns
+        - http
+    ProxyProtocol:
+      type: string
+      enum:
+        - http
+        - https
+        - socks5
+        - socks4
+    KeywordRuleType:
+      type: string
+      enum:
+        - string
+        - regex
+    CreatePersonaRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        personaType:
+          $ref: '#/components/schemas/PersonaType'
+        description:
+          type: string
+        configDetails:
+          description: HTTP or DNS persona configuration object
+          type: object
+          additionalProperties: {}
+        isEnabled:
+          type: boolean
+      required:
+        - name
+        - personaType
+        - configDetails
+    UpdatePersonaRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        configDetails:
+          type: object
+          additionalProperties: {}
+        isEnabled:
+          type: boolean
+    PersonaResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        personaType:
+          $ref: '#/components/schemas/PersonaType'
+        description:
+          type: string
+        configDetails:
+          type: object
+          additionalProperties: {}
+        isEnabled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - personaType
+        - isEnabled
+        - createdAt
+        - updatedAt
+    PersonaTestResponse:
+      type: object
+      properties:
+        personaId:
+          type: string
+        personaType:
+          type: string
+        personaName:
+          type: string
+        success:
+          type: boolean
+        testPassed:
+          type: boolean
+        message:
+          type: string
+        testResults:
+          type: object
+        results:
+          type: object
+        timestamp:
+          type: string
+    PersonaDeleteResponse:
+      type: object
+      properties:
+        personaId:
+          type: string
+          format: uuid
+        deleted:
+          type: boolean
+        message:
+          type: string
+      required:
+        - personaId
+        - deleted
+    CreateProxyRequestAPI:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        address:
+          type: string
+        protocol:
+          $ref: '#/components/schemas/ProxyProtocol'
+        username:
+          type: string
+        password:
+          type: string
+        countryCode:
+          type: string
+        isEnabled:
+          type: boolean
+        notes:
+          type: string
+      required:
+        - name
+        - address
+    ProxyDetailsResponse:
+      type: object
+      properties:
+        host:
+          type: string
+        port:
+          type: integer
+        protocol:
+          type: string
+        username:
+          type: string
+    ProxyTestResponse:
+      type: object
+      properties:
+        proxyId:
+          type: string
+          format: uuid
+        success:
+          type: boolean
+        statusCode:
+          type: integer
+        responseTime:
+          type: integer
+          format: int64
+        error:
+          type: string
+    UpdateProxyRequestAPI:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        address:
+          type: string
+        protocol:
+          $ref: '#/components/schemas/ProxyProtocol'
+        username:
+          type: string
+        password:
+          type: string
+        countryCode:
+          type: string
+        isEnabled:
+          type: boolean
+        notes:
+          type: string
+    ProxyStatusResponse:
+      type: object
+      properties:
+        proxyId:
+          type: string
+          format: uuid
+        status:
+          type: string
+        lastChecked:
+          type: string
+          format: date-time
+        responseTime:
+          type: integer
+          format: int64
+        isHealthy:
+          type: boolean
+        proxyDetails:
+          $ref: '#/components/schemas/ProxyDetailsResponse'
+    ProxyHealthCheckResponse:
+      type: object
+      properties:
+        proxyId:
+          type: string
+          format: uuid
+        success:
+          type: boolean
+        status:
+          type: string
+        responseTime:
+          type: integer
+          format: int64
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+    BulkHealthCheckResponse:
+      type: object
+      properties:
+        totalProxies:
+          type: integer
+        healthyProxies:
+          type: integer
+        failedProxies:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProxyHealthCheckResponse'
+    BulkProxyOperationResponse:
+      type: object
+      properties:
+        totalRequested:
+          type: integer
+        successCount:
+          type: integer
+        errorCount:
+          type: integer
+        successfulProxies:
+          type: array
+          items:
+            type: string
+            format: uuid
+        failedProxies:
+          type: array
+          items:
+            type: object
+            properties:
+              proxyId:
+                type: string
+                format: uuid
+              error:
+                type: string
+        results:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    BulkUpdateProxiesRequest:
+      type: object
+      properties:
+        proxyIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+        updates:
+          $ref: '#/components/schemas/UpdateProxyRequestAPI'
+      required:
+        - proxyIds
+        - updates
+    BulkDeleteProxiesRequest:
+      type: object
+      properties:
+        proxyIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          minItems: 1
+      required:
+        - proxyIds
+    BulkProxyTestResponse:
+      type: object
+      properties:
+        totalRequested:
+          type: integer
+        successCount:
+          type: integer
+        errorCount:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProxyTestResponse'
+    ProxyPool:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        isEnabled:
+          type: boolean
+        poolStrategy:
+          type: string
+        healthCheckEnabled:
+          type: boolean
+        healthCheckIntervalSeconds:
+          type: integer
+        maxRetries:
+          type: integer
+        timeoutSeconds:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        proxies:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+    ProxyPoolRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        isEnabled:
+          type: boolean
+        poolStrategy:
+          type: string
+        healthCheckEnabled:
+          type: boolean
+        healthCheckIntervalSeconds:
+          type: integer
+        maxRetries:
+          type: integer
+        timeoutSeconds:
+          type: integer
+      required:
+        - name
+    ProxyPoolMembership:
+      type: object
+      properties:
+        poolId:
+          type: string
+          format: uuid
+        proxyId:
+          type: string
+          format: uuid
+        weight:
+          type: integer
+        isActive:
+          type: boolean
+        addedAt:
+          type: string
+          format: date-time
+    ProxyPoolMembershipResponse:
+      type: object
+      properties:
+        poolId:
+          type: string
+          format: uuid
+        proxyId:
+          type: string
+          format: uuid
+        added:
+          type: boolean
+        removed:
+          type: boolean
+        message:
+          type: string
+    ProxyPoolDeleteResponse:
+      type: object
+      properties:
+        deleted:
+          type: boolean
+        poolId:
+          type: string
+          format: uuid
+        message:
+          type: string
+    KeywordRuleRequest:
+      type: object
+      properties:
+        pattern:
+          type: string
+        ruleType:
+          $ref: '#/components/schemas/KeywordRuleType'
+        isCaseSensitive:
+          type: boolean
+        category:
+          type: string
+        contextChars:
+          type: integer
+      required:
+        - pattern
+        - ruleType
+    CreateKeywordSetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        isEnabled:
+          type: boolean
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeywordRuleRequest'
+      required:
+        - name
+    KeywordRuleDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        keywordSetId:
+          type: string
+          format: uuid
+        pattern:
+          type: string
+        ruleType:
+          type: string
+        isCaseSensitive:
+          type: boolean
+        category:
+          type: string
+        contextChars:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    KeywordSetResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        isEnabled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeywordRuleDTO'
+        ruleCount:
+          type: integer
+      required:
+        - id
+        - name
+        - isEnabled
+        - createdAt
+        - updatedAt
+        - ruleCount
+    UpdateKeywordSetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        isEnabled:
+          type: boolean
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeywordRuleRequest'
+    KeywordSetWithRulesResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        isEnabled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeywordRuleDTO'
+        ruleCount:
+          type: integer
+      required:
+        - id
+        - name
+        - isEnabled
+        - createdAt
+        - updatedAt
+        - rules
+        - ruleCount
+    BatchKeywordExtractionRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+                format: uri
+              keywordSetId:
+                type: string
+                format: uuid
+              httpPersonaId:
+                type: string
+                format: uuid
+              dnsPersonaId:
+                type: string
+                format: uuid
+            required:
+              - url
+              - keywordSetId
+      required:
+        - items
+    BatchKeywordExtractionResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              url:
+                type: string
+                format: uri
+              keywordSetIdUsed:
+                type: string
+                format: uuid
+              httpPersonaIdUsed:
+                type: string
+                format: uuid
+              dnsPersonaIdUsed:
+                type: string
+                format: uuid
+              proxyIdUsed:
+                type: string
+                format: uuid
+              finalURL:
+                type: string
+                format: uri
+              statusCode:
+                type: integer
+              matches:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    matchedPattern:
+                      type: string
+                    matchedText:
+                      type: string
+                    category:
+                      type: string
+                    contexts:
+                      type: array
+                      items:
+                        type: string
+              error:
+                type: string
+    BulkDatabaseQueryRequest:
+      type: object
+      properties:
+        queries:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              sql:
+                type: string
+            required:
+              - id
+              - sql
+        limit:
+          type: integer
+        timeout:
+          type: integer
+      required:
+        - queries
+    BulkDatabaseQueryResponse:
+      type: object
+      properties:
+        results:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              columns:
+                type: array
+                items:
+                  type: string
+              rows:
+                type: array
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DatabaseValue'
+              rowCount:
+                type: integer
+              executionTime:
+                type: integer
+                format: int64
+              success:
+                type: boolean
+              error:
+                type: string
+        totalCount:
+          type: integer
+    DatabaseValue:
+      type: object
+      properties:
+        stringValue:
+          type: string
+        intValue:
+          type: integer
+          format: int64
+        floatValue:
+          type: number
+        boolValue:
+          type: boolean
+        isNull:
+          type: boolean
+        rawValue:
+          type: string
+    BulkDatabaseStatsRequest:
+      type: object
+      properties:
+        schemas:
+          type: array
+          items:
+            type: string
+        tables:
+          type: array
+          items:
+            type: string
+        includeIndexes:
+          type: boolean
+        includeSize:
+          type: boolean
+      additionalProperties: false
+    BulkDatabaseStatsResponse:
+      type: object
+      properties:
+        databaseStats:
+          $ref: '#/components/schemas/DatabaseStats'
+        schemaStats:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/SchemaStats'
+        tableStats:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/TableStats'
+        totalCount:
+          type: integer
+    DatabaseStats:
+      description: Overall database statistics
+      type: object
+      properties:
+        totalTables:
+          type: integer
+        totalUsers:
+          type: integer
+        totalSessions:
+          type: integer
+        databaseSize:
+          type: string
+        schemaVersion:
+          type: string
+        uptime:
+          type: string
+        version:
+          type: string
+        isHealthy:
+          type: boolean
+    SchemaStats:
+      description: Statistics for a specific database schema
+      type: object
+      properties:
+        name:
+          type: string
+        tableCount:
+          type: integer
+        totalRows:
+          type: integer
+        totalSize:
+          type: string
+    TableStats:
+      description: Statistics for a specific table
+      type: object
+      properties:
+        name:
+          type: string
+        rowCount:
+          type: integer
+        size:
+          type: string
+        indexes:
+          type: array
+          items:
+            type: string
+    AuthConfig:
+      type: object
+      description: Authentication configuration
+      additionalProperties: true
+    LoggingConfig:
+      type: object
+      description: Logging configuration
+      additionalProperties: true
+    DNSValidatorConfigJSON:
+      type: object
+      description: DNS validator configuration
+      additionalProperties: true
+    HTTPValidatorConfigJSON:
+      type: object
+      description: HTTP validator configuration
+      additionalProperties: true
+    WorkerConfig:
+      type: object
+      description: Worker configuration
+      additionalProperties: true
+    WorkerConfigUpdate:
+      type: object
+      description: Worker configuration update payload
+      properties:
+        poolSize:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          description: Number of worker threads in the pool
+        maxJobs:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          description: Maximum number of jobs in queue
+        jobTimeout:
+          type: integer
+          minimum: 1
+          maximum: 3600
+          description: Job execution timeout in seconds
+        idleTimeout:
+          type: integer
+          minimum: 1
+          maximum: 300
+          description: Worker idle timeout in seconds
+        retryAttempts:
+          type: integer
+          minimum: 0
+          maximum: 10
+          description: Number of retry attempts for failed jobs
+        retryDelay:
+          type: integer
+          minimum: 100
+          maximum: 60000
+          description: Delay between retries in milliseconds
+        enableMetrics:
+          type: boolean
+          description: Enable worker performance metrics collection
+        metricsInterval:
+          type: integer
+          minimum: 1
+          maximum: 3600
+          description: Metrics collection interval in seconds
+        priority:
+          type: string
+          enum:
+            - low
+            - normal
+            - high
+            - critical
+          description: Worker pool priority level
+        enableHealthChecks:
+          type: boolean
+          description: Enable worker health monitoring
+        healthCheckInterval:
+          type: integer
+          minimum: 5
+          maximum: 300
+          description: Health check interval in seconds
+    RateLimiterConfig:
+      type: object
+      description: Rate limiter configuration
+      additionalProperties: true
+    ProxyManagerConfigJSON:
+      type: object
+      description: Proxy manager configuration
+      additionalProperties: true
+    ServerConfigResponse:
+      type: object
+      description: Consolidated server configuration response
+      additionalProperties: true
+    ServerConfigUpdateRequest:
+      type: object
+      description: Server configuration update request
+      additionalProperties: true

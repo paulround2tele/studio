@@ -20,10 +20,10 @@ delete:
         application/json:
           schema:
             allOf:
-              - $ref: '#/components/schemas/SuccessEnvelope'
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
-                  data: { $ref: '#/components/schemas/ProxyPoolMembershipResponse' }
-    '400': { $ref: '#/components/responses/BadRequest' }
-    '404': { $ref: '#/components/responses/NotFound' }
-    '500': { $ref: '#/components/responses/InternalServerError' }
+                  data: { $ref: '../../components/schemas/all.yaml#/ProxyPoolMembershipResponse' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

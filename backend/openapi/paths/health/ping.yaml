@@ -7,8 +7,8 @@ get:
       description: Pong
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/SuccessEnvelope' }
-    '401': { $ref: '#/components/responses/Unauthorized' }
-    '403': { $ref: '#/components/responses/Forbidden' }
-    '429': { $ref: '#/components/responses/RateLimitExceeded' }
-    '500': { $ref: '#/components/responses/InternalServerError' }
+          schema: { $ref: '../../components/schemas/all.yaml#/SuccessEnvelope' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

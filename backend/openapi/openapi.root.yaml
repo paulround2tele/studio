@@ -31,8 +31,6 @@ paths:
   $ref: './paths/index.yaml'
 
 components:
-  schemas:
-  $ref: './components/schemas/all.yaml'
   responses:
     $ref: './components/responses.yaml'
   parameters:
@@ -41,6 +39,8 @@ components:
     $ref: './components/securitySchemes.yaml'
   examples:
     $ref: './components/examples/sse.yaml'
+  schemas:
+    $ref: './components/schemas/all.yaml'
 
 security:
   - cookieAuth: []

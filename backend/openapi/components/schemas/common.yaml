@@ -1,223 +1,223 @@
 SuccessEnvelope:
-	type: object
-	properties:
-		success:
-			type: boolean
-			enum: [true]
-		metadata:
-			$ref: '#/components/schemas/Metadata'
-		requestId:
-			type: string
-	required: [success, requestId]
+  type: object
+  properties:
+    success:
+      type: boolean
+      enum: [true]
+    metadata:
+      $ref: '#/components/schemas/Metadata'
+    requestId:
+      type: string
+  required: [success, requestId]
 ErrorEnvelope:
-	type: object
-	properties:
-		success:
-			type: boolean
-			enum: [false]
-		error:
-			$ref: '#/components/schemas/ApiError'
-		requestId:
-			type: string
-	required: [success, error, requestId]
+  type: object
+  properties:
+    success:
+      type: boolean
+      enum: [false]
+    error:
+      $ref: '#/components/schemas/ApiError'
+    requestId:
+      type: string
+  required: [success, error, requestId]
 ErrorCode:
-	type: string
-	description: Stable error code space
-	enum:
-		- BAD_REQUEST
-		- UNAUTHORIZED
-		- FORBIDDEN
-		- NOT_FOUND
-		- CONFLICT
-		- VALIDATION_ERROR
-		- REQUIRED_FIELD
-		- RATE_LIMIT_EXCEEDED
-		- REQUEST_TIMEOUT
-		- NOT_IMPLEMENTED
-		- INTERNAL_SERVER_ERROR
-		- DATABASE_ERROR
-		- SERVICE_UNAVAILABLE
-		- GATEWAY_TIMEOUT
-		- CAMPAIGN_IN_PROGRESS
-		- QUOTA_EXCEEDED
-		- INVALID_STATE
+  type: string
+  description: Stable error code space
+  enum:
+    - BAD_REQUEST
+    - UNAUTHORIZED
+    - FORBIDDEN
+    - NOT_FOUND
+    - CONFLICT
+    - VALIDATION_ERROR
+    - REQUIRED_FIELD
+    - RATE_LIMIT_EXCEEDED
+    - REQUEST_TIMEOUT
+    - NOT_IMPLEMENTED
+    - INTERNAL_SERVER_ERROR
+    - DATABASE_ERROR
+    - SERVICE_UNAVAILABLE
+    - GATEWAY_TIMEOUT
+    - CAMPAIGN_IN_PROGRESS
+    - QUOTA_EXCEEDED
+    - INVALID_STATE
 ApiError:
-	type: object
-	properties:
-		code:
-			$ref: '#/components/schemas/ErrorCode'
-		message:
-			type: string
-		details:
-			type: array
-			items:
-				type: object
-				properties:
-					field:
-						type: string
-						description: JSON pointer or field path
-					code:
-						$ref: '#/components/schemas/ErrorCode'
-					message:
-						type: string
-					context:
-						type: object
-						additionalProperties: true
-				required: [code, message]
-		timestamp:
-			type: string
-			format: date-time
-		path:
-			type: string
-	required: [code, message, timestamp]
+  type: object
+  properties:
+    code:
+      $ref: '#/components/schemas/ErrorCode'
+    message:
+      type: string
+    details:
+      type: array
+      items:
+        type: object
+        properties:
+          field:
+            type: string
+            description: JSON pointer or field path
+          code:
+            $ref: '#/components/schemas/ErrorCode'
+          message:
+            type: string
+          context:
+            type: object
+            additionalProperties: true
+        required: [code, message]
+    timestamp:
+      type: string
+      format: date-time
+    path:
+      type: string
+  required: [code, message, timestamp]
 Metadata:
-	type: object
-	properties:
-		page:
-			$ref: '#/components/schemas/Pagination'
-		rateLimit:
-			$ref: '#/components/schemas/RateLimitInfo'
-		processing:
-			$ref: '#/components/schemas/ProcessingInfo'
-		bulk:
-			$ref: '#/components/schemas/BulkOperationInfo'
-		extra:
-			type: object
-			additionalProperties: {}
+  type: object
+  properties:
+    page:
+      $ref: '#/components/schemas/Pagination'
+    rateLimit:
+      $ref: '#/components/schemas/RateLimitInfo'
+    processing:
+      $ref: '#/components/schemas/ProcessingInfo'
+    bulk:
+      $ref: '#/components/schemas/BulkOperationInfo'
+    extra:
+      type: object
+      additionalProperties: {}
 Pagination:
-	type: object
-	properties:
-		current: { type: integer }
-		total: { type: integer }
-		pageSize: { type: integer }
-		count: { type: integer }
+  type: object
+  properties:
+    current: { type: integer }
+    total: { type: integer }
+    pageSize: { type: integer }
+    count: { type: integer }
 RateLimitInfo:
-	type: object
-	properties:
-		limit: { type: integer }
-		remaining: { type: integer }
-		reset: { type: string, format: date-time }
+  type: object
+  properties:
+    limit: { type: integer }
+    remaining: { type: integer }
+    reset: { type: string, format: date-time }
 ProcessingInfo:
-	type: object
-	properties:
-		duration: { type: string }
-		version: { type: string }
+  type: object
+  properties:
+    duration: { type: string }
+    version: { type: string }
 BulkOperationInfo:
-	type: object
-	properties:
-		processedItems: { type: integer }
-		skippedItems: { type: integer }
-		failedItems:
-			type: array
-			items: { type: string }
-		processingTimeMs: { type: integer, format: int64 }
-		totalRowsReturned: { type: integer, format: int64 }
-		type: { type: string }
+  type: object
+  properties:
+    processedItems: { type: integer }
+    skippedItems: { type: integer }
+    failedItems:
+      type: array
+      items: { type: string }
+    processingTimeMs: { type: integer, format: int64 }
+    totalRowsReturned: { type: integer, format: int64 }
+    type: { type: string }
 PersonaType:
-	type: string
-	enum: [dns, http]
+  type: string
+  enum: [dns, http]
 ProxyProtocol:
-	type: string
-	enum: [http, https, socks5, socks4]
+  type: string
+  enum: [http, https, socks5, socks4]
 KeywordRuleType:
-	type: string
-	enum: [string, regex]
+  type: string
+  enum: [string, regex]
 
 # Database bulk
 BulkDatabaseQueryRequest:
-	type: object
-	properties:
-		queries:
-			type: array
-			items:
-				type: object
-				properties:
-					id: { type: string }
-					sql: { type: string }
-				required: [id, sql]
-		limit: { type: integer }
-		timeout: { type: integer }
-	required: [queries]
+  type: object
+  properties:
+    queries:
+      type: array
+      items:
+        type: object
+        properties:
+          id: { type: string }
+          sql: { type: string }
+        required: [id, sql]
+    limit: { type: integer }
+    timeout: { type: integer }
+  required: [queries]
 BulkDatabaseQueryResponse:
-	type: object
-	properties:
-		results:
-			type: object
-			additionalProperties:
-				type: object
-				properties:
-					columns: { type: array, items: { type: string } }
-					rows:
-						type: array
-						items:
-							type: array
-							items:
-								$ref: '#/components/schemas/DatabaseValue'
-					rowCount: { type: integer }
-					executionTime: { type: integer, format: int64 }
-					success: { type: boolean }
-					error: { type: string }
-		totalCount: { type: integer }
+  type: object
+  properties:
+    results:
+      type: object
+      additionalProperties:
+        type: object
+        properties:
+          columns: { type: array, items: { type: string } }
+          rows:
+            type: array
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/DatabaseValue'
+          rowCount: { type: integer }
+          executionTime: { type: integer, format: int64 }
+          success: { type: boolean }
+          error: { type: string }
+    totalCount: { type: integer }
 DatabaseValue:
-	type: object
-	properties:
-		stringValue: { type: string }
-		intValue: { type: integer, format: int64 }
-		floatValue: { type: number }
-		boolValue: { type: boolean }
-		isNull: { type: boolean }
-		rawValue: { type: string }
+  type: object
+  properties:
+    stringValue: { type: string }
+    intValue: { type: integer, format: int64 }
+    floatValue: { type: number }
+    boolValue: { type: boolean }
+    isNull: { type: boolean }
+    rawValue: { type: string }
 # Database stats
 BulkDatabaseStatsRequest:
-	type: object
-	properties:
-		schemas:
-			type: array
-			items: { type: string }
-		tables:
-			type: array
-			items: { type: string }
-		includeIndexes: { type: boolean }
-		includeSize: { type: boolean }
-	additionalProperties: false
+  type: object
+  properties:
+    schemas:
+      type: array
+      items: { type: string }
+    tables:
+      type: array
+      items: { type: string }
+    includeIndexes: { type: boolean }
+    includeSize: { type: boolean }
+  additionalProperties: false
 BulkDatabaseStatsResponse:
-	type: object
-	properties:
-		databaseStats: { $ref: '#/components/schemas/DatabaseStats' }
-		schemaStats:
-			type: object
-			additionalProperties:
-				$ref: '#/components/schemas/SchemaStats'
-		tableStats:
-			type: object
-			additionalProperties:
-				$ref: '#/components/schemas/TableStats'
-		totalCount: { type: integer }
+  type: object
+  properties:
+    databaseStats: { $ref: '#/components/schemas/DatabaseStats' }
+    schemaStats:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/SchemaStats'
+    tableStats:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/TableStats'
+    totalCount: { type: integer }
 DatabaseStats:
-	description: Overall database statistics
-	type: object
-	properties:
-		totalTables: { type: integer }
-		totalUsers: { type: integer }
-		totalSessions: { type: integer }
-		databaseSize: { type: string }
-		schemaVersion: { type: string }
-		uptime: { type: string }
-		version: { type: string }
-		isHealthy: { type: boolean }
+  description: Overall database statistics
+  type: object
+  properties:
+    totalTables: { type: integer }
+    totalUsers: { type: integer }
+    totalSessions: { type: integer }
+    databaseSize: { type: string }
+    schemaVersion: { type: string }
+    uptime: { type: string }
+    version: { type: string }
+    isHealthy: { type: boolean }
 SchemaStats:
-	description: Statistics for a specific database schema
-	type: object
-	properties:
-		name: { type: string }
-		tableCount: { type: integer }
-		totalRows: { type: integer }
-		totalSize: { type: string }
+  description: Statistics for a specific database schema
+  type: object
+  properties:
+    name: { type: string }
+    tableCount: { type: integer }
+    totalRows: { type: integer }
+    totalSize: { type: string }
 TableStats:
-	description: Statistics for a specific table
-	type: object
-	properties:
-		name: { type: string }
-		rowCount: { type: integer }
-		size: { type: string }
-		indexes: { type: array, items: { type: string } }
+  description: Statistics for a specific table
+  type: object
+  properties:
+    name: { type: string }
+    rowCount: { type: integer }
+    size: { type: string }
+    indexes: { type: array, items: { type: string } }

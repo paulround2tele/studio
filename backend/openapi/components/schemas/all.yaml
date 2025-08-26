@@ -7,7 +7,7 @@ SuccessEnvelope:
       type: boolean
       enum: [true]
     metadata:
-      $ref: '#/components/schemas/Metadata'
+      $ref: '#/Metadata'
     requestId:
       type: string
   required: [success, requestId]
@@ -18,7 +18,7 @@ ErrorEnvelope:
       type: boolean
       enum: [false]
     error:
-      $ref: '#/components/schemas/ApiError'
+      $ref: '#/ApiError'
     requestId:
       type: string
   required: [success, error, requestId]
@@ -47,7 +47,7 @@ ApiError:
   type: object
   properties:
     code:
-      $ref: '#/components/schemas/ErrorCode'
+      $ref: '#/ErrorCode'
     message:
       type: string
     details:
@@ -59,7 +59,7 @@ ApiError:
             type: string
             description: JSON pointer or field path
           code:
-            $ref: '#/components/schemas/ErrorCode'
+            $ref: '#/ErrorCode'
           message:
             type: string
           context:
@@ -76,13 +76,13 @@ Metadata:
   type: object
   properties:
     page:
-      $ref: '#/components/schemas/Pagination'
+      $ref: '#/Pagination'
     rateLimit:
-      $ref: '#/components/schemas/RateLimitInfo'
+      $ref: '#/RateLimitInfo'
     processing:
-      $ref: '#/components/schemas/ProcessingInfo'
+      $ref: '#/ProcessingInfo'
     bulk:
-      $ref: '#/components/schemas/BulkOperationInfo'
+      $ref: '#/BulkOperationInfo'
     extra:
       type: object
       additionalProperties: {}
@@ -130,7 +130,7 @@ CreatePersonaRequest:
   type: object
   properties:
     name: { type: string }
-    personaType: { $ref: '#/components/schemas/PersonaType' }
+    personaType: { $ref: '#/PersonaType' }
     description: { type: string }
     configDetails:
       description: HTTP or DNS persona configuration object
@@ -152,7 +152,7 @@ PersonaResponse:
   properties:
     id: { type: string, format: uuid }
     name: { type: string }
-    personaType: { $ref: '#/components/schemas/PersonaType' }
+    personaType: { $ref: '#/PersonaType' }
     description: { type: string }
     configDetails: { type: object, additionalProperties: {} }
     isEnabled: { type: boolean }
@@ -186,7 +186,7 @@ CreateProxyRequestAPI:
     name: { type: string }
     description: { type: string }
     address: { type: string }
-    protocol: { $ref: '#/components/schemas/ProxyProtocol' }
+    protocol: { $ref: '#/ProxyProtocol' }
     username: { type: string }
     password: { type: string }
     countryCode: { type: string }
@@ -214,7 +214,7 @@ UpdateProxyRequestAPI:
     name: { type: string }
     description: { type: string }
     address: { type: string }
-    protocol: { $ref: '#/components/schemas/ProxyProtocol' }
+    protocol: { $ref: '#/ProxyProtocol' }
     username: { type: string }
     password: { type: string }
     countryCode: { type: string }
@@ -228,7 +228,7 @@ ProxyStatusResponse:
     lastChecked: { type: string, format: date-time }
     responseTime: { type: integer, format: int64 }
     isHealthy: { type: boolean }
-    proxyDetails: { $ref: '#/components/schemas/ProxyDetailsResponse' }
+    proxyDetails: { $ref: '#/ProxyDetailsResponse' }
 ProxyHealthCheckResponse:
   type: object
   properties:
@@ -246,7 +246,7 @@ BulkHealthCheckResponse:
     failedProxies: { type: integer }
     results:
       type: array
-      items: { $ref: '#/components/schemas/ProxyHealthCheckResponse' }
+      items: { $ref: '#/ProxyHealthCheckResponse' }
 BulkProxyOperationResponse:
   type: object
   properties:
@@ -275,7 +275,7 @@ BulkUpdateProxiesRequest:
       type: array
       items: { type: string, format: uuid }
       minItems: 1
-    updates: { $ref: '#/components/schemas/UpdateProxyRequestAPI' }
+    updates: { $ref: '#/UpdateProxyRequestAPI' }
   required: [proxyIds, updates]
 BulkDeleteProxiesRequest:
   type: object
@@ -293,7 +293,7 @@ BulkProxyTestResponse:
     errorCount: { type: integer }
     results:
       type: array
-      items: { $ref: '#/components/schemas/ProxyTestResponse' }
+      items: { $ref: '#/ProxyTestResponse' }
 
 # Proxy pools
 ProxyPool:
@@ -353,7 +353,7 @@ KeywordRuleRequest:
   type: object
   properties:
     pattern: { type: string }
-    ruleType: { $ref: '#/components/schemas/KeywordRuleType' }
+    ruleType: { $ref: '#/KeywordRuleType' }
     isCaseSensitive: { type: boolean }
     category: { type: string }
     contextChars: { type: integer }
@@ -366,7 +366,7 @@ CreateKeywordSetRequest:
     isEnabled: { type: boolean }
     rules:
       type: array
-      items: { $ref: '#/components/schemas/KeywordRuleRequest' }
+      items: { $ref: '#/KeywordRuleRequest' }
   required: [name]
 KeywordRuleDTO:
   type: object
@@ -391,7 +391,7 @@ KeywordSetResponse:
     updatedAt: { type: string, format: date-time }
     rules:
       type: array
-      items: { $ref: '#/components/schemas/KeywordRuleDTO' }
+      items: { $ref: '#/KeywordRuleDTO' }
     ruleCount: { type: integer }
   required: [id, name, isEnabled, createdAt, updatedAt, ruleCount]
 UpdateKeywordSetRequest:
@@ -402,7 +402,7 @@ UpdateKeywordSetRequest:
     isEnabled: { type: boolean }
     rules:
       type: array
-      items: { $ref: '#/components/schemas/KeywordRuleRequest' }
+      items: { $ref: '#/KeywordRuleRequest' }
 KeywordSetWithRulesResponse:
   type: object
   properties:
@@ -414,7 +414,7 @@ KeywordSetWithRulesResponse:
     updatedAt: { type: string, format: date-time }
     rules:
       type: array
-      items: { $ref: '#/components/schemas/KeywordRuleDTO' }
+      items: { $ref: '#/KeywordRuleDTO' }
     ruleCount: { type: integer }
   required: [id, name, isEnabled, createdAt, updatedAt, rules, ruleCount]
 
@@ -490,7 +490,7 @@ BulkDatabaseQueryResponse:
             items:
               type: array
               items:
-                $ref: '#/components/schemas/DatabaseValue'
+                $ref: '#/DatabaseValue'
           rowCount: { type: integer }
           executionTime: { type: integer, format: int64 }
           success: { type: boolean }
@@ -521,15 +521,15 @@ BulkDatabaseStatsRequest:
 BulkDatabaseStatsResponse:
   type: object
   properties:
-    databaseStats: { $ref: '#/components/schemas/DatabaseStats' }
+    databaseStats: { $ref: '#/DatabaseStats' }
     schemaStats:
       type: object
       additionalProperties:
-        $ref: '#/components/schemas/SchemaStats'
+        $ref: '#/SchemaStats'
     tableStats:
       type: object
       additionalProperties:
-        $ref: '#/components/schemas/TableStats'
+        $ref: '#/TableStats'
     totalCount: { type: integer }
 DatabaseStats:
   description: Overall database statistics
@@ -651,3 +651,10 @@ ServerConfigUpdateRequest:
   type: object
   description: Server configuration update request
   additionalProperties: true
+
+# Feature flags
+FeatureFlags:
+  type: object
+  description: Feature flags map
+  additionalProperties:
+    type: boolean

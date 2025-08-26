@@ -1,0 +1,10 @@
+schemas:
+  $ref: './schemas/all.yaml'
+responses:
+  $ref: './responses.yaml'
+parameters:
+  $ref: './parameters.yaml'
+securitySchemes:
+  $ref: './securitySchemes.yaml'
+examples:
+  $ref: './examples/sse.yaml'

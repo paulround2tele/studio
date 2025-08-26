@@ -11,7 +11,7 @@ get:
         application/json:
           schema:
             allOf:
-              - $ref: '#/components/schemas/SuccessEnvelope'
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
                   data:
@@ -26,7 +26,7 @@ get:
                       uptime:
                         type: string
                         description: Server uptime
-    '401': { $ref: '#/components/responses/Unauthorized' }
-    '403': { $ref: '#/components/responses/Forbidden' }
-    '429': { $ref: '#/components/responses/RateLimitExceeded' }
-    '500': { $ref: '#/components/responses/InternalServerError' }
+  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+  '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

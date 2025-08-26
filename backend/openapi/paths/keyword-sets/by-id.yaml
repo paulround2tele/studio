@@ -18,16 +18,15 @@ get:
         application/json:
           schema:
             allOf:
-              - $ref: '#/components/schemas/SuccessEnvelope'
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
-                  data:
-                    $ref: '#/components/schemas/KeywordSetResponse'
-    '401': { $ref: '#/components/responses/Unauthorized' }
-    '403': { $ref: '#/components/responses/Forbidden' }
-    '404': { $ref: '#/components/responses/NotFound' }
-    '429': { $ref: '#/components/responses/RateLimitExceeded' }
-    '500': { $ref: '#/components/responses/InternalServerError' }
+                  data: { $ref: '../../components/schemas/all.yaml#/KeywordSetResponse' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
 put:
   tags: [keyword-sets]
   security:
@@ -45,7 +44,7 @@ put:
     required: true
     content:
       application/json:
-        schema: { $ref: '#/components/schemas/UpdateKeywordSetRequest' }
+  schema: { $ref: '../../components/schemas/all.yaml#/UpdateKeywordSetRequest' }
   responses:
     '200':
       description: OK
@@ -53,18 +52,17 @@ put:
         application/json:
           schema:
             allOf:
-              - $ref: '#/components/schemas/SuccessEnvelope'
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
-                  data:
-                    $ref: '#/components/schemas/KeywordSetResponse'
-    '400': { $ref: '#/components/responses/BadRequest' }
-    '401': { $ref: '#/components/responses/Unauthorized' }
-    '403': { $ref: '#/components/responses/Forbidden' }
-    '404': { $ref: '#/components/responses/NotFound' }
-    '422': { $ref: '#/components/responses/ValidationError' }
-    '429': { $ref: '#/components/responses/RateLimitExceeded' }
-    '500': { $ref: '#/components/responses/InternalServerError' }
+                  data: { $ref: '../../components/schemas/all.yaml#/KeywordSetResponse' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '422': { $ref: '../../components/responses.yaml#/ValidationError' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
 delete:
   tags: [keyword-sets]
   security:
@@ -81,8 +79,8 @@ delete:
   responses:
     '204':
       description: No Content
-    '401': { $ref: '#/components/responses/Unauthorized' }
-    '403': { $ref: '#/components/responses/Forbidden' }
-    '404': { $ref: '#/components/responses/NotFound' }
-    '429': { $ref: '#/components/responses/RateLimitExceeded' }
-    '500': { $ref: '#/components/responses/InternalServerError' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

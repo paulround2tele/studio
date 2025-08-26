@@ -1,0 +1,6 @@
+HealthResponse:
+  type: object
+  properties:
+    status:
+      type: string
+      enum: [ok]

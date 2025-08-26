@@ -11,13 +11,13 @@ get:
         application/json:
           schema:
             allOf:
-              - $ref: '#/components/schemas/SuccessEnvelope'
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
                   data:
                     type: array
-                    items: { $ref: '#/components/schemas/ProxyStatusResponse' }
-    '400': { $ref: '#/components/responses/BadRequest' }
-    '401': { $ref: '#/components/responses/Unauthorized' }
-    '403': { $ref: '#/components/responses/Forbidden' }
-    '500': { $ref: '#/components/responses/InternalServerError' }
+                    items: { $ref: '../../components/schemas/all.yaml#/ProxyStatusResponse' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

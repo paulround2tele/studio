@@ -13,7 +13,7 @@ put:
     required: true
     content:
       application/json:
-        schema: { $ref: '#/components/schemas/UpdateProxyRequestAPI' }
+    schema: { $ref: '../../components/schemas/all.yaml#/UpdateProxyRequestAPI' }
   responses:
     '200':
       description: Updated
@@ -21,15 +21,15 @@ put:
         application/json:
           schema:
             allOf:
-              - $ref: '#/components/schemas/SuccessEnvelope'
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
-                  data: { $ref: '#/components/schemas/ProxyDetailsResponse' }
-    '400': { $ref: '#/components/responses/BadRequest' }
-    '401': { $ref: '#/components/responses/Unauthorized' }
-    '403': { $ref: '#/components/responses/Forbidden' }
-    '404': { $ref: '#/components/responses/NotFound' }
-    '500': { $ref: '#/components/responses/InternalServerError' }
+                  data: { $ref: '../../components/schemas/all.yaml#/ProxyDetailsResponse' }
+  '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+  '404': { $ref: '../../components/responses.yaml#/NotFound' }
+  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
 delete:
   tags: [proxies]
   security:
@@ -46,8 +46,8 @@ delete:
       description: Deleted
       content:
         application/json:
-          schema: { $ref: '#/components/schemas/SuccessEnvelope' }
-    '401': { $ref: '#/components/responses/Unauthorized' }
-    '403': { $ref: '#/components/responses/Forbidden' }
-    '404': { $ref: '#/components/responses/NotFound' }
-    '500': { $ref: '#/components/responses/InternalServerError' }
+          schema: { $ref: '../../components/schemas/all.yaml#/SuccessEnvelope' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

@@ -1,50 +1,50 @@
 get:
-	tags: [server-settings]
-	security:
-		- cookieAuth: []
-	summary: Get server configuration
-	operationId: config_get_server
-	responses:
-		'200':
-			description: Server config
-			content:
-				application/json:
-					schema:
-						allOf:
-							- $ref: '#/components/schemas/SuccessEnvelope'
-							- type: object
-								properties:
-									data: { $ref: '#/components/schemas/ServerConfigResponse' }
-		'401': { $ref: '#/components/responses/Unauthorized' }
-		'403': { $ref: '#/components/responses/Forbidden' }
-		'429': { $ref: '#/components/responses/RateLimitExceeded' }
-		'500': { $ref: '#/components/responses/InternalServerError' }
+  tags: [server-settings]
+  security:
+    - cookieAuth: []
+  summary: Get server configuration
+  operationId: config_get_server
+  responses:
+    '200':
+      description: Server config
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data: { $ref: '../../components/schemas/all.yaml#/ServerConfigResponse' }
+  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+  '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
 put:
-	tags: [server-settings]
-	security:
-		- cookieAuth: []
-	summary: Update server configuration
-	operationId: config_update_server
-	requestBody:
-		required: true
-		content:
-			application/json:
-				schema: { $ref: '#/components/schemas/ServerConfigUpdateRequest' }
-	responses:
-		'200':
-			description: Updated
-			content:
-				application/json:
-					schema:
-						allOf:
-							- $ref: '#/components/schemas/SuccessEnvelope'
-							- type: object
-								properties:
-									data: { $ref: '#/components/schemas/ServerConfigResponse' }
-		'400': { $ref: '#/components/responses/BadRequest' }
-		'401': { $ref: '#/components/responses/Unauthorized' }
-		'403': { $ref: '#/components/responses/Forbidden' }
-		'409': { $ref: '#/components/responses/Conflict' }
-		'422': { $ref: '#/components/responses/ValidationError' }
-		'429': { $ref: '#/components/responses/RateLimitExceeded' }
-		'500': { $ref: '#/components/responses/InternalServerError' }
+  tags: [server-settings]
+  security:
+    - cookieAuth: []
+  summary: Update server configuration
+  operationId: config_update_server
+  requestBody:
+    required: true
+    content:
+      application/json:
+  schema: { $ref: '../../components/schemas/all.yaml#/ServerConfigUpdateRequest' }
+  responses:
+    '200':
+      description: Updated
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data: { $ref: '../../components/schemas/all.yaml#/ServerConfigResponse' }
+  '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+  '409': { $ref: '../../components/responses.yaml#/Conflict' }
+  '422': { $ref: '../../components/responses.yaml#/ValidationError' }
+  '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

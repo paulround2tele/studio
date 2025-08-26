@@ -1,19 +1,12 @@
 get:
-  tags: [keyword-sets]
+  tags: [feature-flags]
   security:
     - cookieAuth: []
-  summary: List rules for a keyword set
-  operationId: keyword_sets_rules_list
-  parameters:
-    - name: setId
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
+  summary: Get feature flags
+  operationId: feature_flags_get
   responses:
     '200':
-      description: OK
+      description: Feature flags
       content:
         application/json:
           schema:
@@ -22,35 +15,26 @@ get:
               - type: object
                 properties:
                   data:
-                    type: array
-                    items:
-                      $ref: '../../components/schemas/all.yaml#/KeywordRuleDTO'
+                    $ref: '../../components/schemas/all.yaml#/FeatureFlags'
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
-    '404': { $ref: '../../components/responses.yaml#/NotFound' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
-post:
-  tags: [keyword-sets]
+put:
+  tags: [feature-flags]
   security:
     - cookieAuth: []
-  summary: Add a rule to a keyword set
-  operationId: keyword_sets_rules_add
-  parameters:
-    - name: setId
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
+  summary: Update feature flags
+  operationId: feature_flags_update
   requestBody:
     required: true
     content:
       application/json:
-  schema: { $ref: '../../components/schemas/all.yaml#/KeywordRuleRequest' }
+        schema:
+          $ref: '../../components/schemas/all.yaml#/FeatureFlags'
   responses:
-    '201':
-      description: Created
+    '200':
+      description: Updated
       content:
         application/json:
           schema:
@@ -58,11 +42,12 @@ post:
               - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/KeywordRuleDTO' }
+                  data:
+                    $ref: '../../components/schemas/all.yaml#/FeatureFlags'
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
-    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '409': { $ref: '../../components/responses.yaml#/Conflict' }
     '422': { $ref: '../../components/responses.yaml#/ValidationError' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

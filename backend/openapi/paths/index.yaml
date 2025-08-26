@@ -68,6 +68,10 @@
 
 "/config/auth":
   $ref: "./config/auth.yaml"
+"/config/dns":
+  $ref: "./config/dns.yaml"
+"/config/http":
+  $ref: "./config/http.yaml"
 "/config/logging":
   $ref: "./config/logging.yaml"
 "/config/worker":
@@ -78,3 +82,5 @@
   $ref: "./config/rate-limiter.yaml"
 "/config/server":
   $ref: "./config/server.yaml"
+"/config/features":
+  $ref: "./config/features.yaml"
