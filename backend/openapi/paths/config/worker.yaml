@@ -1,0 +1,50 @@
+get:
+  tags: [server-settings]
+  security:
+    - cookieAuth: []
+  summary: Get worker configuration
+  operationId: config_get_worker
+  responses:
+    '200':
+      description: Worker config
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data: { $ref: '#/components/schemas/WorkerConfig' }
+    '401': { $ref: '#/components/responses/Unauthorized' }
+    '403': { $ref: '#/components/responses/Forbidden' }
+    '429': { $ref: '#/components/responses/RateLimitExceeded' }
+    '500': { $ref: '#/components/responses/InternalServerError' }
+put:
+  tags: [server-settings]
+  security:
+    - cookieAuth: []
+  summary: Update worker configuration
+  operationId: config_update_worker
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema: { $ref: '#/components/schemas/WorkerConfig' }
+  responses:
+    '200':
+      description: Updated
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data: { $ref: '#/components/schemas/WorkerConfig' }
+    '400': { $ref: '#/components/responses/BadRequest' }
+    '401': { $ref: '#/components/responses/Unauthorized' }
+    '403': { $ref: '#/components/responses/Forbidden' }
+    '409': { $ref: '#/components/responses/Conflict' }
+    '422': { $ref: '#/components/responses/ValidationError' }
+    '429': { $ref: '#/components/responses/RateLimitExceeded' }
+    '500': { $ref: '#/components/responses/InternalServerError' }

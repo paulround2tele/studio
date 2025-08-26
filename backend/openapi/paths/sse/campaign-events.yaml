@@ -1,0 +1,27 @@
+get:
+  tags: [sse]
+  security:
+    - cookieAuth: []
+  summary: Stream campaign events (specific campaign)
+  operationId: sse_events_campaign
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    '200':
+      description: SSE stream
+      content:
+        text/event-stream:
+          schema: { type: string }
+          examples:
+            message:
+              summary: Example event
+              value: |
+                event: campaign_progress
+                data: {"campaignId":"00000000-0000-0000-0000-000000000000","progress":75.0,"status":"in_progress"}
+    '401': { $ref: '#/components/responses/Unauthorized' }
+    '403': { $ref: '#/components/responses/Forbidden' }
+    '429': { $ref: '#/components/responses/RateLimitExceeded' }
+    '500': { $ref: '#/components/responses/InternalServerError' }

@@ -1,0 +1,52 @@
+CreatePersonaRequest:
+  type: object
+  properties:
+    name: { type: string }
+    personaType: { $ref: '#/components/schemas/PersonaType' }
+    description: { type: string }
+    configDetails:
+      description: HTTP or DNS persona configuration object
+      type: object
+      additionalProperties: {}
+    isEnabled: { type: boolean }
+  required: [name, personaType, configDetails]
+UpdatePersonaRequest:
+  type: object
+  properties:
+    name: { type: string }
+    description: { type: string }
+    configDetails:
+      type: object
+      additionalProperties: {}
+    isEnabled: { type: boolean }
+PersonaResponse:
+  type: object
+  properties:
+    id: { type: string, format: uuid }
+    name: { type: string }
+    personaType: { $ref: '#/components/schemas/PersonaType' }
+    description: { type: string }
+    configDetails: { type: object, additionalProperties: {} }
+    isEnabled: { type: boolean }
+    createdAt: { type: string, format: date-time }
+    updatedAt: { type: string, format: date-time }
+  required: [id, name, personaType, isEnabled, createdAt, updatedAt]
+PersonaTestResponse:
+  type: object
+  properties:
+    personaId: { type: string }
+    personaType: { type: string }
+    personaName: { type: string }
+    success: { type: boolean }
+    testPassed: { type: boolean }
+    message: { type: string }
+    testResults: { type: object }
+    results: { type: object }
+    timestamp: { type: string }
+PersonaDeleteResponse:
+  type: object
+  properties:
+    personaId: { type: string, format: uuid }
+    deleted: { type: boolean }
+    message: { type: string }
+  required: [personaId, deleted]

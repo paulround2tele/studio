@@ -1,0 +1,4 @@
+DNSValidatorConfigJSON:
+  type: object
+  description: DNS validator configuration
+  additionalProperties: true

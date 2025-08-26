@@ -1,0 +1,60 @@
+	/health:
+		get:
+			tags: [health]
+			summary: Health check
+			operationId: health_check
+			responses:
+				'200':
+					description: OK
+					content:
+						application/json:
+							schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+				'401': { $ref: '#/components/responses/Unauthorized' }
+				'403': { $ref: '#/components/responses/Forbidden' }
+				'429': { $ref: '#/components/responses/RateLimitExceeded' }
+				'500': { $ref: '#/components/responses/InternalServerError' }
+	/ping:
+		get:
+			tags: [health]
+			summary: Ping server
+			operationId: ping
+			responses:
+				'200':
+					description: Pong
+					content:
+						application/json:
+							schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+				'401': { $ref: '#/components/responses/Unauthorized' }
+				'403': { $ref: '#/components/responses/Forbidden' }
+				'429': { $ref: '#/components/responses/RateLimitExceeded' }
+				'500': { $ref: '#/components/responses/InternalServerError' }
+	/health/ready:
+		get:
+			tags: [health]
+			summary: Readiness check
+			operationId: health_ready
+			responses:
+				'200':
+					description: Ready
+					content:
+						application/json:
+							schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+				'401': { $ref: '#/components/responses/Unauthorized' }
+				'403': { $ref: '#/components/responses/Forbidden' }
+				'429': { $ref: '#/components/responses/RateLimitExceeded' }
+				'500': { $ref: '#/components/responses/InternalServerError' }
+	/health/live:
+		get:
+			tags: [health]
+			summary: Liveness check
+			operationId: health_live
+			responses:
+				'200':
+					description: Alive
+					content:
+						application/json:
+							schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+				'401': { $ref: '#/components/responses/Unauthorized' }
+				'403': { $ref: '#/components/responses/Forbidden' }
+				'429': { $ref: '#/components/responses/RateLimitExceeded' }
+				'500': { $ref: '#/components/responses/InternalServerError' }

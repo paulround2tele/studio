@@ -1,0 +1,10 @@
+cookieAuth:
+	type: apiKey
+	in: cookie
+	name: domainflow_session
+	description: |
+		Session cookie. Flags: HttpOnly=true, Secure=true (in production), SameSite=Lax. Domain set per environment.
+bearerAuth:
+	type: http
+	scheme: bearer
+	bearerFormat: opaque

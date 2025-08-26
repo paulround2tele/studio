@@ -1,0 +1,23 @@
+get:
+  tags: [proxies]
+  security:
+    - cookieAuth: []
+  summary: Get proxy statuses
+  operationId: proxies_status
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProxyStatusResponse' }
+    '400': { $ref: '#/components/responses/BadRequest' }
+    '401': { $ref: '#/components/responses/Unauthorized' }
+    '403': { $ref: '#/components/responses/Forbidden' }
+    '500': { $ref: '#/components/responses/InternalServerError' }

@@ -1,0 +1,80 @@
+"/health":
+  $ref: "./health/health.yaml"
+"/ping":
+  $ref: "./health/ping.yaml"
+"/health/ready":
+  $ref: "./health/ready.yaml"
+"/health/live":
+  $ref: "./health/live.yaml"
+
+"/sse/events":
+  $ref: "./sse/events.yaml"
+"/sse/campaigns/{campaignId}/events":
+  $ref: "./sse/campaign-events.yaml"
+"/sse/events/stats":
+  $ref: "./sse/stats.yaml"
+
+"/personas":
+  $ref: "./personas/personas.yaml"
+"/personas/{id}":
+  $ref: "./personas/persona-by-id.yaml"
+"/personas/{id}/test":
+  $ref: "./personas/persona-test.yaml"
+
+"/proxies":
+  $ref: "./proxies/proxies.yaml"
+"/proxies/{proxyId}":
+  $ref: "./proxies/proxy-by-id.yaml"
+"/proxies/{proxyId}/test":
+  $ref: "./proxies/proxy-test.yaml"
+"/proxies/status":
+  $ref: "./proxies/status.yaml"
+"/proxies/{proxyId}/health-check":
+  $ref: "./proxies/health-check-single.yaml"
+"/proxies/health-check":
+  $ref: "./proxies/health-check-all.yaml"
+"/proxies/bulk/update":
+  $ref: "./proxies/bulk-update.yaml"
+"/proxies/bulk/delete":
+  $ref: "./proxies/bulk-delete.yaml"
+"/proxies/bulk/test":
+  $ref: "./proxies/bulk-test.yaml"
+
+"/proxy-pools":
+  $ref: "./proxy-pools/list-create.yaml"
+"/proxy-pools/{poolId}":
+  $ref: "./proxy-pools/by-id.yaml"
+"/proxy-pools/{poolId}/proxies":
+  $ref: "./proxy-pools/add-proxy.yaml"
+"/proxy-pools/{poolId}/proxies/{proxyId}":
+  $ref: "./proxy-pools/remove-proxy.yaml"
+
+"/keyword-sets":
+  $ref: "./keyword-sets/list-create.yaml"
+"/keyword-sets/{setId}":
+  $ref: "./keyword-sets/by-id.yaml"
+"/keyword-sets/{setId}/rules":
+  $ref: "./keyword-sets/rules.yaml"
+
+"/database/query":
+  $ref: "./database/query.yaml"
+"/database/stats":
+  $ref: "./database/stats.yaml"
+
+"/extract/keywords":
+  $ref: "./extraction/batch.yaml"
+"/extract/keywords/stream":
+  $ref: "./extraction/stream.yaml"
+
+"/config/auth":
+  $ref: "./config/auth.yaml"
+"/config/logging":
+  $ref: "./config/logging.yaml"
+"/config/worker":
+  $ref: "./config/worker.yaml"
+"/config/proxy-manager":
+  $ref: "./config/proxy-manager.yaml"
+"/config/rate-limit":
+  $ref: "./config/rate-limiter.yaml"
+"/config/server":
+  $ref: "./config/server.yaml"

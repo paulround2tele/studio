@@ -1,0 +1,4 @@
+LoggingConfig:
+  type: object
+  description: Logging configuration
+  additionalProperties: true

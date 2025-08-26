@@ -1,0 +1,68 @@
+KeywordRuleRequest:
+  type: object
+  properties:
+    pattern: { type: string }
+    ruleType: { $ref: '#/components/schemas/KeywordRuleType' }
+    isCaseSensitive: { type: boolean }
+    category: { type: string }
+    contextChars: { type: integer }
+  required: [pattern, ruleType]
+CreateKeywordSetRequest:
+  type: object
+  properties:
+    name: { type: string }
+    description: { type: string }
+    isEnabled: { type: boolean }
+    rules:
+      type: array
+      items: { $ref: '#/components/schemas/KeywordRuleRequest' }
+  required: [name]
+KeywordRuleDTO:
+  type: object
+  properties:
+    id: { type: string, format: uuid }
+    keywordSetId: { type: string, format: uuid }
+    pattern: { type: string }
+    ruleType: { type: string }
+    isCaseSensitive: { type: boolean }
+    category: { type: string }
+    contextChars: { type: integer }
+    createdAt: { type: string, format: date-time }
+    updatedAt: { type: string, format: date-time }
+KeywordSetResponse:
+  type: object
+  properties:
+    id: { type: string, format: uuid }
+    name: { type: string }
+    description: { type: string }
+    isEnabled: { type: boolean }
+    createdAt: { type: string, format: date-time }
+    updatedAt: { type: string, format: date-time }
+    rules:
+      type: array
+      items: { $ref: '#/components/schemas/KeywordRuleDTO' }
+    ruleCount: { type: integer }
+  required: [id, name, isEnabled, createdAt, updatedAt, ruleCount]
+UpdateKeywordSetRequest:
+  type: object
+  properties:
+    name: { type: string }
+    description: { type: string }
+    isEnabled: { type: boolean }
+    rules:
+      type: array
+      items: { $ref: '#/components/schemas/KeywordRuleRequest' }
+KeywordSetWithRulesResponse:
+  type: object
+  properties:
+    id: { type: string, format: uuid }
+    name: { type: string }
+    description: { type: string }
+    isEnabled: { type: boolean }
+    createdAt: { type: string, format: date-time }
+    updatedAt: { type: string, format: date-time }
+    rules:
+      type: array
+      items: { $ref: '#/components/schemas/KeywordRuleDTO' }
+    ruleCount: { type: integer }
+  required: [id, name, isEnabled, createdAt, updatedAt, rules, ruleCount]

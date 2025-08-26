@@ -1,0 +1,14 @@
+get:
+  tags: [health]
+  summary: Health check
+  operationId: health_check
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+    '401': { $ref: '#/components/responses/Unauthorized' }
+    '403': { $ref: '#/components/responses/Forbidden' }
+    '429': { $ref: '#/components/responses/RateLimitExceeded' }
+    '500': { $ref: '#/components/responses/InternalServerError' }

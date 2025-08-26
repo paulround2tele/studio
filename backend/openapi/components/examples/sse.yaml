@@ -1,0 +1,14 @@
+message:
+  summary: Example event
+  value: |
+    event: campaign_progress
+    data: {"campaignId":"c1","progress":42.5,"status":"running"}
+heartbeat:
+  summary: Server heartbeat
+  value: |
+    event: heartbeat
+    data: {"ts":"2025-01-01T00:00:00Z","alive":true}
+retry:
+  summary: Retry guidance
+  value: |
+    retry: 5000

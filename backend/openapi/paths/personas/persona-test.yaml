@@ -1,0 +1,30 @@
+post:
+  tags: [personas]
+  security:
+    - cookieAuth: []
+  summary: Test persona
+  operationId: personas_test
+  parameters:
+    - name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    '200':
+      description: Test result
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PersonaTestResponse'
+    '400': { $ref: '#/components/responses/BadRequest' }
+    '401': { $ref: '#/components/responses/Unauthorized' }
+    '403': { $ref: '#/components/responses/Forbidden' }
+    '404': { $ref: '#/components/responses/NotFound' }
+    '422': { $ref: '#/components/responses/ValidationError' }
+    '429': { $ref: '#/components/responses/RateLimitExceeded' }
+    '500': { $ref: '#/components/responses/InternalServerError' }

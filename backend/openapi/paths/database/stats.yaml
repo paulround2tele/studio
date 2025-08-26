@@ -1,0 +1,32 @@
+post:
+  tags: [database]
+  security:
+    - cookieAuth: []
+  summary: Get bulk database statistics
+  description: Retrieve comprehensive database statistics including schema and table-level details
+  operationId: db_bulk_stats
+  parameters:
+    - $ref: '#/components/parameters/XRequestedWith'
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema: { $ref: '#/components/schemas/BulkDatabaseStatsRequest' }
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BulkDatabaseStatsResponse'
+    '400': { $ref: '#/components/responses/BadRequest' }
+    '401': { $ref: '#/components/responses/Unauthorized' }
+    '403': { $ref: '#/components/responses/Forbidden' }
+    '422': { $ref: '#/components/responses/ValidationError' }
+    '429': { $ref: '#/components/responses/RateLimitExceeded' }
+    '500': { $ref: '#/components/responses/InternalServerError' }

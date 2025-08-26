@@ -1,0 +1,80 @@
+	/sse/events:
+		get:
+			tags: [sse]
+			security:
+				- cookieAuth: []
+			summary: Stream campaign events
+			operationId: sse_events_all
+			responses:
+				'200':
+					description: SSE stream
+					content:
+						text/event-stream:
+							schema: { type: string }
+							examples:
+								$ref: '#/components/examples/sse.yaml'
+				'401': { $ref: '#/components/responses/Unauthorized' }
+				'403': { $ref: '#/components/responses/Forbidden' }
+				'429': { $ref: '#/components/responses/RateLimitExceeded' }
+				'500': { $ref: '#/components/responses/InternalServerError' }
+	/sse/campaigns/{campaignId}/events:
+		get:
+			tags: [sse]
+			security:
+				- cookieAuth: []
+			summary: Stream campaign events (specific campaign)
+			operationId: sse_events_campaign
+			parameters:
+				- name: campaignId
+					in: path
+					required: true
+					schema: { type: string, format: uuid }
+			responses:
+				'200':
+					description: SSE stream
+					content:
+						text/event-stream:
+							schema: { type: string }
+							examples:
+								message:
+									summary: Example event
+									value: |
+										event: campaign_progress
+										data: {"campaignId":"00000000-0000-0000-0000-000000000000","progress":75.0,"status":"in_progress"}
+				'401': { $ref: '#/components/responses/Unauthorized' }
+				'403': { $ref: '#/components/responses/Forbidden' }
+				'429': { $ref: '#/components/responses/RateLimitExceeded' }
+				'500': { $ref: '#/components/responses/InternalServerError' }
+	/sse/events/stats:
+		get:
+			tags: [sse]
+			security:
+				- cookieAuth: []
+			summary: Get SSE connection statistics
+			operationId: sse_events_stats
+			responses:
+				'200':
+					description: SSE statistics
+					content:
+						application/json:
+							schema:
+								allOf:
+									- $ref: '#/components/schemas/SuccessEnvelope'
+									- type: object
+										properties:
+											data:
+												type: object
+												properties:
+													activeConnections:
+														type: integer
+														description: Number of active SSE connections
+													totalEventsSent:
+														type: integer
+														description: Total events sent since server start
+													uptime:
+														type: string
+														description: Server uptime
+				'401': { $ref: '#/components/responses/Unauthorized' }
+				'403': { $ref: '#/components/responses/Forbidden' }
+				'429': { $ref: '#/components/responses/RateLimitExceeded' }
+				'500': { $ref: '#/components/responses/InternalServerError' }

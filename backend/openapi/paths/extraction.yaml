@@ -1,0 +1,81 @@
+	/extract/keywords:
+		post:
+			tags: [keyword-extraction]
+			security:
+				- cookieAuth: []
+			summary: Batch keyword extraction
+			operationId: keyword_extract_batch
+			requestBody:
+				required: true
+				content:
+					application/json:
+						schema: { $ref: '#/components/schemas/BatchKeywordExtractionRequest' }
+			responses:
+				'200':
+					description: OK
+					content:
+						application/json:
+							schema:
+								allOf:
+									- $ref: '#/components/schemas/SuccessEnvelope'
+									- type: object
+										properties:
+											data: { $ref: '#/components/schemas/BatchKeywordExtractionResponse' }
+				'400': { $ref: '#/components/responses/BadRequest' }
+				'401': { $ref: '#/components/responses/Unauthorized' }
+				'403': { $ref: '#/components/responses/Forbidden' }
+				'422': { $ref: '#/components/responses/ValidationError' }
+				'429': { $ref: '#/components/responses/RateLimitExceeded' }
+				'500': { $ref: '#/components/responses/InternalServerError' }
+	/extract/keywords/stream:
+		get:
+			tags: [keyword-extraction]
+			security:
+				- cookieAuth: []
+			summary: Stream keyword extraction
+			operationId: keyword_extract_stream
+			parameters:
+				- name: url
+					in: query
+					required: true
+					schema: { type: string, format: uri }
+				- name: keywordSetId
+					in: query
+					required: true
+					schema: { type: string, format: uuid }
+				- name: httpPersonaId
+					in: query
+					schema: { type: string, format: uuid }
+				- name: dnsPersonaId
+					in: query
+					schema: { type: string, format: uuid }
+			description: |
+				Server-Sent Events stream. Clients SHOULD handle heartbeats and reconnection hints.
+				Heartbeat events are sent periodically:
+				- see example SseHeartbeat; clients SHOULD keep the connection alive.
+				The server MAY suggest a retry delay with an SSE control line (see SseRetry example).
+			responses:
+				'200':
+					description: SSE stream
+					content:
+						text/event-stream:
+							schema: { type: string }
+							examples:
+								heartbeat:
+									summary: Heartbeat event
+									value: |
+										event: ping
+										data: {}
+								retry:
+									summary: Client reconnection hint
+									value: |
+										retry: 5000
+								progress:
+									summary: Example extraction progress event
+									value: |
+										event: extraction_progress
+										data: {"url":"https://example.com","progress":0.5}
+				'401': { $ref: '#/components/responses/Unauthorized' }
+				'403': { $ref: '#/components/responses/Forbidden' }
+				'429': { $ref: '#/components/responses/RateLimitExceeded' }
+				'500': { $ref: '#/components/responses/InternalServerError' }

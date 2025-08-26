@@ -1,0 +1,69 @@
+Limit:
+	name: limit
+	in: query
+	description: Page size (items per page)
+	required: false
+	schema:
+		type: integer
+		minimum: 1
+		maximum: 500
+		default: 50
+Offset:
+	name: offset
+	in: query
+	description: Zero-based offset
+	required: false
+	schema:
+		type: integer
+		minimum: 0
+		default: 0
+XRequestedWith:
+	name: X-Requested-With
+	in: header
+	description: CSRF/XHR sentinel header. Must be exactly "XMLHttpRequest" for browser-initiated unsafe requests.
+	required: false
+	schema:
+		type: string
+		enum: [XMLHttpRequest]
+IsEnabled:
+	name: isEnabled
+	in: query
+	description: Filter by enabled state
+	required: false
+	schema:
+		type: boolean
+PersonaTypeFilter:
+	name: personaType
+	in: query
+	description: Filter by persona type
+	required: false
+	schema:
+		$ref: '#/components/schemas/PersonaType'
+ProxyCountry:
+	name: countryCode
+	in: query
+	description: Filter proxies by ISO country code
+	required: false
+	schema:
+		type: string
+ProxyProtocol:
+	name: protocol
+	in: query
+	description: Filter proxies by protocol
+	required: false
+	schema:
+		$ref: '#/components/schemas/ProxyProtocol'
+IsHealthy:
+	name: isHealthy
+	in: query
+	description: Filter by health status
+	required: false
+	schema:
+		type: boolean
+IncludeRules:
+	name: includeRules
+	in: query
+	description: If true, include rules array in keyword-sets list items
+	required: false
+	schema:
+		type: boolean

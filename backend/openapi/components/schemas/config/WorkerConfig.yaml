@@ -1,0 +1,78 @@
+WorkerConfig:
+  type: object
+  description: Worker configuration
+  additionalProperties: true
+    priority:
+      type: string
+      enum: [low, normal, high, critical]
+      description: Worker pool priority level
+      example: normal
+    enableHealthChecks:
+      type: boolean
+      description: Enable worker health monitoring
+      example: true
+    healthCheckInterval:
+      type: integer
+      minimum: 5
+      maximum: 300
+      description: Health check interval in seconds
+      example: 30
+  required:
+    - poolSize
+    - maxJobs
+    - jobTimeout
+
+WorkerConfigUpdate:
+  type: object
+  description: Worker configuration update payload
+  properties:
+    poolSize:
+      type: integer
+      minimum: 1
+      maximum: 1000
+      description: Number of worker threads in the pool
+    maxJobs:
+      type: integer
+      minimum: 1
+      maximum: 10000
+      description: Maximum number of jobs in queue
+    jobTimeout:
+      type: integer
+      minimum: 1
+      maximum: 3600
+      description: Job execution timeout in seconds
+    idleTimeout:
+      type: integer
+      minimum: 1
+      maximum: 300
+      description: Worker idle timeout in seconds
+    retryAttempts:
+      type: integer
+      minimum: 0
+      maximum: 10
+      description: Number of retry attempts for failed jobs
+    retryDelay:
+      type: integer
+      minimum: 100
+      maximum: 60000
+      description: Delay between retries in milliseconds
+    enableMetrics:
+      type: boolean
+      description: Enable worker performance metrics collection
+    metricsInterval:
+      type: integer
+      minimum: 1
+      maximum: 3600
+      description: Metrics collection interval in seconds
+    priority:
+      type: string
+      enum: [low, normal, high, critical]
+      description: Worker pool priority level
+    enableHealthChecks:
+      type: boolean
+      description: Enable worker health monitoring
+    healthCheckInterval:
+      type: integer
+      minimum: 5
+      maximum: 300
+      description: Health check interval in seconds

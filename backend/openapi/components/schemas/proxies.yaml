@@ -1,0 +1,114 @@
+CreateProxyRequestAPI:
+  type: object
+  properties:
+    name: { type: string }
+    description: { type: string }
+    address: { type: string }
+    protocol: { $ref: '#/components/schemas/ProxyProtocol' }
+    username: { type: string }
+    password: { type: string }
+    countryCode: { type: string }
+    isEnabled: { type: boolean }
+    notes: { type: string }
+  required: [name, address]
+ProxyDetailsResponse:
+  type: object
+  properties:
+    host: { type: string }
+    port: { type: integer }
+    protocol: { type: string }
+    username: { type: string }
+ProxyTestResponse:
+  type: object
+  properties:
+    proxyId: { type: string, format: uuid }
+    success: { type: boolean }
+    statusCode: { type: integer }
+    responseTime: { type: integer, format: int64 }
+    error: { type: string }
+UpdateProxyRequestAPI:
+  type: object
+  properties:
+    name: { type: string }
+    description: { type: string }
+    address: { type: string }
+    protocol: { $ref: '#/components/schemas/ProxyProtocol' }
+    username: { type: string }
+    password: { type: string }
+    countryCode: { type: string }
+    isEnabled: { type: boolean }
+    notes: { type: string }
+ProxyStatusResponse:
+  type: object
+  properties:
+    proxyId: { type: string, format: uuid }
+    status: { type: string }
+    lastChecked: { type: string, format: date-time }
+    responseTime: { type: integer, format: int64 }
+    isHealthy: { type: boolean }
+    proxyDetails: { $ref: '#/components/schemas/ProxyDetailsResponse' }
+ProxyHealthCheckResponse:
+  type: object
+  properties:
+    proxyId: { type: string, format: uuid }
+    success: { type: boolean }
+    status: { type: string }
+    responseTime: { type: integer, format: int64 }
+    message: { type: string }
+    timestamp: { type: string, format: date-time }
+BulkHealthCheckResponse:
+  type: object
+  properties:
+    totalProxies: { type: integer }
+    healthyProxies: { type: integer }
+    failedProxies: { type: integer }
+    results:
+      type: array
+      items: { $ref: '#/components/schemas/ProxyHealthCheckResponse' }
+BulkProxyOperationResponse:
+  type: object
+  properties:
+    totalRequested: { type: integer }
+    successCount: { type: integer }
+    errorCount: { type: integer }
+    successfulProxies:
+      type: array
+      items: { type: string, format: uuid }
+    failedProxies:
+      type: array
+      items:
+        type: object
+        properties:
+          proxyId: { type: string, format: uuid }
+          error: { type: string }
+    results:
+      type: array
+      items:
+        type: object
+        additionalProperties: true
+BulkUpdateProxiesRequest:
+  type: object
+  properties:
+    proxyIds:
+      type: array
+      items: { type: string, format: uuid }
+      minItems: 1
+    updates: { $ref: '#/components/schemas/UpdateProxyRequestAPI' }
+  required: [proxyIds, updates]
+BulkDeleteProxiesRequest:
+  type: object
+  properties:
+    proxyIds:
+      type: array
+      items: { type: string, format: uuid }
+      minItems: 1
+  required: [proxyIds]
+BulkProxyTestResponse:
+  type: object
+  properties:
+    totalRequested: { type: integer }
+    successCount: { type: integer }
+    errorCount: { type: integer }
+    results:
+      type: array
+      items: { $ref: '#/components/schemas/ProxyTestResponse' }

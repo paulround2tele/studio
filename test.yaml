@@ -1,0 +1,15 @@
+openapi: 3.1.0
+info:
+  title: Test
+tags:
+  - name: feature-flags
+    description: Feature flag configuration
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: domainflow_session
+      description: |
+        Session cookie. Flags: HttpOnly=true, Secure=true (in production), SameSite=Lax. Domain set per environment.

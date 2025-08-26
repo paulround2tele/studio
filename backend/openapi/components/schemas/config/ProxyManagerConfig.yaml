@@ -1,0 +1,4 @@
+ProxyManagerConfigJSON:
+  type: object
+  description: Proxy manager configuration
+  additionalProperties: true

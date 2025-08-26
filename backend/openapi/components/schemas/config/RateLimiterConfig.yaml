@@ -1,0 +1,4 @@
+RateLimiterConfig:
+  type: object
+  description: Rate limiter configuration
+  additionalProperties: true

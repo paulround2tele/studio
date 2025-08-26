@@ -1,0 +1,41 @@
+BatchKeywordExtractionRequest:
+  type: object
+  properties:
+    items:
+      type: array
+      items:
+        type: object
+        properties:
+          url: { type: string, format: uri }
+          keywordSetId: { type: string, format: uuid }
+          httpPersonaId: { type: string, format: uuid }
+          dnsPersonaId: { type: string, format: uuid }
+        required: [url, keywordSetId]
+  required: [items]
+BatchKeywordExtractionResponse:
+  type: object
+  properties:
+    results:
+      type: array
+      items:
+        type: object
+        properties:
+          url: { type: string, format: uri }
+          keywordSetIdUsed: { type: string, format: uuid }
+          httpPersonaIdUsed: { type: string, format: uuid }
+          dnsPersonaIdUsed: { type: string, format: uuid }
+          proxyIdUsed: { type: string, format: uuid }
+          finalURL: { type: string, format: uri }
+          statusCode: { type: integer }
+          matches:
+            type: array
+            items:
+              type: object
+              properties:
+                matchedPattern: { type: string }
+                matchedText: { type: string }
+                category: { type: string }
+                contexts:
+                  type: array
+                  items: { type: string }
+          error: { type: string }

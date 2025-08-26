@@ -1,0 +1,168 @@
+	/proxy-pools:
+		get:
+			tags: [proxy-pools]
+			security:
+				- cookieAuth: []
+			summary: List proxy pools
+			operationId: proxy_pools_list
+			responses:
+				'200':
+					description: OK
+					content:
+						application/json:
+							schema:
+								allOf:
+									- $ref: '#/components/schemas/SuccessEnvelope'
+									- type: object
+										properties:
+											data:
+												type: array
+												items: { $ref: '#/components/schemas/ProxyPool' }
+				'401': { $ref: '#/components/responses/Unauthorized' }
+				'403': { $ref: '#/components/responses/Forbidden' }
+				'500': { $ref: '#/components/responses/InternalServerError' }
+		post:
+			tags: [proxy-pools]
+			security:
+				- cookieAuth: []
+			summary: Create proxy pool
+			operationId: proxy_pools_create
+			requestBody:
+				required: true
+				content:
+					application/json:
+						schema: { $ref: '#/components/schemas/ProxyPoolRequest' }
+			responses:
+				'201':
+					description: Created
+					content:
+						application/json:
+							schema:
+								allOf:
+									- $ref: '#/components/schemas/SuccessEnvelope'
+									- type: object
+										properties:
+											data: { $ref: '#/components/schemas/ProxyPool' }
+				'400': { $ref: '#/components/responses/BadRequest' }
+				'500': { $ref: '#/components/responses/InternalServerError' }
+
+	/proxy-pools/{poolId}:
+		put:
+			tags: [proxy-pools]
+			security:
+				- cookieAuth: []
+			summary: Update proxy pool
+			operationId: proxy_pools_update
+			parameters:
+				- name: poolId
+					in: path
+					required: true
+					schema: { type: string, format: uuid }
+			requestBody:
+				required: true
+				content:
+					application/json:
+						schema: { $ref: '#/components/schemas/ProxyPoolRequest' }
+			responses:
+				'200':
+					description: OK
+					content:
+						application/json:
+							schema:
+								allOf:
+									- $ref: '#/components/schemas/SuccessEnvelope'
+									- type: object
+										properties:
+											data: { $ref: '#/components/schemas/ProxyPool' }
+				'400': { $ref: '#/components/responses/BadRequest' }
+				'404': { $ref: '#/components/responses/NotFound' }
+				'500': { $ref: '#/components/responses/InternalServerError' }
+		delete:
+			tags: [proxy-pools]
+			security:
+				- cookieAuth: []
+			summary: Delete proxy pool
+			operationId: proxy_pools_delete
+			parameters:
+				- name: poolId
+					in: path
+					required: true
+					schema: { type: string, format: uuid }
+			responses:
+				'200':
+					description: OK
+					content:
+						application/json:
+							schema:
+								allOf:
+									- $ref: '#/components/schemas/SuccessEnvelope'
+									- type: object
+										properties:
+											data: { $ref: '#/components/schemas/ProxyPoolDeleteResponse' }
+				'400': { $ref: '#/components/responses/BadRequest' }
+				'404': { $ref: '#/components/responses/NotFound' }
+				'500': { $ref: '#/components/responses/InternalServerError' }
+
+	/proxy-pools/{poolId}/proxies:
+		post:
+			tags: [proxy-pools]
+			security:
+				- cookieAuth: []
+			summary: Add proxy to pool
+			operationId: proxy_pools_add_proxy
+			parameters:
+				- name: poolId
+					in: path
+					required: true
+					schema: { type: string, format: uuid }
+			requestBody:
+				required: true
+				content:
+					application/json:
+						schema:
+							type: object
+							properties:
+								proxyId: { type: string, format: uuid }
+								weight: { type: integer }
+							required: [proxyId]
+			responses:
+				'201':
+					description: Created
+					content:
+						application/json:
+							schema:
+								allOf:
+									- $ref: '#/components/schemas/SuccessEnvelope'
+									- type: object
+										properties:
+											data: { $ref: '#/components/schemas/ProxyPoolMembership' }
+				'400': { $ref: '#/components/responses/BadRequest' }
+				'500': { $ref: '#/components/responses/InternalServerError' }
+
+	/proxy-pools/{poolId}/proxies/{proxyId}:
+		delete:
+			tags: [proxy-pools]
+			security:
+				- cookieAuth: []
+			summary: Remove proxy from pool
+			operationId: proxy_pools_remove_proxy
+			parameters:
+				- name: poolId
+					in: path
+					required: true
+					schema: { type: string, format: uuid }
+				- name: proxyId
+					in: path
+					required: true
+					schema: { type: string, format: uuid }
+			responses:
+				'200':
+					description: OK
+					content:
+						application/json:
+							schema:
+								allOf:
+									- $ref: '#/components/schemas/SuccessEnvelope'
+									- type: object
+										properties:
+											data: { $ref: '#/components/schemas/ProxyPoolMembershipResponse' }

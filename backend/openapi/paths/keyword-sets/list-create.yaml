@@ -1,0 +1,58 @@
+get:
+  tags: [keyword-sets]
+  security:
+    - cookieAuth: []
+  summary: List keyword sets
+  operationId: keyword_sets_list
+  parameters:
+    - $ref: '#/components/parameters/Limit'
+    - $ref: '#/components/parameters/Offset'
+    - $ref: '#/components/parameters/IncludeRules'
+    - $ref: '#/components/parameters/IsEnabled'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/KeywordSetResponse' }
+    '401': { $ref: '#/components/responses/Unauthorized' }
+    '403': { $ref: '#/components/responses/Forbidden' }
+    '429': { $ref: '#/components/responses/RateLimitExceeded' }
+    '500': { $ref: '#/components/responses/InternalServerError' }
+post:
+  tags: [keyword-sets]
+  security:
+    - cookieAuth: []
+  summary: Create keyword set
+  operationId: keyword_sets_create
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema: { $ref: '#/components/schemas/CreateKeywordSetRequest' }
+  responses:
+    '201':
+      description: Created
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/KeywordSetResponse'
+    '400': { $ref: '#/components/responses/BadRequest' }
+    '401': { $ref: '#/components/responses/Unauthorized' }
+    '403': { $ref: '#/components/responses/Forbidden' }
+    '409': { $ref: '#/components/responses/Conflict' }
+    '422': { $ref: '#/components/responses/ValidationError' }
+    '429': { $ref: '#/components/responses/RateLimitExceeded' }
+    '500': { $ref: '#/components/responses/InternalServerError' }

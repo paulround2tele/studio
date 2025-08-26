@@ -1,0 +1,4 @@
+HTTPValidatorConfigJSON:
+  type: object
+  description: HTTP validator configuration
+  additionalProperties: true

@@ -1,0 +1,50 @@
+get:
+	tags: [server-settings]
+	security:
+		- cookieAuth: []
+	summary: Get logging configuration
+	operationId: config_get_logging
+	responses:
+		'200':
+			description: Logging config
+			content:
+				application/json:
+					schema:
+						allOf:
+							- $ref: '#/components/schemas/SuccessEnvelope'
+							- type: object
+								properties:
+									data: { $ref: '#/components/schemas/LoggingConfig' }
+		'401': { $ref: '#/components/responses/Unauthorized' }
+		'403': { $ref: '#/components/responses/Forbidden' }
+		'429': { $ref: '#/components/responses/RateLimitExceeded' }
+		'500': { $ref: '#/components/responses/InternalServerError' }
+put:
+	tags: [server-settings]
+	security:
+		- cookieAuth: []
+	summary: Update logging configuration
+	operationId: config_update_logging
+	requestBody:
+		required: true
+		content:
+			application/json:
+				schema: { $ref: '#/components/schemas/LoggingConfig' }
+	responses:
+		'200':
+			description: Updated
+			content:
+				application/json:
+					schema:
+						allOf:
+							- $ref: '#/components/schemas/SuccessEnvelope'
+							- type: object
+								properties:
+									data: { $ref: '#/components/schemas/LoggingConfig' }
+		'400': { $ref: '#/components/responses/BadRequest' }
+		'401': { $ref: '#/components/responses/Unauthorized' }
+		'403': { $ref: '#/components/responses/Forbidden' }
+		'409': { $ref: '#/components/responses/Conflict' }
+		'422': { $ref: '#/components/responses/ValidationError' }
+		'429': { $ref: '#/components/responses/RateLimitExceeded' }
+		'500': { $ref: '#/components/responses/InternalServerError' }

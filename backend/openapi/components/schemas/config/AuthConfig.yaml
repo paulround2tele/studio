@@ -1,0 +1,4 @@
+AuthConfig:
+  type: object
+  description: Authentication configuration
+  additionalProperties: true

@@ -1,0 +1,8 @@
+ServerConfigResponse:
+  type: object
+  description: Consolidated server configuration response
+  additionalProperties: true
+ServerConfigUpdateRequest:
+  type: object
+  description: Server configuration update request
+  additionalProperties: true

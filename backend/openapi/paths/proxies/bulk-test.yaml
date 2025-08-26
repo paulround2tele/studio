@@ -1,0 +1,30 @@
+post:
+  tags: [proxies]
+  security:
+    - cookieAuth: []
+  summary: Bulk test proxies
+  operationId: proxies_bulk_test
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            proxyIds:
+              type: array
+              items: { type: string, format: uuid }
+          required: [proxyIds]
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data: { $ref: '#/components/schemas/BulkProxyTestResponse' }
+    '400': { $ref: '#/components/responses/BadRequest' }
+    '500': { $ref: '#/components/responses/InternalServerError' }

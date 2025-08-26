@@ -1,0 +1,60 @@
+get:
+  tags: [proxies]
+  security:
+    - cookieAuth: []
+  summary: List proxies
+  operationId: proxies_list
+  parameters:
+    - $ref: '#/components/parameters/Limit'
+    - $ref: '#/components/parameters/Offset'
+    - $ref: '#/components/parameters/ProxyProtocol'
+    - $ref: '#/components/parameters/ProxyCountry'
+    - $ref: '#/components/parameters/IsEnabled'
+    - $ref: '#/components/parameters/IsHealthy'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ProxyDetailsResponse' }
+    '401': { $ref: '#/components/responses/Unauthorized' }
+    '403': { $ref: '#/components/responses/Forbidden' }
+    '429': { $ref: '#/components/responses/RateLimitExceeded' }
+    '500': { $ref: '#/components/responses/InternalServerError' }
+post:
+  tags: [proxies]
+  security:
+    - cookieAuth: []
+  summary: Create proxy
+  operationId: proxies_create
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema: { $ref: '#/components/schemas/CreateProxyRequestAPI' }
+  responses:
+    '201':
+      description: Created
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ProxyDetailsResponse'
+    '400': { $ref: '#/components/responses/BadRequest' }
+    '401': { $ref: '#/components/responses/Unauthorized' }
+    '403': { $ref: '#/components/responses/Forbidden' }
+    '409': { $ref: '#/components/responses/Conflict' }
+    '422': { $ref: '#/components/responses/ValidationError' }
+    '429': { $ref: '#/components/responses/RateLimitExceeded' }
+    '500': { $ref: '#/components/responses/InternalServerError' }

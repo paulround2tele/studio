@@ -1,0 +1,55 @@
+put:
+  tags: [proxy-pools]
+  security:
+    - cookieAuth: []
+  summary: Update proxy pool
+  operationId: proxy_pools_update
+  parameters:
+    - name: poolId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema: { $ref: '#/components/schemas/ProxyPoolRequest' }
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ProxyPool' }
+    '400': { $ref: '#/components/responses/BadRequest' }
+    '404': { $ref: '#/components/responses/NotFound' }
+    '500': { $ref: '#/components/responses/InternalServerError' }
+delete:
+  tags: [proxy-pools]
+  security:
+    - cookieAuth: []
+  summary: Delete proxy pool
+  operationId: proxy_pools_delete
+  parameters:
+    - name: poolId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data: { $ref: '#/components/schemas/ProxyPoolDeleteResponse' }
+    '400': { $ref: '#/components/responses/BadRequest' }
+    '404': { $ref: '#/components/responses/NotFound' }
+    '500': { $ref: '#/components/responses/InternalServerError' }

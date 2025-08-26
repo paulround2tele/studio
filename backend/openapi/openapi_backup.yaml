@@ -5579,39 +5579,30 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '429': { $ref: '#/components/responses/RateLimitExceeded' }
         '500': { $ref: '#/components/responses/InternalServerError' }
-
-  # ============================================================================
-  # PROXY POOLS ENDPOINTS
-  # ============================================================================
-
-  /v2/proxy-pools:
-    get:
-      tags: [Proxy Pools]
-      summary: List proxy pools
-      description: Retrieve all configured proxy pools with their status and proxy counts
-      operationId: listProxyPools
-      security:
-        - bearerAuth: []
       parameters:
         - name: limit
           in: query
           schema: { type: integer, minimum: 1, maximum: 1000, default: 100 }
-          description: Maximum number of pools to return
+          description: Maximum number of personas to return
         - name: offset
           in: query
           schema: { type: integer, minimum: 0, default: 0 }
-          description: Number of pools to skip for pagination
-        - name: status
+          description: Number of personas to skip for pagination
+        - name: category
           in: query
-          schema: { type: string, enum: [active, inactive, error] }
-          description: Filter pools by status
+          schema: { type: string, enum: [web_scraper, social_media, e_commerce, news, academic, general] }
+          description: Filter personas by category
+        - name: active
+          in: query
+          schema: { type: boolean }
+          description: Filter by active status
         - name: search
           in: query
           schema: { type: string }
-          description: Search pools by name or description
+          description: Search personas by name or description
       responses:
         '200':
-          description: Proxy pools retrieved successfully
+          description: Personas retrieved successfully
           content:
             application/json:
               schema:
@@ -5622,7 +5613,7 @@ paths:
                       data:
                         type: object
                         properties:
-                          pools:
+                          personas:
                             type: array
                             items:
                               type: object
@@ -5630,14 +5621,25 @@ paths:
                                 id: { type: string, format: uuid }
                                 name: { type: string }
                                 description: { type: string }
-                                status: { type: string, enum: [active, inactive, error] }
-                                proxyCount: { type: integer, minimum: 0 }
-                                activeProxies: { type: integer, minimum: 0 }
-                                healthyProxies: { type: integer, minimum: 0 }
-                                rotation: { type: string, enum: [round_robin, random, least_used, health_based] }
-                                lastHealthCheck: { type: string, format: date-time, nullable: true }
-                                avgResponseTime: { type: number, minimum: 0, nullable: true }
-                                successRate: { type: number, minimum: 0, maximum: 1, nullable: true }
+                                category: { type: string, enum: [web_scraper, social_media, e_commerce, news, academic, general] }
+                                isActive: { type: boolean }
+                                userAgent: { type: string }
+                                headers:
+                                  type: object
+                                  additionalProperties: { type: string }
+                                behaviors:
+                                  type: object
+                                  properties:
+                                    respectRobots: { type: boolean }
+                                    delayRange: 
+                                      type: object
+                                      properties:
+                                        min: { type: integer, minimum: 0 }
+                                        max: { type: integer, minimum: 0 }
+                                    maxRetries: { type: integer, minimum: 0 }
+                                usageCount: { type: integer, minimum: 0 }
+                                successRate: { type: number, minimum: 0, maximum: 1 }
+                                lastUsed: { type: string, format: date-time, nullable: true }
                                 createdAt: { type: string, format: date-time }
                                 updatedAt: { type: string, format: date-time }
                           total: { type: integer, minimum: 0 }
@@ -5645,12 +5647,11 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '429': { $ref: '#/components/responses/RateLimitExceeded' }
         '500': { $ref: '#/components/responses/InternalServerError' }
-
+    
     post:
-      tags: [Proxy Pools]
-      summary: Create proxy pool
-      description: Create a new proxy pool with configuration and initial proxies
-      operationId: createProxyPool
+      tags: [Personas]
+      summary: Create persona
+      description: Create a new persona with custom browser behavior and headers
       security:
         - bearerAuth: []
       requestBody:
@@ -5659,43 +5660,34 @@ paths:
           application/json:
             schema:
               type: object
-              required: [name, rotation]
+              required: [name, category, userAgent]
               properties:
                 name: { type: string, minLength: 1, maxLength: 255 }
                 description: { type: string, maxLength: 1000 }
-                rotation: { type: string, enum: [round_robin, random, least_used, health_based] }
-                healthCheck:
+                category: { type: string, enum: [web_scraper, social_media, e_commerce, news, academic, general] }
+                userAgent: { type: string, minLength: 10, maxLength: 500 }
+                headers:
+                  type: object
+                  additionalProperties: { type: string }
+                  maxProperties: 50
+                behaviors:
                   type: object
                   properties:
-                    enabled: { type: boolean, default: true }
-                    interval: { type: integer, minimum: 10, maximum: 3600, default: 300 }
-                    timeout: { type: integer, minimum: 1, maximum: 60, default: 10 }
-                    url: { type: string, format: uri }
-                    expectedStatus: { type: integer, minimum: 100, maximum: 599, default: 200 }
-                retryConfig:
-                  type: object
-                  properties:
+                    respectRobots: { type: boolean, default: true }
+                    delayRange:
+                      type: object
+                      properties:
+                        min: { type: integer, minimum: 0, maximum: 30000 }
+                        max: { type: integer, minimum: 0, maximum: 60000 }
                     maxRetries: { type: integer, minimum: 0, maximum: 10, default: 3 }
-                    backoffMultiplier: { type: number, minimum: 1, maximum: 10, default: 2 }
-                    initialDelay: { type: integer, minimum: 100, maximum: 10000, default: 1000 }
-                proxies:
-                  type: array
-                  items:
-                    type: object
-                    required: [host, port]
-                    properties:
-                      host: { type: string, minLength: 1 }
-                      port: { type: integer, minimum: 1, maximum: 65535 }
-                      protocol: { type: string, enum: [http, https, socks4, socks5], default: "http" }
-                      username: { type: string }
-                      password: { type: string }
-                      country: { type: string, minLength: 2, maxLength: 2 }
-                      region: { type: string }
-                      city: { type: string }
-                  maxItems: 1000
+                    followRedirects: { type: boolean, default: true }
+                    timeout: { type: integer, minimum: 1000, maximum: 300000, default: 30000 }
+                    cookieHandling: { type: string, enum: [none, session, persistent], default: "session" }
+                    javascriptEnabled: { type: boolean, default: false }
+                isActive: { type: boolean, default: true }
       responses:
         '201':
-          description: Proxy pool created successfully
+          description: Persona created successfully
           content:
             application/json:
               schema:
@@ -5708,13 +5700,15 @@ paths:
                         properties:
                           id: { type: string, format: uuid }
                           name: { type: string }
-                          status: { type: string, enum: [active, inactive, error] }
-                          proxyCount: { type: integer, minimum: 0 }
+                          description: { type: string }
+                          category: { type: string }
+                          userAgent: { type: string }
+                          isActive: { type: boolean }
                           createdAt: { type: string, format: date-time }
         '400': { $ref: '#/components/responses/BadRequest' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '409':
-          description: Pool name already exists
+          description: Persona name already exists
           content:
             application/json:
               schema:
@@ -5729,53 +5723,29 @@ paths:
                           details:
                             type: object
                             properties:
-                              existingPoolId: { type: string, format: uuid }
+                              existingPersonaId: { type: string, format: uuid }
         '422': { $ref: '#/components/responses/ValidationError' }
         '429': { $ref: '#/components/responses/RateLimitExceeded' }
         '500': { $ref: '#/components/responses/InternalServerError' }
-
-  /v2/proxy-pools/{poolId}:
-    put:
-      tags: [Proxy Pools]
-      summary: Update proxy pool
-      description: Update proxy pool configuration and settings
-      operationId: updateProxyPool
+    get:
+      tags: [Personas]
+      summary: Get persona details
+      description: Retrieve detailed information about a specific persona including usage statistics
       security:
         - bearerAuth: []
       parameters:
-        - name: poolId
+        - name: personaId
           in: path
           required: true
           schema: { type: string, format: uuid }
-          description: Unique identifier of the proxy pool
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name: { type: string, minLength: 1, maxLength: 255 }
-                description: { type: string, maxLength: 1000 }
-                rotation: { type: string, enum: [round_robin, random, least_used, health_based] }
-                status: { type: string, enum: [active, inactive] }
-                healthCheck:
-                  type: object
-                  properties:
-                    enabled: { type: boolean }
-                    interval: { type: integer, minimum: 10, maximum: 3600 }
-                    timeout: { type: integer, minimum: 1, maximum: 60 }
-                    url: { type: string, format: uri }
-                    expectedStatus: { type: integer, minimum: 100, maximum: 599 }
-                retryConfig:
-                  type: object
-                  properties:
-                    maxRetries: { type: integer, minimum: 0, maximum: 10 }
-                    backoffMultiplier: { type: number, minimum: 1, maximum: 10 }
-                    initialDelay: { type: integer, minimum: 100, maximum: 10000 }
+          description: Unique identifier of the persona
+        - name: includeStats
+          in: query
+          schema: { type: boolean, default: false }
+          description: Whether to include usage statistics
       responses:
         '200':
-          description: Proxy pool updated successfully
+          description: Persona details retrieved successfully
           content:
             application/json:
               schema:
@@ -5788,506 +5758,50 @@ paths:
                         properties:
                           id: { type: string, format: uuid }
                           name: { type: string }
-                          status: { type: string, enum: [active, inactive, error] }
-                          proxyCount: { type: integer, minimum: 0 }
-                          updatedAt: { type: string, format: date-time }
-                          configChanged: { type: boolean }
-                          healthCheckTriggered: { type: boolean }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '409':
-          description: Update would cause conflict
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/ErrorEnvelope'
-                  - type: object
-                    properties:
-                      error:
-                        type: object
-                        properties:
-                          code: { type: string, example: "POOL_IN_USE" }
-                          details:
-                            type: object
-                            properties:
-                              activeCampaigns:
-                                type: array
-                                items: { type: string, format: uuid }
-        '422': { $ref: '#/components/responses/ValidationError' }
-        '429': { $ref: '#/components/responses/RateLimitExceeded' }
-        '500': { $ref: '#/components/responses/InternalServerError' }
-
-    delete:
-      tags: [Proxy Pools]
-      summary: Delete proxy pool
-      description: Delete a proxy pool and all associated proxies
-      operationId: deleteProxyPool
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: poolId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-          description: Unique identifier of the proxy pool
-        - name: force
-          in: query
-          schema: { type: boolean, default: false }
-          description: Force deletion even if pool is in use by active campaigns
-      responses:
-        '204':
-          description: Proxy pool deleted successfully
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '409':
-          description: Cannot delete pool in use
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/ErrorEnvelope'
-                  - type: object
-                    properties:
-                      error:
-                        type: object
-                        properties:
-                          code: { type: string, example: "POOL_IN_USE" }
-                          details:
-                            type: object
-                            properties:
-                              activeCampaigns:
-                                type: array
-                                items: { type: string, format: uuid }
-                              suggestForce: { type: boolean, default: true }
-        '429': { $ref: '#/components/responses/RateLimitExceeded' }
-        '500': { $ref: '#/components/responses/InternalServerError' }
-
-  /v2/proxy-pools/{poolId}/proxies:
-    post:
-      tags: [Proxy Pools]
-      summary: Add proxies to pool
-      description: Add one or more proxies to an existing proxy pool
-      operationId: addProxiesToPool
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: poolId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-          description: Unique identifier of the proxy pool
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [proxies]
-              properties:
-                proxies:
-                  type: array
-                  items:
-                    type: object
-                    required: [host, port]
-                    properties:
-                      host: { type: string, minLength: 1 }
-                      port: { type: integer, minimum: 1, maximum: 65535 }
-                      protocol: { type: string, enum: [http, https, socks4, socks5], default: "http" }
-                      username: { type: string }
-                      password: { type: string }
-                      country: { type: string, minLength: 2, maxLength: 2 }
-                      region: { type: string }
-                      city: { type: string }
-                  minItems: 1
-                  maxItems: 1000
-                skipDuplicates: { type: boolean, default: true }
-                validateProxies: { type: boolean, default: true }
-      responses:
-        '201':
-          description: Proxies added to pool successfully
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          poolId: { type: string, format: uuid }
-                          addedCount: { type: integer, minimum: 0 }
-                          skippedCount: { type: integer, minimum: 0 }
-                          failedCount: { type: integer, minimum: 0 }
-                          totalProxies: { type: integer, minimum: 0 }
-                          validationResults:
-                            type: array
-                            items:
-                              type: object
-                              properties:
-                                proxy: { type: string }
-                                status: { type: string, enum: [added, skipped, failed] }
-                                reason: { type: string }
-                                proxyId: { type: string, format: uuid, nullable: true }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '422': { $ref: '#/components/responses/ValidationError' }
-        '429': { $ref: '#/components/responses/RateLimitExceeded' }
-        '500': { $ref: '#/components/responses/InternalServerError' }
-
-  /v2/proxy-pools/{poolId}/proxies/{proxyId}:
-    delete:
-      tags: [Proxy Pools]
-      summary: Remove proxy from pool
-      description: Remove a specific proxy from a proxy pool
-      operationId: removeProxyFromPool
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: poolId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-          description: Unique identifier of the proxy pool
-        - name: proxyId
-          in: path
-          required: true
-          schema: { type: string, format: uuid }
-          description: Unique identifier of the proxy to remove
-      responses:
-        '204':
-          description: Proxy removed from pool successfully
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '404': { $ref: '#/components/responses/NotFound' }
-        '429': { $ref: '#/components/responses/RateLimitExceeded' }
-        '500': { $ref: '#/components/responses/InternalServerError' }
-
-  # ============================================================================
-  # CONFIG ENDPOINTS
-  # ============================================================================
-
-  /v2/config/auth:
-    get:
-      tags: [Config]
-      summary: Get authentication configuration
-      description: Retrieve current authentication settings and policies
-      operationId: getAuthConfig
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Authentication configuration retrieved successfully
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          sessionTimeout: { type: integer, minimum: 300, maximum: 86400 }
-                          tokenExpiry: { type: integer, minimum: 900, maximum: 604800 }
-                          refreshTokenExpiry: { type: integer, minimum: 3600, maximum: 2592000 }
-                          maxLoginAttempts: { type: integer, minimum: 3, maximum: 10 }
-                          lockoutDuration: { type: integer, minimum: 300, maximum: 3600 }
-                          requirePasswordChange: { type: boolean }
-                          passwordMinLength: { type: integer, minimum: 8, maximum: 128 }
-                          passwordRequireSpecialChars: { type: boolean }
-                          passwordRequireNumbers: { type: boolean }
-                          passwordRequireUppercase: { type: boolean }
-                          twoFactorEnabled: { type: boolean }
-                          allowedHosts:
-                            type: array
-                            items: { type: string }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '429': { $ref: '#/components/responses/RateLimitExceeded' }
-        '500': { $ref: '#/components/responses/InternalServerError' }
-
-    put:
-      tags: [Config]
-      summary: Update authentication configuration
-      description: Update authentication settings and security policies
-      operationId: updateAuthConfig
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                sessionTimeout: { type: integer, minimum: 300, maximum: 86400 }
-                tokenExpiry: { type: integer, minimum: 900, maximum: 604800 }
-                refreshTokenExpiry: { type: integer, minimum: 3600, maximum: 2592000 }
-                maxLoginAttempts: { type: integer, minimum: 3, maximum: 10 }
-                lockoutDuration: { type: integer, minimum: 300, maximum: 3600 }
-                requirePasswordChange: { type: boolean }
-                passwordMinLength: { type: integer, minimum: 8, maximum: 128 }
-                passwordRequireSpecialChars: { type: boolean }
-                passwordRequireNumbers: { type: boolean }
-                passwordRequireUppercase: { type: boolean }
-                twoFactorEnabled: { type: boolean }
-                allowedHosts:
-                  type: array
-                  items: { type: string }
-                  maxItems: 100
-      responses:
-        '200':
-          description: Authentication configuration updated successfully
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          applied: { type: boolean }
-                          restartRequired: { type: boolean }
-                          affectedUsers: { type: integer, minimum: 0 }
-        '422': { $ref: '#/components/responses/ValidationError' }
-        '429': { $ref: '#/components/responses/RateLimitExceeded' }
-        '500': { $ref: '#/components/responses/InternalServerError' }
-
-  /v2/config/http:
-    get:
-      tags: [Config]  
-      summary: Get HTTP configuration
-      description: Retrieve HTTP client and server settings
-      operationId: getHttpConfig
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: HTTP configuration retrieved successfully
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          timeout: { type: integer, minimum: 1, maximum: 300 }
-                          maxRetries: { type: integer, minimum: 0, maximum: 10 }
-                          retryDelay: { type: integer, minimum: 100, maximum: 10000 }
-                          maxConcurrent: { type: integer, minimum: 1, maximum: 1000 }
+                          description: { type: string }
+                          category: { type: string, enum: [web_scraper, social_media, e_commerce, news, academic, general] }
                           userAgent: { type: string }
-                          followRedirects: { type: boolean }
-                          maxRedirects: { type: integer, minimum: 0, maximum: 20 }
-                          keepAlive: { type: boolean }
-                          compression: { type: boolean }
+                          headers:
+                            type: object
+                            additionalProperties: { type: string }
+                          behaviors:
+                            type: object
+                            properties:
+                              respectRobots: { type: boolean }
+                              delayRange:
+                                type: object
+                                properties:
+                                  min: { type: integer, minimum: 0 }
+                                  max: { type: integer, minimum: 0 }
+                              maxRetries: { type: integer, minimum: 0 }
+                              followRedirects: { type: boolean }
+                              timeout: { type: integer, minimum: 0 }
+                              cookieHandling: { type: string, enum: [none, session, persistent] }
+                              javascriptEnabled: { type: boolean }
+                          isActive: { type: boolean }
+                          stats:
+                            type: object
+                            nullable: true
+                            properties:
+                              usageCount: { type: integer, minimum: 0 }
+                              successRate: { type: number, minimum: 0, maximum: 1 }
+                              avgResponseTime: { type: number, minimum: 0 }
+                              totalRequests: { type: integer, minimum: 0 }
+                              successfulRequests: { type: integer, minimum: 0 }
+                              failedRequests: { type: integer, minimum: 0 }
+                              recentActivity:
+                                type: object
+                                properties:
+                                  last24h: { type: integer, minimum: 0 }
+                                  last7d: { type: integer, minimum: 0 }
+                                  last30d: { type: integer, minimum: 0 }
+                              errorBreakdown:
+                                type: object
+                                additionalProperties: { type: integer, minimum: 0 }
+                          createdAt: { type: string, format: date-time }
+                          updatedAt: { type: string, format: date-time }
+                          lastUsed: { type: string, format: date-time, nullable: true }
         '401': { $ref: '#/components/responses/Unauthorized' }
-        '429': { $ref: '#/components/responses/RateLimitExceeded' }
-        '500': { $ref: '#/components/responses/InternalServerError' }
-
-    put:
-      tags: [Config]
-      summary: Update HTTP configuration  
-      description: Update HTTP client and server settings
-      operationId: updateHttpConfig
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                timeout: { type: integer, minimum: 1, maximum: 300 }
-                maxRetries: { type: integer, minimum: 0, maximum: 10 }
-                retryDelay: { type: integer, minimum: 100, maximum: 10000 }
-                maxConcurrent: { type: integer, minimum: 1, maximum: 1000 }
-                userAgent: { type: string }
-                followRedirects: { type: boolean }
-                maxRedirects: { type: integer, minimum: 0, maximum: 20 }
-                keepAlive: { type: boolean }
-                compression: { type: boolean }
-      responses:
-        '200':
-          description: HTTP configuration updated successfully
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          applied: { type: boolean }
-                          restartRequired: { type: boolean }
-        '422': { $ref: '#/components/responses/ValidationError' }
-        '429': { $ref: '#/components/responses/RateLimitExceeded' }
-        '500': { $ref: '#/components/responses/InternalServerError' }
-
-  /v2/config/logging:
-    get:
-      tags: [Config]
-      summary: Get logging configuration
-      description: Retrieve logging levels and output settings
-      operationId: getLoggingConfig
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Logging configuration retrieved successfully
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          level: { type: string, enum: [debug, info, warn, error] }
-                          format: { type: string, enum: [json, text] }
-                          output: { type: string, enum: [stdout, file, both] }
-                          logFile: { type: string, nullable: true }
-                          maxSize: { type: integer, minimum: 1, maximum: 1000 }
-                          maxBackups: { type: integer, minimum: 1, maximum: 100 }
-                          maxAge: { type: integer, minimum: 1, maximum: 365 }
-                          compress: { type: boolean }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '429': { $ref: '#/components/responses/RateLimitExceeded' }
-        '500': { $ref: '#/components/responses/InternalServerError' }
-
-    put:
-      tags: [Config]
-      summary: Update logging configuration
-      description: Update logging levels and output settings
-      operationId: updateLoggingConfig
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                level: { type: string, enum: [debug, info, warn, error] }
-                format: { type: string, enum: [json, text] }
-                output: { type: string, enum: [stdout, file, both] }
-                logFile: { type: string, nullable: true }
-                maxSize: { type: integer, minimum: 1, maximum: 1000 }
-                maxBackups: { type: integer, minimum: 1, maximum: 100 }
-                maxAge: { type: integer, minimum: 1, maximum: 365 }
-                compress: { type: boolean }
-      responses:
-        '200':
-          description: Logging configuration updated successfully
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          applied: { type: boolean }
-                          restartRequired: { type: boolean }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '422': { $ref: '#/components/responses/ValidationError' }
-        '429': { $ref: '#/components/responses/RateLimitExceeded' }
-        '500': { $ref: '#/components/responses/InternalServerError' }
-
-  /v2/config/server:
-    get:
-      tags: [Config]
-      summary: Get server configuration
-      description: Retrieve server runtime and performance settings
-      operationId: getServerConfig
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Server configuration retrieved successfully
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          port: { type: integer, minimum: 1, maximum: 65535 }
-                          host: { type: string }
-                          readTimeout: { type: integer, minimum: 1, maximum: 300 }
-                          writeTimeout: { type: integer, minimum: 1, maximum: 300 }
-                          maxHeaderBytes: { type: integer, minimum: 1024, maximum: 10485760 }
-                          enableCors: { type: boolean }
-                          corsOrigins:
-                            type: array
-                            items: { type: string }
-                          enableMetrics: { type: boolean }
-                          metricsPath: { type: string }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '429': { $ref: '#/components/responses/RateLimitExceeded' }
-        '500': { $ref: '#/components/responses/InternalServerError' }
-
-    put:
-      tags: [Config]
-      summary: Update server configuration
-      description: Update server runtime and performance settings
-      operationId: updateServerConfig
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                port: { type: integer, minimum: 1, maximum: 65535 }
-                host: { type: string }
-                readTimeout: { type: integer, minimum: 1, maximum: 300 }
-                writeTimeout: { type: integer, minimum: 1, maximum: 300 }
-                maxHeaderBytes: { type: integer, minimum: 1024, maximum: 10485760 }
-                enableCors: { type: boolean }
-                corsOrigins:
-                  type: array
-                  items: { type: string }
-                  maxItems: 100
-                enableMetrics: { type: boolean }
-                metricsPath: { type: string }
-      responses:
-        '200':
-          description: Server configuration updated successfully
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          applied: { type: boolean }
-                          restartRequired: { type: boolean }
-        '400': { $ref: '#/components/responses/BadRequest' }
-        '401': { $ref: '#/components/responses/Unauthorized' }
-        '422': { $ref: '#/components/responses/ValidationError' }
+        '404': { $ref: '#/components/responses/NotFound' }
         '429': { $ref: '#/components/responses/RateLimitExceeded' }
         '500': { $ref: '#/components/responses/InternalServerError' }

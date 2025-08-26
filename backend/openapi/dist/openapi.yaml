@@ -1,0 +1,1030 @@
+openapi: 3.1.0
+info:
+  title: DomainFlow API
+  description: |
+    Enterprise-grade proxy management and data extraction platform.
+
+    ## Authentication
+
+    This API uses bearer token authentication. Include your API key in the Authorization header:
+    ```
+    Authorization: Bearer your-api-key
+    ```
+
+    ## Response Format
+
+    All responses follow a consistent envelope pattern:
+    - Success responses wrap data in a `SuccessEnvelope`
+    - Error responses use an `ErrorEnvelope` with detailed error information
+
+    ## Rate Limiting
+
+    API requests are rate limited per API key. Rate limit headers are included in responses.
+  version: 0.0.1
+  contact:
+    name: DomainFlow API Support
+    url: https://domainflow.dev/docs
+    email: api-support@domainflow.dev
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+  - url: https://api.domainflow.dev/api
+    description: Production environment
+  - url: https://staging-api.domainflow.dev/api
+    description: Staging environment
+  - url: http://localhost:8080/api
+    description: Local development
+security:
+  - bearerAuth: []
+tags:
+  - name: Personas
+    description: DNS persona management and configuration
+  - name: Proxies
+    description: Individual proxy management and health monitoring
+  - name: Proxy Pools
+    description: Proxy pool creation, management, and rotation strategies
+  - name: Keyword Sets
+    description: Keyword set management for targeted extraction
+  - name: Extraction
+    description: Data extraction operations and campaign management
+  - name: Config
+    description: System configuration management
+  - name: Database
+    description: Database operations and query execution
+  - name: Auth
+    description: Authentication and authorization management
+  - name: Health
+    description: System health and monitoring endpoints
+  - name: SSE
+    description: Server-Sent Events for real-time updates
+paths:
+  /v2/config/worker:
+    get:
+      tags:
+        - Config
+      summary: Get worker configuration
+      description: Retrieve worker pool and processing settings
+      operationId: getWorkerConfig
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessEnvelope_WorkerConfig'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - Config
+      summary: Update worker configuration
+      description: Update worker pool and processing settings
+      operationId: updateWorkerConfig
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkerConfigUpdateRequest'
+            examples:
+              basic:
+                summary: Basic worker configuration
+                value:
+                  poolSize: 10
+                  maxJobs: 1000
+                  jobTimeout: 300
+              high_throughput:
+                summary: High throughput configuration
+                value:
+                  poolSize: 50
+                  maxJobs: 5000
+                  jobTimeout: 600
+                  retryAttempts: 5
+                  enableMetrics: true
+                  priority: high
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessEnvelope_ConfigUpdate'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Bearer token authentication using API keys.
+
+        Include your API key in the Authorization header:
+        ```
+        Authorization: Bearer your-api-key
+        ```
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: session_token
+      description: |
+        Session-based authentication using HTTP-only cookies.
+        Used primarily for web dashboard authentication.
+  responses:
+    SuccessEnvelope_WorkerConfig:
+      description: Worker configuration response
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/WorkerConfig'
+    Unauthorized:
+      description: Unauthorized - invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorEnvelope'
+              - type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: UNAUTHORIZED
+                      message:
+                        type: string
+                        example: Invalid authentication credentials
+    RateLimitExceeded:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorEnvelope'
+              - type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: RATE_LIMIT_EXCEEDED
+                      message:
+                        type: string
+                        example: Rate limit exceeded. Please try again later.
+                      retryAfter:
+                        type: integer
+                        example: 60
+                        description: Seconds until rate limit resets
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorEnvelope'
+              - type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: INTERNAL_ERROR
+                      message:
+                        type: string
+                        example: An internal server error occurred
+    SuccessEnvelope_ConfigUpdate:
+      description: Configuration update response
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      applied:
+                        type: boolean
+                        description: Whether the configuration was successfully applied
+                      restartRequired:
+                        type: boolean
+                        description: Whether a service restart is required for changes to take effect
+    BadRequest:
+      description: Bad request - invalid parameters or malformed request
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorEnvelope'
+              - type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: INVALID_REQUEST
+                      message:
+                        type: string
+                        example: Request validation failed
+    ValidationError:
+      description: Validation error - request data failed validation
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorEnvelope'
+              - type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: VALIDATION_ERROR
+                      message:
+                        type: string
+                        example: Request validation failed
+                      details:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            field:
+                              type: string
+                              example: email
+                            message:
+                              type: string
+                              example: Invalid email format
+    SuccessEnvelope:
+      description: Standard successful response envelope
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: Indicates successful operation
+        data:
+          type: object
+          description: Response payload data
+        meta:
+          $ref: '#/components/schemas/ResponseMetadata'
+    ErrorEnvelope:
+      description: Standard error response envelope
+      type: object
+      required:
+        - success
+        - error
+        - meta
+      properties:
+        success:
+          type: boolean
+          example: false
+          description: Indicates failed operation
+        error:
+          $ref: '#/components/schemas/ApiError'
+        meta:
+          $ref: '#/components/schemas/ResponseMetadata'
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorEnvelope'
+              - type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: FORBIDDEN
+                      message:
+                        type: string
+                        example: Insufficient permissions for this operation
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorEnvelope'
+              - type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: NOT_FOUND
+                      message:
+                        type: string
+                        example: Requested resource not found
+    Conflict:
+      description: Conflict - resource already exists or conflicting operation
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/ErrorEnvelope'
+              - type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        example: CONFLICT
+                      message:
+                        type: string
+                        example: Resource already exists or conflicting operation
+  parameters:
+    limit:
+      name: limit
+      in: query
+      description: Maximum number of items to return
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 1000
+        default: 50
+      example: 50
+    offset:
+      name: offset
+      in: query
+      description: Number of items to skip before returning results
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      example: 0
+    page:
+      name: page
+      in: query
+      description: Page number (1-based)
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      example: 1
+    sort:
+      name: sort
+      in: query
+      description: |
+        Sort field and direction. Format: `field:direction`
+
+        Direction can be `asc` or `desc`. Default is `asc`.
+
+        Examples:
+        - `name:asc` - Sort by name ascending
+        - `createdAt:desc` - Sort by creation date descending
+      required: false
+      schema:
+        type: string
+        pattern: ^[a-zA-Z][a-zA-Z0-9_]*:(asc|desc)$
+      example: createdAt:desc
+    search:
+      name: search
+      in: query
+      description: Search term to filter results
+      required: false
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 255
+      example: proxy
+    status:
+      name: status
+      in: query
+      description: Filter by status
+      required: false
+      schema:
+        type: string
+        enum:
+          - active
+          - inactive
+          - pending
+          - error
+      example: active
+    personaId:
+      name: personaId
+      in: path
+      description: Unique identifier for a persona
+      required: true
+      schema:
+        type: string
+        format: uuid
+      example: 123e4567-e89b-12d3-a456-426614174000
+    proxyId:
+      name: proxyId
+      in: path
+      description: Unique identifier for a proxy
+      required: true
+      schema:
+        type: string
+        format: uuid
+      example: 123e4567-e89b-12d3-a456-426614174000
+    poolId:
+      name: poolId
+      in: path
+      description: Unique identifier for a proxy pool
+      required: true
+      schema:
+        type: string
+        format: uuid
+      example: 123e4567-e89b-12d3-a456-426614174000
+    keywordSetId:
+      name: keywordSetId
+      in: path
+      description: Unique identifier for a keyword set
+      required: true
+      schema:
+        type: string
+        format: uuid
+      example: 123e4567-e89b-12d3-a456-426614174000
+    campaignId:
+      name: campaignId
+      in: path
+      description: Unique identifier for an extraction campaign
+      required: true
+      schema:
+        type: string
+        format: uuid
+      example: 123e4567-e89b-12d3-a456-426614174000
+    batchSize:
+      name: batchSize
+      in: query
+      description: Number of items to process in each batch
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 1000
+        default: 100
+      example: 100
+    startDate:
+      name: startDate
+      in: query
+      description: Start date for filtering (ISO 8601 format)
+      required: false
+      schema:
+        type: string
+        format: date-time
+      example: '2023-01-01T00:00:00Z'
+    endDate:
+      name: endDate
+      in: query
+      description: End date for filtering (ISO 8601 format)
+      required: false
+      schema:
+        type: string
+        format: date-time
+      example: '2023-12-31T23:59:59Z'
+    include:
+      name: include
+      in: query
+      description: |
+        Comma-separated list of related resources to include in the response.
+
+        Available includes vary by endpoint. Common options:
+        - `metadata` - Include resource metadata
+        - `stats` - Include usage statistics
+        - `health` - Include health status
+      required: false
+      schema:
+        type: string
+      example: metadata,stats
+    fields:
+      name: fields
+      in: query
+      description: |
+        Comma-separated list of fields to include in the response.
+        Use to reduce response size by only returning needed fields.
+      required: false
+      schema:
+        type: string
+      example: id,name,status
+  schemas:
+    ResponseMetadata:
+      type: object
+      required:
+        - timestamp
+        - requestId
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Response timestamp in ISO 8601 format
+          example: '2023-07-15T10:30:00Z'
+        requestId:
+          type: string
+          format: uuid
+          description: Unique request identifier for tracing
+          example: req_123e4567-e89b-12d3-a456-426614174000
+        pagination:
+          $ref: '#/components/schemas/PaginationMetadata'
+        rateLimit:
+          $ref: '#/components/schemas/RateLimitMetadata'
+    PaginationMetadata:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          description: Current page number
+          example: 1
+        limit:
+          type: integer
+          minimum: 1
+          description: Items per page
+          example: 50
+        total:
+          type: integer
+          minimum: 0
+          description: Total number of items
+          example: 1250
+        totalPages:
+          type: integer
+          minimum: 0
+          description: Total number of pages
+          example: 25
+        hasNext:
+          type: boolean
+          description: Whether there are more pages
+          example: true
+        hasPrevious:
+          type: boolean
+          description: Whether there are previous pages
+          example: false
+    RateLimitMetadata:
+      type: object
+      properties:
+        limit:
+          type: integer
+          description: Requests allowed per time window
+          example: 1000
+        remaining:
+          type: integer
+          description: Requests remaining in current window
+          example: 950
+        reset:
+          type: string
+          format: date-time
+          description: When the rate limit window resets
+          example: '2023-07-15T11:00:00Z'
+        retryAfter:
+          type: integer
+          description: Seconds to wait before retrying (only present when rate limited)
+          example: 60
+    ApiError:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Machine-readable error code
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          description: Human-readable error message
+          example: Request validation failed
+        details:
+          type: array
+          description: Additional error details
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+        traceId:
+          type: string
+          description: Internal trace ID for debugging
+          example: trace_abc123def456
+    ErrorDetail:
+      type: object
+      required:
+        - field
+        - message
+      properties:
+        field:
+          type: string
+          description: Field that caused the error
+          example: email
+        message:
+          type: string
+          description: Specific error message for this field
+          example: Invalid email format
+        code:
+          type: string
+          description: Specific error code for this field
+          example: INVALID_FORMAT
+    Timestamps:
+      type: object
+      required:
+        - createdAt
+        - updatedAt
+      properties:
+        createdAt:
+          type: string
+          format: date-time
+          description: Resource creation timestamp
+          example: '2023-07-15T10:30:00Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Resource last modification timestamp
+          example: '2023-07-15T10:35:00Z'
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Resource deletion timestamp (soft delete)
+          example: null
+    HealthStatus:
+      type: string
+      enum:
+        - healthy
+        - degraded
+        - unhealthy
+        - unknown
+      description: |
+        Health status of a resource:
+        - `healthy` - Resource is functioning normally
+        - `degraded` - Resource is functioning but with reduced performance
+        - `unhealthy` - Resource is not functioning properly
+        - `unknown` - Health status cannot be determined
+    ConfigStatus:
+      type: string
+      enum:
+        - active
+        - pending
+        - error
+        - disabled
+      description: |
+        Configuration status:
+        - `active` - Configuration is active and applied
+        - `pending` - Configuration change is pending application
+        - `error` - Configuration has errors and cannot be applied
+        - `disabled` - Configuration is disabled
+    ResourceStatus:
+      type: string
+      enum:
+        - active
+        - inactive
+        - pending
+        - error
+        - maintenance
+      description: |
+        Resource operational status:
+        - `active` - Resource is active and operational
+        - `inactive` - Resource is inactive but available
+        - `pending` - Resource is being provisioned or configured
+        - `error` - Resource has errors and needs attention
+        - `maintenance` - Resource is under maintenance
+    UUID:
+      type: string
+      format: uuid
+      pattern: ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
+      example: 123e4567-e89b-12d3-a456-426614174000
+    ResourceStats:
+      type: object
+      properties:
+        totalRequests:
+          type: integer
+          minimum: 0
+          description: Total number of requests processed
+          example: 12500
+        successfulRequests:
+          type: integer
+          minimum: 0
+          description: Number of successful requests
+          example: 12000
+        failedRequests:
+          type: integer
+          minimum: 0
+          description: Number of failed requests
+          example: 500
+        averageResponseTime:
+          type: number
+          minimum: 0
+          description: Average response time in milliseconds
+          example: 245.5
+        successRate:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Success rate as a decimal (0.0 to 1.0)
+          example: 0.96
+        lastActivity:
+          type: string
+          format: date-time
+          description: Timestamp of last activity
+          example: '2023-07-15T10:30:00Z'
+    Tags:
+      type: array
+      items:
+        type: string
+        minLength: 1
+        maxLength: 50
+        pattern: ^[a-zA-Z0-9][a-zA-Z0-9-_]*[a-zA-Z0-9]$
+      maxItems: 20
+      uniqueItems: true
+      description: Resource tags for categorization and filtering
+      example:
+        - production
+        - high-priority
+        - us-east
+    WorkerConfig:
+      type: object
+      required:
+        - poolSize
+        - maxJobs
+        - jobTimeout
+      properties:
+        poolSize:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          description: Number of worker threads in the pool
+          example: 10
+        maxJobs:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          description: Maximum number of jobs that can be queued
+          example: 1000
+        jobTimeout:
+          type: integer
+          minimum: 1
+          maximum: 3600
+          description: Job timeout in seconds
+          example: 300
+        idleTimeout:
+          type: integer
+          minimum: 1
+          maximum: 300
+          description: Worker idle timeout in seconds before thread cleanup
+          example: 60
+          default: 60
+        retryAttempts:
+          type: integer
+          minimum: 0
+          maximum: 10
+          description: Number of retry attempts for failed jobs
+          example: 3
+          default: 3
+        retryDelay:
+          type: integer
+          minimum: 100
+          maximum: 60000
+          description: Delay between retry attempts in milliseconds
+          example: 5000
+          default: 5000
+        enableMetrics:
+          type: boolean
+          description: Whether to collect worker performance metrics
+          example: true
+          default: true
+        metricsInterval:
+          type: integer
+          minimum: 1
+          maximum: 3600
+          description: Metrics collection interval in seconds
+          example: 30
+          default: 30
+        priority:
+          type: string
+          enum:
+            - low
+            - normal
+            - high
+            - critical
+          description: Worker priority level
+          example: normal
+          default: normal
+        enableHealthCheck:
+          type: boolean
+          description: Whether to enable worker health monitoring
+          example: true
+          default: true
+        healthCheckInterval:
+          type: integer
+          minimum: 10
+          maximum: 300
+          description: Health check interval in seconds
+          example: 60
+          default: 60
+    WorkerConfigUpdateRequest:
+      type: object
+      properties:
+        poolSize:
+          type: integer
+          minimum: 1
+          maximum: 1000
+          description: Number of worker threads in the pool
+        maxJobs:
+          type: integer
+          minimum: 1
+          maximum: 10000
+          description: Maximum number of jobs that can be queued
+        jobTimeout:
+          type: integer
+          minimum: 1
+          maximum: 3600
+          description: Job timeout in seconds
+        idleTimeout:
+          type: integer
+          minimum: 1
+          maximum: 300
+          description: Worker idle timeout in seconds
+        retryAttempts:
+          type: integer
+          minimum: 0
+          maximum: 10
+          description: Number of retry attempts for failed jobs
+        retryDelay:
+          type: integer
+          minimum: 100
+          maximum: 60000
+          description: Delay between retry attempts in milliseconds
+        enableMetrics:
+          type: boolean
+          description: Whether to collect worker performance metrics
+        metricsInterval:
+          type: integer
+          minimum: 1
+          maximum: 3600
+          description: Metrics collection interval in seconds
+        priority:
+          type: string
+          enum:
+            - low
+            - normal
+            - high
+            - critical
+          description: Worker priority level
+        enableHealthCheck:
+          type: boolean
+          description: Whether to enable worker health monitoring
+        healthCheckInterval:
+          type: integer
+          minimum: 10
+          maximum: 300
+          description: Health check interval in seconds
+    WorkerStatus:
+      type: object
+      required:
+        - status
+        - activeJobs
+        - queuedJobs
+        - totalProcessed
+      properties:
+        status:
+          $ref: '#/components/schemas/ResourceStatus'
+        activeJobs:
+          type: integer
+          minimum: 0
+          description: Number of currently active jobs
+          example: 5
+        queuedJobs:
+          type: integer
+          minimum: 0
+          description: Number of jobs waiting in queue
+          example: 25
+        totalProcessed:
+          type: integer
+          minimum: 0
+          description: Total number of jobs processed since startup
+          example: 15000
+        averageProcessingTime:
+          type: number
+          minimum: 0
+          description: Average job processing time in milliseconds
+          example: 1250.5
+        successRate:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Job success rate as decimal (0.0 to 1.0)
+          example: 0.98
+        lastJobAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp of last job processing
+          example: '2023-07-15T10:30:00Z'
+        health:
+          $ref: '#/components/schemas/HealthStatus'
+    WorkerMetrics:
+      type: object
+      properties:
+        throughput:
+          type: object
+          properties:
+            jobsPerSecond:
+              type: number
+              minimum: 0
+              description: Current jobs processed per second
+              example: 5.2
+            peakJobsPerSecond:
+              type: number
+              minimum: 0
+              description: Peak jobs per second in current period
+              example: 8.7
+        performance:
+          type: object
+          properties:
+            cpuUsage:
+              type: number
+              minimum: 0
+              maximum: 100
+              description: CPU usage percentage
+              example: 45.2
+            memoryUsage:
+              type: number
+              minimum: 0
+              description: Memory usage in MB
+              example: 512.8
+            goroutines:
+              type: integer
+              minimum: 0
+              description: Number of active goroutines
+              example: 25
+        queue:
+          type: object
+          properties:
+            size:
+              type: integer
+              minimum: 0
+              description: Current queue size
+              example: 15
+            capacity:
+              type: integer
+              minimum: 0
+              description: Maximum queue capacity
+              example: 1000
+            utilizationPercent:
+              type: number
+              minimum: 0
+              maximum: 100
+              description: Queue utilization percentage
+              example: 1.5
+    SuccessEnvelope:
+      description: Standard successful response envelope
+      type: object
+      required:
+        - success
+        - data
+        - meta
+      properties:
+        success:
+          type: boolean
+          example: true
+          description: Indicates successful operation
+        data:
+          type: object
+          description: Response payload data
+        meta:
+          $ref: '#/components/schemas/ResponseMetadata'
+    ErrorEnvelope:
+      description: Standard error response envelope
+      type: object
+      required:
+        - success
+        - error
+        - meta
+      properties:
+        success:
+          type: boolean
+          example: false
+          description: Indicates failed operation
+        error:
+          $ref: '#/components/schemas/ApiError'
+        meta:
+          $ref: '#/components/schemas/ResponseMetadata'
