@@ -31,7 +31,7 @@ import {
   Activity,
   Loader2
 } from 'lucide-react';
-import type { GithubComFntelecomllcStudioBackendInternalModelsProxy as ProxyType } from '@/lib/api-client/models';
+import type { ModelsProxy as ProxyType } from '@/lib/api-client/models';
 import { useTestProxyMutation } from '@/store/api/proxyApi';
 import { useToast } from '@/hooks/use-toast';
 import { useProxyHealth } from '@/lib/hooks/useProxyHealth';

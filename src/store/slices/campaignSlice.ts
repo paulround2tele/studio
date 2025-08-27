@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { Campaign } from '@/lib/api-client/models';
+import type { Campaign } from '@/lib/api-client';
 
 // State interface for campaign management
 export interface CampaignState {

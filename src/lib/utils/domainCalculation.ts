@@ -2,10 +2,8 @@
 // Production domain calculation utilities
 // Uses backend OpenAPI types exclusively
 
-import type { components } from '@/lib/api-client/types';
-
-// Use backend OpenAPI type - the one that ACTUALLY exists
-type DomainGenerationParams = components['schemas']['models.DomainGenerationPhaseConfig'];
+// TODO: map to generated model when available
+type DomainGenerationParams = any;
 
 /**
  * Calculate maximum theoretical domains for a given configuration
@@ -66,7 +64,7 @@ export function validateDomainConfig(config: DomainGenerationParams): {
     errors.push('Variable length must be at least 1');
   }
 
-  if (!config.tlds?.length || !config.tlds.some(tld => tld.trim())) {
+  if (!config.tlds?.length || !config.tlds.some((tld: string) => tld.trim())) {
     errors.push('At least one valid TLD is required');
   }
 

@@ -12,7 +12,7 @@ import { Play, Loader2 } from 'lucide-react';
 import type { components } from '@/lib/api-client/types';
 
 // Use enums from OpenAPI schema
-type CampaignCurrentPhaseEnum = components['schemas']['api.CampaignSummary']['currentPhase'];
+import type { CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
 
 interface ReduxPhaseTransitionButtonProps {
   campaignId: string;

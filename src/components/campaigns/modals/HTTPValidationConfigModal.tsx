@@ -15,12 +15,13 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Import types and services - using proper client structure
-import { campaignsApi, personasApi, proxiesApi } from '@/lib/api-client/client';
+import { PersonasApi, Configuration } from '@/lib/api-client';
+import { PersonaType } from '@/lib/api-client/models/persona-type';
 import { useConfigurePhaseStandaloneMutation } from '@/store/api/campaignApi';
-import type { HTTPValidationConfig } from '@/lib/api-client/models/httpvalidation-config';
-import type { ApiPhaseConfigureRequest } from '@/lib/api-client/models/api-phase-configure-request';
-import { ApiPhaseConfigureRequestPhaseTypeEnum } from '@/lib/api-client/models/api-phase-configure-request';
+import type { ApiHTTPValidationConfig } from '@/lib/api-client/models/api-httpvalidation-config';
+import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 // Response types from OpenAPI - using exact same types as campaign form
 interface ExtendedPersonaResponse extends PersonaResponse {
@@ -87,16 +88,18 @@ export default function HTTPValidationConfigModal({
         setLoadingData(true);
         
         // Fetch HTTP personas - using proper API client
-        const httpResponse = await personasApi.personasGet(undefined, undefined, undefined, 'http');
-        const httpData = Array.isArray(httpResponse.data) ? httpResponse.data : [];
+  const cfg = new Configuration({ basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080' });
+  const personasApi = new PersonasApi(cfg);
+  const httpResponse = await personasApi.personasList(undefined, undefined, true, PersonaType.http);
+  const httpData = extractResponseData<{ items?: PersonaResponse[] }>(httpResponse)?.items || [];
         // Add missing status property for compatibility - exact same as campaign form
-        const httpPersonasWithStatus = httpData.map(persona => ({
+  const httpPersonasWithStatus = httpData.map((persona: any) => ({
           ...persona,
           status: persona.isEnabled ? 'Active' : 'Disabled',
           id: persona.id || '',
           name: persona.name || '',
           personaType: persona.personaType || 'http'
-        })).filter(p => p.isEnabled); // Only enabled personas
+  })).filter((p: any) => p.isEnabled); // Only enabled personas
         setHttpPersonas(httpPersonasWithStatus as ExtendedPersonaResponse[]);
 
         // Note: Keyword sets functionality needs to be implemented with proper API
@@ -168,24 +171,19 @@ export default function HTTPValidationConfigModal({
       setConfiguring(true);
 
       // Prepare the simplified persona-driven configuration
-      const httpConfig: HTTPValidationConfig = {
+      const httpConfig: ApiHTTPValidationConfig = {
         name: data.name,
         personaIds: data.personaIds,
         keywordSetIds: data.keywordSetIds.length > 0 ? data.keywordSetIds : undefined,
         adHocKeywords: data.adHocKeywords.length > 0 ? data.adHocKeywords : undefined,
       };
 
-      const configRequest: ApiPhaseConfigureRequest = {
-        phaseType: ApiPhaseConfigureRequestPhaseTypeEnum.http_keyword_validation,
-        config: { httpValidation: httpConfig },
+      const configRequest: PhaseConfigurationRequest = {
+        configuration: { httpValidation: httpConfig },
       };
 
-      // Use professional RTK Query mutation instead of amateur singleton API
-      await configurePhase({
-        campaignId,
-        phase: ApiPhaseConfigureRequestPhaseTypeEnum.http_keyword_validation,
-        config: configRequest
-      }).unwrap();
+  // Use professional RTK Query mutation with normalized phase name
+  await configurePhase({ campaignId, phase: 'extraction', config: configRequest }).unwrap();
 
       toast({
         title: "HTTP validation configured",

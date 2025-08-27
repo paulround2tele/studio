@@ -10,17 +10,18 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Briefcase, RefreshCw, CheckCircle, AlertCircle, Clock, Pause, Play, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { Campaign, CampaignPhaseStatusEnum } from '@/lib/api-client/models';
+import type { CampaignResponse } from '@/lib/api-client/models';
 
 export interface CampaignHeaderProps {
-  campaign: Campaign;
+  campaign: CampaignResponse;
   loading?: boolean;
   onRefresh?: () => void;
   totalDomains?: number;
   className?: string;
 }
 
-const getStatusIcon = (status: CampaignPhaseStatusEnum) => {
+type PhaseStatus = 'not_started' | 'in_progress' | 'completed' | 'failed' | 'paused';
+const getStatusIcon = (status: PhaseStatus) => {
   switch (status) {
     case 'completed': return CheckCircle;
     case 'failed': return AlertCircle;
@@ -31,7 +32,7 @@ const getStatusIcon = (status: CampaignPhaseStatusEnum) => {
   }
 };
 
-const getStatusVariant = (status: CampaignPhaseStatusEnum): 'default' | 'secondary' | 'destructive' | 'outline' => {
+const getStatusVariant = (status: PhaseStatus): 'default' | 'secondary' | 'destructive' | 'outline' => {
   switch (status) {
     case 'completed': return 'default' as any;
     case 'failed': return 'destructive' as any;
@@ -42,7 +43,7 @@ const getStatusVariant = (status: CampaignPhaseStatusEnum): 'default' | 'seconda
   }
 };
 
-const getStatusDisplayText = (status: CampaignPhaseStatusEnum): string => {
+const getStatusDisplayText = (status: PhaseStatus): string => {
   switch (status) {
     case 'completed': return 'Completed';
     case 'failed': return 'Failed';
@@ -55,11 +56,10 @@ const getStatusDisplayText = (status: CampaignPhaseStatusEnum): string => {
 
 const getPhaseDisplayName = (phase: string): string => {
   switch (phase) {
-    case 'setup': return 'Campaign Setup';
-    case 'generation': return 'Domain Generation';
-    case 'dns_validation': return 'DNS Validation';
-    case 'http_keyword_validation': return 'HTTP Validation';
-    case 'analysis': return 'Analysis';
+  case 'discovery': return 'Discovery';
+  case 'validation': return 'Validation';
+  case 'extraction': return 'Extraction';
+  case 'analysis': return 'Analysis';
     default: return phase.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   }
 };
@@ -79,19 +79,26 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
   totalDomains = 0,
   className
 }) => {
-  const campaignStatus = campaign.phaseStatus || 'not_started';
-  const campaignPhase = campaign.currentPhase || 'setup';
+  const campaignPhase = campaign.currentPhase || 'discovery';
+  const campaignStatus: PhaseStatus = (() => {
+    switch (campaign.status) {
+      case 'completed': return 'completed';
+      case 'failed': return 'failed';
+      case 'paused': return 'paused';
+      case 'running': return 'in_progress';
+      case 'draft':
+      default: return 'not_started';
+    }
+  })();
   
   // Determine actual status based on data
-  const actualStatus = totalDomains > 0 && campaignPhase === 'generation' 
+  const actualStatus = totalDomains > 0 && campaignPhase === 'discovery' 
     ? 'completed' as const 
     : campaignStatus;
   
   const StatusIcon = getStatusIcon(actualStatus);
   const statusVariant = getStatusVariant(actualStatus);
-  const statusText = totalDomains > 0 && campaignPhase === 'generation' 
-    ? 'Phase 1 Complete' 
-    : getStatusDisplayText(actualStatus);
+  const statusText = getStatusDisplayText(actualStatus);
   const phaseDisplayName = getPhaseDisplayName(campaignPhase);
 
   return (
@@ -160,12 +167,9 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
             <div className="text-muted-foreground font-medium">Phase Progress</div>
             <div className="font-semibold text-base">
               {/* Calculate accurate progress based on actual data */}
-              {totalDomains > 0 && campaign.currentPhase === 'generation' 
-                ? <span className="text-green-600 font-bold">100% Complete</span>
-                : campaign.progressPercentage !== undefined 
-                  ? `${campaign.progressPercentage}%` 
-                  : <span className="text-muted-foreground">Initializing</span>
-              }
+              {typeof campaign.progress?.percentComplete === 'number' 
+                ? `${Math.round(campaign.progress.percentComplete)}%`
+                : <span className="text-muted-foreground">Initializing</span>}
             </div>
           </div>
         </div>
@@ -174,15 +178,13 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
         <div className="mt-6 pt-4 border-t">
           <div className="flex items-center justify-between mb-3">
             <span className="text-base font-semibold">Overall Campaign Progress</span>
-            <span className="text-sm text-muted-foreground font-medium">
-              {totalDomains > 0 ? 'Phase 1 Complete' : 'Getting Started'}
-            </span>
+      <span className="text-sm text-muted-foreground font-medium">{`${Math.round(campaign.progress?.percentComplete || 0)}%`}</span>
           </div>
           <div className="w-full bg-secondary rounded-full h-3 overflow-hidden">
             <div 
               className="bg-gradient-to-r from-primary to-primary/80 h-3 rounded-full transition-all duration-500 ease-in-out" 
               style={{ 
-                width: `${totalDomains > 0 ? 25 : 0}%` // 25% = 1 phase out of 4 completed
+        width: `${Math.max(0, Math.min(100, campaign.progress?.percentComplete || 0))}%`
               }}
             />
           </div>
@@ -198,13 +200,13 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
         
         {/* Note: Campaign description not available in current schema */}
         
-        {campaign.errorMessage && (
+    {false && (campaign as any).errorMessage && (
           <div className="mt-4 pt-4 border-t">
             <div className="flex items-center gap-2 text-destructive">
               <AlertCircle className="h-4 w-4" />
               <span className="text-sm font-medium">Error Details</span>
             </div>
-            <div className="text-sm text-destructive mt-1">{campaign.errorMessage}</div>
+      <div className="text-sm text-destructive mt-1">{(campaign as any).errorMessage}</div>
           </div>
         )}
       </CardContent>

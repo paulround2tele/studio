@@ -7,14 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { useConfigurePhaseStandaloneMutation, useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
-import type { 
-  ApiPhaseConfigureRequest,
-  ApiDNSValidationConfig,
-  ApiHTTPValidationConfig,
-  ServicesDomainGenerationPhaseConfig,
-  ApiAnalysisConfig,
-  CampaignCurrentPhaseEnum
-} from '@/lib/api-client/models';
+import type { PhaseConfigurationRequest as ApiPhaseConfigureRequest } from '@/lib/api-client/models';
+import type { DNSValidatorConfigJSON as ApiDNSValidationConfig } from '@/lib/api-client/models/dnsvalidator-config-json';
+import type { HTTPValidatorConfigJSON as ApiHTTPValidationConfig } from '@/lib/api-client/models/httpvalidator-config-json';
+import type { ServicesDomainGenerationPhaseConfig } from '@/lib/api-client/models/services-domain-generation-phase-config';
+import type { ApiAnalysisConfig } from '@/lib/api-client/models/api-analysis-config';
+import { CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
 
 // Import the properly typed configuration components
 import DNSValidationConfig from './configuration/DNSValidationConfig';
@@ -55,29 +53,20 @@ export const CampaignPhaseManager: React.FC<CampaignPhaseManagerProps> = ({ camp
     }
 
     // Get the appropriate config based on selected phase
-    let phaseConfig: any;
-    let phaseType: 'dns_validation' | 'http_keyword_validation' | 'analysis';
+  let phaseConfig: any;
     
     switch (data.selectedPhase) {
-      case 'dns_validation':
-        phaseConfig = data.dnsValidationConfig;
-        phaseType = 'dns_validation';
+      case 'validation':
+        phaseConfig = data.dnsValidationConfig ?? data.httpKeywordValidationConfig;
         break;
-      case 'http_keyword_validation':
+      case 'extraction':
         phaseConfig = data.httpKeywordValidationConfig;
-        phaseType = 'http_keyword_validation';
         break;
       case 'analysis':
         phaseConfig = data.analysisConfig;
-        phaseType = 'analysis';
         break;
-      case 'generation':
-      case 'setup':
-        // These phases don't use the PhaseConfigureRequest - they might use different endpoints
-        toast({
-          title: "Info", 
-          description: `${data.selectedPhase} phase uses a different configuration method`,
-        });
+      case 'discovery':
+        toast({ title: 'Info', description: 'Discovery uses campaign creation config' });
         return;
       default:
         toast({
@@ -89,14 +78,11 @@ export const CampaignPhaseManager: React.FC<CampaignPhaseManagerProps> = ({ camp
     }
 
     try {
-      await configurePhase({
-        campaignId,
-        phase: data.selectedPhase,
-        config: {
-          phaseType: phaseType as any, // TODO: Fix enum compatibility
-          config: phaseConfig
-        }
-      }).unwrap();
+      const configReq: ApiPhaseConfigureRequest = {
+        configuration: phaseConfig || {},
+        // personaIds/keywordSetIds can be set by the individual config UIs
+      };
+      await configurePhase({ campaignId, phase: data.selectedPhase, config: configReq }).unwrap();
 
       toast({
         title: "Phase Configured",
@@ -146,7 +132,7 @@ export const CampaignPhaseManager: React.FC<CampaignPhaseManagerProps> = ({ camp
     if (!selectedPhase) return null;
 
     switch (selectedPhase) {
-      case 'dns_validation':
+      case 'validation':
         return (
           <FormField
             control={form.control}
@@ -159,7 +145,7 @@ export const CampaignPhaseManager: React.FC<CampaignPhaseManagerProps> = ({ camp
             )}
           />
         );
-      case 'http_keyword_validation':
+      case 'extraction':
         return (
           <FormField
             control={form.control}
@@ -172,7 +158,7 @@ export const CampaignPhaseManager: React.FC<CampaignPhaseManagerProps> = ({ camp
             )}
           />
         );
-      case 'generation':
+      case 'discovery':
         return (
           <FormField
             control={form.control}
@@ -233,10 +219,9 @@ export const CampaignPhaseManager: React.FC<CampaignPhaseManagerProps> = ({ camp
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="setup">Setup</SelectItem>
-                      <SelectItem value="generation">Domain Generation</SelectItem>
-                      <SelectItem value="dns_validation">DNS Validation</SelectItem>
-                      <SelectItem value="http_keyword_validation">HTTP Keyword Validation</SelectItem>
+                      <SelectItem value="discovery">Discovery</SelectItem>
+                      <SelectItem value="validation">Validation</SelectItem>
+                      <SelectItem value="extraction">Extraction</SelectItem>
                       <SelectItem value="analysis">Analysis</SelectItem>
                     </SelectContent>
                   </Select>

@@ -1,21 +1,19 @@
 # KeywordSetsApi
 
-All URIs are relative to *http://localhost:8080/api/v2*
+All URIs are relative to *https://api.domainflow.dev/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**createKeywordSet**](#createkeywordset) | **POST** /keywords/sets | Create keyword set|
-|[**deleteKeywordSet**](#deletekeywordset) | **DELETE** /keywords/sets/{setId} | Delete keyword set|
-|[**getKeywordSet**](#getkeywordset) | **GET** /keywords/sets/{setId} | Get keyword set|
-|[**getKeywordSetRules**](#getkeywordsetrules) | **GET** /keyword-sets/{id}/rules | Get keyword set with high-performance rules loading|
-|[**listKeywordRules**](#listkeywordrules) | **GET** /keyword-rules | Query keyword rules with advanced filtering|
-|[**listKeywordSets**](#listkeywordsets) | **GET** /keywords/sets | List keyword sets|
-|[**updateKeywordSet**](#updatekeywordset) | **PUT** /keywords/sets/{setId} | Update keyword set|
+|[**keywordSetsCreate**](#keywordsetscreate) | **POST** /keyword-sets | Create keyword set|
+|[**keywordSetsDelete**](#keywordsetsdelete) | **DELETE** /keyword-sets/{setId} | Delete keyword set|
+|[**keywordSetsGet**](#keywordsetsget) | **GET** /keyword-sets/{setId} | Get keyword set|
+|[**keywordSetsList**](#keywordsetslist) | **GET** /keyword-sets | List keyword sets|
+|[**keywordSetsRulesList**](#keywordsetsruleslist) | **GET** /keyword-sets/{setId}/rules | List rules for a keyword set|
+|[**keywordSetsUpdate**](#keywordsetsupdate) | **PUT** /keyword-sets/{setId} | Update keyword set|
 
-# **createKeywordSet**
-> BulkValidateDNS200Response createKeywordSet(apiCreateKeywordSetRequest)
+# **keywordSetsCreate**
+> KeywordSetsCreate201Response keywordSetsCreate(createKeywordSetRequest)
 
-Create a new keyword set with optional rules
 
 ### Example
 
@@ -23,16 +21,16 @@ Create a new keyword set with optional rules
 import {
     KeywordSetsApi,
     Configuration,
-    ApiCreateKeywordSetRequest
+    CreateKeywordSetRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordSetsApi(configuration);
 
-let apiCreateKeywordSetRequest: ApiCreateKeywordSetRequest; //Keyword set creation request
+let createKeywordSetRequest: CreateKeywordSetRequest; //
 
-const { status, data } = await apiInstance.createKeywordSet(
-    apiCreateKeywordSetRequest
+const { status, data } = await apiInstance.keywordSetsCreate(
+    createKeywordSetRequest
 );
 ```
 
@@ -40,16 +38,16 @@ const { status, data } = await apiInstance.createKeywordSet(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **apiCreateKeywordSetRequest** | **ApiCreateKeywordSetRequest**| Keyword set creation request | |
+| **createKeywordSetRequest** | **CreateKeywordSetRequest**|  | |
 
 
 ### Return type
 
-**BulkValidateDNS200Response**
+**KeywordSetsCreate201Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -60,179 +58,75 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**201** | Created keyword set |  -  |
-|**400** | Invalid request payload or validation failed |  -  |
-|**409** | Keyword set with name already exists |  -  |
-|**500** | Failed to create keyword set |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **deleteKeywordSet**
-> BulkValidateDNS200Response deleteKeywordSet()
-
-Delete a keyword set by ID
-
-### Example
-
-```typescript
-import {
-    KeywordSetsApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new KeywordSetsApi(configuration);
-
-let setId: string; //Keyword set ID (default to undefined)
-
-const { status, data } = await apiInstance.deleteKeywordSet(
-    setId
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **setId** | [**string**] | Keyword set ID | defaults to undefined|
-
-
-### Return type
-
-**BulkValidateDNS200Response**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Keyword set deleted |  -  |
-|**400** | Invalid keyword set ID format |  -  |
-|**404** | Keyword set not found |  -  |
-|**500** | Failed to delete keyword set |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **getKeywordSet**
-> BulkValidateDNS200Response getKeywordSet()
-
-Retrieve a specific keyword set by ID including its rules
-
-### Example
-
-```typescript
-import {
-    KeywordSetsApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new KeywordSetsApi(configuration);
-
-let setId: string; //Keyword set ID (default to undefined)
-
-const { status, data } = await apiInstance.getKeywordSet(
-    setId
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **setId** | [**string**] | Keyword set ID | defaults to undefined|
-
-
-### Return type
-
-**BulkValidateDNS200Response**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Keyword set with rules |  -  |
-|**400** | Invalid keyword set ID format |  -  |
-|**404** | Keyword set not found |  -  |
-|**500** | Failed to fetch keyword set |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **getKeywordSetRules**
-> ApiAPIResponse getKeywordSetRules()
-
-Optimized endpoint for Phase 3 HTTP keyword validation scanning using JSONB rules column
-
-### Example
-
-```typescript
-import {
-    KeywordSetsApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new KeywordSetsApi(configuration);
-
-let id: string; //Keyword Set ID (default to undefined)
-
-const { status, data } = await apiInstance.getKeywordSetRules(
-    id
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **id** | [**string**] | Keyword Set ID | defaults to undefined|
-
-
-### Return type
-
-**ApiAPIResponse**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Keyword set rules |  -  |
+|**201** | Created |  -  |
 |**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**409** | Conflict |  -  |
+|**422** | Validation Error |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **keywordSetsDelete**
+> keywordSetsDelete()
+
+
+### Example
+
+```typescript
+import {
+    KeywordSetsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new KeywordSetsApi(configuration);
+
+let setId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.keywordSetsDelete(
+    setId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **setId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+void (empty response body)
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**204** | No Content |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
 |**404** | Not Found |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **listKeywordRules**
-> ApiAPIResponse listKeywordRules()
+# **keywordSetsGet**
+> KeywordSetsCreate201Response keywordSetsGet()
 
-Advanced querying for keyword rule management across sets with multiple filter options
 
 ### Example
 
@@ -245,16 +139,10 @@ import {
 const configuration = new Configuration();
 const apiInstance = new KeywordSetsApi(configuration);
 
-let limit: number; //Page size (optional) (default to 50)
-let offset: number; //Offset (optional) (default to 0)
-let setId: string; //Filter by set ID (optional) (default to undefined)
-let pattern: string; //Filter by pattern contains (optional) (default to undefined)
+let setId: string; // (default to undefined)
 
-const { status, data } = await apiInstance.listKeywordRules(
-    limit,
-    offset,
-    setId,
-    pattern
+const { status, data } = await apiInstance.keywordSetsGet(
+    setId
 );
 ```
 
@@ -262,19 +150,16 @@ const { status, data } = await apiInstance.listKeywordRules(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **limit** | [**number**] | Page size | (optional) defaults to 50|
-| **offset** | [**number**] | Offset | (optional) defaults to 0|
-| **setId** | [**string**] | Filter by set ID | (optional) defaults to undefined|
-| **pattern** | [**string**] | Filter by pattern contains | (optional) defaults to undefined|
+| **setId** | [**string**] |  | defaults to undefined|
 
 
 ### Return type
 
-**ApiAPIResponse**
+**KeywordSetsCreate201Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -285,16 +170,18 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Rules list |  -  |
-|**400** | Bad Request |  -  |
+|**200** | OK |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**404** | Not Found |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **listKeywordSets**
-> BulkValidateDNS200Response listKeywordSets()
+# **keywordSetsList**
+> KeywordSetsList200Response keywordSetsList()
 
-Retrieve a list of keyword sets with optional filtering
 
 ### Example
 
@@ -307,12 +194,12 @@ import {
 const configuration = new Configuration();
 const apiInstance = new KeywordSetsApi(configuration);
 
-let limit: number; //Maximum number of results (optional) (default to 20)
-let offset: number; //Number of results to skip (optional) (default to 0)
-let includeRules: boolean; //Include rules in response (optional) (default to false)
-let isEnabled: boolean; //Filter by enabled status (optional) (default to undefined)
+let limit: number; //Page size (items per page) (optional) (default to 50)
+let offset: number; //Zero-based offset (optional) (default to 0)
+let includeRules: boolean; //If true, include rules array in keyword-sets list items (optional) (default to undefined)
+let isEnabled: boolean; //Filter by enabled state (optional) (default to undefined)
 
-const { status, data } = await apiInstance.listKeywordSets(
+const { status, data } = await apiInstance.keywordSetsList(
     limit,
     offset,
     includeRules,
@@ -324,19 +211,19 @@ const { status, data } = await apiInstance.listKeywordSets(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **limit** | [**number**] | Maximum number of results | (optional) defaults to 20|
-| **offset** | [**number**] | Number of results to skip | (optional) defaults to 0|
-| **includeRules** | [**boolean**] | Include rules in response | (optional) defaults to false|
-| **isEnabled** | [**boolean**] | Filter by enabled status | (optional) defaults to undefined|
+| **limit** | [**number**] | Page size (items per page) | (optional) defaults to 50|
+| **offset** | [**number**] | Zero-based offset | (optional) defaults to 0|
+| **includeRules** | [**boolean**] | If true, include rules array in keyword-sets list items | (optional) defaults to undefined|
+| **isEnabled** | [**boolean**] | Filter by enabled state | (optional) defaults to undefined|
 
 
 ### Return type
 
-**BulkValidateDNS200Response**
+**KeywordSetsList200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -347,34 +234,33 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | List of keyword sets |  -  |
-|**500** | Failed to list keyword sets |  -  |
+|**200** | OK |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **updateKeywordSet**
-> BulkValidateDNS200Response updateKeywordSet(apiUpdateKeywordSetRequest)
+# **keywordSetsRulesList**
+> KeywordSetsRulesList200Response keywordSetsRulesList()
 
-Update an existing keyword set and its rules
 
 ### Example
 
 ```typescript
 import {
     KeywordSetsApi,
-    Configuration,
-    ApiUpdateKeywordSetRequest
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordSetsApi(configuration);
 
-let setId: string; //Keyword set ID (default to undefined)
-let apiUpdateKeywordSetRequest: ApiUpdateKeywordSetRequest; //Keyword set update request
+let setId: string; // (default to undefined)
 
-const { status, data } = await apiInstance.updateKeywordSet(
-    setId,
-    apiUpdateKeywordSetRequest
+const { status, data } = await apiInstance.keywordSetsRulesList(
+    setId
 );
 ```
 
@@ -382,17 +268,75 @@ const { status, data } = await apiInstance.updateKeywordSet(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **apiUpdateKeywordSetRequest** | **ApiUpdateKeywordSetRequest**| Keyword set update request | |
-| **setId** | [**string**] | Keyword set ID | defaults to undefined|
+| **setId** | [**string**] |  | defaults to undefined|
 
 
 ### Return type
 
-**BulkValidateDNS200Response**
+**KeywordSetsRulesList200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**404** | Not Found |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **keywordSetsUpdate**
+> KeywordSetsCreate201Response keywordSetsUpdate(updateKeywordSetRequest)
+
+
+### Example
+
+```typescript
+import {
+    KeywordSetsApi,
+    Configuration,
+    UpdateKeywordSetRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new KeywordSetsApi(configuration);
+
+let setId: string; // (default to undefined)
+let updateKeywordSetRequest: UpdateKeywordSetRequest; //
+
+const { status, data } = await apiInstance.keywordSetsUpdate(
+    setId,
+    updateKeywordSetRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **updateKeywordSetRequest** | **UpdateKeywordSetRequest**|  | |
+| **setId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**KeywordSetsCreate201Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -403,11 +347,14 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Updated keyword set |  -  |
-|**400** | Invalid request payload or validation failed |  -  |
-|**404** | Keyword set not found |  -  |
-|**409** | Keyword set name already exists |  -  |
-|**500** | Failed to update keyword set |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**404** | Not Found |  -  |
+|**422** | Validation Error |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

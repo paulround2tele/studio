@@ -179,20 +179,20 @@ export default function ProductionReadinessCheck() {
     // 2. API Connectivity Check - CRITICAL FIX: Use cached health service
     try {
       // Only force refresh if explicitly requested, otherwise use cache (hourly)
-      const data = await healthService.getHealth(forceHealthRefresh);
+  const data = await healthService.getHealth(forceHealthRefresh);
       
       // Update last health check timestamp
       if (!data.isCached) {
         setLastHealthCheck(new Date());
       }
       
-      let healthDetails = `Version: ${data.version || 'Unknown'}`;
+  let healthDetails = `Version: ${data.version ?? 'Unknown'}`;
       if (data.isCached) {
         const ageMinutes = Math.floor((data.cacheAge || 0) / 60);
         healthDetails += ` (Cached ${ageMinutes}m ago)`;
       }
       
-      if (data.status === 'ok') {
+  if (data.status === 'ok' || data.status === 'passed') {
         results.push({
           name: 'API Backend',
           status: 'passed',
@@ -200,7 +200,7 @@ export default function ProductionReadinessCheck() {
           details: healthDetails,
           icon: <Database className="h-4 w-4" />
         });
-      } else if (data.status === 'degraded') {
+  } else if (data.status === 'degraded' || data.status === 'warning') {
         results.push({
           name: 'API Backend',
           status: 'warning',
@@ -213,7 +213,7 @@ export default function ProductionReadinessCheck() {
           name: 'API Backend',
           status: 'Failed',
           message: 'Backend API returned unhealthy status',
-          details: `Status: ${data.status || 'Unknown'} ${data.isCached ? '(Cached)' : ''}`,
+          details: `Status: ${data.status ?? 'Unknown'} ${data.isCached ? '(Cached)' : ''}`,
           icon: <Database className="h-4 w-4" />
         });
       }

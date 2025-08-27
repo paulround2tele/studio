@@ -2,58 +2,44 @@
 // Addresses audit issue: "Persona Configuration Type Safety"
 
 import { z } from 'zod';
-import type { components } from '@/lib/api-client/types';
+import type { ConfigDNSValidatorConfigJSON } from '@/lib/api-client/models/config-dnsvalidator-config-json';
+import type { ConfigHTTPValidatorConfigJSON } from '@/lib/api-client/models/config-httpvalidator-config-json';
 
-type DnsPersonaConfig = components['schemas']['config.DNSValidatorConfigJSON'];
-type HttpPersonaConfig = components['schemas']['config.HTTPValidatorConfigJSON'];
+type DnsPersonaConfig = ConfigDNSValidatorConfigJSON;
+type HttpPersonaConfig = ConfigHTTPValidatorConfigJSON;
 
 // Validation schemas that match backend DnsPersonaConfig and HttpPersonaConfig
 export const dnsPersonaConfigSchema = z.object({
-  // Required fields
-  maxDomainsPerRequest: z.number().min(1),
-  queryTimeoutSeconds: z.number().min(0),
-  resolverStrategy: z.enum(['round_robin', 'random', 'weighted', 'priority']),
-  resolvers: z.array(z.string().min(1)),
-  // Optional fields
+  // Generated model fields (all optional in spec; validate types and bounds)
   concurrentQueriesPerDomain: z.number().min(1).optional(),
   maxConcurrentGoroutines: z.number().min(1).optional(),
+  maxDomainsPerRequest: z.number().min(1).optional(),
   queryDelayMaxMs: z.number().min(0).optional(),
   queryDelayMinMs: z.number().min(0).optional(),
+  queryTimeoutSeconds: z.number().min(0).optional(),
   rateLimitBurst: z.number().min(0).optional(),
   rateLimitDps: z.number().min(0).optional(),
+  resolverStrategy: z.string().optional(),
+  resolvers: z.array(z.string().min(1)).optional(),
   resolversPreferredOrder: z.array(z.string()).optional(),
   resolversWeighted: z.record(z.string(), z.number()).optional(),
   useSystemResolvers: z.boolean().optional(),
 });
 
 export const httpPersonaConfigSchema = z.object({
-  // Required fields
-  userAgent: z.string().min(1),
-  // Optional fields
-  allowInsecureTls: z.boolean().optional(),
-  allowedStatusCodes: z.array(z.number()).optional(),
-  cookieHandling: z.any().optional(), // Use any to avoid enum mismatch issues
-  domSnapshot: z.boolean().optional(),
-  fetchBodyForKeywords: z.boolean().optional(),
+  // Generated model fields (optional)
+  allowInsecureTLS: z.boolean().optional(),
+  defaultHeaders: z.record(z.string(), z.string()).optional(),
+  defaultUserAgent: z.string().min(1).optional(),
   followRedirects: z.boolean().optional(),
-  headerOrder: z.array(z.string()).optional(),
-  headers: z.record(z.string(), z.string()).optional(),
-  headlessTimeoutSeconds: z.number().min(0).optional(),
-  headlessUserAgent: z.string().optional(),
-  http2Settings: z.any().optional(),
-  insecureSkipVerify: z.boolean().optional(),
-  loadImages: z.boolean().optional(),
+  maxBodyReadBytes: z.number().min(0).optional(),
+  maxConcurrentGoroutines: z.number().min(1).optional(),
+  maxDomainsPerRequest: z.number().min(1).optional(),
   maxRedirects: z.number().min(0).optional(),
   rateLimitBurst: z.number().min(0).optional(),
   rateLimitDps: z.number().min(0).optional(),
-  requestTimeoutSec: z.number().min(0).optional(),
-  screenshot: z.boolean().optional(),
-  scriptExecution: z.boolean().optional(),
-  tlsClientHello: z.any().optional(),
-  useHeadless: z.boolean().optional(),
-  viewportHeight: z.number().min(0).optional(),
-  viewportWidth: z.number().min(0).optional(),
-  waitDelaySeconds: z.number().min(0).optional(),
+  requestTimeoutSeconds: z.number().min(0).optional(),
+  userAgents: z.array(z.string()).optional(),
 });
 
 /**

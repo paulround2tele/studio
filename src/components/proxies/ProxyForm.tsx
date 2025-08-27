@@ -17,8 +17,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { GithubComFntelecomllcStudioBackendInternalModelsProxy as ProxyType } from '@/lib/api-client/models';
-import type { GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest as UpdateProxyRequest } from '@/lib/api-client/models';
+import type { ModelsProxy as ProxyType, UpdateProxyRequestAPI as UpdateProxyRequest } from '@/lib/api-client/models';
+import { ProxyProtocol } from '@/lib/api-client/models';
 
 // Type aliases for better readability
 import { useUpdateProxyMutation } from '@/store/api/proxyApi';
@@ -102,7 +102,7 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
           name: data.name,
           description: data.description,
           address: data.address,
-          protocol: data.protocol as "http" | "https" | "socks4" | "socks5",
+          protocol: data.protocol as unknown as ProxyProtocol,
           username: data.username,
           password: data.password,
           countryCode: data.countryCode,

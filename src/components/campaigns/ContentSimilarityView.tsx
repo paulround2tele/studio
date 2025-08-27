@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, UserCheck, Percent, Link as LinkIcon, ExternalLink, Sparkles, Loader2 } from 'lucide-react';
-import type { Campaign } from '@/lib/api-client/models';
+import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 import type { ExtractedContentItem } from '@/lib/api-client/models/extracted-content-item';
 import type { LeadItem } from '@/lib/api-client/models/lead-item';
 import { ScrollArea } from '../ui/scroll-area';
@@ -86,7 +86,7 @@ export default function ContentSimilarityView({ campaign, onAnalysisComplete }: 
   };
 
 
-  if (extractedContent.length === 0 && leads.length === 0 && campaign.currentPhase !== 'analysis' && campaign.phaseStatus !== 'in_progress') {
+  if (extractedContent.length === 0 && leads.length === 0 && campaign.currentPhase !== 'analysis' && campaign.status !== 'running') {
     return (
       <Card className="shadow-md mt-6">
         <CardHeader>
@@ -101,7 +101,7 @@ export default function ContentSimilarityView({ campaign, onAnalysisComplete }: 
       </Card>
     );
   }
-   if (extractedContent.length === 0 && leads.length === 0 && campaign.currentPhase === 'analysis' && campaign.phaseStatus === 'in_progress') {
+  if (extractedContent.length === 0 && leads.length === 0 && campaign.currentPhase === 'analysis' && campaign.status === 'running') {
      return (
       <Card className="shadow-md mt-6">
         <CardHeader>

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, CheckCircle, Clock, Pause } from 'lucide-react';
-import type { Campaign, CampaignCurrentPhaseEnum, CampaignPhaseStatusEnum } from '@/lib/api-client/models';
+import type { CampaignResponse as Campaign, CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum, CampaignResponseStatusEnum as CampaignPhaseStatusEnum } from '@/lib/api-client/models';
 import { normalizeStatus, getStatusColor } from '@/lib/utils/statusMapping';
 
 interface CampaignProgressMonitorProps {
@@ -43,22 +43,22 @@ const CampaignProgressMonitor = memo(({
   // Campaign key for tracking
   const campaignKey = useMemo(() => ({
     id: campaign?.id || '',
-    currentPhase: campaign?.currentPhase || 'domain_generation',
-    status: campaign?.phaseStatus || 'pending'
-  }), [campaign?.id, campaign?.currentPhase, campaign?.phaseStatus]);
+    currentPhase: (campaign?.currentPhase || 'discovery') as CampaignCurrentPhaseEnum,
+    status: (campaign?.status || 'draft') as CampaignPhaseStatusEnum,
+  }), [campaign?.id, campaign?.currentPhase, campaign?.status]);
 
   // Progress calculation logic
   const progressInfo = useMemo((): ProgressInfo => {
-    const phase = campaignKey.currentPhase as CampaignCurrentPhaseEnum;
-    const status = campaignKey.status as CampaignPhaseStatusEnum;
-    const progress = campaign?.progressPercentage || 0;
+  const phase = campaignKey.currentPhase as CampaignCurrentPhaseEnum;
+  const status = campaignKey.status as CampaignPhaseStatusEnum;
+  const progress = campaign?.progress?.percentComplete || 0;
     
     const normalizedStatus = normalizeStatus(status);
     const statusColor = getStatusColor(normalizedStatus);
     
     // Status icons
     let icon: React.ReactNode;
-    switch (normalizedStatus) {
+    switch (normalizedStatus as 'completed' | 'failed' | 'in_progress' | 'paused' | 'draft' | 'running' | 'cancelled') {
       case 'completed':
         icon = <CheckCircle className="h-4 w-4" />;
         break;
@@ -83,21 +83,21 @@ const CampaignProgressMonitor = memo(({
       statusColor,
       icon
     };
-  }, [campaignKey.currentPhase, campaignKey.status, campaign?.progressPercentage]);
+  }, [campaignKey.currentPhase, campaignKey.status, campaign?.progress?.percentComplete]);
 
   // Phase display names
   const getPhaseDisplayName = (phase: CampaignCurrentPhaseEnum): string => {
     switch (phase) {
-      case 'generation':
-        return 'Domain Generation';
-      case 'dns_validation':
-        return 'DNS Validation';
-      case 'http_keyword_validation':
-        return 'HTTP Validation';
+      case 'discovery':
+        return 'Discovery';
+      case 'validation':
+        return 'Validation';
+      case 'extraction':
+        return 'Extraction';
       case 'analysis':
         return 'Analysis';
       default:
-        return phase;
+        return String(phase);
     }
   };
 

@@ -134,7 +134,7 @@ function PersonasPageContent() {
     }
     
     try {
-      const response = await personasApi.personasGet(undefined, undefined, undefined, type);
+  const response = await personasApi.personasList(undefined, undefined, undefined, type as any);
       
       if (response.data) {
         // Handle PersonaListResponse - data is array directly from OpenAPI
@@ -186,8 +186,8 @@ function PersonasPageContent() {
   const handleDeletePersona = async (personaId: string, personaType: 'http' | 'dns') => {
     setActionLoading(prev => ({ ...prev, [personaId]: 'delete' }));
     try {
-      const response = await personasApi.personasIdDelete(personaId);
-      if (response.data) {
+  const response = await personasApi.personasDelete(personaId);
+      if (response.status >= 200) {
         toast({ title: "Persona Deleted", description: "Persona successfully deleted." });
         fetchPersonasData(personaType, false);
       } else {
@@ -204,10 +204,10 @@ function PersonasPageContent() {
   const handleTestPersona = async (personaId: string, personaType: 'http' | 'dns') => {
     setActionLoading(prev => ({ ...prev, [personaId]: 'test' }));
     try {
-      const response = await personasApi.personasIdTestPost(personaId);
-      if (response.data) {
-        // PersonaTestResult response data is directly available
-        const testData = response.data;
+  const response = await personasApi.personasTest(personaId);
+      if (response.status >= 200) {
+        const { extractResponseData } = await import('@/lib/utils/apiResponseHelpers');
+        const testData = extractResponseData<any>(response);
         const personaName = testData?.personaId || 'Persona';
         toast({ title: "Persona Test Complete", description: `Test for ${personaName} completed.` });
         fetchPersonasData(personaType, false);
@@ -231,9 +231,11 @@ function PersonasPageContent() {
     try {
       // Map status to isEnabled field which is what the backend accepts
       const isEnabled = newStatus === 'Active';
-      const response = await personasApi.personasIdPut(personaId, { isEnabled } as any);
-      if (response.data) {
-        toast({ title: `Persona Status Updated`, description: `${response.data.name} is now ${newStatus}.` });
+  const response = await personasApi.personasUpdate(personaId, { isEnabled } as any);
+      if (response.status >= 200) {
+        const { extractResponseData } = await import('@/lib/utils/apiResponseHelpers');
+        const data = extractResponseData<any>(response);
+        toast({ title: `Persona Status Updated`, description: `${data?.name || 'Persona'} is now ${newStatus}.` });
         fetchPersonasData(personaType, false);
       } else {
         toast({ title: "Error Updating Status", description: "Could not update persona status.", variant: "destructive"});
@@ -329,7 +331,7 @@ function PersonasPageContent() {
                     } as any,
                 };
             }
-            const response = await personasApi.personasPost(createPayload as any);
+            const response = await personasApi.personasCreate(createPayload as any);
             if (response.data) {
               importedCount++;
             } else {

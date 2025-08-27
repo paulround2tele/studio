@@ -13,7 +13,7 @@
 
 import { z } from 'zod';
 import React from 'react';
-import { featureFlagsApi } from '@/lib/api-client/client';
+import { FeatureFlagsApi, Configuration } from '@/lib/api-client';
 
 // Feature flag value types
 export type FeatureFlagValue = boolean | string | number | Record<string, unknown>;
@@ -22,7 +22,8 @@ export type FeatureFlagValue = boolean | string | number | Record<string, unknow
 export const FeatureFlagSchema = z.object({
   key: z.string(),
   value: z.union([z.boolean(), z.string(), z.number(), z.record(z.unknown())]),
-  enabled: z.boolean().default(true),
+  // Some callers referenced an 'enabled' property; include it in the schema to match internal usage
+  enabled: z.boolean().optional().default(true),
   description: z.string().optional(),
   rolloutPercentage: z.number().min(0).max(100).optional(),
   segments: z.array(z.string()).optional(),
@@ -59,6 +60,7 @@ class FeatureFlagsService {
   private userContext: UserContext = {};
   private cacheTimestamp: number = 0;
   private abTestAssignments: Map<string, string> = new Map();
+  private api = new FeatureFlagsApi(new Configuration({ basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080' }));
 
   constructor(config: FeatureFlagsConfig = {}) {
     this.config = {
@@ -258,9 +260,9 @@ class FeatureFlagsService {
    */
   async fetchFlags(): Promise<void> {
     try {
-      // Use enhanced API client to fetch feature flags
-      const response = await featureFlagsApi.getFeatureFlags();
-      const result = response.data;
+  // Use enhanced API client to fetch feature flags
+  const response = await this.api.featureFlagsGet();
+  const result = response.data as any;
       
       if (!result) {
         throw new Error('No feature flags data received');
@@ -274,7 +276,7 @@ class FeatureFlagsService {
         description: `API flag: ${key}`
       }));
 
-      const flags = z.array(FeatureFlagSchema).parse(apiFlags);
+  const flags = z.array(FeatureFlagSchema).parse(apiFlags);
 
       // Update flags
       flags.forEach(flag => {

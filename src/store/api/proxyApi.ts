@@ -6,15 +6,17 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { ProxiesApi, Configuration } from '@/lib/api-client';
 import type {
-  GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest,
-  GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest,
-  GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest,
-  GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest,
-  ApiBulkProxyTestResponse,
-  ApiProxyTestResponse,
-  BulkValidateDNS200Response,
-  GithubComFntelecomllcStudioBackendInternalModelsProxy
-} from '@/lib/api-client';
+  BulkDeleteProxiesRequest,
+  ProxiesBulkTestRequest,
+  BulkUpdateProxiesRequest,
+  UpdateProxyRequestAPI,
+  ProxiesBulkTest200Response,
+  ProxiesTest200Response,
+  ProxiesBulkUpdate200Response,
+  GithubComFntelecomllcStudioBackendInternalModelsProxy as ModelsProxy,
+  SuccessEnvelope
+} from '@/lib/api-client/models';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 // Professional API configuration - not some hard-coded localhost amateur nonsense
 const config = new Configuration({
@@ -32,13 +34,14 @@ export const proxyApi = createApi({
   endpoints: (builder) => ({
     // Bulk operations - because professionals batch their operations
     bulkDeleteProxies: builder.mutation<
-      BulkValidateDNS200Response,
-      GithubComFntelecomllcStudioBackendInternalModelsBulkDeleteProxiesRequest
+      ProxiesBulkUpdate200Response,
+      BulkDeleteProxiesRequest
     >({
       queryFn: async (request) => {
         try {
-          const response = await proxiesApi.proxiesBulkDeleteDelete(request);
-          return { data: response.data };
+          const response = await proxiesApi.proxiesBulkDelete(request);
+          const data = extractResponseData<ProxiesBulkUpdate200Response>(response);
+          return { data: data as ProxiesBulkUpdate200Response };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }
@@ -47,13 +50,14 @@ export const proxyApi = createApi({
     }),
 
     bulkTestProxies: builder.mutation<
-      ApiBulkProxyTestResponse,
-      GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest
+      ProxiesBulkTest200Response,
+      ProxiesBulkTestRequest
     >({
       queryFn: async (request) => {
         try {
-          const response = await proxiesApi.proxiesBulkTestPost(request);
-          return { data: response.data };
+          const response = await proxiesApi.proxiesBulkTest(request);
+          const data = extractResponseData<ProxiesBulkTest200Response>(response);
+          return { data: data as ProxiesBulkTest200Response };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }
@@ -62,13 +66,14 @@ export const proxyApi = createApi({
     }),
 
     bulkUpdateProxies: builder.mutation<
-      BulkValidateDNS200Response,
-      GithubComFntelecomllcStudioBackendInternalModelsBulkUpdateProxiesRequest
+      ProxiesBulkUpdate200Response,
+      BulkUpdateProxiesRequest
     >({
       queryFn: async (request) => {
         try {
-          const response = await proxiesApi.proxiesBulkUpdatePut(request);
-          return { data: response.data };
+          const response = await proxiesApi.proxiesBulkUpdate(request);
+          const data = extractResponseData<ProxiesBulkUpdate200Response>(response);
+          return { data: data as ProxiesBulkUpdate200Response };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }
@@ -80,7 +85,7 @@ export const proxyApi = createApi({
     deleteProxy: builder.mutation<void, string>({
       queryFn: async (proxyId) => {
         try {
-          await proxiesApi.proxiesProxyIdDelete(proxyId);
+          await proxiesApi.proxiesDelete(proxyId);
           return { data: undefined };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
@@ -90,13 +95,14 @@ export const proxyApi = createApi({
     }),
 
     updateProxy: builder.mutation<
-      GithubComFntelecomllcStudioBackendInternalModelsProxy,
-      { proxyId: string; request: GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest }
+  ModelsProxy,
+  { proxyId: string; request: UpdateProxyRequestAPI }
     >({
       queryFn: async ({ proxyId, request }) => {
         try {
-          const response = await proxiesApi.proxiesProxyIdPut(proxyId, request);
-          return { data: response.data };
+      const response = await proxiesApi.proxiesUpdate(proxyId, request);
+      const data = extractResponseData<ModelsProxy>(response);
+      return { data: data as ModelsProxy };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }
@@ -104,11 +110,12 @@ export const proxyApi = createApi({
       invalidatesTags: ['Proxy'],
     }),
 
-    testProxy: builder.mutation<ApiProxyTestResponse, string>({
+    testProxy: builder.mutation<ProxiesTest200Response, string>({
       queryFn: async (proxyId) => {
         try {
-          const response = await proxiesApi.proxiesProxyIdTestPost(proxyId);
-          return { data: response.data };
+      const response = await proxiesApi.proxiesTest(proxyId);
+      const data = extractResponseData<ProxiesTest200Response>(response);
+      return { data: data as ProxiesTest200Response };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }
@@ -117,22 +124,14 @@ export const proxyApi = createApi({
     }),
 
     // Clean proxies operation - maps to bulk delete for cleaning inactive/failed proxies
-    cleanProxies: builder.mutation<BulkValidateDNS200Response, void>({
+    cleanProxies: builder.mutation<SuccessEnvelope, void>({
       queryFn: async () => {
         try {
-          // This is likely a custom operation - for now, implement as a no-op that returns success
-          // In a real implementation, this would clean up inactive/failed proxies
-          const response: BulkValidateDNS200Response = {
-            data: {
-              successfulProxies: [],
-              failedProxies: [],
-              operationId: crypto.randomUUID(),
-              totalProcessed: 0,
-              totalSuccessful: 0,
-              totalFailed: 0
-            }
+          // Placeholder operation - return a simple success envelope
+          const response: SuccessEnvelope = {
+            success: true,
+            requestId: (globalThis.crypto?.randomUUID?.() || Math.random().toString(36)) as string,
           };
-          
           return { data: response };
         } catch (error: any) {
           return { error: error.response?.data || error.message };

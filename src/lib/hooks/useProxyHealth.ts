@@ -3,14 +3,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ProxiesApi, Configuration } from '@/lib/api-client';
-import type { 
-  ApiAPIResponse,
-  GithubComFntelecomllcStudioBackendInternalModelsProxy as Proxy,
-  GithubComFntelecomllcStudioBackendInternalModelsBulkTestProxiesRequest,
-  ApiBulkProxyTestResponse,
-  ApiProxyTestResponse,
-  ApiBulkHealthCheckResponse
-} from '@/lib/api-client';
+import type { ModelsProxy as Proxy } from '@/lib/api-client/models';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 import { useToast } from '@/hooks/use-toast';
 
 // Use Proxy directly - no extension needed since all fields are already there
@@ -141,11 +135,10 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     }
 
     try {
-      const response = await proxiesApi.proxiesGet();
-      
-      if (response.data) {
-        // Ensure data is always an array - the generated API returns the data directly
-        const proxiesArray = Array.isArray(response.data) ? response.data : [];
+      const response = await proxiesApi.proxiesList();
+      const data = extractResponseData<any>(response);
+      if (data) {
+        const proxiesArray = Array.isArray(data) ? data : [];
         setProxies(proxiesArray as ExtendedProxy[]);
         const metrics = calculateHealthMetrics(proxiesArray as ExtendedProxy[]);
         setHealthMetrics(metrics);
@@ -179,10 +172,10 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     setHealthCheckInProgress(true);
     
     try {
-      // Use the bulk health check endpoint like a professional
-      const response = await proxiesApi.proxiesHealthCheckPost();
-      
-      if (response.data) {
+      // Use the bulk health check endpoint
+      const response = await proxiesApi.proxiesHealthCheckAll();
+      const data = extractResponseData<any>(response);
+      if (data) {
         toast({
           title: "Health Check Complete",
           description: "All proxies have been tested",
@@ -215,9 +208,9 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
    */
   const testSpecificProxy = useCallback(async (proxyId: string) => {
     try {
-      const response = await proxiesApi.proxiesProxyIdTestPost(proxyId);
-      
-      if (response.data) {
+      const response = await proxiesApi.proxiesTest(proxyId);
+      const data = extractResponseData<any>(response);
+      if (data) {
         // Find and update the specific proxy in our state
         setProxies(prev => prev.map(p =>
           p.id === proxyId ? { ...p, lastTested: new Date().toISOString(), isHealthy: true } : p
@@ -230,7 +223,7 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
         const metrics = calculateHealthMetrics(updatedProxies);
         setHealthMetrics(metrics);
         
-        return response.data;
+        return data;
       } else {
         throw new Error('Test failed - no response data');
       }

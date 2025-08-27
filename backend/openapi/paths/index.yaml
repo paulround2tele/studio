@@ -93,43 +93,43 @@
   $ref: "./config/features.yaml"
 
 "/monitoring/performance/summary":
-  $ref: "./monitoring/core.yaml"
+  $ref: "./monitoring/performance-summary.yaml"
 "/monitoring/performance/slow":
-  $ref: "./monitoring/core.yaml"
+  $ref: "./monitoring/performance-slow.yaml"
 "/monitoring/performance/metrics":
-  $ref: "./monitoring/core.yaml"
+  $ref: "./monitoring/performance-metrics.yaml"
 "/monitoring/performance/active":
-  $ref: "./monitoring/core.yaml"
+  $ref: "./monitoring/performance-active.yaml"
 "/monitoring/performance/failed":
-  $ref: "./monitoring/core.yaml"
+  $ref: "./monitoring/performance-failed.yaml"
 "/monitoring/campaigns/{campaignId}/resources":
-  $ref: "./monitoring/campaigns.yaml"
+  $ref: "./monitoring/campaigns-resources.yaml"
 "/monitoring/campaigns/{campaignId}/performance":
-  $ref: "./monitoring/campaigns.yaml"
+  $ref: "./monitoring/campaigns-performance.yaml"
 "/monitoring/campaigns/{campaignId}/health":
-  $ref: "./monitoring/campaigns.yaml"
+  $ref: "./monitoring/campaigns-health.yaml"
 "/monitoring/campaigns/{campaignId}/limits":
   $ref: "./monitoring/limits.yaml"
 "/monitoring/cleanup/stats":
-  $ref: "./monitoring/core.yaml"
+  $ref: "./monitoring/cleanup-stats.yaml"
 "/monitoring/cleanup/campaigns/{campaignId}":
   $ref: "./monitoring/campaigns.yaml"
 "/monitoring/cleanup/campaigns/{campaignId}/force":
   $ref: "./monitoring/cleanup-force.yaml"
 "/monitoring/resources/system":
-  $ref: "./monitoring/core.yaml"
+  $ref: "./monitoring/resources-system.yaml"
 "/monitoring/resources/history":
-  $ref: "./monitoring/core.yaml"
+  $ref: "./monitoring/resources-history.yaml"
 "/monitoring/resources/alerts":
-  $ref: "./monitoring/core.yaml"
+  $ref: "./monitoring/resources-alerts.yaml"
 "/monitoring/dashboard/summary":
-  $ref: "./monitoring/core.yaml"
+  $ref: "./monitoring/dashboard-summary.yaml"
 "/monitoring/dashboard/trends":
-  $ref: "./monitoring/core.yaml"
+  $ref: "./monitoring/performance-trends.yaml"
 "/monitoring/health":
-  $ref: "./monitoring/core.yaml"
+  $ref: "./monitoring/health.yaml"
 "/monitoring/stats":
-  $ref: "./monitoring/core.yaml"
+  $ref: "./monitoring/stats.yaml"
 
 
 "/auth/login":
@@ -152,11 +152,11 @@
 "/campaigns/{campaignId}/phases/{phase}/status":
   $ref: "./campaigns/phase-status.yaml"
 "/campaigns/{campaignId}/phases/{phase}/configure":
-  $ref: "./campaigns/phase-control.yaml"
+  $ref: "./campaigns/phase-configure.yaml"
 "/campaigns/{campaignId}/phases/{phase}/start":
-  $ref: "./campaigns/phase-control.yaml"
+  $ref: "./campaigns/phase-start.yaml"
 "/campaigns/{campaignId}/phases/{phase}/stop":
-  $ref: "./campaigns/phase-control.yaml"
+  $ref: "./campaigns/phase-stop.yaml"
 "/campaigns/bulk/operations":
   $ref: "./campaigns/bulk.yaml"
 "/campaigns/bulk/operations/{operationId}/status":

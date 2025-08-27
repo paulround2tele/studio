@@ -7,8 +7,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Plus, Edit } from 'lucide-react';
-import { keywordSetsApi } from '@/lib/api-client/client';
-import type { ApiKeywordSetResponse } from '@/lib/api-client/models';
+import { keywordSetsApi } from '@/lib/api-client/compat';
+import type { KeywordSetResponse as ApiKeywordSetResponse } from '@/lib/api-client/models';
 
 type KeywordSet = ApiKeywordSetResponse;
 
@@ -22,8 +22,10 @@ export default function KeywordSetsPage() {
     try {
       setIsLoading(true);
       // Use the correct method name from the generated API
-      const resp = await keywordSetsApi.keywordsSetsGet();
-      setSets(resp.data as KeywordSet[]);
+  const resp = await keywordSetsApi.keywordSetsList();
+  // Envelope may wrap the list; attempt minimal unwrap
+  const data = (resp as any)?.data?.data ?? (resp as any)?.data;
+  setSets((data as KeywordSet[]) || []);
     } catch (e) {
       console.error(e);
       setErrorMessage(e instanceof Error ? e.message : 'Failed to load keyword sets');

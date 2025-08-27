@@ -21,7 +21,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { components } from '@/lib/api-client/types';
 
 // Use the single source of truth
-type Campaign = components['schemas']['api.CampaignSummary'];
+import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 
 interface CampaignControlsProps {
   campaign: Campaign;
@@ -33,9 +33,9 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign }) => {
       <AlertTriangle className="h-4 w-4 text-red-600" />
       <AlertDescription className="text-red-800">
         <strong>Component Under Reconstruction</strong><br/>
-        This amateur component was built on fantasy data structures (campaign.phases) 
-        that don't exist in the real backend. Being reconstructed with actual Campaign schema:
-        currentPhase={campaign.currentPhase}, phaseStatus={campaign.phaseStatus}
+  This amateur component was built on fantasy data structures (campaign.phases)
+  that don't exist in the real backend. Being reconstructed with actual Campaign schema:
+  currentPhase={campaign.currentPhase}
       </AlertDescription>
     </Alert>
   );

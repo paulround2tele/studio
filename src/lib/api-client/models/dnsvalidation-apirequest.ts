@@ -1,0 +1,1 @@
+export type DNSValidationAPIRequest = any;

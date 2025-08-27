@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, Briefcase, Loader2, ArrowLeft } from 'lucide-react';
 
 // PROFESSIONAL: Direct OpenAPI client imports - no amateur wrappers
-import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
-import type { Campaign } from '@/lib/api-client/models';
+import { CampaignsApi, Configuration } from '@/lib/api-client';
+import type { CampaignResponse } from '@/lib/api-client/models';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 // Professional components using real OpenAPI types
 import PageHeader from '@/components/shared/PageHeader';
@@ -25,32 +26,19 @@ export default function CampaignPage() {
   const campaignId = params?.id as string;
 
   // Professional state management - no amateur RTK Query wrapper crimes
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [campaign, setCampaign] = useState<CampaignResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchCampaigns = async () => {
+  const fetchCampaign = async () => {
       try {
         setLoading(true);
-        const api = new CampaignsApi();
-        // Professional bulk API call - prevents amateur N+1 query disasters
-        const response = await api.getCampaignsStandalone();
-        
-        // Professional handling of backend APIResponse structure
-        if (response && response.data) {
-          const campaignData = response.data as any[];
-          // Convert backend campaign data to frontend Campaign model
-          const formattedCampaigns: Campaign[] = campaignData.map((item: any) => ({
-            id: item.campaignId,
-            name: item.name,
-            currentPhase: item.currentPhase,
-            phaseStatus: item.phaseStatus,
-            createdAt: item.createdAt,
-            updatedAt: item.updatedAt,
-          }));
-          setCampaigns(formattedCampaigns);
-        }
+    const api = new CampaignsApi(new Configuration({ basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080' }));
+    // Fetch a single campaign by id and unwrap the SuccessEnvelope
+    const response = await api.campaignsGet(campaignId);
+    const data = extractResponseData<CampaignResponse>(response);
+    if (data) setCampaign(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch campaigns');
       } finally {
@@ -58,11 +46,8 @@ export default function CampaignPage() {
       }
     };
 
-    fetchCampaigns();
+  fetchCampaign();
   }, []);
-
-  // Professional client-side filtering - no database abuse like amateur single-resource endpoints
-  const campaign = campaigns.find(c => c.id === campaignId);
 
   const handleBack = () => {
     router.push('/campaigns');

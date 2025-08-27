@@ -14,12 +14,10 @@ import { AlertCircle, BarChart3, FileText, Camera } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-// Import types and services - using the new auto-generated API client
-import { campaignsApi } from '@/lib/api-client/client';
-import { ConfigurePhaseStandalonePhaseEnum } from '@/lib/api-client/apis/campaigns-api';
-import type { AnalysisConfig } from '@/lib/api-client/models/analysis-config';
-import type { ApiPhaseConfigureRequest } from '@/lib/api-client/models/api-phase-configure-request';
-import { ApiPhaseConfigureRequestPhaseTypeEnum } from '@/lib/api-client/models/api-phase-configure-request';
+// Import types and services - using RTK Query wrapper
+import { useConfigurePhaseStandaloneMutation } from '@/store/api/campaignApi';
+import type { ApiAnalysisConfig } from '@/lib/api-client/models/api-analysis-config';
+import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
 
 interface AnalysisFormValues {
   analysisType: string;
@@ -43,6 +41,7 @@ export default function AnalysisConfigModal({
 }: AnalysisConfigModalProps) {
   const { toast } = useToast();
   const [configuring, setConfiguring] = useState(false);
+  const [configurePhase] = useConfigurePhaseStandaloneMutation();
 
   // Form initialization with smart defaults from the plan
   const form = useForm<AnalysisFormValues>({
@@ -59,23 +58,22 @@ export default function AnalysisConfigModal({
       setConfiguring(true);
 
       // Build the analysis configuration using auto-generated types
-      const analysisConfig: AnalysisConfig = {
-        analysisType: values.analysisType as any, // Convert to enum
+      const analysisConfig: ApiAnalysisConfig = {
+        analysisType: values.analysisType as any,
         includeScreenshots: values.includeScreenshots,
         generateReport: values.generateReport,
         customRules: values.customRules.filter(rule => rule.trim() !== ''),
       };
 
       // Create the phase configuration request using auto-generated types
-      const configRequest: ApiPhaseConfigureRequest = {
-        phaseType: ApiPhaseConfigureRequestPhaseTypeEnum.analysis,
-        config: {
-          analysis: analysisConfig as any // TODO: Fix enum compatibility between AnalysisConfig and ApiAnalysisConfig
+      const configRequest: PhaseConfigurationRequest = {
+        configuration: {
+          analysis: analysisConfig as any,
         },
       };
 
-      // Use the generated API client method
-      await campaignsApi.configurePhaseStandalone(campaignId, ConfigurePhaseStandalonePhaseEnum.analysis, configRequest);
+  // Use the RTK Query mutation (calls campaignsPhaseConfigure under the hood)
+  await configurePhase({ campaignId, phase: 'analysis', config: configRequest }).unwrap();
 
       toast({
         title: "Analysis Configuration Saved",

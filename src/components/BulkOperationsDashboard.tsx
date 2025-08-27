@@ -26,20 +26,16 @@ import {
 } from '@/store/slices/bulkOperationsSlice';
 import type { RootState } from '@/store';
 import type {
-  GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest,
-  GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest,
-  GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest,
-  GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest,
-  GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest
+  BulkDomainGenerationRequest,
+  BulkDNSValidationRequest,
+  BulkHTTPValidationRequest,
+  BulkAnalyticsRequest,
+  BulkResourceAllocationRequest,
 } from '@/lib/api-client/models';
 import type { UUID } from '@/lib/api-client/uuid-types';
 
 // Professional type aliases for readability
-type BulkDomainGenerationRequest = GithubComFntelecomllcStudioBackendInternalModelsBulkDomainGenerationRequest;
-type BulkDNSValidationRequest = GithubComFntelecomllcStudioBackendInternalModelsBulkDNSValidationRequest;
-type BulkHTTPValidationRequest = GithubComFntelecomllcStudioBackendInternalModelsBulkHTTPValidationRequest;
-type BulkAnalyticsRequest = GithubComFntelecomllcStudioBackendInternalModelsBulkAnalyticsRequest;
-type BulkResourceRequest = GithubComFntelecomllcStudioBackendInternalModelsBulkResourceRequest;
+type BulkResourceRequest = BulkResourceAllocationRequest;
 
 /**
  * Bulk Operations Dashboard Component

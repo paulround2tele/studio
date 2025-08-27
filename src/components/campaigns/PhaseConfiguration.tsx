@@ -15,9 +15,8 @@ import { Form } from "@/components/ui/form";
 import { Loader2, CheckCircle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { useCampaignFormData } from "@/lib/hooks/useCampaignFormData";
-import type { Campaign } from '@/lib/api-client/models';
-import { campaignsApi } from '@/lib/api-client/client';
-import { isResponseSuccess, getResponseError } from '@/lib/utils/apiResponseHelpers';
+import type { CampaignResponse } from '@/lib/api-client/models/campaign-response';
+import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { validateUUID } from '@/lib/utils/uuidValidation';
 
 // Clean, modular section components
@@ -53,7 +52,7 @@ interface PhaseConfigurationProps {
   mode: PhaseConfigurationMode;
   isOpen: boolean;
   onClose: () => void;
-  sourceCampaign: Campaign;
+  sourceCampaign: CampaignResponse;
   phaseType: string;
   onPhaseStarted: (campaignId: string) => void;
 }
@@ -76,6 +75,7 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
 }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [startPhase] = useStartPhaseStandaloneMutation();
 
   // Load data using the existing hook
   const {
@@ -158,13 +158,8 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
         throw new Error(`Unsupported phase type: ${phaseType}`);
       }
 
-      // Execute phase transition
-      const response = await campaignsApi.startPhaseStandalone(sourceCampaign.id, backendPhaseParam as any);
-
-      if (!isResponseSuccess(response)) {
-        const errorMessage = getResponseError(response) || 'Failed to start phase';
-        throw new Error(errorMessage);
-      }
+  // Execute phase transition via RTK Query
+  await startPhase({ campaignId: sourceCampaign.id, phase: backendPhaseParam }).unwrap();
 
       toast({
         title: `${phaseDisplayNames[phaseType]} Started`,

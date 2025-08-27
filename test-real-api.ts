@@ -15,8 +15,8 @@ async function testRealApiCall() {
     
     console.log('=== TESTING REAL API CALL ===');
     
-    // Test actual getCampaignsStandalone call
-    const response = await campaignsApi.getCampaignsStandalone();
+  // Test actual campaignsList call
+  const response = await campaignsApi.campaignsList();
     
     console.log('✅ API call successful!');
     console.log('Response type:', typeof response);

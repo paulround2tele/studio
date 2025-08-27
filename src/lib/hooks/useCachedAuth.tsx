@@ -1,13 +1,11 @@
 'use client';
 
 import { useCallback, useState, useEffect, useRef } from 'react';
-import { authApi } from '@/lib/api-client/client';
+import { authApi } from '@/lib/api-client/compat';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
-import type { components } from '@/lib/api-client/types';
+import type { LoginRequest, UserPublicResponse as User } from '@/lib/api-client/models';
 
-// Type definitions using proper OpenAPI schema types
-type LoginRequest = components['schemas']['github_com_fntelecomllc_studio_backend_internal_models.LoginRequest'];
-type User = components['schemas']['github_com_fntelecomllc_studio_backend_internal_models.User'];
+// Using generated model types
 
 type LoginResult =
   | { success: true }
@@ -122,14 +120,14 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
         setTimeout(() => reject(new Error('API call timeout after 10 seconds')), 10000);
       });
       
-      console.log('[useCachedAuth] 🔍 DEBUGGING: About to call authApi.getCurrentUser()...');
+      console.log('[useCachedAuth] 🔍 DEBUGGING: About to call authApi.authMe()...');
       const response = await Promise.race([
-        authApi.getCurrentUser(),
+        authApi.authMe(),
         timeoutPromise
       ]);
       
       console.log('[useCachedAuth] 🔍 DEBUGGING: API call completed, response:', response);
-      const userData = extractResponseData<User>(response);
+  const userData = extractResponseData<User>(response);
       console.log('[useCachedAuth] 🔍 DEBUGGING: Extracted user data:', userData);
       
       if (userData?.id && userData?.email) {
@@ -221,34 +219,30 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
         password: credentials.password
       };
       
-      const response = await authApi.loginUser(loginRequest);
+  const response = await authApi.authLogin(loginRequest);
       const loginData = extractResponseData(response);
       
       if (loginData) {
         console.log('[useCachedAuth] Login successful');
         
         // Extract user data from SessionResponse
-        const sessionUser = (loginData as any).User;
+        const sessionUser = (loginData as any)?.User || (loginData as any)?.user;
         let userData: User;
         
         if (sessionUser) {
           userData = {
-            id: sessionUser.ID,
-            email: sessionUser.Email,
-            name: sessionUser.Username,
-            isActive: sessionUser.IsActive,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            id: sessionUser.id ?? sessionUser.ID,
+            email: sessionUser.email ?? sessionUser.Email,
+            username: sessionUser.username ?? sessionUser.Username ?? sessionUser.email,
+            isActive: sessionUser.isActive ?? sessionUser.IsActive ?? true,
           } as User;
         } else {
           // Fallback user data
           userData = {
             id: 'authenticated',
             email: credentials.email,
-            name: credentials.email,
+            username: credentials.email,
             isActive: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
           } as User;
         }
         
@@ -286,7 +280,7 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
   const logout = useCallback(async () => {
     setIsLogoutLoading(true);
     try {
-      await authApi.logoutUser();
+  await authApi.authLogout();
     } catch (error) {
       console.error('[useCachedAuth] Logout API failed:', error);
     } finally {

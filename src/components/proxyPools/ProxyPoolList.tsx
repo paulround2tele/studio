@@ -13,7 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import ProxyPoolForm from "./ProxyPoolForm";
-import { proxyPoolsApi } from "@/lib/api-client/client";
+import { proxyPoolsApi } from "@/lib/api-client/compat";
 import type { GithubComFntelecomllcStudioBackendInternalModelsProxyPool as ProxyPoolType } from '@/lib/api-client/models';
 import {
   Dialog,
@@ -22,6 +22,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 export default function ProxyPoolList() {
   const [pools, setPools] = useState<ProxyPoolType[]>([]);
@@ -31,8 +32,9 @@ export default function ProxyPoolList() {
 
   const loadPools = async () => {
     try {
-      const pools = await proxyPoolsApi.listProxyPools();
-      setPools((pools.data as any[]).filter((pool: { id?: unknown }) => pool.id) as ProxyPoolType[]);
+      const resp = await proxyPoolsApi.proxyPoolsList();
+      const data = extractResponseData<any[]>(resp) || [];
+      setPools(data.filter((pool: { id?: unknown }) => pool.id) as ProxyPoolType[]);
     } catch (error) {
       console.error('Failed to load proxy pools:', error);
     }
@@ -44,7 +46,7 @@ export default function ProxyPoolList() {
 
   const handleDelete = async (id: string) => {
     try {
-      await proxyPoolsApi.proxyPoolsPoolIdDelete(id);
+      await proxyPoolsApi.proxyPoolsDelete(id);
       toast({ title: "Deleted" });
       loadPools();
     } catch (error) {

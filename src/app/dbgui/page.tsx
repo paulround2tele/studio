@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Database, Server } from 'lucide-react';
 import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
 import { DatabaseApi, Configuration } from '@/lib/api-client';
-import type { 
+import type {
   ApiDatabaseQueryResult,
   ApiDatabaseStats,
   ApiBulkDatabaseStatsRequest,
@@ -84,14 +84,15 @@ export default function DatabaseGUI() {
         detailed: true
       };
       
-      const response = await databaseApi.apiV2DatabaseStatsPost(
-        'XMLHttpRequest', 
-        statsRequest
+      const response = await databaseApi.dbBulkStats(
+        statsRequest,
+        // X-Requested-With header sentinel
+        'XMLHttpRequest' as any
       );
-      
-      if (response.data?.data) {
-        setDbStats(response.data.data as any);
-      }
+      // unwrap SuccessEnvelope -> data
+      const { extractResponseData } = await import('@/lib/utils/apiResponseHelpers');
+      const data = extractResponseData<ApiDatabaseStats>(response);
+      if (data) setDbStats(data as any);
     } catch (err) {
       console.error('Failed to load database stats:', err);
     }
@@ -115,14 +116,14 @@ export default function DatabaseGUI() {
         limit: 1000
       };
       
-      const response = await databaseApi.apiV2DatabaseQueryPost(
-        'XMLHttpRequest', 
-        queryRequest
+  const response = await databaseApi.dbBulkQuery(
+        queryRequest,
+        // X-Requested-With header sentinel
+        'XMLHttpRequest' as any
       );
-      
-      if (response.data?.data) {
-        setQueryResult(response.data.data as any);
-      }
+  const { extractResponseData } = await import('@/lib/utils/apiResponseHelpers');
+  const data = extractResponseData<ApiDatabaseQueryResult>(response);
+  if (data) setQueryResult(data as any);
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -499,7 +500,7 @@ export default function DatabaseGUI() {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              {queryResult.columns?.map((column, index) => (
+                                {queryResult.columns?.map((column: string, index: number) => (
                                 <TableHead key={index} className="font-semibold">
                                   {column}
                                 </TableHead>
@@ -507,9 +508,9 @@ export default function DatabaseGUI() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {queryResult.rows?.map((row, rowIndex) => (
+                            {queryResult.rows?.map((row: any[], rowIndex: number) => (
                               <TableRow key={rowIndex}>
-                                {row.map((cell, cellIndex) => (
+                                {row.map((cell: any, cellIndex: number) => (
                                   <TableCell key={cellIndex} className="font-mono text-sm">
                                     {cell === null ? (
                                       <span className="text-gray-400 italic">NULL</span>

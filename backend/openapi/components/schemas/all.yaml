@@ -5,7 +5,10 @@ SuccessEnvelope:
   properties:
     success:
       type: boolean
-      enum: [true]
+      description: Always true for success envelopes.
+      default: true
+      example: true
+      readOnly: true
     metadata:
       $ref: '#/Metadata'
     requestId:
@@ -16,7 +19,10 @@ ErrorEnvelope:
   properties:
     success:
       type: boolean
-      enum: [false]
+      description: Always false for error envelopes.
+      default: false
+      example: false
+      readOnly: true
     error:
       $ref: '#/ApiError'
     requestId:

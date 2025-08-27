@@ -788,14 +788,14 @@ paths:
         required: false
         content:
           application/json:
-            schema: null
-            type: object
-            properties:
-              ids:
-                type: array
-                items:
-                  type: string
-                  format: uuid
+            schema:
+              type: object
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
       responses:
         '202':
           description: Accepted
@@ -884,16 +884,16 @@ paths:
         required: true
         content:
           application/json:
-            schema: null
-            type: object
-            properties:
-              proxyIds:
-                type: array
-                items:
-                  type: string
-                  format: uuid
-            required:
-              - proxyIds
+            schema:
+              type: object
+              properties:
+                proxyIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+              required:
+                - proxyIds
       responses:
         '200':
           description: OK
@@ -1057,16 +1057,16 @@ paths:
         required: true
         content:
           application/json:
-            schema: null
-            type: object
-            properties:
-              proxyId:
-                type: string
-                format: uuid
-              weight:
-                type: integer
-            required:
-              - proxyId
+            schema:
+              type: object
+              properties:
+                proxyId:
+                  type: string
+                  format: uuid
+                weight:
+                  type: integer
+              required:
+                - proxyId
       responses:
         '201':
           description: Created
@@ -1602,16 +1602,16 @@ paths:
       operationId: config_get_auth
       responses:
         '200':
-          description: Auth config
+          description: authentication config
           content:
             application/json:
               schema:
                 allOf:
                   - $ref: '#/components/schemas/SuccessEnvelope'
                   - type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/AuthConfig'
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AuthConfig'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1642,9 +1642,9 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/SuccessEnvelope'
                   - type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/AuthConfig'
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/AuthConfig'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1676,9 +1676,9 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/SuccessEnvelope'
                   - type: object
-                properties:
-                  data: null
-                $ref: '#/components/schemas/DNSValidatorConfigJSON'
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DNSValidatorConfigJSON'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1707,11 +1707,11 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: ../../components/schemas/all.yaml#/SuccessEnvelope
+                  - $ref: '#/components/schemas/SuccessEnvelope'
                   - type: object
-                properties:
-                  data: null
-                $ref: '#/components/schemas/DNSValidatorConfigJSON'
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DNSValidatorConfigJSON'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1740,12 +1740,8 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                properties:
-                  data: null
-                $ref: '#/components/schemas/HTTPValidatorConfigJSON'
+                type: object
+                description: HTTP configuration object
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1766,19 +1762,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/HTTPValidatorConfigJSON'
+              type: object
+              description: HTTP configuration object
       responses:
         '200':
           description: Updated
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: ../../components/schemas/all.yaml#/SuccessEnvelope
-                  - type: object
-                properties:
-                  data: null
-                $ref: '#/components/schemas/HTTPValidatorConfigJSON'
+                type: object
+                description: HTTP configuration object
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1803,16 +1796,16 @@ paths:
       operationId: config_get_logging
       responses:
         '200':
-          description: Logging config
+          description: logging config
           content:
             application/json:
               schema:
                 allOf:
                   - $ref: '#/components/schemas/SuccessEnvelope'
                   - type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/LoggingConfig'
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/LoggingConfig'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1843,9 +1836,9 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/SuccessEnvelope'
                   - type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/LoggingConfig'
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/LoggingConfig'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1870,16 +1863,16 @@ paths:
       operationId: config_get_worker
       responses:
         '200':
-          description: Worker config
+          description: worker config
           content:
             application/json:
               schema:
                 allOf:
                   - $ref: '#/components/schemas/SuccessEnvelope'
                   - type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/WorkerConfig'
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/WorkerConfig'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1910,9 +1903,9 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/SuccessEnvelope'
                   - type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/WorkerConfig'
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/WorkerConfig'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1937,16 +1930,12 @@ paths:
       operationId: config_get_proxy_manager
       responses:
         '200':
-          description: Proxy manager config
+          description: proxy manager config
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/ProxyManagerConfigJSON'
+                type: object
+                description: proxy manager configuration object
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1967,19 +1956,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProxyManagerConfigJSON'
+              type: object
+              description: proxy manager configuration object
       responses:
         '200':
           description: Updated
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/ProxyManagerConfigJSON'
+                type: object
+                description: proxy manager configuration object
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2004,16 +1990,16 @@ paths:
       operationId: config_get_rate_limiter
       responses:
         '200':
-          description: Rate limiter config
+          description: rate limiter config
           content:
             application/json:
               schema:
                 allOf:
                   - $ref: '#/components/schemas/SuccessEnvelope'
                   - type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/RateLimiterConfig'
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/RateLimiterConfig'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2044,9 +2030,9 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/SuccessEnvelope'
                   - type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/RateLimiterConfig'
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/RateLimiterConfig'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2071,16 +2057,12 @@ paths:
       operationId: config_get_server
       responses:
         '200':
-          description: Server config
+          description: server config
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/ServerConfigResponse'
+                type: object
+                description: server configuration object
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2101,19 +2083,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ServerConfigUpdateRequest'
+              type: object
+              description: server configuration object
       responses:
         '200':
           description: Updated
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/ServerConfigResponse'
+                type: object
+                description: server configuration object
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2145,9 +2124,9 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/SuccessEnvelope'
                   - type: object
-                properties:
-                  data: null
-                $ref: '#/components/schemas/FeatureFlags'
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/FeatureFlags'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2176,11 +2155,11 @@ paths:
             application/json:
               schema:
                 allOf:
-                  - $ref: ../../components/schemas/all.yaml#/SuccessEnvelope
+                  - $ref: '#/components/schemas/SuccessEnvelope'
                   - type: object
-                properties:
-                  data: null
-                $ref: '#/components/schemas/FeatureFlags'
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/FeatureFlags'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2199,8 +2178,8 @@ paths:
     get:
       tags:
         - monitoring
-      summary: Monitoring core endpoint
-      operationId: monitoring_core_generic
+      summary: Monitoring performance summary
+      operationId: monitoring_performance_summary
       responses:
         '200':
           description: OK
@@ -2221,8 +2200,8 @@ paths:
     get:
       tags:
         - monitoring
-      summary: Monitoring core endpoint
-      operationId: monitoring_core_generic
+      summary: Monitoring performance slow
+      operationId: monitoring_performance_slow
       responses:
         '200':
           description: OK
@@ -2243,8 +2222,8 @@ paths:
     get:
       tags:
         - monitoring
-      summary: Monitoring core endpoint
-      operationId: monitoring_core_generic
+      summary: Monitoring performance metrics
+      operationId: monitoring_performance_metrics
       responses:
         '200':
           description: OK
@@ -2265,8 +2244,8 @@ paths:
     get:
       tags:
         - monitoring
-      summary: Monitoring core endpoint
-      operationId: monitoring_core_generic
+      summary: Monitoring performance active
+      operationId: monitoring_performance_active
       responses:
         '200':
           description: OK
@@ -2287,8 +2266,8 @@ paths:
     get:
       tags:
         - monitoring
-      summary: Monitoring core endpoint
-      operationId: monitoring_core_generic
+      summary: Monitoring performance failed
+      operationId: monitoring_performance_failed
       responses:
         '200':
           description: OK
@@ -2309,8 +2288,8 @@ paths:
     get:
       tags:
         - monitoring
-      summary: Monitoring campaign-specific endpoint
-      operationId: monitoring_campaign_generic
+      summary: Monitoring campaign resources
+      operationId: monitoring_campaign_resources
       parameters:
         - name: campaignId
           in: path
@@ -2340,8 +2319,8 @@ paths:
     get:
       tags:
         - monitoring
-      summary: Monitoring campaign-specific endpoint
-      operationId: monitoring_campaign_generic
+      summary: Monitoring campaign performance
+      operationId: monitoring_campaign_performance
       parameters:
         - name: campaignId
           in: path
@@ -2371,8 +2350,8 @@ paths:
     get:
       tags:
         - monitoring
-      summary: Monitoring campaign-specific endpoint
-      operationId: monitoring_campaign_generic
+      summary: Monitoring campaign health
+      operationId: monitoring_campaign_health
       parameters:
         - name: campaignId
           in: path
@@ -2415,13 +2394,13 @@ paths:
         required: true
         content:
           application/json:
-            schema: null
-            type: object
-            properties:
-              maxConcurrentJobs:
-                type: integer
-              rateLimitPerMinute:
-                type: integer
+            schema:
+              type: object
+              properties:
+                maxConcurrentJobs:
+                  type: integer
+                rateLimitPerMinute:
+                  type: integer
       responses:
         '200':
           description: Updated
@@ -2437,8 +2416,8 @@ paths:
     get:
       tags:
         - monitoring
-      summary: Monitoring core endpoint
-      operationId: monitoring_core_generic
+      summary: Cleanup stats
+      operationId: monitoring_cleanup_stats
       responses:
         '200':
           description: OK
@@ -2512,8 +2491,8 @@ paths:
     get:
       tags:
         - monitoring
-      summary: Monitoring core endpoint
-      operationId: monitoring_core_generic
+      summary: System resources
+      operationId: monitoring_resources_system
       responses:
         '200':
           description: OK
@@ -2534,8 +2513,8 @@ paths:
     get:
       tags:
         - monitoring
-      summary: Monitoring core endpoint
-      operationId: monitoring_core_generic
+      summary: System resources history
+      operationId: monitoring_resources_history
       responses:
         '200':
           description: OK
@@ -2556,8 +2535,8 @@ paths:
     get:
       tags:
         - monitoring
-      summary: Monitoring core endpoint
-      operationId: monitoring_core_generic
+      summary: System resources alerts
+      operationId: monitoring_resources_alerts
       responses:
         '200':
           description: OK
@@ -2578,8 +2557,8 @@ paths:
     get:
       tags:
         - monitoring
-      summary: Monitoring core endpoint
-      operationId: monitoring_core_generic
+      summary: Monitoring dashboard summary
+      operationId: monitoring_dashboard_summary
       responses:
         '200':
           description: OK
@@ -2600,8 +2579,8 @@ paths:
     get:
       tags:
         - monitoring
-      summary: Monitoring core endpoint
-      operationId: monitoring_core_generic
+      summary: Monitoring performance trends
+      operationId: monitoring_performance_trends
       responses:
         '200':
           description: OK
@@ -2622,8 +2601,8 @@ paths:
     get:
       tags:
         - monitoring
-      summary: Monitoring core endpoint
-      operationId: monitoring_core_generic
+      summary: Monitoring health
+      operationId: monitoring_health
       responses:
         '200':
           description: OK
@@ -2644,8 +2623,8 @@ paths:
     get:
       tags:
         - monitoring
-      summary: Monitoring core endpoint
-      operationId: monitoring_core_generic
+      summary: Monitoring stats
+      operationId: monitoring_stats
       responses:
         '200':
           description: OK
@@ -3078,8 +3057,8 @@ paths:
     post:
       tags:
         - campaigns
-      summary: Configure campaign phase
-      operationId: campaigns_phase_configure
+      summary: Start campaign phase
+      operationId: campaigns_phase_start
       parameters:
         - name: campaignId
           in: path
@@ -3097,15 +3076,9 @@ paths:
               - validation
               - extraction
               - analysis
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PhaseConfigurationRequest'
       responses:
         '200':
-          description: Configured
+          description: Started
           content:
             application/json:
               schema:
@@ -3127,8 +3100,8 @@ paths:
     post:
       tags:
         - campaigns
-      summary: Configure campaign phase
-      operationId: campaigns_phase_configure
+      summary: Stop campaign phase
+      operationId: campaigns_phase_stop
       parameters:
         - name: campaignId
           in: path
@@ -3146,15 +3119,9 @@ paths:
               - validation
               - extraction
               - analysis
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PhaseConfigurationRequest'
       responses:
         '200':
-          description: Configured
+          description: Stopped
           content:
             application/json:
               schema:
@@ -3723,8 +3690,10 @@ components:
       properties:
         success:
           type: boolean
-          enum:
-            - true
+          description: Always true for success envelopes.
+          default: true
+          example: true
+          readOnly: true
         metadata:
           $ref: '#/components/schemas/Metadata'
         requestId:
@@ -3792,8 +3761,10 @@ components:
       properties:
         success:
           type: boolean
-          enum:
-            - false
+          description: Always false for error envelopes.
+          default: false
+          example: false
+          readOnly: true
         error:
           $ref: '#/components/schemas/ApiError'
         requestId:
@@ -4517,10 +4488,6 @@ components:
       type: object
       description: DNS validator configuration
       additionalProperties: true
-    HTTPValidatorConfigJSON:
-      type: object
-      description: HTTP validator configuration
-      additionalProperties: true
     LoggingConfig:
       type: object
       description: Logging configuration
@@ -4529,21 +4496,9 @@ components:
       type: object
       description: Worker configuration
       additionalProperties: true
-    ProxyManagerConfigJSON:
-      type: object
-      description: Proxy manager configuration
-      additionalProperties: true
     RateLimiterConfig:
       type: object
       description: Rate limiter configuration
-      additionalProperties: true
-    ServerConfigResponse:
-      type: object
-      description: Consolidated server configuration response
-      additionalProperties: true
-    ServerConfigUpdateRequest:
-      type: object
-      description: Server configuration update request
       additionalProperties: true
     FeatureFlags:
       type: object
@@ -5516,6 +5471,10 @@ components:
         - updatedAt
         - rules
         - ruleCount
+    HTTPValidatorConfigJSON:
+      type: object
+      description: HTTP validator configuration
+      additionalProperties: true
     WorkerConfigUpdate:
       type: object
       description: Worker configuration update payload
@@ -5574,3 +5533,15 @@ components:
           minimum: 5
           maximum: 300
           description: Health check interval in seconds
+    ProxyManagerConfigJSON:
+      type: object
+      description: Proxy manager configuration
+      additionalProperties: true
+    ServerConfigResponse:
+      type: object
+      description: Consolidated server configuration response
+      additionalProperties: true
+    ServerConfigUpdateRequest:
+      type: object
+      description: Server configuration update request
+      additionalProperties: true

@@ -13,9 +13,9 @@ import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShieldCheck, PlusCircle, TestTubeDiagonal, Sparkles, Activity, UploadCloud } from 'lucide-react';
-import type { components } from '@/lib/api-client/types';
-import { proxiesApi } from '@/lib/api-client/client';
-import type { GithubComFntelecomllcStudioBackendInternalModelsProxy } from '@/lib/api-client';
+import { proxiesApi } from '@/lib/api-client/compat';
+import type { ModelsProxy as GithubComFntelecomllcStudioBackendInternalModelsProxy } from '@/lib/api-client/models';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 // Professional type definitions using actual generated types
 type FrontendProxy = GithubComFntelecomllcStudioBackendInternalModelsProxy;
@@ -60,10 +60,10 @@ function ProxiesPageContent() {
   const fetchProxiesData = useCallback(async (showLoadingSpinner = true) => {
     if (showLoadingSpinner) setLoading(true);
     try {
-      const response = await proxiesApi.proxiesGet();
-      if (response.data) {
-        // Ensure data is always an array
-        const proxiesArray = Array.isArray(response.data) ? response.data : [];
+      const response = await proxiesApi.proxiesList();
+      const data = extractResponseData<any>(response);
+      if (data) {
+        const proxiesArray = Array.isArray(data) ? data : [];
         setProxies(proxiesArray);
       } else {
         toast({ title: "Error Loading Proxies", description: "Failed to load proxies.", variant: "destructive" });
@@ -133,7 +133,7 @@ function ProxiesPageContent() {
         toast({ title: "Error", description: "Invalid proxy ID", variant: "destructive" });
         return;
       }
-      await proxiesApi.proxiesProxyIdDelete(proxyToDelete.id);
+  await proxiesApi.proxiesDelete(proxyToDelete.id);
       toast({ title: "Proxy Deleted", description: "Proxy deleted successfully" });
       setProxies(prev => prev.filter(p => p.id !== proxyToDelete!.id));
     } catch (err: unknown) {
@@ -149,8 +149,9 @@ function ProxiesPageContent() {
   const handleTestProxy = async (proxyId: string) => {
     setActionLoading(prev => ({ ...prev, [`test-${proxyId}`]: true }));
     try {
-      const response = await proxiesApi.proxiesProxyIdTestPost(proxyId);
-      if (response.data) {
+  const response = await proxiesApi.proxiesTest(proxyId);
+  const data = extractResponseData<any>(response);
+  if (data) {
         toast({ title: "Proxy Test Completed", description: `Test completed successfully` });
         // Refresh proxy list to get updated status
         fetchProxiesData(false);
@@ -173,10 +174,11 @@ function ProxiesPageContent() {
         toast({ title: "Error", description: "Invalid proxy ID", variant: "destructive" });
         return;
       }
-      const response = await proxiesApi.proxiesProxyIdPut(proxy.id, payload as any);
-      if (response.data) {
+      const response = await proxiesApi.proxiesUpdate(proxy.id, payload as any);
+      const data = extractResponseData<any>(response);
+      if (data) {
         toast({ title: `Proxy ${newStatus === 'Active' ? 'Enabled' : 'Disabled'}`, description: `Proxy ${proxy.address} is now ${newStatus.toLowerCase()}.`});
-        setProxies(prev => prev.map(p => p.id === proxy.id ? response.data! : p));
+        setProxies(prev => prev.map(p => p.id === proxy.id ? data! : p));
       } else {
         toast({ title: "Error Updating Proxy Status", description: "Failed to update proxy status.", variant: "destructive" });
       }
@@ -198,7 +200,7 @@ function ProxiesPageContent() {
         toast({ title: "No Proxies", description: "No proxies available to test.", variant: "destructive" });
         return;
       }
-      const response = await proxiesApi.proxiesBulkTestPost({ proxyIds });
+  const response = await proxiesApi.proxiesBulkTest({ proxyIds } as any);
       toast({ title: "Test All Proxies", description: "Testing process initiated/completed." });
       fetchProxiesData(false); // Refresh list to show updated statuses
     } catch (err: unknown) {
@@ -221,7 +223,7 @@ function ProxiesPageContent() {
         return;
       }
       
-      const response = await proxiesApi.proxiesBulkDeleteDelete({ proxyIds });
+  const response = await proxiesApi.proxiesBulkDelete({ proxyIds } as any);
       toast({ title: "Clean Proxies", description: `Cleaned ${proxyIds.length} disabled proxies.` });
       fetchProxiesData(false); // Refresh list
     } catch (err: unknown) {
@@ -261,7 +263,7 @@ function ProxiesPageContent() {
           };
 
           try {
-            const response = await proxiesApi.proxiesPost(payload as any);
+            const response = await proxiesApi.proxiesCreate(payload as any);
             if (response.data) {
               importedCount++;
             } else {

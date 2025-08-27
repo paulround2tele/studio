@@ -10,7 +10,7 @@ import { transformCampaignToViewModel } from '@/lib/utils/campaignTransforms';
 import type { components } from '@/lib/api-client/types';
 
 // Use the single source of truth
-type Campaign = components['schemas']['api.CampaignSummary'];
+import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 
 interface ModernCampaignDataContextValue {
   campaigns: Campaign[];
@@ -37,8 +37,8 @@ export const ModernCampaignDataProvider: React.FC<ModernCampaignDataProviderProp
     refetch
   } = useGetCampaignsStandaloneQuery();
 
-  // Extract campaigns from API response wrapper
-  const apiCampaigns = apiResponse?.data || [];
+  // Extract campaigns from typed list response
+  const apiCampaigns = (apiResponse as any)?.data || [];
   
   // Transform API data to view models (with type casting for legacy compatibility)
   const campaigns: Campaign[] = Array.isArray(apiCampaigns) 

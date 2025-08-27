@@ -7,12 +7,15 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { campaignsApi } from '@/lib/api-client/client';
-import type { ApiBulkEnrichedDataRequest } from '@/lib/api-client/models';
-import type { EnrichedCampaignData } from '@/lib/api-client/models/enriched-campaign-data';
-import type { GeneratedDomain } from '@/lib/api-client/models/generated-domain';
-import type { BulkEnrichedDataResponse } from '@/lib/api-client/models/bulk-enriched-data-response';
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
+
+// Local minimal domain shape based on bulk enriched-data response
+interface GeneratedDomainLite {
+  domain?: string;
+  dnsStatus?: string;
+  httpStatus?: string;
+  leadStatus?: string;
+  [key: string]: any;
+}
 
 // Professional type imports using proper model references
 
@@ -41,7 +44,7 @@ interface UseDomainDataOptions {
 
 // Hook return type
 interface DomainDataResult {
-  domains: GeneratedDomain[];
+  domains: GeneratedDomainLite[];
   statusSummary: DomainStatusSummary | null;
   total: number;
   loading: boolean;
@@ -74,7 +77,7 @@ export function useDomainData(
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   
   // State
-  const [domains, setDomains] = useState<GeneratedDomain[]>([]);
+  const [domains, setDomains] = useState<GeneratedDomainLite[]>([]);
   const [statusSummary, setStatusSummary] = useState<DomainStatusSummary | null>(null);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
@@ -89,14 +92,21 @@ export function useDomainData(
       setError(null);
 
       // Use existing bulk enriched data endpoint
-      const request: ApiBulkEnrichedDataRequest = {
+      const request = {
         campaignIds: [campaignId],
         limit: limit,
         offset: currentOffset
       };
 
-      const response = await campaignsApi.getBulkEnrichedCampaignData(request);
-      const apiResponse = extractResponseData(response) as BulkEnrichedDataResponse;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const res = await fetch(`${apiUrl}/campaigns/bulk/enriched-data`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+      });
+      if (!res.ok) throw new Error(`Bulk enriched data failed: ${res.status}`);
+      const apiResponse = await res.json();
       
       if (!apiResponse || !apiResponse.campaigns) {
         throw new Error('Invalid response format from bulk enriched data endpoint');
@@ -111,9 +121,9 @@ export function useDomainData(
       const domains = campaignData.domains || [];
       
       // Apply client-side filtering if needed
-      let filteredDomains = domains;
+      let filteredDomains = domains as GeneratedDomainLite[];
       if (statusFilter || phaseFilter) {
-        filteredDomains = domains.filter((domain: GeneratedDomain) => {
+        filteredDomains = domains.filter((domain: GeneratedDomainLite) => {
           // Filter by DNS status if statusFilter is provided
           if (statusFilter && domain.dnsStatus !== statusFilter) return false;
           // Filter by lead status if phaseFilter is provided 
@@ -133,11 +143,11 @@ export function useDomainData(
       setHasMore(currentOffset + filteredDomains.length < filteredDomains.length);
 
       // Build status summary from the data
-      const summary: DomainStatusSummary = {
+    const summary: DomainStatusSummary = {
         campaignId,
         summary: {
-          total: domains.length,
-          generated: domains.length,
+      total: domains.length,
+      generated: domains.length,
           dnsValidated: campaignData.dnsValidatedDomains?.length || 0,
           httpValidated: campaignData.httpKeywordResults?.length || 0,
           leadsGenerated: campaignData.leads?.length || 0,
@@ -258,14 +268,20 @@ export function useDomainStatusSummary(
       setError(null);
 
       // Use existing bulk enriched data endpoint for status summary
-      const request: ApiBulkEnrichedDataRequest = {
+      const request = {
         campaignIds: [campaignId],
         limit: 1, // We only need summary, not actual domains
         offset: 0
       };
-
-      const response = await campaignsApi.getBulkEnrichedCampaignData(request);
-      const apiResponse = extractResponseData(response) as BulkEnrichedDataResponse;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const res = await fetch(`${apiUrl}/campaigns/bulk/enriched-data`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(request),
+      });
+      if (!res.ok) throw new Error(`Bulk enriched data failed: ${res.status}`);
+      const apiResponse = await res.json();
       
       if (!apiResponse || !apiResponse.campaigns) {
         throw new Error('Invalid response format from bulk enriched data endpoint');

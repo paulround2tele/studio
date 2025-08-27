@@ -1,16 +1,15 @@
 # FeatureFlagsApi
 
-All URIs are relative to *http://localhost:8080/api/v2*
+All URIs are relative to *https://api.domainflow.dev/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**getFeatureFlags**](#getfeatureflags) | **GET** /feature-flags | Get feature flags|
-|[**updateFeatureFlags**](#updatefeatureflags) | **PUT** /feature-flags | Update feature flags|
+|[**featureFlagsGet**](#featureflagsget) | **GET** /config/features | Get feature flags|
+|[**featureFlagsUpdate**](#featureflagsupdate) | **PUT** /config/features | Update feature flags|
 
-# **getFeatureFlags**
-> ConfigFeatureFlags getFeatureFlags()
+# **featureFlagsGet**
+> FeatureFlagsGet200Response featureFlagsGet()
 
-Retrieve current feature flag settings
 
 ### Example
 
@@ -23,7 +22,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new FeatureFlagsApi(configuration);
 
-const { status, data } = await apiInstance.getFeatureFlags();
+const { status, data } = await apiInstance.featureFlagsGet();
 ```
 
 ### Parameters
@@ -32,11 +31,11 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ConfigFeatureFlags**
+**FeatureFlagsGet200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -47,14 +46,17 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Feature flags settings |  -  |
+|**200** | Feature flags |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **updateFeatureFlags**
-> ConfigFeatureFlags updateFeatureFlags(configFeatureFlags)
+# **featureFlagsUpdate**
+> FeatureFlagsGet200Response featureFlagsUpdate(featureFlags)
 
-Update feature flag settings
 
 ### Example
 
@@ -62,16 +64,16 @@ Update feature flag settings
 import {
     FeatureFlagsApi,
     Configuration,
-    ConfigFeatureFlags
+    FeatureFlags
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new FeatureFlagsApi(configuration);
 
-let configFeatureFlags: ConfigFeatureFlags; //Feature flags settings
+let featureFlags: FeatureFlags; //
 
-const { status, data } = await apiInstance.updateFeatureFlags(
-    configFeatureFlags
+const { status, data } = await apiInstance.featureFlagsUpdate(
+    featureFlags
 );
 ```
 
@@ -79,16 +81,16 @@ const { status, data } = await apiInstance.updateFeatureFlags(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **configFeatureFlags** | **ConfigFeatureFlags**| Feature flags settings | |
+| **featureFlags** | **FeatureFlags**|  | |
 
 
 ### Return type
 
-**ConfigFeatureFlags**
+**FeatureFlagsGet200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -99,9 +101,14 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Updated feature flags |  -  |
-|**400** | Invalid request body |  -  |
-|**500** | Failed to save feature flags |  -  |
+|**200** | Updated |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**409** | Conflict |  -  |
+|**422** | Validation Error |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

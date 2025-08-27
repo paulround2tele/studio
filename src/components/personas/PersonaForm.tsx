@@ -14,7 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 // Use proper API client instead of fictional bridge
-import { personasApi } from "@/lib/api-client/client";
+import { personasApi } from "@/lib/api-client/compat";
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 // Import types from proper models
 import type { ApiPersonaResponse } from '@/lib/api-client/models';
 import type { HTTPConfigDetails } from '@/lib/api-client/models/httpconfig-details';
@@ -230,13 +231,14 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
           ...commonPayloadData,
           configDetails: httpConfigDetails
         };
-        response = await personasApi.personasIdPut(persona.id, updatePayload as any);
+  response = await personasApi.personasUpdate(persona.id, updatePayload as any);
       } else {
-        response = await personasApi.personasPost(payload as any);
+  response = await personasApi.personasCreate(payload as any);
       }
 
       if (response.status >= 200 && response.status < 300) {
-        toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${response.data?.name}" has been successfully ${isEditing ? "updated" : "created"}.` });
+        const data = extractResponseData<any>(response);
+        toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${data?.name || ''}" has been successfully ${isEditing ? "updated" : "created"}.` });
         router.push("/personas");
         router.refresh();
       } else {
@@ -486,13 +488,14 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
           ...commonPayloadData,
           configDetails: dnsConfigDetails
         };
-        response = await personasApi.personasIdPut(persona.id, updatePayload);
+  response = await personasApi.personasUpdate(persona.id, updatePayload as any);
       } else {
-        response = await personasApi.personasPost(payload);
+  response = await personasApi.personasCreate(payload as any);
       }
 
       if (response.status >= 200 && response.status < 300) {
-        toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${response.data?.name}" has been successfully ${isEditing ? "updated" : "created"}.` });
+        const data = extractResponseData<any>(response);
+        toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${data?.name || ''}" has been successfully ${isEditing ? "updated" : "created"}.` });
         router.push("/personas");
         router.refresh();
       } else {

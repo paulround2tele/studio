@@ -6,15 +6,12 @@ get:
   operationId: config_get_proxy_manager
   responses:
     '200':
-      description: Proxy manager config
+      description: proxy manager config
       content:
         application/json:
           schema:
-            allOf:
-            - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-            - type: object
-            properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/ProxyManagerConfigJSON' }
+            type: object
+            description: proxy manager configuration object
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
@@ -30,18 +27,16 @@ put:
     content:
       application/json:
         schema:
-          $ref: '../../components/schemas/all.yaml#/ProxyManagerConfigJSON'
+          type: object
+          description: proxy manager configuration object
   responses:
     '200':
       description: Updated
       content:
         application/json:
           schema:
-            allOf:
-            - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-            - type: object
-            properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/ProxyManagerConfigJSON' }
+            type: object
+            description: proxy manager configuration object
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }

@@ -1,18 +1,17 @@
 # HealthApi
 
-All URIs are relative to *http://localhost:8080/api/v2*
+All URIs are relative to *https://api.domainflow.dev/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
 |[**healthCheck**](#healthcheck) | **GET** /health | Health check|
-|[**healthLiveness**](#healthliveness) | **GET** /health/live | Liveness check|
-|[**healthReadiness**](#healthreadiness) | **GET** /health/ready | Readiness check|
+|[**healthLive**](#healthlive) | **GET** /health/live | Liveness check|
+|[**healthReady**](#healthready) | **GET** /health/ready | Readiness check|
 |[**ping**](#ping) | **GET** /ping | Ping server|
 
 # **healthCheck**
-> ApiHealthStatus healthCheck()
+> SuccessEnvelope healthCheck()
 
-Get overall system health status including component checks
 
 ### Example
 
@@ -34,11 +33,11 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ApiHealthStatus**
+**SuccessEnvelope**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -49,14 +48,17 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | System health status |  -  |
+|**200** | OK |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **healthLiveness**
-> ApiHealthCheckResponse healthLiveness()
+# **healthLive**
+> SuccessEnvelope healthLive()
 
-Check if the service is alive and responding
 
 ### Example
 
@@ -69,7 +71,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new HealthApi(configuration);
 
-const { status, data } = await apiInstance.healthLiveness();
+const { status, data } = await apiInstance.healthLive();
 ```
 
 ### Parameters
@@ -78,11 +80,11 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ApiHealthCheckResponse**
+**SuccessEnvelope**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -93,14 +95,17 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Service is alive |  -  |
+|**200** | Alive |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **healthReadiness**
-> ApiHealthCheckResponse healthReadiness()
+# **healthReady**
+> SuccessEnvelope healthReady()
 
-Check if the service is ready to accept requests
 
 ### Example
 
@@ -113,7 +118,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new HealthApi(configuration);
 
-const { status, data } = await apiInstance.healthReadiness();
+const { status, data } = await apiInstance.healthReady();
 ```
 
 ### Parameters
@@ -122,11 +127,11 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ApiHealthCheckResponse**
+**SuccessEnvelope**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -137,15 +142,17 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Service is ready |  -  |
-|**503** | Service not ready |  -  |
+|**200** | Ready |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **ping**
-> ApiPingResponse ping()
+> SuccessEnvelope ping()
 
-Simple ping endpoint to verify server is responding
 
 ### Example
 
@@ -167,11 +174,11 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ApiPingResponse**
+**SuccessEnvelope**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -182,7 +189,11 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Pong response with timestamp |  -  |
+|**200** | Pong |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

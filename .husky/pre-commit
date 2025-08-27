@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Prevent committing manual edits to generated clients/models
+if git diff --cached --name-only | grep -E "^src/lib/api-client/(models|apis|api|base|common|configuration|index|types\.ts)" >/dev/null; then
+	echo "Blocking commit: do not commit manual edits in src/lib/api-client. Running regen..."
+	npm run api:regen:quick || exit 1
+	git add src/lib/api-client
+fi
+
+# Typecheck fast
+npm run typecheck -s || exit 1

@@ -1,7 +1,5 @@
-// Use the single source of truth: OpenAPI generated types
-import type { components } from '@/lib/api-client/types';
-
-type Campaign = components['schemas']['api.CampaignSummary'];
+// Use the single source of truth: OpenAPI generated models
+import type { CampaignResponse as Campaign } from '@/lib/api-client/models/campaign-response';
 
 // Transform API response to frontend Campaign interface
 export function transformCampaignToViewModel(apiCampaign: Campaign): Campaign {

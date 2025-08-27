@@ -24,9 +24,8 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+  "@/*": ["./src/*"],
+  "@/lib/api-client": ["./src/lib/api-client/index-app"]
     },
     "target": "ES2020",
     "forceConsistentCasingInFileNames": true,

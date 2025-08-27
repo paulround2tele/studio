@@ -15,7 +15,7 @@ import {
   PaginationPrevious 
 } from '@/components/ui/pagination';
 import { Search, Filter, SortAsc, SortDesc } from 'lucide-react';
-import type { Campaign } from '@/lib/api-client/models';
+import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 import CampaignListItem from './CampaignListItem';
 
 // Professional pagination context type (no fantasy imports)
@@ -77,7 +77,7 @@ const EnhancedCampaignsList: React.FC<EnhancedCampaignsListProps> = ({
 
     // Apply status filter
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(campaign => campaign.phaseStatus === statusFilter);
+      filtered = filtered.filter(campaign => (campaign.status as string) === statusFilter);
     }
 
     // Apply sorting
@@ -95,12 +95,12 @@ const EnhancedCampaignsList: React.FC<EnhancedCampaignsListProps> = ({
           bValue = new Date(b.createdAt || 0);
           break;
         case 'status':
-          aValue = a.phaseStatus || '';
-          bValue = b.phaseStatus || '';
+          aValue = (a.status as string) || '';
+          bValue = (b.status as string) || '';
           break;
         case 'progress':
-          aValue = a.progressPercentage || 0;
-          bValue = b.progressPercentage || 0;
+          aValue = a.progress?.percentComplete ?? 0;
+          bValue = b.progress?.percentComplete ?? 0;
           break;
         default:
           return 0;
@@ -143,7 +143,7 @@ const EnhancedCampaignsList: React.FC<EnhancedCampaignsListProps> = ({
 
   // Get unique statuses for filter dropdown
   const uniqueStatuses = useMemo(() => {
-    const statuses = [...new Set(campaigns.map(c => c.phaseStatus).filter(Boolean))];
+    const statuses = [...new Set(campaigns.map(c => c.status as string).filter(Boolean))];
     return statuses.sort();
   }, [campaigns]);
 

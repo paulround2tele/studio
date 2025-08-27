@@ -6,8 +6,7 @@
  * BULK-ONLY STRATEGY: All responses must use unified envelope format
  */
 
-import type { ApiAPIResponse } from '@/lib/api-client/models';
-import type { ErrorInfo } from '@/lib/api-client/models/error-info';
+// Using internal envelope types; do not depend on missing legacy ErrorInfo model
 
 // ===================================================================
 // PROPER TYPESCRIPT INTERFACES FOR API RESPONSE HANDLING

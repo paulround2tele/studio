@@ -406,15 +406,15 @@ export function extractCampaignsMap(response: BulkEnrichedDataResponse): Map<str
         // Transform API EnrichedCampaignData to local format
         const localCampaignData: LocalEnrichedCampaignData = {
           id: campaignId as UUID,
-          name: campaignData.campaign?.name || '',
-          currentPhase: campaignData.campaign?.currentPhase,
-          phaseStatus: campaignData.campaign?.phaseStatus,
-          overallProgress: calculateProgressPercentage(campaignData.campaign?.progress),
-          domains: campaignData.domains || [],
-          leads: campaignData.leads || [],
+          name: (campaignData as any).campaign?.name || '',
+          currentPhase: (campaignData as any).campaign?.currentPhase,
+          phaseStatus: (campaignData as any).campaign?.phaseStatus,
+          overallProgress: calculateProgressPercentage((campaignData as any).campaign?.progress),
+          domains: (campaignData as any).domains || [],
+          leads: (campaignData as any).leads || [],
           phases: [], // API doesn't provide phases array, initialize empty
           statistics: {}, // API doesn't provide statistics, initialize empty
-          metadata: campaignData.campaign || {} // Use campaign data as metadata
+          metadata: (campaignData as any).campaign || {} // Use campaign data as metadata
         };
         campaignsMap.set(campaignId, localCampaignData);
       }

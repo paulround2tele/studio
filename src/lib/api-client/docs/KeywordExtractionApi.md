@@ -1,16 +1,15 @@
 # KeywordExtractionApi
 
-All URIs are relative to *http://localhost:8080/api/v2*
+All URIs are relative to *https://api.domainflow.dev/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**keywordExtractionBatch**](#keywordextractionbatch) | **POST** /extract/keywords | Batch keyword extraction|
-|[**keywordExtractionStream**](#keywordextractionstream) | **GET** /extract/keywords/stream | Stream keyword extraction|
+|[**keywordExtractBatch**](#keywordextractbatch) | **POST** /extract/keywords | Batch keyword extraction|
+|[**keywordExtractStream**](#keywordextractstream) | **GET** /extract/keywords/stream | Stream keyword extraction|
 
-# **keywordExtractionBatch**
-> ApiBatchKeywordExtractionResponse keywordExtractionBatch(apiBatchKeywordExtractionRequest)
+# **keywordExtractBatch**
+> KeywordExtractBatch200Response keywordExtractBatch(batchKeywordExtractionRequest)
 
-Extract keywords from multiple URLs using specified keyword sets and personas
 
 ### Example
 
@@ -18,16 +17,16 @@ Extract keywords from multiple URLs using specified keyword sets and personas
 import {
     KeywordExtractionApi,
     Configuration,
-    ApiBatchKeywordExtractionRequest
+    BatchKeywordExtractionRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new KeywordExtractionApi(configuration);
 
-let apiBatchKeywordExtractionRequest: ApiBatchKeywordExtractionRequest; //Batch extraction request
+let batchKeywordExtractionRequest: BatchKeywordExtractionRequest; //
 
-const { status, data } = await apiInstance.keywordExtractionBatch(
-    apiBatchKeywordExtractionRequest
+const { status, data } = await apiInstance.keywordExtractBatch(
+    batchKeywordExtractionRequest
 );
 ```
 
@@ -35,16 +34,16 @@ const { status, data } = await apiInstance.keywordExtractionBatch(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **apiBatchKeywordExtractionRequest** | **ApiBatchKeywordExtractionRequest**| Batch extraction request | |
+| **batchKeywordExtractionRequest** | **BatchKeywordExtractionRequest**|  | |
 
 
 ### Return type
 
-**ApiBatchKeywordExtractionResponse**
+**KeywordExtractBatch200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -55,15 +54,20 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Extraction results |  -  |
-|**400** | Invalid request body or validation failed |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**422** | Validation Error |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **keywordExtractionStream**
-> string keywordExtractionStream()
+# **keywordExtractStream**
+> string keywordExtractStream()
 
-Extract keywords from a single URL with real-time streaming results
+Server-Sent Events stream. Clients SHOULD handle heartbeats and reconnection hints. Heartbeat events are sent periodically: - see example SseHeartbeat; clients SHOULD keep the connection alive. The server MAY suggest a retry delay with an SSE control line (see SseRetry example). 
 
 ### Example
 
@@ -76,12 +80,12 @@ import {
 const configuration = new Configuration();
 const apiInstance = new KeywordExtractionApi(configuration);
 
-let url: string; //URL to extract keywords from (default to undefined)
-let keywordSetId: string; //Keyword set ID to use for extraction (default to undefined)
-let httpPersonaId: string; //HTTP persona ID for request customization (optional) (default to undefined)
-let dnsPersonaId: string; //DNS persona ID for DNS customization (optional) (default to undefined)
+let url: string; // (default to undefined)
+let keywordSetId: string; // (default to undefined)
+let httpPersonaId: string; // (optional) (default to undefined)
+let dnsPersonaId: string; // (optional) (default to undefined)
 
-const { status, data } = await apiInstance.keywordExtractionStream(
+const { status, data } = await apiInstance.keywordExtractStream(
     url,
     keywordSetId,
     httpPersonaId,
@@ -93,10 +97,10 @@ const { status, data } = await apiInstance.keywordExtractionStream(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **url** | [**string**] | URL to extract keywords from | defaults to undefined|
-| **keywordSetId** | [**string**] | Keyword set ID to use for extraction | defaults to undefined|
-| **httpPersonaId** | [**string**] | HTTP persona ID for request customization | (optional) defaults to undefined|
-| **dnsPersonaId** | [**string**] | DNS persona ID for DNS customization | (optional) defaults to undefined|
+| **url** | [**string**] |  | defaults to undefined|
+| **keywordSetId** | [**string**] |  | defaults to undefined|
+| **httpPersonaId** | [**string**] |  | (optional) defaults to undefined|
+| **dnsPersonaId** | [**string**] |  | (optional) defaults to undefined|
 
 
 ### Return type
@@ -105,19 +109,22 @@ const { status, data } = await apiInstance.keywordExtractionStream(
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: application/json, text/event-stream
+ - **Accept**: text/event-stream, application/json
 
 
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Server-sent events stream with extraction results |  -  |
-|**400** | Invalid query parameters |  -  |
+|**200** | SSE stream |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

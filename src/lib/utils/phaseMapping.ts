@@ -3,14 +3,12 @@
  * and frontend configuration types
  */
 
-import type { components } from '@/lib/api-client/types';
-
 // Use proper generated types from OpenAPI - SINGLE SOURCE OF TRUTH
-export type CampaignPhaseEnum = components['schemas']['api.CampaignSummary']['currentPhase'];
-export type CampaignPhaseStatusEnum = components['schemas']['api.CampaignSummary']['phaseStatus'];
-export type PhaseConfigureRequest = components['schemas']['api.PhaseConfigureRequest'];
-export type DNSValidationConfig = components['schemas']['api.DNSValidationConfig'];
-export type HTTPValidationConfig = components['schemas']['api.HTTPValidationConfig'];
+export type CampaignPhaseEnum = 'dns_validation' | 'http_keyword_validation' | 'analysis' | 'setup' | 'generation';
+export type CampaignPhaseStatusEnum = 'not_started' | 'in_progress' | 'completed' | 'failed' | 'paused';
+export type PhaseConfigureRequest = import('@/lib/api-client/models/phase-configuration-request').PhaseConfigurationRequest;
+export type DNSValidationConfig = import('@/lib/api-client/models/api-dnsvalidation-config').ApiDNSValidationConfig;
+export type HTTPValidationConfig = import('@/lib/api-client/models/api-httpvalidation-config').ApiHTTPValidationConfig;
 
 // Backend CampaignPhaseEnum values (from models.go)
 export type BackendPhaseEnum = 

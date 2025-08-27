@@ -1,8 +1,8 @@
 "use client";
 
 import React, { memo, useMemo, useCallback } from 'react';
-import type { Campaign, CampaignPhaseStatusEnum } from '@/lib/api-client/models';
-import { CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
+import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
+import { CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
 import { CheckCircle, AlertTriangle, Clock, Loader2, WorkflowIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
@@ -13,34 +13,27 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-interface CampaignProgressProps {
-  campaign: Campaign;
-}
+interface CampaignProgressProps { campaign: Campaign }
 
 // PROFESSIONAL PHASE DISPLAY NAMES using ACTUAL OpenAPI ENUM VALUES
 const phaseDisplayNames: Record<CampaignCurrentPhaseEnum, string> = {
-  [CampaignCurrentPhaseEnum.Setup]: "Campaign Setup",
-  [CampaignCurrentPhaseEnum.Generation]: "Domain Generation", 
-  [CampaignCurrentPhaseEnum.DnsValidation]: "DNS Validation",
-  [CampaignCurrentPhaseEnum.HttpKeywordValidation]: "HTTP Keyword Validation",
-  [CampaignCurrentPhaseEnum.Analysis]: "Analysis"
+  [CampaignCurrentPhaseEnum.discovery]: 'Discovery',
+  [CampaignCurrentPhaseEnum.validation]: 'Validation',
+  [CampaignCurrentPhaseEnum.extraction]: 'Extraction',
+  [CampaignCurrentPhaseEnum.analysis]: 'Analysis',
 } as const;
 
 // Define phase order for progress calculation
 const PHASE_ORDER: CampaignCurrentPhaseEnum[] = [
-  CampaignCurrentPhaseEnum.Setup,
-  CampaignCurrentPhaseEnum.Generation,
-  CampaignCurrentPhaseEnum.DnsValidation,
-  CampaignCurrentPhaseEnum.HttpKeywordValidation,
-  CampaignCurrentPhaseEnum.Analysis
+  CampaignCurrentPhaseEnum.discovery,
+  CampaignCurrentPhaseEnum.validation,
+  CampaignCurrentPhaseEnum.extraction,
+  CampaignCurrentPhaseEnum.analysis,
 ];
 
 // Memoized phase status icon component for better performance  
-const PhaseStatusIcon = memo(({ phase, status, isActivePhase }: {
-  phase: CampaignCurrentPhaseEnum;
-  status: CampaignPhaseStatusEnum;
-  isActivePhase: boolean;
-}) => {
+type PhaseStatus = 'not_started' | 'in_progress' | 'completed' | 'failed' | 'paused';
+const PhaseStatusIcon = memo(({ status }: { status: PhaseStatus }) => {
   if (status === 'completed') {
     return <CheckCircle className="w-5 h-5 text-green-500" />;
   }
@@ -63,7 +56,19 @@ const PhaseStatusIcon = memo(({ phase, status, isActivePhase }: {
 PhaseStatusIcon.displayName = 'PhaseStatusIcon';
 
 export function CampaignProgress({ campaign }: CampaignProgressProps) {
-  const { currentPhase, phaseStatus } = campaign;
+  const { currentPhase, status } = campaign;
+
+  // Derive a per-phase status from overall status for UI continuity
+  const phaseStatus: PhaseStatus | null = useMemo(() => {
+    switch (status) {
+      case 'completed': return 'completed';
+      case 'failed': return 'failed';
+      case 'paused': return 'paused';
+      case 'running': return 'in_progress';
+      case 'draft':
+      default: return 'not_started';
+    }
+  }, [status]);
 
   const progressPercentage = useMemo(() => {
     if (!currentPhase) return 0;
@@ -71,22 +76,21 @@ export function CampaignProgress({ campaign }: CampaignProgressProps) {
     const currentIndex = PHASE_ORDER.indexOf(currentPhase);
     if (currentIndex === -1) return 0;
     
+    // Prefer backend-provided percentComplete when available
+    const apiPercent = campaign.progress?.percentComplete;
+    if (typeof apiPercent === 'number') return Math.max(0, Math.min(100, apiPercent));
+
     const baseProgress = (currentIndex / PHASE_ORDER.length) * 100;
-    
-    if (phaseStatus === 'completed') {
-      return Math.min(((currentIndex + 1) / PHASE_ORDER.length) * 100, 100);
-    } else if (phaseStatus === 'in_progress') {
-      return baseProgress + (25 / PHASE_ORDER.length);
-    }
-    
+    if (phaseStatus === 'completed') return Math.min(((currentIndex + 1) / PHASE_ORDER.length) * 100, 100);
+    if (phaseStatus === 'in_progress') return baseProgress + (25 / PHASE_ORDER.length);
     return baseProgress;
-  }, [currentPhase, phaseStatus]);
+  }, [currentPhase, phaseStatus, campaign.progress?.percentComplete]);
 
   const currentPhaseDisplay = useMemo(() => {
     return currentPhase ? phaseDisplayNames[currentPhase] : 'Unknown Phase';
   }, [currentPhase]);
 
-  const getStatusColor = useCallback((status: CampaignPhaseStatusEnum) => {
+  const getStatusColor = useCallback((status: PhaseStatus) => {
     switch (status) {
       case 'completed':
         return 'text-green-600';
@@ -113,11 +117,7 @@ export function CampaignProgress({ campaign }: CampaignProgressProps) {
           </div>
           <div className="flex items-center space-x-2">
             {currentPhase && phaseStatus && (
-              <PhaseStatusIcon 
-                phase={currentPhase} 
-                status={phaseStatus}
-                isActivePhase={true} 
-              />
+              <PhaseStatusIcon status={phaseStatus} />
             )}
             <span className={cn(
               "text-sm font-medium",
@@ -152,11 +152,7 @@ export function CampaignProgress({ campaign }: CampaignProgressProps) {
                       isCurrentPhase && "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800",
                       !isCurrentPhase && "hover:bg-gray-50 dark:hover:bg-gray-800"
                     )}>
-                      <PhaseStatusIcon 
-                        phase={phase}
-                        status={displayStatus as CampaignPhaseStatusEnum}
-                        isActivePhase={isCurrentPhase}
-                      />
+                      <PhaseStatusIcon status={displayStatus as PhaseStatus} />
                       <div className="flex-1">
                         <div className="flex items-center space-x-2">
                           <span className={cn(

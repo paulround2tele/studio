@@ -18,12 +18,13 @@
 
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { BulkOperationsApi } from '@/lib/api-client/apis/bulk-operations-api';
-import { 
+import type { 
   BulkValidateDNS200Response,
   ApiOperationCancellationResponse, 
   ApiBulkResourceStatusResponse,
-  GithubComFntelecomllcStudioBackendInternalModelsBulkOperationStatus
+  ModelsBulkOperationStatus
 } from '@/lib/api-client/models';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 // Create instance of the generated API client for bulk operations
 const bulkOperationsApiClient = new BulkOperationsApi();
@@ -152,12 +153,16 @@ export const bulkOperationsApi = createApi({
     }),
 
     // Get bulk operation status - PROFESSIONAL PATTERN
-    getBulkOperationStatus: builder.query<GithubComFntelecomllcStudioBackendInternalModelsBulkOperationStatus, { operationId: string }>({
+  getBulkOperationStatus: builder.query<ModelsBulkOperationStatus, { operationId: string }>({
       queryFn: async ({ operationId }) => {
         try {
           const response = await bulkOperationsApiClient.getBulkOperationStatus(operationId);
-          // Generator returns { data: GithubComFntelecomllcStudioBackendInternalModelsBulkOperationStatus } - trust it completely
-          return { data: response.data };
+          // Unwrap SuccessEnvelope -> ModelsBulkOperationStatus using centralized helper
+          const data = extractResponseData<ModelsBulkOperationStatus>(response);
+          if (!data) {
+            return { error: { status: 500, data: 'Empty bulk operation status' } as any };
+          }
+          return { data };
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }

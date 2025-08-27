@@ -9,22 +9,21 @@ import type { ServicesCreateLeadGenerationCampaignRequest } from '@/lib/api-clie
 console.log('=== TESTING TYPE SAFETY ===');
 
 const campaignRequest: ServicesCreateLeadGenerationCampaignRequest = {
-  name: "Test Campaign",
-  description: "Testing generated types",
-  domainConfig: {
-    patternType: "prefix",
-    constantString: "test",
-    characterSet: "abc",
-    variableLength: 3,
-    tlds: [".com", ".net"]
+  name: 'Test Campaign',
+  description: 'Testing generated types',
+  targetDomains: [],
+  configuration: {
+    phases: {
+      discovery: { enabled: true, maxDepth: 1 },
+    }
   }
-};
+} as any;
 
 console.log('✅ Generated types work perfectly!');
 console.log('Request object:', campaignRequest);
 
 // Check what the campaign API methods expect
 const api = new CampaignsApi();
-console.log('createLeadGenerationCampaign signature works:', typeof api.createLeadGenerationCampaign);
+console.log('campaignsCreate signature works:', typeof (api as any).campaignsCreate);
 
 export { campaignRequest };

@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import type { components } from '@/lib/api-client/types';
-import { apiClient } from '@/lib/api-client/client';
+import type { PersonaResponse as Persona } from '@/lib/api-client/models';
+import type { Campaign } from '@/lib/api-client/models';
+import type { GithubComFntelecomllcStudioBackendInternalModelsProxy as ProxyType } from '@/lib/api-client/models';
+import { apiClient } from '@/lib/api-client';
 // import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms'; // DISABLED during cleanup
 
-// Professional type definitions based on ACTUAL schema
-type ProxyType = GithubComFntelecomllcStudioBackendInternalModelsProxy;
-type HttpPersona = ApiPersonaResponse & { personaType: 'http' };
-type DnsPersona = ApiPersonaResponse & { personaType: 'dns' };
+type HttpPersona = Persona;
+type DnsPersona = Persona;
 
 interface CampaignFormData {
   httpPersonas: HttpPersona[];
@@ -99,7 +99,7 @@ export function useCampaignSelectionOptions(campaigns: Campaign[]) {
     campaigns.map(campaign => ({
       id: campaign.id,
       name: campaign.name,
-      currentPhase: campaign.currentPhase // Use REAL property
+  currentPhase: campaign.currentPhase // Use REAL property
     })),
     [campaigns]
   );

@@ -18,7 +18,7 @@ import { PerformanceTuningSection } from './sections/PerformanceTuningSection';
 // Use the single source of truth: OpenAPI generated types
 import type { components } from '@/lib/api-client/types';
 
-type Campaign = components['schemas']['api.CampaignSummary'];
+import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 
 // Form data type - what the form collects vs what API expects
 type CampaignFormData = {
@@ -114,13 +114,13 @@ export function CampaignDashboard({
     },
   });
 
-  const handleSave = (data: Campaign) => {
-    onSave(data);
+  const handleSave = (data: CampaignFormData) => {
+    onSave(data as any);
   };
 
-  const handleSaveAndStart = (data: Campaign) => {
+  const handleSaveAndStart = (data: CampaignFormData) => {
     if (onSaveAndStart) {
-      onSaveAndStart(data);
+      onSaveAndStart(data as any);
     }
   };
 
@@ -128,7 +128,7 @@ export function CampaignDashboard({
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">
-          {campaign?.campaignId ? 'Edit Campaign' : 'Create Campaign'}
+          {campaign?.id ? 'Edit Campaign' : 'Create Campaign'}
         </h1>
       </div>
 

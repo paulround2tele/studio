@@ -1,19 +1,12 @@
 // Campaign transformer functions for API responses
-import type { components } from '@/lib/api-client/types';
-
-type Campaign = components['schemas']['api.CampaignSummary'];
+import type { CampaignResponse as Campaign } from '@/lib/api-client/models/campaign-response';
 
 /**
  * Transforms a single campaign response from API format
  */
 export function transformCampaignResponse(campaign: any): Campaign {
-  if (!campaign) return campaign;
-  
-  // Handle number conversions if needed
-  return {
-    ...campaign,
-    totalItems: campaign.totalItems ? Number(campaign.totalItems) : undefined,
-  };
+  // With the new API models, the API response already matches our frontend type
+  return campaign as Campaign;
 }
 
 /**

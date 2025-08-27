@@ -4,9 +4,12 @@
  */
 
 import { HealthApi, Configuration } from '@/lib/api-client';
-import type { ApiHealthStatus } from '@/lib/api-client';
+import type { SuccessEnvelope } from '@/lib/api-client/models';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
-interface CachedHealthData extends ApiHealthStatus {
+export interface CachedHealthData {
+  version?: string;
+  status?: string;
   isCached: boolean;
   cacheAge?: number; // seconds since cached
   cachedAt?: Date;
@@ -47,8 +50,8 @@ class HealthService {
 
     try {
       // Make fresh API call using the generated client like a professional
-      const response = await this.api.healthCheck();
-      const healthData = response.data;
+  const response = await this.api.healthCheck();
+  const healthData = extractResponseData<any>(response) || {};
 
       // Cache the fresh data
       this.cache = {
@@ -57,11 +60,11 @@ class HealthService {
         cachedAt: now
       };
 
-      return this.cache;
+  return this.cache as CachedHealthData;
     } catch (error) {
       // If we have stale cache and API fails, return stale data with warning
       if (this.cache) {
-        const cacheAge = Math.floor((now.getTime() - this.cache.cachedAt!.getTime()) / 1000);
+  const cacheAge = Math.floor((now.getTime() - (this.cache.cachedAt as Date).getTime()) / 1000);
         return {
           ...this.cache,
           isCached: true,

@@ -19,11 +19,8 @@ import {
   TrendingUp,
   Activity
 } from 'lucide-react';
-import type { components } from '@/lib/api-client/types';
-
-// Use the single source of truth
-type Campaign = components['schemas']['api.CampaignSummary'];
-import { CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
+import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
+import { CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
 import { cn } from '@/lib/utils';
 
 // Streaming statistics interface for real-time updates
@@ -99,40 +96,23 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
 }) => {
   // Enhanced data calculations combining both approaches
   const stats = useMemo(() => {
-    const totalItems = campaign.totalItems || 0;
+    const totalItems = campaign.progress?.totalDomains ?? 0;
     const processedItems = Math.max(
       totalDomains,
-      campaign.processedItems || 0,
-      // Calculate from progress if available
-      campaign.totalItems ? Math.floor(((campaign.progressPercentage || 0) / 100) * campaign.totalItems) : 0
+      campaign.progress?.processedDomains ?? 0
     );
-    const successfulItems = campaign.successfulItems || 0;
-    const failedItems = campaign.failedItems || 0;
-    const targetItems = Math.max(
-      totalItems,
-      campaign.domains || 0,
-      processedItems // Use processed as minimum target
-    );
+    const successfulItems = campaign.progress?.successfulDomains ?? 0;
+    const failedItems = campaign.progress?.failedDomains ?? 0;
+    const targetItems = Math.max(totalItems, processedItems);
 
-    // Enhanced progress calculation
-    const progressPercentage = Math.max(
-      campaign.progressPercentage || 0,
-      0,
-      calculatePercentage(processedItems, targetItems)
-    );
+    // Prefer backend-provided percentComplete if present
+    const percentFromBackend = campaign.progress?.percentComplete ?? 0;
+    const computedPercent = calculatePercentage(processedItems, targetItems);
+    const progressPercentage = Math.max(percentFromBackend, computedPercent);
 
-    // Calculate derived statistics
     const successRate = calculatePercentage(successfulItems, processedItems);
     const failureRate = calculatePercentage(failedItems, processedItems);
-    const remainingItems = (() => {
-      if (!targetItems || !processedItems) return 0;
-      try {
-        const remaining = targetItems - processedItems;
-        return remaining > 0 ? remaining : 0;
-      } catch {
-        return 0;
-      }
-    })();
+    const remainingItems = targetItems > processedItems ? targetItems - processedItems : 0;
 
     return {
       totalItems,
@@ -148,7 +128,7 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
   }, [campaign, totalDomains]);
 
   const duration = formatDuration(campaign.startedAt, campaign.completedAt);
-  const avgProcessingRate = campaign.avgProcessingRate || 0;
+  const avgProcessingRate = 0;
   
   // Real-time connection status
   const connectionStatus = streamingStats?.connectionStatus || 'disconnected';
@@ -350,19 +330,17 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
           </div>
 
           {/* Estimated Completion */}
-          {campaign.estimatedCompletionAt && campaign.phaseStatus === 'in_progress' && (
+      {false && (
             <div className="pt-4 border-t">
               <div className="space-y-1">
                 <div className="text-xs text-muted-foreground">Estimated Completion</div>
-                <div className="text-sm font-medium">
-                  {new Date(campaign.estimatedCompletionAt).toLocaleString()}
-                </div>
+        <div className="text-sm font-medium">N/A</div>
               </div>
             </div>
           )}
 
           {/* Phase-centric architecture: detailed configuration stored in phase records */}
-          {campaign.currentPhase === CampaignCurrentPhaseEnum.Generation && (
+            {campaign.currentPhase === CampaignCurrentPhaseEnum.discovery && (
             <div className="pt-4 border-t">
               <div className="text-xs text-muted-foreground mb-2">Current Phase</div>
               <div className="grid grid-cols-2 gap-4 text-sm">

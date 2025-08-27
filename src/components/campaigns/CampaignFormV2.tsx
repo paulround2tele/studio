@@ -18,11 +18,9 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 // Use ONLY auto-generated types and new simplified form types
 import type { SimpleCampaignFormValues } from './types/SimpleCampaignFormTypes';
 import { formToApiRequest, defaultFormValues } from './types/SimpleCampaignFormTypes';
-import { ApiPatternOffsetRequestPatternTypeEnum } from '@/lib/api-client/models';
-import { campaignsApi } from '@/lib/api-client/client';
 import { useCreateCampaignMutation } from '@/store/api/campaignApi';
 import { calculateMaxTheoreticalDomains, calculateRemainingDomains } from '@/lib/utils/domainCalculation';
-import type { LeadGenerationCampaignResponse } from '@/lib/api-client/models/lead-generation-campaign-response';
+import type { CampaignResponse } from '@/lib/api-client/models/campaign-response';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 // Common TLD options
@@ -33,7 +31,7 @@ const COMMON_TLDS = [
 
 interface CampaignFormV2Props {
   editMode?: boolean;
-  campaignData?: LeadGenerationCampaignResponse;
+  campaignData?: CampaignResponse;
 }
 
 export default function CampaignFormV2({ editMode = false, campaignData }: CampaignFormV2Props) {
@@ -49,7 +47,7 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
   const [calculatingDomains, setCalculatingDomains] = useState(false);
 
   // Helper function to convert campaign data to form values
-  const campaignToFormValues = (campaign: LeadGenerationCampaignResponse): SimpleCampaignFormValues => {
+  const campaignToFormValues = (campaign: CampaignResponse): SimpleCampaignFormValues => {
     // In phase-centric architecture, we can only edit basic info
     // Domain generation config is read-only after creation
     return {
@@ -72,8 +70,7 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
   });
 
   // Check if domain generation has started (restricts editing)
-  const domainGenerationStarted = editMode && campaignData &&
-    (campaignData.currentPhase !== 'domain_generation' || campaignData.phaseStatus === 'completed');
+  const domainGenerationStarted = !!(editMode && campaignData && campaignData.currentPhase && campaignData.currentPhase !== 'discovery');
 
   // Domain calculation function
   const calculateDomainStatistics = async (formData: SimpleCampaignFormValues) => {
@@ -94,16 +91,27 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
       // Get current offset from backend and calculate remaining domains
       let offset = 0;
       try {
-        const offsetResponse = await campaignsApi.getPatternOffset({
-          patternType: config.patternType as ApiPatternOffsetRequestPatternTypeEnum,
-          characterSet: config.characterSet,
-          constantString: config.constantString,
-          tld: config.tld,
-          variableLength: config.variableLength
+        // Not present in OpenAPI spec; call backend directly
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+        const res = await fetch(`${apiUrl}/campaigns/domain-generation/pattern-offset`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            patternType: config.patternType,
+            characterSet: config.characterSet,
+            constantString: config.constantString,
+            tld: config.tld,
+            variableLength: config.variableLength,
+          }),
         });
-
-        offset = (offsetResponse.data as any)?.data?.currentOffset || 0;
-        setCurrentOffset(offset);
+        if (res.ok) {
+          const json = await res.json();
+          offset = json?.data?.currentOffset || 0;
+          setCurrentOffset(offset);
+        } else {
+          throw new Error(`Pattern offset request failed: ${res.status}`);
+        }
       } catch (offsetError) {
         console.warn('Could not fetch current offset, using 0:', offsetError);
         setCurrentOffset(0);

@@ -5,13 +5,13 @@
 
 import { useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { campaignsApi } from '@/lib/api-client/client';
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
+import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { validateCampaignId, validateBulkEnrichedDataRequest } from '@/lib/utils/uuidValidation';
 import { assertBulkEnrichedDataResponse, extractDomainName } from '@/lib/utils/typeGuards';
 
 export const useCampaignOperations = (campaignId: string) => {
   const { toast } = useToast();
+  const [startPhaseMutation] = useStartPhaseStandaloneMutation();
 
   // Start a specific phase using standalone services API
   const startPhase = useCallback(async (phaseType: string) => {
@@ -23,7 +23,7 @@ export const useCampaignOperations = (campaignId: string) => {
         throw new Error(campaignValidationResult.error || 'Invalid campaign ID');
       }
 
-      await campaignsApi.startPhaseStandalone(campaignId, phaseType as any);
+  await startPhaseMutation({ campaignId, phase: phaseType }).unwrap();
       
       toast({
         title: "Phase Started",
@@ -96,14 +96,21 @@ export const useCampaignOperations = (campaignId: string) => {
         offset: 0
       };
       
-      const bulkResponse = await campaignsApi.getBulkEnrichedCampaignData(bulkRequest);
-      const enrichedData = assertBulkEnrichedDataResponse(extractResponseData(bulkResponse));
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const res = await fetch(`${apiUrl}/campaigns/bulk/enriched-data`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bulkRequest),
+      });
+      if (!res.ok) throw new Error(`Bulk enriched data failed: ${res.status}`);
+      const enrichedData = assertBulkEnrichedDataResponse(await res.json());
       
       // Extract domains from bulk enriched data
       let domainsText = '';
       const campaignData = enrichedData?.campaigns?.[campaignId];
       if (campaignData?.domains && Array.isArray(campaignData.domains)) {
-        domainsText = campaignData.domains.map(domain => extractDomainName(domain)).join('\n') + '\n';
+        domainsText = campaignData.domains.map((domain: any) => extractDomainName(domain)).join('\n') + '\n';
       }
       
       if (!domainsText) {

@@ -11,6 +11,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { PersonasApi, Configuration } from '@/lib/api-client';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 import { useToast } from '@/hooks/use-toast';
 
 // Professional API client initialization
@@ -50,25 +51,26 @@ function EditPersonaPageContent() {
       setLoading(true);
       setError(null); 
       try {
-        let response;
+  let response;
         
         // Use type-specific API methods
         if (type === 'dns') {
-          response = await personasApi.personasDnsIdGet(personaId);
+          response = await personasApi.personasGet(personaId);
         } else if (type === 'http') {
-          response = await personasApi.personasHttpIdGet(personaId);
+          response = await personasApi.personasGet(personaId);
         } else {
-          response = await personasApi.personasIdGet(personaId);
+          response = await personasApi.personasGet(personaId);
         }
         
-        if (response.data) {
+        const data = extractResponseData<any>(response);
+        if (data) {
           // Check if the returned persona matches the expected type
-          if (response.data.personaType !== type) {
-            setError(`Mismatch: Persona ID '${personaId}' found, but it is a '${response.data.personaType}' persona, not '${type}'.`);
+          if (data.personaType !== type) {
+            setError(`Mismatch: Persona ID '${personaId}' found, but it is a '${data.personaType}' persona, not '${type}'.`);
             setPersona(null);
             toast({ title: "Type Mismatch", description: `Persona found, but it's not of type '${type}'.`, variant: "destructive" });
           } else {
-            setPersona(response.data as any);
+            setPersona(data as any);
           }
         } else {
           setError("Persona not found.");

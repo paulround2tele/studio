@@ -34,10 +34,7 @@ export function RTKCampaignDataProvider({ children }: RTKCampaignDataProviderPro
 
   // Extract campaign IDs from response - respects backend APIResponse structure
   const campaignIds = useMemo(() => {
-    if (!campaignListResponse?.data) return [];
-    
-    // Backend returns: { success: true, data: CampaignData[], requestId: "..." }
-    const campaigns = campaignListResponse.data;
+    const campaigns = extractResponseData<any[]>(campaignListResponse) || [];
     if (Array.isArray(campaigns)) {
       return campaigns
         .map(campaign => campaign.campaignId || campaign.id)
@@ -66,15 +63,15 @@ export function RTKCampaignDataProvider({ children }: RTKCampaignDataProviderPro
   // Process the bulk response into a campaigns map
   const campaigns = useMemo(() => {
     const campaignsMap = new Map();
-    
-    if (bulkResponse?.campaigns) {
-      Object.entries(bulkResponse.campaigns).forEach(([campaignId, campaignData]) => {
+    const campaignsObj: any = (bulkResponse as any)?.campaigns;
+    if (campaignsObj && typeof campaignsObj === 'object') {
+      Object.entries(campaignsObj).forEach(([campaignId, campaignData]: [string, any]) => {
         if (campaignData && campaignId) {
           campaignsMap.set(campaignId, {
             id: campaignId,
             name: campaignData.campaign?.name || '',
             currentPhase: campaignData.campaign?.currentPhase,
-            phaseStatus: campaignData.campaign?.phaseStatus,
+            phaseStatus: campaignData.campaign?.status,
             overallProgress: 0, // Default progress - will be calculated from domains
             domains: campaignData.domains || [],
             leads: campaignData.leads || [],

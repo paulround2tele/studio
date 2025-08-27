@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { keywordSetsApi, type CreateKeywordSetRequest } from '@/lib/api-client/client';
+import { keywordSetsApi, type CreateKeywordSetRequest } from '@/lib/api-client/compat';
 
 type CreateKeywordSetPayload = CreateKeywordSetRequest;
 
@@ -32,7 +32,7 @@ export default function NewKeywordSetPage() {
       // Remove rules from payload since this form doesn't handle them
       const { rules: _rules, ...cleanData } = data;
       // Use the correct method name from the generated API
-      await keywordSetsApi.keywordsSetsPost(cleanData);
+  await keywordSetsApi.keywordSetsCreate(cleanData);
       setSuccessMessage('Keyword set created');
       // PERFORMANCE FIX: Immediate navigation instead of 500ms delay
       router.push('/keyword-sets');

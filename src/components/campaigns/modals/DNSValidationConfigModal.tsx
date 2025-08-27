@@ -14,14 +14,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Import types and services - using the EXACT same pattern as campaign form
-import type { components } from '@/lib/api-client/types';
-import { PersonaResponse } from '@/lib/api-client/models/persona-response';
-import { Proxy } from '@/lib/api-client/models/proxy';
-import { campaignsApi, personasApi, proxiesApi } from '@/lib/api-client/client';
+import { PersonasApi, ProxiesApi, Configuration } from '@/lib/api-client';
+import { PersonaType } from '@/lib/api-client/models/persona-type';
 import { useConfigurePhaseStandaloneMutation } from '@/store/api/campaignApi';
-import type { DNSValidationConfig } from '@/lib/api-client/models/dnsvalidation-config';
-import type { ApiPhaseConfigureRequest } from '@/lib/api-client/models/api-phase-configure-request';
-import { ApiPhaseConfigureRequestPhaseTypeEnum } from '@/lib/api-client/models/api-phase-configure-request';
+import type { ApiDNSValidationConfig } from '@/lib/api-client/models/api-dnsvalidation-config';
+import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
+import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
+import type { ModelsProxy } from '@/lib/api-client/models/models-proxy';
 // PhaseConfigureRequestPhaseTypeEnum removed - using direct string literals now
 
 interface DNSValidationFormValues {
@@ -51,8 +51,8 @@ export default function DNSValidationConfigModal({
   const [configurePhase, { isLoading: isConfiguringPhase }] = useConfigurePhaseStandaloneMutation();
   
   // Data state - following campaign form pattern
-  const [dnsPersonas, setDnsPersonas] = useState<any[]>([]);
-  const [proxies, setProxies] = useState<any[]>([]);
+  const [dnsPersonas, setDnsPersonas] = useState<PersonaResponse[]>([]);
+  const [proxies, setProxies] = useState<ModelsProxy[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
   // Form initialization with persona-only configuration
@@ -72,26 +72,25 @@ export default function DNSValidationConfigModal({
     const loadData = async () => {
       try {
         setLoadingData(true);
-        
-        // Load personas and proxies in parallel
+        const cfg = new Configuration({ basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080' });
+        const personasApi = new PersonasApi(cfg);
+        const proxiesApi = new ProxiesApi(cfg);
+        // Load personas and proxies in parallel (use list endpoints)
         const [personasResponse, proxiesResponse] = await Promise.all([
-          personasApi.personasGet(undefined, undefined, undefined, 'dns'),
-          proxiesApi.proxiesGet()
+          personasApi.personasList(undefined, undefined, true, PersonaType.dns),
+          proxiesApi.proxiesList(undefined, undefined, undefined, undefined, true, undefined),
         ]);
-        
-        // Extract data from API responses - using proper Axios response structure
-        const personas = Array.isArray(personasResponse.data) ? personasResponse.data : [];
-        const proxies = Array.isArray(proxiesResponse.data) ? proxiesResponse.data : [];
+        // Unwrap SuccessEnvelope consistently
+        const personas = extractResponseData<{ items?: PersonaResponse[] }>(personasResponse)?.items || [];
+        const proxies = extractResponseData<{ items?: ModelsProxy[] }>(proxiesResponse)?.items || [];
         
         // Filter for active DNS personas only
-        const dnsPersonas = personas.filter((persona: any) => 
+        const dnsPersonas = personas.filter((persona) => 
           persona.personaType === 'dns' && persona.isEnabled === true
         );
         
         // Filter for active proxies only  
-        const activeProxies = proxies.filter((proxy: any) => 
-          proxy.isEnabled === true
-        );
+  const activeProxies = proxies.filter((proxy) => proxy.isEnabled === true);
         
         setDnsPersonas(dnsPersonas);
         setProxies(activeProxies);
@@ -140,22 +139,17 @@ export default function DNSValidationConfigModal({
   const onSubmit = async (data: DNSValidationFormValues) => {
     try {
       // Prepare the simplified persona-only configuration
-      const dnsConfig: DNSValidationConfig = {
+      const dnsConfig: ApiDNSValidationConfig = {
         personaIds: data.personaIds,
         name: data.name,
       };
 
-      const configRequest: ApiPhaseConfigureRequest = {
-        phaseType: ApiPhaseConfigureRequestPhaseTypeEnum.dns_validation,
-        config: { dnsValidation: dnsConfig },
+      const configRequest: PhaseConfigurationRequest = {
+        configuration: { dnsValidation: dnsConfig },
       };
 
-      // Use professional RTK Query mutation instead of amateur singleton API
-      await configurePhase({
-        campaignId,
-        phase: ApiPhaseConfigureRequestPhaseTypeEnum.dns_validation,
-        config: configRequest
-      }).unwrap();
+  // Use professional RTK Query mutation with normalized phase name
+  await configurePhase({ campaignId, phase: 'validation', config: configRequest }).unwrap();
 
       toast({
         title: "DNS validation configured",

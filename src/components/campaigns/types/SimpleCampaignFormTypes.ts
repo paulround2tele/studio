@@ -6,8 +6,9 @@
  * 2. Individual phases are configured later via PhaseDashboard
  * 3. Uses ONLY auto-generated API types from OpenAPI spec
  */
-import type { CreateLeadGenerationCampaignRequest } from '@/lib/api-client/models/create-lead-generation-campaign-request';
-import type { DomainGenerationPhaseConfig } from '@/lib/api-client/models/domain-generation-phase-config';
+import type { CreateCampaignRequest as CreateLeadGenerationCampaignRequest } from '@/lib/api-client/models';
+import { ServicesDomainGenerationPhaseConfigPatternTypeEnum as PatternTypeEnum } from '@/lib/api-client/models/services-domain-generation-phase-config';
+import type { ServicesDomainGenerationPhaseConfig } from '@/lib/api-client/models/services-domain-generation-phase-config';
 
 /**
  * Form values interface for phase-centric campaign creation
@@ -23,7 +24,7 @@ export interface SimpleCampaignFormValues {
   constantString: string;
   characterSet: string;
   variableLength: number;
-  tlds: string[]; // Will be converted from comma-separated string in UI
+  tlds: string[]; // Already parsed list of TLDs
   numDomainsToGenerate?: number;
   
   // UI helper fields
@@ -34,20 +35,27 @@ export interface SimpleCampaignFormValues {
  * Helper function to convert form values to API request
  */
 export function formToApiRequest(formValues: SimpleCampaignFormValues): CreateLeadGenerationCampaignRequest {
-  const domainConfig: DomainGenerationPhaseConfig = {
-    patternType: formValues.patternType,
-    constantString: formValues.constantString,
+  const patternTypeMap: Record<SimpleCampaignFormValues['patternType'], PatternTypeEnum> = {
+    prefix: PatternTypeEnum.prefix,
+    suffix: PatternTypeEnum.suffix,
+    both: PatternTypeEnum.both,
+  };
+
+  const discoveryConfig: ServicesDomainGenerationPhaseConfig = {
     characterSet: formValues.characterSet,
+    constantString: formValues.constantString,
     variableLength: formValues.variableLength,
     tlds: formValues.tlds,
     numDomainsToGenerate: formValues.numDomainsToGenerate,
+    patternType: patternTypeMap[formValues.patternType],
   };
 
   return {
     name: formValues.name,
     description: formValues.description,
-    domainConfig,
-  };
+  targetDomains: [],
+  configuration: { phases: { discovery: discoveryConfig } },
+  } as CreateLeadGenerationCampaignRequest;
 }
 
 /**

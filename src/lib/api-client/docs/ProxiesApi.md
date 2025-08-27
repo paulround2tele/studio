@@ -1,25 +1,24 @@
 # ProxiesApi
 
-All URIs are relative to *http://localhost:8080/api/v2*
+All URIs are relative to *https://api.domainflow.dev/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**bulkDeleteProxies**](#bulkdeleteproxies) | **DELETE** /proxies/bulk/delete | Bulk delete proxies|
-|[**bulkTestProxies**](#bulktestproxies) | **POST** /proxies/bulk/test | Bulk test proxies|
-|[**bulkUpdateProxies**](#bulkupdateproxies) | **PUT** /proxies/bulk/update | Bulk update proxies|
-|[**createProxy**](#createproxy) | **POST** /proxies | Create proxy|
-|[**deleteProxy**](#deleteproxy) | **DELETE** /proxies/{proxyId} | Delete proxy|
-|[**healthCheckAllProxies**](#healthcheckallproxies) | **POST** /proxies/health-check | Health check all proxies|
-|[**healthCheckProxy**](#healthcheckproxy) | **POST** /proxies/{proxyId}/health-check | Health check single proxy|
-|[**listProxies**](#listproxies) | **GET** /proxies | List proxies|
-|[**listProxyStatuses**](#listproxystatuses) | **GET** /proxies/status | Get proxy statuses|
-|[**testProxy**](#testproxy) | **POST** /proxies/{proxyId}/test | Test proxy|
-|[**updateProxy**](#updateproxy) | **PUT** /proxies/{proxyId} | Update proxy|
+|[**proxiesBulkDelete**](#proxiesbulkdelete) | **DELETE** /proxies/bulk/delete | Bulk delete proxies|
+|[**proxiesBulkTest**](#proxiesbulktest) | **POST** /proxies/bulk/test | Bulk test proxies|
+|[**proxiesBulkUpdate**](#proxiesbulkupdate) | **PUT** /proxies/bulk/update | Bulk update proxies|
+|[**proxiesCreate**](#proxiescreate) | **POST** /proxies | Create proxy|
+|[**proxiesDelete**](#proxiesdelete) | **DELETE** /proxies/{proxyId} | Delete proxy|
+|[**proxiesHealthCheckAll**](#proxieshealthcheckall) | **POST** /proxies/health-check | Health check all proxies|
+|[**proxiesHealthCheckSingle**](#proxieshealthchecksingle) | **POST** /proxies/{proxyId}/health-check | Health check single proxy|
+|[**proxiesList**](#proxieslist) | **GET** /proxies | List proxies|
+|[**proxiesStatus**](#proxiesstatus) | **GET** /proxies/status | Get proxy statuses|
+|[**proxiesTest**](#proxiestest) | **POST** /proxies/{proxyId}/test | Test proxy|
+|[**proxiesUpdate**](#proxiesupdate) | **PUT** /proxies/{proxyId} | Update proxy|
 
-# **bulkDeleteProxies**
-> BulkValidateDNS200Response bulkDeleteProxies(modelsBulkDeleteProxiesRequest)
+# **proxiesBulkDelete**
+> ProxiesBulkUpdate200Response proxiesBulkDelete(bulkDeleteProxiesRequest)
 
-Delete multiple proxies in one request
 
 ### Example
 
@@ -27,16 +26,16 @@ Delete multiple proxies in one request
 import {
     ProxiesApi,
     Configuration,
-    ModelsBulkDeleteProxiesRequest
+    BulkDeleteProxiesRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-let modelsBulkDeleteProxiesRequest: ModelsBulkDeleteProxiesRequest; //Bulk delete request
+let bulkDeleteProxiesRequest: BulkDeleteProxiesRequest; //
 
-const { status, data } = await apiInstance.bulkDeleteProxies(
-    modelsBulkDeleteProxiesRequest
+const { status, data } = await apiInstance.proxiesBulkDelete(
+    bulkDeleteProxiesRequest
 );
 ```
 
@@ -44,16 +43,16 @@ const { status, data } = await apiInstance.bulkDeleteProxies(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **modelsBulkDeleteProxiesRequest** | **ModelsBulkDeleteProxiesRequest**| Bulk delete request | |
+| **bulkDeleteProxiesRequest** | **BulkDeleteProxiesRequest**|  | |
 
 
 ### Return type
 
-**BulkValidateDNS200Response**
+**ProxiesBulkUpdate200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -64,16 +63,15 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Bulk operation results |  -  |
+|**200** | OK |  -  |
 |**400** | Bad Request |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **bulkTestProxies**
-> BulkValidateDNS200Response bulkTestProxies(modelsBulkTestProxiesRequest)
+# **proxiesBulkTest**
+> ProxiesBulkTest200Response proxiesBulkTest(proxiesBulkTestRequest)
 
-Test multiple proxies in one request
 
 ### Example
 
@@ -81,16 +79,16 @@ Test multiple proxies in one request
 import {
     ProxiesApi,
     Configuration,
-    ModelsBulkTestProxiesRequest
+    ProxiesBulkTestRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-let modelsBulkTestProxiesRequest: ModelsBulkTestProxiesRequest; //Bulk test request
+let proxiesBulkTestRequest: ProxiesBulkTestRequest; //
 
-const { status, data } = await apiInstance.bulkTestProxies(
-    modelsBulkTestProxiesRequest
+const { status, data } = await apiInstance.proxiesBulkTest(
+    proxiesBulkTestRequest
 );
 ```
 
@@ -98,16 +96,16 @@ const { status, data } = await apiInstance.bulkTestProxies(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **modelsBulkTestProxiesRequest** | **ModelsBulkTestProxiesRequest**| Bulk test request | |
+| **proxiesBulkTestRequest** | **ProxiesBulkTestRequest**|  | |
 
 
 ### Return type
 
-**BulkValidateDNS200Response**
+**ProxiesBulkTest200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -118,16 +116,15 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Bulk test results |  -  |
+|**200** | OK |  -  |
 |**400** | Bad Request |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **bulkUpdateProxies**
-> BulkValidateDNS200Response bulkUpdateProxies(modelsBulkUpdateProxiesRequest)
+# **proxiesBulkUpdate**
+> ProxiesBulkUpdate200Response proxiesBulkUpdate(bulkUpdateProxiesRequest)
 
-Update multiple proxies in one request
 
 ### Example
 
@@ -135,16 +132,16 @@ Update multiple proxies in one request
 import {
     ProxiesApi,
     Configuration,
-    ModelsBulkUpdateProxiesRequest
+    BulkUpdateProxiesRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-let modelsBulkUpdateProxiesRequest: ModelsBulkUpdateProxiesRequest; //Bulk update request
+let bulkUpdateProxiesRequest: BulkUpdateProxiesRequest; //
 
-const { status, data } = await apiInstance.bulkUpdateProxies(
-    modelsBulkUpdateProxiesRequest
+const { status, data } = await apiInstance.proxiesBulkUpdate(
+    bulkUpdateProxiesRequest
 );
 ```
 
@@ -152,16 +149,16 @@ const { status, data } = await apiInstance.bulkUpdateProxies(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **modelsBulkUpdateProxiesRequest** | **ModelsBulkUpdateProxiesRequest**| Bulk update request | |
+| **bulkUpdateProxiesRequest** | **BulkUpdateProxiesRequest**|  | |
 
 
 ### Return type
 
-**BulkValidateDNS200Response**
+**ProxiesBulkUpdate200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -172,16 +169,15 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Bulk operation results |  -  |
+|**200** | OK |  -  |
 |**400** | Bad Request |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **createProxy**
-> BulkValidateDNS200Response createProxy(modelsCreateProxyRequest)
+# **proxiesCreate**
+> ProxiesCreate201Response proxiesCreate(createProxyRequestAPI)
 
-Add a new proxy configuration
 
 ### Example
 
@@ -189,16 +185,16 @@ Add a new proxy configuration
 import {
     ProxiesApi,
     Configuration,
-    ModelsCreateProxyRequest
+    CreateProxyRequestAPI
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-let modelsCreateProxyRequest: ModelsCreateProxyRequest; //Proxy creation request
+let createProxyRequestAPI: CreateProxyRequestAPI; //
 
-const { status, data } = await apiInstance.createProxy(
-    modelsCreateProxyRequest
+const { status, data } = await apiInstance.proxiesCreate(
+    createProxyRequestAPI
 );
 ```
 
@@ -206,16 +202,16 @@ const { status, data } = await apiInstance.createProxy(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **modelsCreateProxyRequest** | **ModelsCreateProxyRequest**| Proxy creation request | |
+| **createProxyRequestAPI** | **CreateProxyRequestAPI**|  | |
 
 
 ### Return type
 
-**BulkValidateDNS200Response**
+**ProxiesCreate201Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -226,17 +222,20 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**201** | Created proxy |  -  |
-|**400** | Invalid request payload or validation failed |  -  |
-|**409** | Proxy with address already exists |  -  |
-|**500** | Failed to create proxy |  -  |
+|**201** | Created |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**409** | Conflict |  -  |
+|**422** | Validation Error |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **deleteProxy**
-> BulkValidateDNS200Response deleteProxy()
+# **proxiesDelete**
+> SuccessEnvelope proxiesDelete()
 
-Delete a proxy by ID
 
 ### Example
 
@@ -249,9 +248,9 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-let proxyId: string; //Proxy ID (default to undefined)
+let proxyId: string; // (default to undefined)
 
-const { status, data } = await apiInstance.deleteProxy(
+const { status, data } = await apiInstance.proxiesDelete(
     proxyId
 );
 ```
@@ -260,16 +259,16 @@ const { status, data } = await apiInstance.deleteProxy(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **proxyId** | [**string**] | Proxy ID | defaults to undefined|
+| **proxyId** | [**string**] |  | defaults to undefined|
 
 
 ### Return type
 
-**BulkValidateDNS200Response**
+**SuccessEnvelope**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -280,62 +279,70 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Proxy deleted successfully |  -  |
-|**400** | Invalid proxy ID format |  -  |
-|**404** | Proxy not found |  -  |
-|**500** | Failed to delete proxy |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **healthCheckAllProxies**
-> BulkValidateDNS200Response healthCheckAllProxies()
-
-Force health checks for all proxies
-
-### Example
-
-```typescript
-import {
-    ProxiesApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ProxiesApi(configuration);
-
-const { status, data } = await apiInstance.healthCheckAllProxies();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**BulkValidateDNS200Response**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Health checks completed |  -  |
+|**200** | Deleted |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**404** | Not Found |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **healthCheckProxy**
-> BulkValidateDNS200Response healthCheckProxy()
+# **proxiesHealthCheckAll**
+> ProxiesHealthCheckAll202Response proxiesHealthCheckAll()
 
-Force a health check for a specific proxy
+
+### Example
+
+```typescript
+import {
+    ProxiesApi,
+    Configuration,
+    ProxiesHealthCheckAllRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ProxiesApi(configuration);
+
+let proxiesHealthCheckAllRequest: ProxiesHealthCheckAllRequest; // (optional)
+
+const { status, data } = await apiInstance.proxiesHealthCheckAll(
+    proxiesHealthCheckAllRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **proxiesHealthCheckAllRequest** | **ProxiesHealthCheckAllRequest**|  | |
+
+
+### Return type
+
+**ProxiesHealthCheckAll202Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**202** | Accepted |  -  |
+|**400** | Bad Request |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **proxiesHealthCheckSingle**
+> ProxiesHealthCheckSingle200Response proxiesHealthCheckSingle()
+
 
 ### Example
 
@@ -348,9 +355,9 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-let proxyId: string; //Proxy ID (default to undefined)
+let proxyId: string; // (default to undefined)
 
-const { status, data } = await apiInstance.healthCheckProxy(
+const { status, data } = await apiInstance.proxiesHealthCheckSingle(
     proxyId
 );
 ```
@@ -359,16 +366,16 @@ const { status, data } = await apiInstance.healthCheckProxy(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **proxyId** | [**string**] | Proxy ID | defaults to undefined|
+| **proxyId** | [**string**] |  | defaults to undefined|
 
 
 ### Return type
 
-**BulkValidateDNS200Response**
+**ProxiesHealthCheckSingle200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -379,17 +386,16 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Health check completed |  -  |
+|**200** | OK |  -  |
 |**400** | Bad Request |  -  |
-|**404** | Proxy not found |  -  |
+|**404** | Not Found |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **listProxies**
-> BulkValidateDNS200Response listProxies()
+# **proxiesList**
+> ProxiesList200Response proxiesList()
 
-Retrieve a list of proxies with optional filtering by protocol, status, and health
 
 ### Example
 
@@ -402,16 +408,18 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-let limit: number; //Maximum number of results (optional) (default to 100)
-let offset: number; //Number of results to skip (optional) (default to 0)
-let protocol: string; //Filter by protocol (http, https, socks4, socks5) (optional) (default to undefined)
-let isEnabled: boolean; //Filter by enabled status (optional) (default to undefined)
+let limit: number; //Page size (items per page) (optional) (default to 50)
+let offset: number; //Zero-based offset (optional) (default to 0)
+let protocol: ProxyProtocol; //Filter proxies by protocol (optional) (default to undefined)
+let countryCode: string; //Filter proxies by ISO country code (optional) (default to undefined)
+let isEnabled: boolean; //Filter by enabled state (optional) (default to undefined)
 let isHealthy: boolean; //Filter by health status (optional) (default to undefined)
 
-const { status, data } = await apiInstance.listProxies(
+const { status, data } = await apiInstance.proxiesList(
     limit,
     offset,
     protocol,
+    countryCode,
     isEnabled,
     isHealthy
 );
@@ -421,20 +429,21 @@ const { status, data } = await apiInstance.listProxies(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **limit** | [**number**] | Maximum number of results | (optional) defaults to 100|
-| **offset** | [**number**] | Number of results to skip | (optional) defaults to 0|
-| **protocol** | [**string**] | Filter by protocol (http, https, socks4, socks5) | (optional) defaults to undefined|
-| **isEnabled** | [**boolean**] | Filter by enabled status | (optional) defaults to undefined|
+| **limit** | [**number**] | Page size (items per page) | (optional) defaults to 50|
+| **offset** | [**number**] | Zero-based offset | (optional) defaults to 0|
+| **protocol** | **ProxyProtocol** | Filter proxies by protocol | (optional) defaults to undefined|
+| **countryCode** | [**string**] | Filter proxies by ISO country code | (optional) defaults to undefined|
+| **isEnabled** | [**boolean**] | Filter by enabled state | (optional) defaults to undefined|
 | **isHealthy** | [**boolean**] | Filter by health status | (optional) defaults to undefined|
 
 
 ### Return type
 
-**BulkValidateDNS200Response**
+**ProxiesList200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -445,15 +454,17 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | List of proxies |  -  |
-|**500** | Failed to list proxies |  -  |
+|**200** | OK |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **listProxyStatuses**
-> BulkValidateDNS200Response listProxyStatuses()
+# **proxiesStatus**
+> ProxiesStatus200Response proxiesStatus()
 
-Retrieve the current status of all proxies
 
 ### Example
 
@@ -466,7 +477,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-const { status, data } = await apiInstance.listProxyStatuses();
+const { status, data } = await apiInstance.proxiesStatus();
 ```
 
 ### Parameters
@@ -475,11 +486,11 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**BulkValidateDNS200Response**
+**ProxiesStatus200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -490,15 +501,17 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Proxy status information |  -  |
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **testProxy**
-> BulkValidateDNS200Response testProxy()
+# **proxiesTest**
+> ProxiesTest200Response proxiesTest()
 
-Test a proxy configuration
 
 ### Example
 
@@ -511,9 +524,9 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-let proxyId: string; //Proxy ID (default to undefined)
+let proxyId: string; // (default to undefined)
 
-const { status, data } = await apiInstance.testProxy(
+const { status, data } = await apiInstance.proxiesTest(
     proxyId
 );
 ```
@@ -522,16 +535,16 @@ const { status, data } = await apiInstance.testProxy(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **proxyId** | [**string**] | Proxy ID | defaults to undefined|
+| **proxyId** | [**string**] |  | defaults to undefined|
 
 
 ### Return type
 
-**BulkValidateDNS200Response**
+**ProxiesTest200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -542,17 +555,20 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Test results |  -  |
+|**200** | OK |  -  |
 |**400** | Bad Request |  -  |
-|**404** | Proxy not found |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**404** | Not Found |  -  |
+|**422** | Validation Error |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **updateProxy**
-> BulkValidateDNS200Response updateProxy(modelsUpdateProxyRequest)
+# **proxiesUpdate**
+> ProxiesCreate201Response proxiesUpdate(updateProxyRequestAPI)
 
-Update an existing proxy configuration
 
 ### Example
 
@@ -560,18 +576,18 @@ Update an existing proxy configuration
 import {
     ProxiesApi,
     Configuration,
-    ModelsUpdateProxyRequest
+    UpdateProxyRequestAPI
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ProxiesApi(configuration);
 
-let proxyId: string; //Proxy ID (default to undefined)
-let modelsUpdateProxyRequest: ModelsUpdateProxyRequest; //Proxy update request
+let proxyId: string; // (default to undefined)
+let updateProxyRequestAPI: UpdateProxyRequestAPI; //
 
-const { status, data } = await apiInstance.updateProxy(
+const { status, data } = await apiInstance.proxiesUpdate(
     proxyId,
-    modelsUpdateProxyRequest
+    updateProxyRequestAPI
 );
 ```
 
@@ -579,17 +595,17 @@ const { status, data } = await apiInstance.updateProxy(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **modelsUpdateProxyRequest** | **ModelsUpdateProxyRequest**| Proxy update request | |
-| **proxyId** | [**string**] | Proxy ID | defaults to undefined|
+| **updateProxyRequestAPI** | **UpdateProxyRequestAPI**|  | |
+| **proxyId** | [**string**] |  | defaults to undefined|
 
 
 ### Return type
 
-**BulkValidateDNS200Response**
+**ProxiesCreate201Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -600,10 +616,12 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Updated proxy |  -  |
-|**400** | Invalid request payload or validation failed |  -  |
-|**404** | Proxy not found |  -  |
-|**500** | Failed to update proxy |  -  |
+|**200** | Updated |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 

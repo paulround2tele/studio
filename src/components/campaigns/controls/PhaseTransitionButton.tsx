@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { components } from '@/lib/api-client/types';
 
 // Use enums from OpenAPI schema  
-type CampaignCurrentPhaseEnum = components['schemas']['api.CampaignSummary']['currentPhase'];
+import type { CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
 
 interface PhaseTransitionButtonProps {
   campaignId: string;

@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { keywordSetsApi } from '@/lib/api-client/client';
+import { keywordSetsApi } from '@/lib/api-client/compat';
 
 // Updated to use the actual request type from auto-generated client
 interface UpdateKeywordSetPayload {
@@ -57,7 +57,7 @@ export default function EditKeywordSetPage() {
     setErrorMessage(null);
     try {
       // Use the correct method name from the generated API
-      await keywordSetsApi.keywordsSetsSetIdPut(params.id as string, data);
+  await keywordSetsApi.keywordSetsUpdate(params.id as string, data as any);
       setSuccessMessage('Keyword set updated');
       // PERFORMANCE FIX: Immediate navigation instead of 500ms delay
       router.push('/keyword-sets');

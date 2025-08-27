@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import type { Campaign } from '@/lib/api-client/models';
+import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 import { ArrowRight, CalendarDays, CheckCircle, AlertTriangle, WorkflowIcon, Play, MoreVertical, FilePenLine, Trash2, PauseCircle, PlayCircle, StopCircle, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -60,64 +60,27 @@ const formatDate = (dateString: string): string => {
 
 // Memoized progress calculation function
 const getOverallCampaignProgress = (campaign: Campaign): number => {
-  // All campaigns follow the same phase progression in phases-based architecture
-  const allPhases = ['generation', 'dns_validation', 'http_keyword_validation', 'analysis'];
-  if (allPhases.length === 0) return 0;
-
-  // Use backend-calculated progressPercentage (no frontend calculation needed)
-  let progressValue = campaign.progressPercentage ?? 0;
-  
-  // If no direct progress, try to calculate from processed vs total items
-  if (progressValue === 0 && campaign.totalItems && campaign.processedItems) {
-    progressValue = Math.floor((campaign.processedItems / campaign.totalItems) * 100);
-  }
-
-  if ((campaign.currentPhase as any) === "completed" || (campaign.phaseStatus as any) === "completed") return 100;
-  
-  if ((campaign.phaseStatus as any) === "paused" || (campaign.phaseStatus as any) === "failed" || !campaign.currentPhase) {
-    // For paused or failed, progress reflects where it stopped. For not started, it's 0.
-    const currentPhaseIndexInType = campaign.currentPhase ? allPhases.indexOf(campaign.currentPhase) : -1;
-     if(!campaign.currentPhase || currentPhaseIndexInType === -1) return Math.max(0, progressValue);
-
-    const completedPhasesProgress = (currentPhaseIndexInType / allPhases.length) * 100;
-    const currentPhaseProgressContribution = (progressValue / allPhases.length);
-    return Math.min(100, Math.floor(completedPhasesProgress + currentPhaseProgressContribution));
-  }
-
-  const currentPhaseIndexInType = campaign.currentPhase ? allPhases.indexOf(campaign.currentPhase) : -1;
-  if (currentPhaseIndexInType === -1) return Math.max(0, progressValue); // Fallback to direct progress value
-
-  const completedPhasesProgress = (currentPhaseIndexInType / allPhases.length) * 100;
-  const currentPhaseProgressContribution = (progressValue / allPhases.length);
-
-  return Math.min(100, Math.floor(completedPhasesProgress + currentPhaseProgressContribution));
+  // Prefer backend provided percentComplete
+  const apiPercent = campaign.progress?.percentComplete;
+  if (typeof apiPercent === 'number') return Math.max(0, Math.min(100, apiPercent));
+  return 0;
 };
 
 // Memoized status badge info generation
 const getStatusBadgeInfo = (campaign: Campaign): { text: string, variant: "default" | "secondary" | "destructive" | "outline", icon: JSX.Element } => {
-  // Check if campaign is fully completed (completed analysis phase = campaign done)
-  if (campaign.phaseStatus === "completed" && campaign.currentPhase === "analysis") {
-    return { text: "Campaign Completed", variant: "default", icon: <CheckCircle className="h-4 w-4 text-green-500" /> };
+  switch (campaign.status) {
+    case 'completed':
+      return { text: 'Campaign Completed', variant: 'default', icon: <CheckCircle className="h-4 w-4 text-green-500" /> };
+    case 'failed':
+      return { text: `Failed: ${campaign.currentPhase || 'Unknown'}`, variant: 'destructive', icon: <AlertTriangle className="h-4 w-4 text-destructive" /> };
+    case 'paused':
+      return { text: `Paused: ${campaign.currentPhase || 'Unknown'}`, variant: 'outline', icon: <PauseCircle className="h-4 w-4 text-muted-foreground" /> };
+    case 'running':
+      return { text: `Active: ${campaign.currentPhase || 'Unknown'}`, variant: 'secondary', icon: <Loader2 className="h-4 w-4 text-blue-500 animate-spin" /> };
+    case 'draft':
+    default:
+      return { text: 'Pending Start', variant: 'outline', icon: <Play className="h-4 w-4 text-muted-foreground" /> };
   }
-  if (campaign.phaseStatus === "failed") return { text: `Failed: ${campaign.currentPhase || 'Unknown'}`, variant: "destructive", icon: <AlertTriangle className="h-4 w-4 text-destructive" /> };
-  if (campaign.phaseStatus === "paused") return { text: `Paused: ${campaign.currentPhase || 'Unknown'}`, variant: "outline", icon: <PauseCircle className="h-4 w-4 text-muted-foreground" /> };
-  if (campaign.phaseStatus === "in_progress") return { text: `Active: ${campaign.currentPhase || 'Unknown'}`, variant: "secondary", icon: <Loader2 className="h-4 w-4 text-blue-500 animate-spin" /> };
-  if (!campaign.currentPhase || campaign.phaseStatus === "not_started") return { text: "Pending Start", variant: "outline", icon: <Play className="h-4 w-4 text-muted-foreground" /> };
-  if (campaign.phaseStatus === "completed") {
-     // Determine next phase in unified workflow
-     const getNextPhaseInWorkflow = (currentPhase: string): string | null => {
-       const phaseOrder = ['generation', 'dns_validation', 'http_keyword_validation', 'analysis'];
-       const currentIndex = phaseOrder.indexOf(currentPhase);
-       if (currentIndex !== -1 && currentIndex < phaseOrder.length - 1) {
-         const nextPhase = phaseOrder[currentIndex + 1];
-         return nextPhase || null;
-       }
-       return null;
-     };
-     const nextPhase = campaign.currentPhase ? getNextPhaseInWorkflow(campaign.currentPhase) : null;
-     return { text: `Next: ${nextPhase || 'Finalizing'}`, variant: "secondary", icon: <WorkflowIcon className="h-4 w-4 text-muted-foreground" /> };
-  }
-  return { text: campaign.currentPhase || 'Unknown', variant: "outline", icon: <WorkflowIcon className="h-4 w-4 text-muted-foreground" /> };
 };
 
 
@@ -171,10 +134,10 @@ const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, on
 
   // Memoize conditional rendering flags
   const showActions = useMemo(() => ({
-    showPause: campaign.phaseStatus === 'in_progress' && onPauseCampaign,
-    showResume: campaign.phaseStatus === 'paused' && onResumeCampaign,
-    showStop: (campaign.phaseStatus === 'in_progress' || campaign.phaseStatus === 'paused') && onStopCampaign
-  }), [campaign.phaseStatus, onPauseCampaign, onResumeCampaign, onStopCampaign]);
+    showPause: campaign.status === 'running' && onPauseCampaign,
+    showResume: campaign.status === 'paused' && onResumeCampaign,
+    showStop: (campaign.status === 'running' || campaign.status === 'paused') && onStopCampaign
+  }), [campaign.status, onPauseCampaign, onResumeCampaign, onStopCampaign]);
 
   return (
     <AlertDialog>
@@ -203,7 +166,7 @@ const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, on
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>Phase: {campaign.currentPhase}</p>
-                    <p>Status: {campaign.phaseStatus}</p>
+                    <p>Status: {campaign.status}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -257,7 +220,7 @@ const CampaignListItem = memo(({ campaign, onDeleteCampaign, onPauseCampaign, on
               </DropdownMenu>
             </div>
           </div>
-          <CardDescription className="line-clamp-2">{campaign.errorMessage || `Campaign ${campaign.currentPhase || 'in progress'}`}</CardDescription>
+          <CardDescription className="line-clamp-2">{`Campaign ${campaign.currentPhase || 'in progress'}`}</CardDescription>
         </CardHeader>
         <CardContent className="flex-grow space-y-3">
           <div>

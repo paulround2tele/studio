@@ -8,13 +8,12 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { CampaignsApi, Configuration } from '@/lib/api-client';
 import type {
   ServicesCreateLeadGenerationCampaignRequest,
-  ApiBulkEnrichedDataRequest,
-  ApiPhaseConfigureRequest,
-  ApiPatternOffsetRequest,
-  ApiCampaignsListAPIResponse,
-  ApiAPIResponse,
-  ApiPatternOffsetResponse
 } from '@/lib/api-client';
+import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
+import type {
+  CampaignsList200Response,
+  SuccessEnvelope,
+} from '@/lib/api-client/models';
 
 // Professional API configuration
 const config = new Configuration({
@@ -32,12 +31,13 @@ export const campaignApi = createApi({
   endpoints: (builder) => ({
     // Campaign CRUD operations
     createCampaign: builder.mutation<
-      ApiAPIResponse,
+      SuccessEnvelope,
       ServicesCreateLeadGenerationCampaignRequest
     >({
       queryFn: async (request) => {
         try {
-          const response = await campaignsApi.createLeadGenerationCampaign(request);
+          // New generated method name
+          const response = await campaignsApi.campaignsCreate(request as any);
           return { data: response.data };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
@@ -47,10 +47,11 @@ export const campaignApi = createApi({
     }),
 
     // Campaign listing
-    getCampaignsStandalone: builder.query<ApiCampaignsListAPIResponse, void>({
+    getCampaignsStandalone: builder.query<CampaignsList200Response, void>({
       queryFn: async () => {
         try {
-          const response = await campaignsApi.getCampaignsStandalone();
+          // New generated method name
+          const response = await campaignsApi.campaignsList();
           return { data: response.data };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
@@ -61,13 +62,26 @@ export const campaignApi = createApi({
 
     // Bulk enriched campaign data
     getBulkEnrichedCampaignData: builder.query<
-      ApiAPIResponse,
-      ApiBulkEnrichedDataRequest
+      { campaigns: Record<string, any>; totalCount: number },
+      { campaignIds: string[]; limit?: number; offset?: number }
     >({
       queryFn: async (request) => {
         try {
-          const response = await campaignsApi.getBulkEnrichedCampaignData(request);
-          return { data: response.data };
+          // Endpoint not present in OpenAPI spec; call directly
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+          const res = await fetch(`${apiUrl}/campaigns/bulk/enriched-data`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request),
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ message: res.statusText }));
+            return { error: err } as any;
+          }
+          const data = await res.json();
+          // Expecting shape: { campaigns: { [id]: {...} }, totalCount: number }
+          return { data } as any;
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }
@@ -76,10 +90,11 @@ export const campaignApi = createApi({
     }),
 
     // Campaign progress tracking
-    getCampaignProgressStandalone: builder.query<ApiAPIResponse, string>({
+    getCampaignProgressStandalone: builder.query<SuccessEnvelope, string>({
       queryFn: async (campaignId) => {
         try {
-          const response = await campaignsApi.getCampaignProgressStandalone(campaignId);
+          // New generated method name
+          const response = await campaignsApi.campaignsProgress(campaignId);
           return { data: response.data };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
@@ -90,32 +105,17 @@ export const campaignApi = createApi({
       ],
     }),
 
-    // Campaign domains status
-    getCampaignDomainsStatus: builder.query<ApiAPIResponse, string>({
-      queryFn: async (campaignId) => {
-        try {
-          const response = await campaignsApi.getCampaignDomainsStatus(campaignId);
-          return { data: response.data };
-        } catch (error: any) {
-          return { error: error.response?.data || error.message };
-        }
-      },
-      providesTags: (result, error, campaignId) => [
-        { type: 'CampaignDomains', id: campaignId }
-      ],
-    }),
-
     // Phase management operations
     configurePhaseStandalone: builder.mutation<
-      ApiAPIResponse,
-      { campaignId: string; phase: string; config: ApiPhaseConfigureRequest }
+      SuccessEnvelope,
+      { campaignId: string; phase: string; config: PhaseConfigurationRequest }
     >({
       queryFn: async ({ campaignId, phase, config }) => {
         try {
-          const response = await campaignsApi.configurePhaseStandalone(
-            campaignId, 
-            phase as any, // Type assertion for enum
-            config
+          const response = await campaignsApi.campaignsPhaseConfigure(
+            campaignId,
+            phase as any,
+            config as any,
           );
           return { data: response.data };
         } catch (error: any) {
@@ -129,15 +129,12 @@ export const campaignApi = createApi({
     }),
 
     startPhaseStandalone: builder.mutation<
-      ApiAPIResponse,
+      SuccessEnvelope,
       { campaignId: string; phase: string }
     >({
       queryFn: async ({ campaignId, phase }) => {
         try {
-          const response = await campaignsApi.startPhaseStandalone(
-            campaignId,
-            phase as any // Type assertion for enum
-          );
+          const response = await campaignsApi.campaignsPhaseStart(campaignId, phase as any);
           return { data: response.data };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
@@ -150,15 +147,12 @@ export const campaignApi = createApi({
     }),
 
     getPhaseStatusStandalone: builder.query<
-      ApiAPIResponse,
+      SuccessEnvelope,
       { campaignId: string; phase: string }
     >({
       queryFn: async ({ campaignId, phase }) => {
         try {
-          const response = await campaignsApi.getPhaseStatusStandalone(
-            campaignId,
-            phase as any // Type assertion for enum
-          );
+          const response = await campaignsApi.campaignsPhaseStatus(campaignId, phase as any);
           return { data: response.data };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
@@ -170,11 +164,26 @@ export const campaignApi = createApi({
     }),
 
     // Pattern offset utility
-    getPatternOffset: builder.query<ApiPatternOffsetResponse, ApiPatternOffsetRequest>({
+    getPatternOffset: builder.query<
+      { success?: boolean; data?: { currentOffset?: number } },
+      { patternType: string; variableLength: number; characterSet: string; constantString: string; tld: string }
+    >({
       queryFn: async (request) => {
         try {
-          const response = await campaignsApi.getPatternOffset(request);
-          return { data: response.data };
+          // Endpoint not present in OpenAPI spec; call directly
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+          const res = await fetch(`${apiUrl}/campaigns/domain-generation/pattern-offset`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(request),
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ message: res.statusText }));
+            return { error: err } as any;
+          }
+          const data = await res.json();
+          return { data } as any;
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }
@@ -189,7 +198,6 @@ export const {
   useGetCampaignsStandaloneQuery,
   useGetBulkEnrichedCampaignDataQuery,
   useGetCampaignProgressStandaloneQuery,
-  useGetCampaignDomainsStatusQuery,
   useConfigurePhaseStandaloneMutation,
   useStartPhaseStandaloneMutation,
   useGetPhaseStatusStandaloneQuery,

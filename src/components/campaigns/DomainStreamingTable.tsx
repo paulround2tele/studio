@@ -48,12 +48,12 @@ const getCampaignDomainsPhaseAware = (campaign: Campaign): string[] => {
     campaignId: campaign.id,
     campaignName: campaign.name,
     currentPhase: campaign.currentPhase,
-    phaseStatus: campaign.phaseStatus,
+  phaseStatus: (campaign as any).phaseStatus,
     allKeys: Object.keys(campaign),
-    domainsProperty: campaign.domains,
-    domainsType: typeof campaign.domains,
-    domainsIsArray: Array.isArray(campaign.domains),
-    domainsLength: Array.isArray(campaign.domains) ? campaign.domains.length : 'not array',
+  domainsProperty: (campaign as any).domains,
+  domainsType: typeof (campaign as any).domains,
+  domainsIsArray: Array.isArray((campaign as any).domains),
+  domainsLength: Array.isArray((campaign as any).domains) ? (campaign as any).domains.length : 'not array',
     fullCampaignObject: campaign
   });
 

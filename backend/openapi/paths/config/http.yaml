@@ -10,12 +10,8 @@ get:
       content:
         application/json:
           schema:
-            allOf:
-            - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-            - type: object
-            properties:
-                  data:
-            $ref: '../../components/schemas/all.yaml#/HTTPValidatorConfigJSON'
+            type: object
+            description: HTTP configuration object
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
@@ -31,19 +27,16 @@ put:
     content:
       application/json:
         schema:
-          $ref: '../../components/schemas/all.yaml#/HTTPValidatorConfigJSON'
+          type: object
+          description: HTTP configuration object
   responses:
     '200':
       description: Updated
       content:
         application/json:
           schema:
-            allOf:
-            - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-            - type: object
-            properties:
-                  data:
-            $ref: '../../components/schemas/all.yaml#/HTTPValidatorConfigJSON'
+            type: object
+            description: HTTP configuration object
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }

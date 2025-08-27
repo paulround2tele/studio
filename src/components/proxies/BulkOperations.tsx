@@ -36,8 +36,7 @@ import {
   AlertTriangle,
   Loader2
 } from 'lucide-react';
-import type { GithubComFntelecomllcStudioBackendInternalModelsProxy as ProxyType } from '@/lib/api-client/models';
-import type { GithubComFntelecomllcStudioBackendInternalModelsUpdateProxyRequest as UpdateProxyRequest } from '@/lib/api-client/models';
+import type { ModelsProxy as ProxyType, UpdateProxyRequestAPI as UpdateProxyRequest } from '@/lib/api-client/models';
 import { isResponseSuccess } from '@/lib/utils/apiResponseHelpers';
 
 type ProxyActionResponse = { status: 'success' | 'error'; message?: string };

@@ -11,10 +11,9 @@ import { KeywordTargetingSection } from './configuration/KeywordTargetingSection
 import { PersonaAssignmentSection } from './configuration/PersonaAssignmentSection';
 import { PerformanceTuningSection } from './sections/PerformanceTuningSection';
 
-import { campaignsApi } from '@/lib/api-client/client';
-import { isResponseSuccess, getResponseError } from '@/lib/utils/apiResponseHelpers';
+import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { validateUUID } from '@/lib/utils/uuidValidation';
-import type { Campaign } from '@/lib/api-client/models';
+import type { CampaignResponse } from '@/lib/api-client/models/campaign-response';
 
 // Phase configuration form interface
 interface PhaseConfigurationFormValues {
@@ -34,7 +33,7 @@ interface PhaseConfigurationFormValues {
 interface ModernPhaseConfigurationProps {
   isOpen: boolean;
   onClose: () => void;
-  sourceCampaign: Campaign;
+  sourceCampaign: CampaignResponse;
   phaseType: string;
   onPhaseStarted: (campaignId: string) => void;
 }
@@ -56,6 +55,7 @@ export const ModernPhaseConfiguration: React.FC<ModernPhaseConfigurationProps> =
 }) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [startPhase] = useStartPhaseStandaloneMutation();
 
   // Form setup with proper defaults
   const form = useForm<PhaseConfigurationFormValues>({
@@ -129,13 +129,8 @@ export const ModernPhaseConfiguration: React.FC<ModernPhaseConfigurationProps> =
         throw new Error(`Unsupported phase type: ${phaseType}`);
       }
 
-      // Execute phase transition
-      const response = await campaignsApi.startPhaseStandalone(sourceCampaign.id, backendPhaseParam as any);
-
-      if (!isResponseSuccess(response)) {
-        const errorMessage = getResponseError(response) || 'Failed to start phase';
-        throw new Error(errorMessage);
-      }
+  // Execute phase transition via RTK Query
+  await startPhase({ campaignId: sourceCampaign.id, phase: backendPhaseParam }).unwrap();
 
       toast({
         title: `${phaseDisplayNames[phaseType]} Started`,

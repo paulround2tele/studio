@@ -22,9 +22,9 @@ try {
   // Test 2: Check the available methods
   console.log('Available methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(campaignsApi)));
   
-  // Test 3: Check method signatures
-  console.log('createLeadGenerationCampaign method exists:', typeof campaignsApi.createLeadGenerationCampaign);
-  console.log('getCampaignsStandalone method exists:', typeof campaignsApi.getCampaignsStandalone);
+  // Test 3: Check method signatures (new names)
+  console.log('campaignsCreate method exists:', typeof (campaignsApi as any).campaignsCreate);
+  console.log('campaignsList method exists:', typeof (campaignsApi as any).campaignsList);
   
 } catch (error) {
   console.error('❌ Generated client failed:', error);

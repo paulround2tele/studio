@@ -1,23 +1,32 @@
 # CampaignsApi
 
-All URIs are relative to *http://localhost:8080/api/v2*
+All URIs are relative to *https://api.domainflow.dev/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**configurePhaseStandalone**](#configurephasestandalone) | **POST** /campaigns/{campaignId}/phases/{phase}/configure | Configure campaign phase (standalone)|
-|[**createLeadGenerationCampaign**](#createleadgenerationcampaign) | **POST** /campaigns/lead-generation | Create lead generation campaign|
-|[**getBulkEnrichedCampaignData**](#getbulkenrichedcampaigndata) | **POST** /campaigns/bulk/enriched-data | Get bulk enriched campaign data|
-|[**getCampaignDomainsStatus**](#getcampaigndomainsstatus) | **GET** /campaigns/{campaignId}/domains/status | Get campaign domain status summary|
-|[**getCampaignProgressStandalone**](#getcampaignprogressstandalone) | **GET** /campaigns/{campaignId}/progress | Get campaign progress (standalone)|
-|[**getCampaignsStandalone**](#getcampaignsstandalone) | **GET** /campaigns | List campaigns (standalone)|
-|[**getPatternOffset**](#getpatternoffset) | **POST** /campaigns/domain-generation/pattern-offset | Get domain generation pattern offset|
-|[**getPhaseStatusStandalone**](#getphasestatusstandalone) | **GET** /campaigns/{campaignId}/phases/{phase}/status | Get phase status (standalone)|
-|[**startPhaseStandalone**](#startphasestandalone) | **POST** /campaigns/{campaignId}/phases/{phase}/start | Start campaign phase (standalone)|
+|[**allocateBulkResources**](#allocatebulkresources) | **POST** /campaigns/bulk/resources/allocate | Allocate bulk operation resources|
+|[**bulkAnalyzeDomains**](#bulkanalyzedomains) | **POST** /campaigns/bulk/domains/analyze | Bulk domain analysis|
+|[**bulkGenerateDomains**](#bulkgeneratedomains) | **POST** /campaigns/bulk/domains/generate | Bulk domain generation|
+|[**bulkValidateDNS**](#bulkvalidatedns) | **POST** /campaigns/bulk/domains/validate-dns | Bulk DNS validation|
+|[**bulkValidateHTTP**](#bulkvalidatehttp) | **POST** /campaigns/bulk/domains/validate-http | Bulk HTTP validation|
+|[**campaignsBulkOperationsList**](#campaignsbulkoperationslist) | **GET** /campaigns/bulk/operations | List bulk operations|
+|[**campaignsCreate**](#campaignscreate) | **POST** /campaigns | Create campaign|
+|[**campaignsDelete**](#campaignsdelete) | **DELETE** /campaigns/{campaignId} | Delete campaign|
+|[**campaignsGet**](#campaignsget) | **GET** /campaigns/{campaignId} | Get campaign|
+|[**campaignsList**](#campaignslist) | **GET** /campaigns | List campaigns|
+|[**campaignsPhaseConfigure**](#campaignsphaseconfigure) | **POST** /campaigns/{campaignId}/phases/{phase}/configure | Configure campaign phase|
+|[**campaignsPhaseStart**](#campaignsphasestart) | **POST** /campaigns/{campaignId}/phases/{phase}/start | Start campaign phase|
+|[**campaignsPhaseStatus**](#campaignsphasestatus) | **GET** /campaigns/{campaignId}/phases/{phase}/status | Get phase status|
+|[**campaignsPhaseStop**](#campaignsphasestop) | **POST** /campaigns/{campaignId}/phases/{phase}/stop | Stop campaign phase|
+|[**campaignsProgress**](#campaignsprogress) | **GET** /campaigns/{campaignId}/progress | Get campaign progress|
+|[**campaignsUpdate**](#campaignsupdate) | **PUT** /campaigns/{campaignId} | Update campaign|
+|[**cancelBulkOperation**](#cancelbulkoperation) | **POST** /campaigns/bulk/operations/{operationId}/cancel | Cancel bulk operation|
+|[**getBulkOperationStatus**](#getbulkoperationstatus) | **GET** /campaigns/bulk/operations/{operationId}/status | Get bulk operation status|
+|[**getBulkResourceStatus**](#getbulkresourcestatus) | **GET** /campaigns/bulk/resources/status/{allocationId} | Get bulk resource allocation status|
 
-# **configurePhaseStandalone**
-> ApiAPIResponse configurePhaseStandalone(apiPhaseConfigureRequest)
+# **allocateBulkResources**
+> AllocateBulkResources200Response allocateBulkResources(bulkResourceAllocationRequest)
 
-Configure a specific phase for a campaign using standalone services
 
 ### Example
 
@@ -25,20 +34,16 @@ Configure a specific phase for a campaign using standalone services
 import {
     CampaignsApi,
     Configuration,
-    ApiPhaseConfigureRequest
+    BulkResourceAllocationRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let campaignId: string; //Campaign ID (UUID) (default to undefined)
-let phase: 'dns_validation' | 'http_keyword_validation' | 'analysis'; //Phase type (default to undefined)
-let apiPhaseConfigureRequest: ApiPhaseConfigureRequest; //Phase configuration request
+let bulkResourceAllocationRequest: BulkResourceAllocationRequest; //
 
-const { status, data } = await apiInstance.configurePhaseStandalone(
-    campaignId,
-    phase,
-    apiPhaseConfigureRequest
+const { status, data } = await apiInstance.allocateBulkResources(
+    bulkResourceAllocationRequest
 );
 ```
 
@@ -46,18 +51,16 @@ const { status, data } = await apiInstance.configurePhaseStandalone(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **apiPhaseConfigureRequest** | **ApiPhaseConfigureRequest**| Phase configuration request | |
-| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
-| **phase** | [**&#39;dns_validation&#39; | &#39;http_keyword_validation&#39; | &#39;analysis&#39;**]**Array<&#39;dns_validation&#39; &#124; &#39;http_keyword_validation&#39; &#124; &#39;analysis&#39;>** | Phase type | defaults to undefined|
+| **bulkResourceAllocationRequest** | **BulkResourceAllocationRequest**|  | |
 
 
 ### Return type
 
-**ApiAPIResponse**
+**AllocateBulkResources200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -68,17 +71,17 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Phase configured successfully |  -  |
-|**400** | Bad Request |  -  |
-|**404** | Campaign not found |  -  |
+|**200** | Bulk resources allocated successfully |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **createLeadGenerationCampaign**
-> ApiAPIResponse createLeadGenerationCampaign(servicesCreateLeadGenerationCampaignRequest)
+# **bulkAnalyzeDomains**
+> BulkAnalyzeDomains200Response bulkAnalyzeDomains(bulkAnalyticsRequest)
 
-Create a new lead generation campaign with domain generation configuration
 
 ### Example
 
@@ -86,16 +89,16 @@ Create a new lead generation campaign with domain generation configuration
 import {
     CampaignsApi,
     Configuration,
-    ServicesCreateLeadGenerationCampaignRequest
+    BulkAnalyticsRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let servicesCreateLeadGenerationCampaignRequest: ServicesCreateLeadGenerationCampaignRequest; //Lead generation campaign creation request
+let bulkAnalyticsRequest: BulkAnalyticsRequest; //
 
-const { status, data } = await apiInstance.createLeadGenerationCampaign(
-    servicesCreateLeadGenerationCampaignRequest
+const { status, data } = await apiInstance.bulkAnalyzeDomains(
+    bulkAnalyticsRequest
 );
 ```
 
@@ -103,16 +106,16 @@ const { status, data } = await apiInstance.createLeadGenerationCampaign(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **servicesCreateLeadGenerationCampaignRequest** | **ServicesCreateLeadGenerationCampaignRequest**| Lead generation campaign creation request | |
+| **bulkAnalyticsRequest** | **BulkAnalyticsRequest**|  | |
 
 
 ### Return type
 
-**ApiAPIResponse**
+**BulkAnalyzeDomains200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -123,16 +126,17 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**201** | Campaign created successfully |  -  |
-|**400** | Bad Request |  -  |
+|**200** | Bulk domain analysis initiated successfully |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **getBulkEnrichedCampaignData**
-> ApiAPIResponse getBulkEnrichedCampaignData(apiBulkEnrichedDataRequest)
+# **bulkGenerateDomains**
+> BulkGenerateDomains200Response bulkGenerateDomains(bulkDomainGenerationRequest)
 
-Retrieve bulk enriched data across multiple campaigns for enterprise-scale processing
 
 ### Example
 
@@ -140,16 +144,16 @@ Retrieve bulk enriched data across multiple campaigns for enterprise-scale proce
 import {
     CampaignsApi,
     Configuration,
-    ApiBulkEnrichedDataRequest
+    BulkDomainGenerationRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let apiBulkEnrichedDataRequest: ApiBulkEnrichedDataRequest; //Bulk data request
+let bulkDomainGenerationRequest: BulkDomainGenerationRequest; //
 
-const { status, data } = await apiInstance.getBulkEnrichedCampaignData(
-    apiBulkEnrichedDataRequest
+const { status, data } = await apiInstance.bulkGenerateDomains(
+    bulkDomainGenerationRequest
 );
 ```
 
@@ -157,16 +161,16 @@ const { status, data } = await apiInstance.getBulkEnrichedCampaignData(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **apiBulkEnrichedDataRequest** | **ApiBulkEnrichedDataRequest**| Bulk data request | |
+| **bulkDomainGenerationRequest** | **BulkDomainGenerationRequest**|  | |
 
 
 ### Return type
 
-**ApiAPIResponse**
+**BulkGenerateDomains200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -177,16 +181,127 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Bulk data retrieved successfully |  -  |
-|**400** | Bad Request |  -  |
+|**200** | Bulk domain generation initiated successfully |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **getCampaignDomainsStatus**
-> ApiAPIResponse getCampaignDomainsStatus()
+# **bulkValidateDNS**
+> BulkValidateDNS200Response bulkValidateDNS(bulkDNSValidationRequest)
 
-Retrieve domain status summary and counts for a campaign
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration,
+    BulkDNSValidationRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let bulkDNSValidationRequest: BulkDNSValidationRequest; //
+
+const { status, data } = await apiInstance.bulkValidateDNS(
+    bulkDNSValidationRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **bulkDNSValidationRequest** | **BulkDNSValidationRequest**|  | |
+
+
+### Return type
+
+**BulkValidateDNS200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Bulk DNS validation initiated successfully |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **bulkValidateHTTP**
+> BulkValidateDNS200Response bulkValidateHTTP(bulkHTTPValidationRequest)
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration,
+    BulkHTTPValidationRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let bulkHTTPValidationRequest: BulkHTTPValidationRequest; //
+
+const { status, data } = await apiInstance.bulkValidateHTTP(
+    bulkHTTPValidationRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **bulkHTTPValidationRequest** | **BulkHTTPValidationRequest**|  | |
+
+
+### Return type
+
+**BulkValidateDNS200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Bulk HTTP validation initiated successfully |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsBulkOperationsList**
+> CampaignsBulkOperationsList200Response campaignsBulkOperationsList()
+
 
 ### Example
 
@@ -199,115 +314,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let campaignId: string; //Campaign ID (UUID) (default to undefined)
-
-const { status, data } = await apiInstance.getCampaignDomainsStatus(
-    campaignId
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
-
-
-### Return type
-
-**ApiAPIResponse**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Domain status summary retrieved successfully |  -  |
-|**400** | Bad Request |  -  |
-|**404** | Campaign not found |  -  |
-|**500** | Internal Server Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **getCampaignProgressStandalone**
-> ApiAPIResponse getCampaignProgressStandalone()
-
-Get campaign progress information using standalone services
-
-### Example
-
-```typescript
-import {
-    CampaignsApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new CampaignsApi(configuration);
-
-let campaignId: string; //Campaign ID (UUID) (default to undefined)
-
-const { status, data } = await apiInstance.getCampaignProgressStandalone(
-    campaignId
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
-
-
-### Return type
-
-**ApiAPIResponse**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Campaign progress |  -  |
-|**400** | Bad Request |  -  |
-|**404** | Campaign not found |  -  |
-|**500** | Internal Server Error |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **getCampaignsStandalone**
-> ApiCampaignsListAPIResponse getCampaignsStandalone()
-
-Get list of all campaigns with phase-centric bulk data
-
-### Example
-
-```typescript
-import {
-    CampaignsApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new CampaignsApi(configuration);
-
-const { status, data } = await apiInstance.getCampaignsStandalone();
+const { status, data } = await apiInstance.campaignsBulkOperationsList();
 ```
 
 ### Parameters
@@ -316,11 +323,11 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ApiCampaignsListAPIResponse**
+**CampaignsBulkOperationsList200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -331,15 +338,13 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Campaigns retrieved successfully |  -  |
-|**500** | Internal Server Error |  -  |
+|**200** | OK |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **getPatternOffset**
-> ApiPatternOffsetResponse getPatternOffset(apiPatternOffsetRequest)
+# **campaignsCreate**
+> CampaignsCreate201Response campaignsCreate(createCampaignRequest)
 
-Get the current offset for domain generation patterns
 
 ### Example
 
@@ -347,16 +352,16 @@ Get the current offset for domain generation patterns
 import {
     CampaignsApi,
     Configuration,
-    ApiPatternOffsetRequest
+    CreateCampaignRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let apiPatternOffsetRequest: ApiPatternOffsetRequest; //Pattern offset request
+let createCampaignRequest: CreateCampaignRequest; //
 
-const { status, data } = await apiInstance.getPatternOffset(
-    apiPatternOffsetRequest
+const { status, data } = await apiInstance.campaignsCreate(
+    createCampaignRequest
 );
 ```
 
@@ -364,16 +369,16 @@ const { status, data } = await apiInstance.getPatternOffset(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **apiPatternOffsetRequest** | **ApiPatternOffsetRequest**| Pattern offset request | |
+| **createCampaignRequest** | **CreateCampaignRequest**|  | |
 
 
 ### Return type
 
-**ApiPatternOffsetResponse**
+**CampaignsCreate201Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -384,16 +389,18 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Pattern offset retrieved successfully |  -  |
+|**201** | Created |  -  |
 |**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**409** | Conflict |  -  |
+|**422** | Validation Error |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **getPhaseStatusStandalone**
-> ApiAPIResponse getPhaseStatusStandalone()
+# **campaignsDelete**
+> campaignsDelete()
 
-Get status information for a specific phase of a campaign using standalone services
 
 ### Example
 
@@ -406,12 +413,10 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let campaignId: string; //Campaign ID (UUID) (default to undefined)
-let phase: 'domain_generation' | 'dns_validation' | 'http_keyword_validation' | 'analysis'; //Phase type (default to undefined)
+let campaignId: string; // (default to undefined)
 
-const { status, data } = await apiInstance.getPhaseStatusStandalone(
-    campaignId,
-    phase
+const { status, data } = await apiInstance.campaignsDelete(
+    campaignId
 );
 ```
 
@@ -419,17 +424,16 @@ const { status, data } = await apiInstance.getPhaseStatusStandalone(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
-| **phase** | [**&#39;domain_generation&#39; | &#39;dns_validation&#39; | &#39;http_keyword_validation&#39; | &#39;analysis&#39;**]**Array<&#39;domain_generation&#39; &#124; &#39;dns_validation&#39; &#124; &#39;http_keyword_validation&#39; &#124; &#39;analysis&#39;>** | Phase type | defaults to undefined|
+| **campaignId** | [**string**] |  | defaults to undefined|
 
 
 ### Return type
 
-**ApiAPIResponse**
+void (empty response body)
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -440,17 +444,16 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Phase status retrieved successfully |  -  |
-|**400** | Bad Request |  -  |
-|**404** | Campaign or phase not found |  -  |
+|**204** | No Content |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **startPhaseStandalone**
-> ApiAPIResponse startPhaseStandalone()
+# **campaignsGet**
+> CampaignsCreate201Response campaignsGet()
 
-Start a specific phase of a campaign using standalone services
 
 ### Example
 
@@ -463,12 +466,10 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let campaignId: string; //Campaign ID (UUID) (default to undefined)
-let phase: 'domain-generation' | 'dns-validation' | 'http-validation'; //Phase name (default to undefined)
+let campaignId: string; // (default to undefined)
 
-const { status, data } = await apiInstance.startPhaseStandalone(
-    campaignId,
-    phase
+const { status, data } = await apiInstance.campaignsGet(
+    campaignId
 );
 ```
 
@@ -476,17 +477,16 @@ const { status, data } = await apiInstance.startPhaseStandalone(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **campaignId** | [**string**] | Campaign ID (UUID) | defaults to undefined|
-| **phase** | [**&#39;domain-generation&#39; | &#39;dns-validation&#39; | &#39;http-validation&#39;**]**Array<&#39;domain-generation&#39; &#124; &#39;dns-validation&#39; &#124; &#39;http-validation&#39;>** | Phase name | defaults to undefined|
+| **campaignId** | [**string**] |  | defaults to undefined|
 
 
 ### Return type
 
-**ApiAPIResponse**
+**CampaignsCreate201Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -497,9 +497,562 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Phase started successfully |  -  |
+|**200** | OK |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsList**
+> CampaignsList200Response campaignsList()
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+const { status, data } = await apiInstance.campaignsList();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**CampaignsList200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**401** | Unauthorized |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsPhaseConfigure**
+> CampaignsPhaseStatus200Response campaignsPhaseConfigure(phaseConfigurationRequest)
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration,
+    PhaseConfigurationRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+let phase: 'discovery' | 'validation' | 'extraction' | 'analysis'; // (default to undefined)
+let phaseConfigurationRequest: PhaseConfigurationRequest; //
+
+const { status, data } = await apiInstance.campaignsPhaseConfigure(
+    campaignId,
+    phase,
+    phaseConfigurationRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **phaseConfigurationRequest** | **PhaseConfigurationRequest**|  | |
+| **campaignId** | [**string**] |  | defaults to undefined|
+| **phase** | [**&#39;discovery&#39; | &#39;validation&#39; | &#39;extraction&#39; | &#39;analysis&#39;**]**Array<&#39;discovery&#39; &#124; &#39;validation&#39; &#124; &#39;extraction&#39; &#124; &#39;analysis&#39;>** |  | defaults to undefined|
+
+
+### Return type
+
+**CampaignsPhaseStatus200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Configured |  -  |
 |**400** | Bad Request |  -  |
-|**404** | Campaign not found |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsPhaseStart**
+> CampaignsPhaseStatus200Response campaignsPhaseStart()
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+let phase: 'discovery' | 'validation' | 'extraction' | 'analysis'; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsPhaseStart(
+    campaignId,
+    phase
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+| **phase** | [**&#39;discovery&#39; | &#39;validation&#39; | &#39;extraction&#39; | &#39;analysis&#39;**]**Array<&#39;discovery&#39; &#124; &#39;validation&#39; &#124; &#39;extraction&#39; &#124; &#39;analysis&#39;>** |  | defaults to undefined|
+
+
+### Return type
+
+**CampaignsPhaseStatus200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Started |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsPhaseStatus**
+> CampaignsPhaseStatus200Response campaignsPhaseStatus()
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+let phase: 'discovery' | 'validation' | 'extraction' | 'analysis'; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsPhaseStatus(
+    campaignId,
+    phase
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+| **phase** | [**&#39;discovery&#39; | &#39;validation&#39; | &#39;extraction&#39; | &#39;analysis&#39;**]**Array<&#39;discovery&#39; &#124; &#39;validation&#39; &#124; &#39;extraction&#39; &#124; &#39;analysis&#39;>** |  | defaults to undefined|
+
+
+### Return type
+
+**CampaignsPhaseStatus200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsPhaseStop**
+> CampaignsPhaseStatus200Response campaignsPhaseStop()
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+let phase: 'discovery' | 'validation' | 'extraction' | 'analysis'; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsPhaseStop(
+    campaignId,
+    phase
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+| **phase** | [**&#39;discovery&#39; | &#39;validation&#39; | &#39;extraction&#39; | &#39;analysis&#39;**]**Array<&#39;discovery&#39; &#124; &#39;validation&#39; &#124; &#39;extraction&#39; &#124; &#39;analysis&#39;>** |  | defaults to undefined|
+
+
+### Return type
+
+**CampaignsPhaseStatus200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Stopped |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsProgress**
+> CampaignsProgress200Response campaignsProgress()
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsProgress(
+    campaignId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**CampaignsProgress200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsUpdate**
+> CampaignsCreate201Response campaignsUpdate(updateCampaignRequest)
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration,
+    UpdateCampaignRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+let updateCampaignRequest: UpdateCampaignRequest; //
+
+const { status, data } = await apiInstance.campaignsUpdate(
+    campaignId,
+    updateCampaignRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **updateCampaignRequest** | **UpdateCampaignRequest**|  | |
+| **campaignId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**CampaignsCreate201Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **cancelBulkOperation**
+> CancelBulkOperation200Response cancelBulkOperation()
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let operationId: string; //Bulk operation ID to cancel (default to undefined)
+
+const { status, data } = await apiInstance.cancelBulkOperation(
+    operationId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **operationId** | [**string**] | Bulk operation ID to cancel | defaults to undefined|
+
+
+### Return type
+
+**CancelBulkOperation200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Bulk operation cancelled successfully |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**404** | Not Found |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getBulkOperationStatus**
+> GetBulkOperationStatus200Response getBulkOperationStatus()
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let operationId: string; //Bulk operation ID (default to undefined)
+
+const { status, data } = await apiInstance.getBulkOperationStatus(
+    operationId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **operationId** | [**string**] | Bulk operation ID | defaults to undefined|
+
+
+### Return type
+
+**GetBulkOperationStatus200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Bulk operation status retrieved successfully |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **getBulkResourceStatus**
+> GetBulkResourceStatus200Response getBulkResourceStatus()
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let allocationId: string; //Resource allocation ID (default to undefined)
+
+const { status, data } = await apiInstance.getBulkResourceStatus(
+    allocationId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **allocationId** | [**string**] | Resource allocation ID | defaults to undefined|
+
+
+### Return type
+
+**GetBulkResourceStatus200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Resource allocation status retrieved successfully |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

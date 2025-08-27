@@ -1,30 +1,29 @@
 # ServerSettingsApi
 
-All URIs are relative to *http://localhost:8080/api/v2*
+All URIs are relative to *https://api.domainflow.dev/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**getAuthConfig**](#getauthconfig) | **GET** /server/auth-config | Get authentication configuration|
-|[**getDNSConfig**](#getdnsconfig) | **GET** /server/dns-config | Get DNS configuration|
-|[**getHTTPConfig**](#gethttpconfig) | **GET** /server/http-config | Get HTTP configuration|
-|[**getLoggingConfig**](#getloggingconfig) | **GET** /server/logging-config | Get logging configuration|
-|[**getProxyManagerConfig**](#getproxymanagerconfig) | **GET** /server/proxy-manager-config | Get proxy manager configuration|
-|[**getRateLimiterConfig**](#getratelimiterconfig) | **GET** /server/rate-limiter-config | Get rate limiter configuration|
-|[**getServerConfig**](#getserverconfig) | **GET** /server/config | Get server configuration|
-|[**getWorkerConfig**](#getworkerconfig) | **GET** /server/worker-config | Get worker configuration|
-|[**updateAuthConfig**](#updateauthconfig) | **PUT** /server/auth-config | Update authentication configuration|
-|[**updateDNSConfig**](#updatednsconfig) | **PUT** /server/dns-config | Update DNS configuration|
-|[**updateHTTPConfig**](#updatehttpconfig) | **PUT** /server/http-config | Update HTTP configuration|
-|[**updateLoggingConfig**](#updateloggingconfig) | **PUT** /server/logging-config | Update logging configuration|
-|[**updateProxyManagerConfig**](#updateproxymanagerconfig) | **PUT** /server/proxy-manager-config | Update proxy manager configuration|
-|[**updateRateLimiterConfig**](#updateratelimiterconfig) | **PUT** /server/rate-limiter-config | Update rate limiter configuration|
-|[**updateServerConfig**](#updateserverconfig) | **PUT** /server/config | Update server configuration|
-|[**updateWorkerConfig**](#updateworkerconfig) | **PUT** /server/worker-config | Update worker configuration|
+|[**configGetAuth**](#configgetauth) | **GET** /config/auth | Get authentication configuration|
+|[**configGetDns**](#configgetdns) | **GET** /config/dns | Get DNS configuration|
+|[**configGetHttp**](#configgethttp) | **GET** /config/http | Get HTTP configuration|
+|[**configGetLogging**](#configgetlogging) | **GET** /config/logging | Get logging configuration|
+|[**configGetProxyManager**](#configgetproxymanager) | **GET** /config/proxy-manager | Get proxy manager configuration|
+|[**configGetRateLimiter**](#configgetratelimiter) | **GET** /config/rate-limit | Get rate limiter configuration|
+|[**configGetServer**](#configgetserver) | **GET** /config/server | Get server configuration|
+|[**configGetWorker**](#configgetworker) | **GET** /config/worker | Get worker configuration|
+|[**configUpdateAuth**](#configupdateauth) | **PUT** /config/auth | Update authentication configuration|
+|[**configUpdateDns**](#configupdatedns) | **PUT** /config/dns | Update DNS configuration|
+|[**configUpdateHttp**](#configupdatehttp) | **PUT** /config/http | Update HTTP configuration|
+|[**configUpdateLogging**](#configupdatelogging) | **PUT** /config/logging | Update logging configuration|
+|[**configUpdateProxyManager**](#configupdateproxymanager) | **PUT** /config/proxy-manager | Update proxy manager configuration|
+|[**configUpdateRateLimiter**](#configupdateratelimiter) | **PUT** /config/rate-limit | Update rate limiter configuration|
+|[**configUpdateServer**](#configupdateserver) | **PUT** /config/server | Update server configuration|
+|[**configUpdateWorker**](#configupdateworker) | **PUT** /config/worker | Update worker configuration|
 
-# **getAuthConfig**
-> ConfigAuthConfig getAuthConfig()
+# **configGetAuth**
+> ConfigGetAuth200Response configGetAuth()
 
-Retrieve the current authentication configuration settings
 
 ### Example
 
@@ -37,7 +36,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-const { status, data } = await apiInstance.getAuthConfig();
+const { status, data } = await apiInstance.configGetAuth();
 ```
 
 ### Parameters
@@ -46,11 +45,11 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ConfigAuthConfig**
+**ConfigGetAuth200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -61,15 +60,17 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Authentication configuration |  -  |
+|**200** | authentication config |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **getDNSConfig**
-> ConfigDNSValidatorConfigJSON getDNSConfig()
+# **configGetDns**
+> ConfigGetDns200Response configGetDns()
 
-Retrieve default DNS validator configuration
 
 ### Example
 
@@ -82,7 +83,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-const { status, data } = await apiInstance.getDNSConfig();
+const { status, data } = await apiInstance.configGetDns();
 ```
 
 ### Parameters
@@ -91,11 +92,11 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ConfigDNSValidatorConfigJSON**
+**ConfigGetDns200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -106,103 +107,17 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | DNS validator configuration |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **getHTTPConfig**
-> ConfigHTTPValidatorConfigJSON getHTTPConfig()
-
-Retrieve default HTTP validator configuration
-
-### Example
-
-```typescript
-import {
-    ServerSettingsApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ServerSettingsApi(configuration);
-
-const { status, data } = await apiInstance.getHTTPConfig();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**ConfigHTTPValidatorConfigJSON**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | HTTP validator configuration |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **getLoggingConfig**
-> ConfigLoggingConfig getLoggingConfig()
-
-Retrieve the current logging configuration settings
-
-### Example
-
-```typescript
-import {
-    ServerSettingsApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ServerSettingsApi(configuration);
-
-const { status, data } = await apiInstance.getLoggingConfig();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**ConfigLoggingConfig**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Logging configuration |  -  |
+|**200** | DNS config |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **getProxyManagerConfig**
-> ConfigProxyManagerConfigJSON getProxyManagerConfig()
+# **configGetHttp**
+> object configGetHttp()
 
-Retrieve the current proxy manager configuration settings
 
 ### Example
 
@@ -215,7 +130,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-const { status, data } = await apiInstance.getProxyManagerConfig();
+const { status, data } = await apiInstance.configGetHttp();
 ```
 
 ### Parameters
@@ -224,11 +139,11 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ConfigProxyManagerConfigJSON**
+**object**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -239,15 +154,17 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Proxy manager configuration |  -  |
+|**200** | HTTP config |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **getRateLimiterConfig**
-> ConfigRateLimiterConfig getRateLimiterConfig()
+# **configGetLogging**
+> ConfigGetLogging200Response configGetLogging()
 
-Retrieve the current rate limiter configuration settings
 
 ### Example
 
@@ -260,7 +177,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-const { status, data } = await apiInstance.getRateLimiterConfig();
+const { status, data } = await apiInstance.configGetLogging();
 ```
 
 ### Parameters
@@ -269,11 +186,11 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ConfigRateLimiterConfig**
+**ConfigGetLogging200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -284,15 +201,17 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Rate limiter configuration |  -  |
+|**200** | logging config |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **getServerConfig**
-> ApiServerConfigResponse getServerConfig()
+# **configGetProxyManager**
+> object configGetProxyManager()
 
-Retrieve current server-wide configuration settings
 
 ### Example
 
@@ -305,7 +224,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-const { status, data } = await apiInstance.getServerConfig();
+const { status, data } = await apiInstance.configGetProxyManager();
 ```
 
 ### Parameters
@@ -314,11 +233,11 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ApiServerConfigResponse**
+**object**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -329,59 +248,158 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Server configuration |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **getWorkerConfig**
-> ConfigWorkerConfig getWorkerConfig()
-
-Retrieve the current worker configuration settings
-
-### Example
-
-```typescript
-import {
-    ServerSettingsApi,
-    Configuration
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ServerSettingsApi(configuration);
-
-const { status, data } = await apiInstance.getWorkerConfig();
-```
-
-### Parameters
-This endpoint does not have any parameters.
-
-
-### Return type
-
-**ConfigWorkerConfig**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: Not defined
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Worker configuration |  -  |
+|**200** | proxy manager config |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **updateAuthConfig**
-> ConfigAuthConfig updateAuthConfig(configAuthConfig)
+# **configGetRateLimiter**
+> ConfigGetRateLimiter200Response configGetRateLimiter()
 
-Update the authentication configuration settings
+
+### Example
+
+```typescript
+import {
+    ServerSettingsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ServerSettingsApi(configuration);
+
+const { status, data } = await apiInstance.configGetRateLimiter();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**ConfigGetRateLimiter200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | rate limiter config |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **configGetServer**
+> object configGetServer()
+
+
+### Example
+
+```typescript
+import {
+    ServerSettingsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ServerSettingsApi(configuration);
+
+const { status, data } = await apiInstance.configGetServer();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**object**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | server config |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **configGetWorker**
+> ConfigGetWorker200Response configGetWorker()
+
+
+### Example
+
+```typescript
+import {
+    ServerSettingsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ServerSettingsApi(configuration);
+
+const { status, data } = await apiInstance.configGetWorker();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**ConfigGetWorker200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | worker config |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **configUpdateAuth**
+> ConfigGetAuth200Response configUpdateAuth(authConfig)
+
 
 ### Example
 
@@ -389,16 +407,16 @@ Update the authentication configuration settings
 import {
     ServerSettingsApi,
     Configuration,
-    ConfigAuthConfig
+    AuthConfig
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-let configAuthConfig: ConfigAuthConfig; //Authentication configuration
+let authConfig: AuthConfig; //
 
-const { status, data } = await apiInstance.updateAuthConfig(
-    configAuthConfig
+const { status, data } = await apiInstance.configUpdateAuth(
+    authConfig
 );
 ```
 
@@ -406,16 +424,16 @@ const { status, data } = await apiInstance.updateAuthConfig(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **configAuthConfig** | **ConfigAuthConfig**| Authentication configuration | |
+| **authConfig** | **AuthConfig**|  | |
 
 
 ### Return type
 
-**ConfigAuthConfig**
+**ConfigGetAuth200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -426,16 +444,20 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Updated authentication configuration |  -  |
+|**200** | Updated |  -  |
 |**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**409** | Conflict |  -  |
+|**422** | Validation Error |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **updateDNSConfig**
-> ConfigDNSValidatorConfigJSON updateDNSConfig(configDNSValidatorConfigJSON)
+# **configUpdateDns**
+> ConfigGetDns200Response configUpdateDns(dNSValidatorConfigJSON)
 
-Update default DNS validator configuration
 
 ### Example
 
@@ -443,16 +465,16 @@ Update default DNS validator configuration
 import {
     ServerSettingsApi,
     Configuration,
-    ConfigDNSValidatorConfigJSON
+    DNSValidatorConfigJSON
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-let configDNSValidatorConfigJSON: ConfigDNSValidatorConfigJSON; //DNS validator configuration
+let dNSValidatorConfigJSON: DNSValidatorConfigJSON; //
 
-const { status, data } = await apiInstance.updateDNSConfig(
-    configDNSValidatorConfigJSON
+const { status, data } = await apiInstance.configUpdateDns(
+    dNSValidatorConfigJSON
 );
 ```
 
@@ -460,16 +482,16 @@ const { status, data } = await apiInstance.updateDNSConfig(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **configDNSValidatorConfigJSON** | **ConfigDNSValidatorConfigJSON**| DNS validator configuration | |
+| **dNSValidatorConfigJSON** | **DNSValidatorConfigJSON**|  | |
 
 
 ### Return type
 
-**ConfigDNSValidatorConfigJSON**
+**ConfigGetDns200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -480,141 +502,36 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Updated DNS configuration |  -  |
-|**400** | Invalid request body or validation failed |  -  |
-|**500** | Failed to save DNS configuration |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **updateHTTPConfig**
-> ConfigHTTPValidatorConfigJSON updateHTTPConfig(configHTTPValidatorConfigJSON)
-
-Update default HTTP validator configuration
-
-### Example
-
-```typescript
-import {
-    ServerSettingsApi,
-    Configuration,
-    ConfigHTTPValidatorConfigJSON
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ServerSettingsApi(configuration);
-
-let configHTTPValidatorConfigJSON: ConfigHTTPValidatorConfigJSON; //HTTP validator configuration
-
-const { status, data } = await apiInstance.updateHTTPConfig(
-    configHTTPValidatorConfigJSON
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **configHTTPValidatorConfigJSON** | **ConfigHTTPValidatorConfigJSON**| HTTP validator configuration | |
-
-
-### Return type
-
-**ConfigHTTPValidatorConfigJSON**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Updated HTTP configuration |  -  |
-|**400** | Invalid request body or validation failed |  -  |
-|**500** | Failed to save HTTP configuration |  -  |
-
-[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
-
-# **updateLoggingConfig**
-> ConfigLoggingConfig updateLoggingConfig(configLoggingConfig)
-
-Update the logging configuration settings
-
-### Example
-
-```typescript
-import {
-    ServerSettingsApi,
-    Configuration,
-    ConfigLoggingConfig
-} from './api';
-
-const configuration = new Configuration();
-const apiInstance = new ServerSettingsApi(configuration);
-
-let configLoggingConfig: ConfigLoggingConfig; //Logging configuration
-
-const { status, data } = await apiInstance.updateLoggingConfig(
-    configLoggingConfig
-);
-```
-
-### Parameters
-
-|Name | Type | Description  | Notes|
-|------------- | ------------- | ------------- | -------------|
-| **configLoggingConfig** | **ConfigLoggingConfig**| Logging configuration | |
-
-
-### Return type
-
-**ConfigLoggingConfig**
-
-### Authorization
-
-No authorization required
-
-### HTTP request headers
-
- - **Content-Type**: application/json
- - **Accept**: application/json
-
-
-### HTTP response details
-| Status code | Description | Response headers |
-|-------------|-------------|------------------|
-|**200** | Updated logging configuration |  -  |
+|**200** | Updated |  -  |
 |**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**409** | Conflict |  -  |
+|**422** | Validation Error |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **updateProxyManagerConfig**
-> ConfigProxyManagerConfigJSON updateProxyManagerConfig(configProxyManagerConfigJSON)
+# **configUpdateHttp**
+> object configUpdateHttp(body)
 
-Update the proxy manager configuration settings
 
 ### Example
 
 ```typescript
 import {
     ServerSettingsApi,
-    Configuration,
-    ConfigProxyManagerConfigJSON
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-let configProxyManagerConfigJSON: ConfigProxyManagerConfigJSON; //Proxy manager configuration
+let body: object; //
 
-const { status, data } = await apiInstance.updateProxyManagerConfig(
-    configProxyManagerConfigJSON
+const { status, data } = await apiInstance.configUpdateHttp(
+    body
 );
 ```
 
@@ -622,16 +539,16 @@ const { status, data } = await apiInstance.updateProxyManagerConfig(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **configProxyManagerConfigJSON** | **ConfigProxyManagerConfigJSON**| Proxy manager configuration | |
+| **body** | **object**|  | |
 
 
 ### Return type
 
-**ConfigProxyManagerConfigJSON**
+**object**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -642,16 +559,20 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Updated proxy manager configuration |  -  |
+|**200** | Updated |  -  |
 |**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**409** | Conflict |  -  |
+|**422** | Validation Error |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **updateRateLimiterConfig**
-> ConfigRateLimiterConfig updateRateLimiterConfig(configRateLimiterConfig)
+# **configUpdateLogging**
+> ConfigGetLogging200Response configUpdateLogging(loggingConfig)
 
-Update the rate limiter configuration settings
 
 ### Example
 
@@ -659,16 +580,16 @@ Update the rate limiter configuration settings
 import {
     ServerSettingsApi,
     Configuration,
-    ConfigRateLimiterConfig
+    LoggingConfig
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-let configRateLimiterConfig: ConfigRateLimiterConfig; //Rate limiter configuration
+let loggingConfig: LoggingConfig; //
 
-const { status, data } = await apiInstance.updateRateLimiterConfig(
-    configRateLimiterConfig
+const { status, data } = await apiInstance.configUpdateLogging(
+    loggingConfig
 );
 ```
 
@@ -676,16 +597,16 @@ const { status, data } = await apiInstance.updateRateLimiterConfig(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **configRateLimiterConfig** | **ConfigRateLimiterConfig**| Rate limiter configuration | |
+| **loggingConfig** | **LoggingConfig**|  | |
 
 
 ### Return type
 
-**ConfigRateLimiterConfig**
+**ConfigGetLogging200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -696,33 +617,36 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Updated rate limiter configuration |  -  |
+|**200** | Updated |  -  |
 |**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**409** | Conflict |  -  |
+|**422** | Validation Error |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **updateServerConfig**
-> ApiServerConfigResponse updateServerConfig(apiServerConfigUpdateRequest)
+# **configUpdateProxyManager**
+> object configUpdateProxyManager(body)
 
-Update server-wide configuration settings
 
 ### Example
 
 ```typescript
 import {
     ServerSettingsApi,
-    Configuration,
-    ApiServerConfigUpdateRequest
+    Configuration
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-let apiServerConfigUpdateRequest: ApiServerConfigUpdateRequest; //Server configuration update
+let body: object; //
 
-const { status, data } = await apiInstance.updateServerConfig(
-    apiServerConfigUpdateRequest
+const { status, data } = await apiInstance.configUpdateProxyManager(
+    body
 );
 ```
 
@@ -730,16 +654,16 @@ const { status, data } = await apiInstance.updateServerConfig(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **apiServerConfigUpdateRequest** | **ApiServerConfigUpdateRequest**| Server configuration update | |
+| **body** | **object**|  | |
 
 
 ### Return type
 
-**ApiServerConfigResponse**
+**object**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -750,16 +674,20 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Updated server configuration |  -  |
-|**400** | Invalid request payload |  -  |
-|**500** | Failed to save server configuration |  -  |
+|**200** | Updated |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**409** | Conflict |  -  |
+|**422** | Validation Error |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **updateWorkerConfig**
-> ConfigWorkerConfig updateWorkerConfig(configWorkerConfig)
+# **configUpdateRateLimiter**
+> ConfigGetRateLimiter200Response configUpdateRateLimiter(rateLimiterConfig)
 
-Update the worker configuration settings
 
 ### Example
 
@@ -767,16 +695,16 @@ Update the worker configuration settings
 import {
     ServerSettingsApi,
     Configuration,
-    ConfigWorkerConfig
+    RateLimiterConfig
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-let configWorkerConfig: ConfigWorkerConfig; //Worker configuration
+let rateLimiterConfig: RateLimiterConfig; //
 
-const { status, data } = await apiInstance.updateWorkerConfig(
-    configWorkerConfig
+const { status, data } = await apiInstance.configUpdateRateLimiter(
+    rateLimiterConfig
 );
 ```
 
@@ -784,16 +712,16 @@ const { status, data } = await apiInstance.updateWorkerConfig(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **configWorkerConfig** | **ConfigWorkerConfig**| Worker configuration | |
+| **rateLimiterConfig** | **RateLimiterConfig**|  | |
 
 
 ### Return type
 
-**ConfigWorkerConfig**
+**ConfigGetRateLimiter200Response**
 
 ### Authorization
 
-No authorization required
+[cookieAuth](../README.md#cookieAuth)
 
 ### HTTP request headers
 
@@ -804,8 +732,128 @@ No authorization required
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Updated worker configuration |  -  |
+|**200** | Updated |  -  |
 |**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**409** | Conflict |  -  |
+|**422** | Validation Error |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **configUpdateServer**
+> object configUpdateServer(body)
+
+
+### Example
+
+```typescript
+import {
+    ServerSettingsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ServerSettingsApi(configuration);
+
+let body: object; //
+
+const { status, data } = await apiInstance.configUpdateServer(
+    body
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **body** | **object**|  | |
+
+
+### Return type
+
+**object**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Updated |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**409** | Conflict |  -  |
+|**422** | Validation Error |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **configUpdateWorker**
+> ConfigGetWorker200Response configUpdateWorker(workerConfig)
+
+
+### Example
+
+```typescript
+import {
+    ServerSettingsApi,
+    Configuration,
+    WorkerConfig
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ServerSettingsApi(configuration);
+
+let workerConfig: WorkerConfig; //
+
+const { status, data } = await apiInstance.configUpdateWorker(
+    workerConfig
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **workerConfig** | **WorkerConfig**|  | |
+
+
+### Return type
+
+**ConfigGetWorker200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Updated |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**409** | Conflict |  -  |
+|**422** | Validation Error |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

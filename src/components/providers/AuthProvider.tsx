@@ -2,10 +2,7 @@
 
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
-import type { components } from '@/lib/api-client/types';
-
-// Use the same user type as the API client
-type User = components['schemas']['github_com_fntelecomllc_studio_backend_internal_models.User'];
+import type { UserPublicResponse as User } from '@/lib/api-client/models';
 
 // Type definitions
 
