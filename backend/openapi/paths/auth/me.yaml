@@ -1,0 +1,18 @@
+get:
+  tags: [auth]
+  summary: Get current user
+  operationId: auth_me
+  responses:
+    '200':
+      description: Current user
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    $ref: '../../openapi.yaml#/components/schemas/UserPublicResponse'
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

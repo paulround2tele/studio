@@ -2,43 +2,52 @@ BadRequest:
   description: Bad Request
   content:
     application/json:
-  schema: { $ref: './schemas/all.yaml#/ErrorEnvelope' }
+      schema:
+        $ref: './schemas/all.yaml#/ErrorEnvelope'
 Unauthorized:
   description: Unauthorized
   content:
     application/json:
-  schema: { $ref: './schemas/all.yaml#/ErrorEnvelope' }
+      schema:
+        $ref: './schemas/all.yaml#/ErrorEnvelope'
 Forbidden:
   description: Forbidden
   content:
     application/json:
-  schema: { $ref: './schemas/all.yaml#/ErrorEnvelope' }
+      schema:
+        $ref: './schemas/all.yaml#/ErrorEnvelope'
 NotFound:
   description: Not Found
   content:
     application/json:
-  schema: { $ref: './schemas/all.yaml#/ErrorEnvelope' }
+      schema:
+        $ref: './schemas/all.yaml#/ErrorEnvelope'
 Conflict:
   description: Conflict
   content:
     application/json:
-  schema: { $ref: './schemas/all.yaml#/ErrorEnvelope' }
+      schema:
+        $ref: './schemas/all.yaml#/ErrorEnvelope'
 ValidationError:
   description: Validation Error
   content:
     application/json:
-  schema: { $ref: './schemas/all.yaml#/ErrorEnvelope' }
+      schema:
+        $ref: './schemas/all.yaml#/ErrorEnvelope'
 RateLimitExceeded:
   description: Rate limit exceeded
   headers:
     Retry-After:
       description: Seconds to wait before retrying
-      schema: { type: integer }
+      schema:
+        type: integer
   content:
     application/json:
-  schema: { $ref: './schemas/all.yaml#/ErrorEnvelope' }
+      schema:
+        $ref: './schemas/all.yaml#/ErrorEnvelope'
 InternalServerError:
   description: Internal Server Error
   content:
     application/json:
-  schema: { $ref: './schemas/all.yaml#/ErrorEnvelope' }
+      schema:
+        $ref: './schemas/all.yaml#/ErrorEnvelope'

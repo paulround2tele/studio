@@ -1,0 +1,24 @@
+post:
+  tags: [auth]
+  summary: User login
+  operationId: auth_login
+  requestBody:
+    required: true
+    content:
+      application/json:
+          schema: { $ref: '../../openapi.yaml#/components/schemas/LoginRequest' }
+  responses:
+    '200':
+      description: Login successful
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data: { $ref: '../../openapi.yaml#/components/schemas/SessionResponse' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

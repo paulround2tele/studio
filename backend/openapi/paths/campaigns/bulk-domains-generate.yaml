@@ -1,0 +1,24 @@
+post:
+  tags: [campaigns]
+  summary: Bulk domain generation
+  operationId: bulkGenerateDomains
+  requestBody:
+    required: true
+    content:
+      application/json:
+          schema: { $ref: '../../openapi.yaml#/components/schemas/BulkDomainGenerationRequest' }
+  responses:
+    '200':
+      description: Bulk domain generation initiated successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data: { $ref: '../../openapi.yaml#/components/schemas/BulkGenerationResponse' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

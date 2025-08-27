@@ -30,39 +30,3 @@ get:
     '404': { $ref: '../../components/responses.yaml#/NotFound' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
-post:
-  tags: [keyword-sets]
-  security:
-    - cookieAuth: []
-  summary: Add a rule to a keyword set
-  operationId: keyword_sets_rules_add
-  parameters:
-    - name: setId
-      in: path
-      required: true
-      schema:
-        type: string
-        format: uuid
-  requestBody:
-    required: true
-    content:
-      application/json:
-  schema: { $ref: '../../components/schemas/all.yaml#/KeywordRuleRequest' }
-  responses:
-    '201':
-      description: Created
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/KeywordRuleDTO' }
-    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
-    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
-    '404': { $ref: '../../components/responses.yaml#/NotFound' }
-    '422': { $ref: '../../components/responses.yaml#/ValidationError' }
-    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
-    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

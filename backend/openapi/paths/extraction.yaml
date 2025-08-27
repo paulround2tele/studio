@@ -9,13 +9,13 @@
 				required: true
 				content:
 					application/json:
-						schema: { $ref: '#/components/schemas/BatchKeywordExtractionRequest' }
+          schema: { $ref: '#/components/schemas/BatchKeywordExtractionRequest' }
 			responses:
 				'200':
 					description: OK
 					content:
 						application/json:
-							schema:
+          schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object

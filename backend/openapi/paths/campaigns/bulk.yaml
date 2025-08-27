@@ -1,0 +1,22 @@
+get:
+  tags: [campaigns]
+  summary: List bulk operations
+  operationId: campaigns_bulk_operations_list
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        operationId: { type: string, format: uuid }
+                        type: { type: string }
+                        status: { type: string }

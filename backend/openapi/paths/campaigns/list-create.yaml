@@ -1,0 +1,44 @@
+get:
+  tags: [campaigns]
+  summary: List campaigns
+  operationId: campaigns_list
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '../../openapi.yaml#/components/schemas/CampaignResponse' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+post:
+  tags: [campaigns]
+  summary: Create campaign
+  operationId: campaigns_create
+  requestBody:
+    required: true
+    content:
+      application/json:
+          schema: { $ref: '../../openapi.yaml#/components/schemas/CreateCampaignRequest' }
+  responses:
+    '201':
+      description: Created
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data: { $ref: '../../openapi.yaml#/components/schemas/CampaignResponse' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '409': { $ref: '../../components/responses.yaml#/Conflict' }
+    '422': { $ref: '../../components/responses.yaml#/ValidationError' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

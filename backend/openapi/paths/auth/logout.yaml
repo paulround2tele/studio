@@ -1,0 +1,20 @@
+post:
+  tags: [auth]
+  summary: User logout
+  operationId: auth_logout
+  responses:
+    '200':
+      description: Logout successful
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message: { type: string }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

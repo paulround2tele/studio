@@ -1,12 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SPEC="backend/openapi/openapi.yaml"
+# Determine which spec to validate.
+# Priority:
+#  1) SPEC env var (explicit)
+#  2) Bundled modular spec (backend/openapi/dist/openapi.yaml) if present
+#  3) Modular root (backend/openapi/openapi.root.yaml)
+#  4) Legacy monolith (backend/openapi/openapi.yaml)
+
+if [[ -n "${SPEC:-}" ]]; then
+  SPEC="$SPEC"
+elif [[ -f "backend/openapi/dist/openapi.yaml" ]]; then
+  SPEC="backend/openapi/dist/openapi.yaml"
+elif [[ -f "backend/openapi/openapi.root.yaml" ]]; then
+  SPEC="backend/openapi/openapi.root.yaml"
+else
+  SPEC="backend/openapi/openapi.yaml"
+fi
 
 if [[ ! -f "$SPEC" ]]; then
   echo "Spec not found: $SPEC" >&2
   exit 1
 fi
+
+echo "Validating spec: $SPEC"
 
 # Compute absolute path to the spec to avoid cwd issues in subshells
 REPO_ROOT=$(pwd)

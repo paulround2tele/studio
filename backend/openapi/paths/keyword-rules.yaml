@@ -1,0 +1,45 @@
+get:
+  tags: [keyword-rules]
+  security:
+    - cookieAuth: []
+  summary: Query keyword rules
+  operationId: keyword_rules_query
+  parameters:
+    - name: limit
+      in: query
+      schema: { type: integer, default: 50 }
+    - name: offset
+      in: query
+      schema: { type: integer, default: 0 }
+    - name: keyword_set_id
+      in: query
+      schema: { type: string, format: uuid }
+    - name: rule_type
+      in: query
+      schema: { $ref: '../openapi.yaml#/components/schemas/KeywordRuleType' }
+    - name: category
+      in: query
+      schema: { type: string }
+    - name: is_case_sensitive
+      in: query
+      schema: { type: boolean }
+    - name: pattern
+      in: query
+      schema: { type: string }
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '../openapi.yaml#/components/schemas/KeywordRuleDTO' }
+    '401': { $ref: '../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../components/responses.yaml#/Forbidden' }
+    '429': { $ref: '../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../components/responses.yaml#/InternalServerError' }

@@ -15,7 +15,7 @@
 					description: List
 					content:
 						application/json:
-							schema:
+          schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object
@@ -37,13 +37,13 @@
 				required: true
 				content:
 					application/json:
-						schema: { $ref: '#/components/schemas/CreatePersonaRequest' }
+          schema: { $ref: '#/components/schemas/CreatePersonaRequest' }
 			responses:
 				'201':
 					description: Created
 					content:
 						application/json:
-							schema:
+          schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object
@@ -73,7 +73,7 @@
 					description: Persona
 					content:
 						application/json:
-							schema:
+          schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object
@@ -100,13 +100,13 @@
 				required: true
 				content:
 					application/json:
-						schema: { $ref: '#/components/schemas/UpdatePersonaRequest' }
+          schema: { $ref: '#/components/schemas/UpdatePersonaRequest' }
 			responses:
 				'200':
 					description: Updated
 					content:
 						application/json:
-							schema:
+          schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object
@@ -137,7 +137,7 @@
 					description: Deleted
 					content:
 						application/json:
-							schema:
+          schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object
@@ -167,7 +167,7 @@
 					description: Test result
 					content:
 						application/json:
-							schema:
+          schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object

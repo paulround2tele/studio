@@ -1,0 +1,18 @@
+post:
+  tags: [auth]
+  summary: Refresh session
+  operationId: auth_refresh
+  responses:
+    '200':
+      description: Refreshed
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    $ref: '../../openapi.yaml#/components/schemas/SessionResponse'
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

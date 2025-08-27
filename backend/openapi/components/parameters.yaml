@@ -38,7 +38,16 @@ PersonaTypeFilter:
   description: Filter by persona type
   required: false
   schema:
-  $ref: './schemas/all.yaml#/PersonaType'
+    $ref: './schemas/all.yaml#/PersonaType'
+
+# Alias to satisfy references that use components.parameters.PersonaType
+PersonaType:
+  name: personaType
+  in: query
+  description: Filter by persona type
+  required: false
+  schema:
+    $ref: './schemas/all.yaml#/PersonaType'
 ProxyCountry:
   name: countryCode
   in: query
@@ -52,7 +61,7 @@ ProxyProtocol:
   description: Filter proxies by protocol
   required: false
   schema:
-  $ref: './schemas/all.yaml#/ProxyProtocol'
+    $ref: './schemas/all.yaml#/ProxyProtocol'
 IsHealthy:
   name: isHealthy
   in: query

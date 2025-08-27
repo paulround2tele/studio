@@ -8,7 +8,7 @@ put:
     required: true
     content:
       application/json:
-  schema: { $ref: '../../components/schemas/all.yaml#/BulkUpdateProxiesRequest' }
+          schema: { $ref: '../../components/schemas/all.yaml#/BulkUpdateProxiesRequest' }
   responses:
     '200':
       description: OK

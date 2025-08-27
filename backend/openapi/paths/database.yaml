@@ -11,13 +11,13 @@
 				required: true
 				content:
 					application/json:
-						schema: { $ref: '#/components/schemas/BulkDatabaseQueryRequest' }
+          schema: { $ref: '#/components/schemas/BulkDatabaseQueryRequest' }
 			responses:
 				'200':
 					description: OK
 					content:
 						application/json:
-							schema:
+          schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object
@@ -44,13 +44,13 @@
 				required: true
 				content:
 					application/json:
-						schema: { $ref: '#/components/schemas/BulkDatabaseStatsRequest' }
+          schema: { $ref: '#/components/schemas/BulkDatabaseStatsRequest' }
 			responses:
 				'200':
 					description: OK
 					content:
 						application/json:
-							schema:
+          schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object

@@ -8,7 +8,7 @@
 					description: OK
 					content:
 						application/json:
-							schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+          schema: { $ref: '#/components/schemas/SuccessEnvelope' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }
@@ -23,7 +23,7 @@
 					description: Pong
 					content:
 						application/json:
-							schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+          schema: { $ref: '#/components/schemas/SuccessEnvelope' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }
@@ -38,7 +38,7 @@
 					description: Ready
 					content:
 						application/json:
-							schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+          schema: { $ref: '#/components/schemas/SuccessEnvelope' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }
@@ -53,7 +53,7 @@
 					description: Alive
 					content:
 						application/json:
-							schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+          schema: { $ref: '#/components/schemas/SuccessEnvelope' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }

@@ -15,7 +15,7 @@
 					description: OK
 					content:
 						application/json:
-							schema:
+          schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object
@@ -37,13 +37,13 @@
 				required: true
 				content:
 					application/json:
-						schema: { $ref: '#/components/schemas/CreateKeywordSetRequest' }
+          schema: { $ref: '#/components/schemas/CreateKeywordSetRequest' }
 			responses:
 				'201':
 					description: Created
 					content:
 						application/json:
-							schema:
+          schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object
@@ -76,7 +76,7 @@
 					description: OK
 					content:
 						application/json:
-							schema:
+          schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object
@@ -105,13 +105,13 @@
 				required: true
 				content:
 					application/json:
-						schema: { $ref: '#/components/schemas/UpdateKeywordSetRequest' }
+          schema: { $ref: '#/components/schemas/UpdateKeywordSetRequest' }
 			responses:
 				'200':
 					description: OK
 					content:
 						application/json:
-							schema:
+          schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object
@@ -165,7 +165,7 @@
 					description: OK
 					content:
 						application/json:
-							schema:
+          schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object

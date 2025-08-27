@@ -21,7 +21,7 @@ get:
               value: |
                 event: campaign_progress
                 data: {"campaignId":"00000000-0000-0000-0000-000000000000","progress":75.0,"status":"in_progress"}
-  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
-  '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
-  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

@@ -13,7 +13,7 @@ post:
     required: true
     content:
       application/json:
-        schema:
+          schema:
           type: object
           properties:
             proxyId: { type: string, format: uuid }

@@ -1,0 +1,27 @@
+get:
+  tags: [campaigns]
+  summary: Get phase status
+  operationId: campaigns_phase_status
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    - name: phase
+      in: path
+      required: true
+      schema: { type: string, enum: [discovery, validation, extraction, analysis] }
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data: { $ref: '../../openapi.yaml#/components/schemas/PhaseStatusResponse' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

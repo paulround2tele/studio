@@ -13,7 +13,7 @@ put:
     required: true
     content:
       application/json:
-  schema: { $ref: '../../components/schemas/all.yaml#/ProxyPoolRequest' }
+          schema: { $ref: '../../components/schemas/all.yaml#/ProxyPoolRequest' }
   responses:
     '200':
       description: OK

@@ -32,6 +32,8 @@
   "api:validate": "bash scripts/validate-openapi-spec.sh",
   "api:validate-spec": "bash scripts/validate-openapi-spec.sh",
   "api:validate-bundle": "SPEC=backend/openapi/dist/openapi.yaml bash scripts/validate-openapi-spec.sh",
+  "api:check-routes": "node scripts/check-routes.mjs",
+  "api:autogen": "node scripts/api-autogen.mjs",
     "test:visual": "percy exec -- jest src/components/ui/__tests__/visual/",
     "percy:start": "percy exec -- start-server-and-test start http://localhost:8080 'npm run test:visual'",
     "test:e2e": "playwright test",

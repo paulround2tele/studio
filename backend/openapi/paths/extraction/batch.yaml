@@ -8,7 +8,7 @@ post:
     required: true
     content:
       application/json:
-  schema: { $ref: '../../components/schemas/all.yaml#/BatchKeywordExtractionRequest' }
+          schema: { $ref: '../../components/schemas/all.yaml#/BatchKeywordExtractionRequest' }
   responses:
     '200':
       description: OK

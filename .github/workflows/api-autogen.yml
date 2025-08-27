@@ -1,0 +1,43 @@
+name: API Autogeneration
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  autogen:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.x'
+
+      - name: Setup Java (for openapi-generator-cli)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run API autogeneration
+        run: npm run api:autogen
+
+      - name: Upload route parity report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: route-parity
+          path: scripts/test-logs/route-parity.json

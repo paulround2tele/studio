@@ -1,0 +1,14 @@
+post:
+  tags: [monitoring]
+  summary: Force cleanup
+  operationId: monitoring_cleanup_force
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    '202': { description: Accepted }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

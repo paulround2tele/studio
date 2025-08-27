@@ -1,0 +1,30 @@
+get:
+  tags: [campaigns]
+  summary: Get bulk resource allocation status
+  operationId: getBulkResourceStatus
+  parameters:
+    - name: allocationId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+      description: Resource allocation ID
+  responses:
+    '200':
+      description: Resource allocation status retrieved successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      allocationId: { type: string, format: uuid }
+                      status: { type: string }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

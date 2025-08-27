@@ -20,6 +20,10 @@
   $ref: "./personas/persona-by-id.yaml"
 "/personas/{id}/test":
   $ref: "./personas/persona-test.yaml"
+"/personas/http/{id}":
+  $ref: "./personas/http-by-id.yaml"
+"/personas/dns/{id}":
+  $ref: "./personas/dns-by-id.yaml"
 
 "/proxies":
   $ref: "./proxies/proxies.yaml"
@@ -56,6 +60,9 @@
 "/keyword-sets/{setId}/rules":
   $ref: "./keyword-sets/rules.yaml"
 
+"/keyword-rules":
+  $ref: "./keyword-rules.yaml"
+
 "/database/query":
   $ref: "./database/query.yaml"
 "/database/stats":
@@ -84,3 +91,87 @@
   $ref: "./config/server.yaml"
 "/config/features":
   $ref: "./config/features.yaml"
+
+"/monitoring/performance/summary":
+  $ref: "./monitoring/core.yaml"
+"/monitoring/performance/slow":
+  $ref: "./monitoring/core.yaml"
+"/monitoring/performance/metrics":
+  $ref: "./monitoring/core.yaml"
+"/monitoring/performance/active":
+  $ref: "./monitoring/core.yaml"
+"/monitoring/performance/failed":
+  $ref: "./monitoring/core.yaml"
+"/monitoring/campaigns/{campaignId}/resources":
+  $ref: "./monitoring/campaigns.yaml"
+"/monitoring/campaigns/{campaignId}/performance":
+  $ref: "./monitoring/campaigns.yaml"
+"/monitoring/campaigns/{campaignId}/health":
+  $ref: "./monitoring/campaigns.yaml"
+"/monitoring/campaigns/{campaignId}/limits":
+  $ref: "./monitoring/limits.yaml"
+"/monitoring/cleanup/stats":
+  $ref: "./monitoring/core.yaml"
+"/monitoring/cleanup/campaigns/{campaignId}":
+  $ref: "./monitoring/campaigns.yaml"
+"/monitoring/cleanup/campaigns/{campaignId}/force":
+  $ref: "./monitoring/cleanup-force.yaml"
+"/monitoring/resources/system":
+  $ref: "./monitoring/core.yaml"
+"/monitoring/resources/history":
+  $ref: "./monitoring/core.yaml"
+"/monitoring/resources/alerts":
+  $ref: "./monitoring/core.yaml"
+"/monitoring/dashboard/summary":
+  $ref: "./monitoring/core.yaml"
+"/monitoring/dashboard/trends":
+  $ref: "./monitoring/core.yaml"
+"/monitoring/health":
+  $ref: "./monitoring/core.yaml"
+"/monitoring/stats":
+  $ref: "./monitoring/core.yaml"
+
+
+"/auth/login":
+  $ref: "./auth/login.yaml"
+"/auth/logout":
+  $ref: "./auth/logout.yaml"
+"/auth/refresh":
+  $ref: "./auth/refresh.yaml"
+"/auth/me":
+  $ref: "./auth/me.yaml"
+"/auth/change-password":
+  $ref: "./auth/change-password.yaml"
+
+"/campaigns":
+  $ref: "./campaigns/list-create.yaml"
+"/campaigns/{campaignId}":
+  $ref: "./campaigns/by-id.yaml"
+"/campaigns/{campaignId}/progress":
+  $ref: "./campaigns/progress.yaml"
+"/campaigns/{campaignId}/phases/{phase}/status":
+  $ref: "./campaigns/phase-status.yaml"
+"/campaigns/{campaignId}/phases/{phase}/configure":
+  $ref: "./campaigns/phase-control.yaml"
+"/campaigns/{campaignId}/phases/{phase}/start":
+  $ref: "./campaigns/phase-control.yaml"
+"/campaigns/{campaignId}/phases/{phase}/stop":
+  $ref: "./campaigns/phase-control.yaml"
+"/campaigns/bulk/operations":
+  $ref: "./campaigns/bulk.yaml"
+"/campaigns/bulk/operations/{operationId}/status":
+  $ref: "./campaigns/bulk-operations-status.yaml"
+"/campaigns/bulk/domains/generate":
+  $ref: "./campaigns/bulk-domains-generate.yaml"
+"/campaigns/bulk/domains/analyze":
+  $ref: "./campaigns/bulk-domains-analyze.yaml"
+"/campaigns/bulk/domains/validate-dns":
+  $ref: "./campaigns/bulk-domains-validate-dns.yaml"
+"/campaigns/bulk/domains/validate-http":
+  $ref: "./campaigns/bulk-domains-validate-http.yaml"
+"/campaigns/bulk/resources/status/{allocationId}":
+  $ref: "./campaigns/bulk-resources-status.yaml"
+"/campaigns/bulk/resources/allocate":
+  $ref: "./campaigns/bulk-resources-allocate.yaml"
+"/campaigns/bulk/operations/{operationId}/cancel":
+  $ref: "./campaigns/bulk-operations-cancel.yaml"

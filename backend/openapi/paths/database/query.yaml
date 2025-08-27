@@ -10,7 +10,7 @@ post:
     required: true
     content:
       application/json:
-  schema: { $ref: '../../components/schemas/all.yaml#/BulkDatabaseQueryRequest' }
+          schema: { $ref: '../../components/schemas/all.yaml#/BulkDatabaseQueryRequest' }
   responses:
     '200':
       description: OK

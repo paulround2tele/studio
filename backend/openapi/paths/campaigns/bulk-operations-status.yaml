@@ -1,0 +1,32 @@
+get:
+  tags: [campaigns]
+  summary: Get bulk operation status
+  operationId: getBulkOperationStatus
+  parameters:
+    - name: operationId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+      description: Bulk operation ID
+  responses:
+    '200':
+      description: Bulk operation status retrieved successfully
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      operationId: { type: string, format: uuid }
+                      type: { type: string }
+                      status: { type: string }
+                      progress: { type: number, minimum: 0, maximum: 100 }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

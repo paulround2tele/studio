@@ -8,7 +8,7 @@ delete:
     required: true
     content:
       application/json:
-  schema: { $ref: '../../components/schemas/all.yaml#/BulkDeleteProxiesRequest' }
+          schema: { $ref: '../../components/schemas/all.yaml#/BulkDeleteProxiesRequest' }
   responses:
     '200':
       description: OK

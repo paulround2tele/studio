@@ -1,0 +1,24 @@
+post:
+  tags: [monitoring]
+  summary: Set campaign resource limits
+  operationId: monitoring_campaign_limits
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  requestBody:
+    required: true
+    content:
+      application/json:
+          schema:
+          type: object
+          properties:
+            maxConcurrentJobs: { type: integer }
+            rateLimitPerMinute: { type: integer }
+  responses:
+    '200': { description: Updated }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

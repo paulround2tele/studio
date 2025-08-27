@@ -1,0 +1,14 @@
+post:
+  tags: [campaigns]
+  summary: Cancel bulk operation
+  operationId: campaigns_bulk_operation_cancel
+  parameters:
+    - name: operationId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    '202': { description: Accepted }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

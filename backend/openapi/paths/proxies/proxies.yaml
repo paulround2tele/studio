@@ -24,10 +24,10 @@ get:
                   data:
                     type: array
                     items: { $ref: '../../components/schemas/all.yaml#/ProxyDetailsResponse' }
-  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
-  '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
-  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
 post:
   tags: [proxies]
   security:
@@ -38,7 +38,7 @@ post:
     required: true
     content:
       application/json:
-        schema: { $ref: '../../components/schemas/all.yaml#/CreateProxyRequestAPI' }
+          schema: { $ref: '../../components/schemas/all.yaml#/CreateProxyRequestAPI' }
   responses:
     '201':
       description: Created
@@ -50,10 +50,10 @@ post:
               - type: object
                 properties:
                   data: { $ref: '../../components/schemas/all.yaml#/ProxyDetailsResponse' }
-  '400': { $ref: '../../components/responses.yaml#/BadRequest' }
-  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
-  '409': { $ref: '../../components/responses.yaml#/Conflict' }
-  '422': { $ref: '../../components/responses.yaml#/ValidationError' }
-  '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
-  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '409': { $ref: '../../components/responses.yaml#/Conflict' }
+    '422': { $ref: '../../components/responses.yaml#/ValidationError' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

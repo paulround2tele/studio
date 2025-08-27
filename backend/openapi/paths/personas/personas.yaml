@@ -22,10 +22,10 @@ get:
                   data:
                     type: array
                     items: { $ref: '../../components/schemas/all.yaml#/PersonaResponse' }
-  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
-  '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
-  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
 post:
   tags: [personas]
   security:
@@ -36,7 +36,7 @@ post:
     required: true
     content:
       application/json:
-        schema: { $ref: '../../components/schemas/all.yaml#/CreatePersonaRequest' }
+          schema: { $ref: '../../components/schemas/all.yaml#/CreatePersonaRequest' }
   responses:
     '201':
       description: Created
@@ -49,9 +49,9 @@ post:
                 properties:
                   data:
                     $ref: '../../components/schemas/all.yaml#/PersonaResponse'
-  '400': { $ref: '../../components/responses.yaml#/BadRequest' }
-  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
-  '422': { $ref: '../../components/responses.yaml#/ValidationError' }
-  '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
-  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '422': { $ref: '../../components/responses.yaml#/ValidationError' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

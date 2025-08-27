@@ -1,0 +1,33 @@
+post:
+  tags: [campaigns]
+  summary: Configure campaign phase
+  operationId: campaigns_phase_configure
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    - name: phase
+      in: path
+      required: true
+      schema: { type: string, enum: [discovery, validation, extraction, analysis] }
+  requestBody:
+    required: true
+    content:
+      application/json:
+          schema: { $ref: '../../openapi.yaml#/components/schemas/PhaseConfigurationRequest' }
+  responses:
+    '200':
+      description: Configured
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data: { $ref: '../../openapi.yaml#/components/schemas/PhaseStatusResponse' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

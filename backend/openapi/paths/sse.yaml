@@ -57,7 +57,7 @@
 					description: SSE statistics
 					content:
 						application/json:
-							schema:
+          schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object
