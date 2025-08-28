@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 // File: backend/internal/api/bulk_domains_handlers.go
 package api
 
@@ -28,19 +31,6 @@ func NewBulkDomainsAPIHandler(orchestrator *application.CampaignOrchestrator, ss
 	}
 }
 
-// @Summary Generate domains in bulk using orchestrator
-// @Description Generate large batches of domains with stealth-aware configuration and resource management
-// @Tags bulk-operations,domains
-// @ID bulkGenerateDomains
-// @Accept json
-// @Produce json
-// @Param request body models.BulkDomainGenerationRequest true "Bulk domain generation request"
-// @Success 200 {object} APIResponse{data=models.BulkDomainGenerationResponse} "Domains generated successfully"
-// @Success 202 {object} APIResponse{data=models.BulkDomainGenerationResponse} "Operation accepted and processing"
-// @Failure 400 {object} APIResponse "Bad Request - Invalid configuration"
-// @Failure 429 {object} APIResponse "Rate Limited - Too many concurrent operations"
-// @Failure 500 {object} APIResponse "Internal Server Error"
-// @Router /campaigns/bulk/domains/generate [post]
 func (h *BulkDomainsAPIHandler) BulkGenerateDomains(c *gin.Context) {
 	var request models.BulkDomainGenerationRequest
 	if err := c.ShouldBindJSON(&request); err != nil {

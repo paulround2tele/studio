@@ -12,10 +12,7 @@ post:
     content:
       application/json:
         schema:
-          type: object
-          properties:
-            maxConcurrentJobs: { type: integer }
-            rateLimitPerMinute: { type: integer }
+          $ref: '../../components/schemas/monitoring-limits.yaml#/MonitoringCampaignLimitsRequest'
   responses:
     '200': { description: Updated }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }

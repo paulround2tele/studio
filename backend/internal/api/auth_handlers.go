@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 package api
 
 import (
@@ -38,20 +41,6 @@ func NewAuthHandler(sessionService *services.SessionService, sessionConfig *conf
 }
 
 // Login handles user login requests.
-// @Summary User login
-// @Description Authenticate user credentials and create session
-// @Tags authentication
-// @ID loginUser
-// @Accept json
-// @Produce json
-// @Param request body models.LoginRequest true "Login credentials"
-// @Success 200 {object} APIResponse{data=SessionResponse} "Login successful with user and session info"
-// @Failure 400 {object} APIResponse{error=ApiError} "Invalid request format"
-// @Failure 401 {object} APIResponse{error=ApiError} "Invalid credentials"
-// @Failure 423 {object} APIResponse{error=ApiError} "Account locked"
-// @Failure 403 {object} APIResponse{error=ApiError} "Account inactive"
-// @Failure 500 {object} APIResponse{error=ApiError} "Internal server error"
-// @Router /auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	fmt.Println("DEBUG: Login handler started")
 	var req models.LoginRequest
@@ -160,13 +149,6 @@ func (h *AuthHandler) Login(c *gin.Context) {
 }
 
 // Logout handles user logout requests.
-// @Summary User logout
-// @Description Invalidate current user session and clear cookies
-// @Tags authentication
-// @ID logoutUser
-// @Produce json
-// @Success 200 {object} APIResponse{data=SuccessMessageResponse} "Logout successful"
-// @Router /auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	// Get session ID from cookie
 	sessionID, err := c.Cookie(h.config.CookieName)
@@ -201,16 +183,6 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 }
 
 // Me returns current user information.
-// @Summary Get current user
-// @Description Get information about the currently authenticated user
-// @Tags authentication
-// @ID getCurrentUser
-// @Produce json
-// @Success 200 {object} APIResponse{data=models.User} "Current user information"
-// @Failure 401 {object} APIResponse "Authentication required"
-// @Failure 404 {object} APIResponse "User not found"
-// @Failure 500 {object} APIResponse "Internal server error"
-// @Router /auth/me [get]
 func (h *AuthHandler) Me(c *gin.Context) {
 	// Get security context from middleware
 	securityContext, exists := c.Get("security_context")
@@ -272,18 +244,6 @@ func (h *AuthHandler) Me(c *gin.Context) {
 }
 
 // ChangePassword handles password change requests.
-// @Summary Change user password
-// @Description Change password for the currently authenticated user
-// @Tags authentication
-// @ID changePassword
-// @Accept json
-// @Produce json
-// @Param request body models.ChangePasswordRequest true "Password change request"
-// @Success 200 {object} APIResponse{data=SuccessMessageResponse} "Password changed successfully"
-// @Failure 400 {object} APIResponse{error=ApiError} "Invalid request format"
-// @Failure 401 {object} APIResponse{error=ApiError} "Authentication required"
-// @Failure 501 {object} APIResponse{error=ApiError} "Not implemented"
-// @Router /auth/change-password [post]
 func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	var req models.ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -296,15 +256,6 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 }
 
 // RefreshSession handles session refresh requests.
-// @Summary Refresh user session
-// @Description Extend the current session expiry time
-// @Tags authentication
-// @ID refreshSession
-// @Produce json
-// @Success 200 {object} APIResponse{data=SessionRefreshResponse} "Session refreshed with new expiry"
-// @Failure 401 {object} APIResponse{error=ApiError} "Invalid or expired session"
-// @Failure 500 {object} APIResponse{error=ApiError} "Failed to refresh session"
-// @Router /auth/refresh [post]
 func (h *AuthHandler) RefreshSession(c *gin.Context) {
 	// Get session ID from cookie
 	sessionID, err := c.Cookie(h.config.CookieName)

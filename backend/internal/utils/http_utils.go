@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 package utils
 
 import (

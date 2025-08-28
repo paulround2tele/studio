@@ -148,8 +148,8 @@ export default function DNSValidationConfigModal({
         configuration: { dnsValidation: dnsConfig },
       };
 
-  // Use professional RTK Query mutation with normalized phase name
-  await configurePhase({ campaignId, phase: 'validation', config: configRequest }).unwrap();
+  // Use RTK mutation with canonical backend phase identifier
+  await configurePhase({ campaignId, phase: 'dns_validation', config: configRequest }).unwrap();
 
       toast({
         title: "DNS validation configured",

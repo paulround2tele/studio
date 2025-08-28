@@ -10,14 +10,12 @@ import (
 )
 
 // DNSPhaseConfigRequest represents DNS validation phase configuration
-// @description Request body for configuring DNS validation phase
 type DNSPhaseConfigRequest struct {
 	PersonaIDs []string `json:"personaIds" validate:"required,min=1" binding:"required" example:"[\"persona-uuid-1\", \"persona-uuid-2\"]" description:"Array of persona IDs to use for DNS validation"`
 	Name       *string  `json:"name,omitempty" example:"My DNS Campaign" description:"Optional name for the campaign"`
 }
 
 // HTTPPhaseConfigRequest represents HTTP validation phase configuration
-// @description Request body for configuring HTTP keyword validation phase
 type HTTPPhaseConfigRequest struct {
 	PersonaIDs    []string `json:"personaIds" validate:"required,min=1" binding:"required" example:"[\"persona-uuid-1\", \"persona-uuid-2\"]" description:"Array of persona IDs to use for HTTP validation"`
 	Keywords      []string `json:"keywords,omitempty" example:"[\"keyword1\", \"keyword2\"]" description:"Predefined keywords to search for"`
@@ -191,12 +189,11 @@ type HTTPConfigDetails struct {
 
 // Persona represents a DNS or HTTP persona
 // Persona represents a persona configuration
-// @Description Persona settings and validation rules
 type Persona struct {
 	ID            uuid.UUID          `db:"id" json:"id"`
 	Name          string             `db:"name" json:"name" validate:"required"`
 	PersonaType   PersonaTypeEnum    `db:"persona_type" json:"personaType" validate:"required,oneof=dns http"`
-	Description   sql.NullString     `db:"description" json:"description,omitempty" swaggertype:"string"`
+	Description   sql.NullString     `db:"description" json:"description,omitempty"`
 	ConfigDetails json.RawMessage    `db:"config_details" json:"configDetails" validate:"required"` // Keep as RawMessage for DB compatibility
 	IsEnabled     bool               `db:"is_enabled" json:"isEnabled"`
 	Status        *PersonaStatusEnum `db:"status" json:"status,omitempty"` // Frontend expects this field
@@ -210,46 +207,45 @@ type Persona struct {
 }
 
 // Proxy represents a proxy server configuration
-// @Description Proxy server connection and authentication details
 type Proxy struct {
 	ID            uuid.UUID          `db:"id" json:"id"`
 	Name          string             `db:"name" json:"name" validate:"required"`
-	Description   sql.NullString     `db:"description" json:"description,omitempty" swaggertype:"string"`
+	Description   sql.NullString     `db:"description" json:"description,omitempty"`
 	Address       string             `db:"address" json:"address" validate:"required"` // Full proxy address (e.g., 'http://user:pass@host:port')
 	Protocol      *ProxyProtocolEnum `db:"protocol" json:"protocol,omitempty"`
-	Username      sql.NullString     `db:"username" json:"username,omitempty" swaggertype:"string"` // Username for proxy auth, from DB
-	PasswordHash  sql.NullString     `db:"password_hash" json:"-"`                                  // Hashed password, from DB
-	Host          sql.NullString     `db:"host" json:"host,omitempty" swaggertype:"string"`         // Hostname or IP
-	Port          sql.NullInt32      `db:"port" json:"port,omitempty" swaggertype:"integer"`        // Port number
+	Username      sql.NullString     `db:"username" json:"username,omitempty"` // Username for proxy auth, from DB
+	PasswordHash  sql.NullString     `db:"password_hash" json:"-"`             // Hashed password, from DB
+	Host          sql.NullString     `db:"host" json:"host,omitempty"`         // Hostname or IP
+	Port          sql.NullInt32      `db:"port" json:"port,omitempty"`         // Port number
 	IsEnabled     bool               `db:"is_enabled" json:"isEnabled"`
 	IsHealthy     bool               `db:"is_healthy" json:"isHealthy"`
-	LastStatus    sql.NullString     `db:"last_status" json:"lastStatus,omitempty" swaggertype:"string"`        // e.g., 'Active', 'Inactive', 'Error'
-	LastCheckedAt sql.NullTime       `db:"last_checked_at" json:"lastCheckedAt,omitempty" swaggertype:"string"` // Timestamp of last health check
-	LatencyMs     sql.NullInt32      `db:"latency_ms" json:"latencyMs,omitempty" swaggertype:"integer"`         // Last measured latency
-	City          sql.NullString     `db:"city" json:"city,omitempty" swaggertype:"string"`
-	CountryCode   sql.NullString     `db:"country_code" json:"countryCode,omitempty" swaggertype:"string"`
-	Provider      sql.NullString     `db:"provider" json:"provider,omitempty" swaggertype:"string"`
+	LastStatus    sql.NullString     `db:"last_status" json:"lastStatus,omitempty"`        // e.g., 'Active', 'Inactive', 'Error'
+	LastCheckedAt sql.NullTime       `db:"last_checked_at" json:"lastCheckedAt,omitempty"` // Timestamp of last health check
+	LatencyMs     sql.NullInt32      `db:"latency_ms" json:"latencyMs,omitempty"`          // Last measured latency
+	City          sql.NullString     `db:"city" json:"city,omitempty"`
+	CountryCode   sql.NullString     `db:"country_code" json:"countryCode,omitempty"`
+	Provider      sql.NullString     `db:"provider" json:"provider,omitempty"`
 	CreatedAt     time.Time          `db:"created_at" json:"createdAt"`
 	UpdatedAt     time.Time          `db:"updated_at" json:"updatedAt"`
 
 	// Frontend-expected fields
-	Status       *ProxyStatusEnum `db:"status" json:"status,omitempty"`                                    // Frontend expects this enum field
-	Notes        sql.NullString   `db:"notes" json:"notes,omitempty" swaggertype:"string"`                 // Proxy notes/comments
-	SuccessCount sql.NullInt32    `db:"success_count" json:"successCount,omitempty" swaggertype:"integer"` // Count of successful operations
-	FailureCount sql.NullInt32    `db:"failure_count" json:"failureCount,omitempty" swaggertype:"integer"` // Count of failed operations
-	LastTested   sql.NullTime     `db:"last_tested" json:"lastTested,omitempty" swaggertype:"string"`      // Last test timestamp
-	LastError    sql.NullString   `db:"last_error" json:"lastError,omitempty" swaggertype:"string"`        // Last error message
+	Status       *ProxyStatusEnum `db:"status" json:"status,omitempty"`              // Frontend expects this enum field
+	Notes        sql.NullString   `db:"notes" json:"notes,omitempty"`                // Proxy notes/comments
+	SuccessCount sql.NullInt32    `db:"success_count" json:"successCount,omitempty"` // Count of successful operations
+	FailureCount sql.NullInt32    `db:"failure_count" json:"failureCount,omitempty"` // Count of failed operations
+	LastTested   sql.NullTime     `db:"last_tested" json:"lastTested,omitempty"`     // Last test timestamp
+	LastError    sql.NullString   `db:"last_error" json:"lastError,omitempty"`       // Last error message
 
 	// Fields for input/logic, not direct DB columns if already covered by Address or PasswordHash
-	InputUsername sql.NullString `json:"inputUsername,omitempty" swaggertype:"string"` // For API input, to be parsed from/into Address or used for PasswordHash
-	InputPassword sql.NullString `json:"inputPassword,omitempty" swaggertype:"string"` // For API input, to be hashed into PasswordHash
+	InputUsername sql.NullString `json:"inputUsername,omitempty"` // For API input, to be parsed from/into Address or used for PasswordHash
+	InputPassword sql.NullString `json:"inputPassword,omitempty"` // For API input, to be hashed into PasswordHash
 }
 
 // KeywordSet represents a collection of keyword rules
 type KeywordSet struct {
 	ID          uuid.UUID      `db:"id" json:"id"`
 	Name        string         `db:"name" json:"name" validate:"required"`
-	Description sql.NullString `db:"description" json:"description,omitempty" swaggertype:"string"`
+	Description sql.NullString `db:"description" json:"description,omitempty"`
 	IsEnabled   bool           `db:"is_enabled" json:"isEnabled"`
 	CreatedAt   time.Time      `db:"created_at" json:"createdAt"`
 	UpdatedAt   time.Time      `db:"updated_at" json:"updatedAt"`
@@ -263,7 +259,7 @@ type KeywordRule struct {
 	Pattern         string              `db:"pattern" json:"pattern" validate:"required"`
 	RuleType        KeywordRuleTypeEnum `db:"rule_type" json:"ruleType" validate:"required,oneof=string regex"`
 	IsCaseSensitive bool                `db:"is_case_sensitive" json:"isCaseSensitive"`
-	Category        sql.NullString      `db:"category" json:"category,omitempty" swaggertype:"string"`
+	Category        sql.NullString      `db:"category" json:"category,omitempty"`
 	ContextChars    int                 `db:"context_chars" json:"contextChars,omitempty" validate:"gte=0"`
 	CreatedAt       time.Time           `db:"created_at" json:"createdAt"`
 	UpdatedAt       time.Time           `db:"updated_at" json:"updatedAt"`
@@ -274,7 +270,6 @@ type KeywordRule struct {
 // ======================================================================
 
 // LeadGenerationCampaign represents a lead generation campaign with 4 phases
-// @Description Lead generation campaign with phase-based execution model
 type LeadGenerationCampaign struct {
 	ID     uuid.UUID  `db:"id" json:"id"`
 	Name   string     `db:"name" json:"name" validate:"required"`
@@ -508,18 +503,18 @@ type GeneratedDomain struct {
 	DomainName    string         `db:"domain_name" json:"domainName" firestore:"domainName" validate:"required,hostname_rfc1123"`
 	OffsetIndex   int64          `db:"offset_index" json:"offsetIndex" firestore:"offsetIndex" validate:"gte=0"` // Absolute offset in the total possible generation space for this config
 	GeneratedAt   time.Time      `db:"generated_at" json:"generatedAt" firestore:"generatedAt"`
-	SourceKeyword sql.NullString `db:"source_keyword" json:"sourceKeyword,omitempty" firestore:"sourceKeyword,omitempty" swaggertype:"string"`
-	SourcePattern sql.NullString `db:"source_pattern" json:"sourcePattern,omitempty" firestore:"sourcePattern,omitempty" swaggertype:"string"`
-	TLD           sql.NullString `db:"tld" json:"tld,omitempty" firestore:"tld,omitempty" swaggertype:"string"`
+	SourceKeyword sql.NullString `db:"source_keyword" json:"sourceKeyword,omitempty" firestore:"sourceKeyword,omitempty"`
+	SourcePattern sql.NullString `db:"source_pattern" json:"sourcePattern,omitempty" firestore:"sourcePattern,omitempty"`
+	TLD           sql.NullString `db:"tld" json:"tld,omitempty" firestore:"tld,omitempty"`
 	CreatedAt     time.Time      `db:"created_at" json:"createdAt" firestore:"createdAt"`
 
 	// Domain-centric validation status fields
 	DNSStatus       *DomainDNSStatusEnum  `db:"dns_status" json:"dnsStatus,omitempty" firestore:"dnsStatus,omitempty"`
-	DNSIP           sql.NullString        `db:"dns_ip" json:"dnsIp,omitempty" firestore:"dnsIp,omitempty" swaggertype:"string"`
+	DNSIP           sql.NullString        `db:"dns_ip" json:"dnsIp,omitempty" firestore:"dnsIp,omitempty"`
 	HTTPStatus      *DomainHTTPStatusEnum `db:"http_status" json:"httpStatus,omitempty" firestore:"httpStatus,omitempty"`
 	HTTPStatusCode  sql.NullInt32         `db:"http_status_code" json:"httpStatusCode,omitempty" firestore:"httpStatusCode,omitempty"`
-	HTTPTitle       sql.NullString        `db:"http_title" json:"httpTitle,omitempty" firestore:"httpTitle,omitempty" swaggertype:"string"`
-	HTTPKeywords    sql.NullString        `db:"http_keywords" json:"httpKeywords,omitempty" firestore:"httpKeywords,omitempty" swaggertype:"string"`
+	HTTPTitle       sql.NullString        `db:"http_title" json:"httpTitle,omitempty" firestore:"httpTitle,omitempty"`
+	HTTPKeywords    sql.NullString        `db:"http_keywords" json:"httpKeywords,omitempty" firestore:"httpKeywords,omitempty"`
 	LeadStatus      *DomainLeadStatusEnum `db:"lead_status" json:"leadStatus,omitempty" firestore:"leadStatus,omitempty"`
 	LeadScore       sql.NullFloat64       `db:"lead_score" json:"leadScore,omitempty" firestore:"leadScore,omitempty"`
 	LastValidatedAt sql.NullTime          `db:"last_validated_at" json:"lastValidatedAt,omitempty" firestore:"lastValidatedAt,omitempty"`
@@ -685,9 +680,9 @@ type CampaignJob struct {
 type ProxyPool struct {
 	ID                         uuid.UUID      `db:"id" json:"id"`
 	Name                       string         `db:"name" json:"name" validate:"required"`
-	Description                sql.NullString `db:"description" json:"description,omitempty" swaggertype:"string"`
+	Description                sql.NullString `db:"description" json:"description,omitempty"`
 	IsEnabled                  bool           `db:"is_enabled" json:"isEnabled"`
-	PoolStrategy               sql.NullString `db:"pool_strategy" json:"poolStrategy,omitempty" swaggertype:"string"` // round_robin, random, weighted, failover
+	PoolStrategy               sql.NullString `db:"pool_strategy" json:"poolStrategy,omitempty"` // round_robin, random, weighted, failover
 	HealthCheckEnabled         bool           `db:"health_check_enabled" json:"healthCheckEnabled"`
 	HealthCheckIntervalSeconds *int           `db:"health_check_interval_seconds" json:"healthCheckIntervalSeconds,omitempty"`
 	MaxRetries                 *int           `db:"max_retries" json:"maxRetries,omitempty"`

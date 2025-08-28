@@ -1,63 +1,11 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 package api
 
-import (
-	"log"
-	"net/http"
-	"os"
-	"strings"
-	"time"
-
-	// Alias your internal websocket package to avoid collision with gorilla/websocket
-	"github.com/fntelecomllc/studio/backend/internal/models"
-	"github.com/fntelecomllc/studio/backend/internal/services"
-	internalwebsocket "github.com/fntelecomllc/studio/backend/internal/websocket"
-
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket" // This will be identified by the package name 'websocket'
-)
-
-// upgrader uses the gorilla/websocket package
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		// CRITICAL SECURITY FIX: Proper origin validation for production
-		origin := r.Header.Get("Origin")
-
-		log.Printf("WebSocket origin validation check: origin='%s', gin.Mode='%s'", origin, gin.Mode())
-
-		// Debug: Log environment variables
-		log.Printf("WebSocket env debug: ENV='%s', DEPLOYMENT_ENVIRONMENT='%s', DEV_MODE='%s', NODE_ENV='%s'",
-			os.Getenv("ENV"), os.Getenv("DEPLOYMENT_ENVIRONMENT"), os.Getenv("DEV_MODE"), os.Getenv("NODE_ENV"))
-
-		// Enhanced development mode detection - check multiple conditions
-		isDevelopment := gin.Mode() == gin.DebugMode ||
-			gin.Mode() == gin.TestMode ||
-			os.Getenv("GIN_MODE") == "debug" ||
-			os.Getenv("NODE_ENV") == "development" ||
-			strings.Contains(os.Getenv("GO_ENV"), "dev") ||
-			os.Getenv("ENV") == "development" ||
-			os.Getenv("DEPLOYMENT_ENVIRONMENT") == "development" ||
-			os.Getenv("DEV_MODE") == "true" ||
-			strings.EqualFold(os.Getenv("ENV"), "dev") ||
-			strings.EqualFold(os.Getenv("ENVIRONMENT"), "development") ||
-			strings.EqualFold(os.Getenv("ENVIRONMENT"), "dev")
-
-		// ADDITIONAL: If environment variables indicate production but we're clearly in a local development setup
-		// (localhost origins), treat it as development. This handles cases where deploy scripts set ENV=production
-		// but we're actually running locally for development.
-		isLocalhost := strings.Contains(origin, "localhost") || strings.Contains(origin, "127.0.0.1") || strings.Contains(origin, "0.0.0.0")
-		if !isDevelopment && isLocalhost {
-			log.Printf("WebSocket: Detected localhost origin '%s' - treating as development despite environment settings", origin)
-			isDevelopment = true
-		}
-
-		// In development, be more permissive with localhost origins
-		if isDevelopment {
-			developmentOrigins := []string{
-				"http://localhost:3000",
-				"http://127.0.0.1:3000",
-				"http://localhost:3001", // Next.js sometimes uses 3001
+// This file contained legacy Gin + Gorilla/WebSocket handlers.
+// After migrating to Chi + oapi-codegen StrictServer, these are excluded from default builds.
+// To resurrect for reference, build with -tags=legacy_gin.
 				"http://127.0.0.1:3001",
 				"http://localhost:8080",
 				"http://127.0.0.1:8080",
@@ -135,15 +83,6 @@ func NewWebSocketHandler(hub internalwebsocket.Broadcaster, sessionService *serv
 }
 
 // HandleConnections upgrades HTTP GET requests to WebSocket connections.
-// @Summary WebSocket connection
-// @Description Upgrade HTTP connection to WebSocket for real-time communication
-// @Tags websocket
-// @ID connectWebSocket
-// @Param domainflow_session header string false "Session cookie for authentication"
-// @Success 101 {string} string "WebSocket connection established"
-// @Failure 401 {object} api.APIResponse "Authentication required"
-// @Failure 403 {object} api.APIResponse "Invalid origin or session security validation failed"
-// @Router /ws [get]
 func (h *WebSocketHandler) HandleConnections(c *gin.Context) {
 	// Session-based authentication: Validate session before upgrading to WebSocket
 	// Try the primary session cookie name first

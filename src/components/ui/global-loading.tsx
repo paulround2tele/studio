@@ -1,8 +1,7 @@
 /**
  * THIN CLIENT: Global Loading Indicator
  * 
- * Backend-driven loading states via WebSocket
- * No frontend state management needed
+ * Placeholder for global loading state if needed.
  */
 
 "use client";

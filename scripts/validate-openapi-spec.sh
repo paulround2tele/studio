@@ -6,7 +6,6 @@ set -euo pipefail
 #  1) SPEC env var (explicit)
 #  2) Bundled modular spec (backend/openapi/dist/openapi.yaml) if present
 #  3) Modular root (backend/openapi/openapi.root.yaml)
-#  4) Legacy monolith (backend/openapi/openapi.yaml)
 
 if [[ -n "${SPEC:-}" ]]; then
   SPEC="$SPEC"
@@ -15,7 +14,8 @@ elif [[ -f "backend/openapi/dist/openapi.yaml" ]]; then
 elif [[ -f "backend/openapi/openapi.root.yaml" ]]; then
   SPEC="backend/openapi/openapi.root.yaml"
 else
-  SPEC="backend/openapi/openapi.yaml"
+  echo "Spec not found (expected dist/openapi.yaml or openapi.root.yaml)." >&2
+  exit 1
 fi
 
 if [[ ! -f "$SPEC" ]]; then

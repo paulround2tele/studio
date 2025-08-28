@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 // Package api provides unified response types for API endpoints
 package api
 
@@ -43,17 +46,15 @@ type ErrorDetail struct {
 }
 
 // APIResponse represents the unified response format for all API endpoints
-// @Description Standard API response envelope used by all endpoints
 type APIResponse struct {
 	Success   bool            `json:"success" example:"true"`                   // Indicates if the request was successful
-	Data      json.RawMessage `json:"data,omitempty" swaggertype:"object"`      // Response data (only present on success)
+	Data      json.RawMessage `json:"data,omitempty"`                           // Response data (only present on success)
 	Error     *ApiError       `json:"error,omitempty"`                          // Error information (only present on failure)
 	Metadata  *Metadata       `json:"metadata,omitempty"`                       // Optional metadata
 	RequestID string          `json:"requestId" example:"req_1234567890abcdef"` // Unique request identifier for tracing
 }
 
 // ApiError contains comprehensive error information
-// @Description Detailed error information structure
 type ApiError struct {
 	Code      ErrorCode     `json:"code" example:"VALIDATION_ERROR"`              // Primary error code
 	Message   string        `json:"message" example:"Invalid input parameters"`   // Primary error message
@@ -63,7 +64,6 @@ type ApiError struct {
 }
 
 // Metadata contains optional response metadata
-// @Description Optional metadata attached to API responses
 type Metadata struct {
 	Page       *PageInfo              `json:"page,omitempty"`       // Pagination info
 	RateLimit  *RateLimitInfo         `json:"rateLimit,omitempty"`  // Rate limiting info

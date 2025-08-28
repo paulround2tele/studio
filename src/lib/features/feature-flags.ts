@@ -89,12 +89,6 @@ class FeatureFlagsService {
         description: 'Enable advanced performance and error monitoring'
       },
       {
-        key: 'websocket_reconnect',
-        value: true,
-        enabled: true,
-        description: 'Enable automatic WebSocket reconnection'
-      },
-      {
         key: 'rate_limiting',
         value: false,
         enabled: true,

@@ -131,6 +131,11 @@ KeywordRuleType:
   type: string
   enum: [string, regex]
 
+# Bulk operation cancel status enum (used by cancel API response)
+BulkOperationCancelStatus:
+  type: string
+  enum: [cancelled, cancelling]
+
 # Personas
 CreatePersonaRequest:
   type: object

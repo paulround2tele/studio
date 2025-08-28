@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/models"
@@ -57,6 +58,9 @@ type SSEService struct {
 	keepAlive   time.Duration
 	maxClients  int
 	eventBuffer int
+	// metrics
+	startTime   time.Time
+	totalEvents uint64
 }
 
 // NewSSEService creates a new SSE service
@@ -66,6 +70,7 @@ func NewSSEService() *SSEService {
 		keepAlive:   30 * time.Second,
 		maxClients:  1000, // Reasonable limit to prevent resource exhaustion
 		eventBuffer: 100,  // Buffer size for event channels
+		startTime:   time.Now(),
 	}
 }
 
@@ -232,6 +237,8 @@ func (s *SSEService) sendEventToClient(client *SSEClient, event SSEEvent) {
 
 	client.Flusher.Flush()
 	client.LastSeen = time.Now()
+	// increment global counter after successful flush
+	atomic.AddUint64(&s.totalEvents, 1)
 }
 
 // clientKeepAlive maintains the connection with periodic keep-alive messages
@@ -274,6 +281,17 @@ func (s *SSEService) GetClientsForUser(userID uuid.UUID) int {
 		}
 	}
 	return count
+}
+
+// GetTotalEvents returns the total number of events sent since service start
+func (s *SSEService) GetTotalEvents() int {
+	return int(atomic.LoadUint64(&s.totalEvents))
+}
+
+// GetUptime returns the duration since the SSE service started
+func (s *SSEService) GetUptime() time.Duration {
+	// startTime is set at construction time and never changes
+	return time.Since(s.startTime)
 }
 
 // Cleanup removes stale clients

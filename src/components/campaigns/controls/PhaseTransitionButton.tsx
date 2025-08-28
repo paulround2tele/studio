@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Play, Pause, Square, ArrowRight } from 'lucide-react';
 import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { useToast } from '@/hooks/use-toast';
-import type { components } from '@/lib/api-client/types';
 
 // Use enums from OpenAPI schema  
 import type { CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum } from '@/lib/api-client/models';

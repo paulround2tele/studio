@@ -1,0 +1,214 @@
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"os"
+	"path/filepath"
+	"time"
+
+	"github.com/fntelecomllc/studio/backend/internal/application"
+	"github.com/fntelecomllc/studio/backend/internal/config"
+	"github.com/fntelecomllc/studio/backend/internal/contentfetcher"
+	"github.com/fntelecomllc/studio/backend/internal/dnsvalidator"
+	domainservices "github.com/fntelecomllc/studio/backend/internal/domain/services"
+	"github.com/fntelecomllc/studio/backend/internal/httpvalidator"
+	"github.com/fntelecomllc/studio/backend/internal/monitoring"
+	"github.com/fntelecomllc/studio/backend/internal/proxymanager"
+	"github.com/fntelecomllc/studio/backend/internal/services"
+	"github.com/fntelecomllc/studio/backend/internal/store"
+	pg_store "github.com/fntelecomllc/studio/backend/internal/store/postgres"
+	"github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
+)
+
+// AppDeps holds the minimal shared dependencies needed by strict handlers.
+// We'll expand this incrementally as we migrate more endpoints.
+type AppDeps struct {
+	Config *config.AppConfig
+	// Core runtime deps used by strict handlers
+	DB     *sqlx.DB
+	Stores struct {
+		Campaign    store.CampaignStore
+		Persona     store.PersonaStore
+		Proxy       store.ProxyStore
+		ProxyPools  store.ProxyPoolStore
+		Keyword     store.KeywordStore
+		AuditLog    store.AuditLogStore
+		CampaignJob store.CampaignJobStore
+	}
+	ProxyMgr     *proxymanager.ProxyManager
+	SSE          *services.SSEService
+	Orchestrator *application.CampaignOrchestrator
+	BulkOps      *BulkOpsTracker
+	// Monitoring suite
+	Monitoring *monitoring.MonitoringService
+	Cleanup    *monitoring.CleanupService
+	// Auth/session
+	Session *services.SessionService
+}
+
+// initAppDependencies loads environment/config and returns core dependencies for the Chi strict server.
+// This is a lifted, shared initializer derived from the previous Gin path startup.
+func initAppDependencies() (*AppDeps, error) {
+	// Load .env from common locations (same logic as legacy path)
+	envPaths := []string{
+		".env",
+		filepath.Join("..", ".env"),
+		filepath.Join(".", ".env"),
+	}
+	for _, p := range envPaths {
+		if err := godotenv.Load(p); err == nil {
+			log.Printf("Loaded environment variables from %s", p)
+			break
+		}
+	}
+
+	// Load configuration with environment variable support
+	appConfig, err := config.LoadWithEnv("")
+	if err != nil {
+		log.Printf("Warning: Failed to load config file: %v", err)
+		log.Println("Falling back to environment variables and defaults…")
+		if envConfig, err2 := config.LoadWithEnv(""); err2 != nil {
+			log.Printf("Warning: Failed to load environment variables: %v", err2)
+			appConfig = &config.AppConfig{}
+		} else {
+			appConfig = envConfig
+		}
+	}
+
+	// Initialize optimization configuration if not set
+	if !appConfig.Optimization.Enabled && !appConfig.Optimization.Phases.BatchQueries {
+		environment := os.Getenv("ENVIRONMENT")
+		switch environment {
+		case "development":
+			appConfig.Optimization = config.GetDevelopmentOptimizationConfig()
+		case "staging":
+			appConfig.Optimization = config.GetStagingOptimizationConfig()
+		case "production":
+			appConfig.Optimization = config.GetProductionOptimizationConfig()
+		default:
+			appConfig.Optimization = config.GetDefaultOptimizationConfig()
+		}
+		log.Printf("Optimization configuration initialized for environment: %s", environment)
+	}
+
+	deps := &AppDeps{Config: appConfig}
+
+	// Initialize PostgreSQL (mirror legacy path)
+	// Prefer DSN from config if present, else env vars
+	var dsn string
+	if appConfig.Server.DatabaseConfig != nil {
+		dsn = config.GetDatabaseDSN(appConfig.Server.DatabaseConfig)
+	} else {
+		dbHost := os.Getenv("DB_HOST")
+		dbPort := os.Getenv("DB_PORT")
+		dbUser := os.Getenv("DB_USER")
+		dbPassword := os.Getenv("DB_PASSWORD")
+		dbName := os.Getenv("DB_NAME")
+		dbSSLMode := os.Getenv("DB_SSLMODE")
+		if dbSSLMode == "" {
+			dbSSLMode = "disable"
+		}
+		if dbHost == "" || dbPort == "" || dbUser == "" || dbPassword == "" || dbName == "" {
+			// Database not configured; allow Chi server to run with limited endpoints
+			log.Println("Database environment variables not fully set; starting with limited functionality")
+		} else {
+			dsn = fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s", dbHost, dbPort, dbUser, dbPassword, dbName, dbSSLMode)
+		}
+	}
+
+	if dsn != "" {
+		db, err := sqlx.Connect("postgres", dsn)
+		if err != nil {
+			return nil, fmt.Errorf("connect postgres: %w", err)
+		}
+		db.SetMaxOpenConns(appConfig.Server.DBMaxOpenConns)
+		db.SetMaxIdleConns(appConfig.Server.DBMaxIdleConns)
+		db.SetConnMaxLifetime(time.Duration(appConfig.Server.DBConnMaxLifetimeMinutes) * time.Minute)
+		deps.DB = db
+
+		// Initialize stores
+		deps.Stores.Campaign = pg_store.NewCampaignStorePostgres(db)
+		deps.Stores.Persona = pg_store.NewPersonaStorePostgres(db)
+		deps.Stores.Proxy = pg_store.NewProxyStorePostgres(db)
+		deps.Stores.ProxyPools = pg_store.NewProxyPoolStorePostgres(db)
+		deps.Stores.Keyword = pg_store.NewKeywordStorePostgres(db)
+		deps.Stores.AuditLog = pg_store.NewAuditLogStorePostgres(db)
+		deps.Stores.CampaignJob = pg_store.NewCampaignJobStorePostgres(db)
+	}
+
+	// Initialize session service (uses DB if available; defaults to relaxed config)
+	sessSvc, err := services.NewSessionService(deps.DB, nil, deps.Stores.AuditLog)
+	if err == nil {
+		deps.Session = sessSvc
+	}
+
+	// Initialize ProxyManager if DB and store available
+	if deps.DB != nil && deps.Stores.Proxy != nil {
+		pmCfg := appConfig.ProxyManager
+		if pmCfg.TestTimeout == 0 {
+			if appConfig.HTTPValidator.RequestTimeoutSeconds > 0 {
+				pmCfg.TestTimeout = time.Duration(appConfig.HTTPValidator.RequestTimeoutSeconds) * time.Second
+			} else {
+				pmCfg.TestTimeout = 30 * time.Second
+			}
+		}
+		deps.ProxyMgr = proxymanager.NewProxyManager(appConfig.Proxies, pmCfg, deps.Stores.Proxy, deps.DB)
+	}
+
+	// Initialize engines/services required by orchestrator
+	httpValSvc := httpvalidator.NewHTTPValidator(appConfig)
+	dnsValSvc := dnsvalidator.New(appConfig.DNSValidator)
+	var contentFetcherSvc *contentfetcher.ContentFetcher
+	if deps.ProxyMgr != nil {
+		contentFetcherSvc = contentfetcher.NewContentFetcher(appConfig, deps.ProxyMgr)
+	} else {
+		contentFetcherSvc = contentfetcher.NewContentFetcher(appConfig, nil)
+	}
+
+	// Domain services deps and implementations
+	simpleLogger := &SimpleLogger{}
+	domainDeps := domainservices.Dependencies{Logger: simpleLogger, DB: deps.DB}
+	domainGenSvc := domainservices.NewDomainGenerationService(deps.Stores.Campaign, domainDeps)
+	dnsValidationSvc := domainservices.NewDNSValidationService(dnsValSvc, deps.Stores.Campaign, domainDeps)
+	httpValidationSvc := domainservices.NewHTTPValidationService(deps.Stores.Campaign, domainDeps, httpValSvc)
+	analysisSvc := domainservices.NewAnalysisService(deps.Stores.Campaign, domainDeps, contentFetcherSvc)
+
+	// Stealth integration and wrappers
+	stealthIntegration := services.NewStealthIntegrationService(deps.DB, deps.Stores.Campaign, nil, nil)
+	stealthAwareDNS := domainservices.NewStealthAwareDNSValidationService(dnsValidationSvc, stealthIntegration)
+	stealthAwareHTTP := domainservices.NewStealthAwareHTTPValidationService(httpValidationSvc, stealthIntegration)
+	defaultStealth := services.DefaultStealthConfig()
+	stealthAwareDNS.EnableStealthMode(defaultStealth)
+	stealthAwareHTTP.EnableStealthMode(defaultStealth)
+
+	// SSE and Orchestrator
+	deps.SSE = services.NewSSEService()
+	if deps.Stores.Campaign != nil {
+		deps.Orchestrator = application.NewCampaignOrchestrator(
+			deps.Stores.Campaign,
+			domainDeps,
+			domainGenSvc,
+			stealthAwareDNS,
+			stealthAwareHTTP,
+			analysisSvc,
+			deps.SSE,
+		)
+	}
+
+	// Monitoring and cleanup services
+	deps.Monitoring = monitoring.NewMonitoringService(monitoring.DefaultMonitoringConfig())
+	_ = deps.Monitoring.Start(context.Background(), monitoring.DefaultMonitoringConfig())
+	deps.Cleanup = monitoring.NewCleanupService(deps.Monitoring.ResourceMonitor, deps.Monitoring, monitoring.DefaultCleanupConfig())
+	_ = deps.Cleanup.Start(context.Background())
+	// Global integration for convenience
+	monitoring.SetGlobalMonitoringIntegration(monitoring.NewCampaignMonitoringIntegration(deps.Monitoring))
+
+	// In-memory bulk operations tracker
+	deps.BulkOps = NewBulkOpsTracker()
+
+	return deps, nil
+}

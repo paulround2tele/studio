@@ -374,14 +374,6 @@ class Logger {
     warn: (message: string, data?: unknown) => this.warn('API', message, data),
   };
 
-  websocket = {
-    connect: (message: string, data?: unknown) => this.info('WEBSOCKET', `Connect: ${message}`, data),
-    disconnect: (message: string, data?: unknown) => this.info('WEBSOCKET', `Disconnect: ${message}`, data),
-    message: (message: string, data?: unknown) => this.debug('WEBSOCKET', `Message: ${message}`, data),
-    error: (message: string, error?: Error | unknown) => this.error('WEBSOCKET', message, error),
-    warn: (message: string, data?: unknown) => this.warn('WEBSOCKET', message, data),
-    success: (message: string, data?: unknown) => this.info('WEBSOCKET', message, data),
-  };
 
   campaign = {
     created: (message: string, data?: unknown) => this.info('CAMPAIGN', `Created: ${message}`, data),
@@ -442,7 +434,7 @@ const logger = getLogger();
 // Legacy exports for backward compatibility (used by existing code)
 export const logAuth = logger.auth;
 export const logAPI = logger.api;
-export const logWebSocket = logger.websocket;
+// WebSocket logging removed – no frontend WebSocket usage remains
 export const logCampaign = logger.campaign;
 export const logUI = logger.ui;
 

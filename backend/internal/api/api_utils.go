@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 // File: backend/internal/api/api_utils.go
 package api
 

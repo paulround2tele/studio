@@ -16,7 +16,6 @@ type BulkDomainGenerationRequest struct {
 }
 
 // DomainGenerationOperationConfig represents the configuration for domain generation operations
-// @Description Union type for different domain generation configuration patterns
 type DomainGenerationOperationConfig struct {
 	// Pattern-based generation (most common)
 	PatternBased *DomainGenerationPhaseConfig `json:"patternBased,omitempty" description:"Pattern-based domain generation configuration"`
@@ -42,7 +41,6 @@ type GenerationConstraints struct {
 }
 
 // DomainGenerationPhaseConfig represents standard pattern-based domain generation
-// @Description Configuration for pattern-based domain generation
 type DomainGenerationPhaseConfig struct {
 	PatternType          string   `json:"patternType" validate:"required,oneof=prefix suffix both" example:"prefix" description:"Pattern type for domain generation"`
 	VariableLength       int      `json:"variableLength" validate:"required,gt=0" example:"5" description:"Length of variable part"`

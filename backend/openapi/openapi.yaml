@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: Domain Flow API
   version: 2.0.0
-  description: API defined from server handlers. Source of truth is code under backend/internal/api.
+  description: API defined by OpenAPI spec and generated strict server under backend/cmd/apiserver using backend/internal/api/gen.
   license:
     name: MIT
     url: https://opensource.org/license/mit

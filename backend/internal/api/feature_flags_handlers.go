@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 // File: backend/internal/api/feature_flags_handlers.go
 package api
 
@@ -9,13 +12,6 @@ import (
 )
 
 // GetFeatureFlagsGin returns current feature flag settings.
-// @Summary Get feature flags
-// @Description Retrieve current feature flag settings
-// @Tags feature-flags
-// @ID getFeatureFlags
-// @Produce json
-// @Success 200 {object} APIResponse{data=config.FeatureFlags} "Feature flags settings"
-// @Router /feature-flags [get]
 func (h *APIHandler) GetFeatureFlagsGin(c *gin.Context) {
 	h.configMutex.RLock()
 	flags := h.Config.Features
@@ -24,17 +20,6 @@ func (h *APIHandler) GetFeatureFlagsGin(c *gin.Context) {
 }
 
 // UpdateFeatureFlagsGin updates feature flag settings.
-// @Summary Update feature flags
-// @Description Update feature flag settings
-// @Tags feature-flags
-// @ID updateFeatureFlags
-// @Accept json
-// @Produce json
-// @Param request body config.FeatureFlags true "Feature flags settings"
-// @Success 200 {object} APIResponse{data=config.FeatureFlags} "Updated feature flags"
-// @Failure 400 {object} APIResponse{error=ApiError} "Invalid request body"
-// @Failure 500 {object} APIResponse{error=ApiError} "Failed to save feature flags"
-// @Router /feature-flags [put]
 func (h *APIHandler) UpdateFeatureFlagsGin(c *gin.Context) {
 	var req config.FeatureFlags
 	if err := c.ShouldBindJSON(&req); err != nil {

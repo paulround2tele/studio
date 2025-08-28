@@ -1,0 +1,12 @@
+# github.com/fntelecomllc/studio/backend/internal/api/gen
+internal/api/gen/server.gen.go:2671:16: undefined: runtime.BindStyledParameterWithOptions
+internal/api/gen/server.gen.go:2671:126: undefined: runtime.BindStyledParameterOptions
+internal/api/gen/server.gen.go:2702:16: undefined: runtime.BindStyledParameterWithOptions
+internal/api/gen/server.gen.go:2702:126: undefined: runtime.BindStyledParameterOptions
+internal/api/gen/server.gen.go:2753:16: undefined: runtime.BindStyledParameterWithOptions
+internal/api/gen/server.gen.go:2753:129: undefined: runtime.BindStyledParameterOptions
+internal/api/gen/server.gen.go:2784:16: undefined: runtime.BindStyledParameterWithOptions
+internal/api/gen/server.gen.go:6340:16: undefined: CancelBulkOperation200JSONResponseDataStatus
+internal/api/gen/server.gen.go:12450:40: undefined: strictnethttp.StrictHTTPHandlerFunc
+internal/api/gen/server.gen.go:12451:43: undefined: strictnethttp.StrictHTTPMiddlewareFunc
+internal/api/gen/server.gen.go:2784:16: too many errors

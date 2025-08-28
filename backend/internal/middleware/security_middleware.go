@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 package middleware
 
 import (
@@ -99,7 +102,7 @@ func (m *SecurityMiddleware) EnhancedCORS() gin.HandlerFunc {
 		// Get allowed origins from environment variable
 		corsOrigins := os.Getenv("CORS_ORIGINS")
 		var allowedOrigins []string
-		
+
 		if corsOrigins != "" {
 			// Parse comma-separated origins from environment variable
 			allowedOrigins = strings.Split(corsOrigins, ",")

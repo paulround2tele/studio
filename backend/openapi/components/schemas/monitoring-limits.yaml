@@ -1,0 +1,29 @@
+MonitoringCampaignLimitsRequest:
+  type: object
+  properties:
+    maxConcurrentJobs:
+      type: integer
+      minimum: 0
+    rateLimitPerMinute:
+      type: integer
+      minimum: 0
+    maxCPUPercent:
+      type: number
+      format: float
+      minimum: 0
+      maximum: 100
+      description: Max CPU percent usable by campaign workers
+    maxMemoryMB:
+      type: integer
+      format: int64
+      minimum: 0
+      description: Max memory usage in MB
+    maxDiskMB:
+      type: integer
+      format: int64
+      minimum: 0
+      description: Max disk space usage in MB
+    maxDurationSeconds:
+      type: integer
+      minimum: 0
+      description: Max run duration in seconds

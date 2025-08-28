@@ -28,16 +28,16 @@ type SecurityEvent struct {
 	ID                  uuid.UUID        `db:"id" json:"id"`
 	EventType           string           `db:"event_type" json:"eventType"`
 	UserID              uuid.NullUUID    `db:"user_id" json:"userId,omitempty"`
-	SessionID           sql.NullString   `db:"session_id" json:"sessionId,omitempty" swaggertype:"string"`
+	SessionID           sql.NullString   `db:"session_id" json:"sessionId,omitempty"`
 	CampaignID          uuid.NullUUID    `db:"campaign_id" json:"campaignId,omitempty"`
-	ResourceType        sql.NullString   `db:"resource_type" json:"resourceType,omitempty" swaggertype:"string"`
-	ResourceID          sql.NullString   `db:"resource_id" json:"resourceId,omitempty" swaggertype:"string"`
+	ResourceType        sql.NullString   `db:"resource_type" json:"resourceType,omitempty"`
+	ResourceID          sql.NullString   `db:"resource_id" json:"resourceId,omitempty"`
 	ActionAttempted     string           `db:"action_attempted" json:"actionAttempted"`
 	AuthorizationResult string           `db:"authorization_result" json:"authorizationResult"`
-	DenialReason        sql.NullString   `db:"denial_reason" json:"denialReason,omitempty" swaggertype:"string"`
+	DenialReason        sql.NullString   `db:"denial_reason" json:"denialReason,omitempty"`
 	RiskScore           int              `db:"risk_score" json:"riskScore"`
 	SourceIP            *net.IP          `db:"source_ip" json:"sourceIp,omitempty"`
-	UserAgent           sql.NullString   `db:"user_agent" json:"userAgent,omitempty" swaggertype:"string"`
+	UserAgent           sql.NullString   `db:"user_agent" json:"userAgent,omitempty"`
 	RequestContext      *json.RawMessage `db:"request_context" json:"requestContext,omitempty"`
 	AuditLogID          uuid.NullUUID    `db:"audit_log_id" json:"auditLogId,omitempty"`
 	CreatedAt           time.Time        `db:"created_at" json:"createdAt"`
@@ -52,7 +52,7 @@ type AuthorizationDecision struct {
 	ResourceID        string           `db:"resource_id" json:"resourceId"`
 	Action            string           `db:"action" json:"action"`
 	Decision          string           `db:"decision" json:"decision"`
-	PolicyVersion     sql.NullString   `db:"policy_version" json:"policyVersion,omitempty" swaggertype:"string"`
+	PolicyVersion     sql.NullString   `db:"policy_version" json:"policyVersion,omitempty"`
 	EvaluatedPolicies pq.StringArray   `db:"evaluated_policies" json:"evaluatedPolicies,omitempty"`
 	ConditionsMet     *json.RawMessage `db:"conditions_met" json:"conditionsMet,omitempty"`
 	DecisionTimeMs    int              `db:"decision_time_ms" json:"decisionTimeMs"`
@@ -97,7 +97,7 @@ type CacheEntry struct {
 	CacheKey             string           `db:"cache_key" json:"cacheKey"`
 	CacheNamespace       string           `db:"cache_namespace" json:"cacheNamespace"`
 	ServiceName          string           `db:"service_name" json:"serviceName"`
-	CampaignPhase        sql.NullString   `db:"campaign_phase" json:"campaignPhase,omitempty" swaggertype:"string"` // Phase-based tracking for security analytics
+	CampaignPhase        sql.NullString   `db:"campaign_phase" json:"campaignPhase,omitempty"` // Phase-based tracking for security analytics
 	CampaignID           uuid.NullUUID    `db:"campaign_id" json:"campaignId,omitempty"`
 	CacheValue           *string          `db:"cache_value" json:"cacheValue,omitempty"`
 	CacheValueCompressed []byte           `db:"cache_value_compressed" json:"cacheValueCompressed,omitempty"`
@@ -122,12 +122,12 @@ type CacheInvalidationLog struct {
 	InvalidationPattern string         `db:"invalidation_pattern" json:"invalidationPattern"`
 	InvalidationReason  string         `db:"invalidation_reason" json:"invalidationReason"`
 	AffectedKeysCount   int            `db:"affected_keys_count" json:"affectedKeysCount"`
-	CampaignPhase       sql.NullString   `db:"campaign_phase" json:"campaignPhase,omitempty" swaggertype:"string"` // Phase-based tracking for security analytics
+	CampaignPhase       sql.NullString `db:"campaign_phase" json:"campaignPhase,omitempty"` // Phase-based tracking for security analytics
 	CampaignID          uuid.NullUUID  `db:"campaign_id" json:"campaignId,omitempty"`
 	TriggeredBy         string         `db:"triggered_by" json:"triggeredBy"`
 	ExecutionTimeMs     float64        `db:"execution_time_ms" json:"executionTimeMs"`
 	Success             bool           `db:"success" json:"success"`
-	ErrorMessage        sql.NullString   `db:"error_message" json:"errorMessage,omitempty" swaggertype:"string"`
+	ErrorMessage        sql.NullString `db:"error_message" json:"errorMessage,omitempty"`
 	ExecutedAt          time.Time      `db:"executed_at" json:"executedAt"`
 }
 
@@ -136,7 +136,7 @@ type CacheInvalidation struct {
 	ID                 uuid.UUID        `db:"id" json:"id"`
 	CacheName          string           `db:"cache_name" json:"cacheName"`
 	InvalidationType   string           `db:"invalidation_type" json:"invalidationType"`
-	InvalidationReason sql.NullString   `db:"invalidation_reason" json:"invalidationReason,omitempty" swaggertype:"string"`
+	InvalidationReason sql.NullString   `db:"invalidation_reason" json:"invalidationReason,omitempty"`
 	KeysInvalidated    int              `db:"keys_invalidated" json:"keysInvalidated"`
 	BytesFreed         int64            `db:"bytes_freed" json:"bytesFreed"`
 	OperationContext   *json.RawMessage `db:"operation_context" json:"operationContext,omitempty"`
@@ -148,7 +148,7 @@ type CacheMetric struct {
 	ID              uuid.UUID      `db:"id" json:"id"`
 	ServiceName     string         `db:"service_name" json:"serviceName"`
 	CacheNamespace  string         `db:"cache_namespace" json:"cacheNamespace"`
-	CampaignPhase   sql.NullString   `db:"campaign_phase" json:"campaignPhase,omitempty" swaggertype:"string"` // Phase-based tracking for security analytics
+	CampaignPhase   sql.NullString `db:"campaign_phase" json:"campaignPhase,omitempty"` // Phase-based tracking for security analytics
 	OperationType   string         `db:"operation_type" json:"operationType"`
 	CacheKey        string         `db:"cache_key" json:"cacheKey"`
 	ExecutionTimeMs float64        `db:"execution_time_ms" json:"executionTimeMs"`

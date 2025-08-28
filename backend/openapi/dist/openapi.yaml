@@ -2395,12 +2395,7 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                maxConcurrentJobs:
-                  type: integer
-                rateLimitPerMinute:
-                  type: integer
+              $ref: '#/components/schemas/MonitoringCampaignLimitsRequest'
       responses:
         '200':
           description: Updated
@@ -3448,10 +3443,7 @@ paths:
                             type: string
                             format: uuid
                           status:
-                            type: string
-                            enum:
-                              - cancelled
-                              - cancelling
+                            $ref: '#/components/schemas/BulkOperationCancelStatus'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -4505,6 +4497,35 @@ components:
       description: Feature flags map
       additionalProperties:
         type: boolean
+    MonitoringCampaignLimitsRequest:
+      type: object
+      properties:
+        maxConcurrentJobs:
+          type: integer
+          minimum: 0
+        rateLimitPerMinute:
+          type: integer
+          minimum: 0
+        maxCPUPercent:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: Max CPU percent usable by campaign workers
+        maxMemoryMB:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Max memory usage in MB
+        maxDiskMB:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Max disk space usage in MB
+        maxDurationSeconds:
+          type: integer
+          minimum: 0
+          description: Max run duration in seconds
     LoginRequest:
       type: object
       properties:
@@ -5439,6 +5460,11 @@ components:
         - status
         - resources
         - allocation
+    BulkOperationCancelStatus:
+      type: string
+      enum:
+        - cancelled
+        - cancelling
     KeywordSetWithRulesResponse:
       type: object
       properties:

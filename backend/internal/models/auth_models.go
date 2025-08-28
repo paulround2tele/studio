@@ -8,7 +8,6 @@ import (
 )
 
 // User represents a user in the authentication system
-// @Description User account information
 type User struct {
 	ID                       uuid.UUID  `json:"id" db:"id"`
 	Email                    string     `json:"email" db:"email"`
@@ -25,7 +24,7 @@ type User struct {
 	FailedLoginAttempts      int        `json:"-" db:"failed_login_attempts"`
 	LockedUntil              *time.Time `json:"-" db:"locked_until"`
 	LastLoginAt              *time.Time `json:"lastLoginAt" db:"last_login_at"`
-	LastLoginIP              *net.IP    `json:"lastLoginIp" db:"last_login_ip" swaggertype:"string" example:"192.168.1.1"`
+	LastLoginIP              *net.IP    `json:"lastLoginIp" db:"last_login_ip" example:"192.168.1.1"`
 	PasswordChangedAt        time.Time  `json:"-" db:"password_changed_at"`
 	MustChangePassword       bool       `json:"mustChangePassword" db:"must_change_password"`
 

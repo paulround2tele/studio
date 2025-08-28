@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 // File: backend/internal/api/bulk_analytics_handlers.go
 package api
 
@@ -25,19 +28,6 @@ func NewBulkAnalyticsAPIHandler(orchestrator *application.CampaignOrchestrator) 
 	}
 }
 
-// @Summary Analyze domains in bulk with enterprise intelligence
-// @Description Perform comprehensive analytics across multiple campaigns with advanced metrics and aggregation
-// @Tags bulk-operations,analytics
-// @ID bulkAnalyzeDomains
-// @Accept json
-// @Produce json
-// @Param request body models.BulkAnalyticsRequest true "Bulk analytics request"
-// @Success 200 {object} APIResponse{data=models.BulkAnalyticsResponse} "Analytics completed successfully"
-// @Success 202 {object} APIResponse{data=models.BulkAnalyticsResponse} "Analytics accepted and processing"
-// @Failure 400 {object} APIResponse "Bad Request - Invalid configuration"
-// @Failure 429 {object} APIResponse "Rate Limited - Too many concurrent analytics"
-// @Failure 500 {object} APIResponse "Internal Server Error"
-// @Router /campaigns/bulk/analytics/analyze [post]
 func (h *BulkAnalyticsAPIHandler) BulkAnalyzeDomains(c *gin.Context) {
 	var request models.BulkAnalyticsRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -178,19 +168,7 @@ func (h *BulkAnalyticsAPIHandler) BulkAnalyzeDomains(c *gin.Context) {
 	c.JSON(http.StatusOK, envelope)
 }
 
-// @Summary Manage bulk campaign operations
-// @Description Perform bulk operations on multiple campaigns (start, stop, pause, resume, delete, configure)
-// @Tags bulk-operations,campaigns
-// @ID bulkCampaignOperations
-// @Accept json
-// @Produce json
-// @Param request body models.BulkCampaignOperationRequest true "Bulk campaign operation request"
-// @Success 200 {object} APIResponse{data=models.BulkCampaignOperationResponse} "Campaign operations completed successfully"
-// @Success 202 {object} APIResponse{data=models.BulkCampaignOperationResponse} "Operations accepted and processing"
-// @Failure 400 {object} APIResponse "Bad Request - Invalid operation or campaign IDs"
-// @Failure 409 {object} APIResponse "Conflict - Campaign state conflicts"
-// @Failure 500 {object} APIResponse "Internal Server Error"
-// @Router /campaigns/bulk/domains/analyze [post]
+//
 
 // getNewStateForOperation returns the expected new state for a campaign operation
 func getNewStateForOperation(operation string) string {

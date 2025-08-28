@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 // File: backend/internal/api/keyword_extraction_handlers.go
 package api
 
@@ -27,16 +30,6 @@ const (
 )
 
 // BatchExtractKeywordsGin performs batch keyword extraction on multiple URLs.
-// @Summary Batch keyword extraction
-// @Description Extract keywords from multiple URLs using specified keyword sets and personas
-// @Tags keyword-extraction
-// @ID keywordExtractionBatch
-// @Accept json
-// @Produce json
-// @Param request body BatchKeywordExtractionRequest true "Batch extraction request"
-// @Success 200 {object} APIResponse{data=BatchKeywordExtractionResponse} "Extraction results"
-// @Failure 400 {object} APIResponse{error=ApiError} "Invalid request body or validation failed"
-// @Router /extract/keywords [post]
 func (h *APIHandler) BatchExtractKeywordsGin(c *gin.Context) {
 	var req BatchKeywordExtractionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -218,18 +211,6 @@ sendResponseGin:
 }
 
 // StreamExtractKeywordsGin performs streaming keyword extraction on a single URL.
-// @Summary Stream keyword extraction
-// @Description Extract keywords from a single URL with real-time streaming results
-// @Tags keyword-extraction
-// @ID keywordExtractionStream
-// @Produce text/event-stream
-// @Param url query string true "URL to extract keywords from"
-// @Param keywordSetId query string true "Keyword set ID to use for extraction"
-// @Param httpPersonaId query string false "HTTP persona ID for request customization"
-// @Param dnsPersonaId query string false "DNS persona ID for DNS customization"
-// @Success 200 {string} string "Server-sent events stream with extraction results"
-// @Failure 400 {object} APIResponse "Invalid query parameters"
-// @Router /extract/keywords/stream [get]
 func (h *APIHandler) StreamExtractKeywordsGin(c *gin.Context) {
 	flusher, ok := c.Writer.(http.Flusher)
 	if !ok {
@@ -355,24 +336,24 @@ func (h *APIHandler) StreamExtractKeywordsGin(c *gin.Context) {
 // streamResultEventGin sends a single KeywordExtractionAPIResult as an SSE event using Gin.
 func streamResultEventGin(c *gin.Context, flusher http.Flusher, eventID string, result KeywordExtractionAPIResult) {
 	// Check if client is still connected before attempting to write
-    select {
-    case <-c.Request.Context().Done():
-        log.Printf("streamResultEventGin: Client disconnected for eventID %s, URL %s", eventID, result.URL)
-        return
-    default:
-    }
+	select {
+	case <-c.Request.Context().Done():
+		log.Printf("streamResultEventGin: Client disconnected for eventID %s, URL %s", eventID, result.URL)
+		return
+	default:
+	}
 	c.SSEvent("keyword_extraction_result", result)
 	flusher.Flush()
 }
 
 // streamDoneEventGin sends the done event for SSE using Gin.
 func streamDoneEventGin(c *gin.Context, flusher http.Flusher, message string) {
-    select {
-    case <-c.Request.Context().Done():
-        log.Printf("streamDoneEventGin: Client disconnected before sending done event.")
-        return
-    default:
-    }
+	select {
+	case <-c.Request.Context().Done():
+		log.Printf("streamDoneEventGin: Client disconnected before sending done event.")
+		return
+	default:
+	}
 	c.SSEvent("done", SuccessMessageResponse{Message: message})
 	flusher.Flush()
 }

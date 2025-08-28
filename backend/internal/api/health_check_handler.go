@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 package api
 
 import (
@@ -58,13 +61,6 @@ func NewHealthCheckHandler(db *sql.DB) *HealthCheckHandler {
 }
 
 // HandleHealthCheck handles GET /health requests
-// @Summary Health check
-// @Description Get overall system health status including component checks
-// @Tags health
-// @ID healthCheck
-// @Produce json
-// @Success 200 {object} APIResponse{data=HealthStatus} "System health status"
-// @Router /health [get]
 func (h *HealthCheckHandler) HandleHealthCheck(c *gin.Context) {
 	status := HealthStatus{
 		Status:      "ok",
@@ -95,14 +91,6 @@ func (h *HealthCheckHandler) HandleHealthCheck(c *gin.Context) {
 }
 
 // HandleReadinessCheck handles GET /health/ready requests
-// @Summary Readiness check
-// @Description Check if the service is ready to accept requests
-// @Tags health
-// @ID healthReadiness
-// @Produce json
-// @Success 200 {object} APIResponse{data=HealthCheckResponse} "Service is ready"
-// @Failure 503 {object} APIResponse "Service not ready"
-// @Router /health/ready [get]
 func (h *HealthCheckHandler) HandleReadinessCheck(c *gin.Context) {
 	// Check if database is ready
 	dbStatus := h.checkDatabaseStatus()
@@ -117,13 +105,6 @@ func (h *HealthCheckHandler) HandleReadinessCheck(c *gin.Context) {
 }
 
 // HandleLivenessCheck handles GET /health/live requests
-// @Summary Liveness check
-// @Description Check if the service is alive and responding
-// @Tags health
-// @ID healthLiveness
-// @Produce json
-// @Success 200 {object} APIResponse{data=HealthCheckResponse} "Service is alive"
-// @Router /health/live [get]
 func (h *HealthCheckHandler) HandleLivenessCheck(c *gin.Context) {
 	// For liveness, we just check if the service is running
 	aliveResponse := HealthCheckResponse{Status: "alive"}

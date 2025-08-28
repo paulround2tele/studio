@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 // File: backend/internal/api/proxy_handlers.go
 package api
 
@@ -17,7 +20,8 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/proxymanager"
 	"github.com/fntelecomllc/studio/backend/internal/store"
-	"github.com/fntelecomllc/studio/backend/internal/websocket"
+
+	// WS removed
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -30,28 +34,28 @@ import (
 
 // CreateProxyRequestAPI documents the public request schema without leaking internal enums.
 type CreateProxyRequestAPI struct {
-    Name        string         `json:"name" validate:"required,min=1,max=255"`
-    Description string         `json:"description,omitempty"`
-    Address     string         `json:"address" validate:"required"`
-    Protocol    ProxyProtocol  `json:"protocol,omitempty"`
-    Username    string         `json:"username,omitempty"`
-    Password    string         `json:"password,omitempty"`
-    CountryCode string         `json:"countryCode,omitempty"`
-    IsEnabled   *bool          `json:"isEnabled,omitempty"`
-    Notes       string         `json:"notes,omitempty"`
+	Name        string        `json:"name" validate:"required,min=1,max=255"`
+	Description string        `json:"description,omitempty"`
+	Address     string        `json:"address" validate:"required"`
+	Protocol    ProxyProtocol `json:"protocol,omitempty"`
+	Username    string        `json:"username,omitempty"`
+	Password    string        `json:"password,omitempty"`
+	CountryCode string        `json:"countryCode,omitempty"`
+	IsEnabled   *bool         `json:"isEnabled,omitempty"`
+	Notes       string        `json:"notes,omitempty"`
 }
 
 // UpdateProxyRequestAPI documents the public update schema without internal enums.
 type UpdateProxyRequestAPI struct {
-    Name        *string        `json:"name,omitempty" validate:"omitempty,min=1,max=255"`
-    Description *string        `json:"description,omitempty"`
-    Address     *string        `json:"address,omitempty"`
-    Protocol    *ProxyProtocol `json:"protocol,omitempty"`
-    Username    *string        `json:"username,omitempty"`
-    Password    *string        `json:"password,omitempty"`
-    CountryCode *string        `json:"countryCode,omitempty"`
-    IsEnabled   *bool          `json:"isEnabled,omitempty"`
-    Notes       *string        `json:"notes,omitempty"`
+	Name        *string        `json:"name,omitempty" validate:"omitempty,min=1,max=255"`
+	Description *string        `json:"description,omitempty"`
+	Address     *string        `json:"address,omitempty"`
+	Protocol    *ProxyProtocol `json:"protocol,omitempty"`
+	Username    *string        `json:"username,omitempty"`
+	Password    *string        `json:"password,omitempty"`
+	CountryCode *string        `json:"countryCode,omitempty"`
+	IsEnabled   *bool          `json:"isEnabled,omitempty"`
+	Notes       *string        `json:"notes,omitempty"`
 }
 
 // Helper to convert models.Proxy to config.ProxyConfigEntry
@@ -110,19 +114,6 @@ func toListProxyDetailsResponse(proxies []*models.Proxy) []ProxyDetailsResponse 
 // --- Gin Handlers for Proxies ---
 
 // ListProxiesGin lists all proxies.
-// @Summary List proxies
-// @Description Retrieve a list of proxies with optional filtering by protocol, status, and health
-// @Tags proxies
-// @ID listProxies
-// @Produce json
-// @Param limit query int false "Maximum number of results" default(100)
-// @Param offset query int false "Number of results to skip" default(0)
-// @Param protocol query string false "Filter by protocol (http, https, socks4, socks5)"
-// @Param isEnabled query bool false "Filter by enabled status"
-// @Param isHealthy query bool false "Filter by health status"
-// @Success 200 {object} APIResponse{data=[]ProxyDetailsResponse} "List of proxies"
-// @Failure 500 {object} APIResponse{error=ApiError} "Failed to list proxies"
-// @Router /proxies [get]
 func (h *APIHandler) ListProxiesGin(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "100"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
@@ -175,18 +166,6 @@ func (h *APIHandler) ListProxiesGin(c *gin.Context) {
 }
 
 // AddProxyGin adds a new proxy.
-// @Summary Create proxy
-// @Description Add a new proxy configuration
-// @Tags proxies
-// @ID createProxy
-// @Accept json
-// @Produce json
-// @Param request body CreateProxyRequestAPI true "Proxy creation request"
-// @Success 201 {object} APIResponse{data=ProxyDetailsResponse} "Created proxy"
-// @Failure 400 {object} APIResponse{error=ApiError} "Invalid request payload or validation failed"
-// @Failure 409 {object} APIResponse{error=ApiError} "Proxy with address already exists"
-// @Failure 500 {object} APIResponse{error=ApiError} "Failed to create proxy"
-// @Router /proxies [post]
 func (h *APIHandler) AddProxyGin(c *gin.Context) {
 	var req models.CreateProxyRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -297,27 +276,13 @@ func (h *APIHandler) AddProxyGin(c *gin.Context) {
 		return
 	}
 
-	// Broadcast proxy creation to WebSocket clients
-	websocket.BroadcastProxyCreated(proxy.ID.String(), proxy)
-	log.Printf("Proxy created and broadcasted: %s", proxy.ID)
+	// Realtime broadcast via WebSocket removed
+	log.Printf("Proxy created: %s", proxy.ID)
 
 	respondWithJSONGin(c, http.StatusCreated, toProxyDetailsResponse(proxy))
 }
 
 // UpdateProxyGin updates a proxy.
-// @Summary Update proxy
-// @Description Update an existing proxy configuration
-// @Tags proxies
-// @ID updateProxy
-// @Accept json
-// @Produce json
-// @Param proxyId path string true "Proxy ID"
-// @Param request body UpdateProxyRequestAPI true "Proxy update request"
-// @Success 200 {object} APIResponse{data=ProxyDetailsResponse} "Updated proxy"
-// @Failure 400 {object} APIResponse{error=ApiError} "Invalid request payload or validation failed"
-// @Failure 404 {object} APIResponse{error=ApiError} "Proxy not found"
-// @Failure 500 {object} APIResponse{error=ApiError} "Failed to update proxy"
-// @Router /proxies/{proxyId} [put]
 func (h *APIHandler) UpdateProxyGin(c *gin.Context) {
 	proxyIDStr := c.Param("proxyId")
 	proxyID, err := uuid.Parse(proxyIDStr)
@@ -457,24 +422,13 @@ func (h *APIHandler) UpdateProxyGin(c *gin.Context) {
 		return
 	}
 
-	// Broadcast proxy update to WebSocket clients
-	websocket.BroadcastProxyUpdated(existingProxy.ID.String(), existingProxy)
-	log.Printf("Proxy updated and broadcasted: %s", existingProxy.ID)
+	// Realtime broadcast via WebSocket removed
+	log.Printf("Proxy updated: %s", existingProxy.ID)
 
 	respondWithJSONGin(c, http.StatusOK, toProxyDetailsResponse(existingProxy))
 }
 
 // DeleteProxyGin deletes a proxy.
-// @Summary Delete proxy
-// @Description Delete a proxy by ID
-// @Tags proxies
-// @ID deleteProxy
-// @Param proxyId path string true "Proxy ID"
-// @Success 200 {object} APIResponse{data=DeletionResponse} "Proxy deleted successfully"
-// @Failure 400 {object} APIResponse{error=ApiError} "Invalid proxy ID format"
-// @Failure 404 {object} APIResponse{error=ApiError} "Proxy not found"
-// @Failure 500 {object} APIResponse{error=ApiError} "Failed to delete proxy"
-// @Router /proxies/{proxyId} [delete]
 func (h *APIHandler) DeleteProxyGin(c *gin.Context) {
 	proxyIDStr := c.Param("proxyId")
 	proxyID, err := uuid.Parse(proxyIDStr)
@@ -554,9 +508,8 @@ func (h *APIHandler) DeleteProxyGin(c *gin.Context) {
 		return
 	}
 
-	// Broadcast proxy deletion to WebSocket clients
-	websocket.BroadcastProxyDeleted(proxyID.String())
-	log.Printf("Proxy deleted and broadcasted: %s", proxyID)
+	// Realtime broadcast via WebSocket removed
+	log.Printf("Proxy deleted: %s", proxyID)
 
 	respondWithJSONGin(c, http.StatusOK, DeletionResponse{
 		Success: true,
@@ -566,14 +519,6 @@ func (h *APIHandler) DeleteProxyGin(c *gin.Context) {
 }
 
 // GetProxyStatusesGin returns proxy statuses.
-// @Summary Get proxy statuses
-// @Description Retrieve the current status of all proxies
-// @Tags proxies
-// @ID listProxyStatuses
-// @Produce json
-// @Success 200 {object} APIResponse{data=[]ProxyStatusResponse} "Proxy status information"
-// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
-// @Router /proxies/status [get]
 func (h *APIHandler) GetProxyStatusesGin(c *gin.Context) {
 	if h.ProxyMgr == nil {
 		respondWithErrorGin(c, http.StatusInternalServerError, "ProxyManager not available")
@@ -585,17 +530,6 @@ func (h *APIHandler) GetProxyStatusesGin(c *gin.Context) {
 }
 
 // ForceCheckSingleProxyGin triggers health check for single proxy.
-// @Summary Health check single proxy
-// @Description Force a health check for a specific proxy
-// @Tags proxies
-// @ID healthCheckProxy
-// @Produce json
-// @Param proxyId path string true "Proxy ID"
-// @Success 200 {object} APIResponse{data=ProxyHealthCheckResponse} "Health check completed"
-// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
-// @Failure 404 {object} APIResponse{error=ApiError} "Proxy not found"
-// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
-// @Router /proxies/{proxyId}/health-check [post]
 func (h *APIHandler) ForceCheckSingleProxyGin(c *gin.Context) {
 	if h.ProxyMgr == nil {
 		respondWithErrorGin(c, http.StatusInternalServerError, "ProxyManager not available")
@@ -620,14 +554,6 @@ func (h *APIHandler) ForceCheckSingleProxyGin(c *gin.Context) {
 }
 
 // ForceCheckAllProxiesGin triggers health checks for all proxies.
-// @Summary Health check all proxies
-// @Description Force health checks for all proxies
-// @Tags proxies
-// @ID healthCheckAllProxies
-// @Produce json
-// @Success 200 {object} APIResponse{data=BulkHealthCheckResponse} "Health checks completed"
-// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
-// @Router /proxies/health-check [post]
 func (h *APIHandler) ForceCheckAllProxiesGin(c *gin.Context) {
 	if h.ProxyMgr == nil {
 		respondWithErrorGin(c, http.StatusInternalServerError, "ProxyManager not available")
@@ -657,17 +583,6 @@ func (h *APIHandler) ForceCheckAllProxiesGin(c *gin.Context) {
 }
 
 // TestProxyGin tests a proxy.
-// @Summary Test proxy
-// @Description Test a proxy configuration
-// @Tags proxies
-// @ID testProxy
-// @Produce json
-// @Param proxyId path string true "Proxy ID"
-// @Success 200 {object} APIResponse{data=ProxyTestResponse} "Test results"
-// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
-// @Failure 404 {object} APIResponse{error=ApiError} "Proxy not found"
-// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
-// @Router /proxies/{proxyId}/test [post]
 func (h *APIHandler) TestProxyGin(c *gin.Context) {
 	proxyIDStr := c.Param("proxyId")
 	proxyID, err := uuid.Parse(proxyIDStr)
@@ -702,17 +617,6 @@ func (h *APIHandler) TestProxyGin(c *gin.Context) {
 }
 
 // BulkUpdateProxiesGin updates proxies in bulk.
-// @Summary Bulk update proxies
-// @Description Update multiple proxies in one request
-// @Tags proxies
-// @ID bulkUpdateProxies
-// @Accept json
-// @Produce json
-// @Param request body models.BulkUpdateProxiesRequest true "Bulk update request"
-// @Success 200 {object} APIResponse{data=models.BulkProxyOperationResponse} "Bulk operation results"
-// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
-// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
-// @Router /proxies/bulk/update [put]
 func (h *APIHandler) BulkUpdateProxiesGin(c *gin.Context) {
 	var req models.BulkUpdateProxiesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -849,8 +753,7 @@ func (h *APIHandler) BulkUpdateProxiesGin(c *gin.Context) {
 				continue
 			}
 
-			// Broadcast proxy update
-			websocket.BroadcastProxyUpdated(proxy.ID.String(), proxy)
+			// Realtime broadcast via WebSocket removed
 		}
 
 		response.SuccessfulProxies = append(response.SuccessfulProxies, proxy.ID.String())
@@ -879,17 +782,6 @@ func (h *APIHandler) BulkUpdateProxiesGin(c *gin.Context) {
 }
 
 // BulkDeleteProxiesGin deletes proxies in bulk.
-// @Summary Bulk delete proxies
-// @Description Delete multiple proxies in one request
-// @Tags proxies
-// @ID bulkDeleteProxies
-// @Accept json
-// @Produce json
-// @Param request body models.BulkDeleteProxiesRequest true "Bulk delete request"
-// @Success 200 {object} APIResponse{data=models.BulkProxyOperationResponse} "Bulk operation results"
-// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
-// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
-// @Router /proxies/bulk/delete [delete]
 func (h *APIHandler) BulkDeleteProxiesGin(c *gin.Context) {
 	var req models.BulkDeleteProxiesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -995,8 +887,7 @@ func (h *APIHandler) BulkDeleteProxiesGin(c *gin.Context) {
 			// Don't fail the operation for audit log errors
 		}
 
-		// Broadcast proxy deletion
-		websocket.BroadcastProxyDeleted(proxyID.String())
+		// Realtime broadcast via WebSocket removed
 		response.SuccessfulProxies = append(response.SuccessfulProxies, proxyID.String())
 	}
 
@@ -1008,17 +899,6 @@ func (h *APIHandler) BulkDeleteProxiesGin(c *gin.Context) {
 }
 
 // BulkTestProxiesGin tests proxies in bulk.
-// @Summary Bulk test proxies
-// @Description Test multiple proxies in one request
-// @Tags proxies
-// @ID bulkTestProxies
-// @Accept json
-// @Produce json
-// @Param request body models.BulkTestProxiesRequest true "Bulk test request"
-// @Success 200 {object} APIResponse{data=BulkProxyTestResponse} "Bulk test results"
-// @Failure 400 {object} APIResponse{error=ApiError} "Bad Request"
-// @Failure 500 {object} APIResponse{error=ApiError} "Internal Server Error"
-// @Router /proxies/bulk/test [post]
 func (h *APIHandler) BulkTestProxiesGin(c *gin.Context) {
 	var req models.BulkTestProxiesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

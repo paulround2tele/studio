@@ -85,20 +85,21 @@ jobs:
       - name: Install frontend tooling
         run: npm ci
 
-      - name: Validate OpenAPI 3.1 spec
+  - name: Validate OpenAPI 3.1 spec
         run: |
           set -euo pipefail
           bash scripts/validate-openapi-spec.sh
 
-      - name: Contract hygiene checks
+    - name: Contract hygiene checks
         run: |
           set -euo pipefail
-          SPEC=backend/openapi/openapi.yaml
-          echo "Checking for empty or missing operationIds..."
-          if rg -n "^\s*operationId:\s*$" "$SPEC"; then echo "Empty operationId entries" >&2; exit 1; fi
-          if ! rg -n "^\s*operationId:\s+" "$SPEC" > /dev/null; then echo "No operationIds found" >&2; exit 1; fi
-          echo "Checking for SuccessEnvelope usage..."
-          if ! rg -n "SuccessEnvelope" "$SPEC" > /dev/null; then echo "SuccessEnvelope not referenced" >&2; exit 1; fi
+      # Use validate script to auto-pick bundled spec
+      SPEC=backend/openapi/dist/openapi.yaml
+      echo "Checking for empty or missing operationIds..."
+      if rg -n "^\s*operationId:\s*$" "$SPEC"; then echo "Empty operationId entries" >&2; exit 1; fi
+      if ! rg -n "^\s*operationId:\s+" "$SPEC" > /dev/null; then echo "No operationIds found" >&2; exit 1; fi
+      echo "Checking for SuccessEnvelope usage..."
+      if ! rg -n "SuccessEnvelope" "$SPEC" > /dev/null; then echo "SuccessEnvelope not referenced" >&2; exit 1; fi
           echo "Ensuring swaggo fossils are gone..."
           if rg -n "swaggo|swagger|backend/docs" -S backend || rg -n "swaggo|swagger|backend/docs" -S .github; then echo "Swagger fossils detected" >&2; exit 1; fi
 

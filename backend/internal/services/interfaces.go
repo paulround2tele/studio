@@ -307,7 +307,6 @@ type PhaseConfig struct {
 }
 
 // DomainGenerationPhaseConfig contains domain generation phase parameters
-// @Description Configuration for domain generation phase
 type DomainGenerationPhaseConfig struct {
 	PatternType          string   `json:"patternType" validate:"required,oneof=prefix suffix both" example:"prefix" description:"Pattern type for domain generation"`
 	VariableLength       int      `json:"variableLength" validate:"required,gt=0" example:"5" description:"Length of variable part"`

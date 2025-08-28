@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 // File: backend/internal/api/keyword_set_handlers.go
 package api
 
@@ -12,7 +15,8 @@ import (
 
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
-	"github.com/fntelecomllc/studio/backend/internal/websocket"
+
+	// WS removed
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -22,11 +26,11 @@ import (
 // --- DTOs for KeywordSet API ---
 
 type KeywordRuleRequest struct {
-    Pattern         string          `json:"pattern" validate:"required"`
-    RuleType        KeywordRuleType `json:"ruleType" validate:"required,oneof=string regex"`
-    IsCaseSensitive bool            `json:"isCaseSensitive"`
-    Category        string          `json:"category,omitempty"`
-    ContextChars    int             `json:"contextChars,omitempty" validate:"gte=0"`
+	Pattern         string          `json:"pattern" validate:"required"`
+	RuleType        KeywordRuleType `json:"ruleType" validate:"required,oneof=string regex"`
+	IsCaseSensitive bool            `json:"isCaseSensitive"`
+	Category        string          `json:"category,omitempty"`
+	ContextChars    int             `json:"contextChars,omitempty" validate:"gte=0"`
 }
 
 type CreateKeywordSetRequest struct {
@@ -104,18 +108,6 @@ func toKeywordSetResponse(ks *models.KeywordSet, rules []models.KeywordRule) Key
 // --- Gin Handlers for KeywordSets ---
 
 // CreateKeywordSetGin creates a new keyword set.
-// @Summary Create keyword set
-// @Description Create a new keyword set with optional rules
-// @Tags keyword-sets
-// @ID createKeywordSet
-// @Accept json
-// @Produce json
-// @Param request body CreateKeywordSetRequest true "Keyword set creation request"
-// @Success 201 {object} APIResponse{data=KeywordSetResponse} "Created keyword set"
-// @Failure 400 {object} APIResponse{error=ApiError} "Invalid request payload or validation failed"
-// @Failure 409 {object} APIResponse{error=ApiError} "Keyword set with name already exists"
-// @Failure 500 {object} APIResponse{error=ApiError} "Failed to create keyword set"
-// @Router /keywords/sets [post]
 func (h *APIHandler) CreateKeywordSetGin(c *gin.Context) {
 	var req CreateKeywordSetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -208,17 +200,17 @@ func (h *APIHandler) CreateKeywordSetGin(c *gin.Context) {
 	if len(req.Rules) > 0 {
 		modelRules := make([]*models.KeywordRule, len(req.Rules))
 		for i, rReq := range req.Rules {
-            modelRules[i] = &models.KeywordRule{
-                ID:              uuid.New(),
-                KeywordSetID:    setID,
-                Pattern:         rReq.Pattern,
-                RuleType:        models.KeywordRuleTypeEnum(rReq.RuleType),
-                IsCaseSensitive: rReq.IsCaseSensitive,
-                Category:        sql.NullString{String: rReq.Category, Valid: rReq.Category != ""},
-                ContextChars:    rReq.ContextChars,
-                CreatedAt:       now,
-                UpdatedAt:       now,
-            }
+			modelRules[i] = &models.KeywordRule{
+				ID:              uuid.New(),
+				KeywordSetID:    setID,
+				Pattern:         rReq.Pattern,
+				RuleType:        models.KeywordRuleTypeEnum(rReq.RuleType),
+				IsCaseSensitive: rReq.IsCaseSensitive,
+				Category:        sql.NullString{String: rReq.Category, Valid: rReq.Category != ""},
+				ContextChars:    rReq.ContextChars,
+				CreatedAt:       now,
+				UpdatedAt:       now,
+			}
 		}
 		if errCreateRules := h.KeywordStore.CreateKeywordRules(c.Request.Context(), querier, modelRules); errCreateRules != nil {
 			opErr = errCreateRules // Set opErr; if sqlTx is active, defer will rollback
@@ -261,27 +253,14 @@ func (h *APIHandler) CreateKeywordSetGin(c *gin.Context) {
 		return
 	}
 
-	// Broadcast keyword set creation to WebSocket clients
-	websocket.BroadcastKeywordSetCreated(keywordSet.ID.String(), toKeywordSetResponse(keywordSet, createdRulesModels))
-	log.Printf("Successfully created keyword set %s (%s) and broadcasted", keywordSet.ID, keywordSet.Name)
+	// Realtime broadcast via WebSocket removed; SSE used elsewhere if needed
+	log.Printf("Successfully created keyword set %s (%s)", keywordSet.ID, keywordSet.Name)
 
 	keywordSetResponse := toKeywordSetResponse(keywordSet, createdRulesModels)
 	respondWithJSONGin(c, http.StatusCreated, keywordSetResponse)
 }
 
 // ListKeywordSetsGin lists keyword sets.
-// @Summary List keyword sets
-// @Description Retrieve a list of keyword sets with optional filtering
-// @Tags keyword-sets
-// @ID listKeywordSets
-// @Produce json
-// @Param limit query int false "Maximum number of results" default(20)
-// @Param offset query int false "Number of results to skip" default(0)
-// @Param includeRules query bool false "Include rules in response" default(false)
-// @Param isEnabled query bool false "Filter by enabled status"
-// @Success 200 {object} APIResponse{data=[]KeywordSetResponse} "List of keyword sets"
-// @Failure 500 {object} APIResponse{error=ApiError} "Failed to list keyword sets"
-// @Router /keywords/sets [get]
 func (h *APIHandler) ListKeywordSetsGin(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	offset, _ := strconv.Atoi(c.DefaultQuery("offset", "0"))
@@ -328,17 +307,6 @@ func (h *APIHandler) ListKeywordSetsGin(c *gin.Context) {
 }
 
 // GetKeywordSetGin gets a keyword set by ID.
-// @Summary Get keyword set
-// @Description Retrieve a specific keyword set by ID including its rules
-// @Tags keyword-sets
-// @ID getKeywordSet
-// @Produce json
-// @Param setId path string true "Keyword set ID"
-// @Success 200 {object} APIResponse{data=KeywordSetResponse} "Keyword set with rules"
-// @Failure 400 {object} APIResponse{error=ApiError} "Invalid keyword set ID format"
-// @Failure 404 {object} APIResponse{error=ApiError} "Keyword set not found"
-// @Failure 500 {object} APIResponse{error=ApiError} "Failed to fetch keyword set"
-// @Router /keywords/sets/{setId} [get]
 func (h *APIHandler) GetKeywordSetGin(c *gin.Context) {
 	setIDStr := c.Param("setId")
 	setID, err := uuid.Parse(setIDStr)
@@ -370,20 +338,6 @@ func (h *APIHandler) GetKeywordSetGin(c *gin.Context) {
 }
 
 // UpdateKeywordSetGin updates a keyword set.
-// @Summary Update keyword set
-// @Description Update an existing keyword set and its rules
-// @Tags keyword-sets
-// @ID updateKeywordSet
-// @Accept json
-// @Produce json
-// @Param setId path string true "Keyword set ID"
-// @Param request body UpdateKeywordSetRequest true "Keyword set update request"
-// @Success 200 {object} APIResponse{data=KeywordSetResponse} "Updated keyword set"
-// @Failure 400 {object} APIResponse{error=ApiError} "Invalid request payload or validation failed"
-// @Failure 404 {object} APIResponse{error=ApiError} "Keyword set not found"
-// @Failure 409 {object} APIResponse{error=ApiError} "Keyword set name already exists"
-// @Failure 500 {object} APIResponse{error=ApiError} "Failed to update keyword set"
-// @Router /keywords/sets/{setId} [put]
 func (h *APIHandler) UpdateKeywordSetGin(c *gin.Context) {
 	setIDStr := c.Param("setId")
 	setID, errParam := uuid.Parse(setIDStr)
@@ -474,17 +428,17 @@ func (h *APIHandler) UpdateKeywordSetGin(c *gin.Context) {
 			modelRules := make([]*models.KeywordRule, len(req.Rules))
 			now := time.Now().UTC()
 			for i, rReq := range req.Rules {
-                modelRules[i] = &models.KeywordRule{
-                    ID:              uuid.New(),
-                    KeywordSetID:    setID,
-                    Pattern:         rReq.Pattern,
-                    RuleType:        models.KeywordRuleTypeEnum(rReq.RuleType),
-                    IsCaseSensitive: rReq.IsCaseSensitive,
-                    Category:        sql.NullString{String: rReq.Category, Valid: rReq.Category != ""},
-                    ContextChars:    rReq.ContextChars,
-                    CreatedAt:       now,
-                    UpdatedAt:       now,
-                }
+				modelRules[i] = &models.KeywordRule{
+					ID:              uuid.New(),
+					KeywordSetID:    setID,
+					Pattern:         rReq.Pattern,
+					RuleType:        models.KeywordRuleTypeEnum(rReq.RuleType),
+					IsCaseSensitive: rReq.IsCaseSensitive,
+					Category:        sql.NullString{String: rReq.Category, Valid: rReq.Category != ""},
+					ContextChars:    rReq.ContextChars,
+					CreatedAt:       now,
+					UpdatedAt:       now,
+				}
 			}
 			if errCreateRules := h.KeywordStore.CreateKeywordRules(c.Request.Context(), querier, modelRules); errCreateRules != nil {
 				opErr = errCreateRules
@@ -545,26 +499,14 @@ func (h *APIHandler) UpdateKeywordSetGin(c *gin.Context) {
 		return
 	}
 
-	// Broadcast keyword set update to WebSocket clients
-	websocket.BroadcastKeywordSetUpdated(existingSet.ID.String(), toKeywordSetResponse(existingSet, updatedRulesModels))
-	log.Printf("Successfully updated keyword set %s (%s) and broadcasted", existingSet.ID, existingSet.Name)
+	// Realtime broadcast via WebSocket removed
+	log.Printf("Successfully updated keyword set %s (%s)", existingSet.ID, existingSet.Name)
 
 	keywordSetResponse := toKeywordSetResponse(existingSet, updatedRulesModels)
 	respondWithJSONGin(c, http.StatusOK, keywordSetResponse)
 }
 
 // DeleteKeywordSetGin deletes a keyword set.
-// @Summary Delete keyword set
-// @Description Delete a keyword set by ID
-// @Tags keyword-sets
-// @ID deleteKeywordSet
-// @Produce json
-// @Param setId path string true "Keyword set ID"
-// @Success 200 {object} APIResponse{data=KeywordSetDeleteResponse} "Keyword set deleted"
-// @Failure 400 {object} APIResponse{error=ApiError} "Invalid keyword set ID format"
-// @Failure 404 {object} APIResponse{error=ApiError} "Keyword set not found"
-// @Failure 500 {object} APIResponse{error=ApiError} "Failed to delete keyword set"
-// @Router /keywords/sets/{setId} [delete]
 func (h *APIHandler) DeleteKeywordSetGin(c *gin.Context) {
 	setIDStr := c.Param("setId")
 	setID, errParam := uuid.Parse(setIDStr)
@@ -650,9 +592,8 @@ func (h *APIHandler) DeleteKeywordSetGin(c *gin.Context) {
 		return
 	}
 
-	// Broadcast keyword set deletion to WebSocket clients
-	websocket.BroadcastKeywordSetDeleted(setID.String())
-	log.Printf("Successfully deleted keyword set %s and broadcasted", setID)
+	// Realtime broadcast via WebSocket removed
+	log.Printf("Successfully deleted keyword set %s", setID)
 
 	respondWithJSONGin(c, http.StatusOK, KeywordSetDeleteResponse{
 		KeywordSetID: setID.String(),
@@ -664,17 +605,6 @@ func (h *APIHandler) DeleteKeywordSetGin(c *gin.Context) {
 // --- NEW PERFORMANCE ENDPOINTS FOR PHASE 3 HTTP KEYWORD VALIDATION ---
 
 // GetKeywordSetWithRulesGin gets a keyword set with high-performance rules loading via JSONB.
-// @Summary Get keyword set with high-performance rules loading
-// @Description Optimized endpoint for Phase 3 HTTP keyword validation scanning using JSONB rules column
-// @Tags keyword-sets
-// @ID getKeywordSetRules
-// @Produce json
-// @Param id path string true "Keyword Set ID" Format(uuid)
-// @Success 200 {object} APIResponse "Keyword set rules"
-// @Failure 400 {object} APIResponse
-// @Failure 404 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /keyword-sets/{id}/rules [get]
 func (h *APIHandler) GetKeywordSetWithRulesGin(c *gin.Context) {
 	keywordSetIDStr := c.Param("id")
 	keywordSetID, err := uuid.Parse(keywordSetIDStr)
@@ -710,19 +640,6 @@ func (h *APIHandler) GetKeywordSetWithRulesGin(c *gin.Context) {
 }
 
 // QueryKeywordRulesGin queries keyword rules with advanced filtering.
-// @Summary Query keyword rules with advanced filtering
-// @Description Advanced querying for keyword rule management across sets with multiple filter options
-// @Tags keyword-sets
-// @ID listKeywordRules
-// @Produce json
-// @Param limit query int false "Page size" default(50)
-// @Param offset query int false "Offset" default(0)
-// @Param setId query string false "Filter by set ID"
-// @Param pattern query string false "Filter by pattern contains"
-// @Success 200 {object} APIResponse "Rules list"
-// @Failure 400 {object} APIResponse
-// @Failure 500 {object} APIResponse
-// @Router /keyword-rules [get]
 func (h *APIHandler) QueryKeywordRulesGin(c *gin.Context) {
 	// Parse query parameters
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "50"))

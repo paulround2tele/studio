@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 package api
 
 import (
@@ -303,7 +306,6 @@ type CampaignDetailsResponse struct {
 }
 
 // LeadGenerationCampaignResponse represents a complete lead generation campaign response
-// @Description Complete lead generation campaign with phase-centric architecture
 type LeadGenerationCampaignResponse struct {
 	ID           string  `json:"id" validate:"required" example:"550e8400-e29b-41d4-a716-446655440000" description:"Campaign UUID"`
 	Name         string  `json:"name" validate:"required" example:"Domain Generation Campaign" description:"Campaign name"`
@@ -316,9 +318,9 @@ type LeadGenerationCampaignResponse struct {
 	// Phase management
 	CurrentPhase    *PhaseType   `json:"currentPhase,omitempty" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
 	PhaseStatus     *PhaseStatus `json:"phaseStatus,omitempty" enums:"not_started,ready,configured,in_progress,paused,completed,failed"`
-	TotalPhases     int                     `json:"totalPhases" example:"4" description:"Total number of phases (always 4)"`
-	CompletedPhases int                     `json:"completedPhases" example:"2" description:"Number of completed phases"`
-	OverallProgress *float64                `json:"overallProgress,omitempty" example:"75.5" description:"Overall campaign progress (0-100)"`
+	TotalPhases     int          `json:"totalPhases" example:"4" description:"Total number of phases (always 4)"`
+	CompletedPhases int          `json:"completedPhases" example:"2" description:"Number of completed phases"`
+	OverallProgress *float64     `json:"overallProgress,omitempty" example:"75.5" description:"Overall campaign progress (0-100)"`
 
 	// Phase execution details
 	Phases []PhaseProgressResponse `json:"phases,omitempty" description:"Individual phase progress details"`
@@ -337,33 +339,30 @@ type LeadGenerationCampaignResponse struct {
 }
 
 // PhaseProgressResponse represents progress information for a single phase
-// @Description Progress and status information for a campaign phase
 type PhaseProgressResponse struct {
 	PhaseType       PhaseType   `json:"phaseType" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
 	Status          PhaseStatus `json:"status" enums:"not_started,ready,configured,in_progress,paused,completed,failed"`
-	Progress        float64                `json:"progress" example:"85.5" description:"Phase progress percentage (0-100)"`
-	ProcessedItems  int64                  `json:"processedItems" example:"850" description:"Items processed in this phase"`
-	TotalItems      int64                  `json:"totalItems" example:"1000" description:"Total items to process in this phase"`
-	SuccessfulItems int64                  `json:"successfulItems" example:"820" description:"Successfully processed items"`
-	FailedItems     int64                  `json:"failedItems" example:"30" description:"Failed processing items"`
-	StartedAt       *string                `json:"startedAt,omitempty" description:"Phase start timestamp"`
-	CompletedAt     *string                `json:"completedAt,omitempty" description:"Phase completion timestamp"`
-	ErrorMessage    *string                `json:"errorMessage,omitempty" description:"Error message if phase failed"`
+	Progress        float64     `json:"progress" example:"85.5" description:"Phase progress percentage (0-100)"`
+	ProcessedItems  int64       `json:"processedItems" example:"850" description:"Items processed in this phase"`
+	TotalItems      int64       `json:"totalItems" example:"1000" description:"Total items to process in this phase"`
+	SuccessfulItems int64       `json:"successfulItems" example:"820" description:"Successfully processed items"`
+	FailedItems     int64       `json:"failedItems" example:"30" description:"Failed processing items"`
+	StartedAt       *string     `json:"startedAt,omitempty" description:"Phase start timestamp"`
+	CompletedAt     *string     `json:"completedAt,omitempty" description:"Phase completion timestamp"`
+	ErrorMessage    *string     `json:"errorMessage,omitempty" description:"Error message if phase failed"`
 }
 
 // CampaignProgressResponse represents overall campaign progress
-// @Description Overall campaign progress across all phases
 type CampaignProgressResponse struct {
 	CampaignID             string                  `json:"campaignId"`
 	OverallProgress        float64                 `json:"overallProgress" example:"75.5" description:"Overall campaign progress (0-100)"`
-	CurrentPhase           PhaseType    `json:"currentPhase" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
-	PhaseStatus            PhaseStatus  `json:"phaseStatus" enums:"not_started,ready,configured,in_progress,paused,completed,failed"`
+	CurrentPhase           PhaseType               `json:"currentPhase" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
+	PhaseStatus            PhaseStatus             `json:"phaseStatus" enums:"not_started,ready,configured,in_progress,paused,completed,failed"`
 	Phases                 []PhaseProgressResponse `json:"phases" description:"Progress for each phase"`
 	EstimatedTimeRemaining *string                 `json:"estimatedTimeRemaining,omitempty" description:"Estimated time to completion"`
 }
 
 // CampaignData represents campaign information (legacy compatibility)
-// @Description Campaign data with phases-based architecture
 type CampaignData struct {
 	ID          string `json:"id" example:"550e8400-e29b-41d4-a716-446655440000" description:"Campaign UUID"`
 	Name        string `json:"name" example:"Domain Generation Campaign" description:"Campaign name"`
@@ -372,15 +371,13 @@ type CampaignData struct {
 	Description string `json:"description,omitempty" example:"Campaign for generating and validating domains" description:"Optional campaign description"`
 
 	// Phases-based architecture fields
-	// @Description Current phase of campaign execution
-	// @Example "domain_generation"
+	// Current phase of campaign execution
 	CurrentPhase *PhaseType `json:"currentPhase,omitempty" enums:"domain_generation,dns_validation,http_keyword_validation,analysis"`
 
-	// @Description Status of the current phase
-	// @Example "in_progress"
+	// Status of the current phase
 	PhaseStatus *PhaseStatus `json:"phaseStatus,omitempty" enums:"not_started,ready,configured,in_progress,paused,completed,failed"`
 
-	// @Description Phase-specific progress information
+	// Phase-specific progress information
 	Progress PhaseProgressData `json:"progress,omitempty" description:"Phase-specific progress information"`
 }
 
@@ -443,7 +440,6 @@ type EnrichedCampaignData struct {
 }
 
 // ErrorContext represents error context information with all possible fields
-// @Description Error context information for API responses
 type ErrorContext struct {
 	CampaignID       string `json:"campaign_id,omitempty" example:"550e8400-e29b-41d4-a716-446655440000" description:"Campaign UUID"`
 	CampaignCount    int    `json:"campaign_count,omitempty" example:"5" description:"Number of campaigns involved"`
@@ -507,7 +503,6 @@ type AddProxyToPoolRequest struct {
 // Bulk API request/response types for B2B scale operations
 
 // BulkEnrichedDataRequest represents a request for bulk enriched campaign data
-// @Description Request payload for retrieving enriched data for multiple campaigns
 type BulkEnrichedDataRequest struct {
 	CampaignIDs []string `json:"campaignIds" binding:"max=1000" validate:"max=1000,dive,uuid" example:"['550e8400-e29b-41d4-a716-446655440000']" description:"List of campaign UUIDs (empty = all campaigns, max 1000 specific campaigns)"`
 	Limit       int      `json:"limit,omitempty" validate:"omitempty,min=1,max=1000" example:"100" description:"Maximum number of items per campaign (1-1000)"`
@@ -515,14 +510,12 @@ type BulkEnrichedDataRequest struct {
 }
 
 // BulkEnrichedDataResponse represents enriched campaign data for multiple campaigns
-// @Description Response containing enriched data for multiple campaigns
 type BulkEnrichedDataResponse struct {
 	Campaigns  map[string]EnrichedCampaignData `json:"campaigns" description:"Map of campaign ID to enriched campaign data"`
 	TotalCount int                             `json:"totalCount" example:"25" description:"Total number of successfully processed campaigns"`
 }
 
 // BulkDomainsRequest represents a request for bulk domain data
-// @Description Request payload for retrieving domain data for multiple campaigns
 type BulkDomainsRequest struct {
 	CampaignIDs []string `json:"campaignIds" binding:"required,min=1,max=1000" validate:"required,min=1,max=1000,dive,uuid" example:"['550e8400-e29b-41d4-a716-446655440000']" description:"List of campaign UUIDs (1-1000 campaigns)"`
 	Limit       int      `json:"limit,omitempty" validate:"omitempty,min=1,max=100000" example:"10000" description:"Maximum number of domains per campaign (1-100,000)"`
@@ -530,14 +523,12 @@ type BulkDomainsRequest struct {
 }
 
 // BulkDomainsResponse represents domain data for multiple campaigns
-// @Description Response containing domain data for multiple campaigns
 type BulkDomainsResponse struct {
 	Domains    map[string][]string `json:"domains" description:"Map of campaign ID to list of domains"`
 	TotalCount int                 `json:"totalCount" example:"150" description:"Total number of domains across all campaigns"`
 }
 
 // BulkLogsRequest represents a request for bulk log data
-// @Description Request payload for retrieving log data for multiple campaigns
 type BulkLogsRequest struct {
 	CampaignIDs []string `json:"campaignIds" binding:"required,min=1,max=50" validate:"required,min=1,max=50,dive,uuid" example:"['550e8400-e29b-41d4-a716-446655440000']" description:"List of campaign UUIDs (1-50 campaigns)"`
 	Limit       int      `json:"limit,omitempty" validate:"omitempty,min=1,max=1000" example:"100" description:"Maximum number of log entries per campaign (1-1000)"`
@@ -545,14 +536,12 @@ type BulkLogsRequest struct {
 }
 
 // BulkLogsResponse represents log data for multiple campaigns
-// @Description Response containing log data for multiple campaigns
 type BulkLogsResponse struct {
 	Logs       map[string][]models.AuditLog `json:"logs" description:"Map of campaign ID to list of log entries"`
 	TotalCount int                          `json:"totalCount" example:"500" description:"Total number of log entries across all campaigns"`
 }
 
 // BulkLeadsRequest represents a request for bulk lead data
-// @Description Request payload for retrieving lead data for multiple campaigns
 type BulkLeadsRequest struct {
 	CampaignIDs []string `json:"campaignIds" binding:"required,min=1,max=50" validate:"required,min=1,max=50,dive,uuid" example:"['550e8400-e29b-41d4-a716-446655440000']" description:"List of campaign UUIDs (1-50 campaigns)"`
 	Limit       int      `json:"limit,omitempty" validate:"omitempty,min=1,max=1000" example:"100" description:"Maximum number of leads per campaign (1-1000)"`
@@ -560,7 +549,6 @@ type BulkLeadsRequest struct {
 }
 
 // BulkLeadsResponse represents lead data for multiple campaigns
-// @Description Response containing lead data for multiple campaigns
 type BulkLeadsResponse struct {
 	Leads      map[string][]models.LeadItem `json:"leads" description:"Map of campaign ID to list of leads"`
 	TotalCount int                          `json:"totalCount" example:"75" description:"Total number of leads across all campaigns"`
@@ -569,7 +557,6 @@ type BulkLeadsResponse struct {
 // Database API Models for Enterprise Bulk Operations
 
 // BulkDatabaseQueryRequest represents a bulk database query request
-// @Description Request payload for executing multiple database queries in a single operation
 type BulkDatabaseQueryRequest struct {
 	Queries []DatabaseQuery `json:"queries" binding:"required,min=1,max=50" validate:"required,min=1,max=50,dive" description:"List of SQL queries to execute (1-50 queries)"`
 	Limit   int             `json:"limit,omitempty" validate:"omitempty,min=1,max=10000" example:"1000" description:"Maximum number of rows per query (1-10000)"`
@@ -577,21 +564,18 @@ type BulkDatabaseQueryRequest struct {
 }
 
 // DatabaseQuery represents a single query in a bulk operation
-// @Description Individual query with identifier for bulk operations
 type DatabaseQuery struct {
 	ID  string `json:"id" binding:"required" validate:"required" example:"query_1" description:"Unique identifier for this query"`
 	SQL string `json:"sql" binding:"required" validate:"required" example:"SELECT * FROM campaigns LIMIT 10" description:"SQL query to execute"`
 }
 
 // BulkDatabaseQueryResponse represents the response from bulk database queries
-// @Description Response containing results from multiple database queries
 type BulkDatabaseQueryResponse struct {
 	Results    map[string]DatabaseQueryResult `json:"results" description:"Map of query ID to query results"`
 	TotalCount int                            `json:"totalCount" example:"5" description:"Total number of queries processed"`
 }
 
 // DatabaseQueryResult represents the result of a database query
-// @Description Response containing query results with metadata
 type DatabaseQueryResult struct {
 	Columns       []string          `json:"columns" example:"['id','name','status']" description:"Column names from the query result"`
 	Rows          [][]DatabaseValue `json:"rows" description:"Query result rows, each row is an array of database values"`
@@ -602,7 +586,6 @@ type DatabaseQueryResult struct {
 }
 
 // DatabaseValue represents a value that can be returned from a database query
-// @Description A database value that can be string, number, boolean, or null
 type DatabaseValue struct {
 	StringValue *string  `json:"stringValue,omitempty" description:"String value"`
 	IntValue    *int64   `json:"intValue,omitempty" description:"Integer value"`
@@ -613,7 +596,6 @@ type DatabaseValue struct {
 }
 
 // BulkDatabaseStatsRequest represents a bulk database statistics request
-// @Description Request payload for retrieving database statistics for multiple schemas/databases
 type BulkDatabaseStatsRequest struct {
 	Schemas  []string `json:"schemas,omitempty" validate:"omitempty,max=20,dive,min=1" example:"['public','analytics']" description:"List of database schemas to analyze (max 20)"`
 	Tables   []string `json:"tables,omitempty" validate:"omitempty,max=100,dive,min=1" example:"['campaigns','users']" description:"List of specific tables to analyze (max 100)"`
@@ -621,7 +603,6 @@ type BulkDatabaseStatsRequest struct {
 }
 
 // BulkDatabaseStatsResponse represents the response from bulk database statistics
-// @Description Response containing database statistics
 type BulkDatabaseStatsResponse struct {
 	DatabaseStats DatabaseStats          `json:"databaseStats" description:"Overall database statistics"`
 	SchemaStats   map[string]SchemaStats `json:"schemaStats,omitempty" description:"Statistics by schema (if requested)"`
@@ -630,7 +611,6 @@ type BulkDatabaseStatsResponse struct {
 }
 
 // DatabaseStats represents database statistics
-// @Description Database statistics and health information
 type DatabaseStats struct {
 	TotalTables   int    `json:"totalTables" example:"23" description:"Total number of tables in the database"`
 	TotalUsers    int    `json:"totalUsers" example:"5" description:"Total number of users in the system"`
@@ -643,7 +623,6 @@ type DatabaseStats struct {
 }
 
 // SchemaStats represents statistics for a database schema
-// @Description Statistics for a specific database schema
 type SchemaStats struct {
 	Name       string `json:"name" example:"public" description:"Schema name"`
 	TableCount int    `json:"tableCount" example:"15" description:"Number of tables in the schema"`
@@ -652,7 +631,6 @@ type SchemaStats struct {
 }
 
 // TableStats represents statistics for a database table
-// @Description Statistics for a specific database table
 type TableStats struct {
 	Name       string `json:"name" example:"campaigns" description:"Table name"`
 	Schema     string `json:"schema" example:"public" description:"Schema name"`
@@ -664,14 +642,12 @@ type TableStats struct {
 // === STANDALONE SERVICES ARCHITECTURE RESPONSE MODELS ===
 
 // PhaseConfigureRequest represents a request to configure a specific campaign phase
-// @Description Request payload for configuring campaign phase parameters
 type PhaseConfigureRequest struct {
 	PhaseType string      `json:"phaseType" validate:"required,oneof=dns_validation http_keyword_validation analysis" example:"dns_validation" description:"Type of phase to configure"`
 	Config    PhaseConfig `json:"config" validate:"required" description:"Phase-specific configuration object"`
 }
 
 // PhaseConfig is a union type for all possible phase configurations
-// @Description Phase configuration that can be DNS validation, HTTP validation, or analysis configuration
 type PhaseConfig struct {
 	// Exactly one of these fields should be populated based on PhaseType
 	DNSValidation  *DNSValidationConfig  `json:"dnsValidation,omitempty" description:"DNS validation configuration (when phaseType=dns_validation)"`
@@ -680,14 +656,12 @@ type PhaseConfig struct {
 }
 
 // DNSValidationConfig represents DNS validation phase configuration
-// @Description Configuration for DNS validation phase - all technical parameters derived from persona ConfigDetails
 type DNSValidationConfig struct {
 	PersonaIDs []string `json:"personaIds" validate:"required,min=1" example:"[\"550e8400-e29b-41d4-a716-446655440000\"]" description:"Array of persona IDs to use for DNS validation"`
 	Name       *string  `json:"name,omitempty" example:"My DNS Campaign" description:"Optional name for the campaign"`
 }
 
 // HTTPValidationConfig represents HTTP validation phase configuration
-// @Description Configuration for HTTP keyword validation phase - all technical parameters derived from persona ConfigDetails
 type HTTPValidationConfig struct {
 	PersonaIDs    []string `json:"personaIds" validate:"required,min=1" example:"[\"550e8400-e29b-41d4-a716-446655440000\"]" description:"Array of persona IDs to use for HTTP validation"`
 	KeywordSetIDs []string `json:"keywordSetIds,omitempty" example:"[\"set1\", \"set2\"]" description:"Array of predefined keyword set IDs"`
@@ -696,7 +670,6 @@ type HTTPValidationConfig struct {
 }
 
 // AnalysisConfig represents analysis phase configuration
-// @Description Configuration for analysis phase
 type AnalysisConfig struct {
 	AnalysisType       string   `json:"analysisType" validate:"required,oneof=basic comprehensive custom" example:"comprehensive" description:"Type of analysis to perform"`
 	IncludeScreenshots bool     `json:"includeScreenshots,omitempty" example:"true" description:"Whether to capture screenshots during analysis"`
@@ -705,7 +678,6 @@ type AnalysisConfig struct {
 }
 
 // PhaseStartRequest represents a request to start a configured campaign phase
-// @Description Request payload for starting a campaign phase
 type PhaseStartRequest struct {
 	PhaseType string `json:"phaseType" validate:"required,oneof=domain_generation dns_validation http_keyword_validation analysis" example:"dns_validation" description:"Type of phase to start"`
 }
@@ -741,7 +713,6 @@ type BulkOperationStatusResponse struct {
 }
 
 // BulkOperationResults represents typed results for different bulk operations
-// @Description Operation results that vary by operation type
 type BulkOperationResults struct {
 	// Domain generation results
 	DomainGeneration *DomainGenerationResults `json:"domainGeneration,omitempty" description:"Domain generation operation results"`
@@ -827,26 +798,23 @@ type OperationCancellationResponse struct {
 }
 
 // CampaignSummary represents a single campaign in the campaigns list
-// @Description Campaign summary with phase-centric bulk data
 type CampaignSummary struct {
-	CampaignID   string                  `json:"campaignId" example:"550e8400-e29b-41d4-a716-446655440000" description:"Campaign UUID"`
-	Name         string                  `json:"name" example:"Enterprise Lead Generation" description:"Campaign name"`
-    CurrentPhase *PhaseType   `json:"currentPhase,omitempty" enums:"setup,domain_generation,dns_validation,http_keyword_validation,analysis"`
-    PhaseStatus  *PhaseStatus `json:"phaseStatus,omitempty" enums:"not_started,in_progress,paused,completed,failed"`
-	TotalItems   int                     `json:"totalItems" example:"1500" description:"Total items across all phases"`
-	CreatedAt    string                  `json:"createdAt" example:"2024-01-15T10:30:00Z" description:"Campaign creation timestamp"`
-	UpdatedAt    string                  `json:"updatedAt" example:"2024-01-15T15:45:30Z" description:"Last update timestamp"`
+	CampaignID   string       `json:"campaignId" example:"550e8400-e29b-41d4-a716-446655440000" description:"Campaign UUID"`
+	Name         string       `json:"name" example:"Enterprise Lead Generation" description:"Campaign name"`
+	CurrentPhase *PhaseType   `json:"currentPhase,omitempty" enums:"setup,domain_generation,dns_validation,http_keyword_validation,analysis"`
+	PhaseStatus  *PhaseStatus `json:"phaseStatus,omitempty" enums:"not_started,in_progress,paused,completed,failed"`
+	TotalItems   int          `json:"totalItems" example:"1500" description:"Total items across all phases"`
+	CreatedAt    string       `json:"createdAt" example:"2024-01-15T10:30:00Z" description:"Campaign creation timestamp"`
+	UpdatedAt    string       `json:"updatedAt" example:"2024-01-15T15:45:30Z" description:"Last update timestamp"`
 }
 
 // CampaignsListResponse represents the campaigns list endpoint response
-// @Description List of all campaigns with phase-centric bulk data
 type CampaignsListResponse struct {
 	Campaigns []CampaignSummary `json:"campaigns" description:"Array of campaign summaries"`
 	Total     int               `json:"total" example:"25" description:"Total number of campaigns"`
 }
 
 // CampaignsListAPIResponse represents the complete API response for campaigns list endpoint
-// @Description Professional typed response for campaigns list with proper swagger generation
 type CampaignsListAPIResponse struct {
 	Success   bool                  `json:"success" example:"true"`
 	Data      CampaignsListResponse `json:"data"`

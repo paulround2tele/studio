@@ -15,7 +15,6 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
-	"github.com/fntelecomllc/studio/backend/internal/websocket"
 )
 
 // analysisServiceImpl provides automated cleanup/processing for campaigns that have completed HTTP validation
@@ -194,14 +193,7 @@ func (s *analysisServiceImpl) ProcessAnalysisCampaignBatch(ctx context.Context, 
 		return false, processedInThisBatch, opErr
 	}
 
-	// Broadcast analysis completion via WebSocket
-	// Optional non-blocking websocket notification for completion
-	go func() {
-		if broadcaster := websocket.GetBroadcaster(); broadcaster != nil {
-			message := websocket.CreateCampaignProgressMessage(campaignID.String(), 100.0, "completed", "analysis")
-			broadcaster.BroadcastToCampaign(campaignID.String(), message)
-		}
-	}()
+	// WebSocket broadcasting removed; SSE is the canonical realtime path.
 
 	log.Printf("ProcessAnalysisCampaignBatch: Campaign %s analysis phase completed successfully", campaignID)
 

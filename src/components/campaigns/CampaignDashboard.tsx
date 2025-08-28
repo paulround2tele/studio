@@ -16,7 +16,6 @@ import { PerformanceTuningSection } from './sections/PerformanceTuningSection';
 
 // Backend-driven data types (following the actual API schema)
 // Use the single source of truth: OpenAPI generated types
-import type { components } from '@/lib/api-client/types';
 
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 

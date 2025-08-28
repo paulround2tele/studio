@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/shared/PageHeader';
 import PersonaListItem from '@/components/personas/PersonaListItem';
-import type { components } from '@/lib/api-client/types';
 import { ApiPersonaResponse } from '@/lib/api-client';
 
 // Use OpenAPI types directly - simplified for now

@@ -42,9 +42,10 @@
   - POST /database/query, POST /database/stats (requires X-Requested-With: XMLHttpRequest)
 
 - Tooling & CI
-  - Spec source: backend/openapi/openapi.yaml only
+  - Spec source: modular files under backend/openapi (root: openapi.root.yaml; bundled: dist/openapi.yaml)
   - Swagger fossils purged (imports, UI route, backend/docs/*)
   - CI: scripts/validate-openapi-spec.sh runs kin-openapi + redocly; PRs fail on warnings/errors
+  - Legacy monolith files (backend/openapi/openapi.yaml, backend/openapi/openapi_backup.yaml) removed; do not reintroduce.
 
 # Contract Inventory and Decisions
 

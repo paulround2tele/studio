@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 // File: backend/internal/api/bulk_validation_handlers.go
 package api
 
@@ -26,19 +29,6 @@ func NewBulkValidationAPIHandler(orchestrator *application.CampaignOrchestrator,
 	}
 }
 
-// @Summary Validate domains using bulk DNS validation with stealth
-// @Description Perform bulk DNS validation with stealth detection avoidance and resource optimization
-// @Tags bulk-operations,validation
-// @ID bulkValidateDNS
-// @Accept json
-// @Produce json
-// @Param request body models.BulkDNSValidationRequest true "Bulk DNS validation request"
-// @Success 200 {object} APIResponse{data=models.BulkValidationResponse} "DNS validation completed successfully"
-// @Success 202 {object} APIResponse{data=models.BulkValidationResponse} "Validation accepted and processing"
-// @Failure 400 {object} APIResponse "Bad Request - Invalid domains or configuration"
-// @Failure 429 {object} APIResponse "Rate Limited - Too many concurrent validations"
-// @Failure 500 {object} APIResponse "Internal Server Error"
-// @Router /campaigns/bulk/domains/validate-dns [post]
 func (h *BulkValidationAPIHandler) BulkValidateDNS(c *gin.Context) {
 	var request models.BulkDNSValidationRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -218,19 +208,6 @@ func (h *BulkValidationAPIHandler) BulkValidateDNS(c *gin.Context) {
 	c.JSON(http.StatusOK, envelope)
 }
 
-// @Summary Validate domains using bulk HTTP validation with stealth
-// @Description Perform bulk HTTP validation with keyword extraction, stealth detection avoidance, and resource optimization
-// @Tags bulk-operations,validation
-// @ID bulkValidateHTTP
-// @Accept json
-// @Produce json
-// @Param request body models.BulkHTTPValidationRequest true "Bulk HTTP validation request"
-// @Success 200 {object} APIResponse{data=models.BulkValidationResponse} "HTTP validation completed successfully"
-// @Success 202 {object} APIResponse{data=models.BulkValidationResponse} "Validation accepted and processing"
-// @Failure 400 {object} APIResponse "Bad Request - Invalid domains or configuration"
-// @Failure 429 {object} APIResponse "Rate Limited - Too many concurrent validations"
-// @Failure 500 {object} APIResponse "Internal Server Error"
-// @Router /campaigns/bulk/domains/validate-http [post]
 func (h *BulkValidationAPIHandler) BulkValidateHTTP(c *gin.Context) {
 	var request models.BulkHTTPValidationRequest
 	if err := c.ShouldBindJSON(&request); err != nil {

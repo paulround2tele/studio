@@ -1,4 +1,5 @@
-//go:build exclude
+//go:build legacy_gin
+// +build legacy_gin
 
 // Documentation-only placeholder. Intentionally contains no compilable or scannable types.
 package api

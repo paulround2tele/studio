@@ -182,8 +182,8 @@ export default function HTTPValidationConfigModal({
         configuration: { httpValidation: httpConfig },
       };
 
-  // Use professional RTK Query mutation with normalized phase name
-  await configurePhase({ campaignId, phase: 'extraction', config: configRequest }).unwrap();
+  // Use RTK mutation with canonical backend phase identifier
+  await configurePhase({ campaignId, phase: 'http_keyword_validation', config: configRequest }).unwrap();
 
       toast({
         title: "HTTP validation configured",

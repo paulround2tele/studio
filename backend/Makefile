@@ -60,12 +60,14 @@ generate-mocks:
 openapi: ## Generate server and types from OpenAPI 3.1 spec using oapi-codegen (Chi)
 	@echo "Installing oapi-codegen (v2) CLI if not present..."
 	GO111MODULE=on GOBIN=$(HOME)/go/bin go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.5.0
+	@echo "Bundling modular OpenAPI spec (openapi.root.yaml -> dist/openapi.yaml)..."
+	cd .. && bash scripts/bundle-openapi-spec.sh
 	@echo "Validating OpenAPI 3.1 bundled spec with kin-openapi..."
 	cd cmd/spec-validate && go run . ../../openapi/dist/openapi.yaml
 	@echo "Generating Chi server and types from backend/openapi/dist/openapi.yaml..."
 	mkdir -p internal/api/gen
 	export PATH=$$PATH:$(HOME)/go/bin && oapi-codegen -config oapi-codegen.yaml openapi/dist/openapi.yaml
-	@echo "✅ oapi-codegen generation complete: backend/internal/api/gen/*.go"
+	@echo "✅ oapi-codegen generation complete: backend/internal/api/gen/*.go (Chi strict)"
 
 # Default target
 .DEFAULT_GOAL := help

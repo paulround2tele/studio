@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 // File: backend/internal/api/keyword_extraction_api_models.go
 package api
 
@@ -16,7 +19,6 @@ type BatchKeywordExtractionRequest struct {
 }
 
 // KeywordExtractionMatch mirrors the extractor's result shape for OpenAPI stability
-// @Description Keyword match result from content extraction
 type KeywordExtractionMatch struct {
 	MatchedPattern string   `json:"matchedPattern"`
 	MatchedText    string   `json:"matchedText"`

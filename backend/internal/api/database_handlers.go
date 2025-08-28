@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 package api
 
 import (
@@ -24,19 +27,6 @@ func NewDatabaseHandler(apiHandler *APIHandler) *DatabaseHandler {
 }
 
 // HandleBulkDatabaseQuery executes multiple database queries in a single request for enterprise scale
-// @Summary Execute bulk database queries
-// @Description Execute multiple SQL queries against the database with security restrictions for enterprise operations
-// @Tags database
-// @Accept json
-// @Produce json
-// @ID bulkDatabaseQuery
-// @Param X-Requested-With header string true "Must be XMLHttpRequest"
-// @Param request body BulkDatabaseQueryRequest true "Bulk query request"
-// @Success 200 {object} APIResponse{data=BulkDatabaseQueryResponse} "Queries executed successfully"
-// @Failure 400 {object} APIResponse "Bad request or invalid queries"
-// @Failure 403 {object} APIResponse "Forbidden query detected"
-// @Failure 500 {object} APIResponse "Internal server error"
-// @Router /database/query [post]
 func (h *DatabaseHandler) HandleBulkDatabaseQuery(c *gin.Context) {
 	startTime := time.Now()
 	requestID := getRequestID(c)
@@ -170,18 +160,6 @@ func (h *DatabaseHandler) HandleBulkDatabaseQuery(c *gin.Context) {
 }
 
 // HandleBulkDatabaseStats returns database statistics for enterprise monitoring
-// @Summary Get bulk database statistics
-// @Description Retrieve comprehensive database statistics including schema and table-level details for enterprise monitoring
-// @Tags database
-// @Accept json
-// @Produce json
-// @ID bulkDatabaseStats
-// @Param X-Requested-With header string true "Must be XMLHttpRequest"
-// @Param request body BulkDatabaseStatsRequest true "Bulk stats request"
-// @Success 200 {object} APIResponse{data=BulkDatabaseStatsResponse} "Statistics retrieved successfully"
-// @Failure 400 {object} APIResponse "Bad request"
-// @Failure 500 {object} APIResponse "Internal server error"
-// @Router /database/stats [post]
 func (h *DatabaseHandler) HandleBulkDatabaseStats(c *gin.Context) {
 	startTime := time.Now()
 	requestID := getRequestID(c)

@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 // File: backend/internal/api/bulk_resources_handlers.go
 package api
 
@@ -24,19 +27,6 @@ func NewBulkResourcesAPIHandler(orchestrator *application.CampaignOrchestrator) 
 	}
 }
 
-// @Summary Allocate bulk resources for enterprise operations
-// @Description Allocate compute, network, and storage resources for bulk campaign operations with priority scheduling
-// @Tags bulk-operations,resources
-// @ID allocateBulkResources
-// @Accept json
-// @Produce json
-// @Param request body models.BulkResourceRequest true "Bulk resource allocation request"
-// @Success 200 {object} APIResponse{data=models.BulkResourceResponse} "Resources allocated successfully"
-// @Success 202 {object} APIResponse{data=models.BulkResourceResponse} "Resource allocation accepted and processing"
-// @Failure 400 {object} APIResponse "Bad Request - Invalid resource configuration"
-// @Failure 429 {object} APIResponse "Rate Limited - Resource quota exceeded"
-// @Failure 500 {object} APIResponse "Internal Server Error"
-// @Router /campaigns/bulk/resources/allocate [post]
 func (h *BulkResourcesAPIHandler) AllocateBulkResources(c *gin.Context) {
 	var request models.BulkResourceRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -161,17 +151,6 @@ func (h *BulkResourcesAPIHandler) AllocateBulkResources(c *gin.Context) {
 	c.JSON(http.StatusOK, envelope)
 }
 
-// @Summary Get bulk resource allocation status
-// @Description Get current status and utilization of allocated bulk resources
-// @Tags bulk-operations,resources
-// @ID getBulkResourceStatus
-// @Accept json
-// @Produce json
-// @Param allocationId path string true "Resource allocation ID"
-// @Success 200 {object} APIResponse{data=BulkResourceStatusResponse} "Resource status retrieved successfully"
-// @Failure 404 {object} APIResponse "Resource allocation not found"
-// @Failure 500 {object} APIResponse "Internal Server Error"
-// @Router /campaigns/bulk/resources/status/{allocationId} [get]
 func (h *BulkResourcesAPIHandler) GetBulkResourceStatus(c *gin.Context) {
 	allocationID := c.Param("allocationId")
 
@@ -205,18 +184,6 @@ func (h *BulkResourcesAPIHandler) GetBulkResourceStatus(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusOK, response)
 }
 
-// @Summary Cancel bulk operations
-// @Description Cancel running bulk operations and release allocated resources
-// @Tags bulk-operations,management
-// @ID cancelBulkOperation
-// @Accept json
-// @Produce json
-// @Param operationId path string true "Bulk operation ID to cancel"
-// @Success 200 {object} APIResponse{data=OperationCancellationResponse} "Operation cancelled successfully"
-// @Failure 404 {object} APIResponse "Operation not found"
-// @Failure 409 {object} APIResponse "Operation cannot be cancelled (already completed)"
-// @Failure 500 {object} APIResponse "Internal Server Error"
-// @Router /campaigns/bulk/operations/{operationId}/cancel [post]
 func (h *BulkResourcesAPIHandler) CancelBulkOperation(c *gin.Context) {
 	operationID := c.Param("operationId")
 
@@ -246,17 +213,6 @@ func (h *BulkResourcesAPIHandler) CancelBulkOperation(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusOK, response)
 }
 
-// @Summary Get bulk operation status by ID
-// @Description Get detailed status of a specific bulk operation including progress and results
-// @Tags bulk-operations,monitoring
-// @ID getBulkOperationStatus
-// @Accept json
-// @Produce json
-// @Param operationId path string true "Bulk operation ID"
-// @Success 200 {object} APIResponse "Operation status retrieved successfully"
-// @Failure 404 {object} APIResponse "Operation not found"
-// @Failure 500 {object} APIResponse "Internal Server Error"
-// @Router /campaigns/bulk/operations/{operationId}/status [get]
 func (h *BulkResourcesAPIHandler) GetBulkOperationStatus(c *gin.Context) {
 	operationID := c.Param("operationId")
 
@@ -301,20 +257,6 @@ func (h *BulkResourcesAPIHandler) GetBulkOperationStatus(c *gin.Context) {
 	respondWithJSONGin(c, http.StatusOK, response)
 }
 
-// @Summary List bulk operations with filtering
-// @Description Get a list of bulk operations with optional filtering by status, type, and time range
-// @Tags bulk-operations,monitoring
-// @ID listBulkOperations
-// @Accept json
-// @Produce json
-// @Param status query string false "Filter by operation status" Enums(queued,running,completed,failed,cancelled)
-// @Param type query string false "Filter by operation type" Enums(domain_generation,dns_validation,http_validation,analytics)
-// @Param limit query int false "Number of operations to return (max 1000)" minimum(1) maximum(1000) default(50)
-// @Param offset query int false "Number of operations to skip" minimum(0) default(0)
-// @Success 200 {object} APIResponse{data=models.BulkOperationListResponse} "Operations list retrieved successfully"
-// @Failure 400 {object} APIResponse "Bad Request - Invalid parameters"
-// @Failure 500 {object} APIResponse "Internal Server Error"
-// @Router /campaigns/bulk/operations [get]
 func (h *BulkResourcesAPIHandler) ListBulkOperations(c *gin.Context) {
 	// Parse query parameters
 	status := c.Query("status")

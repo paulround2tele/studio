@@ -22,7 +22,8 @@ post:
                     type: object
                     properties:
                       operationId: { type: string, format: uuid }
-                      status: { type: string, enum: [cancelled, cancelling] }
+                      status:
+                        $ref: '../../components/schemas/all.yaml#/BulkOperationCancelStatus'
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }

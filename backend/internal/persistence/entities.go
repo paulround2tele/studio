@@ -1,3 +1,5 @@
+//go:build exclude
+
 package persistence
 
 import (
@@ -8,7 +10,7 @@ import (
 	"net"
 	"time"
 
-	"studio/backend/internal/domain"
+	"github.com/fntelecomllc/studio/backend/internal/domain"
 
 	"github.com/google/uuid"
 )

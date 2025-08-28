@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 // File: backend/internal/api/ping_handler.go
 package api
 
@@ -9,13 +12,6 @@ import (
 )
 
 // PingHandlerGin responds to ping requests to check server health using Gin.
-// @Summary Ping server
-// @Description Simple ping endpoint to verify server is responding
-// @Tags health
-// @ID ping
-// @Produce json
-// @Success 200 {object} APIResponse{data=PingResponse} "Pong response with timestamp"
-// @Router /ping [get]
 func PingHandlerGin(c *gin.Context) {
 	pingResponse := PingResponse{
 		Message:   "pong",

@@ -17,7 +17,8 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/constants"
 	"github.com/fntelecomllc/studio/backend/internal/store"
-	"github.com/fntelecomllc/studio/backend/internal/websocket"
+
+	// WS removed: "github.com/fntelecomllc/studio/backend/internal/websocket"
 	"github.com/google/uuid"
 )
 
@@ -26,31 +27,31 @@ import (
 // GetHTTPTransportForProxy, GetAllProxyStatuses, ForceCheckSingleProxy, ForceCheckProxiesAsync
 // ... (These remain IDENTICAL to the last complete version you have) ...
 var (
-       defaultProxyTestTimeout               = 10 * time.Second
-       defaultProxyTestURL                   = "https://httpbin.org/ip"
-       defaultInitialHealthCheckTimeout      = 7 * time.Second
-       defaultMaxConcurrentInitialChecks     = 10
+	defaultProxyTestTimeout           = 10 * time.Second
+	defaultProxyTestURL               = "https://httpbin.org/ip"
+	defaultInitialHealthCheckTimeout  = 7 * time.Second
+	defaultMaxConcurrentInitialChecks = 10
 
-       packageCfg   = config.ProxyManagerConfig{
-               TestTimeout:               defaultProxyTestTimeout,
-               TestURL:                   defaultProxyTestURL,
-               InitialHealthCheckTimeout: defaultInitialHealthCheckTimeout,
-               MaxConcurrentInitialChecks: defaultMaxConcurrentInitialChecks,
-       }
-       cfgMu sync.RWMutex
+	packageCfg = config.ProxyManagerConfig{
+		TestTimeout:                defaultProxyTestTimeout,
+		TestURL:                    defaultProxyTestURL,
+		InitialHealthCheckTimeout:  defaultInitialHealthCheckTimeout,
+		MaxConcurrentInitialChecks: defaultMaxConcurrentInitialChecks,
+	}
+	cfgMu sync.RWMutex
 )
 
 func updatePackageConfig(cfg config.ProxyManagerConfig) {
-       cfgMu.Lock()
-       packageCfg = cfg
-       cfgMu.Unlock()
+	cfgMu.Lock()
+	packageCfg = cfg
+	cfgMu.Unlock()
 }
 
 func getPackageConfig() config.ProxyManagerConfig {
-       cfgMu.RLock()
-       c := packageCfg
-       cfgMu.RUnlock()
-       return c
+	cfgMu.RLock()
+	c := packageCfg
+	cfgMu.RUnlock()
+	return c
 }
 
 type ProxyTestResult struct {
@@ -63,10 +64,10 @@ type ProxyTestResult struct {
 }
 
 func TestProxy(proxyEntry config.ProxyConfigEntry) ProxyTestResult {
-       startTime := time.Now()
-       result := ProxyTestResult{ProxyID: proxyEntry.ID}
-       cfg := getPackageConfig()
-       lcProtocol := strings.ToLower(proxyEntry.Protocol)
+	startTime := time.Now()
+	result := ProxyTestResult{ProxyID: proxyEntry.ID}
+	cfg := getPackageConfig()
+	lcProtocol := strings.ToLower(proxyEntry.Protocol)
 	if lcProtocol != constants.ProtocolHTTP && lcProtocol != constants.ProtocolHTTPS {
 		result.Error = fmt.Sprintf("Unsupported proxy protocol for testing: %s. Only http/https are supported.", proxyEntry.Protocol)
 		result.DurationMs = time.Since(startTime).Milliseconds()
@@ -82,11 +83,11 @@ func TestProxy(proxyEntry config.ProxyConfigEntry) ProxyTestResult {
 		result.DurationMs = time.Since(startTime).Milliseconds()
 		return result
 	}
-       transport := &http.Transport{Proxy: http.ProxyURL(proxyURL), TLSHandshakeTimeout: cfg.TestTimeout / 2}
-       client := &http.Client{Transport: transport, Timeout: cfg.TestTimeout}
-       ctx, cancel := context.WithTimeout(context.Background(), cfg.TestTimeout)
-       defer cancel()
-       req, err := http.NewRequestWithContext(ctx, "GET", cfg.TestURL, nil)
+	transport := &http.Transport{Proxy: http.ProxyURL(proxyURL), TLSHandshakeTimeout: cfg.TestTimeout / 2}
+	client := &http.Client{Transport: transport, Timeout: cfg.TestTimeout}
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.TestTimeout)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, "GET", cfg.TestURL, nil)
 	if err != nil {
 		result.Error = "Failed to create test request: " + err.Error()
 		result.DurationMs = time.Since(startTime).Milliseconds()
@@ -136,33 +137,33 @@ type ProxyStatus struct {
 	ConsecutiveFailures int       `json:"consecutiveFailures"`
 }
 type ProxyManager struct {
-       allProxies         []*ProxyStatus
-       activeProxies      []*ProxyStatus
-       mu                 sync.RWMutex
-       currentIndex       int
-       healthCheckTimeout time.Duration
-       config             config.ProxyManagerConfig
-       proxyStore         store.ProxyStore
-       db                 store.Querier
+	allProxies         []*ProxyStatus
+	activeProxies      []*ProxyStatus
+	mu                 sync.RWMutex
+	currentIndex       int
+	healthCheckTimeout time.Duration
+	config             config.ProxyManagerConfig
+	proxyStore         store.ProxyStore
+	db                 store.Querier
 }
 
 func NewProxyManager(entries []config.ProxyConfigEntry, cfg config.ProxyManagerConfig, proxyStore store.ProxyStore, db store.Querier) *ProxyManager {
-       if cfg.InitialHealthCheckTimeout <= 0 {
-               cfg.InitialHealthCheckTimeout = defaultInitialHealthCheckTimeout
-       }
-       if cfg.MaxConcurrentInitialChecks == 0 {
-               cfg.MaxConcurrentInitialChecks = defaultMaxConcurrentInitialChecks
-       }
-       updatePackageConfig(cfg)
-       pm := &ProxyManager{
-               allProxies:        make([]*ProxyStatus, 0, len(entries)),
-               activeProxies:     make([]*ProxyStatus, 0, len(entries)),
-               currentIndex:      0,
-               healthCheckTimeout: cfg.InitialHealthCheckTimeout,
-               config:            cfg,
-               proxyStore:        proxyStore,
-               db:                db,
-       }
+	if cfg.InitialHealthCheckTimeout <= 0 {
+		cfg.InitialHealthCheckTimeout = defaultInitialHealthCheckTimeout
+	}
+	if cfg.MaxConcurrentInitialChecks == 0 {
+		cfg.MaxConcurrentInitialChecks = defaultMaxConcurrentInitialChecks
+	}
+	updatePackageConfig(cfg)
+	pm := &ProxyManager{
+		allProxies:         make([]*ProxyStatus, 0, len(entries)),
+		activeProxies:      make([]*ProxyStatus, 0, len(entries)),
+		currentIndex:       0,
+		healthCheckTimeout: cfg.InitialHealthCheckTimeout,
+		config:             cfg,
+		proxyStore:         proxyStore,
+		db:                 db,
+	}
 	log.Printf("ProxyManager: Initializing with %d proxy entries.", len(entries))
 	supportedProxies := make([]*ProxyStatus, 0, len(entries))
 	for _, entry := range entries {
@@ -176,8 +177,8 @@ func NewProxyManager(entries []config.ProxyConfigEntry, cfg config.ProxyManagerC
 	}
 	pm.allProxies = supportedProxies
 	log.Printf("ProxyManager: Performing initial health checks for %d supported proxies (timeout per proxy: %s)...", len(pm.allProxies), pm.healthCheckTimeout)
-       var wg sync.WaitGroup
-       semaphore := make(chan struct{}, pm.config.MaxConcurrentInitialChecks)
+	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, pm.config.MaxConcurrentInitialChecks)
 	for _, ps := range pm.allProxies {
 		wg.Add(1)
 		semaphore <- struct{}{}
@@ -209,8 +210,8 @@ func NewProxyManager(entries []config.ProxyConfigEntry, cfg config.ProxyManagerC
 	return pm
 }
 func performSingleProxyCheck(ctx context.Context, proxyEntry config.ProxyConfigEntry) ProxyTestResult {
-       cfg := getPackageConfig()
-       result := ProxyTestResult{ProxyID: proxyEntry.ID, Success: false}
+	cfg := getPackageConfig()
+	result := ProxyTestResult{ProxyID: proxyEntry.ID, Success: false}
 	proxyURLString := fmt.Sprintf("%s://%s", proxyEntry.Protocol, proxyEntry.Address)
 	if proxyEntry.Username != "" {
 		proxyURLString = fmt.Sprintf("%s://%s:%s@%s", proxyEntry.Protocol, url.QueryEscape(proxyEntry.Username), url.QueryEscape(proxyEntry.Password), proxyEntry.Address)
@@ -220,9 +221,9 @@ func performSingleProxyCheck(ctx context.Context, proxyEntry config.ProxyConfigE
 		result.Error = "failed to parse proxy URL: " + err.Error()
 		return result
 	}
-       transport := &http.Transport{Proxy: http.ProxyURL(proxyURL), TLSHandshakeTimeout: cfg.InitialHealthCheckTimeout / 2, DisableKeepAlives: true}
-       client := &http.Client{Transport: transport, Timeout: cfg.InitialHealthCheckTimeout + (2 * time.Second)}
-       req, err := http.NewRequestWithContext(ctx, "GET", cfg.TestURL, nil)
+	transport := &http.Transport{Proxy: http.ProxyURL(proxyURL), TLSHandshakeTimeout: cfg.InitialHealthCheckTimeout / 2, DisableKeepAlives: true}
+	client := &http.Client{Transport: transport, Timeout: cfg.InitialHealthCheckTimeout + (2 * time.Second)}
+	req, err := http.NewRequestWithContext(ctx, "GET", cfg.TestURL, nil)
 	if err != nil {
 		result.Error = "failed to create health check request: " + err.Error()
 		return result
@@ -339,12 +340,7 @@ func (pm *ProxyManager) ReportProxyHealth(proxyID string, wasSuccessful bool, fa
 		pm.allProxies[foundIndex] = foundProxy
 		pm.updateActiveProxies()
 
-		// Broadcast proxy status change via WebSocket
-		status := "unhealthy"
-		if foundProxy.IsHealthy {
-			status = "healthy"
-		}
-		websocket.BroadcastProxyStatus(foundProxy.ID, status, "")
+		// Broadcast proxy status change via WebSocket removed
 	} else if foundIndex != -1 {
 		pm.allProxies[foundIndex] = foundProxy
 	}
@@ -477,8 +473,8 @@ func (pm *ProxyManager) ForceCheckProxiesAsync(idsToCheck []string) {
 			log.Printf("ProxyManager: ForceCheckProxiesAsync - No proxies found to check.")
 			return
 		}
-               var wgChecks sync.WaitGroup
-               semaphore := make(chan struct{}, pm.config.MaxConcurrentInitialChecks)
+		var wgChecks sync.WaitGroup
+		semaphore := make(chan struct{}, pm.config.MaxConcurrentInitialChecks)
 		var overallStatusChangedSinceStartOfAsyncOp bool
 		for _, ps := range proxiesToActuallyCheck {
 			wgChecks.Add(1)
@@ -499,10 +495,9 @@ func (pm *ProxyManager) ForceCheckProxiesAsync(idsToCheck []string) {
 						overallStatusChangedSinceStartOfAsyncOp = true
 						log.Printf("ProxyManager: ForceCheckProxiesAsync - Proxy ID '%s' (%s) PASSED check and is now HEALTHY.", proxyStatus.ProxyConfigEntry.ID, proxyStatus.ProxyConfigEntry.Address)
 
-						// Broadcast proxy status change via WebSocket
-						websocket.BroadcastProxyStatus(proxyStatus.ProxyConfigEntry.ID, "healthy", "")
+						// Broadcast proxy status change removed
 					}
-					
+
 					// Update database health status
 					pm.syncHealthStatusToDatabase(proxyStatus.ProxyConfigEntry.ID, true, checkResult.DurationMs)
 				} else {
@@ -513,15 +508,14 @@ func (pm *ProxyManager) ForceCheckProxiesAsync(idsToCheck []string) {
 						log.Printf("ProxyManager: ForceCheckProxiesAsync - Proxy ID '%s' (%s) FAILED check: %s. Marking UNHEALTHY.", proxyStatus.ProxyConfigEntry.ID, proxyStatus.ProxyConfigEntry.Address, checkResult.Error)
 						proxyStatus.ConsecutiveFailures = 1
 
-						// Broadcast proxy status change via WebSocket
-						websocket.BroadcastProxyStatus(proxyStatus.ProxyConfigEntry.ID, "unhealthy", "")
+						// Broadcast proxy status change removed
 					} else {
 						log.Printf("ProxyManager: ForceCheckProxiesAsync - Proxy ID '%s' (%s) FAILED check again: %s.", proxyStatus.ProxyConfigEntry.ID, proxyStatus.ProxyConfigEntry.Address, checkResult.Error)
 						if proxyStatus.ConsecutiveFailures == 0 {
 							proxyStatus.ConsecutiveFailures = 1
 						}
 					}
-					
+
 					// Update database health status
 					pm.syncHealthStatusToDatabase(proxyStatus.ProxyConfigEntry.ID, false, checkResult.DurationMs)
 				}
@@ -577,17 +571,17 @@ func (pm *ProxyManager) UpdateProxyUserEnabledStatus(proxyID string, isEnabled b
 
 // UpdateConfig updates the proxy manager configuration.
 func (pm *ProxyManager) UpdateConfig(cfg config.ProxyManagerConfig) {
-       if cfg.InitialHealthCheckTimeout <= 0 {
-               cfg.InitialHealthCheckTimeout = defaultInitialHealthCheckTimeout
-       }
-       if cfg.MaxConcurrentInitialChecks == 0 {
-               cfg.MaxConcurrentInitialChecks = defaultMaxConcurrentInitialChecks
-       }
-       updatePackageConfig(cfg)
-       pm.mu.Lock()
-       pm.healthCheckTimeout = cfg.InitialHealthCheckTimeout
-       pm.config = cfg
-       pm.mu.Unlock()
+	if cfg.InitialHealthCheckTimeout <= 0 {
+		cfg.InitialHealthCheckTimeout = defaultInitialHealthCheckTimeout
+	}
+	if cfg.MaxConcurrentInitialChecks == 0 {
+		cfg.MaxConcurrentInitialChecks = defaultMaxConcurrentInitialChecks
+	}
+	updatePackageConfig(cfg)
+	pm.mu.Lock()
+	pm.healthCheckTimeout = cfg.InitialHealthCheckTimeout
+	pm.config = cfg
+	pm.mu.Unlock()
 }
 
 // IsProxyRelatedError checks if an error message suggests a proxy-related issue.
@@ -624,21 +618,21 @@ func (pm *ProxyManager) syncHealthStatusToDatabase(proxyID string, isHealthy boo
 	if pm.proxyStore == nil || pm.db == nil {
 		return // Skip database sync if store is not available
 	}
-	
+
 	proxyUUID, err := uuid.Parse(proxyID)
 	if err != nil {
 		log.Printf("ProxyManager: syncHealthStatusToDatabase - Invalid proxy ID format '%s': %v", proxyID, err)
 		return
 	}
-	
+
 	var latency sql.NullInt32
 	if latencyMs > 0 {
 		latency = sql.NullInt32{Int32: int32(latencyMs), Valid: true}
 	}
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	err = pm.proxyStore.UpdateProxyHealth(ctx, pm.db, proxyUUID, isHealthy, latency, time.Now())
 	if err != nil {
 		log.Printf("ProxyManager: Failed to sync health status to database for proxy ID '%s': %v", proxyID, err)

@@ -2,7 +2,6 @@
 
 import PersonaForm from '@/components/personas/PersonaForm';
 import PageHeader from '@/components/shared/PageHeader';
-import type { components } from '@/lib/api-client/types';
 
 // Use backend-generated types directly - no custom types needed
 import { UserCog, Globe, Wifi, AlertCircle } from 'lucide-react';

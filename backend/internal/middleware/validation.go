@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 package middleware
 
 import (
@@ -100,7 +103,7 @@ func validateCommonFields(data interface{}) error {
 		lowerKey := strings.ToLower(key)
 		isIdField := strings.Contains(lowerKey, "id") || strings.HasSuffix(lowerKey, "_id")
 		isSessionId := lowerKey == "sessionid"
-		
+
 		if isIdField && !isSessionId {
 			if strValue, ok := value.(string); ok {
 				if !isValidUUID(strValue) {

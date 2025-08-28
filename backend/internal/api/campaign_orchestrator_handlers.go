@@ -1,3 +1,6 @@
+//go:build legacy_gin
+// +build legacy_gin
+
 // File: backend/internal/api/campaign_orchestrator_handlers.go
 package api
 
@@ -14,7 +17,8 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/fntelecomllc/studio/backend/internal/store"
-	"github.com/fntelecomllc/studio/backend/internal/websocket"
+
+	// WS removed
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -24,7 +28,6 @@ type CampaignOrchestratorAPIHandler struct {
 	orchestrator            *application.CampaignOrchestrator // NEW: Domain-driven orchestrator (Phase 4)
 	domainGenerationService services.DomainGenerationService  // Legacy: Keep for backward compatibility during transition
 	campaignStore           store.CampaignStore               // Direct access needed for pattern offset queries
-	broadcaster             websocket.Broadcaster             // WebSocket broadcaster for real-time updates
 	db                      store.Querier                     // Database connection for store operations
 }
 
@@ -33,13 +36,11 @@ func NewCampaignOrchestratorAPIHandler(
 	orchestrator *application.CampaignOrchestrator,
 	domainGenerationService services.DomainGenerationService,
 	campaignStore store.CampaignStore,
-	broadcaster websocket.Broadcaster,
 	db store.Querier) *CampaignOrchestratorAPIHandler {
 	return &CampaignOrchestratorAPIHandler{
 		orchestrator:            orchestrator,
 		domainGenerationService: domainGenerationService,
 		campaignStore:           campaignStore,
-		broadcaster:             broadcaster,
 		db:                      db,
 	}
 }
@@ -66,12 +67,20 @@ func getCurrentPhaseString(campaign *models.LeadGenerationCampaign) string {
 	return "setup"
 }
 
-func getCurrentPhaseEnum(campaign *models.LeadGenerationCampaign) *models.PhaseTypeEnum {
-	return campaign.CurrentPhase
+func getCurrentPhaseEnum(campaign *models.LeadGenerationCampaign) *PhaseType {
+	if campaign.CurrentPhase == nil {
+		return nil
+	}
+	v := PhaseType(*campaign.CurrentPhase)
+	return &v
 }
 
-func getPhaseStatusEnum(campaign *models.LeadGenerationCampaign) *models.PhaseStatusEnum {
-	return campaign.PhaseStatus
+func getPhaseStatusEnum(campaign *models.LeadGenerationCampaign) *PhaseStatus {
+	if campaign.PhaseStatus == nil {
+		return nil
+	}
+	v := PhaseStatus(*campaign.PhaseStatus)
+	return &v
 }
 
 // RegisterCampaignOrchestrationRoutes registers all campaign orchestration related routes.
@@ -106,17 +115,6 @@ func (h *CampaignOrchestratorAPIHandler) RegisterCampaignOrchestrationRoutes(gro
 }
 
 // createLeadGenerationCampaign creates a new lead generation campaign using standalone services
-// @Summary Create lead generation campaign
-// @Description Create a new lead generation campaign with domain generation configuration
-// @Tags campaigns
-// @ID createLeadGenerationCampaign
-// @Accept json
-// @Produce json
-// @Param request body services.CreateLeadGenerationCampaignRequest true "Lead generation campaign creation request"
-// @Success 201 {object} APIResponse "Campaign created successfully"
-// @Failure 400 {object} api.APIResponse "Bad Request"
-// @Failure 500 {object} api.APIResponse "Internal Server Error"
-// @Router /campaigns/lead-generation [post]
 func (h *CampaignOrchestratorAPIHandler) createLeadGenerationCampaign(c *gin.Context) {
 	var req services.CreateLeadGenerationCampaignRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -178,28 +176,11 @@ func (h *CampaignOrchestratorAPIHandler) createLeadGenerationCampaign(c *gin.Con
 
 	log.Printf("Successfully created lead generation campaign: %s", campaign.ID)
 
-	// Broadcast campaign creation to WebSocket clients
-	websocket.BroadcastCampaignCreated(campaign.ID.String(), campaign)
-
 	// Use unified response emission pattern
 	respondWithJSONGin(c, http.StatusCreated, campaign)
 }
 
 // configurePhaseStandalone configures a specific phase for a campaign using standalone services
-// @Summary Configure campaign phase (standalone)
-// @Description Configure a specific phase for a campaign using standalone services
-// @Tags campaigns
-// @ID configurePhaseStandalone
-// @Accept json
-// @Produce json
-// @Param campaignId path string true "Campaign ID (UUID)"
-// @Param phase path string true "Phase type" Enums(dns_validation, http_keyword_validation, analysis)
-// @Param request body PhaseConfigureRequest true "Phase configuration request"
-// @Success 200 {object} APIResponse "Phase configured successfully"
-// @Failure 400 {object} api.APIResponse "Bad Request"
-// @Failure 404 {object} api.APIResponse "Campaign not found"
-// @Failure 500 {object} api.APIResponse "Internal Server Error"
-// @Router /campaigns/{campaignId}/phases/{phase}/configure [post]
 func (h *CampaignOrchestratorAPIHandler) configurePhaseStandalone(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	phase := c.Param("phase")
@@ -271,18 +252,6 @@ func (h *CampaignOrchestratorAPIHandler) configurePhaseStandalone(c *gin.Context
 }
 
 // startPhaseStandalone starts a specific phase using standalone services
-// @Summary Start campaign phase (standalone)
-// @Description Start a specific phase of a campaign using standalone services
-// @Tags campaigns
-// @ID startPhaseStandalone
-// @Produce json
-// @Param campaignId path string true "Campaign ID (UUID)"
-// @Param phase path string true "Phase name" Enums(domain-generation, dns-validation, http-validation)
-// @Success 200 {object} APIResponse "Phase started successfully"
-// @Failure 400 {object} api.APIResponse "Bad Request"
-// @Failure 404 {object} api.APIResponse "Campaign not found"
-// @Failure 500 {object} api.APIResponse "Internal Server Error"
-// @Router /campaigns/{campaignId}/phases/{phase}/start [post]
 func (h *CampaignOrchestratorAPIHandler) startPhaseStandalone(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	phase := c.Param("phase")
@@ -326,18 +295,6 @@ func (h *CampaignOrchestratorAPIHandler) startPhaseStandalone(c *gin.Context) {
 }
 
 // getPhaseStatusStandalone gets status for a specific phase using standalone services
-// @Summary Get phase status (standalone)
-// @Description Get status information for a specific phase of a campaign using standalone services
-// @Tags campaigns
-// @ID getPhaseStatusStandalone
-// @Produce json
-// @Param campaignId path string true "Campaign ID (UUID)"
-// @Param phase path string true "Phase type" Enums(domain_generation, dns_validation, http_keyword_validation, analysis)
-// @Success 200 {object} APIResponse "Phase status retrieved successfully"
-// @Failure 400 {object} api.APIResponse "Bad Request"
-// @Failure 404 {object} api.APIResponse "Campaign or phase not found"
-// @Failure 500 {object} api.APIResponse "Internal Server Error"
-// @Router /campaigns/{campaignId}/phases/{phase}/status [get]
 func (h *CampaignOrchestratorAPIHandler) getPhaseStatusStandalone(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	phase := c.Param("phase")
@@ -464,17 +421,6 @@ func (h *CampaignOrchestratorAPIHandler) getPhaseStatusStandalone(c *gin.Context
 }
 
 // getCampaignProgressStandalone gets campaign progress using standalone services
-// @Summary Get campaign progress (standalone)
-// @Description Get campaign progress information using standalone services
-// @Tags campaigns
-// @ID getCampaignProgressStandalone
-// @Produce json
-// @Param campaignId path string true "Campaign ID (UUID)"
-// @Success 200 {object} APIResponse "Campaign progress"
-// @Failure 400 {object} api.APIResponse "Bad Request"
-// @Failure 404 {object} api.APIResponse "Campaign not found"
-// @Failure 500 {object} api.APIResponse "Internal Server Error"
-// @Router /campaigns/{campaignId}/progress [get]
 func (h *CampaignOrchestratorAPIHandler) getCampaignProgressStandalone(c *gin.Context) {
 	campaignIDStr := c.Param("campaignId")
 	campaignID, err := uuid.Parse(campaignIDStr)
@@ -566,14 +512,6 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignProgressStandalone(c *gin.Co
 }
 
 // getCampaignsStandalone lists all campaigns using standalone services
-// @Summary List campaigns (standalone)
-// @Description Get list of all campaigns with phase-centric bulk data
-// @Tags campaigns
-// @ID getCampaignsStandalone
-// @Produce json
-// @Success 200 {object} APIResponse{data=CampaignsListAPIResponse} "Campaigns retrieved successfully"
-// @Failure 500 {object} APIResponse "Internal Server Error"
-// @Router /campaigns [get]
 func (h *CampaignOrchestratorAPIHandler) getCampaignsStandalone(c *gin.Context) {
 	// Get user from context
 	userID, exists := c.Get("user_id")
@@ -647,17 +585,6 @@ func (h *CampaignOrchestratorAPIHandler) getCampaignsStandalone(c *gin.Context) 
 }
 
 // getBulkEnrichedCampaignData retrieves bulk enriched data for campaigns
-// @Summary Get bulk enriched campaign data
-// @Description Retrieve bulk enriched data across multiple campaigns for enterprise-scale processing
-// @Tags campaigns
-// @ID getBulkEnrichedCampaignData
-// @Accept json
-// @Produce json
-// @Param request body BulkEnrichedDataRequest true "Bulk data request"
-// @Success 200 {object} APIResponse "Bulk data retrieved successfully"
-// @Failure 400 {object} api.APIResponse "Bad Request"
-// @Failure 500 {object} api.APIResponse "Internal Server Error"
-// @Router /campaigns/bulk/enriched-data [post]
 func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Context) {
 	var request BulkEnrichedDataRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -716,9 +643,9 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 			continue // Skip campaigns user doesn't own
 		}
 
-		// Create phase enum pointers
-		currentPhase := models.PhaseTypeEnum(getCurrentPhaseString(campaign))
-		phaseStatus := models.PhaseStatusEnum(getPhaseStatusString(campaign))
+		// Create phase enum pointers (use public API enum types)
+		currentPhase := PhaseType(getCurrentPhaseString(campaign))
+		phaseStatus := PhaseStatus(getPhaseStatusString(campaign))
 
 		// Build proper phase progress data
 		progressData := PhaseProgressData{
@@ -740,21 +667,21 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 
 		// Set phase-specific progress based on current phase
 		switch currentPhase {
-		case models.PhaseTypeDomainGeneration:
+		case PhaseTypeDomainGeneration:
 			if campaign.Domains != nil {
 				progressData.DomainGeneration = &DomainGenerationProgress{
 					DomainsGenerated: int(*campaign.Domains),
 					GenerationRate:   50, // Default rate
 				}
 			}
-		case models.PhaseTypeDNSValidation:
+		case PhaseTypeDNSValidation:
 			if campaign.DNSValidatedDomains != nil {
 				progressData.DNSValidation = &DNSValidationProgress{
 					ValidDomains:   int(*campaign.DNSValidatedDomains),
 					ValidationRate: 30, // Default rate
 				}
 			}
-		case models.PhaseTypeHTTPKeywordValidation:
+		case PhaseTypeHTTPKeywordValidation:
 			if campaign.Leads != nil {
 				progressData.HTTPValidation = &HTTPValidationProgress{
 					ScannedDomains:  int(*campaign.Leads),
@@ -818,17 +745,6 @@ func (h *CampaignOrchestratorAPIHandler) getBulkEnrichedCampaignData(c *gin.Cont
 }
 
 // getPatternOffset gets the current pattern offset for domain generation
-// @Summary Get domain generation pattern offset
-// @Description Get the current offset for domain generation patterns
-// @Tags campaigns
-// @ID getPatternOffset
-// @Accept json
-// @Produce json
-// @Param request body PatternOffsetRequest true "Pattern offset request"
-// @Success 200 {object} APIResponse{data=PatternOffsetResponse} "Pattern offset retrieved successfully"
-// @Failure 400 {object} APIResponse "Bad Request"
-// @Failure 500 {object} APIResponse "Internal Server Error"
-// @Router /campaigns/domain-generation/pattern-offset [post]
 func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
 	var req PatternOffsetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -919,17 +835,6 @@ func (h *CampaignOrchestratorAPIHandler) getPatternOffset(c *gin.Context) {
 }
 
 // getCampaignDomainsStatus retrieves domain status summary for a campaign
-// @Summary Get campaign domain status summary
-// @Description Retrieve domain status summary and counts for a campaign
-// @Tags campaigns
-// @ID getCampaignDomainsStatus
-// @Produce json
-// @Param campaignId path string true "Campaign ID (UUID)"
-// @Success 200 {object} APIResponse "Domain status summary retrieved successfully"
-// @Failure 400 {object} api.APIResponse "Bad Request"
-// @Failure 404 {object} api.APIResponse "Campaign not found"
-// @Failure 500 {object} api.APIResponse "Internal Server Error"
-// @Router /campaigns/{campaignId}/domains/status [get]
 func (h *CampaignOrchestratorAPIHandler) getCampaignDomainsStatus(c *gin.Context) {
 	campaignId := c.Param("campaignId")
 

@@ -1,9 +1,12 @@
+//go:build exclude
+
 package services
 
 import (
 	"context"
 	"fmt"
-	"studio/backend/internal/domain"
+
+	"github.com/fntelecomllc/studio/backend/internal/domain"
 
 	"github.com/google/uuid"
 )

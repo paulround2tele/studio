@@ -18,7 +18,6 @@
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import type { components } from '@/lib/api-client/types';
 
 // Use the single source of truth
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';

@@ -3,11 +3,9 @@
 
 import CampaignFormV2 from '@/components/campaigns/CampaignFormV2';
 import PageHeader from '@/components/shared/PageHeader';
-import type { components } from '@/lib/api-client/types';
 import { useGetCampaignsStandaloneQuery } from '@/store/api/campaignApi';
 
-// TODO: Fix this when proper campaign detail types are available
-// type EnrichedCampaignData = components['schemas']['api.EnrichedCampaignData'];
+// TODO: Replace with generated enriched campaign types if/when added to OpenAPI spec
 import { FilePenLine, AlertCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { Suspense } from 'react';
