@@ -3,7 +3,7 @@ get:
   summary: List bulk operations
   operationId: campaigns_bulk_operations_list
   responses:
-    '200':
+    "200":
       description: OK
       content:
         application/json:
@@ -17,6 +17,14 @@ get:
                     items:
                       type: object
                       properties:
-                        operationId: { type: string, format: uuid }
-                        type: { type: string }
-                        status: { type: string }
+                        operationId:
+                          type: string
+                          format: uuid
+                        type:
+                          type: string
+                        status:
+                          type: string
+    "400": { $ref: '../../components/responses.yaml#/BadRequest' }
+    "401": { $ref: '../../components/responses.yaml#/Unauthorized' }
+    "429": { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    "500": { $ref: '../../components/responses.yaml#/InternalServerError' }

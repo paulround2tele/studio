@@ -9,6 +9,119 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/config"
 )
 
+// ConfigGetAuth returns sanitized auth configuration as a free-form object
+func (h *strictHandlers) ConfigGetAuth(ctx context.Context, r gen.ConfigGetAuthRequestObject) (gen.ConfigGetAuthResponseObject, error) {
+	var ac config.AuthConfig
+	if h.deps != nil && h.deps.Config != nil && h.deps.Config.Server.AuthConfig != nil {
+		ac = *h.deps.Config.Server.AuthConfig
+	} else {
+		ac = config.GetDefaultAuthConfig()
+	}
+	m := map[string]interface{}{
+		"bcryptCost":                 ac.BcryptCost,
+		"passwordMinLength":          ac.PasswordMinLength,
+		"sessionDurationSeconds":     int(ac.SessionDuration / time.Second),
+		"sessionIdleTimeoutSeconds":  int(ac.SessionIdleTimeout / time.Second),
+		"sessionCookieName":          ac.SessionCookieName,
+		"sessionCookieDomain":        ac.SessionCookieDomain,
+		"sessionCookieSecure":        ac.SessionCookieSecure,
+		"resetTokenExpirySeconds":    int(ac.ResetTokenExpiry / time.Second),
+		"maxFailedAttempts":          ac.MaxFailedAttempts,
+		"accountLockDurationSeconds": int(ac.AccountLockDuration / time.Second),
+		"rateLimitWindowSeconds":     int(ac.RateLimitWindow / time.Second),
+		"maxLoginAttempts":           ac.MaxLoginAttempts,
+		"maxPasswordResetAttempts":   ac.MaxPasswordResetAttempts,
+		"captchaThreshold":           ac.CaptchaThreshold,
+	}
+	return gen.ConfigGetAuth200JSONResponse{Data: (*gen.AuthConfig)(&m), Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+}
+
+// ConfigUpdateAuth updates auth config fields dynamically and returns the updated config
+func (h *strictHandlers) ConfigUpdateAuth(ctx context.Context, r gen.ConfigUpdateAuthRequestObject) (gen.ConfigUpdateAuthResponseObject, error) {
+	if r.Body == nil {
+		return gen.ConfigUpdateAuth400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "body required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	if h.deps == nil || h.deps.Config == nil {
+		return gen.ConfigUpdateAuth500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	if h.deps.Config.Server.AuthConfig == nil {
+		cfg := config.GetDefaultAuthConfig()
+		h.deps.Config.Server.AuthConfig = &cfg
+	}
+	ac := h.deps.Config.Server.AuthConfig
+	body := map[string]interface{}(*r.Body)
+	// Update known fields if present
+	if v, ok := body["bcryptCost"].(float64); ok {
+		ac.BcryptCost = int(v)
+	}
+	if v, ok := body["passwordMinLength"].(float64); ok {
+		ac.PasswordMinLength = int(v)
+	}
+	if v, ok := body["sessionDurationSeconds"].(float64); ok {
+		ac.SessionDuration = time.Duration(int(v)) * time.Second
+	}
+	if v, ok := body["sessionIdleTimeoutSeconds"].(float64); ok {
+		ac.SessionIdleTimeout = time.Duration(int(v)) * time.Second
+	}
+	if v, ok := body["sessionCookieName"].(string); ok {
+		ac.SessionCookieName = v
+	}
+	if v, ok := body["sessionCookieDomain"].(string); ok {
+		ac.SessionCookieDomain = v
+	}
+	if v, ok := body["sessionCookieSecure"].(bool); ok {
+		ac.SessionCookieSecure = v
+	}
+	if v, ok := body["resetTokenExpirySeconds"].(float64); ok {
+		ac.ResetTokenExpiry = time.Duration(int(v)) * time.Second
+	}
+	if v, ok := body["maxFailedAttempts"].(float64); ok {
+		ac.MaxFailedAttempts = int(v)
+	}
+	if v, ok := body["accountLockDurationSeconds"].(float64); ok {
+		ac.AccountLockDuration = time.Duration(int(v)) * time.Second
+	}
+	if v, ok := body["rateLimitWindowSeconds"].(float64); ok {
+		ac.RateLimitWindow = time.Duration(int(v)) * time.Second
+	}
+	if v, ok := body["maxLoginAttempts"].(float64); ok {
+		ac.MaxLoginAttempts = int(v)
+	}
+	if v, ok := body["maxPasswordResetAttempts"].(float64); ok {
+		ac.MaxPasswordResetAttempts = int(v)
+	}
+	if v, ok := body["captchaThreshold"].(float64); ok {
+		ac.CaptchaThreshold = int(v)
+	}
+	// Propagate to session service if available
+	if h.deps.Session != nil {
+		if ac.SessionDuration > 0 {
+			h.deps.Session.GetConfig().Duration = ac.SessionDuration
+		}
+		if ac.SessionIdleTimeout > 0 {
+			h.deps.Session.GetConfig().IdleTimeout = ac.SessionIdleTimeout
+		}
+	}
+	// Return updated snapshot
+	m := map[string]interface{}{
+		"bcryptCost":                 ac.BcryptCost,
+		"passwordMinLength":          ac.PasswordMinLength,
+		"sessionDurationSeconds":     int(ac.SessionDuration / time.Second),
+		"sessionIdleTimeoutSeconds":  int(ac.SessionIdleTimeout / time.Second),
+		"sessionCookieName":          ac.SessionCookieName,
+		"sessionCookieDomain":        ac.SessionCookieDomain,
+		"sessionCookieSecure":        ac.SessionCookieSecure,
+		"resetTokenExpirySeconds":    int(ac.ResetTokenExpiry / time.Second),
+		"maxFailedAttempts":          ac.MaxFailedAttempts,
+		"accountLockDurationSeconds": int(ac.AccountLockDuration / time.Second),
+		"rateLimitWindowSeconds":     int(ac.RateLimitWindow / time.Second),
+		"maxLoginAttempts":           ac.MaxLoginAttempts,
+		"maxPasswordResetAttempts":   ac.MaxPasswordResetAttempts,
+		"captchaThreshold":           ac.CaptchaThreshold,
+	}
+	return gen.ConfigUpdateAuth200JSONResponse{Data: (*gen.AuthConfig)(&m), Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+}
+
 // ---- Config: DNS ----
 func (h *strictHandlers) ConfigGetDns(ctx context.Context, r gen.ConfigGetDnsRequestObject) (gen.ConfigGetDnsResponseObject, error) {
 	if h.deps == nil || h.deps.Config == nil {

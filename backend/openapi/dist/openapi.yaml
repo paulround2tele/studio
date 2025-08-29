@@ -2,6 +2,9 @@ openapi: 3.1.0
 info:
   title: Domain Flow API
   version: 2.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
 servers:
   - url: https://api.domainflow.dev/api/v2
     description: Production server
@@ -3162,6 +3165,14 @@ paths:
                               type: string
                             status:
                               type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /campaigns/bulk/operations/{operationId}/status:
     get:
       tags:
