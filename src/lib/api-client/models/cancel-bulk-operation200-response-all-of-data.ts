@@ -13,6 +13,9 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { BulkOperationCancelStatus } from './bulk-operation-cancel-status';
 
 /**
  * 
@@ -28,19 +31,11 @@ export interface CancelBulkOperation200ResponseAllOfData {
     'operationId'?: string;
     /**
      * 
-     * @type {string}
+     * @type {BulkOperationCancelStatus}
      * @memberof CancelBulkOperation200ResponseAllOfData
      */
-    'status'?: CancelBulkOperation200ResponseAllOfDataStatusEnum;
+    'status'?: BulkOperationCancelStatus;
 }
 
-/**
-    * @export
-    * @enum {string}
-    */
-export enum CancelBulkOperation200ResponseAllOfDataStatusEnum {
-    cancelled = 'cancelled',
-    cancelling = 'cancelling'
-}
 
 

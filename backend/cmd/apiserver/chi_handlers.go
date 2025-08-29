@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
 	"github.com/fntelecomllc/studio/backend/internal/config"
@@ -38,7 +40,30 @@ func startChiServer() {
 	}
 
 	// Build generated strict server with base URL /api/v2 and auth context injection
-	handler := gen.NewStrictHandler(&strictHandlers{deps: deps}, []gen.StrictMiddlewareFunc{authCtx})
+	// Wire strict error handlers to return our standardized envelopes
+	opts := gen.StrictHTTPServerOptions{
+		RequestErrorHandlerFunc: func(w http.ResponseWriter, r *http.Request, err error) {
+			// 400 Bad Request envelope
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(gen.BadRequestJSONResponse{
+				Error:     gen.ApiError{Message: err.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()},
+				RequestId: requestID(r),
+				Success:   boolPtr(false),
+			})
+		},
+		ResponseErrorHandlerFunc: func(w http.ResponseWriter, r *http.Request, err error) {
+			// 500 Internal Server Error envelope for unexpected response types/validation
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			_ = json.NewEncoder(w).Encode(gen.InternalServerErrorJSONResponse{
+				Error:     gen.ApiError{Message: err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()},
+				RequestId: requestID(r),
+				Success:   boolPtr(false),
+			})
+		},
+	}
+	handler := gen.NewStrictHandlerWithOptions(&strictHandlers{deps: deps}, []gen.StrictMiddlewareFunc{authCtx}, opts)
 	r := gen.HandlerWithOptions(handler, gen.ChiServerOptions{BaseURL: "/api/v2"})
 
 	port := os.Getenv("SERVER_PORT")

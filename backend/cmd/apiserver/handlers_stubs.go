@@ -36,11 +36,11 @@ func (h *strictHandlers) AuthRefresh(ctx context.Context, r gen.AuthRefreshReque
 
 func (h *strictHandlers) CampaignsList(ctx context.Context, r gen.CampaignsListRequestObject) (gen.CampaignsListResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
-		return gen.CampaignsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "campaign store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "campaign store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	rows, err := h.deps.Stores.Campaign.ListCampaigns(ctx, h.deps.DB, store.ListCampaignsFilter{})
 	if err != nil {
-		return gen.CampaignsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to list campaigns", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to list campaigns", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	out := make([]gen.CampaignResponse, 0, len(rows))
 	for _, c := range rows {
@@ -50,10 +50,10 @@ func (h *strictHandlers) CampaignsList(ctx context.Context, r gen.CampaignsListR
 }
 func (h *strictHandlers) CampaignsCreate(ctx context.Context, r gen.CampaignsCreateRequestObject) (gen.CampaignsCreateResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
-		return gen.CampaignsCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "campaign store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "campaign store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if r.Body == nil || r.Body.Name == "" {
-		return gen.CampaignsCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "name is required", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "name is required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	now := time.Now()
 	m := &models.LeadGenerationCampaign{
@@ -67,7 +67,7 @@ func (h *strictHandlers) CampaignsCreate(ctx context.Context, r gen.CampaignsCre
 		IsFullSequenceMode: true,
 	}
 	if err := h.deps.Stores.Campaign.CreateCampaign(ctx, h.deps.DB, m); err != nil {
-		return gen.CampaignsCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to create campaign", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to create campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	// Best-effort: create phases
 	_ = h.deps.Stores.Campaign.CreateCampaignPhases(ctx, h.deps.DB, m.ID)
@@ -76,43 +76,43 @@ func (h *strictHandlers) CampaignsCreate(ctx context.Context, r gen.CampaignsCre
 }
 func (h *strictHandlers) CampaignsDelete(ctx context.Context, r gen.CampaignsDeleteRequestObject) (gen.CampaignsDeleteResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
-		return gen.CampaignsDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "campaign store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "campaign store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if err := h.deps.Stores.Campaign.DeleteCampaign(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
 		if err == store.ErrNotFound {
-			return gen.CampaignsDelete404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.CampaignsDelete404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.CampaignsDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to delete campaign", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to delete campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	return gen.CampaignsDelete204Response{}, nil
 }
 func (h *strictHandlers) CampaignsGet(ctx context.Context, r gen.CampaignsGetRequestObject) (gen.CampaignsGetResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
-		return gen.CampaignsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "campaign store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "campaign store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	m, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
 	if err != nil {
 		if err == store.ErrNotFound {
-			return gen.CampaignsGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.CampaignsGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.CampaignsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch campaign", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	resp := mapCampaignToResponse(m)
 	return gen.CampaignsGet200JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
 }
 func (h *strictHandlers) CampaignsUpdate(ctx context.Context, r gen.CampaignsUpdateRequestObject) (gen.CampaignsUpdateResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
-		return gen.CampaignsUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "campaign store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "campaign store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if r.Body == nil {
-		return gen.CampaignsUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	m, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
 	if err != nil {
 		if err == store.ErrNotFound {
-			return gen.CampaignsUpdate404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.CampaignsUpdate404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.CampaignsUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch campaign", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if r.Body.Name != nil {
 		m.Name = *r.Body.Name
@@ -124,7 +124,7 @@ func (h *strictHandlers) CampaignsUpdate(ctx context.Context, r gen.CampaignsUpd
 	}
 	m.UpdatedAt = time.Now()
 	if err := h.deps.Stores.Campaign.UpdateCampaign(ctx, h.deps.DB, m); err != nil {
-		return gen.CampaignsUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to update campaign", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to update campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	resp := mapCampaignToResponse(m)
 	return gen.CampaignsUpdate200JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
@@ -132,32 +132,32 @@ func (h *strictHandlers) CampaignsUpdate(ctx context.Context, r gen.CampaignsUpd
 func (h *strictHandlers) CampaignsPhaseConfigure(ctx context.Context, r gen.CampaignsPhaseConfigureRequestObject) (gen.CampaignsPhaseConfigureResponseObject, error) {
 	// Dependencies check
 	if h.deps == nil || h.deps.Orchestrator == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
-		return gen.CampaignsPhaseConfigure401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseConfigure401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	// Validate body
 	if r.Body == nil {
-		return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	// Ensure campaign exists
 	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
 		if err == store.ErrNotFound {
-			return gen.CampaignsPhaseConfigure404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.CampaignsPhaseConfigure404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.CampaignsPhaseConfigure500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseConfigure500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	// Map phase
 	phaseModel, err := mapAPIPhaseToModel(string(r.Phase))
 	if err != nil {
-		return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid phase", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid phase", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	// Validate configuration
 	cfg := toMap(r.Body)
 	if err := h.deps.Orchestrator.ValidatePhaseConfiguration(ctx, phaseModel, cfg); err != nil {
-		return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid configuration: " + err.Error(), Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid configuration: " + err.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	// Configure phase
 	if err := h.deps.Orchestrator.ConfigurePhase(ctx, uuid.UUID(r.CampaignId), phaseModel, cfg); err != nil {
-		return gen.CampaignsPhaseConfigure500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to configure phase", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseConfigure500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to configure phase", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	// Fetch status and return
 	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, uuid.UUID(r.CampaignId), phaseModel)
@@ -166,20 +166,20 @@ func (h *strictHandlers) CampaignsPhaseConfigure(ctx context.Context, r gen.Camp
 }
 func (h *strictHandlers) CampaignsPhaseStart(ctx context.Context, r gen.CampaignsPhaseStartRequestObject) (gen.CampaignsPhaseStartResponseObject, error) {
 	if h.deps == nil || h.deps.Orchestrator == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
-		return gen.CampaignsPhaseStart401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseStart401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
 		if err == store.ErrNotFound {
-			return gen.CampaignsPhaseStart404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.CampaignsPhaseStart404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.CampaignsPhaseStart500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseStart500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	phaseModel, err := mapAPIPhaseToModel(string(r.Phase))
 	if err != nil {
-		return gen.CampaignsPhaseStart400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid phase", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseStart400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid phase", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if err := h.deps.Orchestrator.StartPhaseInternal(ctx, uuid.UUID(r.CampaignId), phaseModel); err != nil {
-		return gen.CampaignsPhaseStart500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to start phase: " + err.Error(), Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseStart500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to start phase: " + err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, uuid.UUID(r.CampaignId), phaseModel)
 	data := buildPhaseStatusResponse(phaseModel, st)
@@ -187,17 +187,17 @@ func (h *strictHandlers) CampaignsPhaseStart(ctx context.Context, r gen.Campaign
 }
 func (h *strictHandlers) CampaignsPhaseStatus(ctx context.Context, r gen.CampaignsPhaseStatusRequestObject) (gen.CampaignsPhaseStatusResponseObject, error) {
 	if h.deps == nil || h.deps.Orchestrator == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
-		return gen.CampaignsPhaseStatus401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseStatus401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
 		if err == store.ErrNotFound {
-			return gen.CampaignsPhaseStatus404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.CampaignsPhaseStatus404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.CampaignsPhaseStatus500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseStatus500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	phaseModel, err := mapAPIPhaseToModel(string(r.Phase))
 	if err != nil {
-		return gen.CampaignsPhaseStatus401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "invalid phase", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseStatus401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "invalid phase", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	st, err := h.deps.Orchestrator.GetPhaseStatus(ctx, uuid.UUID(r.CampaignId), phaseModel)
 	if err != nil {
@@ -210,20 +210,20 @@ func (h *strictHandlers) CampaignsPhaseStatus(ctx context.Context, r gen.Campaig
 }
 func (h *strictHandlers) CampaignsPhaseStop(ctx context.Context, r gen.CampaignsPhaseStopRequestObject) (gen.CampaignsPhaseStopResponseObject, error) {
 	if h.deps == nil || h.deps.Orchestrator == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
-		return gen.CampaignsPhaseStop401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseStop401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
 		if err == store.ErrNotFound {
-			return gen.CampaignsPhaseStop404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.CampaignsPhaseStop404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.CampaignsPhaseStop500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseStop500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	phaseModel, err := mapAPIPhaseToModel(string(r.Phase))
 	if err != nil {
-		return gen.CampaignsPhaseStop400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid phase", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseStop400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid phase", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if err := h.deps.Orchestrator.CancelPhase(ctx, uuid.UUID(r.CampaignId), phaseModel); err != nil {
-		return gen.CampaignsPhaseStop500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to stop phase: " + err.Error(), Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseStop500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to stop phase: " + err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, uuid.UUID(r.CampaignId), phaseModel)
 	data := buildPhaseStatusResponse(phaseModel, st)
@@ -231,14 +231,14 @@ func (h *strictHandlers) CampaignsPhaseStop(ctx context.Context, r gen.Campaigns
 }
 func (h *strictHandlers) CampaignsProgress(ctx context.Context, r gen.CampaignsProgressRequestObject) (gen.CampaignsProgressResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
-		return gen.CampaignsProgress401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsProgress401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	c, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
 	if err != nil {
 		if err == store.ErrNotFound {
-			return gen.CampaignsProgress404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.CampaignsProgress404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.CampaignsProgress401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsProgress401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	resp := gen.CampaignProgressResponse{CampaignId: openapi_types.UUID(c.ID)}
 	// Minimal: only fill timeline
@@ -288,12 +288,12 @@ func (h *strictHandlers) KeywordSetsRulesList(ctx context.Context, r gen.Keyword
 }
 func (h *strictHandlers) MonitoringCampaignHealth(ctx context.Context, r gen.MonitoringCampaignHealthRequestObject) (gen.MonitoringCampaignHealthResponseObject, error) {
 	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringCampaignHealth401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringCampaignHealth401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	// Use monitoring integration to compute campaign health
 	health := monitoring.GetGlobalMonitoringIntegration()
 	if health == nil {
-		return gen.MonitoringCampaignHealth500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "monitoring integration unavailable", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringCampaignHealth500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "monitoring integration unavailable", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	hres := health.GetCampaignHealth(uuid.UUID(r.CampaignId))
 	// Map to generic map[string]interface{} as per spec
@@ -302,10 +302,10 @@ func (h *strictHandlers) MonitoringCampaignHealth(ctx context.Context, r gen.Mon
 }
 func (h *strictHandlers) MonitoringCampaignLimits(ctx context.Context, r gen.MonitoringCampaignLimitsRequestObject) (gen.MonitoringCampaignLimitsResponseObject, error) {
 	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringCampaignLimits401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringCampaignLimits401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if r.Body == nil {
-		return gen.MonitoringCampaignLimits400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringCampaignLimits400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	// Apply limits via integration helper using expanded schema fields
 	var maxCPU float64 = 0
@@ -330,7 +330,7 @@ func (h *strictHandlers) MonitoringCampaignLimits(ctx context.Context, r gen.Mon
 }
 func (h *strictHandlers) MonitoringCampaignPerformance(ctx context.Context, r gen.MonitoringCampaignPerformanceRequestObject) (gen.MonitoringCampaignPerformanceResponseObject, error) {
 	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringCampaignPerformance401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringCampaignPerformance401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	// Return recent metrics filtered for campaign
 	limit := 100
@@ -347,11 +347,11 @@ func (h *strictHandlers) MonitoringCampaignPerformance(ctx context.Context, r ge
 }
 func (h *strictHandlers) MonitoringCampaignResources(ctx context.Context, r gen.MonitoringCampaignResourcesRequestObject) (gen.MonitoringCampaignResourcesResponseObject, error) {
 	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringCampaignResources401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringCampaignResources401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	usage, ok := h.deps.Monitoring.GetCampaignResourceUsage(uuid.UUID(r.CampaignId))
 	if !ok || usage == nil {
-		return gen.MonitoringCampaignResources404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found or no resource data", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringCampaignResources404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found or no resource data", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	data := toMap(usage)
 	return gen.MonitoringCampaignResources200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
@@ -359,12 +359,12 @@ func (h *strictHandlers) MonitoringCampaignResources(ctx context.Context, r gen.
 func (h *strictHandlers) MonitoringCampaignGeneric(ctx context.Context, r gen.MonitoringCampaignGenericRequestObject) (gen.MonitoringCampaignGenericResponseObject, error) {
 	// Return combined snapshot for campaign: health + last metrics + resources
 	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringCampaignGeneric401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringCampaignGeneric401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	campID := uuid.UUID(r.CampaignId)
 	integ := monitoring.GetGlobalMonitoringIntegration()
 	if integ == nil {
-		return gen.MonitoringCampaignGeneric500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "monitoring integration unavailable", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringCampaignGeneric500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "monitoring integration unavailable", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	health := integ.GetCampaignHealth(campID)
 	usage, _ := h.deps.Monitoring.GetCampaignResourceUsage(campID)
@@ -384,16 +384,16 @@ func (h *strictHandlers) MonitoringCampaignGeneric(ctx context.Context, r gen.Mo
 }
 func (h *strictHandlers) MonitoringCleanupForce(ctx context.Context, r gen.MonitoringCleanupForceRequestObject) (gen.MonitoringCleanupForceResponseObject, error) {
 	if h.deps == nil || h.deps.Cleanup == nil {
-		return gen.MonitoringCleanupForce401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "cleanup service not available", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringCleanupForce401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "cleanup service not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if err := h.deps.Cleanup.ForceCleanupCampaign(uuid.UUID(r.CampaignId)); err != nil {
-		return gen.MonitoringCleanupForce404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: err.Error(), Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringCleanupForce404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: err.Error(), Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	return gen.MonitoringCleanupForce202Response{}, nil
 }
 func (h *strictHandlers) MonitoringCleanupStats(ctx context.Context, r gen.MonitoringCleanupStatsRequestObject) (gen.MonitoringCleanupStatsResponseObject, error) {
 	if h.deps == nil || h.deps.Cleanup == nil {
-		return gen.MonitoringCleanupStats401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "cleanup service not available", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringCleanupStats401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "cleanup service not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	stats := h.deps.Cleanup.GetCleanupStats()
 	data := toMap(stats)
@@ -562,7 +562,7 @@ func buildPhaseStatusResponse(phase models.PhaseTypeEnum, st *domainservices.Pha
 func (h *strictHandlers) MonitoringDashboardSummary(ctx context.Context, r gen.MonitoringDashboardSummaryRequestObject) (gen.MonitoringDashboardSummaryResponseObject, error) {
 	integ := monitoring.GetGlobalMonitoringIntegration()
 	if integ == nil {
-		return gen.MonitoringDashboardSummary500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "monitoring integration unavailable", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringDashboardSummary500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "monitoring integration unavailable", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	sum := integ.GetSystemHealthSummary()
 	data := toMap(sum)
@@ -570,7 +570,7 @@ func (h *strictHandlers) MonitoringDashboardSummary(ctx context.Context, r gen.M
 }
 func (h *strictHandlers) MonitoringPerformanceTrends(ctx context.Context, r gen.MonitoringPerformanceTrendsRequestObject) (gen.MonitoringPerformanceTrendsResponseObject, error) {
 	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringPerformanceTrends401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringPerformanceTrends401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	// Basic trend: throughput per operation type last 24h
 	trends := h.deps.Monitoring.PerformanceTracker.GetThroughputTrends("domain_generation", 24)
@@ -579,7 +579,7 @@ func (h *strictHandlers) MonitoringPerformanceTrends(ctx context.Context, r gen.
 }
 func (h *strictHandlers) MonitoringHealth(ctx context.Context, r gen.MonitoringHealthRequestObject) (gen.MonitoringHealthResponseObject, error) {
 	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringHealth401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringHealth401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	health := h.deps.Monitoring.GetSystemHealth()
 	data := toMap(health)
@@ -587,7 +587,7 @@ func (h *strictHandlers) MonitoringHealth(ctx context.Context, r gen.MonitoringH
 }
 func (h *strictHandlers) MonitoringPerformanceActive(ctx context.Context, r gen.MonitoringPerformanceActiveRequestObject) (gen.MonitoringPerformanceActiveResponseObject, error) {
 	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringPerformanceActive401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringPerformanceActive401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	ops := h.deps.Monitoring.PerformanceTracker.GetActiveOperations()
 	data := toMap(ops)
@@ -595,7 +595,7 @@ func (h *strictHandlers) MonitoringPerformanceActive(ctx context.Context, r gen.
 }
 func (h *strictHandlers) MonitoringPerformanceFailed(ctx context.Context, r gen.MonitoringPerformanceFailedRequestObject) (gen.MonitoringPerformanceFailedResponseObject, error) {
 	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringPerformanceFailed401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringPerformanceFailed401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	failed := h.deps.Monitoring.PerformanceTracker.GetFailedOperations(50)
 	data := toMap(failed)
@@ -603,7 +603,7 @@ func (h *strictHandlers) MonitoringPerformanceFailed(ctx context.Context, r gen.
 }
 func (h *strictHandlers) MonitoringPerformanceMetrics(ctx context.Context, r gen.MonitoringPerformanceMetricsRequestObject) (gen.MonitoringPerformanceMetricsResponseObject, error) {
 	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringPerformanceMetrics401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringPerformanceMetrics401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	metrics := h.deps.Monitoring.PerformanceTracker.GetRecentMetrics(100)
 	data := toMap(metrics)
@@ -611,7 +611,7 @@ func (h *strictHandlers) MonitoringPerformanceMetrics(ctx context.Context, r gen
 }
 func (h *strictHandlers) MonitoringPerformanceSlow(ctx context.Context, r gen.MonitoringPerformanceSlowRequestObject) (gen.MonitoringPerformanceSlowResponseObject, error) {
 	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringPerformanceSlow401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringPerformanceSlow401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	slow := h.deps.Monitoring.PerformanceTracker.GetSlowOperations(5000, 50)
 	data := toMap(slow)
@@ -619,7 +619,7 @@ func (h *strictHandlers) MonitoringPerformanceSlow(ctx context.Context, r gen.Mo
 }
 func (h *strictHandlers) MonitoringPerformanceSummary(ctx context.Context, r gen.MonitoringPerformanceSummaryRequestObject) (gen.MonitoringPerformanceSummaryResponseObject, error) {
 	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringPerformanceSummary401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringPerformanceSummary401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	summaries := h.deps.Monitoring.PerformanceTracker.GetAllSummaries()
 	data := toMap(summaries)
@@ -627,7 +627,7 @@ func (h *strictHandlers) MonitoringPerformanceSummary(ctx context.Context, r gen
 }
 func (h *strictHandlers) MonitoringResourcesAlerts(ctx context.Context, r gen.MonitoringResourcesAlertsRequestObject) (gen.MonitoringResourcesAlertsResponseObject, error) {
 	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringResourcesAlerts401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringResourcesAlerts401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	alerts := h.deps.Monitoring.ResourceMonitor.GetActiveAlerts(50)
 	data := toMap(alerts)
@@ -635,7 +635,7 @@ func (h *strictHandlers) MonitoringResourcesAlerts(ctx context.Context, r gen.Mo
 }
 func (h *strictHandlers) MonitoringResourcesHistory(ctx context.Context, r gen.MonitoringResourcesHistoryRequestObject) (gen.MonitoringResourcesHistoryResponseObject, error) {
 	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringResourcesHistory401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringResourcesHistory401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	history := h.deps.Monitoring.ResourceMonitor.GetResourceHistory(24)
 	data := toMap(history)
@@ -643,7 +643,7 @@ func (h *strictHandlers) MonitoringResourcesHistory(ctx context.Context, r gen.M
 }
 func (h *strictHandlers) MonitoringResourcesSystem(ctx context.Context, r gen.MonitoringResourcesSystemRequestObject) (gen.MonitoringResourcesSystemResponseObject, error) {
 	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringResourcesSystem401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringResourcesSystem401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	usage := h.deps.Monitoring.ResourceMonitor.GetSystemUsage()
 	data := toMap(usage)
@@ -651,7 +651,7 @@ func (h *strictHandlers) MonitoringResourcesSystem(ctx context.Context, r gen.Mo
 }
 func (h *strictHandlers) MonitoringStats(ctx context.Context, r gen.MonitoringStatsRequestObject) (gen.MonitoringStatsResponseObject, error) {
 	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringStats401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: "unauthorized", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.MonitoringStats401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	stats := h.deps.Monitoring.GetMonitoringStats()
 	data := toMap(stats)
@@ -676,7 +676,7 @@ func (p *pipeResponseWriter) Flush()                      {}
 func (h *strictHandlers) SseEventsCampaign(ctx context.Context, r gen.SseEventsCampaignRequestObject) (gen.SseEventsCampaignResponseObject, error) {
 	// Stream events for a specific campaign
 	if h.deps == nil || h.deps.SSE == nil {
-		return gen.SseEventsCampaign500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "sse service not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.SseEventsCampaign500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "sse service not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	pr, pw := io.Pipe()
 	// Try to bind real user ID from context if set by upstream auth middleware
@@ -712,7 +712,7 @@ func (h *strictHandlers) SseEventsCampaign(ctx context.Context, r gen.SseEventsC
 }
 func (h *strictHandlers) SseEventsAll(ctx context.Context, r gen.SseEventsAllRequestObject) (gen.SseEventsAllResponseObject, error) {
 	if h.deps == nil || h.deps.SSE == nil {
-		return gen.SseEventsAll500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "sse service not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.SseEventsAll500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "sse service not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	pr, pw := io.Pipe()
 	// Bind real user when available
@@ -742,7 +742,7 @@ func (h *strictHandlers) SseEventsAll(ctx context.Context, r gen.SseEventsAllReq
 }
 func (h *strictHandlers) SseEventsStats(ctx context.Context, r gen.SseEventsStatsRequestObject) (gen.SseEventsStatsResponseObject, error) {
 	if h.deps == nil || h.deps.SSE == nil {
-		return gen.SseEventsStats500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "sse service not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.SseEventsStats500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "sse service not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	active := h.deps.SSE.GetClientCount()
 	total := h.deps.SSE.GetTotalEvents()
@@ -755,7 +755,7 @@ func (h *strictHandlers) SseEventsStats(ctx context.Context, r gen.SseEventsStat
 }
 func (h *strictHandlers) ProxiesList(ctx context.Context, r gen.ProxiesListRequestObject) (gen.ProxiesListResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Proxy == nil || h.deps.DB == nil {
-		return gen.ProxiesList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxiesList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	// Build filter
 	var proto models.ProxyProtocolEnum
@@ -775,7 +775,7 @@ func (h *strictHandlers) ProxiesList(ctx context.Context, r gen.ProxiesListReque
 	}
 	proxies, err := h.deps.Stores.Proxy.ListProxies(ctx, h.deps.DB, filter)
 	if err != nil {
-		return gen.ProxiesList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to list proxies", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxiesList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to list proxies", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	items := make([]gen.ProxyDetailsResponse, 0, len(proxies))
 	for _, p := range proxies {
@@ -806,10 +806,10 @@ func (h *strictHandlers) ProxiesList(ctx context.Context, r gen.ProxiesListReque
 }
 func (h *strictHandlers) ProxiesCreate(ctx context.Context, r gen.ProxiesCreateRequestObject) (gen.ProxiesCreateResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Proxy == nil || h.deps.DB == nil {
-		return gen.ProxiesCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxiesCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if r.Body == nil {
-		return gen.ProxiesCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxiesCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	now := time.Now()
 	// Build models.Proxy from request
@@ -843,9 +843,9 @@ func (h *strictHandlers) ProxiesCreate(ctx context.Context, r gen.ProxiesCreateR
 	// Optional: parse address into Host/Port if available; keep minimal for now
 	if err := h.deps.Stores.Proxy.CreateProxy(ctx, h.deps.DB, m); err != nil {
 		if err == store.ErrDuplicateEntry {
-			return gen.ProxiesCreate409JSONResponse{ConflictJSONResponse: gen.ConflictJSONResponse{Error: gen.ApiError{Message: "proxy already exists", Code: "conflict", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.ProxiesCreate409JSONResponse{ConflictJSONResponse: gen.ConflictJSONResponse{Error: gen.ApiError{Message: "proxy already exists", Code: gen.CONFLICT, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.ProxiesCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to create proxy", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxiesCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to create proxy", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	// Response minimal details
 	var host *string
@@ -873,10 +873,10 @@ func (h *strictHandlers) ProxiesCreate(ctx context.Context, r gen.ProxiesCreateR
 }
 func (h *strictHandlers) ProxiesBulkDelete(ctx context.Context, r gen.ProxiesBulkDeleteRequestObject) (gen.ProxiesBulkDeleteResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Proxy == nil || h.deps.DB == nil {
-		return gen.ProxiesBulkDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxiesBulkDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if r.Body == nil || len(r.Body.ProxyIds) == 0 {
-		return gen.ProxiesBulkDelete400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing proxyIds", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxiesBulkDelete400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing proxyIds", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	var success, errors int
 	for _, id := range r.Body.ProxyIds {
@@ -896,7 +896,7 @@ func (h *strictHandlers) ProxiesBulkDelete(ctx context.Context, r gen.ProxiesBul
 }
 func (h *strictHandlers) ProxiesBulkTest(ctx context.Context, r gen.ProxiesBulkTestRequestObject) (gen.ProxiesBulkTestResponseObject, error) {
 	if r.Body == nil || len(r.Body.ProxyIds) == 0 {
-		return gen.ProxiesBulkTest400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing proxyIds", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxiesBulkTest400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing proxyIds", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	results := make([]gen.ProxyTestResponse, 0, len(r.Body.ProxyIds))
 	for _, id := range r.Body.ProxyIds {
@@ -911,10 +911,10 @@ func (h *strictHandlers) ProxiesBulkTest(ctx context.Context, r gen.ProxiesBulkT
 }
 func (h *strictHandlers) ProxiesBulkUpdate(ctx context.Context, r gen.ProxiesBulkUpdateRequestObject) (gen.ProxiesBulkUpdateResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Proxy == nil || h.deps.DB == nil {
-		return gen.ProxiesBulkUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxiesBulkUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if r.Body == nil || len(r.Body.ProxyIds) == 0 {
-		return gen.ProxiesBulkUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing proxyIds", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxiesBulkUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing proxyIds", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	var success, errors int
 	for _, id := range r.Body.ProxyIds {
@@ -955,7 +955,7 @@ func (h *strictHandlers) ProxiesBulkUpdate(ctx context.Context, r gen.ProxiesBul
 }
 func (h *strictHandlers) ProxiesHealthCheckAll(ctx context.Context, r gen.ProxiesHealthCheckAllRequestObject) (gen.ProxiesHealthCheckAllResponseObject, error) {
 	if h.deps == nil {
-		return gen.ProxiesHealthCheckAll500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxiesHealthCheckAll500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	var ids []string
 	if r.Body != nil && r.Body.Ids != nil {
@@ -993,7 +993,7 @@ func (h *strictHandlers) ProxiesStatus(ctx context.Context, r gen.ProxiesStatusR
 	} else if h.deps != nil && h.deps.Stores.Proxy != nil && h.deps.DB != nil {
 		proxies, err := h.deps.Stores.Proxy.ListProxies(ctx, h.deps.DB, store.ListProxiesFilter{})
 		if err != nil {
-			return gen.ProxiesStatus500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load statuses", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.ProxiesStatus500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load statuses", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
 		out = make([]gen.ProxyStatusResponse, 0, len(proxies))
 		for _, p := range proxies {
@@ -1025,29 +1025,29 @@ func (h *strictHandlers) ProxiesStatus(ctx context.Context, r gen.ProxiesStatusR
 }
 func (h *strictHandlers) ProxiesDelete(ctx context.Context, r gen.ProxiesDeleteRequestObject) (gen.ProxiesDeleteResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Proxy == nil || h.deps.DB == nil {
-		return gen.ProxiesDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxiesDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if err := h.deps.Stores.Proxy.DeleteProxy(ctx, h.deps.DB, uuid.UUID(r.ProxyId)); err != nil {
 		if err == store.ErrNotFound {
-			return gen.ProxiesDelete404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "proxy not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.ProxiesDelete404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "proxy not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.ProxiesDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to delete proxy", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxiesDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to delete proxy", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	return gen.ProxiesDelete200JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
 }
 func (h *strictHandlers) ProxiesUpdate(ctx context.Context, r gen.ProxiesUpdateRequestObject) (gen.ProxiesUpdateResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Proxy == nil || h.deps.DB == nil {
-		return gen.ProxiesUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxiesUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if r.Body == nil {
-		return gen.ProxiesUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxiesUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	existing, err := h.deps.Stores.Proxy.GetProxyByID(ctx, h.deps.DB, uuid.UUID(r.ProxyId))
 	if err != nil {
 		if err == store.ErrNotFound {
-			return gen.ProxiesUpdate404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "proxy not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.ProxiesUpdate404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "proxy not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.ProxiesUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch proxy", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxiesUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch proxy", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	up := *r.Body
 	if up.Name != nil {
@@ -1072,9 +1072,9 @@ func (h *strictHandlers) ProxiesUpdate(ctx context.Context, r gen.ProxiesUpdateR
 	existing.UpdatedAt = time.Now()
 	if err := h.deps.Stores.Proxy.UpdateProxy(ctx, h.deps.DB, existing); err != nil {
 		if err == store.ErrDuplicateEntry {
-			return gen.ProxiesUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "duplicate name", Code: "conflict", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.ProxiesUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "duplicate name", Code: gen.CONFLICT, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.ProxiesUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to update proxy", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxiesUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to update proxy", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	// Map back minimal details
 	var host *string
@@ -1102,7 +1102,7 @@ func (h *strictHandlers) ProxiesUpdate(ctx context.Context, r gen.ProxiesUpdateR
 }
 func (h *strictHandlers) ProxiesHealthCheckSingle(ctx context.Context, r gen.ProxiesHealthCheckSingleRequestObject) (gen.ProxiesHealthCheckSingleResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Proxy == nil || h.deps.DB == nil {
-		return gen.ProxiesHealthCheckSingle500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxiesHealthCheckSingle500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	// If ProxyManager present, use it
 	var res gen.ProxyHealthCheckResponse
@@ -1110,7 +1110,7 @@ func (h *strictHandlers) ProxiesHealthCheckSingle(ctx context.Context, r gen.Pro
 	if h.deps.ProxyMgr != nil {
 		st, err := h.deps.ProxyMgr.ForceCheckSingleProxy(pid.String())
 		if err != nil {
-			return gen.ProxiesHealthCheckSingle404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "proxy not found in manager", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.ProxiesHealthCheckSingle404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "proxy not found in manager", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
 		id := openapi_types.UUID(uuid.MustParse(st.ID))
 		ok := st.IsHealthy
@@ -1142,11 +1142,11 @@ func (h *strictHandlers) ProxiesTest(ctx context.Context, r gen.ProxiesTestReque
 }
 func (h *strictHandlers) ProxyPoolsList(ctx context.Context, r gen.ProxyPoolsListRequestObject) (gen.ProxyPoolsListResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.ProxyPools == nil || h.deps.DB == nil {
-		return gen.ProxyPoolsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy pool store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxyPoolsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy pool store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	pools, err := h.deps.Stores.ProxyPools.ListProxyPools(ctx, h.deps.DB)
 	if err != nil {
-		return gen.ProxyPoolsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to list proxy pools", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxyPoolsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to list proxy pools", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	out := make([]gen.ProxyPool, 0, len(pools))
 	for _, p := range pools {
@@ -1162,10 +1162,10 @@ func (h *strictHandlers) ProxyPoolsList(ctx context.Context, r gen.ProxyPoolsLis
 }
 func (h *strictHandlers) ProxyPoolsCreate(ctx context.Context, r gen.ProxyPoolsCreateRequestObject) (gen.ProxyPoolsCreateResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.ProxyPools == nil || h.deps.DB == nil {
-		return gen.ProxyPoolsCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy pool store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxyPoolsCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy pool store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if r.Body == nil {
-		return gen.ProxyPoolsCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxyPoolsCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	now := time.Now()
 	pool := &models.ProxyPool{
@@ -1188,9 +1188,9 @@ func (h *strictHandlers) ProxyPoolsCreate(ctx context.Context, r gen.ProxyPoolsC
 	}
 	if err := h.deps.Stores.ProxyPools.CreateProxyPool(ctx, h.deps.DB, pool); err != nil {
 		if err == store.ErrDuplicateEntry {
-			return gen.ProxyPoolsCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "proxy pool already exists", Code: "conflict", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.ProxyPoolsCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "proxy pool already exists", Code: gen.CONFLICT, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.ProxyPoolsCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to create proxy pool", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxyPoolsCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to create proxy pool", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	id := openapi_types.UUID(pool.ID)
 	name := pool.Name
@@ -1202,13 +1202,13 @@ func (h *strictHandlers) ProxyPoolsCreate(ctx context.Context, r gen.ProxyPoolsC
 }
 func (h *strictHandlers) ProxyPoolsDelete(ctx context.Context, r gen.ProxyPoolsDeleteRequestObject) (gen.ProxyPoolsDeleteResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.ProxyPools == nil || h.deps.DB == nil {
-		return gen.ProxyPoolsDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy pool store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxyPoolsDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy pool store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if err := h.deps.Stores.ProxyPools.DeleteProxyPool(ctx, h.deps.DB, uuid.UUID(r.PoolId)); err != nil {
 		if err == store.ErrNotFound {
-			return gen.ProxyPoolsDelete404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "proxy pool not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.ProxyPoolsDelete404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "proxy pool not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.ProxyPoolsDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to delete proxy pool", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxyPoolsDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to delete proxy pool", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	deleted := true
 	msg := "proxy pool deleted"
@@ -1217,17 +1217,17 @@ func (h *strictHandlers) ProxyPoolsDelete(ctx context.Context, r gen.ProxyPoolsD
 }
 func (h *strictHandlers) ProxyPoolsUpdate(ctx context.Context, r gen.ProxyPoolsUpdateRequestObject) (gen.ProxyPoolsUpdateResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.ProxyPools == nil || h.deps.DB == nil {
-		return gen.ProxyPoolsUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy pool store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxyPoolsUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "proxy pool store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if r.Body == nil {
-		return gen.ProxyPoolsUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxyPoolsUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	pool, err := h.deps.Stores.ProxyPools.GetProxyPoolByID(ctx, h.deps.DB, uuid.UUID(r.PoolId))
 	if err != nil {
 		if err == store.ErrNotFound {
-			return gen.ProxyPoolsUpdate404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "proxy pool not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.ProxyPoolsUpdate404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "proxy pool not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.ProxyPoolsUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch proxy pool", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxyPoolsUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch proxy pool", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	// Name is required and non-pointer in ProxyPoolRequest
 	if r.Body.Name != "" {
@@ -1256,7 +1256,7 @@ func (h *strictHandlers) ProxyPoolsUpdate(ctx context.Context, r gen.ProxyPoolsU
 	}
 	pool.UpdatedAt = time.Now()
 	if err := h.deps.Stores.ProxyPools.UpdateProxyPool(ctx, h.deps.DB, pool); err != nil {
-		return gen.ProxyPoolsUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to update proxy pool", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxyPoolsUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to update proxy pool", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	id := openapi_types.UUID(pool.ID)
 	name := pool.Name
@@ -1268,17 +1268,17 @@ func (h *strictHandlers) ProxyPoolsUpdate(ctx context.Context, r gen.ProxyPoolsU
 }
 func (h *strictHandlers) ProxyPoolsAddProxy(ctx context.Context, r gen.ProxyPoolsAddProxyRequestObject) (gen.ProxyPoolsAddProxyResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.ProxyPools == nil || h.deps.DB == nil {
-		return gen.ProxyPoolsAddProxy400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxyPoolsAddProxy400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if r.Body == nil {
-		return gen.ProxyPoolsAddProxy400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxyPoolsAddProxy400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	m := &models.ProxyPoolMembership{PoolID: uuid.UUID(r.PoolId), ProxyID: uuid.UUID(r.Body.ProxyId), IsActive: true, AddedAt: time.Now()}
 	if r.Body.Weight != nil {
 		m.Weight = r.Body.Weight
 	}
 	if err := h.deps.Stores.ProxyPools.AddProxyToPool(ctx, h.deps.DB, m); err != nil {
-		return gen.ProxyPoolsAddProxy400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "failed to add proxy to pool", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxyPoolsAddProxy400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "failed to add proxy to pool", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	pid := openapi_types.UUID(r.PoolId)
 	xid := openapi_types.UUID(r.Body.ProxyId)
@@ -1286,10 +1286,10 @@ func (h *strictHandlers) ProxyPoolsAddProxy(ctx context.Context, r gen.ProxyPool
 }
 func (h *strictHandlers) ProxyPoolsRemoveProxy(ctx context.Context, r gen.ProxyPoolsRemoveProxyRequestObject) (gen.ProxyPoolsRemoveProxyResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.ProxyPools == nil || h.deps.DB == nil {
-		return gen.ProxyPoolsRemoveProxy400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxyPoolsRemoveProxy400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if err := h.deps.Stores.ProxyPools.RemoveProxyFromPool(ctx, h.deps.DB, uuid.UUID(r.PoolId), uuid.UUID(r.ProxyId)); err != nil {
-		return gen.ProxyPoolsRemoveProxy400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "failed to remove proxy from pool", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ProxyPoolsRemoveProxy400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "failed to remove proxy from pool", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	removed := true
 	pid := openapi_types.UUID(r.PoolId)

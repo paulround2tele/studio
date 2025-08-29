@@ -89,8 +89,15 @@ describe('Type Guards - `as any` Replacement Tests', () => {
       expect(assertBulkEnrichedDataResponse(validResponse)).toEqual(validResponse);
     });
 
-    it('should throw error for invalid response', () => {
-      expect(() => assertBulkEnrichedDataResponse(null)).toThrow('Invalid BulkEnrichedDataResponse');
+    it('should return empty response for null/undefined', () => {
+      const empty = assertBulkEnrichedDataResponse(null as any);
+      expect(empty).toEqual({ campaigns: {}, totalCount: 0, metadata: {} });
+
+      const empty2 = assertBulkEnrichedDataResponse(undefined as any);
+      expect(empty2).toEqual({ campaigns: {}, totalCount: 0, metadata: {} });
+    });
+
+    it('should throw error for invalid non-null response', () => {
       expect(() => assertBulkEnrichedDataResponse('invalid')).toThrow('Invalid BulkEnrichedDataResponse');
     });
   });

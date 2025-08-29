@@ -1891,6 +1891,27 @@ export interface components {
         FeatureFlags: {
             [key: string]: boolean;
         };
+        MonitoringCampaignLimitsRequest: {
+            maxConcurrentJobs?: number;
+            rateLimitPerMinute?: number;
+            /**
+             * Format: float
+             * @description Max CPU percent usable by campaign workers
+             */
+            maxCPUPercent?: number;
+            /**
+             * Format: int64
+             * @description Max memory usage in MB
+             */
+            maxMemoryMB?: number;
+            /**
+             * Format: int64
+             * @description Max disk space usage in MB
+             */
+            maxDiskMB?: number;
+            /** @description Max run duration in seconds */
+            maxDurationSeconds?: number;
+        };
         LoginRequest: {
             /** Format: email */
             email: string;
@@ -2298,6 +2319,8 @@ export interface components {
                 control?: string;
             };
         };
+        /** @enum {string} */
+        BulkOperationCancelStatus: "cancelled" | "cancelling";
         KeywordSetWithRulesResponse: {
             /** Format: uuid */
             id: string;
@@ -4476,10 +4499,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    maxConcurrentJobs?: number;
-                    rateLimitPerMinute?: number;
-                };
+                "application/json": components["schemas"]["MonitoringCampaignLimitsRequest"];
             };
         };
         responses: {
@@ -5430,8 +5450,7 @@ export interface operations {
                         data?: {
                             /** Format: uuid */
                             operationId?: string;
-                            /** @enum {string} */
-                            status?: "cancelled" | "cancelling";
+                            status?: components["schemas"]["BulkOperationCancelStatus"];
                         };
                     };
                 };

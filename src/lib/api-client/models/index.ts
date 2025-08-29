@@ -44,6 +44,7 @@ export * from './bulk-httpvalidation-request-operations-inner';
 export * from './bulk-httpvalidation-request-operations-inner-validation-config';
 export * from './bulk-httpvalidation-request-stealth';
 export * from './bulk-health-check-response';
+export * from './bulk-operation-cancel-status';
 export * from './bulk-operation-info';
 export * from './bulk-proxy-operation-response';
 export * from './bulk-proxy-operation-response-failed-proxies-inner';

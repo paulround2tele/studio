@@ -11,7 +11,7 @@ import (
 // ---- Feature Flags ----
 func (h *strictHandlers) FeatureFlagsGet(ctx context.Context, r gen.FeatureFlagsGetRequestObject) (gen.FeatureFlagsGetResponseObject, error) {
 	if h.deps == nil || h.deps.Config == nil {
-		return gen.FeatureFlagsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.FeatureFlagsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	cf := h.deps.Config.Features
 	ff := gen.FeatureFlags{
@@ -25,10 +25,10 @@ func (h *strictHandlers) FeatureFlagsGet(ctx context.Context, r gen.FeatureFlags
 
 func (h *strictHandlers) FeatureFlagsUpdate(ctx context.Context, r gen.FeatureFlagsUpdateRequestObject) (gen.FeatureFlagsUpdateResponseObject, error) {
 	if h.deps == nil || h.deps.Config == nil {
-		return gen.FeatureFlagsUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.FeatureFlagsUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if r.Body == nil {
-		return gen.FeatureFlagsUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.FeatureFlagsUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	body := *r.Body
 	if v, ok := body["enableRealTimeUpdates"]; ok {
@@ -44,7 +44,7 @@ func (h *strictHandlers) FeatureFlagsUpdate(ctx context.Context, r gen.FeatureFl
 		h.deps.Config.Features.EnableDebugMode = v
 	}
 	if err := config.SaveAppConfig(h.deps.Config); err != nil {
-		return gen.FeatureFlagsUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to save feature flags", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.FeatureFlagsUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to save feature flags", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	ff := gen.FeatureFlags{
 		"enableRealTimeUpdates": h.deps.Config.Features.EnableRealTimeUpdates,

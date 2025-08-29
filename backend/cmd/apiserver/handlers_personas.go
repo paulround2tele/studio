@@ -75,7 +75,7 @@ func parsePersonaConfig(pt models.PersonaTypeEnum, raw json.RawMessage) (json.Ra
 // ---- Personas endpoints ----
 func (h *strictHandlers) PersonasList(ctx context.Context, r gen.PersonasListRequestObject) (gen.PersonasListResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Persona == nil || h.deps.DB == nil {
-		return gen.PersonasList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "persona store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "persona store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
 	// Build filter
@@ -96,7 +96,7 @@ func (h *strictHandlers) PersonasList(ctx context.Context, r gen.PersonasListReq
 
 	personas, err := h.deps.Stores.Persona.ListPersonas(ctx, h.deps.DB, filter)
 	if err != nil {
-		return gen.PersonasList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to list personas", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to list personas", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
 	items := make([]gen.PersonaResponse, 0, len(personas))
@@ -114,16 +114,16 @@ func (h *strictHandlers) PersonasList(ctx context.Context, r gen.PersonasListReq
 
 func (h *strictHandlers) PersonasCreate(ctx context.Context, r gen.PersonasCreateRequestObject) (gen.PersonasCreateResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Persona == nil || h.deps.DB == nil {
-		return gen.PersonasCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "persona store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "persona store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if r.Body == nil {
-		return gen.PersonasCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
 	// Validate persona type
 	pt := models.PersonaTypeEnum(r.Body.PersonaType)
 	if pt != models.PersonaTypeDNS && pt != models.PersonaTypeHTTP {
-		return gen.PersonasCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid personaType (dns|http)", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid personaType (dns|http)", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
 	// Marshal configDetails
@@ -131,13 +131,13 @@ func (h *strictHandlers) PersonasCreate(ctx context.Context, r gen.PersonasCreat
 	if r.Body.ConfigDetails != nil {
 		b, err := json.Marshal(r.Body.ConfigDetails)
 		if err != nil {
-			return gen.PersonasCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid configDetails", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.PersonasCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid configDetails", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
 		raw = b
 	}
 	parsed, err := parsePersonaConfig(pt, raw)
 	if err != nil {
-		return gen.PersonasCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid configuration details", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid configuration details", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
 	now := time.Now()
@@ -159,9 +159,9 @@ func (h *strictHandlers) PersonasCreate(ctx context.Context, r gen.PersonasCreat
 	if err := h.deps.Stores.Persona.CreatePersona(ctx, h.deps.DB, persona); err != nil {
 		if err == store.ErrDuplicateEntry {
 			// 409 not defined for create; use 400
-			return gen.PersonasCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "persona already exists", Code: "conflict", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.PersonasCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "persona already exists", Code: gen.CONFLICT, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.PersonasCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to create persona", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to create persona", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
 	data := personaToResponse(persona)
@@ -176,14 +176,14 @@ func (h *strictHandlers) PersonasCreate(ctx context.Context, r gen.PersonasCreat
 
 func (h *strictHandlers) PersonasGet(ctx context.Context, r gen.PersonasGetRequestObject) (gen.PersonasGetResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Persona == nil || h.deps.DB == nil {
-		return gen.PersonasGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "persona store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "persona store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	p, err := h.deps.Stores.Persona.GetPersonaByID(ctx, h.deps.DB, uuid.UUID(r.Id))
 	if err != nil {
 		if err == store.ErrNotFound {
-			return gen.PersonasGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "persona not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.PersonasGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "persona not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.PersonasGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch persona", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch persona", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	data := personaToResponse(p)
 	return gen.PersonasGet200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
@@ -191,17 +191,17 @@ func (h *strictHandlers) PersonasGet(ctx context.Context, r gen.PersonasGetReque
 
 func (h *strictHandlers) PersonasGetDns(ctx context.Context, r gen.PersonasGetDnsRequestObject) (gen.PersonasGetDnsResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Persona == nil || h.deps.DB == nil {
-		return gen.PersonasGetDns500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "persona store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasGetDns500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "persona store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	p, err := h.deps.Stores.Persona.GetPersonaByID(ctx, h.deps.DB, uuid.UUID(r.Id))
 	if err != nil {
 		if err == store.ErrNotFound {
-			return gen.PersonasGetDns404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "persona not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.PersonasGetDns404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "persona not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.PersonasGetDns500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch persona", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasGetDns500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch persona", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if p.PersonaType != models.PersonaTypeDNS {
-		return gen.PersonasGetDns400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "persona is not DNS type", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasGetDns400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "persona is not DNS type", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	data := personaToResponse(p)
 	return gen.PersonasGetDns200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
@@ -209,17 +209,17 @@ func (h *strictHandlers) PersonasGetDns(ctx context.Context, r gen.PersonasGetDn
 
 func (h *strictHandlers) PersonasGetHttp(ctx context.Context, r gen.PersonasGetHttpRequestObject) (gen.PersonasGetHttpResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Persona == nil || h.deps.DB == nil {
-		return gen.PersonasGetHttp500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "persona store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasGetHttp500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "persona store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	p, err := h.deps.Stores.Persona.GetPersonaByID(ctx, h.deps.DB, uuid.UUID(r.Id))
 	if err != nil {
 		if err == store.ErrNotFound {
-			return gen.PersonasGetHttp404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "persona not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.PersonasGetHttp404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "persona not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.PersonasGetHttp500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch persona", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasGetHttp500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch persona", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if p.PersonaType != models.PersonaTypeHTTP {
-		return gen.PersonasGetHttp400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "persona is not HTTP type", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasGetHttp400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "persona is not HTTP type", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	data := personaToResponse(p)
 	return gen.PersonasGetHttp200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
@@ -227,18 +227,18 @@ func (h *strictHandlers) PersonasGetHttp(ctx context.Context, r gen.PersonasGetH
 
 func (h *strictHandlers) PersonasUpdate(ctx context.Context, r gen.PersonasUpdateRequestObject) (gen.PersonasUpdateResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Persona == nil || h.deps.DB == nil {
-		return gen.PersonasUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "persona store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "persona store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if r.Body == nil {
-		return gen.PersonasUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	id := uuid.UUID(r.Id)
 	existing, err := h.deps.Stores.Persona.GetPersonaByID(ctx, h.deps.DB, id)
 	if err != nil {
 		if err == store.ErrNotFound {
-			return gen.PersonasUpdate404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "persona not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.PersonasUpdate404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "persona not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.PersonasUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch persona", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch persona", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
 	// Apply updates
@@ -251,11 +251,11 @@ func (h *strictHandlers) PersonasUpdate(ctx context.Context, r gen.PersonasUpdat
 	if r.Body.ConfigDetails != nil {
 		b, err := json.Marshal(r.Body.ConfigDetails)
 		if err != nil {
-			return gen.PersonasUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid configDetails", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.PersonasUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid configDetails", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
 		parsed, err := parsePersonaConfig(existing.PersonaType, b)
 		if err != nil {
-			return gen.PersonasUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid configuration details", Code: "bad_request", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.PersonasUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid configuration details", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
 		existing.ConfigDetails = parsed
 	}
@@ -266,12 +266,12 @@ func (h *strictHandlers) PersonasUpdate(ctx context.Context, r gen.PersonasUpdat
 
 	if err := h.deps.Stores.Persona.UpdatePersona(ctx, h.deps.DB, existing); err != nil {
 		if err == store.ErrDuplicateEntry {
-			return gen.PersonasUpdate409JSONResponse{ConflictJSONResponse: gen.ConflictJSONResponse{Error: gen.ApiError{Message: "duplicate persona name", Code: "conflict", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.PersonasUpdate409JSONResponse{ConflictJSONResponse: gen.ConflictJSONResponse{Error: gen.ApiError{Message: "duplicate persona name", Code: gen.CONFLICT, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
 		if err == store.ErrNotFound {
-			return gen.PersonasUpdate404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "persona not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.PersonasUpdate404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "persona not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.PersonasUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to update persona", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to update persona", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
 	data := personaToResponse(existing)
@@ -280,21 +280,21 @@ func (h *strictHandlers) PersonasUpdate(ctx context.Context, r gen.PersonasUpdat
 
 func (h *strictHandlers) PersonasDelete(ctx context.Context, r gen.PersonasDeleteRequestObject) (gen.PersonasDeleteResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Persona == nil || h.deps.DB == nil {
-		return gen.PersonasDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "persona store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "persona store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	id := uuid.UUID(r.Id)
 	existing, err := h.deps.Stores.Persona.GetPersonaByID(ctx, h.deps.DB, id)
 	if err != nil {
 		if err == store.ErrNotFound {
-			return gen.PersonasDelete404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "persona not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.PersonasDelete404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "persona not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.PersonasDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch persona", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch persona", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if err := h.deps.Stores.Persona.DeletePersona(ctx, h.deps.DB, existing.ID); err != nil {
 		if err == store.ErrNotFound {
-			return gen.PersonasDelete404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "persona not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.PersonasDelete404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "persona not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.PersonasDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to delete persona", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to delete persona", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	msg := fmt.Sprintf("persona %s deleted", existing.ID.String())
 	resp := gen.PersonasDelete200JSONResponse{
@@ -312,14 +312,14 @@ func (h *strictHandlers) PersonasDelete(ctx context.Context, r gen.PersonasDelet
 
 func (h *strictHandlers) PersonasTest(ctx context.Context, r gen.PersonasTestRequestObject) (gen.PersonasTestResponseObject, error) {
 	if h.deps == nil || h.deps.Stores.Persona == nil || h.deps.DB == nil {
-		return gen.PersonasTest500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "persona store not initialized", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasTest500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "persona store not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	p, err := h.deps.Stores.Persona.GetPersonaByID(ctx, h.deps.DB, uuid.UUID(r.Id))
 	if err != nil {
 		if err == store.ErrNotFound {
-			return gen.PersonasTest404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "persona not found", Code: "not_found", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.PersonasTest404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "persona not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.PersonasTest500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch persona", Code: "internal", Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.PersonasTest500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch persona", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	now := time.Now().UTC().Format(time.RFC3339)
 	name := p.Name

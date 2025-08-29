@@ -19,7 +19,11 @@ const config: Config = {
   collectCoverage: true,
   coverageReporters: ["json", "lcov", "text", "clover"],
   coverageDirectory: "coverage",
-  testPathIgnorePatterns: ["/node_modules/", "/.next/"],
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/.next/",
+    "<rootDir>/tests/e2e/" // exclude Playwright e2e from Jest
+  ],
   globals: {
     'ts-jest': {
       tsconfig: 'tsconfig.jest.json'

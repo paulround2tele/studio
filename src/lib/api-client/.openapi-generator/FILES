@@ -65,6 +65,7 @@ docs/BulkHTTPValidationRequestOperationsInner.md
 docs/BulkHTTPValidationRequestOperationsInnerValidationConfig.md
 docs/BulkHTTPValidationRequestStealth.md
 docs/BulkHealthCheckResponse.md
+docs/BulkOperationCancelStatus.md
 docs/BulkOperationInfo.md
 docs/BulkProxyOperationResponse.md
 docs/BulkProxyOperationResponseFailedProxiesInner.md
@@ -257,6 +258,7 @@ models/bulk-httpvalidation-request-operations-inner-validation-config.ts
 models/bulk-httpvalidation-request-operations-inner.ts
 models/bulk-httpvalidation-request-stealth.ts
 models/bulk-httpvalidation-request.ts
+models/bulk-operation-cancel-status.ts
 models/bulk-operation-info.ts
 models/bulk-proxy-operation-response-failed-proxies-inner.ts
 models/bulk-proxy-operation-response.ts
