@@ -17,7 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 import { personasApi } from "@/lib/api-client/compat";
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 // Import types from proper models
-import type { ApiPersonaResponse } from '@/lib/api-client/models';
+// Use compat alias to stay stable across client regenerations
+import type { ApiPersonaResponse } from '@/lib/api-client/compat';
 import type { HTTPConfigDetails } from '@/lib/api-client/models/httpconfig-details';
 import type { DNSValidatorConfigJSON } from '@/lib/api-client/models/dnsvalidator-config-json';
 import type { DNSConfigDetails } from '@/lib/api-client/models/dnsconfig-details';

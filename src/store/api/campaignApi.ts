@@ -5,22 +5,22 @@
  */
 
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { CampaignsApi, Configuration } from '@/lib/api-client';
+import { CampaignsApi } from '@/lib/api-client';
+import { apiConfiguration } from '@/lib/api/config';
 import type {
   ServicesCreateLeadGenerationCampaignRequest,
 } from '@/lib/api-client';
 import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
-import type {
-  CampaignsList200Response,
-  SuccessEnvelope,
-} from '@/lib/api-client/models';
+import type { CampaignResponse } from '@/lib/api-client/models/campaign-response';
+import type { CampaignProgressResponse } from '@/lib/api-client/models/campaign-progress-response';
+import type { PhaseStatusResponse } from '@/lib/api-client/models/phase-status-response';
+import type { CampaignDomainsListResponse } from '@/lib/api-client/models/campaign-domains-list-response';
+import type { PatternOffsetRequest } from '@/lib/api-client/models/pattern-offset-request';
+import type { PatternOffsetResponse } from '@/lib/api-client/models/pattern-offset-response';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
-// Professional API configuration
-const config = new Configuration({
-  basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
-});
-
-const campaignsApi = new CampaignsApi(config);
+// Centralized API configuration targeting /api/v2
+const campaignsApi = new CampaignsApi(apiConfiguration);
 
 export const campaignApi = createApi({
   reducerPath: 'campaignApi',
@@ -30,15 +30,13 @@ export const campaignApi = createApi({
   tagTypes: ['Campaign', 'CampaignList', 'CampaignProgress', 'CampaignDomains'],
   endpoints: (builder) => ({
     // Campaign CRUD operations
-    createCampaign: builder.mutation<
-      SuccessEnvelope,
-      ServicesCreateLeadGenerationCampaignRequest
-    >({
+    createCampaign: builder.mutation<CampaignResponse, ServicesCreateLeadGenerationCampaignRequest>({
       queryFn: async (request) => {
         try {
-          // New generated method name
           const response = await campaignsApi.campaignsCreate(request as any);
-          return { data: response.data };
+          const data = extractResponseData<CampaignResponse>(response);
+          if (!data) return { error: { status: 500, data: 'Empty campaign response' } as any };
+          return { data };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }
@@ -47,12 +45,12 @@ export const campaignApi = createApi({
     }),
 
     // Campaign listing
-    getCampaignsStandalone: builder.query<CampaignsList200Response, void>({
+    getCampaignsStandalone: builder.query<CampaignResponse[], void>({
       queryFn: async () => {
         try {
-          // New generated method name
           const response = await campaignsApi.campaignsList();
-          return { data: response.data };
+          const data = extractResponseData<CampaignResponse[]>(response) || [];
+          return { data };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }
@@ -60,42 +58,35 @@ export const campaignApi = createApi({
       providesTags: ['CampaignList'],
     }),
 
-    // Bulk enriched campaign data
-    getBulkEnrichedCampaignData: builder.query<
-      { campaigns: Record<string, any>; totalCount: number },
-      { campaignIds: string[]; limit?: number; offset?: number }
+    // Domains list for a campaign (replaces legacy bulk enriched-data usage for domains)
+    getCampaignDomains: builder.query<
+      CampaignDomainsListResponse,
+      { campaignId: string; limit?: number; offset?: number }
     >({
-      queryFn: async (request) => {
+      queryFn: async ({ campaignId, limit, offset }) => {
         try {
-          // Endpoint not present in OpenAPI spec; call directly
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-          const res = await fetch(`${apiUrl}/campaigns/bulk/enriched-data`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(request),
-          });
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({ message: res.statusText }));
-            return { error: err } as any;
-          }
-          const data = await res.json();
-          // Expecting shape: { campaigns: { [id]: {...} }, totalCount: number }
-          return { data } as any;
+          const response = await campaignsApi.campaignsDomainsList(campaignId, limit, offset);
+          const data = extractResponseData<CampaignDomainsListResponse>(response);
+          if (!data) return { error: { status: 500, data: 'Empty domains list response' } as any };
+          return { data };
         } catch (error: any) {
-          return { error: error.response?.data || error.message };
+          return { error: error?.response?.data || error?.message };
         }
       },
-      providesTags: ['Campaign'],
+      providesTags: (result, error, { campaignId }) => [
+        { type: 'CampaignDomains', id: campaignId },
+      ],
     }),
 
     // Campaign progress tracking
-    getCampaignProgressStandalone: builder.query<SuccessEnvelope, string>({
+  getCampaignProgressStandalone: builder.query<CampaignProgressResponse, string>({
       queryFn: async (campaignId) => {
         try {
           // New generated method name
-          const response = await campaignsApi.campaignsProgress(campaignId);
-          return { data: response.data };
+      const response = await campaignsApi.campaignsProgress(campaignId);
+      const data = extractResponseData<CampaignProgressResponse>(response);
+      if (!data) return { error: { status: 500, data: 'Empty progress response' } as any };
+      return { data };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }
@@ -107,7 +98,7 @@ export const campaignApi = createApi({
 
     // Phase management operations
     configurePhaseStandalone: builder.mutation<
-      SuccessEnvelope,
+      PhaseStatusResponse,
       { campaignId: string; phase: string; config: PhaseConfigurationRequest }
     >({
       queryFn: async ({ campaignId, phase, config }) => {
@@ -117,7 +108,9 @@ export const campaignApi = createApi({
             phase as any,
             config as any,
           );
-          return { data: response.data };
+          const data = extractResponseData<PhaseStatusResponse>(response);
+          if (!data) return { error: { status: 500, data: 'Empty phase configure response' } as any };
+          return { data };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }
@@ -129,13 +122,15 @@ export const campaignApi = createApi({
     }),
 
     startPhaseStandalone: builder.mutation<
-      SuccessEnvelope,
+      PhaseStatusResponse,
       { campaignId: string; phase: string }
     >({
       queryFn: async ({ campaignId, phase }) => {
         try {
           const response = await campaignsApi.campaignsPhaseStart(campaignId, phase as any);
-          return { data: response.data };
+          const data = extractResponseData<PhaseStatusResponse>(response);
+          if (!data) return { error: { status: 500, data: 'Empty phase start response' } as any };
+          return { data };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }
@@ -147,13 +142,15 @@ export const campaignApi = createApi({
     }),
 
     getPhaseStatusStandalone: builder.query<
-      SuccessEnvelope,
+      PhaseStatusResponse,
       { campaignId: string; phase: string }
     >({
       queryFn: async ({ campaignId, phase }) => {
         try {
           const response = await campaignsApi.campaignsPhaseStatus(campaignId, phase as any);
-          return { data: response.data };
+          const data = extractResponseData<PhaseStatusResponse>(response);
+          if (!data) return { error: { status: 500, data: 'Empty phase status response' } as any };
+          return { data };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }
@@ -163,29 +160,19 @@ export const campaignApi = createApi({
       ],
     }),
 
-    // Pattern offset utility
+    // Pattern offset utility (spec-compliant)
     getPatternOffset: builder.query<
-      { success?: boolean; data?: { currentOffset?: number } },
-      { patternType: string; variableLength: number; characterSet: string; constantString: string; tld: string }
+      PatternOffsetResponse,
+      PatternOffsetRequest
     >({
       queryFn: async (request) => {
         try {
-          // Endpoint not present in OpenAPI spec; call directly
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-          const res = await fetch(`${apiUrl}/campaigns/domain-generation/pattern-offset`, {
-            method: 'POST',
-            credentials: 'include',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(request),
-          });
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({ message: res.statusText }));
-            return { error: err } as any;
-          }
-          const data = await res.json();
-          return { data } as any;
+          const response = await campaignsApi.campaignsDomainGenerationPatternOffset(request);
+          const data = extractResponseData<PatternOffsetResponse>(response);
+          if (!data) return { error: { status: 500, data: 'Empty pattern offset response' } as any };
+          return { data };
         } catch (error: any) {
-          return { error: error.response?.data || error.message };
+          return { error: error?.response?.data || error?.message };
         }
       },
     }),
@@ -196,7 +183,7 @@ export const campaignApi = createApi({
 export const {
   useCreateCampaignMutation,
   useGetCampaignsStandaloneQuery,
-  useGetBulkEnrichedCampaignDataQuery,
+  useGetCampaignDomainsQuery,
   useGetCampaignProgressStandaloneQuery,
   useConfigurePhaseStandaloneMutation,
   useStartPhaseStandaloneMutation,

@@ -15,7 +15,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Import types and services - using proper client structure
-import { PersonasApi, Configuration } from '@/lib/api-client';
+import { PersonasApi } from '@/lib/api-client';
+import { apiConfiguration } from '@/lib/api/config';
 import { PersonaType } from '@/lib/api-client/models/persona-type';
 import { useConfigurePhaseStandaloneMutation } from '@/store/api/campaignApi';
 import type { ApiHTTPValidationConfig } from '@/lib/api-client/models/api-httpvalidation-config';
@@ -88,8 +89,7 @@ export default function HTTPValidationConfigModal({
         setLoadingData(true);
         
         // Fetch HTTP personas - using proper API client
-  const cfg = new Configuration({ basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080' });
-  const personasApi = new PersonasApi(cfg);
+  const personasApi = new PersonasApi(apiConfiguration);
   const httpResponse = await personasApi.personasList(undefined, undefined, true, PersonaType.http);
   const httpData = extractResponseData<{ items?: PersonaResponse[] }>(httpResponse)?.items || [];
         // Add missing status property for compatibility - exact same as campaign form

@@ -11,7 +11,7 @@ import {
   setConnectionStatus
 } from '../slices/campaignSlice';
 import type { RootState, AppDispatch } from '../index';
-import type { CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
+import type { CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
 
 // Middleware to handle campaign state synchronization
 export const campaignStateSyncMiddleware: Middleware<{}, RootState, AppDispatch> = (store) => (next) => (action) => {

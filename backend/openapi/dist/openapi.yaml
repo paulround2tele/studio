@@ -2961,6 +2961,52 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/domains:
+    get:
+      tags:
+        - campaigns
+      summary: List generated domains for a campaign
+      operationId: campaigns_domains_list
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CampaignDomainsListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /campaigns/{campaignId}/phases/{phase}/status:
     get:
       tags:
@@ -3465,6 +3511,38 @@ paths:
           $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /campaigns/domain-generation/pattern-offset:
+    post:
+      tags:
+        - campaigns
+      summary: Get current global pattern offset for domain generation config
+      operationId: campaigns_domain_generation_pattern_offset
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatternOffsetRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PatternOffsetResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
 components:
@@ -4835,6 +4913,47 @@ components:
         - overall
         - phases
         - timeline
+    DomainListItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        domain:
+          type: string
+        offset:
+          type: integer
+          format: int64
+        createdAt:
+          type: string
+          format: date-time
+        dnsStatus:
+          type: string
+          description: DNS validation status if available
+        httpStatus:
+          type: string
+          description: HTTP validation status if available
+        leadStatus:
+          type: string
+          description: Lead extraction status if available
+      required:
+        - domain
+    CampaignDomainsListResponse:
+      type: object
+      properties:
+        campaignId:
+          type: string
+          format: uuid
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DomainListItem'
+        total:
+          type: integer
+      required:
+        - campaignId
+        - items
+        - total
     PhaseStatusResponse:
       type: object
       properties:
@@ -5476,6 +5595,35 @@ components:
       enum:
         - cancelled
         - cancelling
+    PatternOffsetRequest:
+      type: object
+      properties:
+        patternType:
+          type: string
+          enum:
+            - prefix
+            - suffix
+            - both
+        variableLength:
+          type: integer
+          minimum: 0
+        characterSet:
+          type: string
+        constantString:
+          type: string
+        tld:
+          type: string
+          description: Single TLD including dot, e.g. .com or without dot
+      required:
+        - patternType
+        - variableLength
+        - characterSet
+    PatternOffsetResponse:
+      type: object
+      properties:
+        currentOffset:
+          type: integer
+          format: int64
     KeywordSetWithRulesResponse:
       type: object
       properties:

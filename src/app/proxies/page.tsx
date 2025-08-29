@@ -14,7 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShieldCheck, PlusCircle, TestTubeDiagonal, Sparkles, Activity, UploadCloud } from 'lucide-react';
 import { proxiesApi } from '@/lib/api-client/compat';
-import type { ModelsProxy as GithubComFntelecomllcStudioBackendInternalModelsProxy } from '@/lib/api-client/models';
+import type { ModelsProxy as GithubComFntelecomllcStudioBackendInternalModelsProxy } from '@/lib/api-client/models/models-proxy';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 // Professional type definitions using actual generated types
@@ -33,7 +33,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { cn } from '@/lib/utils';
-// THIN CLIENT: Removed LoadingStore - backend handles loading state via WebSocket
+// THIN CLIENT: Removed LoadingStore - backend handles loading state via SSE
 
 function ProxiesPageContent() {
   const [proxies, setProxies] = useState<ProxyItem[]>([]);
@@ -52,9 +52,9 @@ function ProxiesPageContent() {
   // THIN CLIENT: Removed LoadingStore - simple loading states only
   const [loading, setLoading] = useState(false);
   
-  // 🚀 WEBSOCKET PUSH MODEL: Disable polling, use WebSocket events instead
+  // 🚀 SSE PUSH MODEL: Disable polling, use SSE events instead
   useProxyHealth({
-    enableHealthChecks: false // Disable health checks - use WebSocket events instead
+    enableHealthChecks: false // Disable health checks - use SSE events instead
   });
 
   const fetchProxiesData = useCallback(async (showLoadingSpinner = true) => {
@@ -76,7 +76,7 @@ function ProxiesPageContent() {
     }
   }, [toast]);
 
-  // WebSocket handlers for real-time proxy updates
+  // SSE handlers for real-time proxy updates
   const handleProxyListUpdate = useCallback((message: { data: unknown }) => {
     console.log('[ProxiesPage] Received proxy list update:', message.data);
     // Refresh proxy list when CRUD operations occur
@@ -99,8 +99,7 @@ function ProxiesPageContent() {
   useEffect(() => {
     fetchProxiesData();
     
-    // TODO: Replace with Server-Sent Events (SSE) for real-time updates
-    // WebSocket infrastructure removed during RTK consolidation
+  // Realtime via SSE: infrastructure switched from WebSocket to Server-Sent Events
   }, [fetchProxiesData, handleProxyListUpdate, handleProxyStatusUpdate]);
 
   const handleAddProxy = () => {

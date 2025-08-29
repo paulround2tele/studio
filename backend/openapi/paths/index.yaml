@@ -149,6 +149,8 @@
   $ref: "./campaigns/by-id.yaml"
 "/campaigns/{campaignId}/progress":
   $ref: "./campaigns/progress.yaml"
+"/campaigns/{campaignId}/domains":
+  $ref: "./campaigns/domains-list.yaml"
 "/campaigns/{campaignId}/phases/{phase}/status":
   $ref: "./campaigns/phase-status.yaml"
 "/campaigns/{campaignId}/phases/{phase}/configure":
@@ -175,3 +177,6 @@
   $ref: "./campaigns/bulk-resources-allocate.yaml"
 "/campaigns/bulk/operations/{operationId}/cancel":
   $ref: "./campaigns/bulk-operations-cancel.yaml"
+
+"/campaigns/domain-generation/pattern-offset":
+  $ref: "./campaigns/domain-generation-pattern-offset.yaml"

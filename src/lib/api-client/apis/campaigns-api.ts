@@ -44,6 +44,10 @@ import type { CampaignsBulkOperationsList200Response } from '../models';
 // @ts-ignore
 import type { CampaignsCreate201Response } from '../models';
 // @ts-ignore
+import type { CampaignsDomainGenerationPatternOffset200Response } from '../models';
+// @ts-ignore
+import type { CampaignsDomainsList200Response } from '../models';
+// @ts-ignore
 import type { CampaignsList200Response } from '../models';
 // @ts-ignore
 import type { CampaignsPhaseStatus200Response } from '../models';
@@ -59,6 +63,8 @@ import type { ErrorEnvelope } from '../models';
 import type { GetBulkOperationStatus200Response } from '../models';
 // @ts-ignore
 import type { GetBulkResourceStatus200Response } from '../models';
+// @ts-ignore
+import type { PatternOffsetRequest } from '../models';
 // @ts-ignore
 import type { PhaseConfigurationRequest } from '../models';
 // @ts-ignore
@@ -353,6 +359,90 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             const localVarQueryParameter = {} as any;
 
             // authentication cookieAuth required
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get current global pattern offset for domain generation config
+         * @param {PatternOffsetRequest} patternOffsetRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsDomainGenerationPatternOffset: async (patternOffsetRequest: PatternOffsetRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'patternOffsetRequest' is not null or undefined
+            assertParamExists('campaignsDomainGenerationPatternOffset', 'patternOffsetRequest', patternOffsetRequest)
+            const localVarPath = `/campaigns/domain-generation/pattern-offset`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication cookieAuth required
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(patternOffsetRequest, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary List generated domains for a campaign
+         * @param {string} campaignId 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsDomainsList: async (campaignId: string, limit?: number, offset?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('campaignsDomainsList', 'campaignId', campaignId)
+            const localVarPath = `/campaigns/{campaignId}/domains`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication cookieAuth required
+
+            if (limit !== undefined) {
+                localVarQueryParameter['limit'] = limit;
+            }
+
+            if (offset !== undefined) {
+                localVarQueryParameter['offset'] = offset;
+            }
 
 
     
@@ -900,6 +990,34 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary Get current global pattern offset for domain generation config
+         * @param {PatternOffsetRequest} patternOffsetRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async campaignsDomainGenerationPatternOffset(patternOffsetRequest: PatternOffsetRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsDomainGenerationPatternOffset200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsDomainGenerationPatternOffset(patternOffsetRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsDomainGenerationPatternOffset']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary List generated domains for a campaign
+         * @param {string} campaignId 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async campaignsDomainsList(campaignId: string, limit?: number, offset?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsDomainsList200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsDomainsList(campaignId, limit, offset, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsDomainsList']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary Get campaign
          * @param {string} campaignId 
          * @param {*} [options] Override http request option.
@@ -1137,6 +1255,28 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
         },
         /**
          * 
+         * @summary Get current global pattern offset for domain generation config
+         * @param {PatternOffsetRequest} patternOffsetRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsDomainGenerationPatternOffset(patternOffsetRequest: PatternOffsetRequest, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsDomainGenerationPatternOffset200Response> {
+            return localVarFp.campaignsDomainGenerationPatternOffset(patternOffsetRequest, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary List generated domains for a campaign
+         * @param {string} campaignId 
+         * @param {number} [limit] 
+         * @param {number} [offset] 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsDomainsList(campaignId: string, limit?: number, offset?: number, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsDomainsList200Response> {
+            return localVarFp.campaignsDomainsList(campaignId, limit, offset, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Get campaign
          * @param {string} campaignId 
          * @param {*} [options] Override http request option.
@@ -1337,6 +1477,28 @@ export interface CampaignsApiInterface {
      * @memberof CampaignsApiInterface
      */
     campaignsDelete(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+
+    /**
+     * 
+     * @summary Get current global pattern offset for domain generation config
+     * @param {PatternOffsetRequest} patternOffsetRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    campaignsDomainGenerationPatternOffset(patternOffsetRequest: PatternOffsetRequest, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsDomainGenerationPatternOffset200Response>;
+
+    /**
+     * 
+     * @summary List generated domains for a campaign
+     * @param {string} campaignId 
+     * @param {number} [limit] 
+     * @param {number} [offset] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    campaignsDomainsList(campaignId: string, limit?: number, offset?: number, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsDomainsList200Response>;
 
     /**
      * 
@@ -1555,6 +1717,32 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
      */
     public campaignsDelete(campaignId: string, options?: RawAxiosRequestConfig) {
         return CampaignsApiFp(this.configuration).campaignsDelete(campaignId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get current global pattern offset for domain generation config
+     * @param {PatternOffsetRequest} patternOffsetRequest 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public campaignsDomainGenerationPatternOffset(patternOffsetRequest: PatternOffsetRequest, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsDomainGenerationPatternOffset(patternOffsetRequest, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary List generated domains for a campaign
+     * @param {string} campaignId 
+     * @param {number} [limit] 
+     * @param {number} [offset] 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public campaignsDomainsList(campaignId: string, limit?: number, offset?: number, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsDomainsList(campaignId, limit, offset, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

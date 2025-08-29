@@ -13,29 +13,30 @@ import { Label } from '@/components/ui/label';
 // Only import icons that are actually used in the component
 import { Database, Server } from 'lucide-react';
 import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
-import { DatabaseApi, Configuration } from '@/lib/api-client';
+import { DatabaseApi } from '@/lib/api-client';
+import { apiConfiguration } from '@/lib/api/config';
 import type {
-  ApiDatabaseQueryResult,
-  ApiDatabaseStats,
-  ApiBulkDatabaseStatsRequest,
-  ApiBulkDatabaseQueryRequest,
-  ApiDatabaseQuery
+  BulkDatabaseStatsRequest,
+  BulkDatabaseQueryRequest,
+  BulkDatabaseQueryRequestQueriesInner,
+  BulkDatabaseQueryResponse,
+  BulkDatabaseQueryResponseResultsValue,
+  BulkDatabaseStatsResponse,
+  DatabaseStats,
 } from '@/lib/api-client/models';
 
 // Professional API client initialization
-const config = new Configuration({
-  basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
-});
+const config = apiConfiguration;
 const databaseApi = new DatabaseApi(config);
 
 
 export default function DatabaseGUI() {
   const [sqlQuery, setSqlQuery] = useState('SELECT * FROM auth.users LIMIT 10;');
-  const [queryResult, setQueryResult] = useState<ApiDatabaseQueryResult | null>(null);
+  const [queryResult, setQueryResult] = useState<BulkDatabaseQueryResponseResultsValue | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
-  const [dbStats, setDbStats] = useState<ApiDatabaseStats | null>(null);
+  const [dbStats, setDbStats] = useState<DatabaseStats | null>(null);
   const [authSuccess, setAuthSuccess] = useState(false);
   const { login } = useCachedAuth();
 
@@ -80,9 +81,10 @@ export default function DatabaseGUI() {
   // Load database statistics
   const loadDatabaseStats = async () => {
     try {
-      const statsRequest: ApiBulkDatabaseStatsRequest = {
-        detailed: true
-      };
+      const statsRequest: BulkDatabaseStatsRequest = {
+        includeIndexes: true,
+        includeSize: true,
+      } as BulkDatabaseStatsRequest;
       
       const response = await databaseApi.dbBulkStats(
         statsRequest,
@@ -91,8 +93,10 @@ export default function DatabaseGUI() {
       );
       // unwrap SuccessEnvelope -> data
       const { extractResponseData } = await import('@/lib/utils/apiResponseHelpers');
-      const data = extractResponseData<ApiDatabaseStats>(response);
-      if (data) setDbStats(data as any);
+      const data = extractResponseData<BulkDatabaseStatsResponse>(response);
+      if (data && (data as BulkDatabaseStatsResponse).databaseStats) {
+        setDbStats((data as BulkDatabaseStatsResponse).databaseStats || null);
+      }
     } catch (err) {
       console.error('Failed to load database stats:', err);
     }
@@ -106,14 +110,15 @@ export default function DatabaseGUI() {
     setError(null);
     
     try {
-      const query: ApiDatabaseQuery = {
-        id: crypto.randomUUID(),
-        sql: sqlQuery
+      const queryId = crypto.randomUUID();
+      const query: BulkDatabaseQueryRequestQueriesInner = {
+        id: queryId,
+        sql: sqlQuery,
       };
       
-      const queryRequest: ApiBulkDatabaseQueryRequest = {
+      const queryRequest: BulkDatabaseQueryRequest = {
         queries: [query],
-        limit: 1000
+        limit: 1000,
       };
       
   const response = await databaseApi.dbBulkQuery(
@@ -122,8 +127,13 @@ export default function DatabaseGUI() {
         'XMLHttpRequest' as any
       );
   const { extractResponseData } = await import('@/lib/utils/apiResponseHelpers');
-  const data = extractResponseData<ApiDatabaseQueryResult>(response);
-  if (data) setQueryResult(data as any);
+  const data = extractResponseData<BulkDatabaseQueryResponse>(response);
+  if (data && (data as BulkDatabaseQueryResponse).results) {
+    const resultsMap = (data as BulkDatabaseQueryResponse).results!;
+    // pick the first/only result
+    const first = Object.values(resultsMap)[0] as BulkDatabaseQueryResponseResultsValue | undefined;
+    if (first) setQueryResult(first);
+  }
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
@@ -133,6 +143,20 @@ export default function DatabaseGUI() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Map DatabaseValue shape to a string for display
+  const renderDbValue = (cell: any): string | JSX.Element => {
+    if (cell == null) return <span className="text-gray-400 italic">NULL</span> as any;
+    if (typeof cell !== 'object') return String(cell);
+    // DatabaseValue from API
+    if ('isNull' in cell && cell.isNull) return <span className="text-gray-400 italic">NULL</span> as any;
+    if ('stringValue' in cell && cell.stringValue != null) return String(cell.stringValue);
+    if ('intValue' in cell && cell.intValue != null) return String(cell.intValue);
+    if ('floatValue' in cell && cell.floatValue != null) return String(cell.floatValue);
+    if ('boolValue' in cell && cell.boolValue != null) return String(cell.boolValue);
+    if ('rawValue' in cell && cell.rawValue != null) return String(cell.rawValue);
+    return JSON.stringify(cell);
   };
 
   // Predefined queries
@@ -508,15 +532,11 @@ export default function DatabaseGUI() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-                            {queryResult.rows?.map((row: any[], rowIndex: number) => (
+          {queryResult.rows?.map((row: any[], rowIndex: number) => (
                               <TableRow key={rowIndex}>
                                 {row.map((cell: any, cellIndex: number) => (
                                   <TableCell key={cellIndex} className="font-mono text-sm">
-                                    {cell === null ? (
-                                      <span className="text-gray-400 italic">NULL</span>
-                                    ) : (
-                                      String(cell)
-                                    )}
+            {renderDbValue(cell)}
                                   </TableCell>
                                 ))}
                               </TableRow>

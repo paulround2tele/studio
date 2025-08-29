@@ -30,29 +30,21 @@ export const ModernCampaignDataProvider: React.FC<ModernCampaignDataProviderProp
 }) => {
   // Use RTK Query for data fetching
   const {
-    data: apiResponse,
+  data: campaigns,
     isLoading: loading,
     error,
     refetch
   } = useGetCampaignsStandaloneQuery();
 
-  // Extract campaigns from typed list response
-  const apiCampaigns = (apiResponse as any)?.data || [];
-  
-  // Transform API data to view models (with type casting for legacy compatibility)
-  const campaigns: Campaign[] = Array.isArray(apiCampaigns) 
-    ? apiCampaigns.map(campaign => transformCampaignToViewModel(campaign as any))
-    : [];
-
   // Use Redux state for any additional state management
   const { selectedCampaignId } = useAppSelector((state) => state.campaign);
 
   const getCampaign = (campaignId: string): Campaign | undefined => {
-    return campaigns.find(campaign => campaign.id === campaignId);
+    return (campaigns || []).find(campaign => campaign.id === campaignId);
   };
 
   const value: ModernCampaignDataContextValue = {
-    campaigns,
+  campaigns: campaigns || [],
     loading,
     error: error ? 'Failed to load campaigns' : null,
     refetch,

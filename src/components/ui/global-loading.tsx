@@ -11,9 +11,9 @@ import { cn } from '@/lib/utils';
 
 export const GlobalLoadingIndicator: React.FC = () => {
   // THIN CLIENT: No loading store needed
-  // Backend sends progress via WebSocket, UI stays minimal
+  // Backend handles progress via server-driven updates (SSE where applicable); UI stays minimal
   
-  return null; // Backend handles all loading indication via WebSocket messages
+  return null; // Backend handles loading indication via backend-driven events
 };
 
 /**

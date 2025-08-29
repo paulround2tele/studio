@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import type { ApiPersonaResponse } from '@/lib/api-client/models';
+// Use compat alias for stability across client regenerations
+import type { ApiPersonaResponse } from '@/lib/api-client/compat';
 import type { HTTPConfigDetails } from '@/lib/api-client/models/httpconfig-details';
 import type { DNSConfigDetails } from '@/lib/api-client/models/dnsconfig-details';
 

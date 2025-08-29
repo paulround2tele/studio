@@ -62,11 +62,11 @@ function serializeError(obj: unknown): string {
     return JSON.stringify(eventData, null, 2);
   }
 
-  // Handle WebSocket-specific events
+  // Handle network event objects (generalized; no socket usage in frontend)
   if (typeof obj === 'object' && obj !== null && 'type' in obj) {
     const eventObj = obj as Record<string, unknown>;
     if (eventObj.type === 'error' || eventObj.type === 'close') {
-      const wsEventData: Record<string, unknown> = {
+      const netEventData: Record<string, unknown> = {
         type: eventObj.type,
         isTrusted: eventObj.isTrusted,
         timeStamp: eventObj.timeStamp,
@@ -74,12 +74,12 @@ function serializeError(obj: unknown): string {
       
       // For close events, include code and reason
       if (eventObj.type === 'close') {
-        wsEventData.code = eventObj.code;
-        wsEventData.reason = eventObj.reason;
-        wsEventData.wasClean = eventObj.wasClean;
+        netEventData.code = eventObj.code;
+        netEventData.reason = eventObj.reason;
+        netEventData.wasClean = eventObj.wasClean;
       }
       
-      return JSON.stringify(wsEventData, null, 2);
+      return JSON.stringify(netEventData, null, 2);
     }
   }
 
@@ -434,7 +434,7 @@ const logger = getLogger();
 // Legacy exports for backward compatibility (used by existing code)
 export const logAuth = logger.auth;
 export const logAPI = logger.api;
-// WebSocket logging removed – no frontend WebSocket usage remains
+// Realtime logging note – frontend avoids socket usage; backend-driven updates (SSE) where applicable
 export const logCampaign = logger.campaign;
 export const logUI = logger.ui;
 

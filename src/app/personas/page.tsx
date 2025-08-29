@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/shared/PageHeader';
 import PersonaListItem from '@/components/personas/PersonaListItem';
-import { ApiPersonaResponse } from '@/lib/api-client';
+import { ApiPersonaResponse } from '@/lib/api-client/compat';
 
 // Use OpenAPI types directly - simplified for now
 type PersonaBase = any;
@@ -42,17 +42,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from '@/components/ui/input';
-import { PersonasApi, Configuration } from '@/lib/api-client';
+import { PersonasApi } from '@/lib/api-client';
+import { apiConfiguration } from '@/lib/api/config';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 
 // Professional API client initialization
-const config = new Configuration({
-  basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
-});
+const config = apiConfiguration;
 const personasApi = new PersonasApi(config);
 
-// THIN CLIENT: Removed LoadingStore - backend handles loading state via WebSocket
+// THIN CLIENT: Removed LoadingStore - backend handles loading state via SSE
 
 // Zod schemas for validating imported persona structures (remains the same)
 const HttpPersonaImportSchema = z.object({
@@ -178,8 +177,7 @@ function PersonasPageContent() {
   useEffect(() => {
     fetchPersonasData(activeTab);
     
-    // TODO: Replace with Server-Sent Events (SSE) for real-time updates
-    // WebSocket infrastructure removed during RTK consolidation
+  // Realtime via SSE: infrastructure switched from WebSocket to Server-Sent Events
   }, [activeTab, fetchPersonasData]);
 
   const handleDeletePersona = async (personaId: string, personaType: 'http' | 'dns') => {

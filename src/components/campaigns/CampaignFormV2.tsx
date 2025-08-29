@@ -19,9 +19,12 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import type { SimpleCampaignFormValues } from './types/SimpleCampaignFormTypes';
 import { formToApiRequest, defaultFormValues } from './types/SimpleCampaignFormTypes';
 import { useCreateCampaignMutation } from '@/store/api/campaignApi';
-import { calculateMaxTheoreticalDomains, calculateRemainingDomains } from '@/lib/utils/domainCalculation';
+import { calculateRemainingDomains } from '@/lib/utils/domainCalculation';
 import type { CampaignResponse } from '@/lib/api-client/models/campaign-response';
+import { CampaignsApi } from '@/lib/api-client';
+import { apiConfiguration } from '@/lib/api/config';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
+import type { PatternOffsetRequest } from '@/lib/api-client/models/pattern-offset-request';
 
 // Common TLD options
 const COMMON_TLDS = [
@@ -70,7 +73,7 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
   });
 
   // Check if domain generation has started (restricts editing)
-  const domainGenerationStarted = !!(editMode && campaignData && campaignData.currentPhase && campaignData.currentPhase !== 'discovery');
+  // const domainGenerationStarted = !!(editMode && campaignData && campaignData.currentPhase && campaignData.currentPhase !== 'discovery');
 
   // Domain calculation function
   const calculateDomainStatistics = async (formData: SimpleCampaignFormValues) => {
@@ -91,27 +94,18 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
       // Get current offset from backend and calculate remaining domains
       let offset = 0;
       try {
-        // Not present in OpenAPI spec; call backend directly
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-        const res = await fetch(`${apiUrl}/campaigns/domain-generation/pattern-offset`, {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            patternType: config.patternType,
-            characterSet: config.characterSet,
-            constantString: config.constantString,
-            tld: config.tld,
-            variableLength: config.variableLength,
-          }),
-        });
-        if (res.ok) {
-          const json = await res.json();
-          offset = json?.data?.currentOffset || 0;
-          setCurrentOffset(offset);
-        } else {
-          throw new Error(`Pattern offset request failed: ${res.status}`);
-        }
+        const req: PatternOffsetRequest = {
+          patternType: config.patternType as any,
+          characterSet: config.characterSet,
+          constantString: config.constantString,
+          tld: (config.tld || '.com').replace(/^\./, ''), // spec expects tld without leading dot
+          variableLength: config.variableLength,
+        };
+        const api = new CampaignsApi(apiConfiguration);
+        const response = await api.campaignsDomainGenerationPatternOffset(req);
+        const data = extractResponseData<{ currentOffset?: number }>(response);
+        offset = data?.currentOffset || 0;
+        setCurrentOffset(offset);
       } catch (offsetError) {
         console.warn('Could not fetch current offset, using 0:', offsetError);
         setCurrentOffset(0);
@@ -203,11 +197,7 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
 
         // Use professional RTK Query mutation with proper type casting
         // TODO: Fix schema mismatches between enums - using any for now
-        const newCampaignData = await createCampaign(apiRequest as any).unwrap();
-        
-        // The response is wrapped in a data field - classic OpenAPI amateur design
-        // Cast to any because the auto-generated types are completely wrong
-        const campaignData = (newCampaignData as any).data || newCampaignData;
+  const campaignData = await createCampaign(apiRequest as any).unwrap();
         if (!campaignData || !campaignData.id) {
           throw new Error('Campaign creation succeeded but no campaign ID returned');
         }
@@ -218,8 +208,8 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
         });
 
         // DEBUG: Log redirect data before attempting navigation
-        console.log('🚀 Campaign creation successful!');
-        console.log('📊 newCampaignData:', JSON.stringify(newCampaignData, null, 2));
+  console.log('🚀 Campaign creation successful!');
+  console.log('📊 newCampaignData:', JSON.stringify(campaignData, null, 2));
         console.log('🆔 Campaign ID:', campaignData.id);
         console.log('🧭 About to redirect to:', `/campaigns/${campaignData.id}`);
 

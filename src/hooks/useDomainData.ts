@@ -2,20 +2,16 @@
  * REST API Domain Data Hook - Using Existing Bulk Enriched Data Endpoint
  * 
  * This hook provides domain data fetching capabilities using the existing bulk enriched data endpoint
- * instead of WebSocket streaming. It supports pagination, filtering, and polling for real-time updates.
+ * instead of any realtime socket streaming. It supports pagination, filtering, and polling for near real-time updates.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useGetCampaignDomainsQuery } from '@/store/api/campaignApi';
+import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
 
 // Local minimal domain shape based on bulk enriched-data response
-interface GeneratedDomainLite {
-  domain?: string;
-  dnsStatus?: string;
-  httpStatus?: string;
-  leadStatus?: string;
-  [key: string]: any;
-}
+type GeneratedDomainLite = Pick<DomainListItem, 'domain' | 'dnsStatus' | 'httpStatus' | 'leadStatus'> & Record<string, any>;
 
 // Professional type imports using proper model references
 
@@ -59,7 +55,7 @@ interface DomainDataResult {
 
 /**
  * Hook for fetching domain data via REST APIs with pagination and filtering
- * Replaces WebSocket domain streaming with polling-based updates
+ * Replaces legacy socket-based domain streaming with polling-based updates
  */
 export function useDomainData(
   campaignId: string,
@@ -85,142 +81,95 @@ export function useDomainData(
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
 
-  // Fetch domain data using bulk enriched data endpoint
-  const fetchDomains = useCallback(async (currentOffset: number = 0, append: boolean = false) => {
-    try {
-      if (!append) setLoading(true);
-      setError(null);
-
-      // Use existing bulk enriched data endpoint
-      const request = {
-        campaignIds: [campaignId],
-        limit: limit,
-        offset: currentOffset
-      };
-
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      const res = await fetch(`${apiUrl}/campaigns/bulk/enriched-data`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(request),
-      });
-      if (!res.ok) throw new Error(`Bulk enriched data failed: ${res.status}`);
-      const apiResponse = await res.json();
-      
-      if (!apiResponse || !apiResponse.campaigns) {
-        throw new Error('Invalid response format from bulk enriched data endpoint');
-      }
-
-      const campaignData = apiResponse.campaigns[campaignId];
-      
-      if (!campaignData) {
-        throw new Error(`No data found for campaign ${campaignId}`);
-      }
-
-      const domains = campaignData.domains || [];
-      
-      // Apply client-side filtering if needed
-      let filteredDomains = domains as GeneratedDomainLite[];
-      if (statusFilter || phaseFilter) {
-        filteredDomains = domains.filter((domain: GeneratedDomainLite) => {
-          // Filter by DNS status if statusFilter is provided
-          if (statusFilter && domain.dnsStatus !== statusFilter) return false;
-          // Filter by lead status if phaseFilter is provided 
-          if (phaseFilter && domain.leadStatus !== phaseFilter) return false;
-          return true;
-        });
-      }
-
-      if (append) {
-        setDomains(prev => [...prev, ...filteredDomains]);
-      } else {
-        setDomains(filteredDomains);
-      }
-
-      setTotal(filteredDomains.length);
-      setOffset(currentOffset + filteredDomains.length);
-      setHasMore(currentOffset + filteredDomains.length < filteredDomains.length);
-
-      // Build status summary from the data
-    const summary: DomainStatusSummary = {
-        campaignId,
-        summary: {
-      total: domains.length,
-      generated: domains.length,
-          dnsValidated: campaignData.dnsValidatedDomains?.length || 0,
-          httpValidated: campaignData.httpKeywordResults?.length || 0,
-          leadsGenerated: campaignData.leads?.length || 0,
-          failed: 0 // TODO: Calculate from domain status
-        },
-        currentPhase: campaignData.campaign?.currentPhase || 'unknown',
-        phaseStatus: campaignData.campaign?.phaseStatus || 'unknown'
-      };
-      
-      setStatusSummary(summary);
-
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch domains';
-      setError(errorMessage);
-      console.error('[useDomainData] Error fetching domains:', err);
-      
-      toast({
-        title: "Domain Data Error",
-        description: errorMessage,
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+  // Use RTK Query to fetch the current page of domains
+  const {
+    data: page,
+    isFetching,
+    error: rtkError,
+    refetch,
+  } = useGetCampaignDomainsQuery(
+    { campaignId, limit, offset },
+    {
+      skip: !campaignId,
+      pollingInterval: enablePolling ? pollingInterval : 0,
     }
-  }, [campaignId, limit, statusFilter, phaseFilter, toast]);
+  );
+
+  // Accumulate or replace items when page changes
+  useEffect(() => {
+    setLoading(isFetching);
+    if (rtkError) {
+      const message = (rtkError as any)?.data?.message || (rtkError as any)?.message || 'Failed to fetch domains';
+      setError(message);
+    } else {
+      setError(null);
+    }
+
+    const items = (page?.items as GeneratedDomainLite[]) || [];
+    const pageTotal = page?.total || 0;
+
+    // Apply optional client-side filtering
+    const filtered = (statusFilter || phaseFilter)
+      ? items.filter((d) => {
+          if (statusFilter && d.dnsStatus !== statusFilter) return false;
+          if (phaseFilter && d.leadStatus !== phaseFilter) return false;
+          return true;
+        })
+      : items;
+
+    if (offset > 0) {
+      setDomains((prev) => [...prev, ...filtered]);
+    } else {
+      setDomains(filtered);
+    }
+
+    setTotal(pageTotal);
+    setHasMore((offset + filtered.length) < pageTotal);
+
+    // Minimal summary (domain list endpoint doesn't include phase details)
+    const summary: DomainStatusSummary = {
+      campaignId,
+      summary: {
+        total: pageTotal,
+        generated: pageTotal,
+        dnsValidated: 0,
+        httpValidated: 0,
+        leadsGenerated: 0,
+        failed: 0,
+      },
+      currentPhase: 'unknown',
+      phaseStatus: 'unknown',
+    };
+    setStatusSummary(summary);
+  }, [page, isFetching, rtkError, statusFilter, phaseFilter, campaignId, offset]);
 
   // Load more domains (pagination)
   const loadMore = useCallback(async () => {
     if (!hasMore || loading) return;
-    await fetchDomains(offset, true);
-  }, [fetchDomains, hasMore, loading, offset]);
+    setOffset((o) => o + (limit || 0));
+    // RTK hook will re-run with new offset
+  }, [hasMore, loading, limit]);
 
   // Refresh all data
   const refresh = useCallback(async () => {
+    setDomains([]);
     setOffset(0);
-    await fetchDomains(0, false);
-  }, [fetchDomains]);
+    await refetch();
+  }, [refetch]);
 
   // Set filters (triggers data refresh)
   const setFilters = useCallback((filters: { status?: string; phase?: string }) => {
     setOffset(0);
     setDomains([]);
     // Filters will be applied through the filter parameters in fetchDomains
-    fetchDomains(0, false);
-  }, [fetchDomains]);
+  }, []);
 
   // Initial data load and filter changes
   useEffect(() => {
     refresh();
   }, [refresh, statusFilter, phaseFilter]);
 
-  // Polling for real-time updates
-  useEffect(() => {
-    if (!enablePolling || !campaignId) return;
-
-    pollingRef.current = setInterval(async () => {
-      try {
-        // Refresh first page if user is at the top to get latest status
-        if (offset === 0) {
-          await fetchDomains(0, false);
-        }
-      } catch (err) {
-        console.error('[useDomainData] Polling error:', err);
-      }
-    }, pollingInterval);
-
-    return () => {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
-    };
-  }, [enablePolling, campaignId, pollingInterval, fetchDomains, offset]);
+  // Polling handled by RTK Query hook via pollingInterval
 
   // Cleanup on unmount
   useEffect(() => {
@@ -267,45 +216,30 @@ export function useDomainStatusSummary(
       setLoading(true);
       setError(null);
 
-      // Use existing bulk enriched data endpoint for status summary
-      const request = {
-        campaignIds: [campaignId],
-        limit: 1, // We only need summary, not actual domains
-        offset: 0
-      };
+      // Use the new domains list endpoint and compute a minimal summary
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      const res = await fetch(`${apiUrl}/campaigns/bulk/enriched-data`, {
-        method: 'POST',
+      const res = await fetch(`${apiUrl}/api/v2/campaigns/${campaignId}/domains?limit=1&offset=0`, {
+        method: 'GET',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(request),
+        headers: { 'Accept': 'application/json' },
       });
-      if (!res.ok) throw new Error(`Bulk enriched data failed: ${res.status}`);
-      const apiResponse = await res.json();
-      
-      if (!apiResponse || !apiResponse.campaigns) {
-        throw new Error('Invalid response format from bulk enriched data endpoint');
-      }
+      if (!res.ok) throw new Error(`Domains list failed: ${res.status}`);
+      const json = await res.json();
+      const total = json?.data?.total ?? 0;
 
-      const campaignData = apiResponse.campaigns[campaignId];
-      
-      if (!campaignData) {
-        throw new Error(`No data found for campaign ${campaignId}`);
-      }
-
-      // Build status summary from the enriched data
+      // Build status summary from the domains list
       const summary: DomainStatusSummary = {
         campaignId,
         summary: {
-          total: campaignData.domains?.length || 0,
-          generated: campaignData.domains?.length || 0,
-          dnsValidated: campaignData.dnsValidatedDomains?.length || 0,
-          httpValidated: campaignData.httpKeywordResults?.length || 0,
-          leadsGenerated: campaignData.leads?.length || 0,
+          total,
+          generated: total,
+          dnsValidated: 0,
+          httpValidated: 0,
+          leadsGenerated: 0,
           failed: 0 // TODO: Calculate from domain status
         },
-        currentPhase: campaignData.campaign?.currentPhase || 'unknown',
-        phaseStatus: campaignData.campaign?.phaseStatus || 'unknown'
+        currentPhase: 'unknown',
+        phaseStatus: 'unknown'
       };
       
       setStatusSummary(summary);

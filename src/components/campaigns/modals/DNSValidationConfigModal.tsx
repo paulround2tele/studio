@@ -14,7 +14,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Import types and services - using the EXACT same pattern as campaign form
-import { PersonasApi, ProxiesApi, Configuration } from '@/lib/api-client';
+import { PersonasApi, ProxiesApi } from '@/lib/api-client';
+import { apiConfiguration } from '@/lib/api/config';
 import { PersonaType } from '@/lib/api-client/models/persona-type';
 import { useConfigurePhaseStandaloneMutation } from '@/store/api/campaignApi';
 import type { ApiDNSValidationConfig } from '@/lib/api-client/models/api-dnsvalidation-config';
@@ -72,9 +73,8 @@ export default function DNSValidationConfigModal({
     const loadData = async () => {
       try {
         setLoadingData(true);
-        const cfg = new Configuration({ basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080' });
-        const personasApi = new PersonasApi(cfg);
-        const proxiesApi = new ProxiesApi(cfg);
+  const personasApi = new PersonasApi(apiConfiguration);
+  const proxiesApi = new ProxiesApi(apiConfiguration);
         // Load personas and proxies in parallel (use list endpoints)
         const [personasResponse, proxiesResponse] = await Promise.all([
           personasApi.personasList(undefined, undefined, true, PersonaType.dns),

@@ -32,7 +32,7 @@ interface ProgressInfo {
  * Campaign Progress Monitor Component
  * 
  * Displays campaign progress and phase information.
- * TODO: Implement Server-Sent Events (SSE) for real-time updates when WebSocket replacement is ready.
+ * Realtime via SSE: Server-Sent Events will power real-time updates (WebSocket removed).
  */
 const CampaignProgressMonitor = memo(({
   campaign,

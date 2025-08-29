@@ -1209,6 +1209,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/campaigns/{campaignId}/domains": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List generated domains for a campaign */
+        get: operations["campaigns_domains_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/campaigns/{campaignId}/phases/{phase}/status": {
         parameters: {
             query?: never;
@@ -1424,6 +1441,23 @@ export interface paths {
         put?: never;
         /** Cancel bulk operation */
         post: operations["cancelBulkOperation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/domain-generation/pattern-offset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Get current global pattern offset for domain generation config */
+        post: operations["campaigns_domain_generation_pattern_offset"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2045,6 +2079,27 @@ export interface components {
                 completedAt?: string | null;
             };
         };
+        DomainListItem: {
+            /** Format: uuid */
+            id?: string;
+            domain: string;
+            /** Format: int64 */
+            offset?: number;
+            /** Format: date-time */
+            createdAt?: string;
+            /** @description DNS validation status if available */
+            dnsStatus?: string;
+            /** @description HTTP validation status if available */
+            httpStatus?: string;
+            /** @description Lead extraction status if available */
+            leadStatus?: string;
+        };
+        CampaignDomainsListResponse: {
+            /** Format: uuid */
+            campaignId: string;
+            items: components["schemas"]["DomainListItem"][];
+            total: number;
+        };
         PhaseStatusResponse: {
             /** @enum {string} */
             phase: "discovery" | "validation" | "extraction" | "analysis";
@@ -2321,6 +2376,19 @@ export interface components {
         };
         /** @enum {string} */
         BulkOperationCancelStatus: "cancelled" | "cancelling";
+        PatternOffsetRequest: {
+            /** @enum {string} */
+            patternType: "prefix" | "suffix" | "both";
+            variableLength: number;
+            characterSet: string;
+            constantString?: string;
+            /** @description Single TLD including dot, e.g. .com or without dot */
+            tld?: string;
+        };
+        PatternOffsetResponse: {
+            /** Format: int64 */
+            currentOffset?: number;
+        };
         KeywordSetWithRulesResponse: {
             /** Format: uuid */
             id: string;
@@ -5062,6 +5130,36 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
+    campaigns_domains_list: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["CampaignDomainsListResponse"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     campaigns_phase_status: {
         parameters: {
             query?: never;
@@ -5464,6 +5562,36 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             429: components["responses"]["RateLimitExceeded"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_domain_generation_pattern_offset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PatternOffsetRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["PatternOffsetResponse"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
             500: components["responses"]["InternalServerError"];
         };
     };

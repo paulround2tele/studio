@@ -13,7 +13,8 @@
 
 import { z } from 'zod';
 import React from 'react';
-import { FeatureFlagsApi, Configuration } from '@/lib/api-client';
+import { FeatureFlagsApi } from '@/lib/api-client';
+import { apiConfiguration } from '@/lib/api/config';
 
 // Feature flag value types
 export type FeatureFlagValue = boolean | string | number | Record<string, unknown>;
@@ -60,7 +61,7 @@ class FeatureFlagsService {
   private userContext: UserContext = {};
   private cacheTimestamp: number = 0;
   private abTestAssignments: Map<string, string> = new Map();
-  private api = new FeatureFlagsApi(new Configuration({ basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080' }));
+  private api = new FeatureFlagsApi(apiConfiguration);
 
   constructor(config: FeatureFlagsConfig = {}) {
     this.config = {

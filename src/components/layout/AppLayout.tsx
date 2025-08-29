@@ -104,8 +104,7 @@ AppSidebar.displayName = 'AppSidebar';
 const AppLayout = memo(({ children }: AppLayoutProps) => {
   const pathname = usePathname();
 
-  // No WebSocket cleanup needed - handled by WebSocketProvider
-  // Removed elasticWebSocketService.disconnectAll() as part of TASK-WS-004
+  // Realtime cleanup not required here; managed at data-provider level
 
   // SECURITY: Isolated routes that should bypass the main app layout
   const isolatedRoutes = ['/dbgui'];

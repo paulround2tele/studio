@@ -70,7 +70,7 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
     runHealthChecks,
     healthCheckInProgress 
   } = useProxyHealth({
-    // 🚀 WEBSOCKET PUSH MODEL: No polling needed - using WebSocket events instead
+  // Realtime note: SSE is the standard push model elsewhere; this component does not rely on realtime push
     enableHealthChecks: false,
     healthCheckInterval: 3600000 // 1 hour (minimal health checks)
   });

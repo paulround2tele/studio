@@ -8,14 +8,14 @@
  * compatibility with existing legacy components that have not yet been migrated.
  */
 import type { 
-  CampaignCurrentPhaseEnum
-} from '@/lib/api-client/models';
+  CampaignResponseCurrentPhaseEnum
+} from '@/lib/api-client/models/campaign-response';
 import type { HTTPKeywordValidationRequest } from '@/lib/api-client/models/httpkeyword-validation-request';
 import type { DNSValidationAPIRequest } from '@/lib/api-client/models/dnsvalidation-apirequest';
 
 export type DomainGenerationPattern = "prefix_variable" | "suffix_variable" | "both_variable";
 export type DomainSourceSelectionMode = "none" | "upload" | "campaign_output";
-export type CampaignPhase = CampaignCurrentPhaseEnum;
+export type CampaignPhase = CampaignResponseCurrentPhaseEnum;
 
 // Import OpenAPI types for full sequence support (legacy)
 export type DNSValidationRequest = DNSValidationAPIRequest;

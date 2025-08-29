@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, Briefcase, Loader2, ArrowLeft } from 'lucide-react';
 
 // PROFESSIONAL: Direct OpenAPI client imports - no amateur wrappers
-import { CampaignsApi, Configuration } from '@/lib/api-client';
+import { CampaignsApi } from '@/lib/api-client';
+import { apiConfiguration } from '@/lib/api/config';
 import type { CampaignResponse } from '@/lib/api-client/models';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
@@ -34,7 +35,7 @@ export default function CampaignPage() {
   const fetchCampaign = async () => {
       try {
         setLoading(true);
-    const api = new CampaignsApi(new Configuration({ basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080' }));
+  const api = new CampaignsApi(apiConfiguration);
     // Fetch a single campaign by id and unwrap the SuccessEnvelope
     const response = await api.campaignsGet(campaignId);
     const data = extractResponseData<CampaignResponse>(response);

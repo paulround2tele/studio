@@ -19,11 +19,8 @@ function EditCampaignPageContent() {
   const campaignId = params.id as string;
   
   // RTK Query: Use centralized campaigns query and find specific campaign
-  const { data: campaignsResponse, isLoading: loading, error } = useGetCampaignsStandaloneQuery();
-  
-  // Extract campaigns from RTK Query response 
-  const campaigns = Array.isArray(campaignsResponse) ? campaignsResponse : [];
-  const campaignData = campaigns.find((c: any) => c.id === campaignId);
+  const { data: campaigns, isLoading: loading, error } = useGetCampaignsStandaloneQuery();
+  const campaignData = (campaigns || []).find((c: any) => c.id === campaignId);
 
   if (loading) {
     return (

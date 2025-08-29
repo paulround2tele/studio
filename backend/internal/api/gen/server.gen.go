@@ -74,9 +74,9 @@ const (
 
 // Defines values for BulkDomainGenerationRequestOperationsConfigPatternType.
 const (
-	Both   BulkDomainGenerationRequestOperationsConfigPatternType = "both"
-	Prefix BulkDomainGenerationRequestOperationsConfigPatternType = "prefix"
-	Suffix BulkDomainGenerationRequestOperationsConfigPatternType = "suffix"
+	BulkDomainGenerationRequestOperationsConfigPatternTypeBoth   BulkDomainGenerationRequestOperationsConfigPatternType = "both"
+	BulkDomainGenerationRequestOperationsConfigPatternTypePrefix BulkDomainGenerationRequestOperationsConfigPatternType = "prefix"
+	BulkDomainGenerationRequestOperationsConfigPatternTypeSuffix BulkDomainGenerationRequestOperationsConfigPatternType = "suffix"
 )
 
 // Defines values for BulkGenerationResponseOperationsStatus.
@@ -199,6 +199,13 @@ const (
 const (
 	Regex  KeywordRuleType = "regex"
 	String KeywordRuleType = "string"
+)
+
+// Defines values for PatternOffsetRequestPatternType.
+const (
+	PatternOffsetRequestPatternTypeBoth   PatternOffsetRequestPatternType = "both"
+	PatternOffsetRequestPatternTypePrefix PatternOffsetRequestPatternType = "prefix"
+	PatternOffsetRequestPatternTypeSuffix PatternOffsetRequestPatternType = "suffix"
 )
 
 // Defines values for PersonaType.
@@ -669,6 +676,13 @@ type BulkValidationResponseOperationsStatus string
 // BulkValidationResponseStatus defines model for BulkValidationResponse.Status.
 type BulkValidationResponseStatus string
 
+// CampaignDomainsListResponse defines model for CampaignDomainsListResponse.
+type CampaignDomainsListResponse struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+	Items      []DomainListItem   `json:"items"`
+	Total      int                `json:"total"`
+}
+
 // CampaignProgressResponse defines model for CampaignProgressResponse.
 type CampaignProgressResponse struct {
 	CampaignId openapi_types.UUID `json:"campaignId"`
@@ -820,6 +834,23 @@ type DatabaseValue struct {
 	StringValue *string  `json:"stringValue,omitempty"`
 }
 
+// DomainListItem defines model for DomainListItem.
+type DomainListItem struct {
+	CreatedAt *time.Time `json:"createdAt,omitempty"`
+
+	// DnsStatus DNS validation status if available
+	DnsStatus *string `json:"dnsStatus,omitempty"`
+	Domain    string  `json:"domain"`
+
+	// HttpStatus HTTP validation status if available
+	HttpStatus *string             `json:"httpStatus,omitempty"`
+	Id         *openapi_types.UUID `json:"id,omitempty"`
+
+	// LeadStatus Lead extraction status if available
+	LeadStatus *string `json:"leadStatus,omitempty"`
+	Offset     *int64  `json:"offset,omitempty"`
+}
+
 // ErrorCode Stable error code space
 type ErrorCode string
 
@@ -913,6 +944,25 @@ type Pagination struct {
 	Current  *int `json:"current,omitempty"`
 	PageSize *int `json:"pageSize,omitempty"`
 	Total    *int `json:"total,omitempty"`
+}
+
+// PatternOffsetRequest defines model for PatternOffsetRequest.
+type PatternOffsetRequest struct {
+	CharacterSet   string                          `json:"characterSet"`
+	ConstantString *string                         `json:"constantString,omitempty"`
+	PatternType    PatternOffsetRequestPatternType `json:"patternType"`
+
+	// Tld Single TLD including dot, e.g. .com or without dot
+	Tld            *string `json:"tld,omitempty"`
+	VariableLength int     `json:"variableLength"`
+}
+
+// PatternOffsetRequestPatternType defines model for PatternOffsetRequest.PatternType.
+type PatternOffsetRequestPatternType string
+
+// PatternOffsetResponse defines model for PatternOffsetResponse.
+type PatternOffsetResponse struct {
+	CurrentOffset *int64 `json:"currentOffset,omitempty"`
 }
 
 // PersonaDeleteResponse defines model for PersonaDeleteResponse.
@@ -1254,6 +1304,12 @@ type AuthChangePasswordJSONBody struct {
 	OldPassword string `json:"oldPassword"`
 }
 
+// CampaignsDomainsListParams defines parameters for CampaignsDomainsList.
+type CampaignsDomainsListParams struct {
+	Limit  *int `form:"limit,omitempty" json:"limit,omitempty"`
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
 // CampaignsPhaseConfigureParamsPhase defines parameters for CampaignsPhaseConfigure.
 type CampaignsPhaseConfigureParamsPhase string
 
@@ -1403,6 +1459,9 @@ type BulkValidateHTTPJSONRequestBody = BulkHTTPValidationRequest
 // AllocateBulkResourcesJSONRequestBody defines body for AllocateBulkResources for application/json ContentType.
 type AllocateBulkResourcesJSONRequestBody = BulkResourceAllocationRequest
 
+// CampaignsDomainGenerationPatternOffsetJSONRequestBody defines body for CampaignsDomainGenerationPatternOffset for application/json ContentType.
+type CampaignsDomainGenerationPatternOffsetJSONRequestBody = PatternOffsetRequest
+
 // CampaignsUpdateJSONRequestBody defines body for CampaignsUpdate for application/json ContentType.
 type CampaignsUpdateJSONRequestBody = UpdateCampaignRequest
 
@@ -1537,6 +1596,9 @@ type ServerInterface interface {
 	// Get bulk resource allocation status
 	// (GET /campaigns/bulk/resources/status/{allocationId})
 	GetBulkResourceStatus(w http.ResponseWriter, r *http.Request, allocationId openapi_types.UUID)
+	// Get current global pattern offset for domain generation config
+	// (POST /campaigns/domain-generation/pattern-offset)
+	CampaignsDomainGenerationPatternOffset(w http.ResponseWriter, r *http.Request)
 	// Delete campaign
 	// (DELETE /campaigns/{campaignId})
 	CampaignsDelete(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
@@ -1546,6 +1608,9 @@ type ServerInterface interface {
 	// Update campaign
 	// (PUT /campaigns/{campaignId})
 	CampaignsUpdate(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
+	// List generated domains for a campaign
+	// (GET /campaigns/{campaignId}/domains)
+	CampaignsDomainsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsDomainsListParams)
 	// Configure campaign phase
 	// (POST /campaigns/{campaignId}/phases/{phase}/configure)
 	CampaignsPhaseConfigure(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignsPhaseConfigureParamsPhase)
@@ -1903,6 +1968,12 @@ func (_ Unimplemented) GetBulkResourceStatus(w http.ResponseWriter, r *http.Requ
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// Get current global pattern offset for domain generation config
+// (POST /campaigns/domain-generation/pattern-offset)
+func (_ Unimplemented) CampaignsDomainGenerationPatternOffset(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // Delete campaign
 // (DELETE /campaigns/{campaignId})
 func (_ Unimplemented) CampaignsDelete(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
@@ -1918,6 +1989,12 @@ func (_ Unimplemented) CampaignsGet(w http.ResponseWriter, r *http.Request, camp
 // Update campaign
 // (PUT /campaigns/{campaignId})
 func (_ Unimplemented) CampaignsUpdate(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// List generated domains for a campaign
+// (GET /campaigns/{campaignId}/domains)
+func (_ Unimplemented) CampaignsDomainsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsDomainsListParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2793,6 +2870,26 @@ func (siw *ServerInterfaceWrapper) GetBulkResourceStatus(w http.ResponseWriter, 
 	handler.ServeHTTP(w, r)
 }
 
+// CampaignsDomainGenerationPatternOffset operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsDomainGenerationPatternOffset(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsDomainGenerationPatternOffset(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CampaignsDelete operation middleware
 func (siw *ServerInterfaceWrapper) CampaignsDelete(w http.ResponseWriter, r *http.Request) {
 
@@ -2877,6 +2974,56 @@ func (siw *ServerInterfaceWrapper) CampaignsUpdate(w http.ResponseWriter, r *htt
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CampaignsUpdate(w, r, campaignId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CampaignsDomainsList operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsDomainsList(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CampaignsDomainsListParams
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", r.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "offset" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "offset", r.URL.Query(), &params.Offset)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "offset", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsDomainsList(w, r, campaignId, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5414,6 +5561,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/campaigns/bulk/resources/status/{allocationId}", wrapper.GetBulkResourceStatus)
 	})
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/campaigns/domain-generation/pattern-offset", wrapper.CampaignsDomainGenerationPatternOffset)
+	})
+	r.Group(func(r chi.Router) {
 		r.Delete(options.BaseURL+"/campaigns/{campaignId}", wrapper.CampaignsDelete)
 	})
 	r.Group(func(r chi.Router) {
@@ -5421,6 +5571,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/campaigns/{campaignId}", wrapper.CampaignsUpdate)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/campaigns/{campaignId}/domains", wrapper.CampaignsDomainsList)
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/campaigns/{campaignId}/phases/{phase}/configure", wrapper.CampaignsPhaseConfigure)
@@ -6346,6 +6499,45 @@ func (response CampaignsBulkOperationsList200JSONResponse) VisitCampaignsBulkOpe
 	return json.NewEncoder(w).Encode(response)
 }
 
+type CampaignsBulkOperationsList400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CampaignsBulkOperationsList400JSONResponse) VisitCampaignsBulkOperationsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsBulkOperationsList401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CampaignsBulkOperationsList401JSONResponse) VisitCampaignsBulkOperationsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsBulkOperationsList429JSONResponse struct{ RateLimitExceededJSONResponse }
+
+func (response CampaignsBulkOperationsList429JSONResponse) VisitCampaignsBulkOperationsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Retry-After", fmt.Sprint(response.Headers.RetryAfter))
+	w.WriteHeader(429)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type CampaignsBulkOperationsList500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsBulkOperationsList500JSONResponse) VisitCampaignsBulkOperationsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type CancelBulkOperationRequestObject struct {
 	OperationId openapi_types.UUID `json:"operationId"`
 }
@@ -6645,6 +6837,68 @@ func (response GetBulkResourceStatus500JSONResponse) VisitGetBulkResourceStatusR
 	return json.NewEncoder(w).Encode(response)
 }
 
+type CampaignsDomainGenerationPatternOffsetRequestObject struct {
+	Body *CampaignsDomainGenerationPatternOffsetJSONRequestBody
+}
+
+type CampaignsDomainGenerationPatternOffsetResponseObject interface {
+	VisitCampaignsDomainGenerationPatternOffsetResponse(w http.ResponseWriter) error
+}
+
+type CampaignsDomainGenerationPatternOffset200JSONResponse struct {
+	Data      *PatternOffsetResponse `json:"data,omitempty"`
+	Metadata  *Metadata              `json:"metadata,omitempty"`
+	RequestId string                 `json:"requestId"`
+
+	// Success Always true for success envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response CampaignsDomainGenerationPatternOffset200JSONResponse) VisitCampaignsDomainGenerationPatternOffsetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsDomainGenerationPatternOffset400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CampaignsDomainGenerationPatternOffset400JSONResponse) VisitCampaignsDomainGenerationPatternOffsetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsDomainGenerationPatternOffset401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CampaignsDomainGenerationPatternOffset401JSONResponse) VisitCampaignsDomainGenerationPatternOffsetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsDomainGenerationPatternOffset404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsDomainGenerationPatternOffset404JSONResponse) VisitCampaignsDomainGenerationPatternOffsetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsDomainGenerationPatternOffset500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsDomainGenerationPatternOffset500JSONResponse) VisitCampaignsDomainGenerationPatternOffsetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type CampaignsDeleteRequestObject struct {
 	CampaignId openapi_types.UUID `json:"campaignId"`
 }
@@ -6800,6 +7054,60 @@ type CampaignsUpdate500JSONResponse struct {
 }
 
 func (response CampaignsUpdate500JSONResponse) VisitCampaignsUpdateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsDomainsListRequestObject struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+	Params     CampaignsDomainsListParams
+}
+
+type CampaignsDomainsListResponseObject interface {
+	VisitCampaignsDomainsListResponse(w http.ResponseWriter) error
+}
+
+type CampaignsDomainsList200JSONResponse struct {
+	Data      *CampaignDomainsListResponse `json:"data,omitempty"`
+	Metadata  *Metadata                    `json:"metadata,omitempty"`
+	RequestId string                       `json:"requestId"`
+
+	// Success Always true for success envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response CampaignsDomainsList200JSONResponse) VisitCampaignsDomainsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsDomainsList401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CampaignsDomainsList401JSONResponse) VisitCampaignsDomainsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsDomainsList404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsDomainsList404JSONResponse) VisitCampaignsDomainsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsDomainsList500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsDomainsList500JSONResponse) VisitCampaignsDomainsListResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -12201,6 +12509,9 @@ type StrictServerInterface interface {
 	// Get bulk resource allocation status
 	// (GET /campaigns/bulk/resources/status/{allocationId})
 	GetBulkResourceStatus(ctx context.Context, request GetBulkResourceStatusRequestObject) (GetBulkResourceStatusResponseObject, error)
+	// Get current global pattern offset for domain generation config
+	// (POST /campaigns/domain-generation/pattern-offset)
+	CampaignsDomainGenerationPatternOffset(ctx context.Context, request CampaignsDomainGenerationPatternOffsetRequestObject) (CampaignsDomainGenerationPatternOffsetResponseObject, error)
 	// Delete campaign
 	// (DELETE /campaigns/{campaignId})
 	CampaignsDelete(ctx context.Context, request CampaignsDeleteRequestObject) (CampaignsDeleteResponseObject, error)
@@ -12210,6 +12521,9 @@ type StrictServerInterface interface {
 	// Update campaign
 	// (PUT /campaigns/{campaignId})
 	CampaignsUpdate(ctx context.Context, request CampaignsUpdateRequestObject) (CampaignsUpdateResponseObject, error)
+	// List generated domains for a campaign
+	// (GET /campaigns/{campaignId}/domains)
+	CampaignsDomainsList(ctx context.Context, request CampaignsDomainsListRequestObject) (CampaignsDomainsListResponseObject, error)
 	// Configure campaign phase
 	// (POST /campaigns/{campaignId}/phases/{phase}/configure)
 	CampaignsPhaseConfigure(ctx context.Context, request CampaignsPhaseConfigureRequestObject) (CampaignsPhaseConfigureResponseObject, error)
@@ -12942,6 +13256,37 @@ func (sh *strictHandler) GetBulkResourceStatus(w http.ResponseWriter, r *http.Re
 	}
 }
 
+// CampaignsDomainGenerationPatternOffset operation middleware
+func (sh *strictHandler) CampaignsDomainGenerationPatternOffset(w http.ResponseWriter, r *http.Request) {
+	var request CampaignsDomainGenerationPatternOffsetRequestObject
+
+	var body CampaignsDomainGenerationPatternOffsetJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsDomainGenerationPatternOffset(ctx, request.(CampaignsDomainGenerationPatternOffsetRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsDomainGenerationPatternOffset")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsDomainGenerationPatternOffsetResponseObject); ok {
+		if err := validResponse.VisitCampaignsDomainGenerationPatternOffsetResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // CampaignsDelete operation middleware
 func (sh *strictHandler) CampaignsDelete(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
 	var request CampaignsDeleteRequestObject
@@ -13020,6 +13365,33 @@ func (sh *strictHandler) CampaignsUpdate(w http.ResponseWriter, r *http.Request,
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CampaignsUpdateResponseObject); ok {
 		if err := validResponse.VisitCampaignsUpdateResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CampaignsDomainsList operation middleware
+func (sh *strictHandler) CampaignsDomainsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsDomainsListParams) {
+	var request CampaignsDomainsListRequestObject
+
+	request.CampaignId = campaignId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsDomainsList(ctx, request.(CampaignsDomainsListRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsDomainsList")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsDomainsListResponseObject); ok {
+		if err := validResponse.VisitCampaignsDomainsListResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

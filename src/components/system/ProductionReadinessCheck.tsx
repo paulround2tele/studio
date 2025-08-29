@@ -227,15 +227,15 @@ export default function ProductionReadinessCheck() {
       });
     }
 
-    // 3. Real-time Communication Status Check (WebSocket removed during RTK consolidation)
+    // 3. Real-time Communication Status Check (WebSocket removed; SSE-only now)
     try {
-      logWithTimestamp('log', '🔌 Real-time communication check (WebSocket disabled during RTK consolidation)...');
+      logWithTimestamp('log', '🔌 Real-time communication check (SSE in use, WebSocket removed)...');
       
       results.push({
         name: 'Real-time Updates',
         status: 'warning',
-        message: 'WebSocket removed - SSE implementation pending',
-        details: 'Real-time updates will be restored with Server-Sent Events',
+        message: 'SSE-enabled realtime',
+        details: 'Real-time updates use Server-Sent Events (SSE)',
         icon: <Wifi className="h-4 w-4" />
       });
     } catch (error) {

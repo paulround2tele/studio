@@ -12,6 +12,8 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**campaignsBulkOperationsList**](#campaignsbulkoperationslist) | **GET** /campaigns/bulk/operations | List bulk operations|
 |[**campaignsCreate**](#campaignscreate) | **POST** /campaigns | Create campaign|
 |[**campaignsDelete**](#campaignsdelete) | **DELETE** /campaigns/{campaignId} | Delete campaign|
+|[**campaignsDomainGenerationPatternOffset**](#campaignsdomaingenerationpatternoffset) | **POST** /campaigns/domain-generation/pattern-offset | Get current global pattern offset for domain generation config|
+|[**campaignsDomainsList**](#campaignsdomainslist) | **GET** /campaigns/{campaignId}/domains | List generated domains for a campaign|
 |[**campaignsGet**](#campaignsget) | **GET** /campaigns/{campaignId} | Get campaign|
 |[**campaignsList**](#campaignslist) | **GET** /campaigns | List campaigns|
 |[**campaignsPhaseConfigure**](#campaignsphaseconfigure) | **POST** /campaigns/{campaignId}/phases/{phase}/configure | Configure campaign phase|
@@ -449,6 +451,120 @@ void (empty response body)
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 |**204** | No Content |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsDomainGenerationPatternOffset**
+> CampaignsDomainGenerationPatternOffset200Response campaignsDomainGenerationPatternOffset(patternOffsetRequest)
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration,
+    PatternOffsetRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let patternOffsetRequest: PatternOffsetRequest; //
+
+const { status, data } = await apiInstance.campaignsDomainGenerationPatternOffset(
+    patternOffsetRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **patternOffsetRequest** | **PatternOffsetRequest**|  | |
+
+
+### Return type
+
+**CampaignsDomainGenerationPatternOffset200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsDomainsList**
+> CampaignsDomainsList200Response campaignsDomainsList()
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+let limit: number; // (optional) (default to 100)
+let offset: number; // (optional) (default to 0)
+
+const { status, data } = await apiInstance.campaignsDomainsList(
+    campaignId,
+    limit,
+    offset
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+| **limit** | [**number**] |  | (optional) defaults to 100|
+| **offset** | [**number**] |  | (optional) defaults to 0|
+
+
+### Return type
+
+**CampaignsDomainsList200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
 |**401** | Unauthorized |  -  |
 |**404** | Not Found |  -  |
 |**500** | Internal Server Error |  -  |

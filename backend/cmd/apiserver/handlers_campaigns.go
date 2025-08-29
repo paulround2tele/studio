@@ -5,10 +5,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
+	"strings"
 	"time"
 
 	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
 	domainservices "github.com/fntelecomllc/studio/backend/internal/domain/services"
+	"github.com/fntelecomllc/studio/backend/internal/domainexpert"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/google/uuid"
@@ -464,4 +467,172 @@ func (h *strictHandlers) CampaignsProgress(ctx context.Context, r gen.CampaignsP
 	resp.Timeline.EstimatedCompletionAt = c.EstimatedCompletionAt
 	resp.Timeline.CompletedAt = c.CompletedAt
 	return gen.CampaignsProgress200JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+}
+
+// CampaignsDomainsList implements GET /campaigns/{campaignId}/domains
+func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.CampaignsDomainsListRequestObject) (gen.CampaignsDomainsListResponseObject, error) {
+	if h.deps == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
+		return gen.CampaignsDomainsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Ensure campaign exists
+	_, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
+	if err != nil {
+		if err == store.ErrNotFound {
+			return gen.CampaignsDomainsList404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+		return gen.CampaignsDomainsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+
+	// Read JSONB domains_data
+	raw, getErr := h.deps.Stores.Campaign.GetCampaignDomainsData(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
+	if getErr != nil && getErr != sql.ErrNoRows {
+		return gen.CampaignsDomainsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to read domains data", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	var domainsData map[string]interface{}
+	if raw != nil {
+		if err := json.Unmarshal(*raw, &domainsData); err != nil {
+			log.Printf("CampaignsDomainsList: failed to unmarshal domains_data: %v", err)
+		}
+	}
+	if domainsData == nil {
+		domainsData = map[string]interface{}{}
+	}
+	// Extract array
+	items := make([]map[string]interface{}, 0)
+	if arr, ok := domainsData["domains"].([]interface{}); ok {
+		for _, v := range arr {
+			if m, ok2 := v.(map[string]interface{}); ok2 {
+				items = append(items, m)
+			}
+		}
+	}
+	total := len(items)
+	// Apply offset/limit
+	start := 0
+	if r.Params.Offset != nil && *r.Params.Offset > 0 {
+		start = int(*r.Params.Offset)
+		if start > total {
+			start = total
+		}
+	}
+	end := start + 100
+	if r.Params.Limit != nil && *r.Params.Limit > 0 {
+		end = start + int(*r.Params.Limit)
+	}
+	if end > total {
+		end = total
+	}
+	page := items[start:end]
+
+	// Map to API DomainListItem
+	out := make([]gen.DomainListItem, 0, len(page))
+	for _, it := range page {
+		var idPtr *openapi_types.UUID
+		if s, ok := it["id"].(string); ok {
+			if uid, err := uuid.Parse(s); err == nil {
+				tmp := openapi_types.UUID(uid)
+				idPtr = &tmp
+			}
+		}
+		var createdAtPtr *time.Time
+		if s, ok := it["created_at"].(string); ok {
+			if ts, err := time.Parse(time.RFC3339, s); err == nil {
+				createdAtPtr = &ts
+			}
+		}
+		var offsetPtr *int64
+		if f, ok := it["offset"].(float64); ok {
+			vv := int64(f)
+			offsetPtr = &vv
+		}
+		d := gen.DomainListItem{
+			Id:        idPtr,
+			Domain:    toStringVal(it["domain_name"]),
+			Offset:    offsetPtr,
+			CreatedAt: createdAtPtr,
+		}
+		// Optional statuses
+		if v, ok := it["dns_status"].(string); ok {
+			d.DnsStatus = &v
+		}
+		if v, ok := it["http_status"].(string); ok {
+			d.HttpStatus = &v
+		}
+		if v, ok := it["lead_status"].(string); ok {
+			d.LeadStatus = &v
+		}
+		out = append(out, d)
+	}
+
+	data := gen.CampaignDomainsListResponse{CampaignId: openapi_types.UUID(r.CampaignId), Items: out, Total: total}
+	return gen.CampaignsDomainsList200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+}
+
+// CampaignsDomainGenerationPatternOffset implements POST /campaigns/domain-generation/pattern-offset
+func (h *strictHandlers) CampaignsDomainGenerationPatternOffset(ctx context.Context, r gen.CampaignsDomainGenerationPatternOffsetRequestObject) (gen.CampaignsDomainGenerationPatternOffsetResponseObject, error) {
+	if h.deps == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
+		return gen.CampaignsDomainGenerationPatternOffset500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	if r.Body == nil {
+		return gen.CampaignsDomainGenerationPatternOffset400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Build params and hash using domainexpert to compute config hash
+	constant := r.Body.ConstantString
+	if constant == nil {
+		s := ""
+		constant = &s
+	}
+	// Normalize TLD: accept with or without dot, store without dot in hash params
+	tld := ""
+	if r.Body.Tld != nil {
+		tld = *r.Body.Tld
+		tld = strings.TrimPrefix(tld, ".")
+	}
+	params := models.DomainGenerationCampaignParams{
+		PatternType:    string(r.Body.PatternType),
+		VariableLength: int(r.Body.VariableLength),
+		CharacterSet:   r.Body.CharacterSet,
+		ConstantString: models.StringPtr(*constant),
+		TLD:            tld,
+	}
+	hashRes, err := domainexpert.GenerateDomainGenerationPhaseConfigHash(params)
+	if err != nil {
+		return gen.CampaignsDomainGenerationPatternOffset500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to compute pattern hash", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	cfgHash := hashRes.HashString
+	// Prefer config manager path when available via services, else store fallback
+	var current int64
+	// Try via store
+	st, getErr := h.deps.Stores.Campaign.GetDomainGenerationPhaseConfigStateByHash(ctx, h.deps.DB, cfgHash)
+	if getErr == nil && st != nil {
+		current = st.LastOffset
+	} else if getErr == store.ErrNotFound {
+		current = 0
+	} else if getErr != nil {
+		log.Printf("pattern-offset: failed to get state by hash: %v", getErr)
+		current = 0
+	}
+	data := gen.PatternOffsetResponse{CurrentOffset: &current}
+	return gen.CampaignsDomainGenerationPatternOffset200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+}
+
+func toStringPtr(v interface{}) *string {
+	if v == nil {
+		return nil
+	}
+	s, ok := v.(string)
+	if !ok {
+		return nil
+	}
+	return &s
+}
+
+func toStringVal(v interface{}) string {
+	if v == nil {
+		return ""
+	}
+	if s, ok := v.(string); ok {
+		return s
+	}
+	return ""
 }

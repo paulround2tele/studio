@@ -2,7 +2,8 @@
 // Advanced proxy health monitoring with branded types integration
 
 import { useState, useEffect, useCallback } from 'react';
-import { ProxiesApi, Configuration } from '@/lib/api-client';
+import { ProxiesApi } from '@/lib/api-client';
+import { apiConfiguration } from '@/lib/api/config';
 import type { ModelsProxy as Proxy } from '@/lib/api-client/models';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 import { useToast } from '@/hooks/use-toast';
@@ -10,11 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 // Use Proxy directly - no extension needed since all fields are already there
 type ExtendedProxy = Proxy;
 
-// Professional API client initialization - not some amateur scattered imports
-const config = new Configuration({
-  basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
-});
-const proxiesApi = new ProxiesApi(config);
+// Professional API client initialization using centralized configuration
+const proxiesApi = new ProxiesApi(apiConfiguration);
 
 
 export interface ProxyHealthMetrics {
@@ -41,7 +39,7 @@ export interface ProxyHealthDetails {
 }
 
 interface UseProxyHealthOptions {
-  // 🚀 WEBSOCKET PUSH MODEL: Removed autoRefresh and refreshInterval - now uses WebSocket push events
+  // 🚀 SSE PUSH MODEL: Removed autoRefresh and refreshInterval - now uses Server-Sent Events
   enableHealthChecks?: boolean;
   healthCheckInterval?: number;
 }
@@ -51,7 +49,7 @@ interface UseProxyHealthOptions {
  */
 export function useProxyHealth(options: UseProxyHealthOptions = {}) {
   const {
-    // 🚀 WEBSOCKET PUSH MODEL: Removed autoRefresh and refreshInterval - now uses WebSocket push events
+    // 🚀 SSE PUSH MODEL: Removed autoRefresh and refreshInterval - now uses Server-Sent Events
     enableHealthChecks: _enableHealthChecks = false,
     healthCheckInterval: _healthCheckInterval = 3600000 // CRITICAL FIX: 1 hour (3600 seconds) instead of 5 minutes
   } = options;
@@ -256,23 +254,23 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     return Math.round(((typeof successCount === "number" ? successCount : parseInt(String(successCount)) || 0) / totalTests) * 100);
   }, [proxies]);
 
-  // 🚀 WEBSOCKET PUSH MODEL: Remove polling, use WebSocket events instead
+  // 🚀 SSE PUSH MODEL: Remove polling, use Server-Sent Events instead
   useEffect(() => {
     // Initial fetch only - no polling
     fetchProxyData();
-    console.log('[useProxyHealth] Using WebSocket push model - no polling needed');
+    console.log('[useProxyHealth] Using SSE push model - no polling needed');
     
-    // Future: WebSocket handler for proxy updates will trigger fetchProxyData
+    // Future: SSE handler for proxy updates will trigger fetchProxyData
     // This removes the 30-second polling that was causing rate limiting
     return () => {}; // No cleanup needed since no polling
   }, [fetchProxyData]);
 
-  // 🚀 WEBSOCKET PUSH MODEL: Health checks disabled - proxy health updates via WebSocket events
+  // 🚀 SSE PUSH MODEL: Health checks disabled - proxy health updates via SSE events
   // No polling needed - backend will push proxy health status changes in real-time
   useEffect(() => {
-    // Future: Health check results will be received via WebSocket proxy_status_update messages
+    // Future: Health check results will be received via SSE proxy_status_update messages
     // This eliminates the need for polling-based health checks
-    console.log('[useProxyHealth] Health checks via WebSocket push model - no polling needed');
+    console.log('[useProxyHealth] Health checks via SSE push model - no polling needed');
     return () => {}; // No cleanup needed
   }, []);
 

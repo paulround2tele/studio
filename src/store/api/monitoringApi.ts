@@ -1,4 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import type { MonitoringPerformanceSummary200Response } from '@/lib/api-client/models';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 // Types for the monitoring system we just built
 export interface ResourceMetrics {
@@ -53,6 +55,10 @@ export const monitoringApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: '/api/v2/monitoring',
     credentials: 'include',
+    prepareHeaders: (headers) => {
+      headers.set('X-Requested-With', 'XMLHttpRequest');
+      return headers;
+    },
   }),
   tagTypes: ['MonitoringHealth', 'ResourceMetrics', 'PerformanceMetrics', 'CleanupStatus'],
   endpoints: (builder) => ({
@@ -60,24 +66,40 @@ export const monitoringApi = createApi({
     // Health endpoint - matches /api/v2/monitoring/health
     getSystemHealth: builder.query<SystemHealth, void>({
       query: () => '/health',
+      transformResponse: (response: MonitoringPerformanceSummary200Response) => {
+        const data = extractResponseData<SystemHealth>(response);
+        return data as SystemHealth;
+      },
       providesTags: ['MonitoringHealth'],
     }),
 
     // Resource stats - matches /api/v2/monitoring/stats
     getResourceMetrics: builder.query<ResourceMetrics, void>({
       query: () => '/stats',
+      transformResponse: (response: MonitoringPerformanceSummary200Response) => {
+        const data = extractResponseData<ResourceMetrics>(response);
+        return data as ResourceMetrics;
+      },
       providesTags: ['ResourceMetrics'],
     }),
 
     // Performance metrics - matches /api/v2/monitoring/performance
     getPerformanceMetrics: builder.query<PerformanceMetrics[], { hours?: number }>({
       query: ({ hours = 24 } = {}) => `/performance?hours=${hours}`,
+      transformResponse: (response: MonitoringPerformanceSummary200Response) => {
+        const data = extractResponseData<PerformanceMetrics[]>(response);
+        return (data || []) as PerformanceMetrics[];
+      },
       providesTags: ['PerformanceMetrics'],
     }),
 
     // Campaign-specific monitoring - matches /api/v2/monitoring/campaigns/:id
     getCampaignMetrics: builder.query<CampaignResourceMetrics, string>({
       query: (campaignId) => `/campaigns/${campaignId}`,
+      transformResponse: (response: MonitoringPerformanceSummary200Response) => {
+        const data = extractResponseData<CampaignResourceMetrics>(response);
+        return data as CampaignResourceMetrics;
+      },
       providesTags: (_result, _error, campaignId) => [
         { type: 'ResourceMetrics', id: campaignId }
       ],
@@ -86,6 +108,10 @@ export const monitoringApi = createApi({
     // Cleanup status - matches /api/v2/monitoring/cleanup/status
     getCleanupStatus: builder.query<CleanupStatus, void>({
       query: () => '/cleanup/status',
+      transformResponse: (response: MonitoringPerformanceSummary200Response) => {
+        const data = extractResponseData<CleanupStatus>(response);
+        return data as CleanupStatus;
+      },
       providesTags: ['CleanupStatus'],
     }),
 
@@ -95,6 +121,10 @@ export const monitoringApi = createApi({
         url: `/cleanup/force/${campaignId}`,
         method: 'POST',
       }),
+      transformResponse: (response: MonitoringPerformanceSummary200Response) => {
+        const data = extractResponseData<{ message: string }>(response);
+        return (data || { message: 'OK' }) as { message: string };
+      },
       invalidatesTags: ['CleanupStatus'],
     }),
 

@@ -3,8 +3,8 @@
  * Unlike amateur hand-rolled services, this uses generated types and includes caching
  */
 
-import { HealthApi, Configuration } from '@/lib/api-client';
-import type { SuccessEnvelope } from '@/lib/api-client/models';
+import { HealthApi } from '@/lib/api-client';
+import { apiConfiguration } from '@/lib/api/config';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 export interface CachedHealthData {
@@ -22,10 +22,7 @@ class HealthService {
   private cacheTimeout = 60 * 60 * 1000; // 1 hour cache - because we're not savages
 
   constructor() {
-    const config = new Configuration({
-      basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
-    });
-    this.api = new HealthApi(config);
+    this.api = new HealthApi(apiConfiguration);
   }
 
   /**

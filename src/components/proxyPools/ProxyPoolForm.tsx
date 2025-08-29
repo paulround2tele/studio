@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { proxyPoolsApi } from "@/lib/api-client/compat";
-import type { GithubComFntelecomllcStudioBackendInternalModelsProxyPool as ProxyPoolType } from '@/lib/api-client/models';
+import type { ModelsProxyPool as ProxyPoolType } from '@/lib/api-client/models';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 

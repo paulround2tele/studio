@@ -4,7 +4,8 @@
  */
 
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { ProxiesApi, Configuration } from '@/lib/api-client';
+import { ProxiesApi } from '@/lib/api-client';
+import { apiConfiguration } from '@/lib/api/config';
 import type {
   BulkDeleteProxiesRequest,
   ProxiesBulkTestRequest,
@@ -13,17 +14,14 @@ import type {
   ProxiesBulkTest200Response,
   ProxiesTest200Response,
   ProxiesBulkUpdate200Response,
-  GithubComFntelecomllcStudioBackendInternalModelsProxy as ModelsProxy,
+  // ModelsProxy type is not re-exported in some barrels; import directly
   SuccessEnvelope
 } from '@/lib/api-client/models';
+import type { ModelsProxy } from '@/lib/api-client/models/models-proxy';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
-// Professional API configuration - not some hard-coded localhost amateur nonsense
-const config = new Configuration({
-  basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
-});
-
-const proxiesApi = new ProxiesApi(config);
+// Centralized API configuration targeting /api/v2 with credentials/headers
+const proxiesApi = new ProxiesApi(apiConfiguration);
 
 export const proxyApi = createApi({
   reducerPath: 'proxyApi',

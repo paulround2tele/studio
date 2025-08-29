@@ -18,16 +18,23 @@
 
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { BulkOperationsApi } from '@/lib/api-client/apis/bulk-operations-api';
-import type { 
-  BulkValidateDNS200Response,
-  ApiOperationCancellationResponse, 
-  ApiBulkResourceStatusResponse,
-  ModelsBulkOperationStatus
+import { apiConfiguration } from '@/lib/api/config';
+import type {
+  // Concrete payloads unwrapped from envelopes
+  BulkResourceAllocationResponse,
+  BulkGenerationResponse,
+  BulkValidationResponse,
+  BulkAnalyticsResponse,
+  CampaignsBulkOperationsList200Response,
+  // Other response shapes
+  CancelBulkOperation200Response,
+  GetBulkResourceStatus200Response,
 } from '@/lib/api-client/models';
+import type { ModelsBulkOperationStatus } from '@/lib/api-client/models/models-bulk-operation-status';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
-// Create instance of the generated API client for bulk operations
-const bulkOperationsApiClient = new BulkOperationsApi();
+// Create instance of the generated API client for bulk operations using centralized config
+const bulkOperationsApiClient = new BulkOperationsApi(apiConfiguration);
 
 // RTK Query API that wraps the generated OpenAPI clients for bulk operations
 export const bulkOperationsApi = createApi({
@@ -44,14 +51,14 @@ export const bulkOperationsApi = createApi({
   ],
   endpoints: (builder) => ({
     
-    // ================ BULK DOMAINS OPERATIONS ================
-    // Domain generation bulk operations - PROFESSIONAL PATTERN
-    bulkGenerateDomains: builder.mutation<BulkValidateDNS200Response, any>({
+  // ================ BULK DOMAINS OPERATIONS ================
+  // Domain generation bulk operations -> return concrete payload
+  bulkGenerateDomains: builder.mutation<BulkGenerationResponse, any>({
       queryFn: async (request) => {
         try {
-          const response = await bulkOperationsApiClient.bulkGenerateDomains(request);
-          // Generator returns { data: BulkValidateDNS200Response } - trust it completely
-          return { data: response.data };
+      const response = await bulkOperationsApiClient.bulkGenerateDomains(request);
+      const data = extractResponseData<BulkGenerationResponse>(response);
+      return data ? { data } : { error: { status: 500, data: 'Empty bulk generation response' } as any };
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
@@ -60,13 +67,13 @@ export const bulkOperationsApi = createApi({
     }),
 
     // ================ BULK VALIDATION OPERATIONS ================
-    // DNS validation bulk operations - PROFESSIONAL PATTERN
-    bulkValidateDNS: builder.mutation<BulkValidateDNS200Response, any>({
+    // DNS validation bulk operations -> return concrete payload
+    bulkValidateDNS: builder.mutation<BulkValidationResponse, any>({
       queryFn: async (request) => {
         try {
-          const response = await bulkOperationsApiClient.bulkValidateDNS(request);
-          // Generator returns { data: BulkValidateDNS200Response } - trust it completely
-          return { data: response.data };
+      const response = await bulkOperationsApiClient.bulkValidateDNS(request);
+      const data = extractResponseData<BulkValidationResponse>(response);
+      return data ? { data } : { error: { status: 500, data: 'Empty DNS validation response' } as any };
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
@@ -74,13 +81,13 @@ export const bulkOperationsApi = createApi({
       invalidatesTags: ['BulkValidation', 'BulkOperationStatus'],
     }),
 
-    // HTTP validation bulk operations - PROFESSIONAL PATTERN
-    bulkValidateHTTP: builder.mutation<BulkValidateDNS200Response, any>({
+    // HTTP validation bulk operations -> return concrete payload
+    bulkValidateHTTP: builder.mutation<BulkValidationResponse, any>({
       queryFn: async (request) => {
         try {
-          const response = await bulkOperationsApiClient.bulkValidateHTTP(request);
-          // Generator returns { data: BulkValidateDNS200Response } - trust it completely
-          return { data: response.data };
+      const response = await bulkOperationsApiClient.bulkValidateHTTP(request);
+      const data = extractResponseData<BulkValidationResponse>(response);
+      return data ? { data } : { error: { status: 500, data: 'Empty HTTP validation response' } as any };
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
@@ -88,14 +95,14 @@ export const bulkOperationsApi = createApi({
       invalidatesTags: ['BulkValidation', 'BulkOperationStatus'],
     }),
 
-    // ================ BULK ANALYTICS OPERATIONS ================
-    // Analytics bulk operations - PROFESSIONAL PATTERN
-    bulkAnalyzeDomains: builder.mutation<BulkValidateDNS200Response, any>({
+  // ================ BULK ANALYTICS OPERATIONS ================
+  // Analytics bulk operations -> return concrete payload
+  bulkAnalyzeDomains: builder.mutation<BulkAnalyticsResponse, any>({
       queryFn: async (request) => {
         try {
-          const response = await bulkOperationsApiClient.bulkAnalyzeDomains(request);
-          // Generator returns { data: BulkValidateDNS200Response } - trust it completely
-          return { data: response.data };
+      const response = await bulkOperationsApiClient.bulkAnalyzeDomains(request);
+          const data = extractResponseData<BulkAnalyticsResponse>(response);
+      return data ? { data } : { error: { status: 500, data: 'Empty bulk analytics response' } as any };
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
@@ -103,14 +110,14 @@ export const bulkOperationsApi = createApi({
       invalidatesTags: ['BulkAnalytics', 'BulkOperationStatus'],
     }),
 
-    // ================ BULK RESOURCES OPERATIONS ================
-    // Resource allocation bulk operations - PROFESSIONAL PATTERN
-    allocateBulkResources: builder.mutation<BulkValidateDNS200Response, any>({
+  // ================ BULK RESOURCES OPERATIONS ================
+  // Resource allocation bulk operations -> return concrete payload
+  allocateBulkResources: builder.mutation<BulkResourceAllocationResponse, any>({
       queryFn: async (request) => {
         try {
-          const response = await bulkOperationsApiClient.allocateBulkResources(request);
-          // Generator returns { data: BulkValidateDNS200Response } - trust it completely
-          return { data: response.data };
+      const response = await bulkOperationsApiClient.allocateBulkResources(request);
+      const data = extractResponseData<BulkResourceAllocationResponse>(response);
+      return data ? { data } : { error: { status: 500, data: 'Empty bulk resource allocation response' } as any };
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
@@ -118,13 +125,13 @@ export const bulkOperationsApi = createApi({
       invalidatesTags: ['BulkResources', 'BulkOperationStatus'],
     }),
 
-    // Get bulk resource status - PROFESSIONAL PATTERN
-    getBulkResourceStatus: builder.query<ApiBulkResourceStatusResponse, { allocationId: string }>({
+  // Get bulk resource status -> return concrete payload
+  getBulkResourceStatus: builder.query<GetBulkResourceStatus200Response, { allocationId: string }>({
       queryFn: async ({ allocationId }) => {
         try {
           const response = await bulkOperationsApiClient.getBulkResourceStatus(allocationId);
-          // Generator returns { data: ApiBulkResourceStatusResponse } - trust it completely
-          return { data: response.data };
+          const data = extractResponseData<GetBulkResourceStatus200Response>(response);
+      return data ? { data } : { error: { status: 500, data: 'Empty bulk resource status response' } as any };
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
@@ -135,13 +142,13 @@ export const bulkOperationsApi = createApi({
       ],
     }),
 
-    // Cancel bulk operation - PROFESSIONAL PATTERN
-    cancelBulkOperation: builder.mutation<ApiOperationCancellationResponse, { operationId: string }>({
+  // Cancel bulk operation -> return concrete payload
+  cancelBulkOperation: builder.mutation<CancelBulkOperation200Response, { operationId: string }>({
       queryFn: async ({ operationId }) => {
         try {
           const response = await bulkOperationsApiClient.cancelBulkOperation(operationId);
-          // Generator returns { data: ApiOperationCancellationResponse } - trust it completely
-          return { data: response.data };
+          const data = extractResponseData<CancelBulkOperation200Response>(response);
+      return data ? { data } : { error: { status: 500, data: 'Empty cancel operation response' } as any };
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
@@ -172,8 +179,8 @@ export const bulkOperationsApi = createApi({
       ],
     }),
 
-    // List bulk operations with filtering - PROFESSIONAL PATTERN
-    listBulkOperations: builder.query<BulkValidateDNS200Response, { 
+  // List bulk operations with filtering -> return concrete payload
+  listBulkOperations: builder.query<CampaignsBulkOperationsList200Response, {
       status?: string;
       type?: string;
       limit?: number;
@@ -187,8 +194,8 @@ export const bulkOperationsApi = createApi({
             limit, 
             offset
           );
-          // Generator returns { data: BulkValidateDNS200Response } - trust it completely
-          return { data: response.data };
+          const data = extractResponseData<CampaignsBulkOperationsList200Response>(response);
+      return data ? { data } : { error: { status: 500, data: 'Empty bulk operations list response' } as any };
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }

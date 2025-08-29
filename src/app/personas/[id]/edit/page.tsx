@@ -9,14 +9,13 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { PersonasApi, Configuration } from '@/lib/api-client';
+import { PersonasApi } from '@/lib/api-client';
+import { apiConfiguration } from '@/lib/api/config';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 import { useToast } from '@/hooks/use-toast';
 
 // Professional API client initialization
-const config = new Configuration({
-  basePath: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
-});
+const config = apiConfiguration;
 const personasApi = new PersonasApi(config);
 
 function EditPersonaPageContent() {

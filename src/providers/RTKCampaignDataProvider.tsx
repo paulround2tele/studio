@@ -4,9 +4,8 @@ import React, { createContext, useContext, useMemo, ReactNode } from 'react';
 import { campaignApi } from '@/store/api/campaignApi';
 
 // Destructure hooks from the API
-const { useGetCampaignsStandaloneQuery, useGetBulkEnrichedCampaignDataQuery } = campaignApi;
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
-import type { BulkEnrichedDataResponse } from '@/lib/api-client/models';
+const { useGetCampaignsStandaloneQuery } = campaignApi;
+// Envelope helpers no longer needed for campaign list; keep for other APIs if required
 
 // Modern campaign data context using RTK Query
 interface RTKCampaignDataContextType {
@@ -26,7 +25,7 @@ interface RTKCampaignDataProviderProps {
 export function RTKCampaignDataProvider({ children }: RTKCampaignDataProviderProps) {
   // Step 1: Get list of campaign IDs
   const { 
-    data: campaignListResponse, 
+    data: campaignsList, 
     isLoading: isLoadingIds, 
     error: idsError,
     refetch: refetchIds
@@ -34,55 +33,28 @@ export function RTKCampaignDataProvider({ children }: RTKCampaignDataProviderPro
 
   // Extract campaign IDs from response - respects backend APIResponse structure
   const campaignIds = useMemo(() => {
-    const campaigns = extractResponseData<any[]>(campaignListResponse) || [];
-    if (Array.isArray(campaigns)) {
-      return campaigns
-        .map(campaign => campaign.campaignId || campaign.id)
-        .filter(Boolean) as string[];
-    }
-    return [];
-  }, [campaignListResponse]);
+    const list = Array.isArray(campaignsList) ? campaignsList : [];
+    return list.map(c => c.id).filter(Boolean) as string[];
+  }, [campaignsList]);
 
-  // Step 2: Get bulk enriched data for all campaigns
-  const {
-    data: bulkResponse,
-    isLoading: isLoadingBulk,
-    error: bulkError,
-    refetch: refetchBulk
-  } = useGetBulkEnrichedCampaignDataQuery(
-    {
-      campaignIds,
-      limit: 1000,
-      offset: 0
-    },
-    {
-      skip: campaignIds.length === 0 // Skip if no campaign IDs
-    }
-  );
-
-  // Process the bulk response into a campaigns map
+  // Build a lightweight campaigns map from the list; domains/leads can be fetched per-campaign when needed
   const campaigns = useMemo(() => {
     const campaignsMap = new Map();
-    const campaignsObj: any = (bulkResponse as any)?.campaigns;
-    if (campaignsObj && typeof campaignsObj === 'object') {
-      Object.entries(campaignsObj).forEach(([campaignId, campaignData]: [string, any]) => {
-        if (campaignData && campaignId) {
-          campaignsMap.set(campaignId, {
-            id: campaignId,
-            name: campaignData.campaign?.name || '',
-            currentPhase: campaignData.campaign?.currentPhase,
-            phaseStatus: campaignData.campaign?.status,
-            overallProgress: 0, // Default progress - will be calculated from domains
-            domains: campaignData.domains || [],
-            leads: campaignData.leads || [],
-            metadata: campaignData.campaign || {}
-          });
-        }
+    (campaignsList || []).forEach((c: any) => {
+      if (!c?.id) return;
+      campaignsMap.set(c.id, {
+        id: c.id,
+        name: c.name || '',
+        currentPhase: c.currentPhase,
+        phaseStatus: c.phaseStatus,
+        overallProgress: 0,
+        domains: [],
+        leads: [],
+        metadata: c,
       });
-    }
-    
+    });
     return campaignsMap;
-  }, [bulkResponse]);
+  }, [campaignsList]);
 
   // Handle RTK Query errors properly
   const getErrorMessage = (error: any): string | null => {
@@ -97,12 +69,11 @@ export function RTKCampaignDataProvider({ children }: RTKCampaignDataProviderPro
   };
 
   // Combine loading states and errors
-  const loading = isLoadingIds || isLoadingBulk;
-  const error = getErrorMessage(idsError) || getErrorMessage(bulkError);
+  const loading = isLoadingIds;
+  const error = getErrorMessage(idsError);
 
   const refetch = () => {
     refetchIds();
-    refetchBulk();
   };
 
   const getCampaign = (campaignId: string) => {

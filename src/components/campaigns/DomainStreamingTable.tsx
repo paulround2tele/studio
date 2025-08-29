@@ -3,9 +3,7 @@
 import React, { useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ExternalLink, RefreshCw } from 'lucide-react';
-import type {
-  Campaign
-} from '@/lib/api-client/models';
+import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 import type { GeneratedDomain } from '@/lib/api-client/models/generated-domain';
 import { ScrollArea } from '../ui/scroll-area';
 import { StatusBadge, type DomainActivityStatus } from '@/components/shared/StatusBadge';
@@ -322,17 +320,17 @@ DomainRow.displayName = 'DomainRow';
 /**
  * ARCHITECTURAL NOTE: DomainStreamingTable vs LatestActivityTable - POST-REFACTOR
  *
- * DomainStreamingTable (REST API ONLY):
+ * DomainStreamingTable (REST API + SSE):
  * - Single campaign focus with prop-based data from REST APIs
  * - Uses generatedDomains from bulk enriched data endpoints
- * - No WebSocket dependencies - pure REST API driven
+ * - No socket dependencies - realtime via SSE where applicable; primarily REST driven
  * - Performance optimized with React.memo
  * - Domain data fetched via polling or on-demand API calls
  *
- * LatestActivityTable (WebSocket + REST):
- * - Multi-campaign dashboard with limited WebSocket for campaign progress only
+ * LatestActivityTable (SSE + REST):
+ * - Multi-campaign dashboard with SSE for campaign progress only
  * - Complex getRichCampaignDataBatch integration
- * - WebSocket used only for campaign progress, not domain data
+ * - SSE used only for campaign progress, not domain data
  * - Campaign phase-aware logic with REST API domain data fetching
  *
  * Both components now share identical:
@@ -345,7 +343,7 @@ DomainRow.displayName = 'DomainRow';
 export default function DomainStreamingTable({
   campaign
 }: DomainStreamingTableProps) {
-  // REFACTORED: Use REST API hook instead of WebSocket streaming
+  // REFACTORED: Use REST API hook; realtime handled via SSE elsewhere
   const {
     domains: apiDomains,
     statusSummary,

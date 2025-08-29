@@ -5,9 +5,9 @@
 
 import { useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
-import { validateCampaignId, validateBulkEnrichedDataRequest } from '@/lib/utils/uuidValidation';
-import { assertBulkEnrichedDataResponse, extractDomainName } from '@/lib/utils/typeGuards';
+import { useStartPhaseStandaloneMutation, useGetCampaignDomainsQuery } from '@/store/api/campaignApi';
+import { validateCampaignId } from '@/lib/utils/uuidValidation';
+import { extractDomainName } from '@/lib/utils/typeGuards';
 
 export const useCampaignOperations = (campaignId: string) => {
   const { toast } = useToast();
@@ -82,36 +82,19 @@ export const useCampaignOperations = (campaignId: string) => {
         // Toast notification already shown by validateCampaignId
         throw new Error(campaignValidationResult.error || 'Invalid campaign ID');
       }
-
-      // Validate bulk request
-      const bulkValidationResult = validateBulkEnrichedDataRequest([campaignId]);
-      if (!bulkValidationResult.isValid) {
-        throw new Error(bulkValidationResult.error || 'Invalid bulk request');
-      }
-
-      // ENTERPRISE FIX: Use bulk enriched data instead of individual getCampaignProgressStandalone
-      const bulkRequest = {
-        campaignIds: [campaignId],
-        limit: 1,
-        offset: 0
-      };
-      
+      // Fetch first page of domains via spec endpoint
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      const res = await fetch(`${apiUrl}/campaigns/bulk/enriched-data`, {
-        method: 'POST',
+      const res = await fetch(`${apiUrl}/api/v2/campaigns/${campaignId}/domains?limit=1000&offset=0`, {
+        method: 'GET',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(bulkRequest),
+        headers: { 'Accept': 'application/json' },
       });
-      if (!res.ok) throw new Error(`Bulk enriched data failed: ${res.status}`);
-      const enrichedData = assertBulkEnrichedDataResponse(await res.json());
-      
-      // Extract domains from bulk enriched data
-      let domainsText = '';
-      const campaignData = enrichedData?.campaigns?.[campaignId];
-      if (campaignData?.domains && Array.isArray(campaignData.domains)) {
-        domainsText = campaignData.domains.map((domain: any) => extractDomainName(domain)).join('\n') + '\n';
-      }
+      if (!res.ok) throw new Error(`Domains list failed: ${res.status}`);
+  const json = await res.json();
+  const items = json?.data?.items || [];
+  let domainsText = Array.isArray(items) && items.length > 0
+        ? items.map((d: any) => d?.domain || extractDomainName(d)).filter(Boolean).join('\n') + '\n'
+        : '';
       
       if (!domainsText) {
         domainsText = 'No domains available for download\n';

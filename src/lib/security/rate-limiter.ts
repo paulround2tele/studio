@@ -96,7 +96,7 @@ class RateLimiter {
       windowMs: 60000 // 1 minute
     });
 
-    // WebSocket connections
+  // Realtime connection allowance (historical; unused in SSE-only frontend)
     this.addLimit({
       endpoint: 'websocket:connect',
       maxRequests: 5,

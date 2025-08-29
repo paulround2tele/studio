@@ -80,6 +80,7 @@ docs/BulkUpdateProxiesRequest.md
 docs/BulkValidateDNS200Response.md
 docs/BulkValidationResponse.md
 docs/BulkValidationResponseOperationsValue.md
+docs/CampaignDomainsListResponse.md
 docs/CampaignProgressResponse.md
 docs/CampaignProgressResponseOverall.md
 docs/CampaignProgressResponsePhases.md
@@ -90,6 +91,8 @@ docs/CampaignsApi.md
 docs/CampaignsBulkOperationsList200Response.md
 docs/CampaignsBulkOperationsList200ResponseAllOfDataInner.md
 docs/CampaignsCreate201Response.md
+docs/CampaignsDomainGenerationPatternOffset200Response.md
+docs/CampaignsDomainsList200Response.md
 docs/CampaignsList200Response.md
 docs/CampaignsPhaseStatus200Response.md
 docs/CampaignsProgress200Response.md
@@ -116,6 +119,7 @@ docs/DatabaseStats.md
 docs/DatabaseValue.md
 docs/DbBulkQuery200Response.md
 docs/DbBulkStats200Response.md
+docs/DomainListItem.md
 docs/ErrorCode.md
 docs/ErrorEnvelope.md
 docs/FeatureFlags.md
@@ -146,6 +150,8 @@ docs/MonitoringApi.md
 docs/MonitoringCampaignLimitsRequest.md
 docs/MonitoringPerformanceSummary200Response.md
 docs/Pagination.md
+docs/PatternOffsetRequest.md
+docs/PatternOffsetResponse.md
 docs/PersonaDeleteResponse.md
 docs/PersonaResponse.md
 docs/PersonaTestResponse.md
@@ -273,6 +279,7 @@ models/bulk-update-proxies-request.ts
 models/bulk-validate-dns200-response.ts
 models/bulk-validation-response-operations-value.ts
 models/bulk-validation-response.ts
+models/campaign-domains-list-response.ts
 models/campaign-progress-response-overall.ts
 models/campaign-progress-response-phases.ts
 models/campaign-progress-response-timeline.ts
@@ -282,6 +289,8 @@ models/campaign-response.ts
 models/campaigns-bulk-operations-list200-response-all-of-data-inner.ts
 models/campaigns-bulk-operations-list200-response.ts
 models/campaigns-create201-response.ts
+models/campaigns-domain-generation-pattern-offset200-response.ts
+models/campaigns-domains-list200-response.ts
 models/campaigns-list200-response.ts
 models/campaigns-phase-status200-response.ts
 models/campaigns-progress200-response.ts
@@ -307,6 +316,7 @@ models/database-value.ts
 models/db-bulk-query200-response.ts
 models/db-bulk-stats200-response.ts
 models/dnsvalidator-config-json.ts
+models/domain-list-item.ts
 models/error-code.ts
 models/error-envelope.ts
 models/feature-flags-get200-response.ts
@@ -332,6 +342,8 @@ models/metadata.ts
 models/monitoring-campaign-limits-request.ts
 models/monitoring-performance-summary200-response.ts
 models/pagination.ts
+models/pattern-offset-request.ts
+models/pattern-offset-response.ts
 models/persona-delete-response.ts
 models/persona-response.ts
 models/persona-test-response.ts

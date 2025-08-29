@@ -21,7 +21,7 @@ export type {
 } from './models';
 
 // Convenience: expose initialized clients similar to previous client.ts exports
-import { Configuration } from './configuration';
+import { apiConfiguration } from '@/lib/api/config';
 import { AuthApi } from './apis/auth-api';
 import { CampaignsApi } from './apis/campaigns-api';
 import { FeatureFlagsApi } from './apis/feature-flags-api';
@@ -30,12 +30,11 @@ import { ProxyPoolsApi } from './apis/proxy-pools-api';
 import { PersonasApi } from './apis/personas-api';
 import { KeywordSetsApi } from './apis/keyword-sets-api';
 
-const _config = new Configuration({ basePath: process.env.NEXT_PUBLIC_API_URL });
-export const authApi = new AuthApi(_config);
-export const campaignsApi = new CampaignsApi(_config);
-export const featureFlagsApi = new FeatureFlagsApi(_config);
-export const proxiesApi = new ProxiesApi(_config);
-export const proxyPoolsApi = new ProxyPoolsApi(_config);
-export const personasApi = new PersonasApi(_config);
-export const keywordSetsApi = new KeywordSetsApi(_config);
+export const authApi = new AuthApi(apiConfiguration);
+export const campaignsApi = new CampaignsApi(apiConfiguration);
+export const featureFlagsApi = new FeatureFlagsApi(apiConfiguration);
+export const proxiesApi = new ProxiesApi(apiConfiguration);
+export const proxyPoolsApi = new ProxyPoolsApi(apiConfiguration);
+export const personasApi = new PersonasApi(apiConfiguration);
+export const keywordSetsApi = new KeywordSetsApi(apiConfiguration);
 export const apiClient = { authApi, campaignsApi, featureFlagsApi, proxiesApi, proxyPoolsApi, personasApi, keywordSetsApi };
