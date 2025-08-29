@@ -63,8 +63,60 @@ func startChiServer() {
 			})
 		},
 	}
-	handler := gen.NewStrictHandlerWithOptions(&strictHandlers{deps: deps}, []gen.StrictMiddlewareFunc{authCtx}, opts)
-	r := gen.HandlerWithOptions(handler, gen.ChiServerOptions{BaseURL: "/api/v2"})
+
+	// Post-response middleware: set session cookie on successful AuthLogin
+	authLoginCookie := func(next gen.StrictHandlerFunc, operationID string) gen.StrictHandlerFunc {
+		return func(ctx context.Context, w http.ResponseWriter, r *http.Request, req interface{}) (interface{}, error) {
+			resp, err := next(ctx, w, r, req)
+			if operationID == "AuthLogin" {
+				if v, ok := resp.(gen.AuthLogin200JSONResponse); ok && v.Data != nil {
+					token := string(v.Data.Token)
+					if token != "" {
+						http.SetCookie(w, &http.Cookie{
+							Name:     config.SessionCookieName,
+							Value:    token,
+							Path:     config.CookiePath,
+							HttpOnly: config.CookieHttpOnly,
+							Secure:   config.CookieSecure,
+							SameSite: sameSiteFromString(config.CookieSameSite),
+							MaxAge:   config.CookieMaxAge,
+						})
+					}
+				}
+			}
+			return resp, err
+		}
+	}
+
+	handler := gen.NewStrictHandlerWithOptions(&strictHandlers{deps: deps}, []gen.StrictMiddlewareFunc{authCtx, authLoginCookie}, opts)
+	baseHandler := gen.HandlerWithOptions(handler, gen.ChiServerOptions{BaseURL: "/api/v2"})
+
+	// CORS middleware to allow frontend at localhost:3000 to call API with credentials
+	allowedOrigins := map[string]struct{}{
+		"http://localhost:3000": {},
+		"http://127.0.0.1:3000": {},
+	}
+	corsWrapper := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			origin := r.Header.Get("Origin")
+			if origin != "" {
+				if _, ok := allowedOrigins[origin]; ok {
+					w.Header().Set("Access-Control-Allow-Origin", origin)
+					w.Header().Set("Vary", "Origin")
+					w.Header().Set("Access-Control-Allow-Credentials", "true")
+					w.Header().Set("Access-Control-Allow-Methods", "GET,POST,PATCH,PUT,DELETE,OPTIONS")
+					w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Requested-With, Authorization")
+					w.Header().Set("Access-Control-Max-Age", "7200")
+				}
+			}
+			if r.Method == http.MethodOptions {
+				w.WriteHeader(http.StatusNoContent)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+	r := corsWrapper(baseHandler)
 
 	port := os.Getenv("SERVER_PORT")
 	if port == "" {
@@ -94,4 +146,18 @@ func clientIP(r *http.Request) string {
 		return host
 	}
 	return r.RemoteAddr
+}
+
+// Map string to http.SameSite mode with safe defaults
+func sameSiteFromString(s string) http.SameSite {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "lax":
+		return http.SameSiteLaxMode
+	case "strict":
+		return http.SameSiteStrictMode
+	case "none":
+		return http.SameSiteNoneMode
+	default:
+		return http.SameSiteLaxMode
+	}
 }

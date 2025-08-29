@@ -58,14 +58,26 @@ export function RTKCampaignDataProvider({ children }: RTKCampaignDataProviderPro
 
   // Handle RTK Query errors properly
   const getErrorMessage = (error: any): string | null => {
-    if (!error) return null;
-    if ('status' in error && 'data' in error) {
-      return error.data?.message || `Request failed with status ${error.status}`;
-    }
-    if ('message' in error) {
-      return error.message;
-    }
-    return 'An error occurred';
+      if (error == null) return null;
+      // If it's already a string
+      if (typeof error === 'string') return error;
+      // If it's an Error instance
+      if (error instanceof Error) return error.message;
+      // Only use 'in' for non-null objects
+      if (typeof error === 'object') {
+        const anyErr = error as any;
+        if ('status' in anyErr && 'data' in anyErr) {
+          const dataMsg = (anyErr.data && (anyErr.data.message || anyErr.data.error?.message)) || null;
+          return dataMsg || `Request failed with status ${anyErr.status}`;
+        }
+        if ('message' in anyErr && typeof anyErr.message === 'string') {
+          return anyErr.message;
+        }
+        try {
+          return JSON.stringify(anyErr);
+        } catch {}
+      }
+      return 'Network Error';
   };
 
   // Combine loading states and errors
