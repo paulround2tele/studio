@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -29,13 +30,13 @@ var (
 // DefaultSessionConfig returns VERY RELAXED session configuration
 func DefaultSessionConfig() *config.SessionConfig {
 	return &config.SessionConfig{
-		Duration:           24 * time.Hour, // 24 hours - very long
-		IdleTimeout:        12 * time.Hour, // 12 hours idle - very generous
+		Duration:           24 * time.Hour,   // 24 hours - very long
+		IdleTimeout:        12 * time.Hour,   // 12 hours idle - very generous
 		CleanupInterval:    60 * time.Minute, // Clean up less frequently
-		MaxSessionsPerUser: 100, // Allow many sessions
-		SessionIDLength:    64, // Shorter for easier debugging
-		RequireIPMatch:     false, // Always disabled
-		RequireUAMatch:     false, // Always disabled
+		MaxSessionsPerUser: 100,              // Allow many sessions
+		SessionIDLength:    64,               // Shorter for easier debugging
+		RequireIPMatch:     false,            // Always disabled
+		RequireUAMatch:     false,            // Always disabled
 	}
 }
 
@@ -200,7 +201,7 @@ func (s *SessionService) CreateSession(userID uuid.UUID, ipAddress, userAgent st
 // ValidateSession validates a session and returns session data
 func (s *SessionService) ValidateSession(sessionID, clientIP string) (*SessionData, error) {
 	startTime := time.Now()
-	
+
 	// Validate session ID format first for security
 	if sessionID == "" || len(sessionID) < 32 {
 		return nil, ErrSessionNotFound
@@ -405,10 +406,27 @@ func (s *SessionService) persistSession(session *SessionData) error {
 		                          last_activity_at, created_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
 
-	_, err := s.db.Exec(insertQuery, session.ID, session.UserID, session.IPAddress, session.UserAgent,
+	// Convert empty optional fields to NULL for DB compatibility (inet/text columns don't accept empty string as inet)
+	var ipParam interface{}
+	if strings.TrimSpace(session.IPAddress) == "" {
+		ipParam = nil
+	} else {
+		ipParam = session.IPAddress
+	}
+
+	var uaParam interface{}
+	if strings.TrimSpace(session.UserAgent) == "" {
+		uaParam = nil
+	} else {
+		uaParam = session.UserAgent
+	}
+
+	_, err := s.db.Exec(insertQuery, session.ID, session.UserID, ipParam, uaParam,
 		session.IsActive, session.ExpiresAt, session.LastActivity, session.CreatedAt)
 
 	if err != nil {
+		// Debug log to help diagnose DB errors during login in development
+		fmt.Printf("DEBUG: persistSession error: %v\n", err)
 		return err
 	}
 
