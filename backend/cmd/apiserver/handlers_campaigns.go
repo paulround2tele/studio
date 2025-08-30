@@ -18,6 +18,125 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// mapToDomainGenerationConfig converts a generic map into the typed DomainGenerationConfig expected by the domain generation service
+func mapToDomainGenerationConfig(in map[string]interface{}) (domainservices.DomainGenerationConfig, error) {
+	var cfg domainservices.DomainGenerationConfig
+	if in == nil {
+		return cfg, fmt.Errorf("missing configuration")
+	}
+	// Helper to get string
+	getString := func(key string) string {
+		if v, ok := in[key]; ok {
+			if s, ok2 := v.(string); ok2 {
+				return s
+			}
+		}
+		return ""
+	}
+	// Helper to get int (from float64 JSON numbers)
+	getInt := func(key string, def int) int {
+		if v, ok := in[key]; ok {
+			switch t := v.(type) {
+			case float64:
+				return int(t)
+			case int:
+				return t
+			case int32:
+				return int(t)
+			case int64:
+				return int(t)
+			}
+		}
+		return def
+	}
+	// Helper to get int64
+	getInt64 := func(key string, def int64) int64 {
+		if v, ok := in[key]; ok {
+			switch t := v.(type) {
+			case float64:
+				return int64(t)
+			case int:
+				return int64(t)
+			case int32:
+				return int64(t)
+			case int64:
+				return t
+			}
+		}
+		return def
+	}
+	// Helper to get first TLD from array under key "tlds" or key "tld"
+	getTLD := func() string {
+		if v, ok := in["tld"]; ok {
+			if s, ok2 := v.(string); ok2 && s != "" {
+				return s
+			}
+		}
+		if v, ok := in["tlds"]; ok {
+			if arr, ok2 := v.([]interface{}); ok2 && len(arr) > 0 {
+				if s, ok3 := arr[0].(string); ok3 {
+					return s
+				}
+			}
+			if arrS, ok2 := v.([]string); ok2 && len(arrS) > 0 {
+				return arrS[0]
+			}
+		}
+		return ""
+	}
+
+	cfg.PatternType = getString("patternType")
+	if cfg.PatternType == "" {
+		// accept snake_case too
+		if v := getString("pattern_type"); v != "" {
+			cfg.PatternType = v
+		}
+	}
+	cfg.VariableLength = getInt("variableLength", 0)
+	if cfg.VariableLength == 0 {
+		cfg.VariableLength = getInt("variable_length", 0)
+	}
+	cfg.CharacterSet = getString("characterSet")
+	if cfg.CharacterSet == "" {
+		cfg.CharacterSet = getString("character_set")
+	}
+	cfg.ConstantString = getString("constantString")
+	if cfg.ConstantString == "" {
+		cfg.ConstantString = getString("constant_string")
+	}
+	cfg.TLD = getTLD()
+	cfg.NumDomains = getInt64("numDomainsToGenerate", 0)
+	if cfg.NumDomains == 0 {
+		cfg.NumDomains = getInt64("num_domains", 0)
+	}
+	cfg.BatchSize = getInt("batchSize", 1000)
+	if cfg.BatchSize == 0 {
+		cfg.BatchSize = getInt("batch_size", 1000)
+	}
+	cfg.OffsetStart = getInt64("offsetStart", 0)
+	if cfg.OffsetStart == 0 {
+		cfg.OffsetStart = getInt64("offset_start", 0)
+	}
+
+	// Basic required checks mirroring service.Validate
+	if cfg.VariableLength <= 0 {
+		return cfg, fmt.Errorf("variableLength must be positive")
+	}
+	if cfg.CharacterSet == "" {
+		return cfg, fmt.Errorf("characterSet cannot be empty")
+	}
+	if cfg.TLD == "" {
+		return cfg, fmt.Errorf("tld cannot be empty")
+	}
+	if cfg.NumDomains <= 0 {
+		return cfg, fmt.Errorf("numDomains must be positive")
+	}
+	if cfg.PatternType == "" {
+		cfg.PatternType = "prefix"
+	}
+	return cfg, nil
+}
+
 // CampaignsList implements GET /campaigns
 func (h *strictHandlers) CampaignsList(ctx context.Context, r gen.CampaignsListRequestObject) (gen.CampaignsListResponseObject, error) {
 	if h.deps == nil || h.deps.DB == nil || h.deps.Stores.Campaign == nil {
@@ -213,8 +332,17 @@ func (h *strictHandlers) CampaignsPhaseConfigure(ctx context.Context, r gen.Camp
 	}
 	var cfg interface{}
 	if r.Body != nil {
-		// Pass through the phase-specific configuration map when present
-		cfg = r.Body.Configuration
+		// For discovery (domain_generation) map the incoming configuration map into the typed config the service expects
+		if phaseModel == models.PhaseTypeDomainGeneration {
+			if typed, err := mapToDomainGenerationConfig(r.Body.Configuration); err == nil {
+				cfg = typed
+			} else {
+				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid domain generation configuration: " + err.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+		} else {
+			// Pass through the phase-specific configuration map for other phases (will be interpreted by respective services)
+			cfg = r.Body.Configuration
+		}
 	}
 	if err := h.deps.Orchestrator.ConfigurePhase(ctx, uuid.UUID(r.CampaignId), phaseModel, cfg); err != nil {
 		return gen.CampaignsPhaseConfigure500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to configure phase: " + err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil

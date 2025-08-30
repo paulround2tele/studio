@@ -75,9 +75,105 @@ func (s *domainGenerationService) Configure(ctx context.Context, campaignID uuid
 		"campaign_id": campaignID,
 	})
 
-	// Type assert the configuration
-	domainConfig, ok := config.(DomainGenerationConfig)
-	if !ok {
+	// Accept either a typed config or a generic map and convert
+	var domainConfig DomainGenerationConfig
+	switch v := config.(type) {
+	case DomainGenerationConfig:
+		domainConfig = v
+	case map[string]interface{}:
+		// Convert common keys (camelCase and snake_case)
+		getString := func(key string) string {
+			if val, ok := v[key]; ok {
+				if s, ok2 := val.(string); ok2 {
+					return s
+				}
+			}
+			return ""
+		}
+		getInt := func(key string) int {
+			if val, ok := v[key]; ok {
+				switch t := val.(type) {
+				case float64:
+					return int(t)
+				case int:
+					return t
+				case int32:
+					return int(t)
+				case int64:
+					return int(t)
+				}
+			}
+			return 0
+		}
+		getInt64 := func(key string) int64 {
+			if val, ok := v[key]; ok {
+				switch t := val.(type) {
+				case float64:
+					return int64(t)
+				case int:
+					return int64(t)
+				case int32:
+					return int64(t)
+				case int64:
+					return t
+				}
+			}
+			return 0
+		}
+		// TLD: accept tld string or first of tlds array
+		getTLD := func() string {
+			if s := getString("tld"); s != "" {
+				return s
+			}
+			if raw, ok := v["tlds"]; ok {
+				if arr, ok2 := raw.([]interface{}); ok2 && len(arr) > 0 {
+					if s, ok3 := arr[0].(string); ok3 {
+						return s
+					}
+				}
+				if arrS, ok2 := raw.([]string); ok2 && len(arrS) > 0 {
+					return arrS[0]
+				}
+			}
+			return ""
+		}
+
+		domainConfig = DomainGenerationConfig{
+			PatternType:    getString("patternType"),
+			VariableLength: getInt("variableLength"),
+			CharacterSet:   getString("characterSet"),
+			ConstantString: getString("constantString"),
+			TLD:            getTLD(),
+			NumDomains:     getInt64("numDomainsToGenerate"),
+			BatchSize:      getInt("batchSize"),
+			OffsetStart:    getInt64("offsetStart"),
+		}
+		// fallbacks for snake_case
+		if domainConfig.PatternType == "" {
+			domainConfig.PatternType = getString("pattern_type")
+		}
+		if domainConfig.VariableLength == 0 {
+			domainConfig.VariableLength = getInt("variable_length")
+		}
+		if domainConfig.CharacterSet == "" {
+			domainConfig.CharacterSet = getString("character_set")
+		}
+		if domainConfig.ConstantString == "" {
+			domainConfig.ConstantString = getString("constant_string")
+		}
+		if domainConfig.NumDomains == 0 {
+			domainConfig.NumDomains = getInt64("num_domains")
+		}
+		if domainConfig.BatchSize == 0 {
+			domainConfig.BatchSize = getInt("batch_size")
+		}
+		if domainConfig.OffsetStart == 0 {
+			domainConfig.OffsetStart = getInt64("offset_start")
+		}
+		if domainConfig.PatternType == "" {
+			domainConfig.PatternType = "prefix"
+		}
+	default:
 		return fmt.Errorf("invalid configuration type for domain generation")
 	}
 

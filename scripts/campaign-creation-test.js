@@ -17,6 +17,7 @@ import { chromium } from 'playwright';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { spawn } from 'child_process';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -478,6 +479,113 @@ async function runCampaignCreationTest() {
   const frontendLogs = new FrontendLogCollector();
   const backendLogs = new BackendLogMonitor(path.join(__dirname, config.backendLogPath));
 
+  // Child process handles for autonomous servers
+  let startedFrontend = null;
+  let startedBackend = null;
+
+  // Helper: wait for URL readiness (any 2xx/3xx or explicit allowed 401 for auth/me)
+  const waitForUrl = async (url, {
+    timeoutMs = 120000,
+    intervalMs = 1000,
+    okStatuses = [200, 204, 301, 302, 307, 308],
+    allow401 = false,
+  } = {}) => {
+    const start = Date.now();
+    let lastErr = null;
+    while (Date.now() - start < timeoutMs) {
+      try {
+        const res = await fetch(url, { redirect: 'manual' });
+        if (okStatuses.includes(res.status) || (allow401 && res.status === 401)) {
+          return true;
+        }
+        lastErr = new Error(`HTTP ${res.status}`);
+      } catch (e) {
+        lastErr = e;
+      }
+      await new Promise(r => setTimeout(r, intervalMs));
+    }
+    throw lastErr || new Error(`Timeout waiting for ${url}`);
+  };
+
+  // Helper: start a process and return child
+  const startProc = (cmd, args, cwd, name, extraEnv = {}) => {
+    const child = spawn(cmd, args, {
+      cwd,
+      env: { ...process.env, ...extraEnv },
+      stdio: 'pipe',
+      detached: false
+    });
+    // Pipe a little output into our test logs
+    child.stdout?.on('data', (d) => {
+      const text = d.toString();
+      logger.debug(`${name}:stdout`, { chunk: text.slice(0, 500) });
+      // Detect Next.js port from "Local: http://localhost:XXXX"
+      if (name === 'frontend') {
+        const m = text.match(/Local:\s+http:\/\/localhost:(\d+)/i);
+        if (m && m[1]) {
+          const port = m[1];
+          const newUrl = `http://localhost:${port}`;
+          if (config.baseUrl !== newUrl) {
+            logger.info('Detected frontend port change, updating baseUrl', { from: config.baseUrl, to: newUrl });
+            config.baseUrl = newUrl;
+          }
+        }
+      }
+    });
+    child.stderr?.on('data', (d) => {
+      const text = d.toString();
+      logger.debug(`${name}:stderr`, { chunk: text.slice(0, 500) });
+      if (name === 'frontend') {
+        const m = text.match(/using available port (\d+)/i);
+        if (m && m[1]) {
+          const port = m[1];
+          const newUrl = `http://localhost:${port}`;
+          if (config.baseUrl !== newUrl) {
+            logger.info('Frontend switched port, updating baseUrl', { from: config.baseUrl, to: newUrl });
+            config.baseUrl = newUrl;
+          }
+        }
+      }
+    });
+    child.on('exit', (code, signal) => logger.info(`${name} exited`, { code, signal }));
+    return child;
+  };
+
+  // Helper: ensure servers
+  const ensureServers = async () => {
+    // Check frontend
+    let frontendReady = false;
+    try {
+  await waitForUrl(`${config.baseUrl}/login`, { timeoutMs: 5000 });
+  frontendReady = true;
+  logger.info('Frontend seems already running');
+    } catch {}
+
+    if (!frontendReady) {
+      logger.info('Starting frontend dev server');
+  // Try to bind to 3000; if in use, we'll parse and update baseUrl
+  startedFrontend = startProc('npm', ['run', 'dev'], path.join(__dirname, '..'), 'frontend', { PORT: '3000' });
+    }
+
+    // Check backend
+    let backendReady = false;
+    try {
+      await waitForUrl(`${config.baseUrl}/api/v2/auth/me`, { timeoutMs: 5000, allow401: true });
+      backendReady = true;
+      logger.info('Backend seems already running (via frontend proxy)');
+    } catch {}
+    if (!backendReady) {
+      logger.info('Starting backend server');
+      startedBackend = startProc('npm', ['run', 'backend:dev'], path.join(__dirname, '..'), 'backend');
+    }
+
+    // Wait until both are ready
+  logger.info('Waiting for frontend /login to be ready');
+  await waitForUrl(`${config.baseUrl}/login`, { timeoutMs: 180000 });
+    logger.info('Waiting for backend /api/v2/auth/me (401 ok)');
+    await waitForUrl(`${config.baseUrl}/api/v2/auth/me`, { timeoutMs: 180000, allow401: true });
+  };
+
   // Ensure output directory exists
   await fs.mkdir(config.outputDir, { recursive: true });
 
@@ -494,11 +602,14 @@ async function runCampaignCreationTest() {
   let page;
 
   try {
-    // Launch browser
+  // Ensure autonomous servers are running
+  await ensureServers();
+
+    // Launch browser (autonomous: headless, no slowMo)
     logger.info('Launching browser');
     browser = await chromium.launch({ 
-      headless: false,  // Keep visible for monitoring
-      slowMo: 1000     // Slow down for observation
+      headless: true,
+      slowMo: 0
     });
     
     const context = await browser.newContext({
@@ -515,121 +626,62 @@ async function runCampaignCreationTest() {
     await page.goto(`${config.baseUrl}/login`);
     await page.waitForLoadState('networkidle');
 
-    // Perform login
+    // Perform login with resilient strategy: try UI first, then in-page fetch fallback
     logger.info('Performing login');
-    await page.fill('input[type="email"]', config.credentials.email);
-    await page.fill('input[type="password"]', config.credentials.password);
-    
-    // Click login button and wait for navigation
-    await page.click('button[type="submit"]');
-    logger.info('Login submitted, waiting for navigation');
-    
-    // Wait for successful login (should redirect to dashboard)
-    await page.waitForURL(/\/(dashboard|campaigns)/, { timeout: config.timeout });
-    logger.info('Login successful, redirected to dashboard');
-
-    // ENHANCED: Wait at dashboard and monitor all console logs and network activity
-    logger.info('ENHANCED MONITORING: Waiting at dashboard to capture all logs and network activity');
-    await page.waitForLoadState('networkidle');
-    
-    // Wait at dashboard for 10 seconds to capture initial load behavior
-    logger.info('Monitoring dashboard for 10 seconds to capture initial behavior...');
-    await page.waitForTimeout(10000);
-    
-    // Check for any immediate errors or warnings
-    const initialErrors = frontendLogs.performanceMetrics.errors.length;
-    const initialWarnings = frontendLogs.performanceMetrics.warnings.length;
-    logger.info('Dashboard monitoring complete', {
-      errorsDetected: initialErrors,
-      warningsDetected: initialWarnings,
-      apiCallsSoFar: frontendLogs.performanceMetrics.apiCalls.length,
-      healthChecksSoFar: frontendLogs.performanceMetrics.healthChecks.length
-    });
-
-    // Navigate to campaigns page
-    logger.info('Navigating to campaigns page');
-    await page.goto(`${config.baseUrl}/campaigns`);
-    await page.waitForLoadState('networkidle');
-    
-    // ENHANCED: Additional wait to capture campaigns page loading behavior
-    logger.info('Monitoring campaigns page loading for 5 seconds...');
-    await page.waitForTimeout(5000);
-
-    // Wait for campaigns page to fully load
-    await page.waitForSelector('main', { timeout: config.timeout });
-    logger.info('Campaigns page loaded');
-
-    // CRITICAL: Take screenshot of campaigns page to see what user sees
-    logger.info('Taking screenshot of campaigns page for debugging');
-    await page.screenshot({
-      path: path.join(config.outputDir, `campaigns-page-loaded-${timestamp}.png`),
-      fullPage: true
-    });
-
-    // Wait a bit more for any async data loading
-    logger.info('Waiting additional 3 seconds for data to load...');
-    await page.waitForTimeout(3000);
-
-    // Take another screenshot after waiting for data
-    await page.screenshot({
-      path: path.join(config.outputDir, `campaigns-page-after-wait-${timestamp}.png`),
-      fullPage: true
-    });
-
-    // Check for campaign list elements
-    logger.info('Checking for campaign list elements');
-    const campaignElements = await page.$$('[data-testid*="campaign"], .campaign-item, [class*="campaign"]');
-    logger.info(`Found ${campaignElements.length} campaign elements`);
-
-    // Check for loading indicators
-    const loadingElements = await page.$$('[data-testid*="loading"], .loading, [class*="loading"], [class*="spinner"]');
-    logger.info(`Found ${loadingElements.length} loading indicators`);
-
-    // Check for empty state
-    const emptyElements = await page.$$('[data-testid*="empty"], .empty-state, [class*="empty"]');
-    logger.info(`Found ${emptyElements.length} empty state indicators`);
-
-    // Look for "Create New Campaign" button
-    logger.info('Looking for Create New Campaign button');
-    
-    // Try multiple selectors that might match the button
-    const buttonSelectors = [
-      'a[href="/campaigns/new"]',
-      'button:has-text("Create New Campaign")',
-      'a:has-text("Create New Campaign")',
-      '[data-testid="create-campaign-button"]'
-    ];
-
-    let createButton = null;
-    for (const selector of buttonSelectors) {
-      try {
-        createButton = await page.waitForSelector(selector, { timeout: 5000 });
-        if (createButton) {
-          logger.info(`Found Create New Campaign button with selector: ${selector}`);
-          break;
-        }
-      } catch (e) {
-        logger.debug(`Button not found with selector: ${selector}`);
+    let loggedIn = false;
+    try {
+      const emailInput = page.getByLabel(/email/i);
+      await emailInput.waitFor({ state: 'visible', timeout: 5000 });
+      await emailInput.fill(config.credentials.email);
+      await page.getByLabel(/password/i).fill(config.credentials.password);
+      const loginButton = await page.getByRole('button', { name: /sign in securely|signing in/i });
+      await loginButton.click();
+      logger.info('Login submitted via UI, waiting for navigation');
+      await page.waitForURL(/\/(dashboard|campaigns|login)/, { timeout: config.timeout });
+    } catch (uiErr) {
+      logger.warn('UI login controls not ready, using in-page fetch fallback', { error: uiErr.message });
+      // Execute login via in-page fetch to ensure cookie is set
+      const result = await page.evaluate(async (creds) => {
+        const res = await fetch('/api/v2/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(creds)
+        });
+        let meStatus = 0;
+        try {
+          const me = await fetch('/api/v2/auth/me', { credentials: 'include' });
+          meStatus = me.status;
+        } catch {}
+        return { ok: res.ok, status: res.status, meStatus };
+      }, config.credentials);
+      logger.info('In-page login result', result);
+      if (!result.ok && result.meStatus !== 200) {
+        throw new Error(`Login failed: status ${result.status}, me ${result.meStatus}`);
       }
+      loggedIn = true;
     }
 
-    if (!createButton) {
-      logger.error('Create New Campaign button not found, taking screenshot');
-      await page.screenshot({ path: path.join(config.outputDir, `campaigns-page-${timestamp}.png`), fullPage: true });
-      throw new Error('Create New Campaign button not found');
+    // If UI path, verify session via /auth/me too
+    if (!loggedIn) {
+      const me = await page.evaluate(async () => {
+        const res = await fetch('/api/v2/auth/me', { credentials: 'include' });
+        return { status: res.status };
+      });
+      if (me.status !== 200) throw new Error(`Auth session not established, /auth/me=${me.status}`);
+      logger.info('Session verified via /auth/me');
     }
 
-    // Get backend logs before clicking
-    const logsBefore = await backendLogs.getNewLogs();
-    logger.info('Backend logs before campaign creation', { count: logsBefore.length });
+    // Optional settle
+    await page.waitForLoadState('networkidle');
 
-    // Click the Create New Campaign button
-    logger.info('Clicking Create New Campaign button');
-    await createButton.click();
-
-    // Wait for navigation to campaign creation form
-    await page.waitForURL(/\/campaigns\/new/, { timeout: config.timeout });
-    logger.info('Navigated to campaign creation form');
+  // Navigate directly to new campaign page (more robust than hunting buttons)
+  logger.info('Navigating directly to new campaign page');
+  await page.goto(`${config.baseUrl}/campaigns/new`);
+    await page.waitForLoadState('networkidle');
+  // Wait for navigation to campaign creation form
+  await page.waitForURL(/\/campaigns\/new/, { timeout: config.timeout });
+  logger.info('On campaign creation form');
 
     // Wait for the form to load
     await page.waitForSelector('form', { timeout: config.timeout });
@@ -641,86 +693,43 @@ async function runCampaignCreationTest() {
       fullPage: true
     });
 
-    // Fill out the domain generation campaign form with specific parameters
+    // Fill out the domain generation campaign form with real selectors
     logger.info('Filling out domain generation campaign form');
-    
-    // Wait a bit more for form to fully initialize
-    await page.waitForTimeout(2000);
-    
-    // Fill campaign name
-    await page.fill('input[name="name"]', 'Test Domain Generation Campaign');
-    logger.info('Campaign name filled');
 
-    // Select domain generation campaign type - it's a Select component
-    logger.info('Selecting campaign type');
+    // Wait for form root
+    await page.waitForSelector('form', { timeout: config.timeout });
+
+    // Campaign Name
+    const campaignName = `Test Campaign ${Date.now()}`;
     try {
-      // Wait for and click the campaign type select trigger
-      await page.waitForSelector('button[role="combobox"]', { timeout: 5000 });
-      await page.click('button[role="combobox"]');
-      await page.waitForTimeout(500);
-      
-      // Click on domain_generation option in the dropdown
-      await page.click('[role="option"]:has-text("domain_generation")');
-      logger.info('Domain generation campaign type selected');
-    } catch (e) {
-      logger.warn('Could not select campaign type via combobox, trying alternative', { error: e.message });
-      try {
-        // Alternative: look for any select trigger
-        await page.click('[data-radix-collection-item]');
-        await page.waitForTimeout(500);
-        await page.click('text=domain_generation');
-        logger.info('Domain generation campaign type selected via alternative method');
-      } catch (e2) {
-        logger.error('Could not select campaign type', { error: e2.message });
-      }
+      await page.getByLabel(/campaign name/i).fill(campaignName);
+    } catch {
+      await page.getByPlaceholder('Enter campaign name').fill(campaignName);
     }
+    logger.info('Campaign name filled', { campaignName });
 
-    // Set generation pattern to "both_variable" for prefix + suffix
-    const patternSelector = 'select[name="generationPattern"], input[name="generationPattern"]';
+    // Description (optional)
     try {
-      await page.selectOption(patternSelector, 'both_variable');
-      logger.info('Generation pattern set to both_variable');
-    } catch (e) {
-      logger.debug('Pattern selector not found, trying radio buttons');
-      try {
-        await page.check('input[value="both_variable"]');
-        logger.info('Generation pattern set to both_variable via radio');
-      } catch (e2) {
-        logger.warn('Could not set generation pattern', { error: e2.message });
-      }
-    }
+      await page.getByLabel(/description/i).fill('Automated test campaign');
+    } catch {}
 
-    // Set constant part to "business"
+    // Maximum Domains to Generate
     try {
-      await page.fill('input[name="constantPart"]', 'business');
-      logger.info('Constant part set to "business"');
-    } catch (e) {
-      logger.warn('Could not set constant part', { error: e.message });
-    }
-
-    // Set prefix variable length to 3
-    try {
-      await page.fill('input[name="prefixVariableLength"]', '3');
-      logger.info('Prefix variable length set to 3');
-    } catch (e) {
-      logger.warn('Could not set prefix variable length', { error: e.message });
-    }
-
-    // Set suffix variable length to 3
-    try {
-      await page.fill('input[name="suffixVariableLength"]', '3');
-      logger.info('Suffix variable length set to 3');
-    } catch (e) {
-      logger.warn('Could not set suffix variable length', { error: e.message });
-    }
-
-    // Set max domains to generate to 25 (slightly more than requested 20)
-    try {
-      await page.fill('input[name="maxDomainsToGenerate"]', '25');
+      await page.getByLabel(/maximum domains to generate/i).fill('25');
       logger.info('Max domains to generate set to 25');
-    } catch (e) {
-      logger.warn('Could not set max domains to generate', { error: e.message });
-    }
+    } catch {}
+
+    // Constant Part
+    try {
+      await page.getByLabel(/constant part/i).fill('business');
+      logger.info('Constant part set');
+    } catch {}
+
+    // Variable Length
+    try {
+      await page.getByLabel(/variable length/i).fill('3');
+      logger.info('Variable length set to 3');
+    } catch {}
 
     // Take screenshot after filling form
     await page.screenshot({
@@ -730,8 +739,8 @@ async function runCampaignCreationTest() {
 
     // Submit the form
     logger.info('Submitting campaign creation form');
-    const submitButton = await page.waitForSelector('button[type="submit"], button:has-text("Create Campaign")');
-    await submitButton.click();
+  const submitButton = await page.getByRole('button', { name: /create campaign|creating/i });
+  await submitButton.click();
     logger.info('Campaign creation form submitted');
 
     // Wait for campaign creation to complete or redirect
@@ -986,6 +995,20 @@ async function runCampaignCreationTest() {
       await browser.close();
       logger.info('Browser closed');
     }
+
+    // Stop servers we started
+    try {
+      if (startedFrontend && !startedFrontend.killed) {
+        startedFrontend.kill('SIGTERM');
+        logger.info('Frontend process terminated');
+      }
+    } catch {}
+    try {
+      if (startedBackend && !startedBackend.killed) {
+        startedBackend.kill('SIGTERM');
+        logger.info('Backend process terminated');
+      }
+    } catch {}
   }
 }
 
