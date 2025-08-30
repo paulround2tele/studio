@@ -4,7 +4,6 @@
 import type { Middleware } from '@reduxjs/toolkit';
 import { campaignApi } from '../api/campaignApi';
 import { 
-  setCampaign,
   startPhaseTransition,
   completePhaseTransition,
   failPhaseTransition,
@@ -14,13 +13,13 @@ import type { RootState, AppDispatch } from '../index';
 import type { CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
 
 // Middleware to handle campaign state synchronization
-export const campaignStateSyncMiddleware: Middleware<{}, RootState, AppDispatch> = (store) => (next) => (action) => {
+export const campaignStateSyncMiddleware: Middleware<unknown, RootState, AppDispatch> = (store) => (next) => (action) => {
   const result = next(action);
 
   // Handle successful phase transitions
   if (campaignApi.endpoints.startPhaseStandalone.matchFulfilled(action)) {
-    const { meta } = action;
-    const campaignId = meta.arg.originalArgs.campaignId;
+  const { meta } = action;
+  const _campaignId = meta.arg.originalArgs.campaignId;
     
     // Auto-refetch campaign data to get updated state
     store.dispatch(campaignApi.endpoints.getCampaignsStandalone.initiate() as any);
@@ -45,7 +44,7 @@ export const campaignStateSyncMiddleware: Middleware<{}, RootState, AppDispatch>
 };
 
 // Helper function to initialize campaign state sync
-export const initializeCampaignSync = (campaignId: string) => (dispatch: AppDispatch) => {
+export const initializeCampaignSync = (_campaignId: string) => (dispatch: AppDispatch) => {
   // Set connection status
   dispatch(setConnectionStatus('connected'));
   

@@ -14,10 +14,7 @@ interface CampaignProgressMonitorProps {
   onDomainReceived?: (domain: string) => void;
 }
 
-interface PhaseInfo {
-  phase: CampaignCurrentPhaseEnum;
-  status: CampaignPhaseStatusEnum;
-}
+// PhaseInfo reserved for future use
 
 interface ProgressInfo {
   phase: CampaignCurrentPhaseEnum;
@@ -36,8 +33,8 @@ interface ProgressInfo {
  */
 const CampaignProgressMonitor = memo(({
   campaign,
-  onCampaignUpdate,
-  onDomainReceived
+  onCampaignUpdate: _onCampaignUpdate,
+  onDomainReceived: _onDomainReceived
 }: CampaignProgressMonitorProps): React.ReactElement => {
   
   // Campaign key for tracking

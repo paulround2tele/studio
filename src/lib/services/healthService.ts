@@ -5,7 +5,6 @@
 
 import { HealthApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 export interface CachedHealthData {
   version?: string;
@@ -46,18 +45,22 @@ class HealthService {
     }
 
     try {
-      // Make fresh API call using the generated client like a professional
-  const response = await this.api.healthCheck();
-  const healthData = extractResponseData<any>(response) || {};
+      // Make fresh API call using the generated client
+      // Health endpoints return a SuccessEnvelope with no data field; treat success=true as ok
+      const response = await this.api.healthCheck();
+      const envelope = response?.data as any;
+      const isOk = envelope && typeof envelope === 'object' && envelope.success === true;
 
-      // Cache the fresh data
-      this.cache = {
-        ...healthData,
+      const normalized: CachedHealthData = {
+        version: envelope?.metadata?.version || undefined,
+        status: isOk ? 'ok' : 'unhealthy',
         isCached: false,
-        cachedAt: now
+        cachedAt: now,
       };
 
-  return this.cache as CachedHealthData;
+      // Cache the fresh data
+      this.cache = normalized;
+      return this.cache as CachedHealthData;
     } catch (error) {
       // If we have stale cache and API fails, return stale data with warning
       if (this.cache) {

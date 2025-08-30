@@ -2,16 +2,13 @@
  * REALITY CHECK PART 2: Test actual API calls with generated client
  */
 
-import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
-import { Configuration } from '@/lib/api-client/configuration';
+import { CampaignsApi } from '@/lib/api-client';
+import { createApiConfiguration } from '@/lib/api/config';
 
 async function testRealApiCall() {
   try {
-    const config = new Configuration({
-      basePath: 'http://localhost:8080' // Backend server
-    });
-    
-    const campaignsApi = new CampaignsApi(config);
+  // Ensure basePath targets /api/v2
+  const campaignsApi = new CampaignsApi(createApiConfiguration());
     
     console.log('=== TESTING REAL API CALL ===');
     
@@ -39,10 +36,10 @@ async function testRealApiCall() {
   }
 }
 
-testRealApiCall().then(result => {
+testRealApiCall().then(_result => {
   console.log('=== TEST COMPLETE ===');
   process.exit(0);
-}).catch(error => {
+}).catch(_error => {
   console.log('=== TEST FAILED ===');
   process.exit(1);
 });

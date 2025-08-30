@@ -124,7 +124,7 @@ export default function AdvancedConditionalLayout({ children }: AdvancedConditio
       // Unlock immediately if no redirect needed
       navigationLockRef.current = false;
     }
-  }, [isAuthenticated, isLoading, isInitialized, isPublicPath, pathname, router]);
+  }, [isAuthenticated, isLoading, isInitialized, isPublicPath, pathname, router, user?.email]);
 
   // Use useLayoutEffect for synchronous execution (prevents visual flashing)
   useLayoutEffect(() => {

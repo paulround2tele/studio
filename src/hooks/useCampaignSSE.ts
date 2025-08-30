@@ -16,7 +16,7 @@ export interface PhaseEvent {
   campaign_id: string;
   phase: string;
   message: string;
-  results?: any;
+  results?: unknown;
   error?: string;
 }
 
@@ -25,9 +25,9 @@ export interface CampaignSSEEvents {
   onPhaseStarted?: (campaignId: string, event: PhaseEvent) => void;
   onPhaseCompleted?: (campaignId: string, event: PhaseEvent) => void;
   onPhaseFailed?: (campaignId: string, event: PhaseEvent) => void;
-  onDomainGenerated?: (campaignId: string, data: any) => void;
-  onDomainValidated?: (campaignId: string, data: any) => void;
-  onAnalysisCompleted?: (campaignId: string, data: any) => void;
+  onDomainGenerated?: (campaignId: string, data: unknown) => void;
+  onDomainValidated?: (campaignId: string, data: unknown) => void;
+  onAnalysisCompleted?: (campaignId: string, data: unknown) => void;
   onError?: (campaignId: string, error: string) => void;
 }
 
@@ -106,7 +106,8 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
 
   // Event handler for all SSE events
   const handleSSEEvent = useCallback((event: SSEEvent) => {
-    const campaignIdFromEvent = event.campaign_id || event.data?.campaign_id;
+    const dataObj = (event.data && typeof event.data === 'object') ? (event.data as Record<string, unknown>) : undefined;
+    const campaignIdFromEvent = event.campaign_id || (dataObj?.campaign_id as string | undefined);
     
     if (!campaignIdFromEvent) {
       console.warn('⚠️ Received SSE event without campaign_id:', event);
@@ -115,7 +116,7 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
 
     switch (event.event) {
       case 'campaign_progress':
-        const progressData = event.data?.progress || event.data;
+        const progressData = (dataObj?.progress as CampaignProgress | undefined) || (dataObj as unknown as CampaignProgress | undefined);
         if (progressData) {
           setLastProgress(progressData);
           events.onProgress?.(campaignIdFromEvent, progressData);
@@ -123,15 +124,15 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
         break;
 
       case 'phase_started':
-        events.onPhaseStarted?.(campaignIdFromEvent, event.data);
+        events.onPhaseStarted?.(campaignIdFromEvent, dataObj as unknown as PhaseEvent);
         break;
 
       case 'phase_completed':
-        events.onPhaseCompleted?.(campaignIdFromEvent, event.data);
+        events.onPhaseCompleted?.(campaignIdFromEvent, dataObj as unknown as PhaseEvent);
         break;
 
       case 'phase_failed':
-        events.onPhaseFailed?.(campaignIdFromEvent, event.data);
+        events.onPhaseFailed?.(campaignIdFromEvent, dataObj as unknown as PhaseEvent);
         break;
 
       case 'domain_generated':
@@ -147,7 +148,7 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
         break;
 
       case 'error':
-        const errorMessage = event.data?.error || event.data?.message || 'Unknown error';
+        const errorMessage = (dataObj?.error as string | undefined) || (dataObj?.message as string | undefined) || 'Unknown error';
         events.onError?.(campaignIdFromEvent, errorMessage);
         break;
 

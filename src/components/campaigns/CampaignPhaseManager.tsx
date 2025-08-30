@@ -35,7 +35,7 @@ interface PhaseManagerFormData {
 
 export const CampaignPhaseManager: React.FC<CampaignPhaseManagerProps> = ({ campaignId }) => {
   const { toast } = useToast();
-  const [selectedPhase, setSelectedPhase] = useState<CampaignCurrentPhaseEnum | ''>('');
+  const [_selectedPhase, _setSelectedPhase] = useState<CampaignCurrentPhaseEnum | ''>('');
   
   const [configurePhase, { isLoading: isConfiguring }] = useConfigurePhaseStandaloneMutation();
   const [startPhase, { isLoading: isStarting }] = useStartPhaseStandaloneMutation();
@@ -137,7 +137,7 @@ export const CampaignPhaseManager: React.FC<CampaignPhaseManagerProps> = ({ camp
           <FormField
             control={form.control}
             name="dnsValidationConfig"
-            render={({ field }) => (
+            render={() => (
               <DNSValidationConfig 
                 control={form.control as any} 
                 disabled={isConfiguring} 
@@ -150,7 +150,7 @@ export const CampaignPhaseManager: React.FC<CampaignPhaseManagerProps> = ({ camp
           <FormField
             control={form.control}
             name="httpKeywordValidationConfig"
-            render={({ field }) => (
+            render={() => (
               <HTTPKeywordValidationConfig 
                 control={form.control as any} 
                 disabled={isConfiguring} 
@@ -163,7 +163,7 @@ export const CampaignPhaseManager: React.FC<CampaignPhaseManagerProps> = ({ camp
           <FormField
             control={form.control}
             name="domainGenerationConfig"
-            render={({ field }) => (
+            render={() => (
               <DomainGenerationConfig 
                 control={form.control as any} 
                 disabled={isConfiguring} 
@@ -176,7 +176,7 @@ export const CampaignPhaseManager: React.FC<CampaignPhaseManagerProps> = ({ camp
           <FormField
             control={form.control}
             name="analysisConfig"
-            render={({ field }) => (
+            render={() => (
               <AnalysisConfig 
                 control={form.control as any} 
                 disabled={isConfiguring} 

@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 export interface SSEEvent {
   id?: string;
   event: string;
-  data: any;
+  data: unknown;
   timestamp: string;
   campaign_id?: string;
   user_id?: string;
@@ -95,16 +95,38 @@ export function useSSE(
     autoReconnect = true,
     maxReconnectAttempts = 5,
     reconnectDelay = 3000,
-    headers = {},
     withCredentials = true,
   } = options;
 
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Runtime-safe EventSource access (SSR-friendly)
+  interface SSEMessageEvent {
+    data: string;
+    lastEventId?: string;
+    type?: string;
+  }
+  interface EventSourceLike {
+    onopen: ((ev: Event) => void) | null;
+    onerror: ((ev: Event) => void) | null;
+    onmessage: ((ev: SSEMessageEvent) => void) | null;
+    addEventListener: (type: string, listener: (ev: SSEMessageEvent) => void) => void;
+    close: () => void;
+    readyState: number;
+  }
+  type EventSourceCtor = new (url: string, options?: { withCredentials?: boolean }) => EventSourceLike;
+  const ES: EventSourceCtor | null =
+    typeof window !== 'undefined' && 'EventSource' in window
+      ? (window as unknown as { EventSource: EventSourceCtor }).EventSource
+      : null;
+  const ES_CONNECTING = 0;
+  const ES_OPEN = 1;
+  const ES_CLOSED = 2;
+
+  const eventSourceRef = useRef<EventSourceLike | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const mountedRef = useRef(true);
   
-  const [readyState, setReadyState] = useState<number>(EventSource.CONNECTING);
+  const [readyState, setReadyState] = useState<number>(ES_CONNECTING);
   const [lastEvent, setLastEvent] = useState<SSEEvent | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -117,19 +139,25 @@ export function useSSE(
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
-    setReadyState(EventSource.CLOSED);
+    setReadyState(ES_CLOSED);
   }, []);
 
   const connect = useCallback(() => {
     if (!url || !mountedRef.current) return;
+    // Ensure we're in a browser with EventSource support
+    if (!ES) {
+      setError('SSE not supported in this environment');
+      setReadyState(ES_CLOSED);
+      return;
+    }
 
     cleanup();
     setError(null);
-    setReadyState(EventSource.CONNECTING);
+    setReadyState(ES_CONNECTING);
 
     try {
       // Modern browsers support headers via EventSource constructor
-      const eventSource = new EventSource(url, {
+      const eventSource = new ES(url, {
         withCredentials,
       });
 
@@ -137,17 +165,17 @@ export function useSSE(
 
       eventSource.onopen = () => {
         if (!mountedRef.current) return;
-        setReadyState(EventSource.OPEN);
+        setReadyState(ES_OPEN);
         setError(null);
         reconnectAttemptsRef.current = 0;
         console.log(`✅ SSE Connected to ${url}`);
       };
 
-      eventSource.onerror = (event) => {
+      eventSource.onerror = (_event: Event) => {
         if (!mountedRef.current) return;
         
-        console.error('❌ SSE Connection error:', event);
-        setReadyState(EventSource.CLOSED);
+        console.error('❌ SSE Connection error');
+        setReadyState(ES_CLOSED);
         
         const errorMessage = 'SSE connection failed';
         setError(errorMessage);
@@ -173,8 +201,8 @@ export function useSSE(
         }
       };
 
-      // Generic event listener for all SSE events
-      eventSource.onmessage = (event) => {
+  // Generic event listener for all SSE events
+  eventSource.onmessage = (event: SSEMessageEvent) => {
         if (!mountedRef.current) return;
         
         try {
@@ -209,7 +237,7 @@ export function useSSE(
       ];
 
       eventTypes.forEach((eventType) => {
-        eventSource.addEventListener(eventType, (event: any) => {
+        eventSource.addEventListener(eventType, (event: SSEMessageEvent) => {
           if (!mountedRef.current) return;
           
           try {
@@ -234,9 +262,9 @@ export function useSSE(
     } catch (connectionError) {
       console.error('❌ Failed to create SSE connection:', connectionError);
       setError('Failed to create SSE connection');
-      setReadyState(EventSource.CLOSED);
+      setReadyState(ES_CLOSED);
     }
-  }, [url, onEvent, autoReconnect, maxReconnectAttempts, reconnectDelay, withCredentials]);
+  }, [url, onEvent, autoReconnect, maxReconnectAttempts, reconnectDelay, withCredentials, ES, cleanup]);
 
   const reconnect = useCallback(() => {
     reconnectAttemptsRef.current = 0;
@@ -267,7 +295,7 @@ export function useSSE(
     error,
     reconnect,
     close,
-    isConnected: readyState === EventSource.OPEN,
+  isConnected: readyState === ES_OPEN,
     reconnectAttempts: reconnectAttemptsRef.current,
   };
 }

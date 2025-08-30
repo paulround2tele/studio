@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, CheckCircle, XCircle, Cpu, HardDrive, MemoryStick } from 'lucide-react';
 import { useGetResourceMetricsQuery, useGetSystemHealthQuery } from '@/store/api/monitoringApi';
 import { useSSE } from '@/hooks/useSSE';
-import type { ResourceMetrics, SystemHealth } from '@/store/api/monitoringApi';
+import type { ResourceMetrics } from '@/store/api/monitoringApi';
 
 interface ResourceMonitorProps {
   variant?: 'full' | 'compact';
@@ -26,7 +26,7 @@ export const ResourceMonitor: React.FC<ResourceMonitorProps> = ({
   const { 
     data: initialMetrics, 
     isLoading: isLoadingMetrics,
-    refetch: refetchMetrics 
+  refetch: _refetchMetrics 
   } = useGetResourceMetricsQuery(undefined, {
     pollingInterval: refreshInterval,
   });
@@ -39,7 +39,7 @@ export const ResourceMonitor: React.FC<ResourceMonitorProps> = ({
   });
 
   // SSE connection for real-time updates
-  const { readyState, lastEvent } = useSSE(
+  const { readyState } = useSSE(
     '/api/v2/monitoring/stream',
     (event) => {
       if (event.event === 'resource_update') {

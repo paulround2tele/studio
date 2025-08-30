@@ -179,7 +179,7 @@ export const campaignApi = createApi({
   }),
 });
 
-// Export hooks for components to use like civilized developers
+// Export hooks for components to use
 export const {
   useCreateCampaignMutation,
   useGetCampaignsStandaloneQuery,

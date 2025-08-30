@@ -35,7 +35,7 @@ export function KeywordTargetingSection({
         <FormField 
           control={control} 
           name="targetKeywordsInput" 
-          render={({ field }) => (
+    render={({ field: _field }) => (
             <FormItem>
               <FormLabel>Target Keywords *</FormLabel>
               <FormControl>
@@ -43,7 +43,7 @@ export function KeywordTargetingSection({
                   placeholder="Enter keywords separated by commas (e.g., telecom, voip, saas, business)"
                   disabled={disabled}
                   rows={3}
-                  {...field} 
+      {..._field} 
                 />
               </FormControl>
               <FormMessage />

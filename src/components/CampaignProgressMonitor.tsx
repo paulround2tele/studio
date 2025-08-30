@@ -1,5 +1,5 @@
 // File: src/components/CampaignProgressMonitor.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useCampaignSSE, CampaignProgress } from '../hooks/useCampaignSSE';
 
 interface CampaignProgressMonitorProps {

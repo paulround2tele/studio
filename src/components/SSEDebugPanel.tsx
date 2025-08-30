@@ -1,5 +1,5 @@
 // File: src/components/SSEDebugPanel.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useCampaignSSE } from '../hooks/useCampaignSSE';
 import { SSEEvent } from '../hooks/useSSE';
 
@@ -98,12 +98,12 @@ export function SSEDebugPanel({
     },
   });
 
-  const addLogEntry = (entry: LogEntry) => {
+  const addLogEntry = useCallback((entry: LogEntry) => {
     setEventLog(prev => {
       const newLog = [entry, ...prev];
       return newLog.slice(0, maxEvents);
     });
-  };
+  }, [maxEvents]);
 
   // Add general event logging
   useEffect(() => {
@@ -116,7 +116,7 @@ export function SSEDebugPanel({
                lastEvent.event === 'phase_failed' ? 'error' : 'info',
       });
     }
-  }, [lastEvent]);
+  }, [lastEvent, addLogEntry]);
 
   const filteredEvents = eventLog.filter(entry => 
     !filter || 

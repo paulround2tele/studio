@@ -10,13 +10,12 @@ import type {
   BulkDeleteProxiesRequest,
   ProxiesBulkTestRequest,
   BulkUpdateProxiesRequest,
-  UpdateProxyRequestAPI,
   ProxiesBulkTest200Response,
   ProxiesTest200Response,
   ProxiesBulkUpdate200Response,
-  // ModelsProxy type is not re-exported in some barrels; import directly
-  SuccessEnvelope
 } from '@/lib/api-client/models';
+import type { UpdateProxyRequestAPI } from '@/lib/api-client/models/update-proxy-request-api';
+import type { SuccessEnvelope } from '@/lib/api-client/models/success-envelope';
 import type { ModelsProxy } from '@/lib/api-client/models/models-proxy';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 

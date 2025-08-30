@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Zap, Clock, Info } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { updateCampaignField } from '@/store/slices/campaignSlice';
+import { useAppDispatch } from '@/store/hooks';
 import { useToast } from '@/hooks/use-toast';
 
 interface CampaignModeToggleProps {
@@ -36,12 +35,12 @@ const modeConfig = {
 };
 
 export function CampaignModeToggle({
-  campaignId,
+  campaignId: _campaignId,
   currentMode,
   disabled,
   className,
 }: CampaignModeToggleProps) {
-  const dispatch = useAppDispatch();
+  const _dispatch = useAppDispatch();
   const { toast } = useToast();
 
   // Use the properly defined modeConfig with all required properties

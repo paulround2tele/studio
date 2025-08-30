@@ -66,7 +66,7 @@ const phaseDisplayNames: Record<string, string> = {
 };
 
 export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
-  mode,
+  mode: _mode,
   isOpen,
   onClose,
   sourceCampaign,
@@ -195,7 +195,7 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  }, [sourceCampaign, phaseType, needsDnsPersona, needsHttpPersona, needsKeywords, toast, onClose, onPhaseStarted]);
+  }, [sourceCampaign, phaseType, needsDnsPersona, needsHttpPersona, needsKeywords, toast, onClose, onPhaseStarted, startPhase]);
 
   // Reset form when dialog opens
   React.useEffect(() => {
@@ -232,7 +232,7 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
           </DialogTitle>
           <DialogDescription>
             Configure the settings for the next phase of your campaign pipeline.
-            This will transition "{sourceCampaign?.name}" to the {phaseDisplayNames[phaseType]?.toLowerCase()} phase.
+            This will transition &quot;{sourceCampaign?.name}&quot; to the {phaseDisplayNames[phaseType]?.toLowerCase()} phase.
           </DialogDescription>
         </DialogHeader>
 

@@ -7,7 +7,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
-import { ArrowRight, CalendarDays, CheckCircle, AlertTriangle, WorkflowIcon, Play, MoreVertical, FilePenLine, Trash2, PauseCircle, PlayCircle, StopCircle, Loader2 } from 'lucide-react';
+import { ArrowRight, CalendarDays, CheckCircle, AlertTriangle, Play, MoreVertical, FilePenLine, Trash2, PauseCircle, PlayCircle, StopCircle, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   Tooltip,
@@ -28,7 +28,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CAMPAIGN_PHASES_ORDERED, getNextPhase } from '@/lib/constants';
+// import { CAMPAIGN_PHASES_ORDERED, getNextPhase } from '@/lib/constants';
 
 interface CampaignListItemProps {
   campaign: Campaign;

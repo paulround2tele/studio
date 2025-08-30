@@ -8,7 +8,7 @@
  */
 
 import { 
-  validateUUID, 
+  validateUUID as _validateUUID, 
   validateBulkEnrichedDataRequest,
   validateCampaignId,
   validatePersonaIds 

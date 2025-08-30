@@ -22,14 +22,14 @@ export function CampaignDetailsSection({ control, disabled }: CampaignDetailsSec
         <FormField 
           control={control} 
           name="name" 
-          render={({ field }) => (
+    render={({ field: _field }) => (
             <FormItem>
               <FormLabel>Campaign Name *</FormLabel>
               <FormControl>
                 <Input 
                   placeholder="Enter campaign name" 
                   disabled={disabled}
-                  {...field} 
+      {..._field} 
                 />
               </FormControl>
               <FormMessage />
@@ -40,14 +40,14 @@ export function CampaignDetailsSection({ control, disabled }: CampaignDetailsSec
         <FormField 
           control={control} 
           name="description" 
-          render={({ field }) => (
+    render={({ field: _field }) => (
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
                 <Textarea 
                   placeholder="Optional description for this campaign" 
                   disabled={disabled}
-                  {...field} 
+      {..._field} 
                 />
               </FormControl>
               <FormMessage />

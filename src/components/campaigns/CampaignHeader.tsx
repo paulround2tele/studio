@@ -7,7 +7,6 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Briefcase, RefreshCw, CheckCircle, AlertCircle, Clock, Pause, Play, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CampaignResponse } from '@/lib/api-client/models';
@@ -198,17 +197,7 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
           </div>
         </div>
         
-        {/* Note: Campaign description not available in current schema */}
-        
-    {false && (campaign as any).errorMessage && (
-          <div className="mt-4 pt-4 border-t">
-            <div className="flex items-center gap-2 text-destructive">
-              <AlertCircle className="h-4 w-4" />
-              <span className="text-sm font-medium">Error Details</span>
-            </div>
-      <div className="text-sm text-destructive mt-1">{(campaign as any).errorMessage}</div>
-          </div>
-        )}
+  {/* Note: Campaign description not available in current schema */}
       </CardContent>
     </Card>
   );

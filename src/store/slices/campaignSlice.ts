@@ -180,8 +180,8 @@ const campaignSlice = createSlice({
       state.phaseStatus = 'idle';
     },
     
-    // Reset all state
-    resetCampaignState: (state) => {
+  // Reset all state
+  resetCampaignState: (_state) => {
       return initialState;
     },
   },

@@ -4,7 +4,6 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Control } from 'react-hook-form';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 
@@ -35,9 +34,9 @@ export const PersonaAssignmentSection: React.FC<PersonaAssignmentSectionProps> =
   control,
   dnsPersonas = [],
   httpPersonas = [],
-  proxies = [],
-  needsHttpPersona = false,
-  needsDnsPersona = false,
+  proxies: _proxies = [],
+  needsHttpPersona: _needsHttpPersona = false,
+  needsDnsPersona: _needsDnsPersona = false,
   noneValuePlaceholder = "none-default",
   disabled = false,
   isLoadingData = false

@@ -7,7 +7,6 @@ import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { useToast } from '@/hooks/use-toast';
 
 // Use enums from OpenAPI schema  
-import type { CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
 
 interface PhaseTransitionButtonProps {
   campaignId: string;
@@ -43,7 +42,7 @@ const buttonConfig = {
 
 export function PhaseTransitionButton({
   campaignId,
-  currentPhase,
+  currentPhase: _currentPhase,
   targetPhase,
   variant = 'transition',
   disabled,

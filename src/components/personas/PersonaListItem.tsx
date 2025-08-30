@@ -15,10 +15,9 @@ type PersonaItem = ApiPersonaResponse;
 
 // Status type derived from the API
 type PersonaStatus = 'Active' | 'Disabled' | 'Testing' | 'Failed';
-import type { HTTPPersona } from '@/lib/api-client/models/httppersona';
-import type { DNSPersona } from '@/lib/api-client/models/dnspersona';
+// (unused detailed config types removed)
 
-import { FilePenLine, Trash2, MoreVertical, Copy, Globe, Tag, Clock, Settings2, Wifi, TestTubeDiagonal, Power, PowerOff, FileJson, AlertCircle, CheckCircle, HelpCircle, Loader2 } from 'lucide-react';
+import { FilePenLine, Trash2, MoreVertical, Copy, Globe, Clock, Settings2, Wifi, TestTubeDiagonal, Power, PowerOff, FileJson, CheckCircle, HelpCircle, Loader2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,7 +33,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { format, formatDistance } from 'date-fns';
+import { format } from 'date-fns';
 
 interface PersonaListItemProps {
   persona: ApiPersonaResponse;
@@ -248,7 +247,7 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
             </Badge>
         </div>
 
-        {persona.personaType === 'http' ? renderHttpPersonaDetails(persona as any) : renderDnsPersonaDetails(persona as any)}
+  {persona.personaType === 'http' ? renderHttpPersonaDetails(persona as PersonaItem) : renderDnsPersonaDetails(persona as PersonaItem)}
         
       </CardContent>
       <CardFooter className="text-xs text-muted-foreground border-t pt-3">

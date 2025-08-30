@@ -36,11 +36,8 @@ import {
   AlertTriangle,
   Loader2
 } from 'lucide-react';
-import type { ModelsProxy as ProxyType, UpdateProxyRequestAPI as UpdateProxyRequest } from '@/lib/api-client/models';
-import { isResponseSuccess } from '@/lib/utils/apiResponseHelpers';
-
-type ProxyActionResponse = { status: 'success' | 'error'; message?: string };
-type UpdateProxyPayload = UpdateProxyRequest;
+import type { ModelsProxy as ProxyType } from '@/lib/api-client/models/models-proxy';
+// Removed unused types/helpers
 import {
   useTestProxyMutation,
   useCleanProxiesMutation,
@@ -71,12 +68,12 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
   const { toast } = useToast();
   
   // RTK Query mutation hooks - professional way to handle API calls
-  const [testProxy] = useTestProxyMutation();
+  const [_testProxy] = useTestProxyMutation();
   const [cleanProxies] = useCleanProxiesMutation();
   const [updateProxy] = useUpdateProxyMutation();
-  const [deleteProxy] = useDeleteProxyMutation();
+  const [_deleteProxy] = useDeleteProxyMutation();
   const [bulkTestProxies] = useBulkTestProxiesMutation();
-  const [bulkUpdateProxies] = useBulkUpdateProxiesMutation();
+  const [_bulkUpdateProxies] = useBulkUpdateProxiesMutation();
   const [bulkDeleteProxies] = useBulkDeleteProxiesMutation();
   
   const [selectedProxyIds, setSelectedProxyIds] = useState<Set<string>>(new Set());
@@ -126,7 +123,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
   /**
    * Select proxies by status
    */
-  const selectByStatus = useCallback((status: 'active' | 'disabled' | 'Failed' | 'enabled') => {
+  const selectByStatus = useCallback((status: 'active' | 'disabled' | 'failed' | 'enabled') => {
     let filteredProxies: ProxyType[] = [];
     
     switch (status) {
@@ -136,7 +133,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
       case 'disabled':
         filteredProxies = disabledProxies;
         break;
-      case 'Failed':
+      case 'failed':
         filteredProxies = failedProxies;
         break;
       case 'enabled':
@@ -192,8 +189,6 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
       errorCount = total;
     } else {
       try {
-        let response: any;
-        
         switch (action) {
           case 'enable':
           case 'disable':
@@ -204,11 +199,12 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
                   proxyId, 
                   request: { isEnabled: action === 'enable' } 
                 });
-                if (updateResponse.data) {
+                if ('data' in updateResponse) {
                   successCount++;
                 } else {
                   errorCount++;
-                  errors.push(`${proxyId}: ${updateResponse.error || 'Update failed'}`);
+                  const errMsg = (updateResponse as { error?: unknown }).error ?? 'Update failed';
+                  errors.push(`${proxyId}: ${String(errMsg)}`);
                 }
               } catch (error) {
                 errorCount++;
@@ -219,22 +215,28 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
             break;
             
           case 'test':
-            response = await bulkTestProxies({ proxyIds });
-            if (response.data) {
+            {
+              const res = await bulkTestProxies({ proxyIds });
+              if ('data' in res) {
               successCount = proxyIds.length;
-            } else {
+              } else {
               errorCount = proxyIds.length;
-              errors.push(`Bulk test failed: ${response.error || 'Unknown error'}`);
+                const errMsg = (res as { error?: unknown }).error ?? 'Unknown error';
+                errors.push(`Bulk test failed: ${String(errMsg)}`);
+              }
             }
             break;
             
           case 'delete':
-            response = await bulkDeleteProxies({ proxyIds });
-            if (response.data) {
+            {
+              const res = await bulkDeleteProxies({ proxyIds });
+              if ('data' in res) {
               successCount = proxyIds.length;
-            } else {
+              } else {
               errorCount = proxyIds.length;
-              errors.push(`Bulk delete failed: ${response.error || 'Unknown error'}`);
+                const errMsg = (res as { error?: unknown }).error ?? 'Unknown error';
+                errors.push(`Bulk delete failed: ${String(errMsg)}`);
+              }
             }
             break;
             
@@ -257,7 +259,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
       errorCount,
       errors
     };
-  }, [selectedProxies, failedProxies]);
+  }, [selectedProxies, failedProxies, cleanProxies, updateProxy, bulkTestProxies, bulkDeleteProxies]);
 
   /**
    * Handle bulk action execution

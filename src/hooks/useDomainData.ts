@@ -11,7 +11,7 @@ import { useGetCampaignDomainsQuery } from '@/store/api/campaignApi';
 import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
 
 // Local minimal domain shape based on bulk enriched-data response
-type GeneratedDomainLite = Pick<DomainListItem, 'domain' | 'dnsStatus' | 'httpStatus' | 'leadStatus'> & Record<string, any>;
+type GeneratedDomainLite = Pick<DomainListItem, 'domain' | 'dnsStatus' | 'httpStatus' | 'leadStatus'> & Record<string, unknown>;
 
 // Professional type imports using proper model references
 
@@ -69,7 +69,7 @@ export function useDomainData(
     pollingInterval = 10000 // 10 seconds
   } = options;
 
-  const { toast } = useToast();
+  const { toast: _toast } = useToast();
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   
   // State
@@ -99,7 +99,13 @@ export function useDomainData(
   useEffect(() => {
     setLoading(isFetching);
     if (rtkError) {
-      const message = (rtkError as any)?.data?.message || (rtkError as any)?.message || 'Failed to fetch domains';
+      const err = rtkError as unknown;
+      let message = 'Failed to fetch domains';
+      if (typeof err === 'string') message = err;
+      else if (err && typeof err === 'object') {
+        const e = err as { data?: { message?: string }; message?: string };
+        message = e.data?.message || e.message || message;
+      }
       setError(message);
     } else {
       setError(null);
@@ -158,7 +164,7 @@ export function useDomainData(
   }, [refetch]);
 
   // Set filters (triggers data refresh)
-  const setFilters = useCallback((filters: { status?: string; phase?: string }) => {
+  const setFilters = useCallback((_filters: { status?: string; phase?: string }) => {
     setOffset(0);
     setDomains([]);
     // Filters will be applied through the filter parameters in fetchDomains
@@ -174,8 +180,9 @@ export function useDomainData(
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
+      const timer = pollingRef.current;
+      if (timer) {
+        clearInterval(timer);
       }
     };
   }, []);

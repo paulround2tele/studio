@@ -1,7 +1,6 @@
 
 "use client";
 
-import CampaignFormV2 from '@/components/campaigns/CampaignFormV2';
 import PageHeader from '@/components/shared/PageHeader';
 import { useGetCampaignsStandaloneQuery } from '@/store/api/campaignApi';
 

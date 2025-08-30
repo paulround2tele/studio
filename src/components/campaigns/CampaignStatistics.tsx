@@ -329,15 +329,7 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
             )}
           </div>
 
-          {/* Estimated Completion */}
-      {false && (
-            <div className="pt-4 border-t">
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Estimated Completion</div>
-        <div className="text-sm font-medium">N/A</div>
-              </div>
-            </div>
-          )}
+          {/* Estimated Completion intentionally omitted */}
 
           {/* Phase-centric architecture: detailed configuration stored in phase records */}
             {campaign.currentPhase === CampaignCurrentPhaseEnum.discovery && (

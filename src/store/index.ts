@@ -3,7 +3,7 @@ import { campaignApi } from './api/campaignApi';
 import { bulkOperationsApi } from './api/bulkOperationsApi';
 import campaignSlice from './slices/campaignSlice';
 import bulkOperationsSlice from './slices/bulkOperationsSlice';
-import { campaignStateSyncMiddleware } from './middleware/campaignStateSyncMiddleware';
+// import { campaignStateSyncMiddleware } from './middleware/campaignStateSyncMiddleware';
 
 export const store = configureStore({
   reducer: {

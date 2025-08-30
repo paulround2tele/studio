@@ -4,7 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ProxiesApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
-import type { ModelsProxy as Proxy } from '@/lib/api-client/models';
+import type { ModelsProxy as Proxy } from '@/lib/api-client/models/models-proxy';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 import { useToast } from '@/hooks/use-toast';
 

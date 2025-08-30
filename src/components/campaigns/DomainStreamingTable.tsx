@@ -9,7 +9,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { StatusBadge, type DomainActivityStatus } from '@/components/shared/StatusBadge';
 import { LeadScoreDisplay } from '@/components/shared/LeadScoreDisplay';
 import { Button } from '@/components/ui/button';
-import { useDomainData, useDomainStatusSummary } from '@/hooks/useDomainData';
+import { useDomainData } from '@/hooks/useDomainData';
 
 interface DomainStreamingTableProps {
   campaign: Campaign;
@@ -40,75 +40,6 @@ interface EnrichedDomain {
   generatedAt?: string;
 }
 
-// Helper functions to safely extract domain data - AGGRESSIVE DEBUGGING
-const getCampaignDomainsPhaseAware = (campaign: Campaign): string[] => {
-  console.log('🚨 [AGGRESSIVE DEBUG] Full campaign object inspection:', {
-    campaignId: campaign.id,
-    campaignName: campaign.name,
-    currentPhase: campaign.currentPhase,
-  phaseStatus: (campaign as any).phaseStatus,
-    allKeys: Object.keys(campaign),
-  domainsProperty: (campaign as any).domains,
-  domainsType: typeof (campaign as any).domains,
-  domainsIsArray: Array.isArray((campaign as any).domains),
-  domainsLength: Array.isArray((campaign as any).domains) ? (campaign as any).domains.length : 'not array',
-    fullCampaignObject: campaign
-  });
-
-  // Try EVERY possible domain field in the campaign object
-  const possibleDomainFields = [
-    'domains', 'generatedDomains', 'dnsValidatedDomains', 'httpValidatedDomains',
-    'leads', 'domainList', 'domainNames', 'results', 'items', 'data'
-  ];
-
-  for (const fieldName of possibleDomainFields) {
-    const fieldValue = (campaign as any)[fieldName];
-    console.log(`🚨 [AGGRESSIVE DEBUG] Checking field '${fieldName}':`, {
-      exists: fieldName in campaign,
-      value: fieldValue,
-      type: typeof fieldValue,
-      isArray: Array.isArray(fieldValue),
-      length: fieldValue?.length
-    });
-
-    if (Array.isArray(fieldValue) && fieldValue.length > 0) {
-      console.log(`🚨 [AGGRESSIVE DEBUG] Found data in '${fieldName}', examining first few items:`, {
-        count: fieldValue.length,
-        samples: fieldValue.slice(0, 3),
-        firstItemType: typeof fieldValue[0],
-        firstItemKeys: typeof fieldValue[0] === 'object' ? Object.keys(fieldValue[0]) : 'not object'
-      });
-
-      // Try to extract domains from this field
-      const extractedDomains = fieldValue.map((item: any, index: number) => {
-        if (typeof item === 'string' && item.includes('.') && !item.includes('[object')) {
-          return item;
-        }
-        if (typeof item === 'object' && item) {
-          // Try multiple possible domain name fields
-          const domainFields = ['domainName', 'domain', 'name', 'hostname', 'url'];
-          for (const domainField of domainFields) {
-            if (domainField in item) {
-              const domainValue = item[domainField];
-              if (typeof domainValue === 'string' && domainValue !== '[object Object]') {
-                return domainValue;
-              }
-            }
-          }
-        }
-        return null;
-      }).filter(Boolean);
-
-      if (extractedDomains.length > 0) {
-        console.log(`🚨 [AGGRESSIVE DEBUG] Successfully extracted ${extractedDomains.length} domains from '${fieldName}':`, extractedDomains.slice(0, 5));
-        return extractedDomains as string[];
-      }
-    }
-  }
-
-  console.log('🚨 [AGGRESSIVE DEBUG] No domains found in any field!');
-  return [];
-};
 
 // Convert backend status to frontend format - ROBUST STATUS CONVERSION
 const convertStatus = (backendStatus?: string): DomainActivityStatus => {
@@ -152,103 +83,7 @@ const convertStatus = (backendStatus?: string): DomainActivityStatus => {
   }
 };
 
-// Backend-driven status lookup - no fallbacks, trust API data completely
-const getDomainStatus = (
-  domainName: string,
-  campaign: Campaign,
-  generatedDomains: GeneratedDomain[],
-  statusType: 'dns' | 'http' | 'lead'
-): DomainActivityStatus => {
-  console.log(`🚀 [BACKEND-DRIVEN] Getting ${statusType} status for domain: ${domainName}`);
-  
-  // Only use generatedDomains from API - no fallbacks
-  if (generatedDomains && Array.isArray(generatedDomains)) {
-    const domainObject = generatedDomains.find((d: any) => {
-      if (typeof d === 'object' && d && 'domainName' in d) {
-        return d.domainName === domainName;
-      }
-      return false;
-    });
-
-    if (domainObject && typeof domainObject === 'object') {
-      // Use only the camelCase field names that match API response
-      const fieldName = statusType === 'dns' ? 'dnsStatus' :
-                       statusType === 'http' ? 'httpStatus' : 'leadStatus';
-      
-      const statusValue = (domainObject as any)[fieldName];
-      
-      console.log(`🚀 [BACKEND-DRIVEN] Found ${fieldName} in API data:`, {
-        domainName,
-        fieldName,
-        statusValue,
-        domainObject: domainObject
-      });
-      
-      if (statusValue !== undefined && statusValue !== null) {
-        return convertStatus(statusValue);
-      }
-    }
-  }
-
-  console.log(`🚀 [BACKEND-DRIVEN] No ${statusType} status found in API data for ${domainName}`);
-  return 'Unknown' as any; // Backend-driven: if API doesn't provide it, it's unknown
-};
-
-// Get lead score from domain object (UPDATED: handle both camelCase and snake_case)
-const getLeadScore = (
-  domainName: string,
-  campaign: Campaign,
-  generatedDomains: GeneratedDomain[]
-): number => {
-  console.log('🔍 [LEAD SCORE DEBUG] Looking for lead score for domain:', domainName);
-  
-  // Try generatedDomains prop first (typed auto-generated objects)
-  if (generatedDomains && Array.isArray(generatedDomains)) {
-    const domainObject = generatedDomains.find((d: GeneratedDomain) => {
-      return d.domainName === domainName;
-    });
-
-    if (domainObject && domainObject.leadScore !== undefined) {
-      const score = Number(domainObject.leadScore);
-      const validScore = !isNaN(score) && score >= 0 && score <= 100 ? score : 0;
-      console.log('🔍 [LEAD SCORE DEBUG] Found score in generatedDomains:', {
-        domainName,
-        rawScore: domainObject.leadScore,
-        convertedScore: validScore
-      });
-      return validScore;
-    }
-  }
-
-  // Try campaign.domains
-  const campaignDomains = (campaign as any).domains;
-  if (campaignDomains && Array.isArray(campaignDomains)) {
-    const domainObject = campaignDomains.find((d: any) => {
-      if (typeof d === 'object' && d && ('domainName' in d || 'domain_name' in d)) {
-        return d.domainName === domainName || d.domain_name === domainName;
-      }
-      return false;
-    });
-
-    if (domainObject && typeof domainObject === 'object') {
-      // Try both camelCase and snake_case field names
-      const leadScore = domainObject.leadScore || domainObject.lead_score;
-      if (leadScore !== undefined) {
-        const score = Number(leadScore);
-        const validScore = !isNaN(score) && score >= 0 && score <= 100 ? score : 0;
-        console.log('🔍 [LEAD SCORE DEBUG] Found score in campaign.domains:', {
-          domainName,
-          rawScore: leadScore,
-          convertedScore: validScore
-        });
-        return validScore;
-      }
-    }
-  }
-
-  console.log('🔍 [LEAD SCORE DEBUG] No score found, defaulting to 0 for:', domainName);
-  return 0; // Default to 0 if no score found
-};
+// Removed unused aggressive debug helpers and fallback getters to satisfy lint and rely solely on REST data
 
 
 // Domain row component with robust rendering
@@ -366,33 +201,41 @@ export default function DomainStreamingTable({
     }
 
     return apiDomains.map((domain) => {
-      const dnsStatus = convertStatus(domain.dnsStatus) || 'not_validated';
-      const httpStatus = convertStatus(domain.httpStatus) || 'not_validated';
-      const leadStatus = convertStatus(domain.leadStatus) || 'not_validated';
-      const leadScore = typeof domain.leadScore === 'string' ? parseFloat(domain.leadScore) || 0 : 0;
+      const d = domain as Record<string, unknown>;
+      const dnsStatus = convertStatus((domain as { dnsStatus?: unknown }).dnsStatus as string | undefined) || 'not_validated';
+      const httpStatus = convertStatus((domain as { httpStatus?: unknown }).httpStatus as string | undefined) || 'not_validated';
+      const leadStatus = convertStatus((domain as { leadStatus?: unknown }).leadStatus as string | undefined) || 'not_validated';
+      const leadScoreRaw = (domain as { leadScore?: unknown }).leadScore;
+      const leadScore = typeof leadScoreRaw === 'number'
+        ? leadScoreRaw
+        : typeof leadScoreRaw === 'string'
+          ? parseFloat(leadScoreRaw) || 0
+          : 0;
       
       console.log('🚀 [REST-API-DRIVEN] Domain data from API:', {
-        domainName: domain.domainName,
-        dnsStatus: `${domain.dnsStatus} → ${dnsStatus}`,
-        httpStatus: `${domain.httpStatus} → ${httpStatus}`,
-        leadStatus: `${domain.leadStatus} → ${leadStatus}`,
-        leadScore: `${domain.leadScore} → ${leadScore}`
+        domainName: (domain as { domain?: unknown }).domain,
+        dnsStatus: `${(domain as { dnsStatus?: unknown }).dnsStatus} → ${dnsStatus}`,
+        httpStatus: `${(domain as { httpStatus?: unknown }).httpStatus} → ${httpStatus}`,
+        leadStatus: `${(domain as { leadStatus?: unknown }).leadStatus} → ${leadStatus}`,
+        leadScore: `${leadScoreRaw} → ${leadScore}`
       });
 
       return {
-        domainName: domain.domainName,
+        domainName: typeof (domain as { domain?: unknown }).domain === 'string'
+          ? (domain as { domain: string }).domain
+          : String((domain as { domain?: unknown }).domain ?? ''),
         dnsStatus,
         httpStatus,
         leadScanStatus: leadStatus,
         leadScore,
-        dnsIp: domain.dnsIp,
-        httpStatusCode: domain.httpStatusCode?.toString(),
-        httpTitle: domain.httpTitle,
-        httpKeywords: domain.httpKeywords,
-        sourceKeyword: domain.sourceKeyword,
-        sourcePattern: domain.sourcePattern,
-        tld: domain.tld,
-        generatedAt: domain.createdAt
+        dnsIp: typeof d['dnsIp'] === 'string' ? (d['dnsIp'] as string) : undefined,
+        httpStatusCode: d['httpStatusCode'] !== undefined ? String(d['httpStatusCode']) : undefined,
+        httpTitle: typeof d['httpTitle'] === 'string' ? (d['httpTitle'] as string) : undefined,
+        httpKeywords: typeof d['httpKeywords'] === 'string' ? (d['httpKeywords'] as string) : undefined,
+        sourceKeyword: typeof d['sourceKeyword'] === 'string' ? (d['sourceKeyword'] as string) : undefined,
+        sourcePattern: typeof d['sourcePattern'] === 'string' ? (d['sourcePattern'] as string) : undefined,
+        tld: typeof d['tld'] === 'string' ? (d['tld'] as string) : undefined,
+        generatedAt: typeof d['createdAt'] === 'string' ? (d['createdAt'] as string) : undefined,
       };
     });
   }, [apiDomains]);

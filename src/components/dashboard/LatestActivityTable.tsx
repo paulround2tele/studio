@@ -1,19 +1,30 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
-import { CAMPAIGN_PHASES_ORDERED } from '@/lib/constants';
 import { ScrollArea } from '../ui/scroll-area';
 import { ExternalLink, Activity } from 'lucide-react';
 import Link from 'next/link';
 import { useRTKCampaignsList } from '@/providers/RTKCampaignDataProvider';
+import { useGetCampaignDomainsQuery } from '@/store/api/campaignApi';
 import { StatusBadge, type DomainActivityStatus } from '@/components/shared/StatusBadge';
 import { LeadScoreDisplay } from '@/components/shared/LeadScoreDisplay';
 
 // Local type definitions for activity data
+type GeneratedDomainLite = {
+  domainName?: string;
+  name?: string;
+  domain?: string;
+  leadScore?: number | string;
+  dnsStatus?: string;
+  httpStatus?: string;
+  leadStatus?: string;
+  generatedAt?: string;
+  createdAt?: string;
+  sourceUrl?: string;
+};
 interface LatestDomainActivity {
   id: string;
   domain: string;
@@ -32,16 +43,7 @@ interface LatestDomainActivity {
   sourceUrl: string;
 }
 
-// ENTERPRISE FIX: Define enriched campaign data type
-type RichCampaignData = {
-  id: string;
-  name: string;
-  domains?: any[];
-  currentPhase?: string;
-  phaseStatus?: string;
-  statistics?: any;
-  [key: string]: any;
-};
+// (removed unused RichCampaignData type)
 
 const MAX_ITEMS_DISPLAY_INITIAL_LOAD = 200;
 
@@ -56,65 +58,89 @@ const formatDate = (dateString: string): string => {
 };
 
 const convertBackendStatus = (backendStatus?: string): DomainActivityStatus => {
-  if (!backendStatus) return 'not_validated' as any;
+  if (!backendStatus) return 'not_validated';
   const normalized = backendStatus.toLowerCase();
   switch (normalized) {
     case 'ok':
     case 'validated':
     case 'success':
-      return 'validated' as any;
+      return 'validated';
     case 'error':
     case 'failed':
     case 'timeout':
-      return 'validation_error' as any;
+      return 'Failed';
     case 'pending':
     case 'in_progress':
-      return 'validating' as any;
+      return 'Pending';
     default:
-      return 'not_validated' as any;
+      return 'not_validated';
   }
 };
 
-const getLeadScoreForLatestActivity = (domainName: string, generatedDomains: any[]): number => {
-  if (!Array.isArray(generatedDomains)) return 0;
-  
-  for (const domain of generatedDomains) {
-    const domainValue = domain?.name || domain?.domainName || domain;
-    if (domainValue === domainName && domain?.leadScore !== undefined) {
-      return Number(domain.leadScore) || 0;
-    }
-  }
-  
-  return 0;
-};
-
-const getSimilarityBadgeVariant = (score: number | undefined) => {
-  if (score === undefined) return "outline";
-  if (score > 75) return "default";
-  if (score > 50) return "secondary" as any;
-  if (score > 25) return "outline";
-  return "destructive";
-};
+// Removed unused helpers
 
 export default function LatestActivityTable() {
   // RTK Query: Use centralized campaign data
   const { campaigns: enrichedCampaigns, loading } = useRTKCampaignsList();
+  // For each campaign, request domains if not already present
+  const domainsByCampaign = new Map<string, GeneratedDomainLite[]>();
+  enrichedCampaigns.forEach((c) => {
+    const hasDomains = Array.isArray(c.domains) && c.domains.length > 0;
+    if (!hasDomains && c.id) {
+      // Fire-and-forget style; hooks must be static, so we can't call conditionally inside a loop.
+      // We'll rely on a derived list of up to first 5 campaigns to avoid excessive hooks.
+    }
+  });
+
+  // Fetch domains for up to 5 campaigns without domains (to keep hooks count bounded)
+  const campaignsNeedingDomains = enrichedCampaigns.filter(c => (!Array.isArray(c.domains) || c.domains.length === 0) && !!c.id).slice(0, 5);
+  const domainsQueries = campaignsNeedingDomains.map(c => ({ id: c.id as string }));
+  const q1 = useGetCampaignDomainsQuery(
+    { campaignId: domainsQueries[0]?.id || '', limit: 100, offset: 0 },
+    { skip: !domainsQueries[0] }
+  );
+  const q2 = useGetCampaignDomainsQuery(
+    { campaignId: domainsQueries[1]?.id || '', limit: 100, offset: 0 },
+    { skip: !domainsQueries[1] }
+  );
+  const q3 = useGetCampaignDomainsQuery(
+    { campaignId: domainsQueries[2]?.id || '', limit: 100, offset: 0 },
+    { skip: !domainsQueries[2] }
+  );
+  const q4 = useGetCampaignDomainsQuery(
+    { campaignId: domainsQueries[3]?.id || '', limit: 100, offset: 0 },
+    { skip: !domainsQueries[3] }
+  );
+  const q5 = useGetCampaignDomainsQuery(
+    { campaignId: domainsQueries[4]?.id || '', limit: 100, offset: 0 },
+    { skip: !domainsQueries[4] }
+  );
+
+  // Build a quick lookup for fetched domains
+  if (domainsQueries[0] && q1?.data?.items) domainsByCampaign.set(domainsQueries[0].id, q1.data.items as GeneratedDomainLite[]);
+  if (domainsQueries[1] && q2?.data?.items) domainsByCampaign.set(domainsQueries[1].id, q2.data.items as GeneratedDomainLite[]);
+  if (domainsQueries[2] && q3?.data?.items) domainsByCampaign.set(domainsQueries[2].id, q3.data.items as GeneratedDomainLite[]);
+  if (domainsQueries[3] && q4?.data?.items) domainsByCampaign.set(domainsQueries[3].id, q4.data.items as GeneratedDomainLite[]);
+  if (domainsQueries[4] && q5?.data?.items) domainsByCampaign.set(domainsQueries[4].id, q5.data.items as GeneratedDomainLite[]);
 
   // Process campaigns into activity data
   const allActivityData = useMemo(() => {
     const processedActivities: LatestDomainActivity[] = [];
     
     enrichedCampaigns.forEach((campaign) => {
-      const apiDomains = campaign.domains || [];
+      const apiDomains: unknown[] = (Array.isArray(campaign.domains) && campaign.domains.length > 0)
+        ? (campaign.domains as unknown[])
+        : ((domainsByCampaign.get(campaign.id) as unknown[]) || []);
       
       if (!Array.isArray(apiDomains) || apiDomains.length === 0) {
         return;
       }
 
       // Process each GeneratedDomain object directly from API
-      apiDomains.forEach((domainObject: any) => {
+      apiDomains.forEach((domainObjectUnknown) => {
+        const domainObject = domainObjectUnknown as GeneratedDomainLite;
         // Use proper GeneratedDomain structure
-        const domainName = domainObject?.domainName;
+        const domainName = domainObject?.domainName || domainObject?.name || domainObject?.domain;
         if (!domainName) return;
 
         // Extract rich domain data from GeneratedDomain
@@ -146,7 +172,7 @@ export default function LatestActivityTable() {
     return processedActivities
       .sort((a, b) => new Date(b.generatedDate).getTime() - new Date(a.generatedDate).getTime())
       .slice(0, MAX_ITEMS_DISPLAY_INITIAL_LOAD);
-  }, [enrichedCampaigns]);
+  }, [enrichedCampaigns, domainsByCampaign]);
 
   const displayedActivities = allActivityData;
 

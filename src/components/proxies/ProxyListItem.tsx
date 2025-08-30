@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { ModelsProxy as ProxyType } from '@/lib/api-client/models';
+import type { ModelsProxy as ProxyType } from '@/lib/api-client/models/models-proxy';
 
 // Define proxy status type based on common proxy states
 type ProxyStatus = 'Active' | 'Disabled' | 'Failed' | 'Testing';

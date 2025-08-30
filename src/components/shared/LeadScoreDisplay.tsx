@@ -15,10 +15,10 @@ export const LeadScoreDisplay = React.memo<LeadScoreDisplayProps>(function LeadS
   score, 
   className = "" 
 }) {
-  const getSimilarityBadgeVariant = (score: number | undefined) => {
+  const getSimilarityBadgeVariant = (score: number | undefined): 'default' | 'secondary' | 'destructive' | 'outline' => {
     if (score === undefined) return "outline";
     if (score > 75) return "default";
-    if (score > 50) return "secondary" as any;
+    if (score > 50) return "secondary";
     if (score > 25) return "outline";
     return "destructive";
   };

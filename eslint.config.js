@@ -141,6 +141,26 @@ export default [
       ...reactHooks.configs.recommended.rules,
       ...next.configs.recommended.rules,
       ...next.configs['core-web-vitals'].rules,
+      // Enforce direct imports for generated API client model files to avoid relying on barrel stability
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@/lib/api-client/models',
+              importNames: [
+                'ModelsProxy',
+                'ModelsProxyPool',
+                'ModelsProxyPoolMembership',
+                'UpdateProxyRequestAPI',
+                'ProxyProtocol'
+              ],
+              message:
+                'Import generated model types directly from their files, e.g., models/models-proxy, models/models-proxy-pool, models/update-proxy-request-api, models/proxy-protocol.'
+            }
+          ]
+        }
+      ],
       
       // Custom rules
       "@typescript-eslint/no-unused-vars": [
@@ -232,6 +252,24 @@ export default [
       '@typescript-eslint/no-unused-vars': 'off',
       'no-undef': 'off',
       'no-useless-escape': 'off'
+    }
+  }
+  ,
+  {
+    // Generated API client (OpenAPI): relax rules and silence unused-disable noise (must come after base rules)
+    files: [
+      'src/lib/api-client/**/*'
+    ],
+    linterOptions: {
+      // Many generator files include broad eslint-disable headers; don't warn about unused disables here
+      reportUnusedDisableDirectives: false
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+      'no-undef': 'off',
+      'react/no-unescaped-entities': 'off',
+      'react-hooks/exhaustive-deps': 'off'
     }
   }
 ];

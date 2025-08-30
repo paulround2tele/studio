@@ -44,7 +44,7 @@ const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | 
 };
 
 export default function CampaignsPage() {
-  const { toast } = useToast();
+  const { toast: _toast } = useToast();
   const router = useRouter();
   
   // RTK CONSOLIDATION: Use new RTK provider instead of legacy hook
@@ -96,16 +96,6 @@ export default function CampaignsPage() {
   }, [enrichedCampaigns]);
 
   const fetchCampaigns = refetch;
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
 
   const getBulkDataSummary = (campaign: CampaignData) => {
     const items = [];

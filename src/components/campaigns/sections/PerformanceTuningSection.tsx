@@ -45,15 +45,15 @@ export function PerformanceTuningSection({
         <FormField 
           control={control} 
           name="processingSpeed" 
-          render={({ field }) => (
+          render={({ field: _field }) => (
             <FormItem>
               <FormLabel className="flex items-center gap-2">
                 <Gauge className="h-4 w-4" />
                 Processing Speed
               </FormLabel>
               <Select 
-                onValueChange={field.onChange} 
-                value={field.value || defaultProcessingSpeed} 
+                onValueChange={_field.onChange} 
+                value={_field.value || defaultProcessingSpeed} 
                 disabled={disabled}
               >
                 <FormControl>
@@ -80,15 +80,15 @@ export function PerformanceTuningSection({
         <FormField 
           control={control} 
           name="batchSize" 
-          render={({ field }) => (
+          render={({ field: _field }) => (
             <FormItem>
               <FormLabel>Batch Size</FormLabel>
               <FormControl>
                 <Input 
                   type="number"
                   placeholder={defaultBatchSize.toString()}
-                  value={field.value || ''}
-                  onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                  value={_field.value || ''}
+                  onChange={(e) => _field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                   disabled={disabled}
                   min={1}
                   max={maxBatchSize}
@@ -106,7 +106,7 @@ export function PerformanceTuningSection({
         <FormField 
           control={control} 
           name="rotationInterval" 
-          render={({ field }) => (
+          render={({ field: _field }) => (
             <FormItem>
               <FormLabel className="flex items-center gap-2">
                 <RotateCcw className="h-4 w-4" />
@@ -116,8 +116,8 @@ export function PerformanceTuningSection({
                 <Input 
                   type="number"
                   placeholder={defaultRotationInterval.toString()}
-                  value={field.value || ''}
-                  onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                  value={_field.value || ''}
+                  onChange={(e) => _field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                   disabled={disabled}
                   min={5}
                   max={maxRotationInterval}
@@ -135,7 +135,7 @@ export function PerformanceTuningSection({
         <FormField 
           control={control} 
           name="retryAttempts" 
-          render={({ field }) => (
+          render={({ field: _field }) => (
             <FormItem>
               <FormLabel className="flex items-center gap-2">
                 <IterationCw className="h-4 w-4" />
@@ -145,8 +145,8 @@ export function PerformanceTuningSection({
                 <Input 
                   type="number"
                   placeholder={defaultRetryAttempts.toString()}
-                  value={field.value || ''}
-                  onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                  value={_field.value || ''}
+                  onChange={(e) => _field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                   disabled={disabled}
                   min={0}
                   max={maxRetryAttempts}

@@ -166,7 +166,7 @@ export const ModernPhaseConfiguration: React.FC<ModernPhaseConfigurationProps> =
     } finally {
       setIsSubmitting(false);
     }
-  }, [sourceCampaign, phaseType, needsDnsPersona, needsHttpPersona, needsKeywords, onClose, onPhaseStarted, toast]);
+  }, [sourceCampaign, phaseType, needsDnsPersona, needsHttpPersona, needsKeywords, onClose, onPhaseStarted, toast, startPhase]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -178,7 +178,7 @@ export const ModernPhaseConfiguration: React.FC<ModernPhaseConfigurationProps> =
           </DialogTitle>
           <DialogDescription>
             Configure the settings for the next phase of your campaign pipeline.
-            This will transition "{sourceCampaign?.name}" to the {phaseDisplayNames[phaseType]?.toLowerCase()} phase.
+            This will transition &quot;{sourceCampaign?.name}&quot; to the {phaseDisplayNames[phaseType]?.toLowerCase()} phase.
           </DialogDescription>
         </DialogHeader>
 

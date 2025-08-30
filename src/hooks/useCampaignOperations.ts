@@ -5,7 +5,7 @@
 
 import { useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useStartPhaseStandaloneMutation, useGetCampaignDomainsQuery } from '@/store/api/campaignApi';
+import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { validateCampaignId } from '@/lib/utils/uuidValidation';
 import { extractDomainName } from '@/lib/utils/typeGuards';
 
@@ -44,7 +44,7 @@ export const useCampaignOperations = (campaignId: string) => {
       });
       throw error;
     }
-  }, [campaignId, toast]);
+  }, [campaignId, toast, startPhaseMutation]);
 
   // Simplified pause operation (Note: Not available in standalone services)
   const pauseCampaign = useCallback(async () => {
@@ -90,10 +90,10 @@ export const useCampaignOperations = (campaignId: string) => {
         headers: { 'Accept': 'application/json' },
       });
       if (!res.ok) throw new Error(`Domains list failed: ${res.status}`);
-  const json = await res.json();
-  const items = json?.data?.items || [];
-  let domainsText = Array.isArray(items) && items.length > 0
-        ? items.map((d: any) => d?.domain || extractDomainName(d)).filter(Boolean).join('\n') + '\n'
+      const json = await res.json();
+      const items = (json?.data?.items || []) as Array<{ domain?: string } | unknown>;
+      let domainsText = Array.isArray(items) && items.length > 0
+        ? items.map((d) => (typeof d === 'object' && d && 'domain' in d ? (d as { domain?: string }).domain : extractDomainName(d))).filter(Boolean).join('\n') + '\n'
         : '';
       
       if (!domainsText) {

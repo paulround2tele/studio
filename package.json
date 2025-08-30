@@ -98,7 +98,7 @@
     "@openapitools/openapi-generator-cli": "2.21.0",
     "@percy/cli": "^1.31.0",
     "@percy/playwright": "^1.0.8",
-    "@playwright/test": "^1.53.1",
+  "@playwright/test": "^1.54.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",

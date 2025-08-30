@@ -110,7 +110,9 @@ export default function DatabaseGUI() {
     setError(null);
     
     try {
-      const queryId = crypto.randomUUID();
+      const queryId = (typeof globalThis !== 'undefined' && (globalThis as any).crypto && typeof (globalThis as any).crypto.randomUUID === 'function')
+        ? (globalThis as any).crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const query: BulkDatabaseQueryRequestQueriesInner = {
         id: queryId,
         sql: sqlQuery,

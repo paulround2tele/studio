@@ -18,7 +18,6 @@ import type { ModelsProxy as GithubComFntelecomllcStudioBackendInternalModelsPro
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 // Professional type definitions using actual generated types
-type FrontendProxy = GithubComFntelecomllcStudioBackendInternalModelsProxy;
 type ProxyItem = GithubComFntelecomllcStudioBackendInternalModelsProxy;
 import { useToast } from '@/hooks/use-toast';
 import { useProxyHealth } from '@/lib/hooks/useProxyHealth';
@@ -199,7 +198,7 @@ function ProxiesPageContent() {
         toast({ title: "No Proxies", description: "No proxies available to test.", variant: "destructive" });
         return;
       }
-  const response = await proxiesApi.proxiesBulkTest({ proxyIds } as any);
+  await proxiesApi.proxiesBulkTest({ proxyIds } as any);
       toast({ title: "Test All Proxies", description: "Testing process initiated/completed." });
       fetchProxiesData(false); // Refresh list to show updated statuses
     } catch (err: unknown) {
@@ -222,7 +221,7 @@ function ProxiesPageContent() {
         return;
       }
       
-  const response = await proxiesApi.proxiesBulkDelete({ proxyIds } as any);
+  await proxiesApi.proxiesBulkDelete({ proxyIds } as any);
       toast({ title: "Clean Proxies", description: `Cleaned ${proxyIds.length} disabled proxies.` });
       fetchProxiesData(false); // Refresh list
     } catch (err: unknown) {

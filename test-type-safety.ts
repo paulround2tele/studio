@@ -3,12 +3,12 @@
  */
 
 import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
-import type { ServicesCreateLeadGenerationCampaignRequest } from '@/lib/api-client/models';
+import type { CreateCampaignRequest } from '@/lib/api-client/models';
 
 // Test type safety
 console.log('=== TESTING TYPE SAFETY ===');
 
-const campaignRequest: ServicesCreateLeadGenerationCampaignRequest = {
+const campaignRequest: CreateCampaignRequest = {
   name: 'Test Campaign',
   description: 'Testing generated types',
   targetDomains: [],
@@ -17,7 +17,7 @@ const campaignRequest: ServicesCreateLeadGenerationCampaignRequest = {
       discovery: { enabled: true, maxDepth: 1 },
     }
   }
-} as any;
+};
 
 console.log('✅ Generated types work perfectly!');
 console.log('Request object:', campaignRequest);

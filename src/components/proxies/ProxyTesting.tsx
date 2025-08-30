@@ -31,7 +31,7 @@ import {
   Activity,
   Loader2
 } from 'lucide-react';
-import type { ModelsProxy as ProxyType } from '@/lib/api-client/models';
+import type { ModelsProxy as ProxyType } from '@/lib/api-client/models/models-proxy';
 import { useTestProxyMutation } from '@/store/api/proxyApi';
 import { useToast } from '@/hooks/use-toast';
 import { useProxyHealth } from '@/lib/hooks/useProxyHealth';
@@ -214,7 +214,7 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
         };
       });
     }
-  }, []);
+  }, [testProxy]);
 
   /**
    * Stop current testing session

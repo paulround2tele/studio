@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { 
   useBulkGenerateDomainsMutation,
@@ -12,7 +12,7 @@ import {
   useGetResourceMetricsQuery,
   useGetSystemHealthQuery 
 } from '@/store/api/monitoringApi';
-import { useSSE } from '@/hooks/useSSE';
+import { useSSE, type SSEEvent } from '@/hooks/useSSE';
 import ResourceMonitor from '@/components/monitoring/ResourceMonitor';
 import PerformanceTracker from '@/components/monitoring/PerformanceTracker';
 import {
@@ -22,9 +22,9 @@ import {
   selectRecentOperations,
   selectCanStartNewOperation,
   selectResourceUsagePercentage,
-  type BulkOperationType
+  type BulkOperationType,
+  type BulkOperationState
 } from '@/store/slices/bulkOperationsSlice';
-import type { RootState } from '@/store';
 import type {
   BulkDomainGenerationRequest,
   BulkDNSValidationRequest,
@@ -65,24 +65,58 @@ export const BulkOperationsDashboard: React.FC = () => {
   const [allocateBulkResources] = useAllocateBulkResourcesMutation();
   
   // Query for operation list
-  const { data: operationsList, isLoading: isLoadingOperations } = useListBulkOperationsQuery({
+  const { data: _operationsList, isLoading: _isLoadingOperations } = useListBulkOperationsQuery({
     limit: 20,
     offset: 0
   });
 
   // Real-time monitoring data
   const { data: resourceMetrics } = useGetResourceMetricsQuery();
-  const { data: systemHealth } = useGetSystemHealthQuery();
+  const { data: _systemHealth } = useGetSystemHealthQuery();
   
   // Local state for operation configuration
   const [selectedOperationType, setSelectedOperationType] = useState<BulkOperationType>('domain_generation');
-  const [isConfiguring, setIsConfiguring] = useState(false);
-  const [realTimeUpdates, setRealTimeUpdates] = useState<any[]>([]);
+  const [_isConfiguring, _setIsConfiguring] = useState(false);
+  const [realTimeUpdates, setRealTimeUpdates] = useState<SSEEvent[]>([]);
 
   // SSE connection for real-time bulk operation updates
-  const { readyState, lastEvent } = useSSE(
+  const { readyState, lastEvent: _lastEvent } = useSSE(
     '/api/v2/monitoring/stream',
     (event) => {
+      const dataObj = (event.data && typeof event.data === 'object') ? (event.data as Record<string, unknown>) : undefined;
+      // Normalize external status strings to our internal BulkOperationState union
+      const normalizeStatus = (status: unknown, evType: string): BulkOperationState => {
+        const s = typeof status === 'string' ? status.toLowerCase() : '';
+        switch (s) {
+          case 'queued':
+          case 'pending':
+          case 'init':
+          case 'initialized':
+            return 'pending';
+          case 'started':
+          case 'in_progress':
+          case 'progress':
+          case 'running':
+            return 'running';
+          case 'success':
+          case 'completed':
+          case 'done':
+            return 'completed';
+          case 'failed':
+          case 'error':
+          case 'errored':
+            return 'failed';
+          case 'cancelled':
+          case 'canceled':
+            return 'cancelled';
+          default:
+            // Fall back to event type hints
+            if (evType === 'bulk_operation_started') return 'running';
+            if (evType === 'bulk_operation_completed') return 'completed';
+            if (evType === 'bulk_operation_failed') return 'failed';
+            return 'pending';
+        }
+      };
       // Handle different types of SSE events
       switch (event.event) {
         case 'bulk_operation_started':
@@ -91,13 +125,14 @@ export const BulkOperationsDashboard: React.FC = () => {
         case 'bulk_operation_failed':
           setRealTimeUpdates(prev => [event, ...prev.slice(0, 9)]); // Keep last 10 updates
           // Update Redux state if needed
-          if (event.data.operation_id) {
+          if (dataObj && 'operation_id' in dataObj) {
+            const operation_id = String((dataObj as { operation_id: unknown }).operation_id);
             dispatch(updateOperationStatus({
-              id: event.data.operation_id,
-              status: event.data.status,
-              progress: event.data.progress || 0,
-              result: event.data.result,
-              error: event.data.error
+              id: operation_id,
+              status: normalizeStatus((dataObj as { status?: unknown }).status, event.event),
+              progress: Number((dataObj as { progress?: unknown }).progress ?? 0),
+              result: (dataObj as { result?: unknown }).result,
+              error: (dataObj as { error?: unknown }).error as string | undefined,
             }));
           }
           break;
@@ -129,9 +164,9 @@ export const BulkOperationsDashboard: React.FC = () => {
   /**
    * Execute bulk operation based on type with resource monitoring
    */
-  const executeBulkOperation = async (operationType: BulkOperationType, config: any) => {
+  const executeBulkOperation = async (operationType: BulkOperationType, config: BulkDomainGenerationRequest | BulkDNSValidationRequest | BulkHTTPValidationRequest | BulkAnalyticsRequest | BulkResourceRequest) => {
     if (!canStartNewOperationSafely()) {
-      alert(
+  window.alert(
         !canStartNewOperation 
           ? 'Maximum concurrent operations reached. Please wait for an operation to complete.'
           : 'System resources are under stress. Please wait before starting new operations.'
@@ -139,7 +174,7 @@ export const BulkOperationsDashboard: React.FC = () => {
       return;
     }
     
-    const operationId = `bulk_${operationType}_${Date.now()}`;
+  const operationId = `bulk_${operationType}_${Date.now()}`;
     
     // Start tracking in Redux
     dispatch(startTracking({
@@ -184,12 +219,12 @@ export const BulkOperationsDashboard: React.FC = () => {
         result
       }));
       
-    } catch (error: any) {
+  } catch (error) {
       // Update operation status with error
       dispatch(updateOperationStatus({
         id: operationId,
         status: 'failed',
-        error: error.message || 'Operation failed'
+    error: error instanceof Error ? error.message : 'Operation failed'
       }));
     }
   };
@@ -203,71 +238,78 @@ export const BulkOperationsDashboard: React.FC = () => {
       case 'domain_generation':
         return {
           operations: [{
-            campaignId: crypto.randomUUID() as UUID,
+            campaignId: (globalThis.crypto?.randomUUID?.() || `${Date.now()}-dg`) as UUID,
             config: {
-              // TODO: Fix schema to match actual API - using any for now
-              pattern: { type: 'prefix', value: 'bulk-test-' },
-              count: 1000,
-              tlds: ['com', 'org', 'net']
+              patternType: 'prefix',
+              variableLength: 8,
+              characterSet: 'abcdefghijklmnopqrstuvwxyz',
+              constantString: 'bulk-test-',
+              tlds: ['com', 'org', 'net'],
+              numDomainsToGenerate: 1000,
+              batchSize: 100,
             },
             maxDomains: 1000,
-            startFrom: 0
           }],
           batchSize: 100,
-          stealth: { enabled: true, randomizationLevel: 'medium' }
-        } as any as BulkDomainGenerationRequest;
+          parallel: true,
+        } as BulkDomainGenerationRequest;
       
       case 'dns_validation':
         return {
           operations: [{
-            campaignId: crypto.randomUUID() as UUID,
+            campaignId: (globalThis.crypto?.randomUUID?.() || `${Date.now()}-dv`) as UUID,
             personaIds: ['persona-1', 'persona-2'],
-            maxDomains: 100
+            maxDomains: 100,
+            validationConfig: { timeout: 5000, retries: 1, recordTypes: ['A', 'MX'] },
           }],
-          stealth: { enabled: true, randomizationLevel: 'high' },
-          batchSize: 50
-        } as any as BulkDNSValidationRequest;
+          batchSize: 50,
+          stealth: { /* shape defined but optional fields not specified */ },
+        } as BulkDNSValidationRequest;
       
       case 'http_validation':
         return {
           operations: [{
-            campaignId: crypto.randomUUID() as UUID,
+            campaignId: (globalThis.crypto?.randomUUID?.() || `${Date.now()}-hv`) as UUID,
             personaIds: ['persona-1', 'persona-2'],
             keywords: ['test', 'sample'],
-            maxDomains: 100
+            maxDomains: 100,
+            validationConfig: { timeout: 5000, followRedirects: true },
           }],
-          stealth: { enabled: true, randomizationLevel: 'extreme' },
-          batchSize: 25
-        } as any as BulkHTTPValidationRequest;
+          batchSize: 25,
+          stealth: { /* optional */ },
+        } as BulkHTTPValidationRequest;
       
       case 'analytics':
         return {
           campaignIds: ['campaign-1', 'campaign-2'],
           metrics: ['response_time', 'content_analysis', 'lead_score'],
           granularity: 'day',
-          timeRange: { 
-            startTime: '2024-01-01T00:00:00Z', 
+          timeRange: {
+            startTime: '2024-01-01T00:00:00Z',
             endTime: '2024-12-31T23:59:59Z',
-            timezone: 'UTC'
-          }
-        } as any as BulkAnalyticsRequest;
+          },
+        } as BulkAnalyticsRequest;
         
       case 'resource_allocation':
         return {
-          operations: [{
-            campaignId: crypto.randomUUID() as UUID,
-            priority: 'normal' as const,
-            type: 'domain_generation' as const,
-            requiredResources: {
-              estimatedDomains: 10000,
-              maxConcurrency: 2
-            }
-          }],
-          requestId: crypto.randomUUID()
-        } as unknown as BulkResourceRequest;
+          operationType: 'domain_generation',
+          resources: {
+            cpu: 2,
+            memory: 4,
+            networkBandwidth: 100,
+          },
+          priority: 'normal',
+          duration: 3600,
+          tags: { source: 'ui', purpose: 'sample' },
+        } as BulkResourceRequest;
         
       default:
-        return {};
+        // Fallback to a no-op analytics request to satisfy typing; UI prevents hitting this path.
+        return {
+          campaignIds: [],
+          metrics: ['response_time'],
+          timeRange: { startTime: new Date().toISOString(), endTime: new Date().toISOString() },
+        } as BulkAnalyticsRequest;
     }
   };
   
@@ -298,11 +340,19 @@ export const BulkOperationsDashboard: React.FC = () => {
           </div>
           {realTimeUpdates.length > 0 && (
             <div className="space-y-1 max-h-20 overflow-y-auto">
-              {realTimeUpdates.slice(0, 3).map((update, index) => (
-                <div key={index} className="text-xs p-1 bg-muted rounded">
-                  {update.event}: {update.data.status || 'update'}
-                </div>
-              ))}
+              {realTimeUpdates.slice(0, 3).map((update, index) => {
+                const dataObj = (update.data && typeof update.data === 'object')
+                  ? (update.data as Record<string, unknown>)
+                  : undefined;
+                const statusText = dataObj && typeof (dataObj as Record<string, unknown>).status === 'string'
+                  ? String((dataObj as { status?: unknown }).status)
+                  : 'update';
+                return (
+                  <div key={index} className="text-xs p-1 bg-muted rounded">
+                    {update.event}: {statusText}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

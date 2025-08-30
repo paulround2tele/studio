@@ -10,10 +10,10 @@ The API system is built on OpenAPI 3.1 specifications with auto-generated TypeSc
 
 ### Core Technologies
 
-- **OpenAPI Generator**: Using swaggo v2.0.0-rc4
-- **Type Safety**: 567 properly typed TypeScript interfaces
-- **Response Structure**: Unified `APIResponse<T>` wrapper for all endpoints
-- **Frontend Integration**: Redux Toolkit Query (RTK Query) for state management
+- Strict OpenAPI 3.1 contracts with generated Chi server (oapi-codegen strict server)
+- Type-safe generated TypeScript client (Axios-based)
+- Unified `APIResponse<T>`/envelope structure with request/response validation
+- Frontend integration via RTK Query and shared Axios configuration
 
 ### Unified Response Structure
 
@@ -298,17 +298,7 @@ campaignEvents.onmessage = (event) => {
 };
 ```
 
-### WebSocket Integration
-
-```typescript
-// WebSocket connection for real-time updates
-const ws = new WebSocket('ws://localhost:8080/api/v2/ws');
-
-ws.onmessage = (event) => {
-  const message = JSON.parse(event.data);
-  handleWebSocketMessage(message);
-};
-```
+> Note: WebSockets have been removed. Real-time updates are provided exclusively via SSE as shown above.
 
 ## Error Handling
 
@@ -343,13 +333,11 @@ export const errorHandlingMiddleware: Middleware = () => (next) => (action) => {
 
 ## Documentation Structure
 
-### Auto-Generated Documentation
+### API Documentation
 
-The system automatically generates documentation for all API endpoints:
-
-- **OpenAPI Specification**: Complete OpenAPI 3.1 specs at `/api/v2/docs/openapi-3.json`
-- **Swagger UI**: Interactive documentation at `/api/v2/docs`
-- **Client Documentation**: Generated markdown files in `src/lib/api-client/docs/`
+- OpenAPI 3.1 specification: `backend/openapi/dist/openapi.yaml`
+- Generated client docs: `src/lib/api-client/docs/`
+- Optional HTML docs can be generated locally with your preferred OpenAPI viewer (e.g., Redocly, Swagger UI container) pointing at the spec above.
 
 ### Documentation Files
 

@@ -31,7 +31,7 @@ export function LoginForm({
   title = 'Welcome back to DomainFlow',
   description = 'Sign in to your account to continue'
 }: LoginFormProps) {
-  const router = useRouter();
+  const _router = useRouter();
   const { login, isLoading: authLoading, isLoginLoading } = useAuth();
   
   const [formData, setFormData] = useState<LoginFormData>({

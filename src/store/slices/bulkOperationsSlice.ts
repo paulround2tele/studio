@@ -1,7 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { 
-  BulkAnalyzeDomains200Response 
-} from '@/lib/api-client/models';
+// Removed unused type import to satisfy ESLint
 
 // Bulk operation types matching our separated backend handlers
 export type BulkOperationType = 

@@ -31,9 +31,9 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign }) => {
     <Alert className="border-red-200 bg-red-50">
       <AlertTriangle className="h-4 w-4 text-red-600" />
       <AlertDescription className="text-red-800">
-        <strong>Component Under Reconstruction</strong><br/>
+    <strong>Component Under Reconstruction</strong><br/>
   This amateur component was built on fantasy data structures (campaign.phases)
-  that don't exist in the real backend. Being reconstructed with actual Campaign schema:
+  that don&apos;t exist in the real backend. Being reconstructed with actual Campaign schema:
   currentPhase={campaign.currentPhase}
       </AlertDescription>
     </Alert>

@@ -50,7 +50,7 @@ const EnhancedCampaignsList: React.FC<EnhancedCampaignsListProps> = ({
   selectedCampaigns = new Set(),
   onSelectCampaign,
   pageSize,
-  context = 'dashboard'
+  context: _context = 'dashboard'
 }) => {
   // Use professional default page size
   const effectivePageSize = pageSize || DEFAULT_PAGE_SIZE;
@@ -180,7 +180,7 @@ const EnhancedCampaignsList: React.FC<EnhancedCampaignsListProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  {uniqueStatuses.map(status => status && (
+                  {uniqueStatuses.map((status) => status && (
                     <SelectItem key={status} value={status}>
                       {status.charAt(0).toUpperCase() + status.slice(1)}
                     </SelectItem>

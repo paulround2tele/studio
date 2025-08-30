@@ -30,7 +30,7 @@ interface StatusBadgeProps {
  * Shared StatusBadge component - used by both LatestActivityTable and DomainStreamingTable
  * Ensures consistent status display across all components
  */
-export const StatusBadge = React.memo<StatusBadgeProps>(function StatusBadge({ status, score }) {
+export const StatusBadge = React.memo<StatusBadgeProps>(function StatusBadge({ status, score: _score }) {
   let Icon;
   let variant: 'default' | 'secondary' | 'destructive' | 'outline' = 'outline';
   let text: string = status;

@@ -17,7 +17,7 @@ import CampaignProgress from '@/components/campaigns/CampaignProgress';
 import CampaignHeader from '@/components/campaigns/CampaignHeader';
 import CampaignControls from '@/components/campaigns/CampaignControls';
 
-interface CampaignPageParams {
+interface _CampaignPageParams {
   id: string;
 }
 
@@ -48,7 +48,7 @@ export default function CampaignPage() {
     };
 
   fetchCampaign();
-  }, []);
+  }, [campaignId]);
 
   const handleBack = () => {
     router.push('/campaigns');
@@ -93,7 +93,7 @@ export default function CampaignPage() {
             Campaign Not Found
           </h2>
           <p className="text-gray-600 dark:text-gray-400 max-w-md">
-            The campaign with ID "{campaignId}" was not found.
+            The campaign with ID &quot;{campaignId}&quot; was not found.
           </p>
           <Button onClick={handleBack} variant="outline">
             <ArrowLeft className="w-4 h-4 mr-2" />

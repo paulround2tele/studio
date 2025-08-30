@@ -20,15 +20,11 @@ import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 // Use compat alias to stay stable across client regenerations
 import type { ApiPersonaResponse } from '@/lib/api-client/compat';
 import type { HTTPConfigDetails } from '@/lib/api-client/models/httpconfig-details';
-import type { DNSValidatorConfigJSON } from '@/lib/api-client/models/dnsvalidator-config-json';
 import type { DNSConfigDetails } from '@/lib/api-client/models/dnsconfig-details';
 import { ApiCreatePersonaRequestPersonaTypeEnum } from '@/lib/api-client/models/api-create-persona-request';
 
 // Type aliases for better readability
 type Persona = ApiPersonaResponse;
-// Using actual imported types instead of fictional ones
-type HTTPConfig = HTTPConfigDetails;
-type DNSConfig = DNSValidatorConfigJSON;
 
 // DNS Resolver Strategy options - aligned with OpenAPI schema
 type DnsResolverStrategy = "round_robin" | "random" | "weighted" | "priority";

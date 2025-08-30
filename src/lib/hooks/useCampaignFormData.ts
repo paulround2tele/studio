@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { PersonaResponse as Persona } from '@/lib/api-client/models';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 import type { ModelsProxy as ProxyType } from '@/lib/api-client/models/models-proxy';
-import { apiClient } from '@/lib/api-client';
+// import { apiClient } from '@/lib/api-client';
 // import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms'; // DISABLED during cleanup
 
 type HttpPersona = Persona;
@@ -28,7 +28,7 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
   const [proxies, setProxies] = useState<ProxyType[]>([]);
   const [sourceCampaigns, setSourceCampaigns] = useState<Campaign[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error] = useState<string | null>(null);
 
   // Memoize the data fetching function to prevent unnecessary re-creations
   const fetchData = useCallback(async () => {

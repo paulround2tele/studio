@@ -2,18 +2,29 @@
 
 import React, { createContext, useContext, useMemo, ReactNode } from 'react';
 import { campaignApi } from '@/store/api/campaignApi';
+import type { CampaignResponse } from '@/lib/api-client/models';
 
 // Destructure hooks from the API
 const { useGetCampaignsStandaloneQuery } = campaignApi;
 // Envelope helpers no longer needed for campaign list; keep for other APIs if required
 
 // Modern campaign data context using RTK Query
+type CampaignLite = {
+  id: string;
+  name: string;
+  currentPhase?: string;
+  overallProgress: number;
+  domains: unknown[];
+  leads: unknown[];
+  metadata: CampaignResponse;
+};
+
 interface RTKCampaignDataContextType {
-  campaigns: Map<string, any>; // Will use proper types from API response
+  campaigns: Map<string, CampaignLite>;
   loading: boolean;
   error: string | null;
   refetch: () => void;
-  getCampaign: (campaignId: string) => any | undefined;
+  getCampaign: (campaignId: string) => CampaignLite | undefined;
 }
 
 const RTKCampaignDataContext = createContext<RTKCampaignDataContextType | undefined>(undefined);
@@ -32,22 +43,18 @@ export function RTKCampaignDataProvider({ children }: RTKCampaignDataProviderPro
   } = useGetCampaignsStandaloneQuery();
 
   // Extract campaign IDs from response - respects backend APIResponse structure
-  const campaignIds = useMemo(() => {
-    const list = Array.isArray(campaignsList) ? campaignsList : [];
-    return list.map(c => c.id).filter(Boolean) as string[];
-  }, [campaignsList]);
+  // Derive campaigns map directly; list of ids not needed currently
 
   // Build a lightweight campaigns map from the list; domains/leads can be fetched per-campaign when needed
   const campaigns = useMemo(() => {
-    const campaignsMap = new Map();
-    (campaignsList || []).forEach((c: any) => {
+    const campaignsMap = new Map<string, CampaignLite>();
+  (campaignsList || []).forEach((c: CampaignResponse) => {
       if (!c?.id) return;
       campaignsMap.set(c.id, {
         id: c.id,
         name: c.name || '',
         currentPhase: c.currentPhase,
-        phaseStatus: c.phaseStatus,
-        overallProgress: 0,
+    overallProgress: typeof c.progress?.percentComplete === 'number' ? c.progress.percentComplete : 0,
         domains: [],
         leads: [],
         metadata: c,
@@ -57,7 +64,7 @@ export function RTKCampaignDataProvider({ children }: RTKCampaignDataProviderPro
   }, [campaignsList]);
 
   // Handle RTK Query errors properly
-  const getErrorMessage = (error: any): string | null => {
+  const getErrorMessage = (error: unknown): string | null => {
       if (error == null) return null;
       // If it's already a string
       if (typeof error === 'string') return error;
@@ -65,17 +72,21 @@ export function RTKCampaignDataProvider({ children }: RTKCampaignDataProviderPro
       if (error instanceof Error) return error.message;
       // Only use 'in' for non-null objects
       if (typeof error === 'object') {
-        const anyErr = error as any;
+        const anyErr = error as Record<string, unknown>;
         if ('status' in anyErr && 'data' in anyErr) {
-          const dataMsg = (anyErr.data && (anyErr.data.message || anyErr.data.error?.message)) || null;
+          const data = anyErr.data as Record<string, unknown> | undefined;
+          const dataMsg = (data && (String((data as any).message) || String((data as any).error?.message))) || null;
           return dataMsg || `Request failed with status ${anyErr.status}`;
         }
-        if ('message' in anyErr && typeof anyErr.message === 'string') {
-          return anyErr.message;
+        if ('message' in anyErr && typeof (anyErr as { message?: unknown }).message === 'string') {
+          return (anyErr as { message: string }).message;
         }
         try {
           return JSON.stringify(anyErr);
-        } catch {}
+  } catch (_e) {
+          // JSON stringify failed; return generic message
+          return 'Unknown error';
+        }
       }
       return 'Network Error';
   };

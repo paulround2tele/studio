@@ -1,6 +1,6 @@
 # DomainFlow Studio
 
-A sophisticated full-stack application for intelligent domain generation, validation, and lead extraction campaigns. Built with Next.js frontend and Go backend, featuring real-time WebSocket communications, multi-phase campaign orchestration, and advanced domain status tracking.
+A sophisticated full-stack application for intelligent domain generation, validation, and lead extraction campaigns. Built with Next.js frontend and Go backend, featuring real-time Server-Sent Events (SSE) communications, multi-phase campaign orchestration, and advanced domain status tracking.
 
 ## 🏗️ Architecture Overview
 
@@ -10,14 +10,14 @@ A sophisticated full-stack application for intelligent domain generation, valida
 - **UI Framework**: Tailwind CSS + shadcn/ui components
 - **State Management**: Redux Toolkit (RTK) with RTK Query for API state
 - **API Client**: Auto-generated from OpenAPI specification with RTK Query integration
-- **Real-time**: WebSocket integration for live campaign updates
+- **Real-time**: Server-Sent Events (SSE) integration for live campaign updates
 - **Architecture**: Unified RTK Query pattern with centralized API state management
 
 ### Backend (Go + PostgreSQL)
-- **Language**: Go with Gin web framework
+- **Language**: Go with Chi web framework (strict OpenAPI via oapi-codegen)
 - **Database**: PostgreSQL with migration system
-- **API**: RESTful API with OpenAPI 3.0 specification
-- **Real-time**: WebSocket server for campaign broadcasting
+- **API**: Strict REST API with OpenAPI 3.1 specification and request/response validation
+- **Real-time**: Server-Sent Events (SSE) endpoints for campaign broadcasting
 - **Architecture**: Clean architecture with service layers
 - **Validation**: DNS validation, HTTP keyword scanning, lead extraction
 
@@ -31,7 +31,7 @@ Domain Generation → DNS Validation → HTTP Keyword Validation → Lead Extrac
 
 ### Domain Status Architecture
 - **Individual Domain Tracking**: Each domain has `dns_status`, `http_status`, and `lead_score`
-- **Real-time Updates**: WebSocket broadcasting for status changes
+- **Real-time Updates**: Server-Sent Events (SSE) stream for status changes
 - **Cumulative Progress**: Multi-phase progress tracking across campaign lifecycle
 - **Status Persistence**: Database-backed status updates with audit trail
 
@@ -93,12 +93,12 @@ getCampaignLeads(campaign): CampaignLead[]
 
 ### Backend
 - **Go 1.22+**: Backend language
-- **Gin**: HTTP web framework
+- **Chi**: HTTP web framework (strict OpenAPI via oapi-codegen)
 - **PostgreSQL**: Primary database
 - **GORM**: ORM for database operations
 - **golang-migrate**: Database migration tool
-- **gorilla/websocket**: WebSocket implementation
-- **go-playground/validator**: Request validation
+- **Server-Sent Events (SSE)**: Real-time streaming endpoints
+- **oapi-codegen**: Strict server generation and request/response validation
 
 ### Development Tools
 - **OpenAPI Generator**: Auto-generated API clients
@@ -168,6 +168,20 @@ npm run dev
 # Frontend runs on http://localhost:3000
 ```
 
+### E2E Smoke Test
+
+With the backend running on :8080, validate core flows with:
+
+```bash
+scripts/smoke-e2e-campaign.sh
+```
+
+Environment overrides:
+
+- `BASE_URL` (default http://localhost:8080/api/v2)
+- `USER_EMAIL` (default test@example.com)
+- `USER_PASSWORD` (default password)
+
 ### Production Build
 
 **Backend**
@@ -217,7 +231,7 @@ domainflow-studio/
 │   │   ├── services/          # Business logic
 │   │   ├── store/             # Database access layer
 │   │   ├── models/            # Data models
-│   │   ├── websocket/         # WebSocket handlers
+│   │   ├── sse/               # Server-Sent Events handlers
 │   │   └── config/            # Configuration management
 │   ├── database/
 │   │   ├── migrations/        # Database migrations
@@ -347,31 +361,14 @@ GET    /api/v2/campaigns/{id}/domains       # Get domain list
 GET    /api/v2/campaigns/{id}/leads         # Get extracted leads
 ```
 
-#### Real-time WebSocket
+#### Real-time SSE
 ```http
-GET    /ws                                  # WebSocket connection
+GET    /api/v2/sse/events                   # All-system events stream
+GET    /api/v2/sse/campaigns/{id}/events    # Campaign-scoped events stream
+GET    /api/v2/sse/events/stats             # Stream stats snapshot
 ```
 
-#### WebSocket Message Types
-```json
-{
-  "type": "domain_generated",
-  "campaignId": "uuid",
-  "data": { "domains": ["example.com"] }
-}
-
-{
-  "type": "dns_validation_result",
-  "campaignId": "uuid", 
-  "data": { "domain": "example.com", "status": "ok" }
-}
-
-{
-  "type": "progress",
-  "campaignId": "uuid",
-  "data": { "progress": 75.5, "phase": "http_keyword_validation" }
-}
-```
+Events are streamed as `text/event-stream` with `data:` JSON payloads per line.
 
 ### Authentication
 ```http
@@ -482,18 +479,18 @@ go test ./...
 - Implement proper error handling with unified error states
 
 ### Real-time Features
-- Use WebSocket connections for campaign progress updates
-- Implement proper connection retry logic
-- Handle connection state in Redux slices alongside RTK Query cache
+- Use Server-Sent Events (SSE) streams for campaign progress updates
+- Implement retry/backoff on event stream disconnects
+- Reflect connection state in Redux slices alongside RTK Query cache
 - Debounce frequent updates to prevent UI thrashing
-- Integrate WebSocket updates with RTK Query cache invalidation
+- Integrate SSE updates with RTK Query cache invalidation
 
 ## 🚨 Common Issues
 
 ### Domain Status Not Updating
-1. Check WebSocket connection status
-2. Verify backend broadcasts are working
-3. Ensure frontend helper functions handle new domain format
+1. Check SSE stream connection status
+2. Verify backend emits events for target campaign
+3. Ensure frontend helper functions handle new domain/event format
 4. Check database status field updates
 
 ### API Type Mismatches
@@ -519,7 +516,7 @@ go test ./...
 ### Backend
 - Database connection pooling
 - Efficient bulk operations for domain processing
-- WebSocket connection management
+- SSE connection management
 - Response caching for static data
 
 ## 🔒 Security
@@ -534,7 +531,7 @@ go test ./...
 - SQL injection prevention with parameterized queries
 - Input validation on all endpoints
 - Rate limiting on API endpoints
-- Secure WebSocket connections
+- Enforce credentialed CORS and CSRF sentinel headers for sensitive endpoints
 
 ## 📝 License
 

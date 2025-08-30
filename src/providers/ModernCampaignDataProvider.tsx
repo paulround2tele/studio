@@ -6,7 +6,6 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useAppSelector } from '@/store/hooks';
 import { useGetCampaignsStandaloneQuery } from '@/store/api/campaignApi';
-import { transformCampaignToViewModel } from '@/lib/utils/campaignTransforms';
 
 // Use the single source of truth
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
@@ -37,7 +36,7 @@ export const ModernCampaignDataProvider: React.FC<ModernCampaignDataProviderProp
   } = useGetCampaignsStandaloneQuery();
 
   // Use Redux state for any additional state management
-  const { selectedCampaignId } = useAppSelector((state) => state.campaign);
+  const { selectedCampaignId: _selectedCampaignId } = useAppSelector((state) => state.campaign);
 
   const getCampaign = (campaignId: string): Campaign | undefined => {
     return (campaigns || []).find(campaign => campaign.id === campaignId);

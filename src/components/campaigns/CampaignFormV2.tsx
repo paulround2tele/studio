@@ -247,7 +247,7 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
 
   // Watch form values for UI updates
   const watchTlds = form.watch('tlds');
-  const watchPatternType = form.watch('patternType');
+  const _watchPatternType = form.watch('patternType');
 
   return (
     <>
@@ -337,7 +337,7 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  <strong>Phase-Centric Architecture:</strong> After creating your campaign, you'll configure 
+                  <strong>Phase-Centric Architecture:</strong> After creating your campaign, you&apos;ll configure 
                   individual phases (DNS Validation, HTTP Keyword Validation, Analysis) through the Phase Dashboard. 
                   Each phase can be configured and started independently.
                 </AlertDescription>
@@ -439,7 +439,7 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
                 <FormField
                   control={form.control}
                   name="tldsInput"
-                  render={({ field }) => (
+                  render={({ field: _field }) => (
                     <FormItem>
                       <FormLabel>Top Level Domains</FormLabel>
                       <div className="space-y-2">

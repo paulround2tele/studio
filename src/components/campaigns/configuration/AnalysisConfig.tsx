@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
-import type { AnalysisPhaseConfig } from '@/lib/api-client/models/analysis-phase-config';
 
 interface AnalysisConfigProps {
   control: Control<any>;
