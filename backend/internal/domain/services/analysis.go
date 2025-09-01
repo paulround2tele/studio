@@ -88,6 +88,15 @@ func (s *analysisService) Configure(ctx context.Context, campaignID uuid.UUID, c
 		return fmt.Errorf("configuration validation failed: %w", err)
 	}
 
+	// Mark configured state in memory for status API
+	s.mu.Lock()
+	if _, ok := s.executions[campaignID]; !ok {
+		s.executions[campaignID] = &analysisExecution{CampaignID: campaignID, Status: models.PhaseStatusConfigured}
+	} else {
+		s.executions[campaignID].Status = models.PhaseStatusConfigured
+	}
+	s.mu.Unlock()
+
 	// Store configuration in campaign store
 	s.deps.Logger.Info(ctx, "Analysis configuration stored", map[string]interface{}{
 		"campaign_id":   campaignID,

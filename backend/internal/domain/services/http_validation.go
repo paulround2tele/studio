@@ -63,6 +63,14 @@ func (s *httpValidationService) Configure(ctx context.Context, campaignID uuid.U
 		"campaign_id": campaignID,
 	})
 
+	// Enforce phase order: DNS must be completed before HTTP can be configured
+	if err := s.ensureDNSCompleted(ctx, campaignID); err != nil {
+		s.deps.Logger.Warn(ctx, "HTTP configuration blocked: DNS not completed", map[string]interface{}{
+			"campaign_id": campaignID,
+		})
+		return fmt.Errorf("cannot configure HTTP validation before DNS validation completes: %w", err)
+	}
+
 	// Type assert the configuration
 	httpConfig, ok := config.(*models.HTTPPhaseConfigRequest)
 	if !ok {
@@ -118,6 +126,11 @@ func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUI
 	s.deps.Logger.Info(ctx, "Starting HTTP validation execution", map[string]interface{}{
 		"campaign_id": campaignID,
 	})
+
+	// Enforce phase order at runtime as a hard precondition
+	if err := s.ensureDNSCompleted(ctx, campaignID); err != nil {
+		return nil, fmt.Errorf("cannot start HTTP validation before DNS validation completes: %w", err)
+	}
 
 	// Check if already executing
 	s.mu.Lock()
@@ -310,6 +323,26 @@ func (s *httpValidationService) getValidatedDomains(ctx context.Context, campaig
 
 	// TODO: Implement actual query to get domains from DNS validation results
 	return []string{"example.com", "test.com"}, nil
+}
+
+// ensureDNSCompleted checks the campaign phase table and ensures DNS phase is marked completed
+func (s *httpValidationService) ensureDNSCompleted(ctx context.Context, campaignID uuid.UUID) error {
+	// Try to use a Querier if available from deps.DB, else pass nil and let store use default connection
+	var exec store.Querier
+	if q, ok := s.deps.DB.(store.Querier); ok {
+		exec = q
+	}
+	phase, err := s.store.GetCampaignPhase(ctx, exec, campaignID, models.PhaseTypeDNSValidation)
+	if err != nil {
+		return fmt.Errorf("failed to get DNS phase status: %w", err)
+	}
+	if phase == nil {
+		return fmt.Errorf("DNS phase not found")
+	}
+	if phase.Status != models.PhaseStatusCompleted {
+		return fmt.Errorf("DNS phase status is '%s' (must be 'completed')", phase.Status)
+	}
+	return nil
 }
 
 // prepareGeneratedDomains converts string domains to GeneratedDomain models for the engine

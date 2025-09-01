@@ -1,3 +1,13 @@
+// Shared UI and API constants
+
+export const DEFAULT_DOMAIN_PAGE_SIZE = 100;
+export const DOMAIN_PAGE_SIZE_OPTIONS = [25, 50, 100, 250, 1000];
+
+// Dashboard latest domains fetch limit per campaign
+export const DASHBOARD_RECENT_DOMAINS_LIMIT = 100;
+
+// Max count used when downloading domains as a quick export
+export const DOWNLOAD_DOMAINS_LIMIT = 1000;
 // src/lib/constants.ts - Frontend Constants Synchronized with Backend Go Constants
 // Perfect alignment with backend/internal/models/models.go and auth_models.go
 

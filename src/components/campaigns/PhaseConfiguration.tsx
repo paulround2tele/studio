@@ -18,6 +18,7 @@ import { useCampaignFormData } from "@/lib/hooks/useCampaignFormData";
 import type { CampaignResponse } from '@/lib/api-client/models/campaign-response';
 import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { validateUUID } from '@/lib/utils/uuidValidation';
+import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 
 // Clean, modular section components
 import { CampaignDetailsSection } from './sections/CampaignDetailsSection';
@@ -147,14 +148,8 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
       }
 
       // Map phase type to backend parameter
-      const phaseParameterMap: Record<string, string> = {
-        'dns_validation': 'dns_validation',
-        'http_keyword_validation': 'http_keyword_validation',
-        'analysis': 'analysis'
-      };
-
-      const backendPhaseParam = phaseParameterMap[phaseType as string];
-      if (!backendPhaseParam) {
+  const backendPhaseParam = normalizeToApiPhase(phaseType as string);
+  if (!backendPhaseParam) {
         throw new Error(`Unsupported phase type: ${phaseType}`);
       }
 

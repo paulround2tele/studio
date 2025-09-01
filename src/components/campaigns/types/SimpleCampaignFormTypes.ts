@@ -2,13 +2,12 @@
  * PHASE-CENTRIC CAMPAIGN FORM TYPES
  * 
  * These types are designed for the new phase-centric architecture where:
- * 1. Campaigns are created with basic info + domain generation config only
- * 2. Individual phases are configured later via PhaseDashboard
+ * 1. Campaigns are created with basic info only (Option A)
+ * 2. Individual phases are configured later via the Campaign Dashboard
  * 3. Uses ONLY auto-generated API types from OpenAPI spec
  */
 import type { CreateCampaignRequest as CreateLeadGenerationCampaignRequest } from '@/lib/api-client/models';
-import { ServicesDomainGenerationPhaseConfigPatternTypeEnum as PatternTypeEnum } from '@/lib/api-client/models/services-domain-generation-phase-config';
-import type { ServicesDomainGenerationPhaseConfig } from '@/lib/api-client/models/services-domain-generation-phase-config';
+// No discovery config on create for Option A
 
 /**
  * Form values interface for phase-centric campaign creation
@@ -18,43 +17,17 @@ export interface SimpleCampaignFormValues {
   // Basic campaign info
   name: string;
   description?: string;
-  
-  // Domain generation config (flattened for form convenience)
-  patternType: 'prefix' | 'suffix' | 'both';
-  constantString: string;
-  characterSet: string;
-  variableLength: number;
-  tlds: string[]; // Already parsed list of TLDs
-  numDomainsToGenerate?: number;
-  
-  // UI helper fields
-  tldsInput: string; // Comma-separated string for UI input
 }
 
 /**
  * Helper function to convert form values to API request
  */
 export function formToApiRequest(formValues: SimpleCampaignFormValues): CreateLeadGenerationCampaignRequest {
-  const patternTypeMap: Record<SimpleCampaignFormValues['patternType'], PatternTypeEnum> = {
-    prefix: PatternTypeEnum.prefix,
-    suffix: PatternTypeEnum.suffix,
-    both: PatternTypeEnum.both,
-  };
-
-  const discoveryConfig: ServicesDomainGenerationPhaseConfig = {
-    characterSet: formValues.characterSet,
-    constantString: formValues.constantString,
-    variableLength: formValues.variableLength,
-    tlds: formValues.tlds,
-    numDomainsToGenerate: formValues.numDomainsToGenerate,
-    patternType: patternTypeMap[formValues.patternType],
-  };
-
   return {
     name: formValues.name,
     description: formValues.description,
   targetDomains: [],
-  configuration: { phases: { discovery: discoveryConfig } },
+  // No initial phase configuration; phases configured on dashboard
   } as CreateLeadGenerationCampaignRequest;
 }
 
@@ -64,14 +37,6 @@ export function formToApiRequest(formValues: SimpleCampaignFormValues): CreateLe
 export const defaultFormValues: SimpleCampaignFormValues = {
   name: "",
   description: "",
-  patternType: "prefix",
-  constantString: "",
-  characterSet: "abcdefghijklmnopqrstuvwxyz0123456789",
-  variableLength: 3,
-  tlds: ["com"],
-  numDomainsToGenerate: 1000,
-  tldsInput: "com",
 };
 
-// Re-export the enum for convenience
-// Enum type removed - using direct string literals now
+// Option A: minimal create payload; discovery configured later

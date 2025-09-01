@@ -137,7 +137,9 @@ export const campaignApi = createApi({
       },
       invalidatesTags: (result, error, { campaignId }) => [
         { type: 'Campaign', id: campaignId },
-        { type: 'CampaignProgress', id: campaignId }
+        { type: 'CampaignProgress', id: campaignId },
+        // Ensure domains list refreshes after discovery starts/completes
+        { type: 'CampaignDomains', id: campaignId },
       ],
     }),
 

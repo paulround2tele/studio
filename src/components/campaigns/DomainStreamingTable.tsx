@@ -10,6 +10,7 @@ import { StatusBadge, type DomainActivityStatus } from '@/components/shared/Stat
 import { LeadScoreDisplay } from '@/components/shared/LeadScoreDisplay';
 import { Button } from '@/components/ui/button';
 import { useDomainData } from '@/hooks/useDomainData';
+import { DEFAULT_DOMAIN_PAGE_SIZE } from '@/lib/constants';
 
 interface DomainStreamingTableProps {
   campaign: Campaign;
@@ -189,7 +190,7 @@ export default function DomainStreamingTable({
     loadMore,
     refresh
   } = useDomainData(campaign.id || '', {
-    limit: 100,
+  limit: DEFAULT_DOMAIN_PAGE_SIZE,
     enablePolling: true,
     pollingInterval: 10000 // Poll every 10 seconds for updates
   });

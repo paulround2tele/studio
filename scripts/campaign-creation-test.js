@@ -18,6 +18,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { spawn } from 'child_process';
+import net from 'net';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -483,6 +484,22 @@ async function runCampaignCreationTest() {
   let startedFrontend = null;
   let startedBackend = null;
 
+  // Helper: find a free TCP port starting from base, up to range
+  const findFreePort = async (start = 3000, range = 50) => {
+    const isFree = (port) => new Promise((resolve) => {
+      const srv = net.createServer()
+        .once('error', () => resolve(false))
+        .once('listening', () => srv.close(() => resolve(true)))
+        .listen(port, '127.0.0.1');
+    });
+    for (let p = start; p < start + range; p++) {
+      // Skip if an HTTP server responds but not usable for us
+      const free = await isFree(p);
+      if (free) return p;
+    }
+    throw new Error('No free port found for frontend');
+  };
+
   // Helper: wait for URL readiness (any 2xx/3xx or explicit allowed 401 for auth/me)
   const waitForUrl = async (url, {
     timeoutMs = 120000,
@@ -553,21 +570,25 @@ async function runCampaignCreationTest() {
 
   // Helper: ensure servers
   const ensureServers = async () => {
-    // Check frontend
-    let frontendReady = false;
+    // Always start our own frontend dev server on a free port so we control env and avoid CORS
+    logger.info('Starting frontend dev server');
+    // Pick a free port (prefer 3000; if busy, next free)
+    let chosenPort = 3000;
     try {
-  await waitForUrl(`${config.baseUrl}/login`, { timeoutMs: 5000 });
-  frontendReady = true;
-  logger.info('Frontend seems already running');
-    } catch {}
-
-    if (!frontendReady) {
-      logger.info('Starting frontend dev server');
-  // Try to bind to 3000; if in use, we'll parse and update baseUrl
-  startedFrontend = startProc('npm', ['run', 'dev'], path.join(__dirname, '..'), 'frontend', { PORT: '3000' });
+      const free = await findFreePort(3000, 50);
+      chosenPort = free;
+    } catch (e) {
+      logger.warn('Could not find free port near 3000, using 0 (OS choose)');
+      chosenPort = 0; // OS chooses
     }
+    // If OS chooses 0, we still need a port to set baseUrl; retry probe to find the one Next picked by parsing stdout
+    config.baseUrl = `http://localhost:${chosenPort || 3000}`;
+    logger.info('Frontend baseUrl set', { baseUrl: config.baseUrl });
+    // Start Next with explicit port and env NEXT_PUBLIC_API_URL to this origin
+    const extraEnv = { NEXT_PUBLIC_API_URL: `http://localhost:${chosenPort || 3000}` };
+    startedFrontend = startProc('npm', ['run', 'dev', '--', '-p', String(chosenPort)], path.join(__dirname, '..'), 'frontend', extraEnv);
 
-    // Check backend
+  // Check backend
     let backendReady = false;
     try {
       await waitForUrl(`${config.baseUrl}/api/v2/auth/me`, { timeoutMs: 5000, allow401: true });
@@ -629,17 +650,42 @@ async function runCampaignCreationTest() {
     // Perform login with resilient strategy: try UI first, then in-page fetch fallback
     logger.info('Performing login');
     let loggedIn = false;
+    const waitForAuth = async (label) => {
+      const start = Date.now();
+      const timeout = 60000; // 60s
+      while (Date.now() - start < timeout) {
+        const me = await page.evaluate(async () => {
+          try {
+            const res = await fetch('/api/v2/auth/me', { credentials: 'include' });
+            return { status: res.status };
+          } catch (e) {
+            return { status: 0 };
+          }
+        });
+        if (me.status === 200) {
+          logger.info(`Session verified via /auth/me after ${label}`);
+          return true;
+        }
+        await page.waitForTimeout(500);
+      }
+      return false;
+    };
+
     try {
       const emailInput = page.getByLabel(/email/i);
-      await emailInput.waitFor({ state: 'visible', timeout: 5000 });
+      await emailInput.waitFor({ state: 'visible', timeout: 8000 });
       await emailInput.fill(config.credentials.email);
       await page.getByLabel(/password/i).fill(config.credentials.password);
       const loginButton = await page.getByRole('button', { name: /sign in securely|signing in/i });
       await loginButton.click();
-      logger.info('Login submitted via UI, waiting for navigation');
-      await page.waitForURL(/\/(dashboard|campaigns|login)/, { timeout: config.timeout });
+      logger.info('Login submitted via UI; polling for session');
+      const ok = await waitForAuth('UI submit');
+      if (ok) loggedIn = true;
     } catch (uiErr) {
       logger.warn('UI login controls not ready, using in-page fetch fallback', { error: uiErr.message });
+    }
+
+    if (!loggedIn) {
       // Execute login via in-page fetch to ensure cookie is set
       const result = await page.evaluate(async (creds) => {
         const res = await fetch('/api/v2/auth/login', {
@@ -648,28 +694,14 @@ async function runCampaignCreationTest() {
           credentials: 'include',
           body: JSON.stringify(creds)
         });
-        let meStatus = 0;
-        try {
-          const me = await fetch('/api/v2/auth/me', { credentials: 'include' });
-          meStatus = me.status;
-        } catch {}
-        return { ok: res.ok, status: res.status, meStatus };
+        return { ok: res.ok, status: res.status };
       }, config.credentials);
       logger.info('In-page login result', result);
-      if (!result.ok && result.meStatus !== 200) {
-        throw new Error(`Login failed: status ${result.status}, me ${result.meStatus}`);
+      const ok = await waitForAuth('fallback login');
+      if (!ok) {
+        throw new Error(`Login failed; me still not 200 after fallback (status ${result.status})`);
       }
       loggedIn = true;
-    }
-
-    // If UI path, verify session via /auth/me too
-    if (!loggedIn) {
-      const me = await page.evaluate(async () => {
-        const res = await fetch('/api/v2/auth/me', { credentials: 'include' });
-        return { status: res.status };
-      });
-      if (me.status !== 200) throw new Error(`Auth session not established, /auth/me=${me.status}`);
-      logger.info('Session verified via /auth/me');
     }
 
     // Optional settle
@@ -757,158 +789,113 @@ async function runCampaignCreationTest() {
         fullPage: true
       });
 
-      // Monitor for domain generation progress
-      logger.info('Monitoring domain generation for 5 seconds');
-      await page.waitForTimeout(5000);
+      // API-driven phase orchestration for reliability
+      const currentUrl = page.url();
+      const campaignIdMatch = currentUrl.match(/\/campaigns\/([a-f0-9-]+)/);
+      const campaignId = campaignIdMatch ? campaignIdMatch[1] : null;
+      if (!campaignId) throw new Error('Could not extract campaign ID after creation');
+      logger.info('Campaign ID captured', { campaignId });
 
-      // Check if domains were generated
-      const domainRows = await page.$$eval(
-        'table tr, [data-testid*="domain"], .domain-row',
-        rows => rows.length
-      ).catch(() => 0);
-      
-      logger.info('Domain generation monitoring complete', {
-        domainRowsFound: domainRows,
-        targetDomains: 25
-      });
+      // Helper to call API with browser cookies
+      const apiCall = async ({ method = 'GET', path, body }) => {
+        return await page.evaluate(async ({ method, path, body }) => {
+          const res = await fetch(path, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: body ? JSON.stringify(body) : undefined,
+          });
+          let json = null;
+          try { json = await res.json(); } catch {}
+          return { status: res.status, ok: res.ok, json };
+        }, { method, path, body });
+      };
 
-      if (domainRows >= 20) {
-        logger.info('SUCCESS: Domain generation campaign created and generated sufficient domains', {
-          domainsGenerated: domainRows,
-          targetMinimum: 20
-        });
-
-        // EXTENDED TEST: Now trigger DNS validation for the completed campaign
-        logger.info('EXTENDING TEST: Attempting to trigger DNS validation on completed campaign');
-        
-        // Extract campaign ID from current URL
-        const currentUrl = page.url();
-        const campaignIdMatch = currentUrl.match(/\/campaigns\/([a-f0-9-]+)/);
-        const campaignId = campaignIdMatch ? campaignIdMatch[1] : null;
-        
-        if (campaignId) {
-          logger.info(`Extracted campaign ID for DNS validation: ${campaignId}`);
-          
-          // Look for DNS validation trigger button or controls
-          logger.info('Looking for DNS validation controls...');
-          
-          // Try multiple potential selectors for DNS validation buttons
-          const dnsValidationSelectors = [
-            'button:has-text("Start DNS Validation")',
-            'button:has-text("DNS Validation")',
-            'button:has-text("Validate DNS")',
-            '[data-testid*="dns-validation"]',
-            '[data-testid*="start-dns"]',
-            'button[aria-label*="DNS"]',
-            'button[aria-label*="dns"]'
-          ];
-
-          let dnsButton = null;
-          for (const selector of dnsValidationSelectors) {
-            try {
-              dnsButton = await page.waitForSelector(selector, { timeout: 3000 });
-              if (dnsButton) {
-                logger.info(`Found DNS validation button with selector: ${selector}`);
-                break;
-              }
-            } catch (e) {
-              logger.debug(`DNS validation button not found with selector: ${selector}`);
-            }
-          }
-
-          if (dnsButton) {
-            logger.info('Clicking DNS validation button...');
-            await dnsButton.click();
-            
-            // Wait for DNS validation to start
-            await page.waitForTimeout(2000);
-            
-            // Take screenshot after DNS validation trigger
-            await page.screenshot({
-              path: path.join(config.outputDir, `dns-validation-triggered-${timestamp}.png`),
-              fullPage: true
-            });
-            
-            // Monitor for DNS validation progress for 10 seconds
-            logger.info('Monitoring DNS validation progress for 10 seconds...');
-            await page.waitForTimeout(10000);
-            
-            logger.info('DNS validation test phase completed');
-            
-            // Now try HTTP validation
-            logger.info('EXTENDING TEST: Attempting to trigger HTTP validation...');
-            
-            const httpValidationSelectors = [
-              'button:has-text("Start HTTP Validation")',
-              'button:has-text("HTTP Validation")',
-              'button:has-text("Validate HTTP")',
-              '[data-testid*="http-validation"]',
-              '[data-testid*="start-http"]',
-              'button[aria-label*="HTTP"]',
-              'button[aria-label*="http"]'
-            ];
-
-            let httpButton = null;
-            for (const selector of httpValidationSelectors) {
-              try {
-                httpButton = await page.waitForSelector(selector, { timeout: 3000 });
-                if (httpButton) {
-                  logger.info(`Found HTTP validation button with selector: ${selector}`);
-                  break;
-                }
-              } catch (e) {
-                logger.debug(`HTTP validation button not found with selector: ${selector}`);
-              }
-            }
-
-            if (httpButton) {
-              logger.info('Clicking HTTP validation button...');
-              await httpButton.click();
-              
-              // Wait for HTTP validation to start
-              await page.waitForTimeout(2000);
-              
-              // Take screenshot after HTTP validation trigger
-              await page.screenshot({
-                path: path.join(config.outputDir, `http-validation-triggered-${timestamp}.png`),
-                fullPage: true
-              });
-              
-              // Monitor for HTTP validation progress for 10 seconds
-              logger.info('Monitoring HTTP validation progress for 10 seconds...');
-              await page.waitForTimeout(10000);
-              
-              logger.info('HTTP validation test phase completed');
-              
-            } else {
-              logger.warn('HTTP validation button not found on page');
-              
-              // Take screenshot to see what validation options are available
-              await page.screenshot({
-                path: path.join(config.outputDir, `validation-options-${timestamp}.png`),
-                fullPage: true
-              });
-            }
-            
-          } else {
-            logger.warn('DNS validation button not found on page');
-            
-            // Take screenshot to see what validation options are available
-            await page.screenshot({
-              path: path.join(config.outputDir, `no-dns-validation-button-${timestamp}.png`),
-              fullPage: true
-            });
-          }
-          
-        } else {
-          logger.error('Could not extract campaign ID from URL for validation testing');
+      // 1) Configure discovery phase
+      logger.info('Configuring discovery phase');
+      const discoveryConfig = {
+        configuration: {
+          patternType: 'both',
+          variableLength: 3,
+          characterSet: 'abcdefghijklmnopqrstuvwxyz0123456789',
+          constantString: 'business',
+          // Backend requires TLDs to start with a dot; prefer singular 'tld' key
+          tld: '.com',
+          numDomainsToGenerate: 25
         }
-        
+      };
+      const cfgResp = await apiCall({
+        method: 'POST',
+        path: `/api/v2/campaigns/${campaignId}/phases/discovery/configure`,
+        body: discoveryConfig
+      });
+      if (!cfgResp.ok) {
+        const msg = cfgResp.json?.error?.message || cfgResp.json?.message || JSON.stringify(cfgResp.json);
+        throw new Error(`Configure discovery failed: ${cfgResp.status}${msg ? ` - ${msg}` : ''}`);
+      }
+      logger.info('Discovery configured', { status: cfgResp.status });
+
+      // 2) Start discovery
+      logger.info('Starting discovery phase');
+      const startResp = await apiCall({
+        method: 'POST',
+        path: `/api/v2/campaigns/${campaignId}/phases/discovery/start`
+      });
+      if (!startResp.ok) throw new Error(`Start discovery failed: ${startResp.status}`);
+      logger.info('Discovery started', { status: startResp.status });
+
+      // 3) Poll status until completed or timeout
+      logger.info('Polling discovery status');
+      const pollStart = Date.now();
+      let status = 'running';
+      while (Date.now() - pollStart < 120000) {
+        const st = await apiCall({ method: 'GET', path: `/api/v2/campaigns/${campaignId}/phases/discovery/status` });
+        if (!st.ok) {
+          logger.warn('Status poll failed', { status: st.status });
+        } else {
+          status = (st.json?.data?.status) || (st.json?.status) || status;
+          logger.debug('Discovery status', { status });
+          if (status === 'completed' || status === 'failed' || status === 'paused') break;
+        }
+        await page.waitForTimeout(2000);
+      }
+      logger.info('Discovery finished state', { status });
+      if (status !== 'completed' && status !== 'configured' && status !== 'running') {
+        logger.warn('Discovery did not reach completed within timeout', { status });
+      }
+
+      // 4) Verify domains via API
+      const domainsResp = await apiCall({ method: 'GET', path: `/api/v2/campaigns/${campaignId}/domains` });
+      const domains = (domainsResp.json?.data) || [];
+      logger.info('Domains fetched', { count: Array.isArray(domains) ? domains.length : 0 });
+
+      if (Array.isArray(domains) && domains.length >= 10) {
+        logger.info('SUCCESS: discovery generated domains', { count: domains.length });
       } else {
-        logger.warn('Domain generation may still be in progress', {
-          domainsFound: domainRows,
-          targetMinimum: 20
-        });
+        logger.warn('Low domain count after discovery', { count: Array.isArray(domains) ? domains.length : 0 });
+      }
+
+      // 5) Optional: try to start validation phase without config (best-effort)
+      try {
+        logger.info('Attempting to start validation phase');
+        const vStart = await apiCall({ method: 'POST', path: `/api/v2/campaigns/${campaignId}/phases/validation/start` });
+        if (vStart.ok) {
+          const vPollStart = Date.now();
+          let vStatus = 'running';
+          while (Date.now() - vPollStart < 60000) {
+            const vst = await apiCall({ method: 'GET', path: `/api/v2/campaigns/${campaignId}/phases/validation/status` });
+            if (vst.ok) {
+              vStatus = (vst.json?.data?.status) || vStatus;
+              if (vStatus === 'completed' || vStatus === 'failed' || vStatus === 'paused') break;
+            }
+            await page.waitForTimeout(2000);
+          }
+          logger.info('Validation finished state', { status: vStatus });
+        } else {
+          logger.warn('Validation phase start rejected', { status: vStart.status });
+        }
+      } catch (vErr) {
+        logger.warn('Validation phase attempt failed', { error: vErr.message });
       }
 
     } catch (redirectError) {

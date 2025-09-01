@@ -9,6 +9,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useGetCampaignDomainsQuery } from '@/store/api/campaignApi';
 import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
+import { DEFAULT_DOMAIN_PAGE_SIZE } from '@/lib/constants';
 
 // Local minimal domain shape based on bulk enriched-data response
 type GeneratedDomainLite = Pick<DomainListItem, 'domain' | 'dnsStatus' | 'httpStatus' | 'leadStatus'> & Record<string, unknown>;
@@ -62,7 +63,7 @@ export function useDomainData(
   options: UseDomainDataOptions = {}
 ): DomainDataResult {
   const {
-    limit = 100,
+    limit = DEFAULT_DOMAIN_PAGE_SIZE,
     statusFilter = '',
     phaseFilter = '',
     enablePolling = true,

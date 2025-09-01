@@ -136,8 +136,15 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 		return fmt.Errorf("failed to get service for phase %s: %w", phase, err)
 	}
 
-	// Start phase execution
-	progressCh, err := service.Execute(ctx, campaignID)
+	// IMPORTANT: Decouple long-running phase execution from the request context.
+	// The incoming ctx is tied to the HTTP request and will be cancelled when the
+	// handler returns or the client disconnects, which previously caused premature
+	// phase failures (status=failed, "Execution cancelled").
+	// Use a background-derived context for execution and monitoring.
+	execCtx, _ := context.WithCancel(context.Background())
+
+	// Start phase execution with background-derived context
+	progressCh, err := service.Execute(execCtx, campaignID)
 	if err != nil {
 		// Broadcast phase failed event
 		if o.sseService != nil && campaign.UserID != nil {
@@ -155,8 +162,8 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 	}
 	o.mu.Unlock()
 
-	// Monitor phase progress in a separate goroutine
-	go o.monitorPhaseProgress(ctx, campaignID, phase, progressCh)
+	// Monitor phase progress in a separate goroutine using the same background context
+	go o.monitorPhaseProgress(execCtx, campaignID, phase, progressCh)
 
 	o.deps.Logger.Info(ctx, "Phase started successfully", map[string]interface{}{
 		"campaign_id": campaignID,

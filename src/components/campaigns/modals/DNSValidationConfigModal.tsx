@@ -13,7 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Import types and services - using the EXACT same pattern as campaign form
-import { PersonasApi, ProxiesApi } from '@/lib/api-client';
+import { PersonasApi, ProxiesApi, ProxyPoolsApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
 import { PersonaType } from '@/lib/api-client/models/persona-type';
 import { useConfigurePhaseStandaloneMutation } from '@/store/api/campaignApi';
@@ -22,11 +22,12 @@ import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-co
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 import type { ModelsProxy } from '@/lib/api-client/models/models-proxy';
+import type { ModelsProxyPool } from '@/lib/api-client/models/models-proxy-pool';
 // PhaseConfigureRequestPhaseTypeEnum removed - using direct string literals now
 
 interface DNSValidationFormValues {
   personaIds: string[];
-  proxyIds?: string[]; // Optional proxy selection
+  proxyPoolId?: string; // Optional proxy pool selection
   name: string;
 }
 
@@ -53,19 +54,20 @@ export default function DNSValidationConfigModal({
   // Data state - following campaign form pattern
   const [dnsPersonas, setDnsPersonas] = useState<PersonaResponse[]>([]);
   const [proxies, setProxies] = useState<ModelsProxy[]>([]);
+  const [proxyPools, setProxyPools] = useState<ModelsProxyPool[]>([]);
   const [loadingData, setLoadingData] = useState(true);
 
   // Form initialization with persona-only configuration
   const form = useForm<DNSValidationFormValues>({
     defaultValues: {
       personaIds: [],
-      proxyIds: [],
+  proxyPoolId: undefined,
       name: `DNS Validation - ${new Date().toLocaleDateString()}`,
     }
   });
 
   const watchedPersonaIds = form.watch('personaIds');
-  const watchedProxyIds = form.watch('proxyIds') || [];
+  const watchedProxyPoolId = form.watch('proxyPoolId');
 
     // Load DNS personas and proxies on mount - using exact same pattern as campaign form
   useEffect(() => {
@@ -74,10 +76,12 @@ export default function DNSValidationConfigModal({
         setLoadingData(true);
   const personasApi = new PersonasApi(apiConfiguration);
   const proxiesApi = new ProxiesApi(apiConfiguration);
+  const proxyPoolsApi = new ProxyPoolsApi(apiConfiguration);
         // Load personas and proxies in parallel (use list endpoints)
-        const [personasResponse, proxiesResponse] = await Promise.all([
+        const [personasResponse, proxiesResponse, proxyPoolsResponse] = await Promise.all([
           personasApi.personasList(undefined, undefined, true, PersonaType.dns),
           proxiesApi.proxiesList(undefined, undefined, undefined, undefined, true, undefined),
+          proxyPoolsApi.proxyPoolsList(),
         ]);
         // Unwrap SuccessEnvelope consistently
         const personas = extractResponseData<{ items?: PersonaResponse[] }>(personasResponse)?.items || [];
@@ -90,9 +94,13 @@ export default function DNSValidationConfigModal({
         
         // Filter for active proxies only  
   const activeProxies = proxies.filter((proxy) => proxy.isEnabled === true);
-        
+  // Load proxy pools (enabled only)
+  const pools = extractResponseData<{ items?: ModelsProxyPool[] }>(proxyPoolsResponse)?.items || [];
+  const enabledPools = pools.filter((p) => p.isEnabled !== false);
+
         setDnsPersonas(dnsPersonas);
         setProxies(activeProxies);
+  setProxyPools(enabledPools);
       } catch (error) {
         console.error('Failed to load DNS personas and proxies:', error);
         toast({
@@ -125,14 +133,8 @@ export default function DNSValidationConfigModal({
     }
   };
 
-  const handleProxyToggle = (proxyId: string) => {
-    const currentProxyIds = form.getValues('proxyIds') || [];
-    if (currentProxyIds.includes(proxyId)) {
-      form.setValue('proxyIds', currentProxyIds.filter(id => id !== proxyId));
-    } else {
-      // No limit on proxy selection since it's optional
-      form.setValue('proxyIds', [...currentProxyIds, proxyId]);
-    }
+  const handleProxyPoolSelect = (poolId: string) => {
+    form.setValue('proxyPoolId', poolId === form.getValues('proxyPoolId') ? undefined : poolId);
   };
 
   const onSubmit = async (data: DNSValidationFormValues) => {
@@ -145,10 +147,11 @@ export default function DNSValidationConfigModal({
 
       const configRequest: PhaseConfigurationRequest = {
         configuration: { dnsValidation: dnsConfig },
+        proxyPoolId: data.proxyPoolId || undefined,
       };
 
-  // Use RTK mutation with canonical backend phase identifier
-  await configurePhase({ campaignId, phase: 'dns_validation', config: configRequest }).unwrap();
+  // Use RTK mutation with canonical backend phase identifier (validation)
+  await configurePhase({ campaignId, phase: 'validation', config: configRequest }).unwrap();
 
       toast({
         title: "DNS validation configured",
@@ -266,70 +269,51 @@ export default function DNSValidationConfigModal({
               </CardContent>
             </Card>
 
-            {/* Proxy Selection - Optional */}
+            {/* Proxy Pool Selection - Optional */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Proxy Selection (Optional)</CardTitle>
+                <CardTitle className="text-lg">Proxy Pool (Optional)</CardTitle>
                 <div className="text-sm text-muted-foreground">
-                  Optionally select proxies for DNS validation requests. Proxies help vary request sources and improve reliability.
+                  Optionally select a proxy pool for DNS validation requests. Pools manage rotation and failover strategies.
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
                 {loadingData ? (
-                  <div className="text-center py-4">Loading proxies...</div>
-                ) : proxies.length === 0 ? (
+                  <div className="text-center py-4">Loading proxy pools...</div>
+                ) : proxyPools.length === 0 ? (
                   <Alert>
                     <AlertCircle className="h-4 w-4" />
                     <AlertDescription>
-                      No active proxies available. DNS validation will proceed without proxy usage.
+                      No proxy pools available. DNS validation will proceed without proxies.
                     </AlertDescription>
                   </Alert>
                 ) : (
                   <>
-                    <div className="text-sm text-muted-foreground">
-                      Select proxies to use for DNS validation (optional, can select multiple):
-                    </div>
                     <div className="grid grid-cols-1 gap-2">
-                      {proxies.map((proxy) => (
+                      {proxyPools.map((pool) => (
                         <div
-                          key={proxy.id}
+                          key={pool.id}
                           className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                            watchedProxyIds.includes(proxy.id || '')
+                            watchedProxyPoolId === pool.id
                               ? 'border-primary bg-primary/5'
                               : 'border-border hover:border-primary/50'
                           }`}
-                          onClick={() => handleProxyToggle(proxy.id || '')}
+                          onClick={() => handleProxyPoolSelect(pool.id || '')}
                         >
                           <div className="flex items-center justify-between">
                             <div>
-                              <div className="font-medium">{proxy.name}</div>
+                              <div className="font-medium">{pool.name}</div>
                               <div className="text-sm text-muted-foreground">
-                                {proxy.protocol?.toUpperCase()} • {proxy.address} • {proxy.isEnabled ? 'Active' : 'Disabled'}
+                                Strategy: {pool.poolStrategy || 'round_robin'} • Timeout: {pool.timeoutSeconds || 0}s
                               </div>
                             </div>
-                            {watchedProxyIds.includes(proxy.id || '') && (
+                            {watchedProxyPoolId === pool.id && (
                               <Badge variant="default">Selected</Badge>
                             )}
                           </div>
                         </div>
                       ))}
                     </div>
-                    {watchedProxyIds.length > 0 && (
-                      <div className="flex flex-wrap gap-2 pt-2">
-                        {watchedProxyIds.map((proxyId) => {
-                          const proxy = proxies.find(p => p.id === proxyId);
-                          return (
-                            <Badge key={proxyId} variant="secondary" className="flex items-center gap-1">
-                              {proxy?.name}
-                              <X
-                                className="h-3 w-3 cursor-pointer"
-                                onClick={() => handleProxyToggle(proxyId)}
-                              />
-                            </Badge>
-                          );
-                        })}
-                      </div>
-                    )}
                   </>
                 )}
               </CardContent>

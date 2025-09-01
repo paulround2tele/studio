@@ -16,6 +16,7 @@ import PageHeader from '@/components/shared/PageHeader';
 import CampaignProgress from '@/components/campaigns/CampaignProgress';
 import CampaignHeader from '@/components/campaigns/CampaignHeader';
 import CampaignControls from '@/components/campaigns/CampaignControls';
+import DomainsList from '@/components/campaigns/DomainsList';
 
 interface _CampaignPageParams {
   id: string;
@@ -122,6 +123,9 @@ export default function CampaignPage() {
       
       {/* Professional campaign controls (disaster recovery component) */}
       <CampaignControls campaign={campaign} />
+
+  {/* Generated domains table */}
+  <DomainsList campaignId={campaign.id} />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"reflect"
 	"strings" // For ListCampaigns dynamic query
 	"time"
 
@@ -1179,20 +1180,42 @@ func (s *campaignStorePostgres) AppendDomainsData(ctx context.Context, exec stor
 		}
 	}
 
-	// Append new domains
+	beforeLen := len(existingDomains)
+	appendCount := 0
+
+	// Append new domains, accepting any slice shape (e.g., []interface{}, []map[string]interface{})
+	appendFromAnySlice := func(v interface{}) {
+		rv := reflect.ValueOf(v)
+		if !rv.IsValid() {
+			return
+		}
+		if rv.Kind() != reflect.Slice && rv.Kind() != reflect.Array {
+			return
+		}
+		for i := 0; i < rv.Len(); i++ {
+			existingDomains = append(existingDomains, rv.Index(i).Interface())
+			appendCount++
+		}
+	}
+
 	if newDomainsArray, ok := newDomains.([]interface{}); ok {
 		existingDomains = append(existingDomains, newDomainsArray...)
+		appendCount += len(newDomainsArray)
 	} else if newDomainsMap, ok := newDomains.(map[string]interface{}); ok {
 		if domains, exists := newDomainsMap["domains"]; exists {
-			if domainArray, ok := domains.([]interface{}); ok {
-				existingDomains = append(existingDomains, domainArray...)
-			}
+			appendFromAnySlice(domains)
 		}
+	} else {
+		// Fallback: if caller passed a raw slice (e.g., []map[string]interface{})
+		appendFromAnySlice(newDomains)
 	}
 
 	// Update the domains in the map
 	domainsMap["domains"] = existingDomains
 	domainsMap["updated_at"] = time.Now()
+
+	// DEBUG: log append stats
+	log.Printf("AppendDomainsData: campaign=%s before_len=%d append_count=%d after_len=%d", campaignID, beforeLen, appendCount, len(existingDomains))
 
 	// Update the database
 	return s.UpdateDomainsData(ctx, exec, campaignID, domainsMap)

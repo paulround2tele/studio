@@ -1,5 +1,8 @@
 
 import type {Metadata} from 'next';
+import { cookies } from 'next/headers';
+import { SESSION_CONFIG } from '@/lib/constants';
+import { getCachedHasSession, setCachedHasSession } from '@/server/authCookieCache';
 // Font imports removed for offline build
 import './globals.css';
 import AdvancedConditionalLayout from '@/components/layout/AdvancedConditionalLayout';
@@ -15,13 +18,21 @@ export const metadata: Metadata = {
   description: 'Campaign-driven domain generation, validation, and lead management.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Server-side: peek at the session cookie for a lightweight hint
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get(SESSION_CONFIG.SESSION_COOKIE_NAME)?.value;
+  let hasSession = getCachedHasSession(sessionCookie);
+  if (hasSession === null) {
+    hasSession = Boolean(sessionCookie && sessionCookie.length > 0);
+    setCachedHasSession(sessionCookie, hasSession);
+  }
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning data-has-session={hasSession ? '1' : '0'}>
       <body className="font-sans antialiased" suppressHydrationWarning>
         <NoSSR fallback={
           <div className="min-h-screen bg-gray-900 flex items-center justify-center">

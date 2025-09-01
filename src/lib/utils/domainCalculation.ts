@@ -3,7 +3,16 @@
 // Uses backend OpenAPI types exclusively
 
 // TODO: map to generated model when available
-type DomainGenerationParams = any;
+type DomainGenerationParams = {
+  patternType?: 'prefix' | 'suffix' | 'both';
+  characterSet?: string;
+  variableLength?: number;
+  // Optional explicit per-side lengths when patternType is 'both'
+  prefixVariableLength?: number;
+  suffixVariableLength?: number;
+  constantString?: string;
+  tlds?: string[];
+};
 
 /**
  * Calculate maximum theoretical domains for a given configuration
@@ -12,7 +21,7 @@ type DomainGenerationParams = any;
 export function calculateMaxTheoreticalDomains(config: DomainGenerationParams): number {
   if (!config) return 0;
 
-  const { patternType, characterSet, variableLength } = config;
+  const { patternType, characterSet, variableLength, prefixVariableLength, suffixVariableLength } = config;
   const charSetLength = characterSet?.length || 26;
 
   switch (patternType) {
@@ -21,10 +30,15 @@ export function calculateMaxTheoreticalDomains(config: DomainGenerationParams): 
     case 'suffix':
       return variableLength ? Math.pow(charSetLength, variableLength) : 0;
     case 'both':
-      // For 'both' pattern, assume half length for prefix and half for suffix
-      const halfLength = Math.floor(variableLength / 2);
-      const prefixCombos = halfLength > 0 ? Math.pow(charSetLength, halfLength) : 1;
-      const suffixCombos = halfLength > 0 ? Math.pow(charSetLength, halfLength) : 1;
+      // If explicit side lengths provided, use them; otherwise derive equally from variableLength
+      const pvl = typeof prefixVariableLength === 'number' && prefixVariableLength >= 0
+        ? prefixVariableLength
+        : Math.floor((variableLength || 0) / 2);
+      const svl = typeof suffixVariableLength === 'number' && suffixVariableLength >= 0
+        ? suffixVariableLength
+        : Math.ceil((variableLength || 0) / 2);
+      const prefixCombos = pvl > 0 ? Math.pow(charSetLength, pvl) : 1;
+      const suffixCombos = svl > 0 ? Math.pow(charSetLength, svl) : 1;
       return prefixCombos * suffixCombos;
     default:
       return 0;
@@ -60,7 +74,13 @@ export function validateDomainConfig(config: DomainGenerationParams): {
     errors.push('Character set is required');
   }
 
-  if (!config.variableLength || config.variableLength < 1) {
+  if (config.patternType === 'both') {
+    const p = Number(config.prefixVariableLength ?? 0);
+    const s = Number(config.suffixVariableLength ?? 0);
+    if (p < 1 || s < 1) {
+      errors.push('Both prefix and suffix variable lengths must be at least 1');
+    }
+  } else if (!config.variableLength || config.variableLength < 1) {
     errors.push('Variable length must be at least 1');
   }
 
@@ -68,7 +88,7 @@ export function validateDomainConfig(config: DomainGenerationParams): {
     errors.push('At least one valid TLD is required');
   }
 
-  if (!['prefix', 'suffix', 'both'].includes(config.patternType)) {
+  if (!config.patternType || !['prefix', 'suffix', 'both'].includes(config.patternType)) {
     errors.push('Pattern type must be prefix, suffix, or both');
   }
 

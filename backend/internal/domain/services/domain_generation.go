@@ -202,7 +202,7 @@ func (s *domainGenerationService) Configure(ctx context.Context, campaignID uuid
 		campaignID:     campaignID,
 		config:         domainConfig,
 		generator:      generator,
-		status:         models.PhaseStatusNotStarted,
+		status:         models.PhaseStatusConfigured,
 		itemsTotal:     domainConfig.NumDomains,
 		itemsProcessed: 0,
 	}
@@ -225,14 +225,15 @@ func (s *domainGenerationService) Execute(ctx context.Context, campaignID uuid.U
 	if !exists {
 		return nil, fmt.Errorf("domain generation not configured for campaign %s", campaignID)
 	}
-
-	if execution.status != models.PhaseStatusNotStarted {
+	// Allow execution to start when the phase has been configured but not yet running
+	if execution.status == models.PhaseStatusInProgress {
 		return nil, fmt.Errorf("domain generation already started for campaign %s", campaignID)
 	}
 
 	// Create cancellable context for execution
 	execution.cancelCtx, execution.cancelFunc = context.WithCancel(ctx)
 	execution.progressCh = make(chan PhaseProgress, 100)
+	// Transition from Configured (or NotStarted) to InProgress
 	execution.status = models.PhaseStatusInProgress
 	execution.startedAt = time.Now()
 
@@ -267,7 +268,8 @@ func (s *domainGenerationService) executeGeneration(execution *domainExecution) 
 	for processedCount < config.NumDomains {
 		select {
 		case <-ctx.Done():
-			s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, "Execution cancelled")
+			// Treat external cancellation as a graceful pause; do not mark as failed
+			s.updateExecutionStatus(campaignID, models.PhaseStatusPaused, "Execution cancelled by caller context")
 			return
 		default:
 		}
@@ -318,12 +320,16 @@ func (s *domainGenerationService) executeGeneration(execution *domainExecution) 
 			return
 		}
 
-		// Publish progress event
-		if err := s.deps.EventBus.PublishProgress(ctx, progress); err != nil {
-			s.deps.Logger.Warn(ctx, "Failed to publish progress event", map[string]interface{}{
-				"campaign_id": campaignID,
-				"error":       err.Error(),
-			})
+		// Publish progress event (guard EventBus)
+		if s.deps.EventBus != nil {
+			if err := s.deps.EventBus.PublishProgress(ctx, progress); err != nil {
+				if s.deps.Logger != nil {
+					s.deps.Logger.Warn(ctx, "Failed to publish progress event", map[string]interface{}{
+						"campaign_id": campaignID,
+						"error":       err.Error(),
+					})
+				}
+			}
 		}
 	}
 
@@ -462,24 +468,83 @@ func (s *domainGenerationService) updateExecutionStatus(campaignID uuid.UUID, st
 	}
 
 	ctx := context.Background()
-	if err := s.deps.EventBus.PublishStatusChange(ctx, phaseStatus); err != nil {
-		s.deps.Logger.Warn(ctx, "Failed to publish status change event", map[string]interface{}{
-			"campaign_id": campaignID,
-			"error":       err.Error(),
-		})
+	if s.deps.EventBus != nil {
+		if err := s.deps.EventBus.PublishStatusChange(ctx, phaseStatus); err != nil {
+			if s.deps.Logger != nil {
+				s.deps.Logger.Warn(ctx, "Failed to publish status change event", map[string]interface{}{
+					"campaign_id": campaignID,
+					"error":       err.Error(),
+				})
+			}
+		}
 	}
 }
 
 func (s *domainGenerationService) storeGeneratedDomains(ctx context.Context, campaignID uuid.UUID, domains []string) error {
-	// This would integrate with the existing store to save generated domains
-	// For now, just log the domains
+	// Persist generated domains to the database and update domains_data JSONB so the REST endpoint returns them
 	s.deps.Logger.Debug(ctx, "Storing generated domains", map[string]interface{}{
 		"campaign_id":    campaignID,
 		"domain_count":   len(domains),
-		"sample_domains": domains[:min(len(domains), 5)], // Log first 5 domains as sample
+		"sample_domains": domains[:min(len(domains), 5)],
 	})
 
-	// TODO: Integrate with actual store.CampaignStore to persist domains
+	if len(domains) == 0 {
+		return nil
+	}
+
+	// Attempt to use the provided DB querier if available
+	var exec store.Querier
+	if q, ok := s.deps.DB.(store.Querier); ok {
+		exec = q
+	} else {
+		// If we cannot obtain a querier, we can't persist; log and exit gracefully
+		s.deps.Logger.Warn(ctx, "No DB querier available; skipping domain persistence", map[string]interface{}{"campaign_id": campaignID})
+		return nil
+	}
+
+	// Build GeneratedDomain models for persistence
+	now := time.Now().UTC()
+	genModels := make([]*models.GeneratedDomain, len(domains))
+	for i, d := range domains {
+		genModels[i] = &models.GeneratedDomain{
+			ID:          uuid.New(),
+			CampaignID:  campaignID,
+			DomainName:  d,
+			GeneratedAt: now,
+			CreatedAt:   now,
+			// OffsetIndex is best-effort here; precise offset is maintained inside JSONB/page data by caller
+		}
+	}
+
+	if err := s.store.CreateGeneratedDomains(ctx, exec, genModels); err != nil {
+		return fmt.Errorf("failed to persist generated domains: %w", err)
+	}
+
+	// Also mirror into domains_data JSONB used by GET /campaigns/{id}/domains
+	// Prepare payload in the expected shape
+	items := make([]map[string]interface{}, len(genModels))
+	for i, gd := range genModels {
+		items[i] = map[string]interface{}{
+			"id":          gd.ID.String(),
+			"domain_name": gd.DomainName,
+			// Offset is optional here if not tracked; frontend tolerates nil
+			"created_at": now.Format(time.RFC3339),
+		}
+	}
+	payload := map[string]interface{}{
+		"domains":      items,
+		"batch_size":   len(items),
+		"last_updated": now.Format(time.RFC3339),
+	}
+	// Write full JSONB snapshot to avoid append-type ambiguity
+	if err := s.store.UpdateDomainsData(ctx, exec, campaignID, payload); err != nil {
+		// Not fatal for persistence, but important for frontend visibility
+		s.deps.Logger.Warn(ctx, "Failed to update JSONB domains_data", map[string]interface{}{
+			"campaign_id": campaignID,
+			"error":       err.Error(),
+		})
+	}
+
 	return nil
 }
 

@@ -13,13 +13,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 // Import types and services - using proper client structure
-import { PersonasApi } from '@/lib/api-client';
+import { PersonasApi, ProxyPoolsApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
 import { PersonaType } from '@/lib/api-client/models/persona-type';
 import { useConfigurePhaseStandaloneMutation } from '@/store/api/campaignApi';
 import type { ApiHTTPValidationConfig } from '@/lib/api-client/models/api-httpvalidation-config';
 import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
+import type { ModelsProxyPool } from '@/lib/api-client/models/models-proxy-pool';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 // Response types from OpenAPI - using exact same types as campaign form
@@ -39,6 +40,7 @@ interface HTTPValidationFormValues {
   personaIds: string[];
   keywordSetIds: string[];
   adHocKeywords: string[];
+  proxyPoolId?: string;
 }
 
 interface HTTPValidationConfigModalProps {
@@ -63,6 +65,7 @@ export default function HTTPValidationConfigModal({
   // Data state - following campaign form pattern
   const [httpPersonas, setHttpPersonas] = useState<ExtendedPersonaResponse[]>([]);
   const [keywordSets, setKeywordSets] = useState<KeywordSetResponse[]>([]);
+  const [proxyPools, setProxyPools] = useState<ModelsProxyPool[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [configuring, setConfiguring] = useState(false);
 
@@ -73,6 +76,7 @@ export default function HTTPValidationConfigModal({
       personaIds: [],
       keywordSetIds: [],
       adHocKeywords: [],
+  proxyPoolId: undefined,
     }
   });
 
@@ -88,7 +92,11 @@ export default function HTTPValidationConfigModal({
         
         // Fetch HTTP personas - using proper API client
   const personasApi = new PersonasApi(apiConfiguration);
-  const httpResponse = await personasApi.personasList(undefined, undefined, true, PersonaType.http);
+  const proxyPoolsApi = new ProxyPoolsApi(apiConfiguration);
+  const [httpResponse, poolsResponse] = await Promise.all([
+    personasApi.personasList(undefined, undefined, true, PersonaType.http),
+    proxyPoolsApi.proxyPoolsList(),
+  ]);
   const httpData = extractResponseData<{ items?: PersonaResponse[] }>(httpResponse)?.items || [];
         // Add missing status property for compatibility - exact same as campaign form
   const httpPersonasWithStatus = httpData.map((persona: any) => ({
@@ -100,7 +108,11 @@ export default function HTTPValidationConfigModal({
   })).filter((p: any) => p.isEnabled); // Only enabled personas
         setHttpPersonas(httpPersonasWithStatus as ExtendedPersonaResponse[]);
 
-        // Note: Keyword sets functionality needs to be implemented with proper API
+  // Load proxy pools (enabled only)
+  const pools = extractResponseData<{ items?: ModelsProxyPool[] }>(poolsResponse)?.items || [];
+  setProxyPools(pools.filter((p) => p.isEnabled !== false));
+
+  // Note: Keyword sets functionality needs to be implemented with proper API
         // For now, we'll use an empty array to prevent build errors
         setKeywordSets([]);
       } catch (error) {
@@ -178,10 +190,11 @@ export default function HTTPValidationConfigModal({
 
       const configRequest: PhaseConfigurationRequest = {
         configuration: { httpValidation: httpConfig },
+        proxyPoolId: data.proxyPoolId || undefined,
       };
 
-  // Use RTK mutation with canonical backend phase identifier
-  await configurePhase({ campaignId, phase: 'http_keyword_validation', config: configRequest }).unwrap();
+  // Use RTK mutation with canonical API umbrella phase identifier ('extraction' maps to HTTP keyword validation)
+  await configurePhase({ campaignId, phase: 'extraction', config: configRequest }).unwrap();
 
       toast({
         title: "HTTP validation configured",
@@ -360,6 +373,51 @@ export default function HTTPValidationConfigModal({
                     </div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Proxy Pool Selection - Optional */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Proxy Pool (Optional)</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {loadingData ? (
+                  <div className="text-center py-4">Loading proxy pools...</div>
+                ) : proxyPools.length === 0 ? (
+                  <Alert>
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      No proxy pools available. HTTP validation will proceed without proxies.
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <div className="grid grid-cols-1 gap-2">
+                    {proxyPools.map((pool) => (
+                      <div
+                        key={pool.id}
+                        className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                          form.watch('proxyPoolId') === pool.id
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                        onClick={() => form.setValue('proxyPoolId', form.watch('proxyPoolId') === pool.id ? undefined : (pool.id || ''))}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium">{pool.name}</div>
+                            <div className="text-sm text-muted-foreground">
+                              Strategy: {pool.poolStrategy || 'round_robin'} • Timeout: {pool.timeoutSeconds || 0}s
+                            </div>
+                          </div>
+                          {form.watch('proxyPoolId') === pool.id && (
+                            <Badge variant="default">Selected</Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 

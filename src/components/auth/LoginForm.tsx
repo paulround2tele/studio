@@ -31,8 +31,8 @@ export function LoginForm({
   title = 'Welcome back to DomainFlow',
   description = 'Sign in to your account to continue'
 }: LoginFormProps) {
-  const _router = useRouter();
-  const { login, isLoading: authLoading, isLoginLoading } = useAuth();
+  const router = useRouter();
+  const { login, isLoginLoading } = useAuth();
   
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
@@ -83,13 +83,10 @@ export function LoginForm({
         logger.warn('LOGIN_FORM', 'Login failed', { error: result.error });
         setError(result.error || 'Login failed. Please try again.');
       } else {
-        logger.info('LOGIN_FORM', 'Login successful - auth state updated');
-        // ✅ ARCHITECTURAL FIX: Let AdvancedConditionalLayout handle navigation
-        // The layout will automatically redirect when auth state updates
-        // This prevents dual navigation conflicts and ensures consistent routing
-        setError(''); // Clear any previous errors
-        
-        logger.debug('LOGIN_FORM', 'Waiting for AdvancedConditionalLayout to handle redirect');
+  logger.info('LOGIN_FORM', 'Login successful - redirecting to dashboard');
+  setError('');
+  // Redirect immediately after successful login. Middleware will keep us safe.
+  router.replace('/dashboard');
       }
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'An unexpected error occurred. Please try again.';
@@ -101,17 +98,7 @@ export function LoginForm({
   };
 
   // Show loading if auth is still loading
-  if (authLoading) {
-    logger.debug('LOGIN_FORM', 'Showing auth loading screen');
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto" />
-          <p className="text-muted-foreground">Checking authentication...</p>
-        </div>
-      </div>
-    );
-  }
+  // Do not block rendering on an auth-loading screen; middleware and form handle flow.
 
   // RACE CONDITION FIX: Let ConditionalLayout handle authenticated user redirects
   // LoginForm will be unmounted by ConditionalLayout when user is authenticated

@@ -9,6 +9,7 @@ import { DNSValidationConfig } from './DNSValidationConfig';
 import { HTTPKeywordValidationConfig } from './HTTPKeywordValidationConfig';
 import { AnalysisConfig } from './AnalysisConfig';
 import { DomainGenerationConfig } from './DomainGenerationConfig';
+import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 
 interface PhaseConfigurationProps {
   control: Control<any>;
@@ -26,7 +27,7 @@ const PHASE_ORDER = [
   { id: 'dns_validation', name: 'DNS Validation', isFoundation: false },
   { id: 'http_keyword_validation', name: 'HTTP Keyword Validation', isFoundation: false },
   { id: 'analysis', name: 'Analysis', isFoundation: false }
-];
+] as const;
 
 export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
   control,

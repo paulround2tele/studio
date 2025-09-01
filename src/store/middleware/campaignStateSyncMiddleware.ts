@@ -11,6 +11,7 @@ import {
 } from '../slices/campaignSlice';
 import type { RootState, AppDispatch } from '../index';
 import type { CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
+import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 
 // Middleware to handle campaign state synchronization
 export const campaignStateSyncMiddleware: Middleware<unknown, RootState, AppDispatch> = (store) => (next) => (action) => {
@@ -58,8 +59,9 @@ export const performPhaseTransition = (campaignId: string, phase: string) => (di
   dispatch(startPhaseTransition(phase));
   
   // Execute backend transition
+  const apiPhase = normalizeToApiPhase(phase);
   return dispatch(campaignApi.endpoints.startPhaseStandalone.initiate({
     campaignId,
-    phase: phase as CampaignCurrentPhaseEnum
+    phase: (apiPhase || phase) as CampaignCurrentPhaseEnum
   }) as any);
 };

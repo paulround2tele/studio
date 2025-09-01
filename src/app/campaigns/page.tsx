@@ -30,6 +30,7 @@ interface CampaignData {
 const PHASE_LABELS: Record<string, string> = {
   setup: "Setup",
   generation: "Domain Generation",
+  discovery: "Domain Generation",
   dns_validation: "DNS Validation",
   http_keyword_validation: "HTTP Validation",
   analysis: "Analysis"
@@ -75,7 +76,8 @@ export default function CampaignsPage() {
       return {
         campaignId: campaign.id,
         name: campaign.name,
-        currentPhase: campaign.currentPhase || 'domain_generation',
+  // Prefer API phase names; fall back to discovery to avoid engine/API mismatch
+  currentPhase: campaign.currentPhase || 'discovery',
         phaseStatus: campaign.phaseStatus || 'not_started',
         totalItems: domains.length,
         createdAt: new Date().toISOString(),

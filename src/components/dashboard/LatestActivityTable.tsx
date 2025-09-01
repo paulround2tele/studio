@@ -11,6 +11,7 @@ import { useRTKCampaignsList } from '@/providers/RTKCampaignDataProvider';
 import { useGetCampaignDomainsQuery } from '@/store/api/campaignApi';
 import { StatusBadge, type DomainActivityStatus } from '@/components/shared/StatusBadge';
 import { LeadScoreDisplay } from '@/components/shared/LeadScoreDisplay';
+import { DASHBOARD_RECENT_DOMAINS_LIMIT } from '@/lib/constants';
 
 // Local type definitions for activity data
 type GeneratedDomainLite = {
@@ -96,23 +97,23 @@ export default function LatestActivityTable() {
   const campaignsNeedingDomains = enrichedCampaigns.filter(c => (!Array.isArray(c.domains) || c.domains.length === 0) && !!c.id).slice(0, 5);
   const domainsQueries = campaignsNeedingDomains.map(c => ({ id: c.id as string }));
   const q1 = useGetCampaignDomainsQuery(
-    { campaignId: domainsQueries[0]?.id || '', limit: 100, offset: 0 },
+    { campaignId: domainsQueries[0]?.id || '', limit: DASHBOARD_RECENT_DOMAINS_LIMIT, offset: 0 },
     { skip: !domainsQueries[0] }
   );
   const q2 = useGetCampaignDomainsQuery(
-    { campaignId: domainsQueries[1]?.id || '', limit: 100, offset: 0 },
+    { campaignId: domainsQueries[1]?.id || '', limit: DASHBOARD_RECENT_DOMAINS_LIMIT, offset: 0 },
     { skip: !domainsQueries[1] }
   );
   const q3 = useGetCampaignDomainsQuery(
-    { campaignId: domainsQueries[2]?.id || '', limit: 100, offset: 0 },
+    { campaignId: domainsQueries[2]?.id || '', limit: DASHBOARD_RECENT_DOMAINS_LIMIT, offset: 0 },
     { skip: !domainsQueries[2] }
   );
   const q4 = useGetCampaignDomainsQuery(
-    { campaignId: domainsQueries[3]?.id || '', limit: 100, offset: 0 },
+    { campaignId: domainsQueries[3]?.id || '', limit: DASHBOARD_RECENT_DOMAINS_LIMIT, offset: 0 },
     { skip: !domainsQueries[3] }
   );
   const q5 = useGetCampaignDomainsQuery(
-    { campaignId: domainsQueries[4]?.id || '', limit: 100, offset: 0 },
+    { campaignId: domainsQueries[4]?.id || '', limit: DASHBOARD_RECENT_DOMAINS_LIMIT, offset: 0 },
     { skip: !domainsQueries[4] }
   );
 

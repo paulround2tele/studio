@@ -135,8 +135,10 @@ function PersonasPageContent() {
   const response = await personasApi.personasList(undefined, undefined, undefined, type as any);
       
       if (response.data) {
-        // Handle PersonaListResponse - data is array directly from OpenAPI
-        const personasData = Array.isArray(response.data) ? response.data : [];
+        // Unwrap SuccessEnvelope shape { success, data, metadata }
+        const envelope = response.data as any;
+        const list = envelope?.data ?? [];
+        const personasData = Array.isArray(list) ? list : [];
         // Add missing status property for compatibility
         const personasWithStatus = personasData.map(persona => ({
           ...persona,
@@ -148,7 +150,7 @@ function PersonasPageContent() {
         
         if (type === 'http') setHttpPersonas(personasWithStatus as HttpPersona[]);
         else setDnsPersonas(personasWithStatus as DnsPersona[]);
-      } else {
+  } else {
         // If no data returned, treat as empty result rather than error
         if (type === 'http') setHttpPersonas([]);
         else setDnsPersonas([]);
@@ -328,12 +330,24 @@ function PersonasPageContent() {
                     } as any,
                 };
             }
-            const response = await personasApi.personasCreate(createPayload as any);
-            if (response.data) {
+            try {
+              const response = await personasApi.personasCreate(createPayload as any);
+              if (response.data) {
               importedCount++;
-            } else {
+              } else {
+                errorCount++;
+                toast({ title: `Error Importing ${item.name || 'Persona'}` , description: "Failed to import persona.", variant: "destructive" });
+              }
+            } catch (e: any) {
+              // Treat HTTP 409 (Conflict) as already present and continue
+              const status = e?.response?.status;
+              if (status === 409) {
+                // Skip counting as error; it's already there
+                continue;
+              }
               errorCount++;
-              toast({ title: `Error Importing ${item.name || 'Persona'}`, description: "Failed to import persona.", variant: "destructive" });
+              const msg = e?.response?.data?.error?.message || e?.message || 'Unknown error';
+              toast({ title: `Error Importing ${item.name || 'Persona'}`, description: msg, variant: "destructive" });
             }
         }
         if (importedCount > 0) {

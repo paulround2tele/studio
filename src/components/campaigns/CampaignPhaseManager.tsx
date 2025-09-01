@@ -13,6 +13,7 @@ import type { HTTPValidatorConfigJSON as ApiHTTPValidationConfig } from '@/lib/a
 import type { ServicesDomainGenerationPhaseConfig } from '@/lib/api-client/models/services-domain-generation-phase-config';
 import type { ApiAnalysisConfig } from '@/lib/api-client/models/api-analysis-config';
 import { CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
+import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 
 // Import the properly typed configuration components
 import DNSValidationConfig from './configuration/DNSValidationConfig';
@@ -78,11 +79,13 @@ export const CampaignPhaseManager: React.FC<CampaignPhaseManagerProps> = ({ camp
     }
 
     try {
-      const configReq: ApiPhaseConfigureRequest = {
+  const configReq: ApiPhaseConfigureRequest = {
         configuration: phaseConfig || {},
         // personaIds/keywordSetIds can be set by the individual config UIs
       };
-      await configurePhase({ campaignId, phase: data.selectedPhase, config: configReq }).unwrap();
+  const apiPhase = normalizeToApiPhase(data.selectedPhase);
+  if (!apiPhase) throw new Error(`Unknown phase: ${data.selectedPhase}`);
+  await configurePhase({ campaignId, phase: apiPhase, config: configReq }).unwrap();
 
       toast({
         title: "Phase Configured",
@@ -109,10 +112,9 @@ export const CampaignPhaseManager: React.FC<CampaignPhaseManagerProps> = ({ camp
     }
 
     try {
-      await startPhase({
-        campaignId,
-        phase: selectedPhase,
-      }).unwrap();
+  const apiPhase = normalizeToApiPhase(selectedPhase);
+  if (!apiPhase) throw new Error(`Unknown phase: ${selectedPhase}`);
+  await startPhase({ campaignId, phase: apiPhase }).unwrap();
 
       toast({
         title: "Phase Started",

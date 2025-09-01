@@ -7,12 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, Clock, Play, Pause, AlertCircle, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { SimpleTooltip } from '@/components/ui/tooltip';
 
 interface PhaseCardProps {
   phase: {
     id: string;
     name: string;
-    status: 'pending' | 'running' | 'completed' | 'failed' | 'paused';
+    status: 'pending' | 'running' | 'completed' | 'failed' | 'paused' | 'configured';
     progress?: number;
     duration?: string;
     itemsProcessed?: number;
@@ -22,10 +23,16 @@ interface PhaseCardProps {
   isActive: boolean;
   canStart: boolean;
   canConfigure: boolean;
+  configureDisabledReason?: string;
+  startDisabledReason?: string;
+  isConfigured?: boolean;
+  lastStartError?: string;
   onStart?: () => void;
   onPause?: () => void;
+  onResume?: () => void;
   onConfigure?: () => void;
   className?: string;
+  liveConnected?: boolean;
 }
 
 const statusConfig = {
@@ -59,6 +66,12 @@ const statusConfig = {
     bgColor: 'bg-yellow-100',
     badgeVariant: 'outline' as const,
   },
+  configured: {
+    icon: Settings,
+    color: 'text-purple-500',
+    bgColor: 'bg-purple-100',
+    badgeVariant: 'secondary' as const,
+  },
 };
 
 export function PhaseCard({
@@ -66,10 +79,16 @@ export function PhaseCard({
   isActive,
   canStart,
   canConfigure,
+  configureDisabledReason,
+  startDisabledReason,
+  isConfigured = false,
+  lastStartError,
   onStart,
   onPause,
+  onResume,
   onConfigure,
   className,
+  liveConnected = false,
 }: PhaseCardProps) {
   const config = statusConfig[phase.status];
   const Icon = config.icon;
@@ -88,13 +107,27 @@ export function PhaseCard({
             </div>
             {phase.name}
           </CardTitle>
-          <Badge variant={config.badgeVariant}>
-            {phase.status}
-          </Badge>
+          <div className="flex items-center gap-2">
+            {liveConnected && (
+              <Badge className="bg-green-100 text-green-700 border-green-200">Live</Badge>
+            )}
+            {phase.status === 'pending' && isConfigured && (
+              <Badge variant="secondary">Configured</Badge>
+            )}
+            <Badge variant={config.badgeVariant}>
+              {phase.status}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       
       <CardContent className="space-y-4">
+        {/* Inline last start error for quick visibility */}
+        {lastStartError && (phase.status === 'pending' || phase.status === 'configured') && (
+          <div className="text-sm text-red-700 bg-red-50 border border-red-200 p-2 rounded">
+            <strong>Start failed:</strong> {lastStartError}
+          </div>
+        )}
         {/* Progress bar for running phases */}
         {phase.status === 'running' && phase.progress !== undefined && (
           <div className="space-y-2">
@@ -127,18 +160,27 @@ export function PhaseCard({
 
         {/* Action buttons */}
         <div className="flex gap-2 pt-2">
-          {canStart && phase.status === 'pending' && (
-            <Button
-              size="sm"
-              onClick={onStart}
-              className="flex-1"
-            >
-              <Play className="h-3 w-3 mr-1" />
-              Start
-            </Button>
+          {(phase.status === 'pending' || phase.status === 'configured') && (
+            canStart ? (
+              <Button size="sm" onClick={onStart} className="flex-1">
+                <Play className="h-3 w-3 mr-1" />
+                Start
+              </Button>
+            ) : (
+              <SimpleTooltip
+                disabled={!startDisabledReason}
+                content={startDisabledReason || ''}
+                side="top"
+              >
+                <Button size="sm" className="flex-1" disabled>
+                  <Play className="h-3 w-3 mr-1" />
+                  Start
+                </Button>
+              </SimpleTooltip>
+            )
           )}
           
-          {phase.status === 'running' && (
+          {phase.status === 'running' && onPause && (
             <Button
               size="sm"
               variant="outline"
@@ -149,16 +191,34 @@ export function PhaseCard({
               Pause
             </Button>
           )}
-          
-          {canConfigure && (
+
+          {phase.status === 'paused' && onResume && (
             <Button
               size="sm"
-              variant="outline"
-              onClick={onConfigure}
+              onClick={onResume}
+              className="flex-1"
             >
+              <Play className="h-3 w-3 mr-1" />
+              Resume
+            </Button>
+          )}
+          
+          {canConfigure ? (
+            <Button size="sm" variant="outline" onClick={onConfigure}>
               <Settings className="h-3 w-3 mr-1" />
               Configure
             </Button>
+          ) : (
+            <SimpleTooltip
+              disabled={!configureDisabledReason}
+              content={configureDisabledReason || ''}
+              side="top"
+            >
+              <Button size="sm" variant="outline" disabled>
+                <Settings className="h-3 w-3 mr-1" />
+                Configure
+              </Button>
+            </SimpleTooltip>
           )}
         </div>
       </CardContent>

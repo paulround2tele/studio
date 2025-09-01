@@ -106,7 +106,7 @@ func (s *dnsValidationService) Configure(ctx context.Context, campaignID uuid.UU
 	s.executions[campaignID] = &dnsExecution{
 		campaignID:        campaignID,
 		config:            dnsConfig,
-		status:            models.PhaseStatusNotStarted,
+		status:            models.PhaseStatusConfigured,
 		domainsToValidate: domains,
 		itemsTotal:        int64(len(domains)),
 		itemsProcessed:    0,
@@ -174,7 +174,7 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 	for i := 0; i < len(domains); i += batchSize {
 		select {
 		case <-ctx.Done():
-			s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, "Execution cancelled")
+			s.updateExecutionStatus(campaignID, models.PhaseStatusPaused, "Execution cancelled by caller context")
 			return
 		default:
 		}
@@ -231,12 +231,16 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 			return
 		}
 
-		// Publish progress event
-		if err := s.deps.EventBus.PublishProgress(ctx, progress); err != nil {
-			s.deps.Logger.Warn(ctx, "Failed to publish progress event", map[string]interface{}{
-				"campaign_id": campaignID,
-				"error":       err.Error(),
-			})
+		// Publish progress event (guard EventBus)
+		if s.deps.EventBus != nil {
+			if err := s.deps.EventBus.PublishProgress(ctx, progress); err != nil {
+				if s.deps.Logger != nil {
+					s.deps.Logger.Warn(ctx, "Failed to publish progress event", map[string]interface{}{
+						"campaign_id": campaignID,
+						"error":       err.Error(),
+					})
+				}
+			}
 		}
 	}
 
@@ -390,11 +394,15 @@ func (s *dnsValidationService) updateExecutionStatus(campaignID uuid.UUID, statu
 	}
 
 	ctx := context.Background()
-	if err := s.deps.EventBus.PublishStatusChange(ctx, phaseStatus); err != nil {
-		s.deps.Logger.Warn(ctx, "Failed to publish status change event", map[string]interface{}{
-			"campaign_id": campaignID,
-			"error":       err.Error(),
-		})
+	if s.deps.EventBus != nil {
+		if err := s.deps.EventBus.PublishStatusChange(ctx, phaseStatus); err != nil {
+			if s.deps.Logger != nil {
+				s.deps.Logger.Warn(ctx, "Failed to publish status change event", map[string]interface{}{
+					"campaign_id": campaignID,
+					"error":       err.Error(),
+				})
+			}
+		}
 	}
 }
 

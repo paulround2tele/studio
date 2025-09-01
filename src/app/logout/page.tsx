@@ -18,7 +18,7 @@ export default function LogoutPage() {
     setIsLoggingOut(true);
     try {
       // THIN CLIENT: Call backend logout API directly
-      await fetch('/api/v2/auth/logout', { method: 'POST' });
+  await fetch('/api/v2/auth/logout', { method: 'POST', credentials: 'include' });
       setLogoutComplete(true);
       
       // PERFORMANCE FIX: Immediate redirect instead of 2-second delay

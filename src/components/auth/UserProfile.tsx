@@ -1,8 +1,10 @@
 // src/components/auth/UserProfile.tsx
 // Simplified user profile component for thin client architecture
+
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,6 +22,7 @@ export function UserProfile({
   onProfileUpdated: _onProfileUpdated,
   showPasswordChange = true 
 }: UserProfileProps) {
+  const router = useRouter();
   // THIN CLIENT: Get user data from backend API instead of frontend context
   // In thin client architecture, backend provides user data via API calls
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
@@ -76,12 +79,13 @@ export function UserProfile({
   };
 
   const handleLogout = async () => {
-    // THIN CLIENT: Call backend logout API directly
     try {
-      await fetch('/api/v2/auth/logout', { method: 'POST' });
-      window.location.href = '/login';
+      await fetch('/api/v2/auth/logout', { method: 'POST', credentials: 'include' });
     } catch (_error) {
-      window.location.href = '/login';
+      // ignore
+    } finally {
+      // Let middleware gate next request, but navigate client-side for UX
+      router.push('/login');
     }
   };
 

@@ -1,7 +1,7 @@
 'use client';
 
-import { usePathname, useRouter } from 'next/navigation';
-import { useLayoutEffect, useRef, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
+import { useLayoutEffect, useRef } from 'react';
 import AppLayout from './AppLayout';
 import { useAuth } from '@/components/providers/AuthProvider';
 
@@ -23,135 +23,23 @@ function AuthLoadingFallback() {
 
 export default function AdvancedConditionalLayout({ children }: AdvancedConditionalLayoutProps) {
   const pathname = usePathname();
-  const router = useRouter();
-  const { isAuthenticated, isLoading, isInitialized, user } = useAuth();
+  const { isAuthenticated, isLoading, isInitialized } = useAuth();
   
-  // Navigation state management with refs for instant updates
-  const navigationLockRef = useRef(false);
+  // Track last auth state to avoid unnecessary reflows
   const lastAuthStateRef = useRef<boolean | null>(null);
-  const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Public paths configuration
-  const publicPaths = ['/login', '/signup'];
-  const isPublicPath = publicPaths.includes(pathname);
-  
-  // Optimistic navigation handler with race condition prevention
-  const handleNavigation = useCallback(() => {
-    // 🔍 DEBUG: Add timestamp and detailed state logging
-    console.log('[AdvancedConditionalLayout] 🔍 HANDLER CALLED:', {
-      timestamp: new Date().toISOString(),
-      isAuthenticated,
-      isInitialized,
-      isLoading,
-      userEmail: user?.email,
-      pathname,
-      isPublicPath,
-      navigationLocked: navigationLockRef.current
-    });
 
-    // Prevent navigation during transitions
-    if (navigationLockRef.current) {
-      console.log('[AdvancedConditionalLayout] NAVIGATION LOCKED - skipping redirect');
-      return;
-    }
-
-    // Only proceed if auth state is stable and initialized
-    if (!isInitialized || isLoading) {
-      console.log('[AdvancedConditionalLayout] AUTH NOT READY - waiting for initialization', {
+  // Minimal monitor for debugging without triggering navigations
+  useLayoutEffect(() => {
+    if (lastAuthStateRef.current !== isAuthenticated) {
+      lastAuthStateRef.current = isAuthenticated;
+      console.log('[AdvancedConditionalLayout] auth state changed', {
+        isAuthenticated,
         isInitialized,
         isLoading,
-        isAuthenticated,
-        user: user?.email
-      });
-      return;
-    }
-
-    // Check if auth state actually changed to prevent unnecessary redirects
-    if (lastAuthStateRef.current === isAuthenticated) {
-      console.log('[AdvancedConditionalLayout] NO AUTH STATE CHANGE - skipping redirect', {
-        current: lastAuthStateRef.current,
-        new: isAuthenticated,
         pathname,
-        user: user?.email
       });
-      return;
     }
-
-    // Update tracked auth state
-    lastAuthStateRef.current = isAuthenticated;
-
-    console.log('[AdvancedConditionalLayout] 🚨 NAVIGATION DECISION:', {
-      isAuthenticated,
-      isPublicPath,
-      pathname,
-      navigationLocked: navigationLockRef.current,
-      userEmail: user?.email,
-      timestamp: new Date().toISOString()
-    });
-
-    // Lock navigation during redirect
-    navigationLockRef.current = true;
-
-    // Clear any existing navigation timeout
-    if (navigationTimeoutRef.current) {
-      clearTimeout(navigationTimeoutRef.current);
-    }
-
-    // Optimistic redirect logic with debouncing
-    if (!isAuthenticated && !isPublicPath) {
-      console.log('[AdvancedConditionalLayout] REDIRECTING: Unauthenticated user to login');
-      
-      // Use immediate router push for fast redirects
-      router.push('/login');
-      
-      // Unlock navigation after short delay
-      navigationTimeoutRef.current = setTimeout(() => {
-        navigationLockRef.current = false;
-      }, 100);
-      
-    } else if (isAuthenticated && isPublicPath) {
-      console.log('[AdvancedConditionalLayout] REDIRECTING: Authenticated user to dashboard');
-      
-      // Use immediate router push for fast redirects
-      router.push('/dashboard');
-      
-      // Unlock navigation after short delay
-      navigationTimeoutRef.current = setTimeout(() => {
-        navigationLockRef.current = false;
-      }, 100);
-    } else {
-      console.log('[AdvancedConditionalLayout] NO REDIRECT NEEDED - staying on:', pathname);
-      // Unlock immediately if no redirect needed
-      navigationLockRef.current = false;
-    }
-  }, [isAuthenticated, isLoading, isInitialized, isPublicPath, pathname, router, user?.email]);
-
-  // Use useLayoutEffect for synchronous execution (prevents visual flashing)
-  useLayoutEffect(() => {
-    console.log('[AdvancedConditionalLayout] 🔄 useLayoutEffect TRIGGERED - calling handleNavigation');
-    handleNavigation();
-  }, [handleNavigation]);
-
-  // 🔍 DEBUG: Also add useEffect to monitor auth state changes separately
-  useLayoutEffect(() => {
-    console.log('[AdvancedConditionalLayout] 🔍 AUTH STATE MONITOR:', {
-      timestamp: new Date().toISOString(),
-      isAuthenticated,
-      isInitialized,
-      isLoading,
-      userEmail: user?.email,
-      pathname
-    });
-  }, [isAuthenticated, isInitialized, isLoading, user, pathname]);
-
-  // Cleanup navigation timeout on unmount
-  useLayoutEffect(() => {
-    return () => {
-      if (navigationTimeoutRef.current) {
-        clearTimeout(navigationTimeoutRef.current);
-      }
-    };
-  }, []);
+  }, [isAuthenticated, isInitialized, isLoading, pathname]);
 
   // PERFORMANCE OPTIMIZATION: Show loading only if both uninitialized AND loading
   // This prevents unnecessary "Checking authentication..." after successful login
@@ -163,27 +51,13 @@ export default function AdvancedConditionalLayout({ children }: AdvancedConditio
   // This prevents flashing loading screen during cache reads
   
   // Render logic with optimistic updates
-  if (!isAuthenticated) {
-    // User is not authenticated
-    if (isPublicPath) {
-      // Allow access to public pages (login, signup) - render immediately
-      return (
-        <div className="min-h-screen bg-background">
-          {children}
-        </div>
-      );
-    } else {
-      // Protected page accessed by unauthenticated user - show loading during redirect
-      return <AuthLoadingFallback />;
-    }
-  } else {
-    // User is authenticated
-    if (isPublicPath) {
-      // Authenticated user on public page - show loading during redirect
-      return <AuthLoadingFallback />;
-    } else {
-      // Authenticated user on protected page - render with AppLayout immediately
-      return <AppLayout>{children}</AppLayout>;
-    }
-  }
+  const publicPaths = ['/login', '/signup'];
+  const isPublicPath = publicPaths.includes(pathname);
+
+  // Do not gate here; middleware/server components handle redirects.
+  // Only wrap authenticated areas in AppLayout based on path heuristics.
+  const appPaths = ['/dashboard', '/campaigns', '/personas', '/keyword-sets', '/proxies'];
+  const isAppPath = appPaths.some((p) => pathname?.startsWith(p));
+  if (isAppPath) return <AppLayout>{children}</AppLayout>;
+  return <div className="min-h-screen bg-background">{children}</div>;
 }

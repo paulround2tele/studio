@@ -8,6 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { validateCampaignId } from '@/lib/utils/uuidValidation';
 import { extractDomainName } from '@/lib/utils/typeGuards';
+import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
+import { DOWNLOAD_DOMAINS_LIMIT } from '@/lib/constants';
 
 export const useCampaignOperations = (campaignId: string) => {
   const { toast } = useToast();
@@ -23,11 +25,13 @@ export const useCampaignOperations = (campaignId: string) => {
         throw new Error(campaignValidationResult.error || 'Invalid campaign ID');
       }
 
-  await startPhaseMutation({ campaignId, phase: phaseType }).unwrap();
+      const apiPhase = normalizeToApiPhase(phaseType);
+      if (!apiPhase) throw new Error(`Unknown phase: ${phaseType}`);
+      await startPhaseMutation({ campaignId, phase: apiPhase }).unwrap();
       
       toast({
         title: "Phase Started",
-        description: `${phaseType.replace('_', ' ')} phase has been started successfully.`,
+  description: `${apiPhase} phase has been started successfully.`,
       });
 
       // Trigger page refresh to get updated data
@@ -84,7 +88,7 @@ export const useCampaignOperations = (campaignId: string) => {
       }
       // Fetch first page of domains via spec endpoint
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      const res = await fetch(`${apiUrl}/api/v2/campaigns/${campaignId}/domains?limit=1000&offset=0`, {
+  const res = await fetch(`${apiUrl}/api/v2/campaigns/${campaignId}/domains?limit=${DOWNLOAD_DOMAINS_LIMIT}&offset=0`, {
         method: 'GET',
         credentials: 'include',
         headers: { 'Accept': 'application/json' },

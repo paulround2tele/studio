@@ -14,6 +14,7 @@ import { PerformanceTuningSection } from './sections/PerformanceTuningSection';
 import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { validateUUID } from '@/lib/utils/uuidValidation';
 import type { CampaignResponse } from '@/lib/api-client/models/campaign-response';
+import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 
 // Phase configuration form interface
 interface PhaseConfigurationFormValues {
@@ -117,14 +118,7 @@ export const ModernPhaseConfiguration: React.FC<ModernPhaseConfigurationProps> =
         if (!httpValidation.isValid) return;
       }
 
-      // Map phase type to backend parameter
-      const phaseParameterMap: Record<string, string> = {
-        'dns_validation': 'dns_validation',
-        'http_keyword_validation': 'http_keyword_validation', 
-        'analysis': 'analysis'
-      };
-
-      const backendPhaseParam = phaseParameterMap[phaseType as string];
+  const backendPhaseParam = normalizeToApiPhase(phaseType as string);
       if (!backendPhaseParam) {
         throw new Error(`Unsupported phase type: ${phaseType}`);
       }

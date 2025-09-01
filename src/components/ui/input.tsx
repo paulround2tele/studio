@@ -35,6 +35,16 @@ export interface InputProps
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type = "text", variant, inputSize, error, helperText, ...props }, ref) => {
     const computedVariant = error ? "destructive" : variant;
+    // Prevent uncontrolled -> controlled warnings by treating fields with onChange as controlled from first paint
+    const { value, defaultValue, onChange, id, ...rest } = props as {
+      value?: string | number | readonly string[];
+      defaultValue?: string | number | readonly string[];
+      onChange?: React.ChangeEventHandler<HTMLInputElement>;
+      id?: string;
+      [key: string]: any;
+    };
+    const isControlled = typeof onChange === 'function';
+    const finalValue = isControlled ? (value ?? '') : value;
     
     return (
       <div className="space-y-1">
@@ -46,12 +56,16 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           )}
           ref={ref}
           aria-invalid={error}
-          aria-describedby={helperText ? `${props.id}-helper` : undefined}
-          {...props}
+          aria-describedby={helperText ? `${id}-helper` : undefined}
+          onChange={onChange}
+          {...(finalValue !== undefined ? { value: finalValue } : {})}
+          {...(!isControlled && defaultValue !== undefined ? { defaultValue } : {})}
+          id={id}
+          {...rest}
         />
         {helperText && (
           <p
-            id={`${props.id}-helper`}
+            id={`${id}-helper`}
             className={cn(
               "text-sm",
               error ? "text-destructive" : "text-muted-foreground"

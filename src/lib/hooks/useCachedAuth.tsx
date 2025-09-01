@@ -1,6 +1,7 @@
-'use client';
+"use client";
 
 import { useCallback, useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { authApi } from '@/lib/api-client/compat';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 import type { LoginRequest, UserPublicResponse as User } from '@/lib/api-client/models';
@@ -46,6 +47,7 @@ const DEFAULT_CONFIG: CachedAuthConfig = {
  * ✅ Cross-tab synchronization via localStorage events
  */
 export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
+  const router = useRouter();
   const finalConfig = { ...DEFAULT_CONFIG, ...config };
   
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -280,7 +282,8 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
   const logout = useCallback(async () => {
     setIsLogoutLoading(true);
     try {
-  await authApi.authLogout();
+      // Ensure cookies sent
+      await authApi.authLogout();
     } catch (error) {
       console.error('[useCachedAuth] Logout API failed:', error);
     } finally {
@@ -289,9 +292,9 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
       setUser(null);
       clearCachedAuthState();
       setIsLogoutLoading(false);
-      
-      // Redirect to login
-      window.location.href = '/login';
+
+  // Navigate client-side; middleware will enforce auth gating on next loads
+  router.push('/login');
     }
   }, [clearCachedAuthState]);
 

@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Play, Loader2 } from 'lucide-react';
+import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 
 interface ReduxPhaseTransitionButtonProps {
   campaignId: string;
@@ -40,7 +41,9 @@ export const ReduxPhaseTransitionButton: React.FC<ReduxPhaseTransitionButtonProp
       dispatch(startPhaseTransition(phaseType));
       
   // Call API
-  await startPhase({ campaignId, phase: phaseType as string }).unwrap();
+  const apiPhase = normalizeToApiPhase(phaseType);
+  if (!apiPhase) throw new Error(`Unknown phase: ${phaseType}`);
+  await startPhase({ campaignId, phase: apiPhase }).unwrap();
       
       // Update Redux state on success
       dispatch(completePhaseTransition());
