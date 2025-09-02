@@ -3,6 +3,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -82,7 +83,16 @@ func (s *httpValidationService) Configure(ctx context.Context, campaignID uuid.U
 		return fmt.Errorf("configuration validation failed: %w", err)
 	}
 
-	// Store configuration in campaign store
+	// Store configuration in campaign phases
+	if s.store != nil {
+		if raw, mErr := json.Marshal(httpConfig); mErr == nil {
+			var exec store.Querier
+			if q, ok := s.deps.DB.(store.Querier); ok {
+				exec = q
+			}
+			_ = s.store.UpdatePhaseConfiguration(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation, raw)
+		}
+	}
 	s.deps.Logger.Info(ctx, "HTTP validation configuration stored", map[string]interface{}{
 		"campaign_id":    campaignID,
 		"persona_count":  len(httpConfig.PersonaIDs),
@@ -150,6 +160,15 @@ func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUI
 	}
 	s.executions[campaignID] = execution
 	s.mu.Unlock()
+
+	// Mark phase started in store
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		_ = s.store.StartPhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation)
+	}
 
 	// Get domains from previous phase (DNS validation)
 	domains, err := s.getValidatedDomains(ctx, campaignID)
@@ -257,9 +276,6 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 		"domain_count": len(domains),
 	})
 
-	// Prepare domains for the engine
-	generatedDomains := s.prepareGeneratedDomains(domains)
-
 	// Get persona and proxy from config (simplified for now)
 	persona, proxy, err := s.getPersonaAndProxy(ctx, campaignID)
 	if err != nil {
@@ -267,24 +283,94 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 		return
 	}
 
-	// Execute HTTP validation using the engine
-	results := s.httpValidator.ValidateDomainsBulk(ctx, generatedDomains, 25, persona, proxy)
-	if len(results) == 0 {
+	// Process in batches for progress visibility
+	const batchSize = 50
+	total := len(domains)
+	processed := 0
+	allResults := make([]*httpvalidator.ValidationResult, 0, total)
+
+	for i := 0; i < total; i += batchSize {
+		select {
+		case <-ctx.Done():
+			s.updateExecutionStatus(campaignID, models.PhaseStatusPaused, "Execution cancelled by caller context")
+			return
+		default:
+		}
+
+		end := i + batchSize
+		if end > total {
+			end = total
+		}
+		batch := domains[i:end]
+
+		// Prepare batch for engine
+		genBatch := s.prepareGeneratedDomains(batch)
+		results := s.httpValidator.ValidateDomainsBulk(ctx, genBatch, 25, persona, proxy)
+
+		// Accumulate
+		allResults = append(allResults, results...)
+		processed += len(results)
+
+		// Persist batch results
+		if err := s.storeHTTPResults(ctx, campaignID, results); err != nil {
+			s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, fmt.Sprintf("failed to store HTTP results: %v", err))
+			return
+		}
+
+		// Update in-memory execution and emit progress
+		s.mu.Lock()
+		if execution, exists := s.executions[campaignID]; exists {
+			execution.Results = append(execution.Results, results...)
+			execution.ItemsProcessed = processed
+			execution.Progress = (float64(processed) / float64(total)) * 100
+			// Send progress update
+			if execution.ProgressChan != nil {
+				progress := PhaseProgress{
+					Phase:          models.PhaseTypeHTTPKeywordValidation,
+					Status:         models.PhaseStatusInProgress,
+					ProgressPct:    execution.Progress,
+					ItemsProcessed: int64(execution.ItemsProcessed),
+					ItemsTotal:     int64(execution.ItemsTotal),
+					Message:        fmt.Sprintf("Validated %d/%d domains", processed, total),
+					Timestamp:      time.Now(),
+				}
+				select {
+				case execution.ProgressChan <- progress:
+				default:
+				}
+				// Publish via EventBus if available
+				if s.deps.EventBus != nil {
+					_ = s.deps.EventBus.PublishProgress(ctx, progress)
+				}
+			}
+		}
+		s.mu.Unlock()
+
+		// Persist progress to store
+		if s.store != nil {
+			var exec store.Querier
+			if q, ok := s.deps.DB.(store.Querier); ok {
+				exec = q
+			}
+			total64 := int64(total)
+			processed64 := int64(processed)
+			_ = s.store.UpdatePhaseProgress(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation, (float64(processed)/float64(total))*100, &total64, &processed64, nil, nil)
+		}
+	}
+
+	if processed == 0 {
 		s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, "HTTP validation returned no results")
 		return
 	}
 
-	// Process results
+	// Finalize execution
 	s.mu.Lock()
 	if execution, exists := s.executions[campaignID]; exists {
-		execution.Results = results
-		execution.ItemsProcessed = len(results)
-		execution.Progress = 100.0
 		execution.Status = models.PhaseStatusCompleted
+		execution.Progress = 100.0
+		execution.ItemsProcessed = processed
 		now := time.Now()
 		execution.CompletedAt = &now
-
-		// Send final progress update
 		if execution.ProgressChan != nil {
 			select {
 			case execution.ProgressChan <- PhaseProgress{
@@ -293,6 +379,7 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 				ProgressPct:    100.0,
 				ItemsProcessed: int64(execution.ItemsProcessed),
 				ItemsTotal:     int64(execution.ItemsTotal),
+				Timestamp:      time.Now(),
 			}:
 			default:
 			}
@@ -300,29 +387,57 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 	}
 	s.mu.Unlock()
 
-	// Store results in campaign store
-	if err := s.storeHTTPResults(ctx, campaignID, results); err != nil {
-		s.deps.Logger.Error(ctx, "Failed to store HTTP validation results", err, map[string]interface{}{
-			"campaign_id": campaignID,
-		})
-	}
-
 	s.deps.Logger.Info(ctx, "HTTP validation completed successfully", map[string]interface{}{
 		"campaign_id":    campaignID,
-		"results_count":  len(results),
+		"results_count":  len(allResults),
 		"domains_tested": len(domains),
 	})
+
+	// Mark completed in store
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		_ = s.store.CompletePhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation)
+	}
 }
 
 // getValidatedDomains retrieves domains that passed DNS validation
 func (s *httpValidationService) getValidatedDomains(ctx context.Context, campaignID uuid.UUID) ([]string, error) {
-	// This would query the campaign store for domains that passed DNS validation
 	s.deps.Logger.Debug(ctx, "Retrieving validated domains from DNS phase", map[string]interface{}{
 		"campaign_id": campaignID,
 	})
 
-	// TODO: Implement actual query to get domains from DNS validation results
-	return []string{"example.com", "test.com"}, nil
+	if s.store == nil {
+		return nil, fmt.Errorf("campaign store not available")
+	}
+	var exec store.Querier
+	if q, ok := s.deps.DB.(store.Querier); ok {
+		exec = q
+	}
+	var after string
+	all := make([]string, 0, 2048)
+	for {
+		page, err := s.store.GetGeneratedDomainsWithCursor(ctx, exec, store.ListGeneratedDomainsFilter{
+			CursorPaginationFilter: store.CursorPaginationFilter{First: 1000, After: after, SortBy: "offset_index", SortOrder: "ASC"},
+			CampaignID:             campaignID,
+			ValidationStatus:       string(models.DomainDNSStatusOK),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch validated domains: %w", err)
+		}
+		for _, gd := range page.Data {
+			if gd != nil && gd.DomainName != "" {
+				all = append(all, gd.DomainName)
+			}
+		}
+		if !page.PageInfo.HasNextPage || page.PageInfo.EndCursor == "" {
+			break
+		}
+		after = page.PageInfo.EndCursor
+	}
+	return all, nil
 }
 
 // ensureDNSCompleted checks the campaign phase table and ensures DNS phase is marked completed
@@ -365,13 +480,49 @@ func (s *httpValidationService) getPersonaAndProxy(ctx context.Context, campaign
 
 // storeHTTPResults stores HTTP validation results in the campaign store
 func (s *httpValidationService) storeHTTPResults(ctx context.Context, campaignID uuid.UUID, results []*httpvalidator.ValidationResult) error {
-	// This would store the results in the campaign store
 	s.deps.Logger.Info(ctx, "Storing HTTP validation results", map[string]interface{}{
 		"campaign_id":  campaignID,
 		"result_count": len(results),
 	})
-
-	// TODO: Implement actual storage of HTTP validation results
+	if s.store == nil || len(results) == 0 {
+		return nil
+	}
+	// Map to bulk model slice
+	bulk := make([]models.HTTPKeywordResult, 0, len(results))
+	for _, r := range results {
+		if r == nil || r.Domain == "" {
+			continue
+		}
+		status := "error"
+		if r.IsSuccess || r.Status == "Validated" || r.Status == "OK" {
+			status = "ok"
+		}
+		var codePtr *int32
+		if r.StatusCode != 0 {
+			c := int32(r.StatusCode)
+			codePtr = &c
+		}
+		var titlePtr *string
+		if r.ExtractedTitle != "" {
+			t := r.ExtractedTitle
+			titlePtr = &t
+		}
+		bulk = append(bulk, models.HTTPKeywordResult{
+			HTTPKeywordCampaignID: campaignID,
+			DomainName:            r.Domain,
+			ValidationStatus:      status,
+			HTTPStatusCode:        codePtr,
+			PageTitle:             titlePtr,
+			LastCheckedAt:         func() *time.Time { t := time.Now(); return &t }(),
+		})
+	}
+	var exec store.Querier
+	if q, ok := s.deps.DB.(store.Querier); ok {
+		exec = q
+	}
+	if err := s.store.UpdateDomainsBulkHTTPStatus(ctx, exec, bulk); err != nil {
+		return fmt.Errorf("failed to persist HTTP results: %w", err)
+	}
 	return nil
 }
 
@@ -405,6 +556,23 @@ func (s *httpValidationService) updateExecutionStatus(campaignID uuid.UUID, stat
 			Error:          errorMsg,
 		}:
 		default:
+		}
+	}
+
+	// Persist status change
+	ctx := context.Background()
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		switch status {
+		case models.PhaseStatusCompleted:
+			_ = s.store.CompletePhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation)
+		case models.PhaseStatusFailed:
+			_ = s.store.FailPhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation, errorMsg)
+		case models.PhaseStatusPaused:
+			_ = s.store.PausePhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation)
 		}
 	}
 }

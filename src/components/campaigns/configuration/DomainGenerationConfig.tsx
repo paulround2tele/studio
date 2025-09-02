@@ -32,7 +32,9 @@ export const DomainGenerationConfig: React.FC<DomainGenerationConfigProps> = ({
   const numDomainsToGenerate = useWatch({ control, name: 'numDomainsToGenerate' }) as number | undefined;
 
   const offsetRequest = useMemo(() => {
-    const tld = Array.isArray(tlds) && tlds.length > 0 ? tlds[0] : undefined;
+    // Normalize first TLD to include leading dot as backend generator requires
+    const rawTld = Array.isArray(tlds) && tlds.length > 0 ? tlds[0] : undefined;
+    const tld = rawTld ? (rawTld.startsWith('.') ? rawTld : `.${rawTld}`) : undefined;
     if (!patternType || !characterSet || !variableLength || !tld) return undefined;
     return {
       patternType,
@@ -269,12 +271,13 @@ export const DomainGenerationConfig: React.FC<DomainGenerationConfigProps> = ({
             <FormControl>
               <div className="space-y-2">
                 <Input
-                  placeholder="Enter TLD (e.g. .com) and press Enter"
+                  placeholder="Enter TLD (e.g. .com or com) and press Enter"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
                       const input = e.target as HTMLInputElement;
-                      const value = input.value.trim();
+                      let value = input.value.trim();
+                      if (value && !value.startsWith('.')) value = `.${value}`;
                       if (value && !field.value?.includes(value)) {
                         field.onChange([...(field.value || []), value]);
                         input.value = '';

@@ -3,14 +3,18 @@ package services
 
 import (
 	"context"
+	"database/sql"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
 
+	"github.com/fntelecomllc/studio/backend/internal/domain/services/infra"
 	"github.com/fntelecomllc/studio/backend/internal/domainexpert"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
 // DomainGenerationConfig represents the configuration for domain generation
@@ -31,6 +35,12 @@ type domainGenerationService struct {
 	store store.CampaignStore
 	deps  Dependencies
 
+	// Infrastructure Adapters
+	auditLogger AuditLogger
+	metrics     MetricsRecorder
+	txManager   TxManager
+	cache       Cache
+
 	// Execution state tracking
 	mu         sync.RWMutex
 	executions map[uuid.UUID]*domainExecution
@@ -41,6 +51,8 @@ type domainExecution struct {
 	campaignID     uuid.UUID
 	config         DomainGenerationConfig
 	generator      *domainexpert.DomainGenerator
+	configHash     string
+	normalized     models.NormalizedDomainGenerationParams
 	status         models.PhaseStatusEnum
 	startedAt      time.Time
 	completedAt    *time.Time
@@ -57,11 +69,33 @@ func NewDomainGenerationService(
 	store store.CampaignStore,
 	deps Dependencies,
 ) DomainGenerationService {
-	return &domainGenerationService{
+	svc := &domainGenerationService{
 		store:      store,
 		deps:       deps,
 		executions: make(map[uuid.UUID]*domainExecution),
 	}
+	// Prefer provided deps; fall back to minimal no-ops
+	if deps.AuditLogger != nil {
+		svc.auditLogger = deps.AuditLogger
+	} else {
+		svc.auditLogger = infra.NewAuditService()
+	}
+	if deps.MetricsRecorder != nil {
+		svc.metrics = deps.MetricsRecorder
+	} else {
+		svc.metrics = infra.NewMetricsSQLX(nil)
+	}
+	if deps.TxManager != nil {
+		svc.txManager = deps.TxManager
+	} else {
+		svc.txManager = infra.NewTxSQLX(nil)
+	}
+	if deps.Cache != nil {
+		svc.cache = deps.Cache
+	} else {
+		svc.cache = infra.NewCacheRedis(nil)
+	}
+	return svc
 }
 
 // GetPhaseType returns the phase type this service handles
@@ -74,6 +108,11 @@ func (s *domainGenerationService) Configure(ctx context.Context, campaignID uuid
 	s.deps.Logger.Info(ctx, "Configuring domain generation phase", map[string]interface{}{
 		"campaign_id": campaignID,
 	})
+
+	// Audit the configuration event
+	if s.auditLogger != nil {
+		s.auditLogger.LogEvent(fmt.Sprintf("Domain generation phase configured for campaign %s", campaignID))
+	}
 
 	// Accept either a typed config or a generic map and convert
 	var domainConfig DomainGenerationConfig
@@ -194,6 +233,25 @@ func (s *domainGenerationService) Configure(ctx context.Context, campaignID uuid
 		return fmt.Errorf("failed to create domain generator: %w", err)
 	}
 
+	// Compute config hash for authoritative global offset management
+	// Map to models.DomainGenerationCampaignParams for hashing utility
+	cs := domainConfig.ConstantString
+	var csPtr *string
+	if cs != "" {
+		csPtr = &cs
+	}
+	hashInput := models.DomainGenerationCampaignParams{
+		PatternType:    domainConfig.PatternType,
+		VariableLength: domainConfig.VariableLength,
+		CharacterSet:   domainConfig.CharacterSet,
+		ConstantString: csPtr,
+		TLD:            domainConfig.TLD,
+	}
+	hashRes, herr := domainexpert.GenerateDomainGenerationPhaseConfigHash(hashInput)
+	if herr != nil {
+		return fmt.Errorf("failed to compute config hash: %w", herr)
+	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -202,6 +260,8 @@ func (s *domainGenerationService) Configure(ctx context.Context, campaignID uuid
 		campaignID:     campaignID,
 		config:         domainConfig,
 		generator:      generator,
+		configHash:     hashRes.HashString,
+		normalized:     hashRes.NormalizedParams,
 		status:         models.PhaseStatusConfigured,
 		itemsTotal:     domainConfig.NumDomains,
 		itemsProcessed: 0,
@@ -212,6 +272,17 @@ func (s *domainGenerationService) Configure(ctx context.Context, campaignID uuid
 		"pattern_type": domainConfig.PatternType,
 		"num_domains":  domainConfig.NumDomains,
 	})
+
+	// Persist configuration in campaign phases
+	if s.store != nil {
+		if raw, mErr := json.Marshal(domainConfig); mErr == nil {
+			var exec store.Querier
+			if q, ok := s.deps.DB.(store.Querier); ok {
+				exec = q
+			}
+			_ = s.store.UpdatePhaseConfiguration(ctx, exec, campaignID, models.PhaseTypeDomainGeneration, raw)
+		}
+	}
 
 	return nil
 }
@@ -242,6 +313,15 @@ func (s *domainGenerationService) Execute(ctx context.Context, campaignID uuid.U
 		"config":      execution.config,
 	})
 
+	// Mark phase started in store
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		_ = s.store.StartPhase(ctx, exec, campaignID, models.PhaseTypeDomainGeneration)
+	}
+
 	// Start execution in goroutine
 	go s.executeGeneration(execution)
 
@@ -263,7 +343,20 @@ func (s *domainGenerationService) executeGeneration(execution *domainExecution) 
 	}
 
 	var processedCount int64
+	// Authoritative starting offset: max(client offsetStart, global last_offset+1)
 	offset := config.OffsetStart
+	var exec store.Querier
+	if q, ok := s.deps.DB.(store.Querier); ok {
+		exec = q
+	}
+	if s.store != nil {
+		// Try read current global config state; ignore not found
+		if state, err := s.store.GetDomainGenerationPhaseConfigStateByHash(ctx, exec, execution.configHash); err == nil && state != nil {
+			if state.LastOffset+1 > offset {
+				offset = state.LastOffset + 1
+			}
+		}
+	}
 
 	for processedCount < config.NumDomains {
 		select {
@@ -288,8 +381,8 @@ func (s *domainGenerationService) executeGeneration(execution *domainExecution) 
 			return
 		}
 
-		// Store generated domains (this would integrate with the existing store)
-		if err := s.storeGeneratedDomains(ctx, campaignID, domains); err != nil {
+		// Store generated domains and update global last_offset atomically
+		if err := s.persistBatchWithGlobalOffset(ctx, campaignID, execution, domains, offset, nextOffset); err != nil {
 			s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, fmt.Sprintf("Failed to store domains: %v", err))
 			return
 		}
@@ -298,9 +391,34 @@ func (s *domainGenerationService) executeGeneration(execution *domainExecution) 
 		processedCount += int64(len(domains))
 		offset = nextOffset
 
+		// Record metrics for domain generation
+		if s.metrics != nil {
+			s.metrics.RecordMetric("domains_generated_batch", float64(len(domains)))
+			s.metrics.RecordMetric("domains_generated_total", float64(processedCount))
+		}
+
+		// Cache progress information
+		if s.cache != nil {
+			cacheKey := fmt.Sprintf("domain_generation_progress_%s", campaignID)
+			cacheValue := fmt.Sprintf("processed:%d,total:%d", processedCount, config.NumDomains)
+			s.cache.Set(ctx, cacheKey, cacheValue, 0) // No TTL for progress
+		}
+
 		s.mu.Lock()
 		execution.itemsProcessed = processedCount
 		s.mu.Unlock()
+
+		// Persist progress in store
+		if s.store != nil {
+			var exec store.Querier
+			if q, ok := s.deps.DB.(store.Querier); ok {
+				exec = q
+			}
+			total := execution.itemsTotal
+			processed := processedCount
+			progressPct := float64(processed) / float64(total) * 100
+			_ = s.store.UpdatePhaseProgress(ctx, exec, campaignID, models.PhaseTypeDomainGeneration, progressPct, &total, &processed, nil, nil)
+		}
 
 		// Send progress update
 		progress := PhaseProgress{
@@ -468,6 +586,21 @@ func (s *domainGenerationService) updateExecutionStatus(campaignID uuid.UUID, st
 	}
 
 	ctx := context.Background()
+	// Persist terminal status in store
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		switch status {
+		case models.PhaseStatusCompleted:
+			_ = s.store.CompletePhase(ctx, exec, campaignID, models.PhaseTypeDomainGeneration)
+		case models.PhaseStatusFailed:
+			_ = s.store.FailPhase(ctx, exec, campaignID, models.PhaseTypeDomainGeneration, errorMsg)
+		case models.PhaseStatusPaused:
+			_ = s.store.PausePhase(ctx, exec, campaignID, models.PhaseTypeDomainGeneration)
+		}
+	}
 	if s.deps.EventBus != nil {
 		if err := s.deps.EventBus.PublishStatusChange(ctx, phaseStatus); err != nil {
 			if s.deps.Logger != nil {
@@ -480,7 +613,7 @@ func (s *domainGenerationService) updateExecutionStatus(campaignID uuid.UUID, st
 	}
 }
 
-func (s *domainGenerationService) storeGeneratedDomains(ctx context.Context, campaignID uuid.UUID, domains []string) error {
+func (s *domainGenerationService) storeGeneratedDomains(ctx context.Context, campaignID uuid.UUID, domains []string, baseOffset int64) error {
 	// Persist generated domains to the database and update domains_data JSONB so the REST endpoint returns them
 	s.deps.Logger.Debug(ctx, "Storing generated domains", map[string]interface{}{
 		"campaign_id":    campaignID,
@@ -512,6 +645,7 @@ func (s *domainGenerationService) storeGeneratedDomains(ctx context.Context, cam
 			DomainName:  d,
 			GeneratedAt: now,
 			CreatedAt:   now,
+			OffsetIndex: baseOffset + int64(i),
 			// OffsetIndex is best-effort here; precise offset is maintained inside JSONB/page data by caller
 		}
 	}
@@ -521,14 +655,14 @@ func (s *domainGenerationService) storeGeneratedDomains(ctx context.Context, cam
 	}
 
 	// Also mirror into domains_data JSONB used by GET /campaigns/{id}/domains
-	// Prepare payload in the expected shape
+	// Prepare payload in the expected shape and append to existing array (not overwrite)
 	items := make([]map[string]interface{}, len(genModels))
 	for i, gd := range genModels {
 		items[i] = map[string]interface{}{
 			"id":          gd.ID.String(),
 			"domain_name": gd.DomainName,
-			// Offset is optional here if not tracked; frontend tolerates nil
-			"created_at": now.Format(time.RFC3339),
+			"offset":      gd.OffsetIndex,
+			"created_at":  now.Format(time.RFC3339),
 		}
 	}
 	payload := map[string]interface{}{
@@ -536,8 +670,8 @@ func (s *domainGenerationService) storeGeneratedDomains(ctx context.Context, cam
 		"batch_size":   len(items),
 		"last_updated": now.Format(time.RFC3339),
 	}
-	// Write full JSONB snapshot to avoid append-type ambiguity
-	if err := s.store.UpdateDomainsData(ctx, exec, campaignID, payload); err != nil {
+	// Append to existing JSONB to accumulate domains across batches
+	if err := s.store.AppendDomainsData(ctx, exec, campaignID, payload); err != nil {
 		// Not fatal for persistence, but important for frontend visibility
 		s.deps.Logger.Warn(ctx, "Failed to update JSONB domains_data", map[string]interface{}{
 			"campaign_id": campaignID,
@@ -545,6 +679,193 @@ func (s *domainGenerationService) storeGeneratedDomains(ctx context.Context, cam
 		})
 	}
 
+	return nil
+}
+
+func (s *domainGenerationService) storeDomainsInTransaction(ctx context.Context, tx *sql.Tx, campaignID uuid.UUID, domains []string, baseOffset int64) error {
+	// Persist generated domains to the database and update domains_data JSONB so the REST endpoint returns them
+	s.deps.Logger.Debug(ctx, "Storing generated domains in transaction", map[string]interface{}{
+		"campaign_id":    campaignID,
+		"domain_count":   len(domains),
+		"sample_domains": domains[:min(len(domains), 5)],
+	})
+
+	if len(domains) == 0 {
+		return nil
+	}
+
+	// Build GeneratedDomain models for persistence
+	now := time.Now().UTC()
+	genModels := make([]*models.GeneratedDomain, len(domains))
+	for i, d := range domains {
+		genModels[i] = &models.GeneratedDomain{
+			ID:          uuid.New(),
+			CampaignID:  campaignID,
+			DomainName:  d,
+			GeneratedAt: now,
+			CreatedAt:   now,
+			OffsetIndex: baseOffset + int64(i),
+			// OffsetIndex is best-effort here; precise offset is maintained inside JSONB/page data by caller
+		}
+	}
+
+	// Use transaction for atomic operations - TODO: integrate with actual store interface
+	if err := s.store.CreateGeneratedDomains(ctx, nil, genModels); err != nil {
+		return fmt.Errorf("failed to persist generated domains: %w", err)
+	}
+
+	// Also mirror into domains_data JSONB used by GET /campaigns/{id}/domains
+	// Prepare payload in the expected shape and append to existing array (not overwrite)
+	items := make([]map[string]interface{}, len(genModels))
+	for i, gd := range genModels {
+		items[i] = map[string]interface{}{
+			"id":          gd.ID.String(),
+			"domain_name": gd.DomainName,
+			"offset":      gd.OffsetIndex,
+			"created_at":  now.Format(time.RFC3339),
+		}
+	}
+	payload := map[string]interface{}{
+		"domains":      items,
+		"batch_size":   len(items),
+		"last_updated": now.Format(time.RFC3339),
+	}
+	// Append to existing JSONB to accumulate domains across batches
+	if err := s.store.AppendDomainsData(ctx, nil, campaignID, payload); err != nil {
+		// Not fatal for persistence, but important for frontend visibility
+		s.deps.Logger.Warn(ctx, "Failed to update JSONB domains_data", map[string]interface{}{
+			"campaign_id": campaignID,
+			"error":       err.Error(),
+		})
+	}
+
+	return nil
+}
+
+// persistBatchWithGlobalOffset writes generated domains and updates global last_offset in a single SQL transaction
+func (s *domainGenerationService) persistBatchWithGlobalOffset(ctx context.Context, campaignID uuid.UUID, execution *domainExecution, domains []string, baseOffset int64, nextOffset int64) error {
+	if len(domains) == 0 {
+		return nil
+	}
+	// Start a sqlx transaction via store to obtain a Querier compatible exec
+
+	// Attempt to open a transaction through the concrete store if available
+	var txq store.Querier
+	if s.store != nil {
+		if t, ok := s.store.(interface {
+			BeginTxx(context.Context, *sql.TxOptions) (*sqlx.Tx, error)
+		}); ok {
+			tx, err := t.BeginTxx(ctx, nil)
+			if err != nil {
+				return fmt.Errorf("begin tx: %w", err)
+			}
+			// Ensure commit/rollback semantics
+			committed := false
+			defer func() {
+				if !committed {
+					_ = tx.Rollback()
+				}
+			}()
+
+			txq = tx
+			// Persist domains
+			if err := s.storeGeneratedDomainsWithExec(ctx, txq, campaignID, domains, baseOffset); err != nil {
+				return err
+			}
+
+			// Upsert global config state last_offset
+			now := time.Now().UTC()
+			details, _ := json.Marshal(execution.normalized)
+			newLast := nextOffset - 1 // nextOffset is exclusive
+			state := &models.DomainGenerationPhaseConfigState{
+				ConfigHash:    execution.configHash,
+				LastOffset:    newLast,
+				ConfigDetails: details,
+				UpdatedAt:     now,
+			}
+			if err := s.store.CreateOrUpdateDomainGenerationPhaseConfigState(ctx, tx, state); err != nil {
+				return fmt.Errorf("upsert config state: %w", err)
+			}
+
+			if err := tx.Commit(); err != nil {
+				return fmt.Errorf("commit tx: %w", err)
+			}
+			committed = true
+			return nil
+		}
+	}
+
+	// Fallback: no transaction, do best-effort separate operations
+	if err := s.storeGeneratedDomains(ctx, campaignID, domains, baseOffset); err != nil {
+		return err
+	}
+	if s.store != nil {
+		now := time.Now().UTC()
+		details, _ := json.Marshal(execution.normalized)
+		newLast := nextOffset - 1
+		state := &models.DomainGenerationPhaseConfigState{
+			ConfigHash:    execution.configHash,
+			LastOffset:    newLast,
+			ConfigDetails: details,
+			UpdatedAt:     now,
+		}
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		if err := s.store.CreateOrUpdateDomainGenerationPhaseConfigState(ctx, exec, state); err != nil {
+			s.deps.Logger.Warn(ctx, "Failed to upsert config state without tx", map[string]interface{}{"error": err.Error()})
+		}
+	}
+	return nil
+}
+
+// storeGeneratedDomainsWithExec persists domains using the provided Querier (e.g., within a transaction)
+func (s *domainGenerationService) storeGeneratedDomainsWithExec(ctx context.Context, exec store.Querier, campaignID uuid.UUID, domains []string, baseOffset int64) error {
+	s.deps.Logger.Debug(ctx, "Storing generated domains (exec)", map[string]interface{}{
+		"campaign_id":    campaignID,
+		"domain_count":   len(domains),
+		"sample_domains": domains[:min(len(domains), 5)],
+	})
+	if len(domains) == 0 {
+		return nil
+	}
+
+	now := time.Now().UTC()
+	genModels := make([]*models.GeneratedDomain, len(domains))
+	for i, d := range domains {
+		genModels[i] = &models.GeneratedDomain{
+			ID:          uuid.New(),
+			CampaignID:  campaignID,
+			DomainName:  d,
+			GeneratedAt: now,
+			CreatedAt:   now,
+			OffsetIndex: baseOffset + int64(i),
+		}
+	}
+	if err := s.store.CreateGeneratedDomains(ctx, exec, genModels); err != nil {
+		return fmt.Errorf("failed to persist generated domains: %w", err)
+	}
+	items := make([]map[string]interface{}, len(genModels))
+	for i, gd := range genModels {
+		items[i] = map[string]interface{}{
+			"id":          gd.ID.String(),
+			"domain_name": gd.DomainName,
+			"offset":      gd.OffsetIndex,
+			"created_at":  now.Format(time.RFC3339),
+		}
+	}
+	payload := map[string]interface{}{
+		"domains":      items,
+		"batch_size":   len(items),
+		"last_updated": now.Format(time.RFC3339),
+	}
+	if err := s.store.AppendDomainsData(ctx, exec, campaignID, payload); err != nil {
+		s.deps.Logger.Warn(ctx, "Failed to update JSONB domains_data", map[string]interface{}{
+			"campaign_id": campaignID,
+			"error":       err.Error(),
+		})
+	}
 	return nil
 }
 

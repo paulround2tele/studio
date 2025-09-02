@@ -4,6 +4,8 @@ package services
 
 import (
 	"context"
+	"database/sql"
+	"net/http"
 	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/models"
@@ -99,6 +101,76 @@ type Dependencies struct {
 	EventBus EventBus
 	Logger   Logger
 	DB       interface{} // Generic database interface - can be store.Querier or specific DB type
+
+	// Infrastructure Adapters
+	AuditLogger        AuditLogger
+	MetricsRecorder    MetricsRecorder
+	TxManager          TxManager
+	WorkerPool         WorkerPool
+	ConfigManager      ConfigManager
+	Cache              Cache
+	SSE                SSE
+	StealthIntegration StealthIntegration
+}
+
+// Infrastructure Adapter Interfaces
+
+// Job represents a job to be executed by the worker pool
+type Job func(ctx context.Context)
+
+// AuditLogger handles auditing operations
+type AuditLogger interface {
+	LogEvent(event string) error
+	GetLogs() ([]string, error)
+	ValidateEvent(event string) bool
+}
+
+// MetricsRecorder handles metrics recording
+type MetricsRecorder interface {
+	RecordMetric(name string, value float64) error
+	GetMetric(name string) (float64, error)
+	ListMetrics() ([]string, error)
+}
+
+// TxManager handles database transactions
+type TxManager interface {
+	BeginTx(ctx context.Context) (*sql.Tx, error)
+	Commit(tx *sql.Tx) error
+	Rollback(tx *sql.Tx) error
+	ExecuteInTx(ctx context.Context, fn func(tx *sql.Tx) error) error
+}
+
+// WorkerPool manages a pool of workers for concurrent operations
+type WorkerPool interface {
+	Start(ctx context.Context)
+	AddJob(job Job)
+	Stop()
+}
+
+// Cache handles caching operations
+type Cache interface {
+	Get(ctx context.Context, key string) (string, error)
+	Set(ctx context.Context, key, value string, ttl time.Duration) error
+	Delete(ctx context.Context, key string) error
+	Exists(ctx context.Context, key string) (bool, error)
+}
+
+// ConfigManager manages configuration data
+type ConfigManager interface {
+	Get(key string) (interface{}, error)
+	Set(key string, value interface{}) error
+}
+
+// SSE handles Server-Sent Events
+type SSE interface {
+	HandleSSE(w http.ResponseWriter, r *http.Request)
+	Send(event string)
+}
+
+// StealthIntegration handles stealth operations for validation phases
+type StealthIntegration interface {
+	RandomizeDomainsForValidation(ctx context.Context, campaignID uuid.UUID, validationType string) ([]string, error)
+	ProcessValidationWithStealth(ctx context.Context, campaignID uuid.UUID, domains []string, validationType string) error
 }
 
 // Logger interface for structured logging

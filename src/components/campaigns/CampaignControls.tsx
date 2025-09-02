@@ -127,7 +127,7 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign }) => {
     const st = discoveryStatus?.status;
     return st === 'configured' || st === 'running' || st === 'completed' || st === 'paused';
   }, [discoveryStatus]);
-  const discoveryStartDisabledReason = discoveryConfigured ? undefined : 'Configure Discovery before starting domain generation.';
+  const discoveryStartDisabledReason = undefined;
   const dnsConfigured = useMemo(() => {
     const st = dnsStatus?.status;
     return st === 'configured' || st === 'running' || st === 'completed' || st === 'paused';
@@ -202,16 +202,20 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign }) => {
   }, [campaign.id, startPhase, toast]);
 
   const handleStartDiscovery = useCallback(async () => {
+    if (!discoveryConfigured) {
+      setDiscoveryModalOpen(true);
+      return;
+    }
     try {
       await startPhase({ campaignId: campaign.id, phase: 'discovery' as any }).unwrap();
       toast({ title: 'Discovery started', description: 'Domain generation has begun. Domains will appear below as they are persisted.' });
-  setStartErrors((s) => ({ ...s, discovery: undefined }));
+      setStartErrors((s) => ({ ...s, discovery: undefined }));
     } catch (e: any) {
-  const msg = extractErrorMessage(e);
-  setStartErrors((s) => ({ ...s, discovery: msg }));
-  toast({ title: 'Failed to start Discovery', description: msg, variant: 'destructive' });
+      const msg = extractErrorMessage(e);
+      setStartErrors((s) => ({ ...s, discovery: msg }));
+      toast({ title: 'Failed to start Discovery', description: msg, variant: 'destructive' });
     }
-  }, [campaign.id, startPhase, toast]);
+  }, [campaign.id, startPhase, toast, discoveryConfigured]);
 
   const handleStartAnalysis = useCallback(async () => {
     try {
@@ -228,9 +232,9 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <PhaseCard
-        phase={discoveryPhase as any}
+  phase={discoveryPhase as any}
         isActive={campaign.currentPhase === 'discovery'}
-  canStart={canStartDiscovery && discoveryConfigured}
+  canStart={canStartDiscovery}
   startDisabledReason={discoveryStartDisabledReason}
   canConfigure={true}
   isConfigured={discoveryConfigured}

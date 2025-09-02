@@ -39,9 +39,13 @@ export default function DiscoveryConfigModal({ isOpen, onClose, campaignId, onCo
     try {
       setConfiguring(true);
       // Discovery expects the raw config map (not nested) so the backend can map it to typed DomainGenerationConfig
-      const config: PhaseConfigurationRequest = {
-        configuration: values as any,
-      };
+      const firstTld = Array.isArray(values.tlds) && values.tlds.length > 0 ? values.tlds[0] : '';
+      const tld = firstTld && !firstTld.startsWith('.') ? `.${firstTld}` : firstTld;
+      const configuration = {
+        ...values,
+        tld, // backend accepts either tld or tlds; prefer single 'tld'
+      } as any;
+      const config: PhaseConfigurationRequest = { configuration };
       await configurePhase({ campaignId, phase: 'discovery', config }).unwrap();
       toast({ title: 'Discovery configuration saved', description: 'Domain generation settings applied.' });
       onConfigured();

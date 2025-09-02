@@ -3,11 +3,13 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/dnsvalidator"
+	"github.com/fntelecomllc/studio/backend/internal/domain/services/infra"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/google/uuid"
@@ -29,6 +31,14 @@ type dnsValidationService struct {
 	dnsValidator *dnsvalidator.DNSValidator
 	store        store.CampaignStore
 	deps         Dependencies
+
+	// Infrastructure Adapters
+	auditLogger   AuditLogger
+	metrics       MetricsRecorder
+	txManager     TxManager
+	workerPool    WorkerPool
+	cache         Cache
+	configManager ConfigManager
 
 	// Execution state tracking
 	mu         sync.RWMutex
@@ -59,12 +69,42 @@ func NewDNSValidationService(
 	store store.CampaignStore,
 	deps Dependencies,
 ) DNSValidationService {
-	return &dnsValidationService{
+	svc := &dnsValidationService{
 		dnsValidator: dnsValidator,
 		store:        store,
 		deps:         deps,
 		executions:   make(map[uuid.UUID]*dnsExecution),
 	}
+	// Prefer injected deps, fall back to minimal adapters
+	if deps.AuditLogger != nil {
+		svc.auditLogger = deps.AuditLogger
+	} else {
+		svc.auditLogger = infra.NewAuditService()
+	}
+	if deps.MetricsRecorder != nil {
+		svc.metrics = deps.MetricsRecorder
+	} else {
+		svc.metrics = infra.NewMetricsSQLX(nil)
+	}
+	if deps.TxManager != nil {
+		svc.txManager = deps.TxManager
+	} else {
+		svc.txManager = infra.NewTxSQLX(nil)
+	}
+	if deps.WorkerPool != nil {
+		svc.workerPool = deps.WorkerPool
+	}
+	if deps.Cache != nil {
+		svc.cache = deps.Cache
+	} else {
+		svc.cache = infra.NewCacheRedis(nil)
+	}
+	if deps.ConfigManager != nil {
+		svc.configManager = deps.ConfigManager
+	} else {
+		svc.configManager = infra.NewConfigManagerAdapter()
+	}
+	return svc
 }
 
 // GetPhaseType returns the phase type this service handles
@@ -77,6 +117,11 @@ func (s *dnsValidationService) Configure(ctx context.Context, campaignID uuid.UU
 	s.deps.Logger.Info(ctx, "Configuring DNS validation phase", map[string]interface{}{
 		"campaign_id": campaignID,
 	})
+
+	// Audit the configuration event
+	if s.auditLogger != nil {
+		s.auditLogger.LogEvent(fmt.Sprintf("DNS validation phase configured for campaign %s", campaignID))
+	}
 
 	// Type assert the configuration
 	dnsConfig, ok := config.(DNSValidationConfig)
@@ -120,6 +165,17 @@ func (s *dnsValidationService) Configure(ctx context.Context, campaignID uuid.UU
 		"persona_count": len(dnsConfig.PersonaIDs),
 	})
 
+	// Persist configuration in campaign phases
+	if s.store != nil {
+		if raw, mErr := json.Marshal(dnsConfig); mErr == nil {
+			var exec store.Querier
+			if q, ok := s.deps.DB.(store.Querier); ok {
+				exec = q
+			}
+			_ = s.store.UpdatePhaseConfiguration(ctx, exec, campaignID, models.PhaseTypeDNSValidation, raw)
+		}
+	}
+
 	return nil
 }
 
@@ -133,8 +189,9 @@ func (s *dnsValidationService) Execute(ctx context.Context, campaignID uuid.UUID
 		return nil, fmt.Errorf("DNS validation not configured for campaign %s", campaignID)
 	}
 
-	if execution.status != models.PhaseStatusNotStarted {
-		return nil, fmt.Errorf("DNS validation already started for campaign %s", campaignID)
+	// Allow execute after configured; guard against double start
+	if execution.status == models.PhaseStatusInProgress {
+		return nil, fmt.Errorf("DNS validation already in progress for campaign %s", campaignID)
 	}
 
 	// Create cancellable context for execution
@@ -147,6 +204,15 @@ func (s *dnsValidationService) Execute(ctx context.Context, campaignID uuid.UUID
 		"campaign_id":   campaignID,
 		"domains_count": len(execution.domainsToValidate),
 	})
+
+	// Mark phase started
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		_ = s.store.StartPhase(ctx, exec, campaignID, models.PhaseTypeDNSValidation)
+	}
 
 	// Start execution in goroutine
 	go s.executeValidation(execution)
@@ -205,6 +271,15 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 			execution.itemsProcessed++
 			processedCount = execution.itemsProcessed
 			s.mu.Unlock()
+
+			// Record metrics for validation results
+			if s.metrics != nil {
+				if isValid {
+					s.metrics.RecordMetric("dns_validation_valid_domains", 1.0)
+				} else {
+					s.metrics.RecordMetric("dns_validation_invalid_domains", 1.0)
+				}
+			}
 		}
 
 		// Store validation results
@@ -223,6 +298,16 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 			ItemsProcessed: processedCount,
 			Message:        fmt.Sprintf("Validated %d domains", processedCount),
 			Timestamp:      time.Now(),
+		}
+		// Persist progress
+		if s.store != nil {
+			var exec store.Querier
+			if q, ok := s.deps.DB.(store.Querier); ok {
+				exec = q
+			}
+			total := int64(len(domains))
+			processed := processedCount
+			_ = s.store.UpdatePhaseProgress(ctx, exec, campaignID, models.PhaseTypeDNSValidation, float64(processed)/float64(total)*100, &total, &processed, nil, nil)
 		}
 
 		select {
@@ -394,6 +479,20 @@ func (s *dnsValidationService) updateExecutionStatus(campaignID uuid.UUID, statu
 	}
 
 	ctx := context.Background()
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		switch status {
+		case models.PhaseStatusCompleted:
+			_ = s.store.CompletePhase(ctx, exec, campaignID, models.PhaseTypeDNSValidation)
+		case models.PhaseStatusFailed:
+			_ = s.store.FailPhase(ctx, exec, campaignID, models.PhaseTypeDNSValidation, errorMsg)
+		case models.PhaseStatusPaused:
+			_ = s.store.PausePhase(ctx, exec, campaignID, models.PhaseTypeDNSValidation)
+		}
+	}
 	if s.deps.EventBus != nil {
 		if err := s.deps.EventBus.PublishStatusChange(ctx, phaseStatus); err != nil {
 			if s.deps.Logger != nil {
@@ -407,27 +506,66 @@ func (s *dnsValidationService) updateExecutionStatus(campaignID uuid.UUID, statu
 }
 
 func (s *dnsValidationService) getDomainsToValidate(ctx context.Context, campaignID uuid.UUID) ([]string, error) {
-	// This would integrate with the existing store to get domains from the domain generation phase
-	// For now, return placeholder logic
 	s.deps.Logger.Debug(ctx, "Getting domains for DNS validation", map[string]interface{}{
 		"campaign_id": campaignID,
 	})
 
-	// TODO: Integrate with actual store.CampaignStore to get generated domains
-	// This would typically query the domains generated in the previous phase
-	return []string{}, fmt.Errorf("domain retrieval not implemented - integrate with store")
+	if s.store == nil {
+		return nil, fmt.Errorf("campaign store not available")
+	}
+	// Prefer a Querier if provided
+	var exec store.Querier
+	if q, ok := s.deps.DB.(store.Querier); ok {
+		exec = q
+	}
+
+	// Fetch all pages using cursor pagination
+	var after string
+	all := make([]string, 0, 2048)
+	for {
+		page, err := s.store.GetGeneratedDomainsWithCursor(ctx, exec, store.ListGeneratedDomainsFilter{
+			CursorPaginationFilter: store.CursorPaginationFilter{First: 1000, After: after, SortBy: "offset_index", SortOrder: "ASC"},
+			CampaignID:             campaignID,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch generated domains: %w", err)
+		}
+		for _, gd := range page.Data {
+			if gd != nil && gd.DomainName != "" {
+				all = append(all, gd.DomainName)
+			}
+		}
+		if !page.PageInfo.HasNextPage || page.PageInfo.EndCursor == "" {
+			break
+		}
+		after = page.PageInfo.EndCursor
+	}
+	return all, nil
 }
 
 func (s *dnsValidationService) storeValidationResults(ctx context.Context, campaignID uuid.UUID, results map[string]bool) error {
-	// This would integrate with the existing store to save validation results
+	if s.store == nil {
+		return fmt.Errorf("campaign store not available")
+	}
+	// Prepare bulk results for efficient persistence
+	bulk := make([]models.DNSValidationResult, 0, len(results))
 	validCount := 0
 	invalidCount := 0
-	for _, isValid := range results {
-		if isValid {
+	for domain, ok := range results {
+		status := "pending"
+		if ok {
+			status = "ok"
 			validCount++
 		} else {
+			status = "error"
 			invalidCount++
 		}
+		bulk = append(bulk, models.DNSValidationResult{
+			DNSCampaignID:    campaignID,
+			DomainName:       domain,
+			ValidationStatus: status,
+			LastCheckedAt:    func() *time.Time { t := time.Now(); return &t }(),
+		})
 	}
 
 	s.deps.Logger.Debug(ctx, "Storing DNS validation results", map[string]interface{}{
@@ -437,6 +575,12 @@ func (s *dnsValidationService) storeValidationResults(ctx context.Context, campa
 		"invalid_domains": invalidCount,
 	})
 
-	// TODO: Integrate with actual store.CampaignStore to persist validation results
+	var exec store.Querier
+	if q, ok := s.deps.DB.(store.Querier); ok {
+		exec = q
+	}
+	if err := s.store.UpdateDomainsBulkDNSStatus(ctx, exec, bulk); err != nil {
+		return fmt.Errorf("failed to persist DNS results: %w", err)
+	}
 	return nil
 }

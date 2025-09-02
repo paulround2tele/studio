@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/contentfetcher"
 	"github.com/fntelecomllc/studio/backend/internal/dnsvalidator"
 	domainservices "github.com/fntelecomllc/studio/backend/internal/domain/services"
+	domaininfra "github.com/fntelecomllc/studio/backend/internal/domain/services/infra"
 	"github.com/fntelecomllc/studio/backend/internal/httpvalidator"
 	"github.com/fntelecomllc/studio/backend/internal/monitoring"
 	"github.com/fntelecomllc/studio/backend/internal/proxymanager"
@@ -48,6 +50,58 @@ type AppDeps struct {
 	Cleanup    *monitoring.CleanupService
 	// Auth/session
 	Session *services.SessionService
+}
+
+// eventBusAdapter bridges domain EventBus to the legacy SSE service
+type eventBusAdapter struct{ sse *services.SSEService }
+
+func (a *eventBusAdapter) PublishProgress(ctx context.Context, progress domainservices.PhaseProgress) error {
+	if a == nil || a.sse == nil {
+		return nil
+	}
+	evt := services.SSEEvent{
+		Event: services.SSEEventCampaignProgress,
+		Data: map[string]interface{}{
+			"phase":          progress.Phase,
+			"status":         progress.Status,
+			"progressPct":    progress.ProgressPct,
+			"itemsTotal":     progress.ItemsTotal,
+			"itemsProcessed": progress.ItemsProcessed,
+			"message":        progress.Message,
+			"error":          progress.Error,
+			"timestamp":      progress.Timestamp,
+		},
+		Timestamp: time.Now(),
+	}
+	a.sse.BroadcastEvent(evt)
+	return nil
+}
+
+func (a *eventBusAdapter) PublishStatusChange(ctx context.Context, status domainservices.PhaseStatus) error {
+	if a == nil || a.sse == nil {
+		return nil
+	}
+	evtType := services.SSEEventPhaseStarted
+	switch status.Status {
+	case "completed":
+		evtType = services.SSEEventPhaseCompleted
+	case "failed":
+		evtType = services.SSEEventPhaseFailed
+	}
+	evt := services.SSEEvent{
+		Event: evtType,
+		Data: map[string]interface{}{
+			"phase":          status.Phase,
+			"status":         status.Status,
+			"progressPct":    status.ProgressPct,
+			"itemsTotal":     status.ItemsTotal,
+			"itemsProcessed": status.ItemsProcessed,
+			"lastError":      status.LastError,
+		},
+		Timestamp: time.Now(),
+	}
+	a.sse.BroadcastEvent(evt)
+	return nil
 }
 
 // initAppDependencies loads environment/config and returns core dependencies for the Chi strict server.
@@ -171,22 +225,50 @@ func initAppDependencies() (*AppDeps, error) {
 
 	// Domain services deps and implementations
 	simpleLogger := &SimpleLogger{}
-	domainDeps := domainservices.Dependencies{Logger: simpleLogger, DB: deps.DB}
+	// Initialize infrastructure adapters using existing connections
+	var auditLogger = domaininfra.NewAuditService()
+	var rawSQL *sql.DB
+	if deps.DB != nil {
+		rawSQL = deps.DB.DB
+	}
+	var metricsRecorder = domaininfra.NewMetricsSQLX(rawSQL)
+	var txManager = domaininfra.NewTxSQLX(deps.DB)
+	var cacheAdapter = domaininfra.NewCacheRedis(nil)
+	var configManager = domaininfra.NewConfigManagerAdapter()
+
+	domainDeps := domainservices.Dependencies{
+		Logger:          simpleLogger,
+		DB:              deps.DB,
+		AuditLogger:     auditLogger,
+		MetricsRecorder: metricsRecorder,
+		TxManager:       txManager,
+		ConfigManager:   configManager,
+		Cache:           cacheAdapter,
+		// EventBus, SSE, StealthIntegration provided where needed separately
+	}
+
+	// Provide EventBus adapter early so services can emit events
+	deps.SSE = services.NewSSEService()
+	domainDeps.EventBus = &eventBusAdapter{sse: deps.SSE}
+
+	// Use store-backed config manager and stealth adapter where applicable
+	domainDeps.ConfigManager = domaininfra.NewStoreBackedConfigManager(deps.Stores.Campaign)
+
 	domainGenSvc := domainservices.NewDomainGenerationService(deps.Stores.Campaign, domainDeps)
 	dnsValidationSvc := domainservices.NewDNSValidationService(dnsValSvc, deps.Stores.Campaign, domainDeps)
 	httpValidationSvc := domainservices.NewHTTPValidationService(deps.Stores.Campaign, domainDeps, httpValSvc)
 	analysisSvc := domainservices.NewAnalysisService(deps.Stores.Campaign, domainDeps, contentFetcherSvc)
 
 	// Stealth integration and wrappers
-	stealthIntegration := services.NewStealthIntegrationService(deps.DB, deps.Stores.Campaign, nil, nil)
-	stealthAwareDNS := domainservices.NewStealthAwareDNSValidationService(dnsValidationSvc, stealthIntegration)
-	stealthAwareHTTP := domainservices.NewStealthAwareHTTPValidationService(httpValidationSvc, stealthIntegration)
+	stealthIntegrationLegacy := services.NewStealthIntegrationService(deps.DB, deps.Stores.Campaign, nil, nil)
+	stealthAdapter := domaininfra.NewStealthAdapter(stealthIntegrationLegacy)
+	stealthAwareDNS := domainservices.NewStealthAwareDNSValidationService(dnsValidationSvc, stealthAdapter)
+	stealthAwareHTTP := domainservices.NewStealthAwareHTTPValidationService(httpValidationSvc, stealthAdapter)
 	defaultStealth := services.DefaultStealthConfig()
 	stealthAwareDNS.EnableStealthMode(defaultStealth)
 	stealthAwareHTTP.EnableStealthMode(defaultStealth)
 
 	// SSE and Orchestrator
-	deps.SSE = services.NewSSEService()
 	if deps.Stores.Campaign != nil {
 		deps.Orchestrator = application.NewCampaignOrchestrator(
 			deps.Stores.Campaign,

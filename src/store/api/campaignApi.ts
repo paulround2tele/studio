@@ -27,7 +27,7 @@ export const campaignApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: '/', // Base URL handled by the generated client
   }),
-  tagTypes: ['Campaign', 'CampaignList', 'CampaignProgress', 'CampaignDomains'],
+  tagTypes: ['Campaign', 'CampaignList', 'CampaignProgress', 'CampaignDomains', 'CampaignPhase'],
   endpoints: (builder) => ({
     // Campaign CRUD operations
     createCampaign: builder.mutation<CampaignResponse, ServicesCreateLeadGenerationCampaignRequest>({
@@ -97,7 +97,7 @@ export const campaignApi = createApi({
     }),
 
     // Phase management operations
-    configurePhaseStandalone: builder.mutation<
+  configurePhaseStandalone: builder.mutation<
       PhaseStatusResponse,
       { campaignId: string; phase: string; config: PhaseConfigurationRequest }
     >({
@@ -115,13 +115,15 @@ export const campaignApi = createApi({
           return { error: error.response?.data || error.message };
         }
       },
-      invalidatesTags: (result, error, { campaignId }) => [
+      invalidatesTags: (result, error, { campaignId, phase }) => [
         { type: 'Campaign', id: campaignId },
-        { type: 'CampaignProgress', id: campaignId }
+        { type: 'CampaignProgress', id: campaignId },
+        // Invalidate phase status cache so UI reflects configured state immediately
+        { type: 'CampaignPhase', id: `${campaignId}:${phase}` },
       ],
     }),
 
-    startPhaseStandalone: builder.mutation<
+  startPhaseStandalone: builder.mutation<
       PhaseStatusResponse,
       { campaignId: string; phase: string }
     >({
@@ -135,11 +137,13 @@ export const campaignApi = createApi({
           return { error: error.response?.data || error.message };
         }
       },
-      invalidatesTags: (result, error, { campaignId }) => [
+      invalidatesTags: (result, error, { campaignId, phase }) => [
         { type: 'Campaign', id: campaignId },
         { type: 'CampaignProgress', id: campaignId },
         // Ensure domains list refreshes after discovery starts/completes
         { type: 'CampaignDomains', id: campaignId },
+        // Invalidate specific phase status as well
+        { type: 'CampaignPhase', id: `${campaignId}:${phase}` },
       ],
     }),
 
@@ -157,8 +161,9 @@ export const campaignApi = createApi({
           return { error: error.response?.data || error.message };
         }
       },
-      providesTags: (result, error, { campaignId }) => [
-        { type: 'CampaignProgress', id: campaignId }
+      providesTags: (result, error, { campaignId, phase }) => [
+        { type: 'CampaignProgress', id: campaignId },
+        { type: 'CampaignPhase', id: `${campaignId}:${phase}` },
       ],
     }),
 

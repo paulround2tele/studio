@@ -642,6 +642,30 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 			}
 		}
 	}
+	// Fallback: if JSONB is empty (common in older runs), fetch from generated_domains table
+	if len(items) == 0 {
+		// Fetch up to a page worth directly from DB preserving order by offset_index
+		list, err := h.deps.Stores.Campaign.GetGeneratedDomainsByCampaign(ctx, h.deps.DB, uuid.UUID(r.CampaignId), 1000, 0)
+		if err == nil && len(list) > 0 {
+			for _, gd := range list {
+				m := map[string]interface{}{
+					"id":          gd.ID.String(),
+					"domain_name": gd.DomainName,
+					"created_at":  gd.CreatedAt.Format(time.RFC3339),
+				}
+				if gd.OffsetIndex >= 0 {
+					m["offset"] = gd.OffsetIndex
+				}
+				if gd.DNSStatus != nil {
+					m["dns_status"] = string(*gd.DNSStatus)
+				}
+				if gd.HTTPStatus != nil {
+					m["http_status"] = string(*gd.HTTPStatus)
+				}
+				items = append(items, m)
+			}
+		}
+	}
 	total := len(items)
 	// Apply offset/limit
 	start := 0

@@ -1,0 +1,13 @@
+{
+  "name": "e2e discovery campaign",
+  "description": "E2E proof via curl",
+  "targetDomains": [],
+  "configuration": {
+    "phases": {
+      "discovery": {"enabled": true},
+      "validation": {"enabled": false},
+      "extraction": {"enabled": false},
+      "analysis": {"enabled": false}
+    }
+  }
+}

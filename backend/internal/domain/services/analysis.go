@@ -3,6 +3,7 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -97,7 +98,16 @@ func (s *analysisService) Configure(ctx context.Context, campaignID uuid.UUID, c
 	}
 	s.mu.Unlock()
 
-	// Store configuration in campaign store
+	// Store configuration in campaign phases
+	if s.store != nil {
+		if raw, mErr := json.Marshal(analysisConfig); mErr == nil {
+			var exec store.Querier
+			if q, ok := s.deps.DB.(store.Querier); ok {
+				exec = q
+			}
+			_ = s.store.UpdatePhaseConfiguration(ctx, exec, campaignID, models.PhaseTypeAnalysis, raw)
+		}
+	}
 	s.deps.Logger.Info(ctx, "Analysis configuration stored", map[string]interface{}{
 		"campaign_id":   campaignID,
 		"persona_count": len(analysisConfig.PersonaIDs),
@@ -153,6 +163,15 @@ func (s *analysisService) Execute(ctx context.Context, campaignID uuid.UUID) (<-
 	}
 	s.executions[campaignID] = execution
 	s.mu.Unlock()
+
+	// Mark phase started in store
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		_ = s.store.StartPhase(ctx, exec, campaignID, models.PhaseTypeAnalysis)
+	}
 
 	// Get domains from previous phase (HTTP validation)
 	domains, err := s.getValidatedHTTPDomains(ctx, campaignID)
@@ -329,6 +348,15 @@ func (s *analysisService) executeAnalysis(ctx context.Context, campaignID uuid.U
 		"keyword_results":  len(keywordResults),
 		"domains_analyzed": len(domains),
 	})
+
+	// Mark completed in store
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		_ = s.store.CompletePhase(ctx, exec, campaignID, models.PhaseTypeAnalysis)
+	}
 }
 
 // fetchContent uses the content fetcher engine to retrieve domain content
@@ -463,9 +491,40 @@ func (s *analysisService) getValidatedHTTPDomains(ctx context.Context, campaignI
 	s.deps.Logger.Debug(ctx, "Retrieving validated domains from HTTP phase", map[string]interface{}{
 		"campaign_id": campaignID,
 	})
-
-	// TODO: Implement actual query to get domains from HTTP validation results
-	return []string{"example.com", "test.com"}, nil
+	if s.store == nil {
+		return nil, fmt.Errorf("campaign store not available")
+	}
+	var exec store.Querier
+	if q, ok := s.deps.DB.(store.Querier); ok {
+		exec = q
+	}
+	// Page through HTTP results marked as success
+	out := make([]string, 0, 1024)
+	const pageSize = 1000
+	offset := 0
+	for {
+		results, err := s.store.GetHTTPKeywordResultsByCampaign(ctx, exec, campaignID, store.ListValidationResultsFilter{
+			ValidationStatus: "success",
+			Limit:            pageSize,
+			Offset:           offset,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch HTTP results: %w", err)
+		}
+		if len(results) == 0 {
+			break
+		}
+		for _, r := range results {
+			if r != nil && r.DomainName != "" {
+				out = append(out, r.DomainName)
+			}
+		}
+		if len(results) < pageSize {
+			break
+		}
+		offset += pageSize
+	}
+	return out, nil
 }
 
 // getAnalysisConfig retrieves analysis configuration for a campaign
@@ -495,8 +554,41 @@ func (s *analysisService) storeAnalysisResults(ctx context.Context, campaignID u
 		"content_results": len(contentResults),
 		"keyword_results": len(keywordResults),
 	})
-
-	// TODO: Implement actual storage of analysis results
+	if s.store == nil {
+		return fmt.Errorf("campaign store not available")
+	}
+	// Build a compact JSON document to store
+	type domainAnalysis struct {
+		ContentSnippet string                                     `json:"contentSnippet,omitempty"`
+		Keywords       []keywordextractor.KeywordExtractionResult `json:"keywords,omitempty"`
+		ContentSize    int                                        `json:"contentSize,omitempty"`
+	}
+	payload := make(map[string]domainAnalysis, len(keywordResults))
+	for domain, kws := range keywordResults {
+		snippet := ""
+		size := 0
+		if b, ok := contentResults[domain]; ok && len(b) > 0 {
+			size = len(b)
+			if size > 1024 {
+				snippet = string(b[:1024])
+			} else {
+				snippet = string(b)
+			}
+		}
+		payload[domain] = domainAnalysis{ContentSnippet: snippet, Keywords: kws, ContentSize: size}
+	}
+	raw, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("failed to marshal analysis results: %w", err)
+	}
+	rawMsg := json.RawMessage(raw)
+	var exec store.Querier
+	if q, ok := s.deps.DB.(store.Querier); ok {
+		exec = q
+	}
+	if err := s.store.UpdateCampaignAnalysisResults(ctx, exec, campaignID, &rawMsg); err != nil {
+		return fmt.Errorf("failed to persist analysis results: %w", err)
+	}
 	return nil
 }
 
@@ -522,6 +614,18 @@ func (s *analysisService) sendProgress(campaignID uuid.UUID, progressPct float64
 		Message:        message,
 	}:
 	default:
+	}
+
+	// Persist progress
+	ctx := context.Background()
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		itemsTotal := int64(execution.ItemsTotal)
+		itemsProcessed := int64(execution.ItemsProcessed)
+		_ = s.store.UpdatePhaseProgress(ctx, exec, campaignID, models.PhaseTypeAnalysis, progressPct, &itemsTotal, &itemsProcessed, nil, nil)
 	}
 }
 
@@ -555,6 +659,23 @@ func (s *analysisService) updateExecutionStatus(campaignID uuid.UUID, status mod
 			Error:          errorMsg,
 		}:
 		default:
+		}
+	}
+
+	// Persist terminal status
+	ctx := context.Background()
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		switch status {
+		case models.PhaseStatusCompleted:
+			_ = s.store.CompletePhase(ctx, exec, campaignID, models.PhaseTypeAnalysis)
+		case models.PhaseStatusFailed:
+			_ = s.store.FailPhase(ctx, exec, campaignID, models.PhaseTypeAnalysis, errorMsg)
+		case models.PhaseStatusPaused:
+			_ = s.store.PausePhase(ctx, exec, campaignID, models.PhaseTypeAnalysis)
 		}
 	}
 }
