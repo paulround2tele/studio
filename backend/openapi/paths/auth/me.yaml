@@ -13,6 +13,6 @@ get:
               - type: object
                 properties:
                   data:
-                    $ref: '../../openapi.yaml#/components/schemas/UserPublicResponse'
+                    $ref: '../../components/schemas/all.yaml#/UserPublicResponse'
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

@@ -3,6 +3,7 @@ package application
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"sync"
 	"time"
@@ -32,6 +33,9 @@ type CampaignOrchestrator struct {
 	// Execution tracking
 	mu                 sync.RWMutex
 	campaignExecutions map[uuid.UUID]*CampaignExecution
+
+	// Optional post-completion hooks
+	hooks []PostCompletionHook
 }
 
 // CampaignExecution tracks the overall execution state of a campaign
@@ -64,7 +68,23 @@ func NewCampaignOrchestrator(
 		analysisSvc:         analysisSvc,
 		sseService:          sseService,
 		campaignExecutions:  make(map[uuid.UUID]*CampaignExecution),
+		hooks:               make([]PostCompletionHook, 0),
 	}
+}
+
+// PostCompletionHook defines a hook executed after campaign completion
+type PostCompletionHook interface {
+	Run(ctx context.Context, campaignID uuid.UUID) error
+}
+
+// RegisterPostCompletionHook registers a hook to run after campaign completion
+func (o *CampaignOrchestrator) RegisterPostCompletionHook(h PostCompletionHook) {
+	if h == nil {
+		return
+	}
+	o.mu.Lock()
+	defer o.mu.Unlock()
+	o.hooks = append(o.hooks, h)
 }
 
 // ConfigurePhase configures a specific phase for a campaign
@@ -154,6 +174,13 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 		return fmt.Errorf("failed to start phase %s: %w", phase, err)
 	}
 
+	// Persist campaign phase fields and overall status at phase start
+	if querier, ok := o.deps.DB.(store.Querier); ok {
+		phaseStatus := models.PhaseStatusInProgress
+		_ = o.store.UpdateCampaignPhaseFields(context.Background(), querier, campaignID, &phase, &phaseStatus)
+		_ = o.store.UpdateCampaignStatus(context.Background(), querier, campaignID, models.PhaseStatusInProgress, sql.NullString{})
+	}
+
 	// Update campaign execution status
 	o.mu.Lock()
 	if execution, exists := o.campaignExecutions[campaignID]; exists {
@@ -194,7 +221,7 @@ func parsePhaseType(phaseType string) (models.PhaseTypeEnum, error) {
 		return models.PhaseTypeDomainGeneration, nil
 	case "dns_validation":
 		return models.PhaseTypeDNSValidation, nil
-	case "http_keyword_validation":
+	case "http_keyword_validation", "http_validation": // accept alias used by some handlers
 		return models.PhaseTypeHTTPKeywordValidation, nil
 	case "analysis":
 		return models.PhaseTypeAnalysis, nil
@@ -396,6 +423,26 @@ func (o *CampaignOrchestrator) updateCampaignProgress(campaignID uuid.UUID, phas
 			execution.CompletedAt = &now
 		}
 	}
+
+	// Persist top-level campaign progress when available
+	if querier, ok := o.deps.DB.(store.Querier); ok {
+		// Only persist when we have totals to avoid zeroing
+		if progress.ItemsTotal > 0 || progress.ItemsProcessed > 0 {
+			pct := progress.ProgressPct
+			// Guard invalid pct
+			if pct < 0 {
+				pct = 0
+			}
+			if pct > 100 {
+				pct = 100
+			}
+			_ = o.store.UpdateCampaignProgress(context.Background(), querier, campaignID, progress.ItemsProcessed, progress.ItemsTotal, pct)
+		}
+		// Also sync current phase and status
+		curPhase := phase
+		curStatus := progress.Status
+		_ = o.store.UpdateCampaignPhaseFields(context.Background(), querier, campaignID, &curPhase, &curStatus)
+	}
 }
 
 // handlePhaseCompletion handles the completion of a phase
@@ -424,6 +471,24 @@ func (o *CampaignOrchestrator) handlePhaseCompletion(ctx context.Context, campai
 		return
 	}
 
+	// Broadcast phase completed event via SSE with final stats if available
+	if o.sseService != nil {
+		if querier, ok := o.deps.DB.(store.Querier); ok {
+			if campaign, err := o.store.GetCampaignByID(ctx, querier, campaignID); err == nil && campaign.UserID != nil {
+				results := map[string]interface{}{
+					"status":          string(finalStatus.Status),
+					"progress_pct":    finalStatus.ProgressPct,
+					"items_total":     finalStatus.ItemsTotal,
+					"items_processed": finalStatus.ItemsProcessed,
+					"started_at":      finalStatus.StartedAt,
+					"completed_at":    finalStatus.CompletedAt,
+				}
+				completedEvent := services.CreatePhaseCompletedEvent(campaignID, *campaign.UserID, phase, results)
+				o.sseService.BroadcastToCampaign(campaignID, completedEvent)
+			}
+		}
+	}
+
 	o.mu.Lock()
 	if execution, exists := o.campaignExecutions[campaignID]; exists {
 		if execution.PhaseStatuses == nil {
@@ -433,13 +498,86 @@ func (o *CampaignOrchestrator) handlePhaseCompletion(ctx context.Context, campai
 	}
 	o.mu.Unlock()
 
-	// TODO: Auto-advance to next phase if configured
-	// This would implement the campaign mode logic (sequential vs manual progression)
+	// Auto-advance to next phase if configured and phase completed successfully
+	if finalStatus != nil && finalStatus.Status == models.PhaseStatusCompleted {
+		// If this was the last phase, finalize campaign execution
+		if o.isLastPhase(phase) {
+			_ = o.HandleCampaignCompletion(ctx, campaignID)
+			return
+		}
+
+		// Check campaign flags to determine if we should auto-advance
+		querier, ok := o.deps.DB.(store.Querier)
+		if !ok {
+			o.deps.Logger.Warn(ctx, "Auto-advance skipped: invalid DB interface", map[string]interface{}{
+				"campaign_id": campaignID,
+			})
+			return
+		}
+
+		campaign, err := o.store.GetCampaignByID(ctx, querier, campaignID)
+		if err != nil {
+			o.deps.Logger.Error(ctx, "Auto-advance: failed to load campaign", err, map[string]interface{}{
+				"campaign_id": campaignID,
+			})
+			return
+		}
+
+		if campaign != nil && (campaign.IsFullSequenceMode || campaign.AutoAdvancePhases) {
+			// Determine next phase in sequence
+			next, ok := o.nextPhase(phase)
+			if !ok {
+				return
+			}
+
+			// Ensure next phase isn't already completed
+			if nextPhaseRow, err := o.store.GetCampaignPhase(ctx, querier, campaignID, next); err == nil {
+				if nextPhaseRow.Status == models.PhaseStatusCompleted {
+					// Already completed; attempt to chain to following phase
+					if chainedNext, ok2 := o.nextPhase(next); ok2 {
+						next = chainedNext
+					} else {
+						_ = o.HandleCampaignCompletion(ctx, campaignID)
+						return
+					}
+				}
+			}
+
+			o.deps.Logger.Info(ctx, "Auto-advancing to next phase", map[string]interface{}{
+				"campaign_id": campaignID,
+				"from_phase":  phase,
+				"to_phase":    next,
+			})
+
+			// Start next phase using orchestrator; it will manage SSE start events and monitoring
+			if err := o.StartPhaseInternal(ctx, campaignID, next); err != nil {
+				o.deps.Logger.Error(ctx, "Failed to auto-advance to next phase", err, map[string]interface{}{
+					"campaign_id": campaignID,
+					"from_phase":  phase,
+					"to_phase":    next,
+				})
+			}
+		}
+	}
 }
 
 // isLastPhase checks if the given phase is the last phase in the campaign
 func (o *CampaignOrchestrator) isLastPhase(phase models.PhaseTypeEnum) bool {
 	return phase == models.PhaseTypeAnalysis
+}
+
+// nextPhase returns the next phase in the standard sequence
+func (o *CampaignOrchestrator) nextPhase(current models.PhaseTypeEnum) (models.PhaseTypeEnum, bool) {
+	switch current {
+	case models.PhaseTypeDomainGeneration:
+		return models.PhaseTypeDNSValidation, true
+	case models.PhaseTypeDNSValidation:
+		return models.PhaseTypeHTTPKeywordValidation, true
+	case models.PhaseTypeHTTPKeywordValidation:
+		return models.PhaseTypeAnalysis, true
+	default:
+		return "", false
+	}
 }
 
 // GetCampaignDetails returns campaign details and configuration
@@ -498,8 +636,22 @@ func (o *CampaignOrchestrator) SetCampaignStatus(ctx context.Context, campaignID
 		}
 	}
 
-	// Update campaign status in store if needed
-	// TODO: Add campaign status update to store interface
+	// Update campaign status in store
+	if querier, ok := o.deps.DB.(store.Querier); ok {
+		var errMsg sql.NullString
+		if status == models.PhaseStatusFailed {
+			if exec, ok := o.campaignExecutions[campaignID]; ok && exec.LastError != "" {
+				errMsg = sql.NullString{String: exec.LastError, Valid: true}
+			}
+		}
+		if err := o.store.UpdateCampaignStatus(ctx, querier, campaignID, status, errMsg); err != nil {
+			o.deps.Logger.Warn(ctx, "Failed to persist campaign status", map[string]interface{}{
+				"campaign_id": campaignID,
+				"status":      status,
+				"error":       err.Error(),
+			})
+		}
+	}
 
 	return nil
 }
@@ -529,6 +681,11 @@ func (o *CampaignOrchestrator) SetCampaignErrorStatus(ctx context.Context, campa
 		"campaign_id": campaignID,
 	})
 
+	// Persist failure status
+	if querier, ok := o.deps.DB.(store.Querier); ok {
+		_ = o.store.UpdateCampaignStatus(ctx, querier, campaignID, models.PhaseStatusFailed, sql.NullString{String: errorMessage, Valid: true})
+	}
+
 	return nil
 }
 
@@ -553,54 +710,54 @@ func (o *CampaignOrchestrator) HandleCampaignCompletion(ctx context.Context, cam
 		"duration":    now.Sub(execution.StartedAt),
 	})
 
-	// TODO: Trigger any post-completion workflows
-	// - Send notifications
-	// - Archive campaign data
-	// - Generate reports
+	// Persist completed status
+	if querier, ok := o.deps.DB.(store.Querier); ok {
+		if err := o.store.UpdateCampaignStatus(ctx, querier, campaignID, models.PhaseStatusCompleted, sql.NullString{}); err != nil {
+			o.deps.Logger.Warn(ctx, "Failed to persist completed status", map[string]interface{}{
+				"campaign_id": campaignID,
+				"error":       err.Error(),
+			})
+		}
+		// Broadcast CampaignCompleted SSE
+		if campaign, err := o.store.GetCampaignByID(ctx, querier, campaignID); err == nil && campaign.UserID != nil && o.sseService != nil {
+			meta := map[string]interface{}{
+				"duration_ms":    now.Sub(execution.StartedAt).Milliseconds(),
+				"overall_status": string(execution.OverallStatus),
+			}
+			evt := services.CreateCampaignCompletedEvent(campaignID, *campaign.UserID, meta)
+			o.sseService.BroadcastToCampaign(campaignID, evt)
+		}
+	}
+
+	// Trigger any post-completion workflows (feature-guarded)
+	go o.runPostCompletionHooks(context.Background(), campaignID)
 
 	return nil
 }
 
-// ProcessDNSValidationWithStealth processes DNS validation with stealth-randomized domains
-func (o *CampaignOrchestrator) ProcessDNSValidationWithStealth(ctx context.Context, campaignID uuid.UUID, domains []*services.RandomizedDomain) (done bool, processedCount int, err error) {
-	// Convert RandomizedDomain back to regular domain processing
-	// The stealth system has already randomized the order, so we just execute validation
-
-	if len(domains) == 0 {
-		return true, 0, nil
+// runPostCompletionHooks executes optional post-completion workflows
+func (o *CampaignOrchestrator) runPostCompletionHooks(ctx context.Context, campaignID uuid.UUID) {
+	// Simple guard: check a config manager flag if available
+	if o.deps.ConfigManager != nil {
+		if v, err := o.deps.ConfigManager.Get("features.post_completion_hooks"); err == nil {
+			if enabled, ok := v.(bool); ok && !enabled {
+				return
+			}
+		}
 	}
 
-	// Start DNS validation phase if not already started
-	err = o.StartPhaseInternal(ctx, campaignID, models.PhaseTypeDNSValidation)
-	if err != nil {
-		return false, 0, fmt.Errorf("failed to start DNS validation phase: %w", err)
+	// Execute registered hooks sequentially
+	o.mu.RLock()
+	hooks := append([]PostCompletionHook(nil), o.hooks...)
+	o.mu.RUnlock()
+	for _, h := range hooks {
+		if err := h.Run(ctx, campaignID); err != nil {
+			o.deps.Logger.Warn(ctx, "Post-completion hook failed", map[string]interface{}{
+				"campaign_id": campaignID,
+				"error":       err.Error(),
+			})
+		}
 	}
-
-	// Process the stealth-randomized domains using our DNS validation service
-	// The domains are already in stealth order, so we just need to execute them
-	processedCount = len(domains)
-
-	return true, processedCount, nil
 }
 
-// ProcessHTTPValidationWithStealth processes HTTP validation with stealth-randomized domains
-func (o *CampaignOrchestrator) ProcessHTTPValidationWithStealth(ctx context.Context, campaignID uuid.UUID, domains []*services.RandomizedDomain) (done bool, processedCount int, err error) {
-	// Convert RandomizedDomain back to regular domain processing
-	// The stealth system has already randomized the order, so we just execute validation
-
-	if len(domains) == 0 {
-		return true, 0, nil
-	}
-
-	// Start HTTP validation phase if not already started
-	err = o.StartPhaseInternal(ctx, campaignID, models.PhaseTypeHTTPKeywordValidation)
-	if err != nil {
-		return false, 0, fmt.Errorf("failed to start HTTP validation phase: %w", err)
-	}
-
-	// Process the stealth-randomized domains using our HTTP validation service
-	// The domains are already in stealth order, so we just need to execute them
-	processedCount = len(domains)
-
-	return true, processedCount, nil
-}
+// Stealth-specific processing methods removed; stealth-aware services now handle any ordering internally.

@@ -16,7 +16,7 @@ get:
       schema: { type: string, format: uuid }
     - name: rule_type
       in: query
-      schema: { $ref: '../openapi.yaml#/components/schemas/KeywordRuleType' }
+      schema: { $ref: '../components/schemas/all.yaml#/KeywordRuleType' }
     - name: category
       in: query
       schema: { type: string }
@@ -38,7 +38,7 @@ get:
                 properties:
                   data:
                     type: array
-                    items: { $ref: '../openapi.yaml#/components/schemas/KeywordRuleDTO' }
+                    items: { $ref: '../components/schemas/all.yaml#/KeywordRuleDTO' }
     '401': { $ref: '../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../components/responses.yaml#/Forbidden' }
     '429': { $ref: '../components/responses.yaml#/RateLimitExceeded' }

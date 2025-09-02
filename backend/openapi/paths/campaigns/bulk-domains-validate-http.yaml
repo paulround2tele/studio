@@ -6,7 +6,7 @@ post:
     required: true
     content:
       application/json:
-          schema: { $ref: '../../openapi.yaml#/components/schemas/BulkHTTPValidationRequest' }
+          schema: { $ref: '../../components/schemas/all.yaml#/BulkHTTPValidationRequest' }
   responses:
     '200':
       description: Bulk HTTP validation initiated successfully
@@ -17,7 +17,7 @@ post:
               - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
-                  data: { $ref: '../../openapi.yaml#/components/schemas/BulkValidationResponse' }
+                  data: { $ref: '../../components/schemas/all.yaml#/BulkValidationResponse' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }

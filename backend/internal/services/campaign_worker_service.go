@@ -19,6 +19,26 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// Minimal no-op worker coordination service to keep build green after legacy cleanup
+type workerCoordinationService struct{}
+
+func newWorkerCoordinationService(_ *sqlx.DB, _ string) *workerCoordinationService {
+	return &workerCoordinationService{}
+}
+
+func (w *workerCoordinationService) RegisterWorker(ctx context.Context, campaignID uuid.UUID, workerType string) error {
+	return nil
+}
+func (w *workerCoordinationService) StartHeartbeat(ctx context.Context) {}
+func (w *workerCoordinationService) StopHeartbeat()                     {}
+func (w *workerCoordinationService) UpdateWorkerStatus(ctx context.Context, campaignID uuid.UUID, status string, info string) error {
+	return nil
+}
+func (w *workerCoordinationService) CleanupStaleWorkers(ctx context.Context) error { return nil }
+func (w *workerCoordinationService) GetWorkerStats(ctx context.Context) (map[string]interface{}, error) {
+	return map[string]interface{}{"status": "noop"}, nil
+}
+
 // Default worker settings if not provided by config
 const (
 	workerPollIntervalDefault    = 5 * time.Second
@@ -33,7 +53,7 @@ type campaignWorkerServiceImpl struct {
 	workerID              string
 	appConfig             *config.AppConfig
 	db                    *sqlx.DB
-	workerCoordinationSvc *WorkerCoordinationService
+	workerCoordinationSvc *workerCoordinationService
 	txManager             *utils.TransactionManager
 }
 
@@ -54,11 +74,11 @@ func NewCampaignWorkerService(
 		workerID = fmt.Sprintf("workerpool-%s", host)
 	}
 
-	var workerCoordSvc *WorkerCoordinationService
+	var workerCoordSvc *workerCoordinationService
 	var txManager *utils.TransactionManager
 
 	if db != nil {
-		workerCoordSvc = NewWorkerCoordinationService(db, workerID)
+		workerCoordSvc = newWorkerCoordinationService(db, workerID)
 		txManager = utils.NewTransactionManager(db)
 	}
 

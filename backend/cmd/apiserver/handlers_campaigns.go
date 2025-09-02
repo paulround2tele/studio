@@ -776,6 +776,365 @@ func (h *strictHandlers) CampaignsDomainGenerationPatternOffset(ctx context.Cont
 	return gen.CampaignsDomainGenerationPatternOffset200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
 }
 
+// CampaignsStateGet implements GET /campaigns/{campaignId}/state
+func (h *strictHandlers) CampaignsStateGet(ctx context.Context, r gen.CampaignsStateGetRequestObject) (gen.CampaignsStateGetResponseObject, error) {
+	if h.deps == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
+		return gen.CampaignsStateGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	st, err := h.deps.Stores.Campaign.GetCampaignState(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
+	if err != nil {
+		if err == store.ErrNotFound {
+			return gen.CampaignsStateGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign state not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+		return gen.CampaignsStateGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign state", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Map models.CampaignState to API CampaignState
+	api := gen.CampaignState{
+		CampaignId:   openapi_types.UUID(st.CampaignID),
+		CurrentState: gen.CampaignStateEnum(st.CurrentState),
+		Mode:         gen.CampaignModeEnum(st.Mode),
+		Version:      st.Version,
+		CreatedAt:    st.CreatedAt,
+		UpdatedAt:    st.UpdatedAt,
+	}
+	// configuration JSON -> map
+	if len(st.Configuration) > 0 {
+		var m map[string]interface{}
+		if err := json.Unmarshal(st.Configuration, &m); err == nil {
+			api.Configuration = &m
+		}
+	}
+	return gen.CampaignsStateGet200JSONResponse{Data: &api, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+}
+
+// CampaignsStatePut implements PUT /campaigns/{campaignId}/state
+func (h *strictHandlers) CampaignsStatePut(ctx context.Context, r gen.CampaignsStatePutRequestObject) (gen.CampaignsStatePutResponseObject, error) {
+	if h.deps == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
+		return gen.CampaignsStatePut500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	if r.Body == nil {
+		return gen.CampaignsStatePut400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Build models.CampaignState from request
+	var cfg json.RawMessage
+	if r.Body.Configuration != nil {
+		b, _ := json.Marshal(r.Body.Configuration)
+		cfg = b
+	}
+	// Try to read existing to keep immutable fields
+	existing, _ := h.deps.Stores.Campaign.GetCampaignState(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
+	st := &models.CampaignState{
+		CampaignID: uuid.UUID(r.CampaignId),
+		CurrentState: func() models.CampaignStateEnum {
+			if r.Body.CurrentState != nil {
+				return models.CampaignStateEnum(*r.Body.CurrentState)
+			}
+			if existing != nil {
+				return existing.CurrentState
+			}
+			return models.CampaignStateDraft
+		}(),
+		Mode: func() models.CampaignModeEnum {
+			if r.Body.Mode != nil {
+				return models.CampaignModeEnum(*r.Body.Mode)
+			}
+			if existing != nil {
+				return existing.Mode
+			}
+			return models.CampaignModeStepByStep
+		}(),
+		Configuration: cfg,
+		Version:       int(0),
+		CreatedAt:     time.Now().UTC(),
+		UpdatedAt:     time.Now().UTC(),
+	}
+	if r.Body.Version != nil {
+		st.Version = int(*r.Body.Version)
+	} else if existing != nil {
+		st.Version = existing.Version
+	}
+	// Upsert via CreateCampaignState implementation (conflict updates)
+	if err := h.deps.Stores.Campaign.CreateCampaignState(ctx, h.deps.DB, st); err != nil {
+		return gen.CampaignsStatePut500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to save campaign state", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Return fresh copy
+	fresh, _ := h.deps.Stores.Campaign.GetCampaignState(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
+	api := gen.CampaignState{
+		CampaignId:   openapi_types.UUID(fresh.CampaignID),
+		CurrentState: gen.CampaignStateEnum(fresh.CurrentState),
+		Mode:         gen.CampaignModeEnum(fresh.Mode),
+		Version:      fresh.Version,
+		CreatedAt:    fresh.CreatedAt,
+		UpdatedAt:    fresh.UpdatedAt,
+	}
+	if len(fresh.Configuration) > 0 {
+		var m map[string]interface{}
+		if err := json.Unmarshal(fresh.Configuration, &m); err == nil {
+			api.Configuration = &m
+		}
+	}
+	return gen.CampaignsStatePut200JSONResponse{Data: &api, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+}
+
+// CampaignsStateDelete implements DELETE /campaigns/{campaignId}/state
+func (h *strictHandlers) CampaignsStateDelete(ctx context.Context, r gen.CampaignsStateDeleteRequestObject) (gen.CampaignsStateDeleteResponseObject, error) {
+	if h.deps == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
+		return gen.CampaignsStateDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	if err := h.deps.Stores.Campaign.DeleteCampaignState(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
+		if err == store.ErrNotFound {
+			return gen.CampaignsStateDelete404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign state not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+		return gen.CampaignsStateDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to delete campaign state", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	return gen.CampaignsStateDelete204Response{}, nil
+}
+
+// CampaignsPhaseExecutionsList implements GET /campaigns/{campaignId}/phase-executions
+func (h *strictHandlers) CampaignsPhaseExecutionsList(ctx context.Context, r gen.CampaignsPhaseExecutionsListRequestObject) (gen.CampaignsPhaseExecutionsListResponseObject, error) {
+	if h.deps == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
+		return gen.CampaignsPhaseExecutionsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	list, err := h.deps.Stores.Campaign.GetPhaseExecutionsByCampaign(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
+	if err != nil {
+		return gen.CampaignsPhaseExecutionsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to list phase executions", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Load state if available
+	st, stErr := h.deps.Stores.Campaign.GetCampaignState(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
+	if stErr != nil && stErr != store.ErrNotFound {
+		return gen.CampaignsPhaseExecutionsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign state", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	apiState := gen.CampaignState{}
+	if st != nil {
+		apiState = gen.CampaignState{CampaignId: openapi_types.UUID(st.CampaignID), CurrentState: gen.CampaignStateEnum(st.CurrentState), Mode: gen.CampaignModeEnum(st.Mode), Version: st.Version, CreatedAt: st.CreatedAt, UpdatedAt: st.UpdatedAt}
+		if len(st.Configuration) > 0 {
+			var m map[string]interface{}
+			_ = json.Unmarshal(st.Configuration, &m)
+			apiState.Configuration = &m
+		}
+	}
+	execs := make([]gen.PhaseExecution, 0, len(list))
+	for _, pe := range list {
+		if pe != nil {
+			execs = append(execs, mapPhaseExecutionToAPI(*pe))
+		}
+	}
+	composite := gen.CampaignStateWithExecutions{CampaignState: apiState, PhaseExecutions: execs}
+	return gen.CampaignsPhaseExecutionsList200JSONResponse{Data: &composite, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+}
+
+// CampaignsPhaseExecutionGet implements GET /campaigns/{campaignId}/phase-executions/{phaseType}
+func (h *strictHandlers) CampaignsPhaseExecutionGet(ctx context.Context, r gen.CampaignsPhaseExecutionGetRequestObject) (gen.CampaignsPhaseExecutionGetResponseObject, error) {
+	if h.deps == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
+		return gen.CampaignsPhaseExecutionGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Map API phaseType to models.PhaseTypeEnum using existing map
+	phaseModel, err := mapAPIPhaseToModel(string(r.PhaseType))
+	if err != nil {
+		return gen.CampaignsPhaseExecutionGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "invalid phase type", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	pe, err := h.deps.Stores.Campaign.GetPhaseExecution(ctx, h.deps.DB, uuid.UUID(r.CampaignId), phaseModel)
+	if err != nil {
+		if err == store.ErrNotFound {
+			return gen.CampaignsPhaseExecutionGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "phase execution not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+		return gen.CampaignsPhaseExecutionGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to get phase execution", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	api := mapPhaseExecutionToAPI(*pe)
+	return gen.CampaignsPhaseExecutionGet200JSONResponse{Data: &api, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+}
+
+// CampaignsPhaseExecutionPut implements PUT /campaigns/{campaignId}/phase-executions/{phaseType}
+func (h *strictHandlers) CampaignsPhaseExecutionPut(ctx context.Context, r gen.CampaignsPhaseExecutionPutRequestObject) (gen.CampaignsPhaseExecutionPutResponseObject, error) {
+	if h.deps == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
+		return gen.CampaignsPhaseExecutionPut500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Map phase type
+	phaseModel, err := mapAPIPhaseToModel(string(r.PhaseType))
+	if err != nil {
+		return gen.CampaignsPhaseExecutionPut404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "invalid phase type", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Fetch existing if any
+	existing, err := h.deps.Stores.Campaign.GetPhaseExecution(ctx, h.deps.DB, uuid.UUID(r.CampaignId), phaseModel)
+	if err != nil && err != store.ErrNotFound {
+		return gen.CampaignsPhaseExecutionPut500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load phase execution", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+
+	// Build model entity by applying updates (partial update semantics)
+	applyUpdate := func(dst *models.PhaseExecution, body *gen.PhaseExecutionUpdate) {
+		if body == nil {
+			return
+		}
+		if body.Status != nil {
+			dst.Status = models.ExecutionStatusEnum(*body.Status)
+		}
+		if body.StartedAt != nil {
+			dst.StartedAt = body.StartedAt
+		}
+		if body.CompletedAt != nil {
+			dst.CompletedAt = body.CompletedAt
+		}
+		if body.PausedAt != nil {
+			dst.PausedAt = body.PausedAt
+		}
+		if body.FailedAt != nil {
+			dst.FailedAt = body.FailedAt
+		}
+		if body.ProgressPercentage != nil {
+			f := float64(*body.ProgressPercentage)
+			dst.ProgressPercentage = &f
+		}
+		if body.TotalItems != nil {
+			dst.TotalItems = body.TotalItems
+		}
+		if body.ProcessedItems != nil {
+			dst.ProcessedItems = body.ProcessedItems
+		}
+		if body.SuccessfulItems != nil {
+			dst.SuccessfulItems = body.SuccessfulItems
+		}
+		if body.FailedItems != nil {
+			dst.FailedItems = body.FailedItems
+		}
+		if body.Configuration != nil {
+			if b, err := json.Marshal(body.Configuration); err == nil {
+				raw := json.RawMessage(b)
+				dst.Configuration = &raw
+			}
+		}
+		if body.ErrorDetails != nil {
+			if b, err := json.Marshal(body.ErrorDetails); err == nil {
+				raw := json.RawMessage(b)
+				dst.ErrorDetails = &raw
+			}
+		}
+		if body.Metrics != nil {
+			if b, err := json.Marshal(body.Metrics); err == nil {
+				raw := json.RawMessage(b)
+				dst.Metrics = &raw
+			}
+		}
+		// updated_at handled by DB
+	}
+
+	if existing != nil {
+		// Update path
+		e := *existing
+		applyUpdate(&e, r.Body)
+		if err := h.deps.Stores.Campaign.UpdatePhaseExecution(ctx, h.deps.DB, &e); err != nil {
+			if err == store.ErrNotFound {
+				return gen.CampaignsPhaseExecutionPut404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "phase execution not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+			return gen.CampaignsPhaseExecutionPut500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to update phase execution", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+	} else {
+		// Create path (upsert) with sensible defaults
+		e := &models.PhaseExecution{
+			CampaignID: uuid.UUID(r.CampaignId),
+			PhaseType:  phaseModel,
+			Status:     models.ExecutionStatusNotStarted,
+		}
+		// Apply body fields
+		applyUpdate(e, r.Body)
+		if err := h.deps.Stores.Campaign.CreatePhaseExecution(ctx, h.deps.DB, e); err != nil {
+			return gen.CampaignsPhaseExecutionPut500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to create phase execution", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+	}
+
+	// Load fresh and return
+	fresh, err := h.deps.Stores.Campaign.GetPhaseExecution(ctx, h.deps.DB, uuid.UUID(r.CampaignId), phaseModel)
+	if err != nil {
+		if err == store.ErrNotFound {
+			return gen.CampaignsPhaseExecutionPut404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "phase execution not found after save", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+		return gen.CampaignsPhaseExecutionPut500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load phase execution after save", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	api := mapPhaseExecutionToAPI(*fresh)
+	return gen.CampaignsPhaseExecutionPut200JSONResponse{Data: &api, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+}
+
+// CampaignsPhaseExecutionDelete implements DELETE /campaigns/{campaignId}/phase-executions/{phaseType}
+func (h *strictHandlers) CampaignsPhaseExecutionDelete(ctx context.Context, r gen.CampaignsPhaseExecutionDeleteRequestObject) (gen.CampaignsPhaseExecutionDeleteResponseObject, error) {
+	if h.deps == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
+		return gen.CampaignsPhaseExecutionDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	phaseModel, err := mapAPIPhaseToModel(string(r.PhaseType))
+	if err != nil {
+		return gen.CampaignsPhaseExecutionDelete404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "invalid phase type", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Find existing to get ID
+	pe, err := h.deps.Stores.Campaign.GetPhaseExecution(ctx, h.deps.DB, uuid.UUID(r.CampaignId), phaseModel)
+	if err != nil {
+		if err == store.ErrNotFound {
+			return gen.CampaignsPhaseExecutionDelete404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "phase execution not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+		return gen.CampaignsPhaseExecutionDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load phase execution", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	if err := h.deps.Stores.Campaign.DeletePhaseExecution(ctx, h.deps.DB, pe.ID); err != nil {
+		if err == store.ErrNotFound {
+			return gen.CampaignsPhaseExecutionDelete404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "phase execution not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+		return gen.CampaignsPhaseExecutionDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to delete phase execution", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	return gen.CampaignsPhaseExecutionDelete204Response{}, nil
+}
+
+// mapPhaseExecutionToAPI converts models.PhaseExecution to API PhaseExecution
+func mapPhaseExecutionToAPI(pe models.PhaseExecution) gen.PhaseExecution {
+	api := gen.PhaseExecution{
+		Id:         openapi_types.UUID(pe.ID),
+		CampaignId: openapi_types.UUID(pe.CampaignID),
+		PhaseType:  gen.PhaseExecutionPhaseType(mapModelPhaseToAPI(pe.PhaseType)),
+		Status:     gen.ExecutionStatusEnum(pe.Status),
+		CreatedAt:  pe.CreatedAt,
+		UpdatedAt:  pe.UpdatedAt,
+	}
+	api.StartedAt = pe.StartedAt
+	api.CompletedAt = pe.CompletedAt
+	api.PausedAt = pe.PausedAt
+	api.FailedAt = pe.FailedAt
+	if pe.ProgressPercentage != nil {
+		v := float32(*pe.ProgressPercentage)
+		api.ProgressPercentage = &v
+	}
+	if pe.TotalItems != nil {
+		vv := int64(*pe.TotalItems)
+		api.TotalItems = &vv
+	}
+	if pe.ProcessedItems != nil {
+		vv := int64(*pe.ProcessedItems)
+		api.ProcessedItems = &vv
+	}
+	if pe.SuccessfulItems != nil {
+		vv := int64(*pe.SuccessfulItems)
+		api.SuccessfulItems = &vv
+	}
+	if pe.FailedItems != nil {
+		vv := int64(*pe.FailedItems)
+		api.FailedItems = &vv
+	}
+	// JSON fields
+	if pe.Configuration != nil && len(*pe.Configuration) > 0 {
+		var m map[string]interface{}
+		if err := json.Unmarshal(*pe.Configuration, &m); err == nil {
+			api.Configuration = &m
+		}
+	}
+	if pe.ErrorDetails != nil && len(*pe.ErrorDetails) > 0 {
+		var m map[string]interface{}
+		if err := json.Unmarshal(*pe.ErrorDetails, &m); err == nil {
+			api.ErrorDetails = &m
+		}
+	}
+	if pe.Metrics != nil && len(*pe.Metrics) > 0 {
+		var m map[string]interface{}
+		if err := json.Unmarshal(*pe.Metrics, &m); err == nil {
+			api.Metrics = &m
+		}
+	}
+	return api
+}
+
 func toStringPtr(v interface{}) *string {
 	if v == nil {
 		return nil

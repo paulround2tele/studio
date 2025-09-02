@@ -747,6 +747,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/config/stealth": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get stealth configuration */
+        get: operations["config_get_stealth"];
+        /** Update stealth configuration */
+        put: operations["config_update_stealth"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/monitoring/performance/summary": {
         parameters: {
             query?: never;
@@ -1221,6 +1239,61 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/{campaignId}/state": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get campaign state */
+        get: operations["campaigns_state_get"];
+        /** Update campaign state */
+        put: operations["campaigns_state_put"];
+        post?: never;
+        /** Delete campaign state */
+        delete: operations["campaigns_state_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/{campaignId}/phase-executions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get campaign state and phase executions */
+        get: operations["campaigns_phase_executions_list"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/{campaignId}/phase-executions/{phaseType}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get phase execution by phase type */
+        get: operations["campaigns_phase_execution_get"];
+        /** Update phase execution by phase type */
+        put: operations["campaigns_phase_execution_put"];
+        post?: never;
+        /** Delete phase execution by phase type */
+        delete: operations["campaigns_phase_execution_delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2099,6 +2172,112 @@ export interface components {
             campaignId: string;
             items: components["schemas"]["DomainListItem"][];
             total: number;
+        };
+        /** @enum {string} */
+        CampaignStateEnum: "draft" | "running" | "paused" | "completed" | "failed" | "cancelled" | "archived";
+        /** @enum {string} */
+        CampaignModeEnum: "full_sequence" | "step_by_step";
+        CampaignState: {
+            /** Format: uuid */
+            campaignId: string;
+            currentState: components["schemas"]["CampaignStateEnum"];
+            mode: components["schemas"]["CampaignModeEnum"];
+            configuration?: {
+                [key: string]: unknown;
+            };
+            version: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CampaignStateUpdate: {
+            currentState?: components["schemas"]["CampaignStateEnum"];
+            mode?: components["schemas"]["CampaignModeEnum"];
+            configuration?: {
+                [key: string]: unknown;
+            };
+            /** @description Optional optimistic concurrency version; if provided must match current */
+            version?: number;
+        };
+        /** @enum {string} */
+        ExecutionStatusEnum: "not_started" | "ready" | "configured" | "in_progress" | "paused" | "completed" | "failed";
+        PhaseExecution: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            campaignId: string;
+            /**
+             * @description Phase identifier
+             * @enum {string}
+             */
+            phaseType: "discovery" | "validation" | "extraction" | "analysis";
+            status: components["schemas"]["ExecutionStatusEnum"];
+            /** Format: date-time */
+            startedAt?: string | null;
+            /** Format: date-time */
+            completedAt?: string | null;
+            /** Format: date-time */
+            pausedAt?: string | null;
+            /** Format: date-time */
+            failedAt?: string | null;
+            /** Format: float */
+            progressPercentage?: number;
+            /** Format: int64 */
+            totalItems?: number;
+            /** Format: int64 */
+            processedItems?: number;
+            /** Format: int64 */
+            successfulItems?: number;
+            /** Format: int64 */
+            failedItems?: number;
+            configuration?: {
+                [key: string]: unknown;
+            } | null;
+            errorDetails?: {
+                [key: string]: unknown;
+            } | null;
+            metrics?: {
+                [key: string]: unknown;
+            } | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CampaignStateWithExecutions: {
+            campaignState: components["schemas"]["CampaignState"];
+            phaseExecutions: components["schemas"]["PhaseExecution"][];
+        };
+        PhaseExecutionUpdate: {
+            status?: components["schemas"]["ExecutionStatusEnum"];
+            /** Format: date-time */
+            startedAt?: string | null;
+            /** Format: date-time */
+            completedAt?: string | null;
+            /** Format: date-time */
+            pausedAt?: string | null;
+            /** Format: date-time */
+            failedAt?: string | null;
+            /** Format: float */
+            progressPercentage?: number;
+            /** Format: int64 */
+            totalItems?: number;
+            /** Format: int64 */
+            processedItems?: number;
+            /** Format: int64 */
+            successfulItems?: number;
+            /** Format: int64 */
+            failedItems?: number;
+            configuration?: {
+                [key: string]: unknown;
+            } | null;
+            errorDetails?: {
+                [key: string]: unknown;
+            } | null;
+            metrics?: {
+                [key: string]: unknown;
+            } | null;
         };
         PhaseStatusResponse: {
             /** @enum {string} */
@@ -4355,6 +4534,65 @@ export interface operations {
             500: components["responses"]["InternalServerError"];
         };
     };
+    config_get_stealth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: {
+                            enabled?: boolean;
+                        };
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    config_update_stealth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    enabled?: boolean;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: {
+                            enabled?: boolean;
+                        };
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
     monitoring_performance_summary: {
         parameters: {
             query?: never;
@@ -5156,6 +5394,193 @@ export interface operations {
                 };
             };
             401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_state_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["CampaignState"];
+                    };
+                };
+            };
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_state_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CampaignStateUpdate"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["CampaignState"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_state_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_phase_executions_list: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["CampaignStateWithExecutions"];
+                    };
+                };
+            };
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_phase_execution_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+                phaseType: "discovery" | "validation" | "extraction" | "analysis";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["PhaseExecution"];
+                    };
+                };
+            };
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_phase_execution_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+                phaseType: "discovery" | "validation" | "extraction" | "analysis";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhaseExecutionUpdate"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["PhaseExecution"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_phase_execution_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+                phaseType: "discovery" | "validation" | "extraction" | "analysis";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             404: components["responses"]["NotFound"];
             500: components["responses"]["InternalServerError"];
         };

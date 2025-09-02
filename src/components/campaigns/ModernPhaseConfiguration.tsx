@@ -10,6 +10,7 @@ import { CampaignDetailsSection } from './configuration/CampaignDetailsSection';
 import { KeywordTargetingSection } from './configuration/KeywordTargetingSection';
 import { PersonaAssignmentSection } from './configuration/PersonaAssignmentSection';
 import { PerformanceTuningSection } from './sections/PerformanceTuningSection';
+import StealthToggle from '@/components/config/StealthToggle';
 
 import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { validateUUID } from '@/lib/utils/uuidValidation';
@@ -174,6 +175,9 @@ export const ModernPhaseConfiguration: React.FC<ModernPhaseConfigurationProps> =
             Configure the settings for the next phase of your campaign pipeline.
             This will transition &quot;{sourceCampaign?.name}&quot; to the {phaseDisplayNames[phaseType]?.toLowerCase()} phase.
           </DialogDescription>
+          <div className="pt-2">
+            <StealthToggle />
+          </div>
         </DialogHeader>
 
         <Form {...form}>

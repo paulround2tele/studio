@@ -1,0 +1,56 @@
+get:
+  tags: [server-settings]
+  security:
+    - cookieAuth: []
+  summary: Get stealth configuration
+  operationId: config_get_stealth
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      enabled:
+                        type: boolean
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+put:
+  tags: [server-settings]
+  security:
+    - cookieAuth: []
+  summary: Update stealth configuration
+  operationId: config_update_stealth
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      enabled:
+                        type: boolean
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

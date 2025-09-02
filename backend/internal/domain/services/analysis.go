@@ -19,6 +19,8 @@ import (
 // It coordinates contentfetcher and keywordextractor without replacing their functionality
 type analysisService struct {
 	store          store.CampaignStore
+	personaStore   store.PersonaStore
+	proxyStore     store.ProxyStore
 	deps           Dependencies
 	contentFetcher *contentfetcher.ContentFetcher
 
@@ -57,9 +59,13 @@ func NewAnalysisService(
 	store store.CampaignStore,
 	deps Dependencies,
 	contentFetcher *contentfetcher.ContentFetcher,
+	personaStore store.PersonaStore,
+	proxyStore store.ProxyStore,
 ) AnalysisService {
 	return &analysisService{
 		store:          store,
+		personaStore:   personaStore,
+		proxyStore:     proxyStore,
 		deps:           deps,
 		contentFetcher: contentFetcher,
 		executions:     make(map[uuid.UUID]*analysisExecution),
@@ -532,19 +538,86 @@ func (s *analysisService) getAnalysisConfig(ctx context.Context, campaignID uuid
 	s.deps.Logger.Debug(ctx, "Retrieving analysis configuration", map[string]interface{}{
 		"campaign_id": campaignID,
 	})
-
-	// TODO: Implement actual query to get stored analysis config
-	return &AnalysisConfig{
-		PersonaIDs:   []string{"persona-1", "persona-2"},
-		KeywordRules: []models.KeywordRule{},
-	}, nil
+	if s.store == nil {
+		return nil, fmt.Errorf("campaign store not available")
+	}
+	var exec store.Querier
+	if q, ok := s.deps.DB.(store.Querier); ok {
+		exec = q
+	}
+	phase, err := s.store.GetCampaignPhase(ctx, exec, campaignID, models.PhaseTypeAnalysis)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get analysis phase: %w", err)
+	}
+	if phase == nil || phase.Configuration == nil {
+		return nil, fmt.Errorf("analysis phase configuration not found")
+	}
+	var cfg AnalysisConfig
+	if err := json.Unmarshal(*phase.Configuration, &cfg); err != nil {
+		return nil, fmt.Errorf("failed to parse analysis configuration: %w", err)
+	}
+	return &cfg, nil
 }
 
 // getPersonasForFetching gets personas and proxy for content fetching
 func (s *analysisService) getPersonasForFetching(ctx context.Context, config *AnalysisConfig) (*models.Persona, *models.Persona, *models.Proxy, error) {
-	// TODO: Query actual personas and proxy from store
-	// For now, return nil which means use default settings
-	return nil, nil, nil, nil
+	if config == nil || len(config.PersonaIDs) == 0 || s.personaStore == nil {
+		return nil, nil, nil, nil
+	}
+	var exec store.Querier
+	if q, ok := s.deps.DB.(store.Querier); ok {
+		exec = q
+	}
+	// Parse persona IDs
+	personaUUIDs := make([]uuid.UUID, 0, len(config.PersonaIDs))
+	for _, idStr := range config.PersonaIDs {
+		if id, err := uuid.Parse(idStr); err == nil {
+			personaUUIDs = append(personaUUIDs, id)
+		}
+	}
+	if len(personaUUIDs) == 0 {
+		return nil, nil, nil, nil
+	}
+	personas, err := s.personaStore.GetPersonasByIDs(ctx, exec, personaUUIDs)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("failed to load personas: %w", err)
+	}
+	var httpPersona *models.Persona
+	var dnsPersona *models.Persona
+	for _, p := range personas {
+		if p == nil || !p.IsEnabled {
+			continue
+		}
+		switch p.PersonaType {
+		case models.PersonaTypeHTTP:
+			if httpPersona == nil {
+				httpPersona = p
+			}
+		case models.PersonaTypeDNS:
+			if dnsPersona == nil {
+				dnsPersona = p
+			}
+		}
+		if httpPersona != nil && dnsPersona != nil {
+			break
+		}
+	}
+	// Resolve proxy: prefer proxies associated with these personas
+	var proxy *models.Proxy
+	if s.proxyStore != nil {
+		if proxies, err := s.proxyStore.GetProxiesByPersonaIDs(ctx, exec, personaUUIDs); err == nil && len(proxies) > 0 {
+			for _, pr := range proxies {
+				if pr != nil && pr.IsEnabled && pr.IsHealthy {
+					proxy = pr
+					break
+				}
+			}
+			if proxy == nil {
+				proxy = proxies[0]
+			}
+		}
+	}
+	return httpPersona, dnsPersona, proxy, nil
 }
 
 // storeAnalysisResults stores analysis results in the campaign store

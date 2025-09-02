@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { X, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import StealthToggle from '@/components/config/StealthToggle';
 
 // Import types and services - using proper client structure
 import { PersonasApi, ProxyPoolsApi } from '@/lib/api-client';
@@ -223,6 +224,9 @@ export default function HTTPValidationConfigModal({
           <DialogDescription>
             Configure HTTP keyword validation for your campaign by selecting personas and keywords. All technical parameters (timeouts, proxy settings, ports) are automatically configured from persona settings.
           </DialogDescription>
+          <div className="pt-2">
+            <StealthToggle />
+          </div>
         </DialogHeader>
 
         <Form {...form}>

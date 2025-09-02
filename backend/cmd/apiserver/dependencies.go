@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/application"
+	application_hooks "github.com/fntelecomllc/studio/backend/internal/application/hooks"
 	"github.com/fntelecomllc/studio/backend/internal/config"
 	"github.com/fntelecomllc/studio/backend/internal/contentfetcher"
 	"github.com/fntelecomllc/studio/backend/internal/dnsvalidator"
@@ -256,17 +257,19 @@ func initAppDependencies() (*AppDeps, error) {
 
 	domainGenSvc := domainservices.NewDomainGenerationService(deps.Stores.Campaign, domainDeps)
 	dnsValidationSvc := domainservices.NewDNSValidationService(dnsValSvc, deps.Stores.Campaign, domainDeps)
-	httpValidationSvc := domainservices.NewHTTPValidationService(deps.Stores.Campaign, domainDeps, httpValSvc)
-	analysisSvc := domainservices.NewAnalysisService(deps.Stores.Campaign, domainDeps, contentFetcherSvc)
+	httpValidationSvc := domainservices.NewHTTPValidationService(deps.Stores.Campaign, domainDeps, httpValSvc, deps.Stores.Persona, deps.Stores.Proxy)
+	analysisSvc := domainservices.NewAnalysisService(deps.Stores.Campaign, domainDeps, contentFetcherSvc, deps.Stores.Persona, deps.Stores.Proxy)
 
-	// Stealth integration and wrappers
-	stealthIntegrationLegacy := services.NewStealthIntegrationService(deps.DB, deps.Stores.Campaign, nil, nil)
-	stealthAdapter := domaininfra.NewStealthAdapter(stealthIntegrationLegacy)
-	stealthAwareDNS := domainservices.NewStealthAwareDNSValidationService(dnsValidationSvc, stealthAdapter)
-	stealthAwareHTTP := domainservices.NewStealthAwareHTTPValidationService(httpValidationSvc, stealthAdapter)
-	defaultStealth := services.DefaultStealthConfig()
-	stealthAwareDNS.EnableStealthMode(defaultStealth)
-	stealthAwareHTTP.EnableStealthMode(defaultStealth)
+	// Stealth integration and wrappers (decoupled from legacy)
+	// Use toggleable stealth: frontend can flip enableStealth via /config/features
+	realStealth := domaininfra.NewRealStealthIntegration(deps.Stores.Campaign)
+	noopStealth := domaininfra.NewNoopStealthIntegration()
+	stealthIntegration := domaininfra.NewToggleableStealthIntegration(realStealth, noopStealth, deps.Config)
+	stealthAwareDNS := domainservices.NewStealthAwareDNSValidationService(dnsValidationSvc, stealthIntegration)
+	stealthAwareHTTP := domainservices.NewStealthAwareHTTPValidationService(httpValidationSvc, stealthIntegration)
+	// Enable stealth mode globally; Noop integration will fall back to standard execution.
+	stealthAwareDNS.EnableStealthMode()
+	stealthAwareHTTP.EnableStealthMode()
 
 	// SSE and Orchestrator
 	if deps.Stores.Campaign != nil {
@@ -279,6 +282,9 @@ func initAppDependencies() (*AppDeps, error) {
 			analysisSvc,
 			deps.SSE,
 		)
+
+		// Register post-completion hooks
+		deps.Orchestrator.RegisterPostCompletionHook(&application_hooks.SummaryReportHook{Store: deps.Stores.Campaign, Deps: domainDeps})
 	}
 
 	// Monitoring and cleanup services

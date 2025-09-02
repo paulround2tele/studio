@@ -146,6 +146,12 @@ const (
 	BulkValidationResponseStatusRunning   BulkValidationResponseStatus = "running"
 )
 
+// Defines values for CampaignModeEnum.
+const (
+	FullSequence CampaignModeEnum = "full_sequence"
+	StepByStep   CampaignModeEnum = "step_by_step"
+)
+
 // Defines values for CampaignProgressResponseOverallStatus.
 const (
 	CampaignProgressResponseOverallStatusCancelled CampaignProgressResponseOverallStatus = "cancelled"
@@ -174,6 +180,17 @@ const (
 	CampaignResponseStatusRunning   CampaignResponseStatus = "running"
 )
 
+// Defines values for CampaignStateEnum.
+const (
+	CampaignStateEnumArchived  CampaignStateEnum = "archived"
+	CampaignStateEnumCancelled CampaignStateEnum = "cancelled"
+	CampaignStateEnumCompleted CampaignStateEnum = "completed"
+	CampaignStateEnumDraft     CampaignStateEnum = "draft"
+	CampaignStateEnumFailed    CampaignStateEnum = "failed"
+	CampaignStateEnumPaused    CampaignStateEnum = "paused"
+	CampaignStateEnumRunning   CampaignStateEnum = "running"
+)
+
 // Defines values for ErrorCode.
 const (
 	BADREQUEST          ErrorCode = "BAD_REQUEST"
@@ -195,6 +212,17 @@ const (
 	VALIDATIONERROR     ErrorCode = "VALIDATION_ERROR"
 )
 
+// Defines values for ExecutionStatusEnum.
+const (
+	ExecutionStatusEnumCompleted  ExecutionStatusEnum = "completed"
+	ExecutionStatusEnumConfigured ExecutionStatusEnum = "configured"
+	ExecutionStatusEnumFailed     ExecutionStatusEnum = "failed"
+	ExecutionStatusEnumInProgress ExecutionStatusEnum = "in_progress"
+	ExecutionStatusEnumNotStarted ExecutionStatusEnum = "not_started"
+	ExecutionStatusEnumPaused     ExecutionStatusEnum = "paused"
+	ExecutionStatusEnumReady      ExecutionStatusEnum = "ready"
+)
+
 // Defines values for KeywordRuleType.
 const (
 	Regex  KeywordRuleType = "regex"
@@ -212,6 +240,14 @@ const (
 const (
 	PersonaTypeDns  PersonaType = "dns"
 	PersonaTypeHttp PersonaType = "http"
+)
+
+// Defines values for PhaseExecutionPhaseType.
+const (
+	PhaseExecutionPhaseTypeAnalysis   PhaseExecutionPhaseType = "analysis"
+	PhaseExecutionPhaseTypeDiscovery  PhaseExecutionPhaseType = "discovery"
+	PhaseExecutionPhaseTypeExtraction PhaseExecutionPhaseType = "extraction"
+	PhaseExecutionPhaseTypeValidation PhaseExecutionPhaseType = "validation"
 )
 
 // Defines values for PhaseProgressSummaryStatus.
@@ -253,6 +289,30 @@ const (
 // Defines values for XRequestedWith.
 const (
 	XRequestedWithXMLHttpRequest XRequestedWith = "XMLHttpRequest"
+)
+
+// Defines values for CampaignsPhaseExecutionDeleteParamsPhaseType.
+const (
+	CampaignsPhaseExecutionDeleteParamsPhaseTypeAnalysis   CampaignsPhaseExecutionDeleteParamsPhaseType = "analysis"
+	CampaignsPhaseExecutionDeleteParamsPhaseTypeDiscovery  CampaignsPhaseExecutionDeleteParamsPhaseType = "discovery"
+	CampaignsPhaseExecutionDeleteParamsPhaseTypeExtraction CampaignsPhaseExecutionDeleteParamsPhaseType = "extraction"
+	CampaignsPhaseExecutionDeleteParamsPhaseTypeValidation CampaignsPhaseExecutionDeleteParamsPhaseType = "validation"
+)
+
+// Defines values for CampaignsPhaseExecutionGetParamsPhaseType.
+const (
+	CampaignsPhaseExecutionGetParamsPhaseTypeAnalysis   CampaignsPhaseExecutionGetParamsPhaseType = "analysis"
+	CampaignsPhaseExecutionGetParamsPhaseTypeDiscovery  CampaignsPhaseExecutionGetParamsPhaseType = "discovery"
+	CampaignsPhaseExecutionGetParamsPhaseTypeExtraction CampaignsPhaseExecutionGetParamsPhaseType = "extraction"
+	CampaignsPhaseExecutionGetParamsPhaseTypeValidation CampaignsPhaseExecutionGetParamsPhaseType = "validation"
+)
+
+// Defines values for CampaignsPhaseExecutionPutParamsPhaseType.
+const (
+	CampaignsPhaseExecutionPutParamsPhaseTypeAnalysis   CampaignsPhaseExecutionPutParamsPhaseType = "analysis"
+	CampaignsPhaseExecutionPutParamsPhaseTypeDiscovery  CampaignsPhaseExecutionPutParamsPhaseType = "discovery"
+	CampaignsPhaseExecutionPutParamsPhaseTypeExtraction CampaignsPhaseExecutionPutParamsPhaseType = "extraction"
+	CampaignsPhaseExecutionPutParamsPhaseTypeValidation CampaignsPhaseExecutionPutParamsPhaseType = "validation"
 )
 
 // Defines values for CampaignsPhaseConfigureParamsPhase.
@@ -683,6 +743,9 @@ type CampaignDomainsListResponse struct {
 	Total      int                `json:"total"`
 }
 
+// CampaignModeEnum defines model for CampaignModeEnum.
+type CampaignModeEnum string
+
 // CampaignProgressResponse defines model for CampaignProgressResponse.
 type CampaignProgressResponse struct {
 	CampaignId openapi_types.UUID `json:"campaignId"`
@@ -740,6 +803,36 @@ type CampaignResponseCurrentPhase string
 
 // CampaignResponseStatus defines model for CampaignResponse.Status.
 type CampaignResponseStatus string
+
+// CampaignState defines model for CampaignState.
+type CampaignState struct {
+	CampaignId    openapi_types.UUID      `json:"campaignId"`
+	Configuration *map[string]interface{} `json:"configuration,omitempty"`
+	CreatedAt     time.Time               `json:"createdAt"`
+	CurrentState  CampaignStateEnum       `json:"currentState"`
+	Mode          CampaignModeEnum        `json:"mode"`
+	UpdatedAt     time.Time               `json:"updatedAt"`
+	Version       int                     `json:"version"`
+}
+
+// CampaignStateEnum defines model for CampaignStateEnum.
+type CampaignStateEnum string
+
+// CampaignStateUpdate defines model for CampaignStateUpdate.
+type CampaignStateUpdate struct {
+	Configuration *map[string]interface{} `json:"configuration,omitempty"`
+	CurrentState  *CampaignStateEnum      `json:"currentState,omitempty"`
+	Mode          *CampaignModeEnum       `json:"mode,omitempty"`
+
+	// Version Optional optimistic concurrency version; if provided must match current
+	Version *int `json:"version,omitempty"`
+}
+
+// CampaignStateWithExecutions defines model for CampaignStateWithExecutions.
+type CampaignStateWithExecutions struct {
+	CampaignState   CampaignState    `json:"campaignState"`
+	PhaseExecutions []PhaseExecution `json:"phaseExecutions"`
+}
 
 // CreateCampaignRequest defines model for CreateCampaignRequest.
 type CreateCampaignRequest struct {
@@ -862,6 +955,9 @@ type ErrorEnvelope struct {
 	// Success Always false for error envelopes.
 	Success *bool `json:"success,omitempty"`
 }
+
+// ExecutionStatusEnum defines model for ExecutionStatusEnum.
+type ExecutionStatusEnum string
 
 // FeatureFlags Feature flags map
 type FeatureFlags map[string]bool
@@ -1012,6 +1108,50 @@ type PhaseConfigurationRequest struct {
 		HttpPersonaId *openapi_types.UUID `json:"httpPersonaId"`
 	} `json:"personaIds,omitempty"`
 	ProxyPoolId *openapi_types.UUID `json:"proxyPoolId"`
+}
+
+// PhaseExecution defines model for PhaseExecution.
+type PhaseExecution struct {
+	CampaignId    openapi_types.UUID      `json:"campaignId"`
+	CompletedAt   *time.Time              `json:"completedAt"`
+	Configuration *map[string]interface{} `json:"configuration"`
+	CreatedAt     time.Time               `json:"createdAt"`
+	ErrorDetails  *map[string]interface{} `json:"errorDetails"`
+	FailedAt      *time.Time              `json:"failedAt"`
+	FailedItems   *int64                  `json:"failedItems,omitempty"`
+	Id            openapi_types.UUID      `json:"id"`
+	Metrics       *map[string]interface{} `json:"metrics"`
+	PausedAt      *time.Time              `json:"pausedAt"`
+
+	// PhaseType Phase identifier
+	PhaseType          PhaseExecutionPhaseType `json:"phaseType"`
+	ProcessedItems     *int64                  `json:"processedItems,omitempty"`
+	ProgressPercentage *float32                `json:"progressPercentage,omitempty"`
+	StartedAt          *time.Time              `json:"startedAt"`
+	Status             ExecutionStatusEnum     `json:"status"`
+	SuccessfulItems    *int64                  `json:"successfulItems,omitempty"`
+	TotalItems         *int64                  `json:"totalItems,omitempty"`
+	UpdatedAt          time.Time               `json:"updatedAt"`
+}
+
+// PhaseExecutionPhaseType Phase identifier
+type PhaseExecutionPhaseType string
+
+// PhaseExecutionUpdate defines model for PhaseExecutionUpdate.
+type PhaseExecutionUpdate struct {
+	CompletedAt        *time.Time              `json:"completedAt"`
+	Configuration      *map[string]interface{} `json:"configuration"`
+	ErrorDetails       *map[string]interface{} `json:"errorDetails"`
+	FailedAt           *time.Time              `json:"failedAt"`
+	FailedItems        *int64                  `json:"failedItems,omitempty"`
+	Metrics            *map[string]interface{} `json:"metrics"`
+	PausedAt           *time.Time              `json:"pausedAt"`
+	ProcessedItems     *int64                  `json:"processedItems,omitempty"`
+	ProgressPercentage *float32                `json:"progressPercentage,omitempty"`
+	StartedAt          *time.Time              `json:"startedAt"`
+	Status             *ExecutionStatusEnum    `json:"status,omitempty"`
+	SuccessfulItems    *int64                  `json:"successfulItems,omitempty"`
+	TotalItems         *int64                  `json:"totalItems,omitempty"`
 }
 
 // PhaseProgressSummary defines model for PhaseProgressSummary.
@@ -1310,6 +1450,15 @@ type CampaignsDomainsListParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
+// CampaignsPhaseExecutionDeleteParamsPhaseType defines parameters for CampaignsPhaseExecutionDelete.
+type CampaignsPhaseExecutionDeleteParamsPhaseType string
+
+// CampaignsPhaseExecutionGetParamsPhaseType defines parameters for CampaignsPhaseExecutionGet.
+type CampaignsPhaseExecutionGetParamsPhaseType string
+
+// CampaignsPhaseExecutionPutParamsPhaseType defines parameters for CampaignsPhaseExecutionPut.
+type CampaignsPhaseExecutionPutParamsPhaseType string
+
 // CampaignsPhaseConfigureParamsPhase defines parameters for CampaignsPhaseConfigure.
 type CampaignsPhaseConfigureParamsPhase string
 
@@ -1330,6 +1479,11 @@ type ConfigUpdateProxyManagerJSONBody = map[string]interface{}
 
 // ConfigUpdateServerJSONBody defines parameters for ConfigUpdateServer.
 type ConfigUpdateServerJSONBody = map[string]interface{}
+
+// ConfigUpdateStealthJSONBody defines parameters for ConfigUpdateStealth.
+type ConfigUpdateStealthJSONBody struct {
+	Enabled *bool `json:"enabled,omitempty"`
+}
 
 // DbBulkQueryParams defines parameters for DbBulkQuery.
 type DbBulkQueryParams struct {
@@ -1465,8 +1619,14 @@ type CampaignsDomainGenerationPatternOffsetJSONRequestBody = PatternOffsetReques
 // CampaignsUpdateJSONRequestBody defines body for CampaignsUpdate for application/json ContentType.
 type CampaignsUpdateJSONRequestBody = UpdateCampaignRequest
 
+// CampaignsPhaseExecutionPutJSONRequestBody defines body for CampaignsPhaseExecutionPut for application/json ContentType.
+type CampaignsPhaseExecutionPutJSONRequestBody = PhaseExecutionUpdate
+
 // CampaignsPhaseConfigureJSONRequestBody defines body for CampaignsPhaseConfigure for application/json ContentType.
 type CampaignsPhaseConfigureJSONRequestBody = PhaseConfigurationRequest
+
+// CampaignsStatePutJSONRequestBody defines body for CampaignsStatePut for application/json ContentType.
+type CampaignsStatePutJSONRequestBody = CampaignStateUpdate
 
 // ConfigUpdateAuthJSONRequestBody defines body for ConfigUpdateAuth for application/json ContentType.
 type ConfigUpdateAuthJSONRequestBody = AuthConfig
@@ -1491,6 +1651,9 @@ type ConfigUpdateRateLimiterJSONRequestBody = RateLimiterConfig
 
 // ConfigUpdateServerJSONRequestBody defines body for ConfigUpdateServer for application/json ContentType.
 type ConfigUpdateServerJSONRequestBody = ConfigUpdateServerJSONBody
+
+// ConfigUpdateStealthJSONRequestBody defines body for ConfigUpdateStealth for application/json ContentType.
+type ConfigUpdateStealthJSONRequestBody ConfigUpdateStealthJSONBody
 
 // ConfigUpdateWorkerJSONRequestBody defines body for ConfigUpdateWorker for application/json ContentType.
 type ConfigUpdateWorkerJSONRequestBody = WorkerConfig
@@ -1611,6 +1774,18 @@ type ServerInterface interface {
 	// List generated domains for a campaign
 	// (GET /campaigns/{campaignId}/domains)
 	CampaignsDomainsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsDomainsListParams)
+	// Get campaign state and phase executions
+	// (GET /campaigns/{campaignId}/phase-executions)
+	CampaignsPhaseExecutionsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
+	// Delete phase execution by phase type
+	// (DELETE /campaigns/{campaignId}/phase-executions/{phaseType})
+	CampaignsPhaseExecutionDelete(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phaseType CampaignsPhaseExecutionDeleteParamsPhaseType)
+	// Get phase execution by phase type
+	// (GET /campaigns/{campaignId}/phase-executions/{phaseType})
+	CampaignsPhaseExecutionGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phaseType CampaignsPhaseExecutionGetParamsPhaseType)
+	// Update phase execution by phase type
+	// (PUT /campaigns/{campaignId}/phase-executions/{phaseType})
+	CampaignsPhaseExecutionPut(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phaseType CampaignsPhaseExecutionPutParamsPhaseType)
 	// Configure campaign phase
 	// (POST /campaigns/{campaignId}/phases/{phase}/configure)
 	CampaignsPhaseConfigure(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignsPhaseConfigureParamsPhase)
@@ -1626,6 +1801,15 @@ type ServerInterface interface {
 	// Get campaign progress
 	// (GET /campaigns/{campaignId}/progress)
 	CampaignsProgress(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
+	// Delete campaign state
+	// (DELETE /campaigns/{campaignId}/state)
+	CampaignsStateDelete(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
+	// Get campaign state
+	// (GET /campaigns/{campaignId}/state)
+	CampaignsStateGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
+	// Update campaign state
+	// (PUT /campaigns/{campaignId}/state)
+	CampaignsStatePut(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
 	// Get authentication configuration
 	// (GET /config/auth)
 	ConfigGetAuth(w http.ResponseWriter, r *http.Request)
@@ -1674,6 +1858,12 @@ type ServerInterface interface {
 	// Update server configuration
 	// (PUT /config/server)
 	ConfigUpdateServer(w http.ResponseWriter, r *http.Request)
+	// Get stealth configuration
+	// (GET /config/stealth)
+	ConfigGetStealth(w http.ResponseWriter, r *http.Request)
+	// Update stealth configuration
+	// (PUT /config/stealth)
+	ConfigUpdateStealth(w http.ResponseWriter, r *http.Request)
 	// Get worker configuration
 	// (GET /config/worker)
 	ConfigGetWorker(w http.ResponseWriter, r *http.Request)
@@ -1998,6 +2188,30 @@ func (_ Unimplemented) CampaignsDomainsList(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// Get campaign state and phase executions
+// (GET /campaigns/{campaignId}/phase-executions)
+func (_ Unimplemented) CampaignsPhaseExecutionsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Delete phase execution by phase type
+// (DELETE /campaigns/{campaignId}/phase-executions/{phaseType})
+func (_ Unimplemented) CampaignsPhaseExecutionDelete(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phaseType CampaignsPhaseExecutionDeleteParamsPhaseType) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get phase execution by phase type
+// (GET /campaigns/{campaignId}/phase-executions/{phaseType})
+func (_ Unimplemented) CampaignsPhaseExecutionGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phaseType CampaignsPhaseExecutionGetParamsPhaseType) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update phase execution by phase type
+// (PUT /campaigns/{campaignId}/phase-executions/{phaseType})
+func (_ Unimplemented) CampaignsPhaseExecutionPut(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phaseType CampaignsPhaseExecutionPutParamsPhaseType) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // Configure campaign phase
 // (POST /campaigns/{campaignId}/phases/{phase}/configure)
 func (_ Unimplemented) CampaignsPhaseConfigure(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignsPhaseConfigureParamsPhase) {
@@ -2025,6 +2239,24 @@ func (_ Unimplemented) CampaignsPhaseStop(w http.ResponseWriter, r *http.Request
 // Get campaign progress
 // (GET /campaigns/{campaignId}/progress)
 func (_ Unimplemented) CampaignsProgress(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Delete campaign state
+// (DELETE /campaigns/{campaignId}/state)
+func (_ Unimplemented) CampaignsStateDelete(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get campaign state
+// (GET /campaigns/{campaignId}/state)
+func (_ Unimplemented) CampaignsStateGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update campaign state
+// (PUT /campaigns/{campaignId}/state)
+func (_ Unimplemented) CampaignsStatePut(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2121,6 +2353,18 @@ func (_ Unimplemented) ConfigGetServer(w http.ResponseWriter, r *http.Request) {
 // Update server configuration
 // (PUT /config/server)
 func (_ Unimplemented) ConfigUpdateServer(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get stealth configuration
+// (GET /config/stealth)
+func (_ Unimplemented) ConfigGetStealth(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update stealth configuration
+// (PUT /config/stealth)
+func (_ Unimplemented) ConfigUpdateStealth(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3033,6 +3277,157 @@ func (siw *ServerInterfaceWrapper) CampaignsDomainsList(w http.ResponseWriter, r
 	handler.ServeHTTP(w, r)
 }
 
+// CampaignsPhaseExecutionsList operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsPhaseExecutionsList(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsPhaseExecutionsList(w, r, campaignId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CampaignsPhaseExecutionDelete operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsPhaseExecutionDelete(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "phaseType" -------------
+	var phaseType CampaignsPhaseExecutionDeleteParamsPhaseType
+
+	err = runtime.BindStyledParameterWithOptions("simple", "phaseType", chi.URLParam(r, "phaseType"), &phaseType, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "phaseType", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsPhaseExecutionDelete(w, r, campaignId, phaseType)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CampaignsPhaseExecutionGet operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsPhaseExecutionGet(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "phaseType" -------------
+	var phaseType CampaignsPhaseExecutionGetParamsPhaseType
+
+	err = runtime.BindStyledParameterWithOptions("simple", "phaseType", chi.URLParam(r, "phaseType"), &phaseType, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "phaseType", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsPhaseExecutionGet(w, r, campaignId, phaseType)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CampaignsPhaseExecutionPut operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsPhaseExecutionPut(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "phaseType" -------------
+	var phaseType CampaignsPhaseExecutionPutParamsPhaseType
+
+	err = runtime.BindStyledParameterWithOptions("simple", "phaseType", chi.URLParam(r, "phaseType"), &phaseType, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "phaseType", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsPhaseExecutionPut(w, r, campaignId, phaseType)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CampaignsPhaseConfigure operation middleware
 func (siw *ServerInterfaceWrapper) CampaignsPhaseConfigure(w http.ResponseWriter, r *http.Request) {
 
@@ -3215,6 +3610,99 @@ func (siw *ServerInterfaceWrapper) CampaignsProgress(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CampaignsProgress(w, r, campaignId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CampaignsStateDelete operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsStateDelete(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsStateDelete(w, r, campaignId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CampaignsStateGet operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsStateGet(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsStateGet(w, r, campaignId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CampaignsStatePut operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsStatePut(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsStatePut(w, r, campaignId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -3535,6 +4023,46 @@ func (siw *ServerInterfaceWrapper) ConfigUpdateServer(w http.ResponseWriter, r *
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ConfigUpdateServer(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ConfigGetStealth operation middleware
+func (siw *ServerInterfaceWrapper) ConfigGetStealth(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ConfigGetStealth(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ConfigUpdateStealth operation middleware
+func (siw *ServerInterfaceWrapper) ConfigUpdateStealth(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ConfigUpdateStealth(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5576,6 +6104,18 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/campaigns/{campaignId}/domains", wrapper.CampaignsDomainsList)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/campaigns/{campaignId}/phase-executions", wrapper.CampaignsPhaseExecutionsList)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/campaigns/{campaignId}/phase-executions/{phaseType}", wrapper.CampaignsPhaseExecutionDelete)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/campaigns/{campaignId}/phase-executions/{phaseType}", wrapper.CampaignsPhaseExecutionGet)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/campaigns/{campaignId}/phase-executions/{phaseType}", wrapper.CampaignsPhaseExecutionPut)
+	})
+	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/campaigns/{campaignId}/phases/{phase}/configure", wrapper.CampaignsPhaseConfigure)
 	})
 	r.Group(func(r chi.Router) {
@@ -5589,6 +6129,15 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/campaigns/{campaignId}/progress", wrapper.CampaignsProgress)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/campaigns/{campaignId}/state", wrapper.CampaignsStateDelete)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/campaigns/{campaignId}/state", wrapper.CampaignsStateGet)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/campaigns/{campaignId}/state", wrapper.CampaignsStatePut)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/config/auth", wrapper.ConfigGetAuth)
@@ -5637,6 +6186,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Put(options.BaseURL+"/config/server", wrapper.ConfigUpdateServer)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/config/stealth", wrapper.ConfigGetStealth)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/config/stealth", wrapper.ConfigUpdateStealth)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/config/worker", wrapper.ConfigGetWorker)
@@ -7114,6 +7669,187 @@ func (response CampaignsDomainsList500JSONResponse) VisitCampaignsDomainsListRes
 	return json.NewEncoder(w).Encode(response)
 }
 
+type CampaignsPhaseExecutionsListRequestObject struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+}
+
+type CampaignsPhaseExecutionsListResponseObject interface {
+	VisitCampaignsPhaseExecutionsListResponse(w http.ResponseWriter) error
+}
+
+type CampaignsPhaseExecutionsList200JSONResponse struct {
+	Data      *CampaignStateWithExecutions `json:"data,omitempty"`
+	Metadata  *Metadata                    `json:"metadata,omitempty"`
+	RequestId string                       `json:"requestId"`
+
+	// Success Always true for success envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response CampaignsPhaseExecutionsList200JSONResponse) VisitCampaignsPhaseExecutionsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseExecutionsList404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsPhaseExecutionsList404JSONResponse) VisitCampaignsPhaseExecutionsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseExecutionsList500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsPhaseExecutionsList500JSONResponse) VisitCampaignsPhaseExecutionsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseExecutionDeleteRequestObject struct {
+	CampaignId openapi_types.UUID                           `json:"campaignId"`
+	PhaseType  CampaignsPhaseExecutionDeleteParamsPhaseType `json:"phaseType"`
+}
+
+type CampaignsPhaseExecutionDeleteResponseObject interface {
+	VisitCampaignsPhaseExecutionDeleteResponse(w http.ResponseWriter) error
+}
+
+type CampaignsPhaseExecutionDelete204Response struct {
+}
+
+func (response CampaignsPhaseExecutionDelete204Response) VisitCampaignsPhaseExecutionDeleteResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type CampaignsPhaseExecutionDelete404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsPhaseExecutionDelete404JSONResponse) VisitCampaignsPhaseExecutionDeleteResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseExecutionDelete500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsPhaseExecutionDelete500JSONResponse) VisitCampaignsPhaseExecutionDeleteResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseExecutionGetRequestObject struct {
+	CampaignId openapi_types.UUID                        `json:"campaignId"`
+	PhaseType  CampaignsPhaseExecutionGetParamsPhaseType `json:"phaseType"`
+}
+
+type CampaignsPhaseExecutionGetResponseObject interface {
+	VisitCampaignsPhaseExecutionGetResponse(w http.ResponseWriter) error
+}
+
+type CampaignsPhaseExecutionGet200JSONResponse struct {
+	Data      *PhaseExecution `json:"data,omitempty"`
+	Metadata  *Metadata       `json:"metadata,omitempty"`
+	RequestId string          `json:"requestId"`
+
+	// Success Always true for success envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response CampaignsPhaseExecutionGet200JSONResponse) VisitCampaignsPhaseExecutionGetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseExecutionGet404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsPhaseExecutionGet404JSONResponse) VisitCampaignsPhaseExecutionGetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseExecutionGet500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsPhaseExecutionGet500JSONResponse) VisitCampaignsPhaseExecutionGetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseExecutionPutRequestObject struct {
+	CampaignId openapi_types.UUID                        `json:"campaignId"`
+	PhaseType  CampaignsPhaseExecutionPutParamsPhaseType `json:"phaseType"`
+	Body       *CampaignsPhaseExecutionPutJSONRequestBody
+}
+
+type CampaignsPhaseExecutionPutResponseObject interface {
+	VisitCampaignsPhaseExecutionPutResponse(w http.ResponseWriter) error
+}
+
+type CampaignsPhaseExecutionPut200JSONResponse struct {
+	Data      *PhaseExecution `json:"data,omitempty"`
+	Metadata  *Metadata       `json:"metadata,omitempty"`
+	RequestId string          `json:"requestId"`
+
+	// Success Always true for success envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response CampaignsPhaseExecutionPut200JSONResponse) VisitCampaignsPhaseExecutionPutResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseExecutionPut400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CampaignsPhaseExecutionPut400JSONResponse) VisitCampaignsPhaseExecutionPutResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseExecutionPut404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsPhaseExecutionPut404JSONResponse) VisitCampaignsPhaseExecutionPutResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseExecutionPut500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsPhaseExecutionPut500JSONResponse) VisitCampaignsPhaseExecutionPutResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type CampaignsPhaseConfigureRequestObject struct {
 	CampaignId openapi_types.UUID                 `json:"campaignId"`
 	Phase      CampaignsPhaseConfigureParamsPhase `json:"phase"`
@@ -7405,6 +8141,140 @@ type CampaignsProgress500JSONResponse struct {
 }
 
 func (response CampaignsProgress500JSONResponse) VisitCampaignsProgressResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsStateDeleteRequestObject struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+}
+
+type CampaignsStateDeleteResponseObject interface {
+	VisitCampaignsStateDeleteResponse(w http.ResponseWriter) error
+}
+
+type CampaignsStateDelete204Response struct {
+}
+
+func (response CampaignsStateDelete204Response) VisitCampaignsStateDeleteResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type CampaignsStateDelete404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsStateDelete404JSONResponse) VisitCampaignsStateDeleteResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsStateDelete500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsStateDelete500JSONResponse) VisitCampaignsStateDeleteResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsStateGetRequestObject struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+}
+
+type CampaignsStateGetResponseObject interface {
+	VisitCampaignsStateGetResponse(w http.ResponseWriter) error
+}
+
+type CampaignsStateGet200JSONResponse struct {
+	Data      *CampaignState `json:"data,omitempty"`
+	Metadata  *Metadata      `json:"metadata,omitempty"`
+	RequestId string         `json:"requestId"`
+
+	// Success Always true for success envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response CampaignsStateGet200JSONResponse) VisitCampaignsStateGetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsStateGet404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsStateGet404JSONResponse) VisitCampaignsStateGetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsStateGet500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsStateGet500JSONResponse) VisitCampaignsStateGetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsStatePutRequestObject struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+	Body       *CampaignsStatePutJSONRequestBody
+}
+
+type CampaignsStatePutResponseObject interface {
+	VisitCampaignsStatePutResponse(w http.ResponseWriter) error
+}
+
+type CampaignsStatePut200JSONResponse struct {
+	Data      *CampaignState `json:"data,omitempty"`
+	Metadata  *Metadata      `json:"metadata,omitempty"`
+	RequestId string         `json:"requestId"`
+
+	// Success Always true for success envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response CampaignsStatePut200JSONResponse) VisitCampaignsStatePutResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsStatePut400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CampaignsStatePut400JSONResponse) VisitCampaignsStatePutResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsStatePut404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsStatePut404JSONResponse) VisitCampaignsStatePutResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsStatePut500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsStatePut500JSONResponse) VisitCampaignsStatePutResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -8589,6 +9459,106 @@ type ConfigUpdateServer500JSONResponse struct {
 }
 
 func (response ConfigUpdateServer500JSONResponse) VisitConfigUpdateServerResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ConfigGetStealthRequestObject struct {
+}
+
+type ConfigGetStealthResponseObject interface {
+	VisitConfigGetStealthResponse(w http.ResponseWriter) error
+}
+
+type ConfigGetStealth200JSONResponse struct {
+	Data *struct {
+		Enabled *bool `json:"enabled,omitempty"`
+	} `json:"data,omitempty"`
+	Metadata  *Metadata `json:"metadata,omitempty"`
+	RequestId string    `json:"requestId"`
+
+	// Success Always true for success envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response ConfigGetStealth200JSONResponse) VisitConfigGetStealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ConfigGetStealth401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ConfigGetStealth401JSONResponse) VisitConfigGetStealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ConfigGetStealth500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response ConfigGetStealth500JSONResponse) VisitConfigGetStealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ConfigUpdateStealthRequestObject struct {
+	Body *ConfigUpdateStealthJSONRequestBody
+}
+
+type ConfigUpdateStealthResponseObject interface {
+	VisitConfigUpdateStealthResponse(w http.ResponseWriter) error
+}
+
+type ConfigUpdateStealth200JSONResponse struct {
+	Data *struct {
+		Enabled *bool `json:"enabled,omitempty"`
+	} `json:"data,omitempty"`
+	Metadata  *Metadata `json:"metadata,omitempty"`
+	RequestId string    `json:"requestId"`
+
+	// Success Always true for success envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response ConfigUpdateStealth200JSONResponse) VisitConfigUpdateStealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ConfigUpdateStealth400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response ConfigUpdateStealth400JSONResponse) VisitConfigUpdateStealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ConfigUpdateStealth401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ConfigUpdateStealth401JSONResponse) VisitConfigUpdateStealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ConfigUpdateStealth500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response ConfigUpdateStealth500JSONResponse) VisitConfigUpdateStealthResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -12524,6 +13494,18 @@ type StrictServerInterface interface {
 	// List generated domains for a campaign
 	// (GET /campaigns/{campaignId}/domains)
 	CampaignsDomainsList(ctx context.Context, request CampaignsDomainsListRequestObject) (CampaignsDomainsListResponseObject, error)
+	// Get campaign state and phase executions
+	// (GET /campaigns/{campaignId}/phase-executions)
+	CampaignsPhaseExecutionsList(ctx context.Context, request CampaignsPhaseExecutionsListRequestObject) (CampaignsPhaseExecutionsListResponseObject, error)
+	// Delete phase execution by phase type
+	// (DELETE /campaigns/{campaignId}/phase-executions/{phaseType})
+	CampaignsPhaseExecutionDelete(ctx context.Context, request CampaignsPhaseExecutionDeleteRequestObject) (CampaignsPhaseExecutionDeleteResponseObject, error)
+	// Get phase execution by phase type
+	// (GET /campaigns/{campaignId}/phase-executions/{phaseType})
+	CampaignsPhaseExecutionGet(ctx context.Context, request CampaignsPhaseExecutionGetRequestObject) (CampaignsPhaseExecutionGetResponseObject, error)
+	// Update phase execution by phase type
+	// (PUT /campaigns/{campaignId}/phase-executions/{phaseType})
+	CampaignsPhaseExecutionPut(ctx context.Context, request CampaignsPhaseExecutionPutRequestObject) (CampaignsPhaseExecutionPutResponseObject, error)
 	// Configure campaign phase
 	// (POST /campaigns/{campaignId}/phases/{phase}/configure)
 	CampaignsPhaseConfigure(ctx context.Context, request CampaignsPhaseConfigureRequestObject) (CampaignsPhaseConfigureResponseObject, error)
@@ -12539,6 +13521,15 @@ type StrictServerInterface interface {
 	// Get campaign progress
 	// (GET /campaigns/{campaignId}/progress)
 	CampaignsProgress(ctx context.Context, request CampaignsProgressRequestObject) (CampaignsProgressResponseObject, error)
+	// Delete campaign state
+	// (DELETE /campaigns/{campaignId}/state)
+	CampaignsStateDelete(ctx context.Context, request CampaignsStateDeleteRequestObject) (CampaignsStateDeleteResponseObject, error)
+	// Get campaign state
+	// (GET /campaigns/{campaignId}/state)
+	CampaignsStateGet(ctx context.Context, request CampaignsStateGetRequestObject) (CampaignsStateGetResponseObject, error)
+	// Update campaign state
+	// (PUT /campaigns/{campaignId}/state)
+	CampaignsStatePut(ctx context.Context, request CampaignsStatePutRequestObject) (CampaignsStatePutResponseObject, error)
 	// Get authentication configuration
 	// (GET /config/auth)
 	ConfigGetAuth(ctx context.Context, request ConfigGetAuthRequestObject) (ConfigGetAuthResponseObject, error)
@@ -12587,6 +13578,12 @@ type StrictServerInterface interface {
 	// Update server configuration
 	// (PUT /config/server)
 	ConfigUpdateServer(ctx context.Context, request ConfigUpdateServerRequestObject) (ConfigUpdateServerResponseObject, error)
+	// Get stealth configuration
+	// (GET /config/stealth)
+	ConfigGetStealth(ctx context.Context, request ConfigGetStealthRequestObject) (ConfigGetStealthResponseObject, error)
+	// Update stealth configuration
+	// (PUT /config/stealth)
+	ConfigUpdateStealth(ctx context.Context, request ConfigUpdateStealthRequestObject) (ConfigUpdateStealthResponseObject, error)
 	// Get worker configuration
 	// (GET /config/worker)
 	ConfigGetWorker(ctx context.Context, request ConfigGetWorkerRequestObject) (ConfigGetWorkerResponseObject, error)
@@ -13399,6 +14396,120 @@ func (sh *strictHandler) CampaignsDomainsList(w http.ResponseWriter, r *http.Req
 	}
 }
 
+// CampaignsPhaseExecutionsList operation middleware
+func (sh *strictHandler) CampaignsPhaseExecutionsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	var request CampaignsPhaseExecutionsListRequestObject
+
+	request.CampaignId = campaignId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsPhaseExecutionsList(ctx, request.(CampaignsPhaseExecutionsListRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsPhaseExecutionsList")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsPhaseExecutionsListResponseObject); ok {
+		if err := validResponse.VisitCampaignsPhaseExecutionsListResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CampaignsPhaseExecutionDelete operation middleware
+func (sh *strictHandler) CampaignsPhaseExecutionDelete(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phaseType CampaignsPhaseExecutionDeleteParamsPhaseType) {
+	var request CampaignsPhaseExecutionDeleteRequestObject
+
+	request.CampaignId = campaignId
+	request.PhaseType = phaseType
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsPhaseExecutionDelete(ctx, request.(CampaignsPhaseExecutionDeleteRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsPhaseExecutionDelete")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsPhaseExecutionDeleteResponseObject); ok {
+		if err := validResponse.VisitCampaignsPhaseExecutionDeleteResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CampaignsPhaseExecutionGet operation middleware
+func (sh *strictHandler) CampaignsPhaseExecutionGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phaseType CampaignsPhaseExecutionGetParamsPhaseType) {
+	var request CampaignsPhaseExecutionGetRequestObject
+
+	request.CampaignId = campaignId
+	request.PhaseType = phaseType
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsPhaseExecutionGet(ctx, request.(CampaignsPhaseExecutionGetRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsPhaseExecutionGet")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsPhaseExecutionGetResponseObject); ok {
+		if err := validResponse.VisitCampaignsPhaseExecutionGetResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CampaignsPhaseExecutionPut operation middleware
+func (sh *strictHandler) CampaignsPhaseExecutionPut(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phaseType CampaignsPhaseExecutionPutParamsPhaseType) {
+	var request CampaignsPhaseExecutionPutRequestObject
+
+	request.CampaignId = campaignId
+	request.PhaseType = phaseType
+
+	var body CampaignsPhaseExecutionPutJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsPhaseExecutionPut(ctx, request.(CampaignsPhaseExecutionPutRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsPhaseExecutionPut")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsPhaseExecutionPutResponseObject); ok {
+		if err := validResponse.VisitCampaignsPhaseExecutionPutResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // CampaignsPhaseConfigure operation middleware
 func (sh *strictHandler) CampaignsPhaseConfigure(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignsPhaseConfigureParamsPhase) {
 	var request CampaignsPhaseConfigureRequestObject
@@ -13533,6 +14644,91 @@ func (sh *strictHandler) CampaignsProgress(w http.ResponseWriter, r *http.Reques
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CampaignsProgressResponseObject); ok {
 		if err := validResponse.VisitCampaignsProgressResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CampaignsStateDelete operation middleware
+func (sh *strictHandler) CampaignsStateDelete(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	var request CampaignsStateDeleteRequestObject
+
+	request.CampaignId = campaignId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsStateDelete(ctx, request.(CampaignsStateDeleteRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsStateDelete")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsStateDeleteResponseObject); ok {
+		if err := validResponse.VisitCampaignsStateDeleteResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CampaignsStateGet operation middleware
+func (sh *strictHandler) CampaignsStateGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	var request CampaignsStateGetRequestObject
+
+	request.CampaignId = campaignId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsStateGet(ctx, request.(CampaignsStateGetRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsStateGet")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsStateGetResponseObject); ok {
+		if err := validResponse.VisitCampaignsStateGetResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CampaignsStatePut operation middleware
+func (sh *strictHandler) CampaignsStatePut(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	var request CampaignsStatePutRequestObject
+
+	request.CampaignId = campaignId
+
+	var body CampaignsStatePutJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsStatePut(ctx, request.(CampaignsStatePutRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsStatePut")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsStatePutResponseObject); ok {
+		if err := validResponse.VisitCampaignsStatePutResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -13973,6 +15169,61 @@ func (sh *strictHandler) ConfigUpdateServer(w http.ResponseWriter, r *http.Reque
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(ConfigUpdateServerResponseObject); ok {
 		if err := validResponse.VisitConfigUpdateServerResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ConfigGetStealth operation middleware
+func (sh *strictHandler) ConfigGetStealth(w http.ResponseWriter, r *http.Request) {
+	var request ConfigGetStealthRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ConfigGetStealth(ctx, request.(ConfigGetStealthRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ConfigGetStealth")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ConfigGetStealthResponseObject); ok {
+		if err := validResponse.VisitConfigGetStealthResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ConfigUpdateStealth operation middleware
+func (sh *strictHandler) ConfigUpdateStealth(w http.ResponseWriter, r *http.Request) {
+	var request ConfigUpdateStealthRequestObject
+
+	var body ConfigUpdateStealthJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ConfigUpdateStealth(ctx, request.(ConfigUpdateStealthRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ConfigUpdateStealth")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ConfigUpdateStealthResponseObject); ok {
+		if err := validResponse.VisitConfigUpdateStealthResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

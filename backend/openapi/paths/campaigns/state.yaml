@@ -1,0 +1,63 @@
+get:
+  tags: [campaigns]
+  summary: Get campaign state
+  operationId: campaigns_state_get
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data: { $ref: '../../components/schemas/all.yaml#/CampaignState' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+put:
+  tags: [campaigns]
+  summary: Update campaign state
+  operationId: campaigns_state_put
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema: { $ref: '../../components/schemas/all.yaml#/CampaignStateUpdate' }
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data: { $ref: '../../components/schemas/all.yaml#/CampaignState' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+delete:
+  tags: [campaigns]
+  summary: Delete campaign state
+  operationId: campaigns_state_delete
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    '204': { description: No Content }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

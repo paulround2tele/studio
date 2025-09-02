@@ -122,6 +122,94 @@ BulkOperationInfo:
     totalRowsReturned: { type: integer, format: int64 }
     type: { type: string }
 
+ # --- Campaign centralized state & phase execution ---
+CampaignStateEnum:
+  type: string
+  enum: [draft, running, paused, completed, failed, cancelled, archived]
+CampaignModeEnum:
+  type: string
+  enum: [full_sequence, step_by_step]
+ExecutionStatusEnum:
+  type: string
+  enum: [not_started, ready, configured, in_progress, paused, completed, failed]
+
+CampaignState:
+  type: object
+  properties:
+    campaignId: { type: string, format: uuid }
+    currentState: { $ref: '#/CampaignStateEnum' }
+    mode: { $ref: '#/CampaignModeEnum' }
+    configuration:
+      type: object
+      additionalProperties: {}
+    version: { type: integer }
+    createdAt: { type: string, format: date-time }
+    updatedAt: { type: string, format: date-time }
+  required: [campaignId, currentState, mode, version, createdAt, updatedAt]
+
+CampaignStateUpdate:
+  type: object
+  properties:
+    currentState: { $ref: '#/CampaignStateEnum' }
+    mode: { $ref: '#/CampaignModeEnum' }
+    configuration:
+      type: object
+      additionalProperties: {}
+    version: { type: integer, description: Optional optimistic concurrency version; if provided must match current }
+
+PhaseExecution:
+  type: object
+  properties:
+    id: { type: string, format: uuid }
+    campaignId: { type: string, format: uuid }
+    phaseType:
+      type: string
+      description: Phase identifier
+      enum: [discovery, validation, extraction, analysis]
+    status: { $ref: '#/ExecutionStatusEnum' }
+    startedAt: { type: string, format: date-time, nullable: true }
+    completedAt: { type: string, format: date-time, nullable: true }
+    pausedAt: { type: string, format: date-time, nullable: true }
+    failedAt: { type: string, format: date-time, nullable: true }
+    progressPercentage: { type: number, format: float }
+    totalItems: { type: integer, format: int64 }
+    processedItems: { type: integer, format: int64 }
+    successfulItems: { type: integer, format: int64 }
+    failedItems: { type: integer, format: int64 }
+    configuration: { type: object, additionalProperties: {}, nullable: true }
+    errorDetails: { type: object, additionalProperties: {}, nullable: true }
+    metrics: { type: object, additionalProperties: {}, nullable: true }
+    createdAt: { type: string, format: date-time }
+    updatedAt: { type: string, format: date-time }
+  required: [id, campaignId, phaseType, status, createdAt, updatedAt]
+
+PhaseExecutionUpdate:
+  type: object
+  properties:
+    status: { $ref: '#/ExecutionStatusEnum' }
+    startedAt: { type: string, format: date-time, nullable: true }
+    completedAt: { type: string, format: date-time, nullable: true }
+    pausedAt: { type: string, format: date-time, nullable: true }
+    failedAt: { type: string, format: date-time, nullable: true }
+    progressPercentage: { type: number, format: float }
+    totalItems: { type: integer, format: int64 }
+    processedItems: { type: integer, format: int64 }
+    successfulItems: { type: integer, format: int64 }
+    failedItems: { type: integer, format: int64 }
+    configuration: { type: object, additionalProperties: {}, nullable: true }
+    errorDetails: { type: object, additionalProperties: {}, nullable: true }
+    metrics: { type: object, additionalProperties: {}, nullable: true }
+
+# Composite view
+CampaignStateWithExecutions:
+  type: object
+  properties:
+    campaignState: { $ref: '#/CampaignState' }
+    phaseExecutions:
+      type: array
+      items: { $ref: '#/PhaseExecution' }
+  required: [campaignState, phaseExecutions]
+
 # --- Campaign Domains Listing & Pattern Offset Schemas ---
 DomainListItem:
   type: object
@@ -706,3 +794,573 @@ FeatureFlags:
   description: Feature flags map
   additionalProperties:
     type: boolean
+
+# Auth
+LoginRequest:
+  type: object
+  properties:
+    email: { type: string, format: email }
+    password: { type: string, format: password }
+  required: [email, password]
+SessionResponse:
+  type: object
+  properties:
+    user: { $ref: '#/UserPublicResponse' }
+    token: { type: string }
+    refreshToken: { type: string }
+    expiresAt: { type: string, format: date-time }
+  required: [user, token, expiresAt]
+UserPublicResponse:
+  type: object
+  properties:
+    id: { type: string, format: uuid }
+    username: { type: string }
+    email: { type: string, format: email }
+    isActive: { type: boolean }
+  required: [id, username, email, isActive]
+
+# Campaigns
+CreateCampaignRequest:
+  type: object
+  properties:
+    name:
+      type: string
+      description: Campaign name
+      minLength: 1
+      maxLength: 255
+    description:
+      type: string
+      description: Campaign description
+    targetDomains:
+      type: array
+      items:
+        type: string
+      description: List of target domains or domain patterns
+    configuration:
+      type: object
+      description: Campaign configuration settings
+      properties:
+        maxDomains:
+          type: integer
+          minimum: 1
+          maximum: 1000000
+          description: Maximum number of domains to process
+        phases:
+          type: object
+          properties:
+            discovery:
+              type: object
+              properties:
+                enabled: { type: boolean }
+                maxDepth: { type: integer, minimum: 1, maximum: 10 }
+            validation:
+              type: object
+              properties:
+                enabled: { type: boolean }
+                dnsValidation: { type: boolean }
+                httpValidation: { type: boolean }
+            extraction:
+              type: object
+              properties:
+                enabled: { type: boolean }
+                keywordSetIds:
+                  type: array
+                  items: { type: string, format: uuid }
+            analysis:
+              type: object
+              properties:
+                enabled: { type: boolean }
+                generateReports: { type: boolean }
+  required: [name, targetDomains]
+UpdateCampaignRequest:
+  type: object
+  properties:
+    name:
+      type: string
+      minLength: 1
+      maxLength: 255
+    description:
+      type: string
+    targetDomains:
+      type: array
+      items:
+        type: string
+    configuration:
+      type: object
+      description: Campaign configuration settings (same structure as CreateCampaignRequest)
+CampaignResponse:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+    name:
+      type: string
+    description:
+      type: string
+    status:
+      type: string
+      enum: [draft, running, paused, completed, failed, cancelled]
+    targetDomains:
+      type: array
+      items:
+        type: string
+    configuration:
+      type: object
+      description: Campaign configuration
+    currentPhase:
+      type: string
+      enum: [discovery, validation, extraction, analysis]
+      nullable: true
+    progress:
+      type: object
+      properties:
+        totalDomains: { type: integer }
+        processedDomains: { type: integer }
+        successfulDomains: { type: integer }
+        failedDomains: { type: integer }
+        percentComplete: { type: number, format: float }
+    createdAt:
+      type: string
+      format: date-time
+    updatedAt:
+      type: string
+      format: date-time
+    startedAt:
+      type: string
+      format: date-time
+      nullable: true
+    completedAt:
+      type: string
+      format: date-time
+      nullable: true
+  required: [id, name, status, targetDomains, configuration, progress, createdAt, updatedAt]
+PhaseConfigurationRequest:
+  type: object
+  properties:
+    configuration:
+      type: object
+      description: Phase-specific configuration
+      additionalProperties: true
+    personaIds:
+      type: object
+      properties:
+        httpPersonaId:
+          type: string
+          format: uuid
+          nullable: true
+        dnsPersonaId:
+          type: string
+          format: uuid
+          nullable: true
+    proxyPoolId:
+      type: string
+      format: uuid
+      nullable: true
+    keywordSetIds:
+      type: array
+      items:
+        type: string
+        format: uuid
+      description: Keyword sets for extraction phase
+  required: [configuration]
+PhaseStatusResponse:
+  type: object
+  properties:
+    phase:
+      type: string
+      enum: [discovery, validation, extraction, analysis]
+    status:
+      type: string
+      enum: [not_started, configured, running, paused, completed, failed]
+    configuration:
+      type: object
+      description: Current phase configuration
+    startedAt:
+      type: string
+      format: date-time
+      nullable: true
+    completedAt:
+      type: string
+      format: date-time
+      nullable: true
+    progress:
+      type: object
+      properties:
+        totalItems: { type: integer }
+        processedItems: { type: integer }
+        successfulItems: { type: integer }
+        failedItems: { type: integer }
+        percentComplete: { type: number, format: float }
+    errors:
+      type: array
+      items:
+        type: object
+        properties:
+          message: { type: string }
+          timestamp: { type: string, format: date-time }
+          code: { type: string }
+  required: [phase, status, progress]
+CampaignProgressResponse:
+  type: object
+  properties:
+    campaignId:
+      type: string
+      format: uuid
+    overall:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [draft, running, paused, completed, failed, cancelled]
+        percentComplete: { type: number, format: float }
+        totalDomains: { type: integer }
+        processedDomains: { type: integer }
+        successfulDomains: { type: integer }
+        failedDomains: { type: integer }
+    phases:
+      type: object
+      properties:
+        discovery:
+          $ref: '#/PhaseProgressSummary'
+        validation:
+          $ref: '#/PhaseProgressSummary'
+        extraction:
+          $ref: '#/PhaseProgressSummary'
+        analysis:
+          $ref: '#/PhaseProgressSummary'
+    timeline:
+      type: object
+      properties:
+        createdAt: { type: string, format: date-time }
+        startedAt: { type: string, format: date-time, nullable: true }
+        estimatedCompletionAt: { type: string, format: date-time, nullable: true }
+        completedAt: { type: string, format: date-time, nullable: true }
+  required: [campaignId, overall, phases, timeline]
+PhaseProgressSummary:
+  type: object
+  properties:
+    status:
+      type: string
+      enum: [not_started, configured, running, paused, completed, failed]
+    percentComplete: { type: number, format: float }
+    itemsProcessed: { type: integer }
+    itemsTotal: { type: integer }
+    startedAt: { type: string, format: date-time, nullable: true }
+    completedAt: { type: string, format: date-time, nullable: true }
+    duration: { type: string, nullable: true, description: "Human readable duration" }
+  required: [status, percentComplete, itemsProcessed, itemsTotal]
+
+# Bulk operations
+BulkDNSValidationRequest:
+  type: object
+  properties:
+    operations:
+      type: array
+      items:
+        type: object
+        properties:
+          campaignId:
+            type: string
+            format: uuid
+          personaIds:
+            type: array
+            items:
+              type: string
+              format: uuid
+          maxDomains:
+            type: integer
+            minimum: 1
+            maximum: 10000
+          validationConfig:
+            type: object
+            properties:
+              timeout: { type: integer, minimum: 1000, maximum: 30000 }
+              retries: { type: integer, minimum: 0, maximum: 5 }
+              recordTypes: { type: array, items: { type: string, enum: [A, AAAA, MX, NS, CNAME] } }
+        required: [campaignId, personaIds]
+      minItems: 1
+      maxItems: 50
+    batchSize:
+      type: integer
+      minimum: 1
+      maximum: 1000
+      default: 100
+    stealth:
+      type: object
+      properties:
+        enabled: { type: boolean, default: true }
+        randomizationLevel: { type: string, enum: [low, medium, high, extreme], default: medium }
+        delayRange: { type: object, properties: { min: { type: integer }, max: { type: integer } } }
+  required: [operations]
+
+BulkHTTPValidationRequest:
+  type: object
+  properties:
+    operations:
+      type: array
+      items:
+        type: object
+        properties:
+          campaignId:
+            type: string
+            format: uuid
+          personaIds:
+            type: array
+            items:
+              type: string
+              format: uuid
+          keywords:
+            type: array
+            items:
+              type: string
+          maxDomains:
+            type: integer
+            minimum: 1
+            maximum: 10000
+          validationConfig:
+            type: object
+            properties:
+              timeout: { type: integer, minimum: 5000, maximum: 60000 }
+              followRedirects: { type: boolean, default: true }
+              userAgent: { type: string }
+              headers: { type: object, additionalProperties: { type: string } }
+        required: [campaignId, personaIds, keywords]
+      minItems: 1
+      maxItems: 50
+    batchSize:
+      type: integer
+      minimum: 1
+      maximum: 500
+      default: 50
+    stealth:
+      type: object
+      properties:
+        enabled: { type: boolean, default: true }
+        randomizationLevel: { type: string, enum: [low, medium, high, extreme], default: high }
+        delayRange: { type: object, properties: { min: { type: integer }, max: { type: integer } } }
+  required: [operations]
+
+# Analytics
+BulkAnalyticsRequest:
+  type: object
+  properties:
+    campaignIds:
+      type: array
+      items:
+        type: string
+        format: uuid
+      minItems: 1
+      maxItems: 100
+    metrics:
+      type: array
+      items:
+        type: string
+        enum: [response_time, content_analysis, lead_score, domain_health, keyword_density]
+    granularity:
+      type: string
+      enum: [hour, day, week, month]
+      default: day
+    timeRange:
+      type: object
+      properties:
+        startTime: { type: string, format: date-time }
+        endTime: { type: string, format: date-time }
+        timezone: { type: string, default: UTC }
+      required: [startTime, endTime]
+    aggregation:
+      type: object
+      properties:
+        groupBy: { type: array, items: { type: string } }
+        functions: { type: array, items: { type: string, enum: [sum, avg, min, max, count] } }
+  required: [campaignIds, metrics, timeRange]
+
+# Duplicate BulkAnalyticsResponse removed (defined earlier)
+
+BulkDomainGenerationRequest:
+  type: object
+  properties:
+    operations:
+      type: array
+      items:
+        type: object
+        properties:
+          campaignId:
+            type: string
+            format: uuid
+          config:
+            type: object
+            properties:
+              patternType: { type: string, enum: [prefix, suffix, both] }
+              variableLength: { type: integer, minimum: 1, maximum: 20 }
+              characterSet: { type: string }
+              constantString: { type: string }
+              tlds: { type: array, items: { type: string } }
+              numDomainsToGenerate: { type: integer, minimum: 1, maximum: 1000000 }
+              batchSize: { type: integer, minimum: 1, maximum: 10000 }
+            required: [patternType, variableLength, characterSet, constantString, tlds, numDomainsToGenerate]
+          maxDomains:
+            type: integer
+            minimum: 1
+            maximum: 1000000
+        required: [campaignId, config, maxDomains]
+      minItems: 1
+      maxItems: 100
+    batchSize:
+      type: integer
+      minimum: 1
+      maximum: 10000
+      default: 1000
+    parallel:
+      type: boolean
+      default: true
+  required: [operations]
+
+BulkValidationResponse:
+  type: object
+  properties:
+    operationId:
+      type: string
+      format: uuid
+    status:
+      type: string
+      enum: [initiated, pending, running]
+    operations:
+      type: object
+      additionalProperties:
+        type: object
+        properties:
+          campaignId: { type: string, format: uuid }
+          status: { type: string, enum: [pending, running, completed, failed] }
+          progress: { type: object, properties: { processed: { type: integer }, total: { type: integer } } }
+          estimatedCompletion: { type: string, format: date-time, nullable: true }
+    totalOperations:
+      type: integer
+    estimatedDuration:
+      type: string
+      nullable: true
+  required: [operationId, status, operations, totalOperations]
+
+BulkGenerationResponse:
+  type: object
+  properties:
+    operationId:
+      type: string
+      format: uuid
+    status:
+      type: string
+      enum: [initiated, pending, running]
+    operations:
+      type: object
+      additionalProperties:
+        type: object
+        properties:
+          campaignId: { type: string, format: uuid }
+          status: { type: string, enum: [pending, running, completed, failed] }
+          domainsGenerated: { type: integer }
+          targetDomains: { type: integer }
+          progress: { type: object, properties: { processed: { type: integer }, total: { type: integer } } }
+    totalOperations:
+      type: integer
+    estimatedDuration:
+      type: string
+      nullable: true
+  required: [operationId, status, operations, totalOperations]
+
+BulkAnalyticsResponse:
+  type: object
+  properties:
+    operationId:
+      type: string
+      format: uuid
+    status:
+      type: string
+      enum: [initiated, pending, running, completed]
+    analytics:
+      type: object
+      properties:
+        totalCampaigns: { type: integer }
+        totalDomains: { type: integer }
+        totalLeads: { type: integer }
+        overallSuccessRate: { type: number, format: float }
+        topPerformingTLDs:
+          type: array
+          items:
+            type: object
+            properties:
+              tld: { type: string }
+              domains: { type: integer }
+              leads: { type: integer }
+              successRate: { type: number, format: float }
+              rank: { type: integer }
+        performanceMetrics:
+          type: object
+          properties:
+            avgResponseTime: { type: number, format: float }
+            avgLeadScore: { type: number, format: float }
+            conversionRate: { type: number, format: float }
+    processedCampaigns:
+      type: integer
+    estimatedCompletion:
+      type: string
+      format: date-time
+      nullable: true
+  required: [operationId, status, processedCampaigns]
+
+BulkResourceAllocationRequest:
+  type: object
+  properties:
+    operationType:
+      type: string
+      enum: [domain_generation, dns_validation, http_validation, analytics]
+    resources:
+      type: object
+      properties:
+        cpu: { type: integer, minimum: 1, maximum: 64, description: "CPU cores" }
+        memory: { type: integer, minimum: 1, maximum: 128, description: "Memory in GB" }
+        networkBandwidth: { type: integer, minimum: 10, maximum: 10000, description: "Bandwidth in Mbps" }
+        storage: { type: integer, minimum: 1, maximum: 1000, description: "Storage in GB" }
+    priority:
+      type: string
+      enum: [low, normal, high, critical]
+      default: normal
+    duration:
+      type: integer
+      minimum: 300
+      maximum: 86400
+      description: Resource allocation duration in seconds
+    tags:
+      type: object
+      additionalProperties: { type: string }
+      description: Resource allocation tags for tracking
+  required: [operationType, resources, duration]
+
+BulkResourceAllocationResponse:
+  type: object
+  properties:
+    allocationId:
+      type: string
+      format: uuid
+    status:
+      type: string
+      enum: [allocating, allocated, failed]
+    resources:
+      type: object
+      properties:
+        cpu: { type: integer }
+        memory: { type: integer }
+        networkBandwidth: { type: integer }
+        storage: { type: integer }
+    allocation:
+      type: object
+      properties:
+        allocatedAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+        estimatedCost: { type: number, format: float, nullable: true }
+    endpoints:
+      type: object
+      properties:
+        monitoring: { type: string, format: uri }
+        metrics: { type: string, format: uri }
+        control: { type: string, format: uri }
+  required: [allocationId, status, resources, allocation]

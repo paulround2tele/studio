@@ -16,6 +16,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "jest",
+  "issues:create": "node scripts/create_github_issues.js",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "perf:audit": "node scripts/performance-audit.mjs",

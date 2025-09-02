@@ -6,7 +6,7 @@ post:
     required: true
     content:
       application/json:
-          schema: { $ref: '../../openapi.yaml#/components/schemas/BulkAnalyticsRequest' }
+          schema: { $ref: '../../components/schemas/all.yaml#/BulkAnalyticsRequest' }
   responses:
     '200':
       description: Bulk domain analysis initiated successfully
@@ -17,7 +17,7 @@ post:
               - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
-                  data: { $ref: '../../openapi.yaml#/components/schemas/BulkAnalyticsResponse' }
+                  data: { $ref: '../../components/schemas/all.yaml#/BulkAnalyticsResponse' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }

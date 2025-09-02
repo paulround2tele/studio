@@ -19,6 +19,7 @@ type SSEEventType string
 
 const (
 	SSEEventCampaignProgress  SSEEventType = "campaign_progress"
+	SSEEventCampaignCompleted SSEEventType = "campaign_completed"
 	SSEEventPhaseStarted      SSEEventType = "phase_started"
 	SSEEventPhaseCompleted    SSEEventType = "phase_completed"
 	SSEEventPhaseFailed       SSEEventType = "phase_failed"
@@ -368,5 +369,23 @@ func CreatePhaseFailedEvent(campaignID uuid.UUID, userID uuid.UUID, phase models
 			"message":     fmt.Sprintf("Phase %s failed", phase),
 		},
 		Timestamp: time.Now(),
+	}
+}
+
+// CreateCampaignCompletedEvent creates a campaign completed SSE event
+func CreateCampaignCompletedEvent(campaignID uuid.UUID, userID uuid.UUID, meta map[string]interface{}) SSEEvent {
+	data := map[string]interface{}{
+		"campaign_id": campaignID.String(),
+		"message":     "Campaign completed successfully",
+	}
+	for k, v := range meta {
+		data[k] = v
+	}
+	return SSEEvent{
+		Event:      SSEEventCampaignCompleted,
+		CampaignID: &campaignID,
+		UserID:     &userID,
+		Data:       data,
+		Timestamp:  time.Now(),
 	}
 }

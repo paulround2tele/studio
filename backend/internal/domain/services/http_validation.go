@@ -18,6 +18,8 @@ import (
 // It wraps httpvalidator.HTTPValidator without replacing its core functionality
 type httpValidationService struct {
 	store         store.CampaignStore
+	personaStore  store.PersonaStore
+	proxyStore    store.ProxyStore
 	deps          Dependencies
 	httpValidator *httpvalidator.HTTPValidator
 
@@ -43,9 +45,11 @@ type httpValidationExecution struct {
 }
 
 // NewHTTPValidationService creates a new HTTP validation service
-func NewHTTPValidationService(store store.CampaignStore, deps Dependencies, httpValidator *httpvalidator.HTTPValidator) HTTPValidationService {
+func NewHTTPValidationService(store store.CampaignStore, deps Dependencies, httpValidator *httpvalidator.HTTPValidator, personaStore store.PersonaStore, proxyStore store.ProxyStore) HTTPValidationService {
 	return &httpValidationService{
 		store:         store,
+		personaStore:  personaStore,
+		proxyStore:    proxyStore,
 		deps:          deps,
 		httpValidator: httpValidator,
 		executions:    make(map[uuid.UUID]*httpValidationExecution),
@@ -181,6 +185,13 @@ func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUI
 		s.updateExecutionStatus(campaignID, models.PhaseStatusCompleted, "no validated domains found")
 		close(execution.ProgressChan)
 		return execution.ProgressChan, nil
+	}
+
+	// Apply stealth order and jitter if present
+	if order, _, _, ok := s.loadStealthForHTTP(ctx, campaignID); ok {
+		if len(order) > 0 {
+			domains = order
+		}
 	}
 
 	execution.ItemsTotal = len(domains)
@@ -412,6 +423,10 @@ func (s *httpValidationService) getValidatedDomains(ctx context.Context, campaig
 	if s.store == nil {
 		return nil, fmt.Errorf("campaign store not available")
 	}
+	// If a stealth order exists, use it
+	if order, _, _, ok := s.loadStealthForHTTP(ctx, campaignID); ok && len(order) > 0 {
+		return order, nil
+	}
 	var exec store.Querier
 	if q, ok := s.deps.DB.(store.Querier); ok {
 		exec = q
@@ -438,6 +453,44 @@ func (s *httpValidationService) getValidatedDomains(ctx context.Context, campaig
 		after = page.PageInfo.EndCursor
 	}
 	return all, nil
+}
+
+// loadStealthForHTTP reads stealth order and jitter from campaign domains data
+func (s *httpValidationService) loadStealthForHTTP(ctx context.Context, campaignID uuid.UUID) (order []string, jitterMin int, jitterMax int, ok bool) {
+	if s.store == nil {
+		return nil, 0, 0, false
+	}
+	var exec store.Querier
+	if q, qok := s.deps.DB.(store.Querier); qok {
+		exec = q
+	}
+	raw, err := s.store.GetCampaignDomainsData(ctx, exec, campaignID)
+	if err != nil || raw == nil {
+		return nil, 0, 0, false
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(*raw, &data); err != nil {
+		return nil, 0, 0, false
+	}
+	if arr, ok2 := data["stealth_order_http"].([]interface{}); ok2 {
+		order = make([]string, 0, len(arr))
+		for _, v := range arr {
+			if s, ok3 := v.(string); ok3 {
+				order = append(order, s)
+			}
+		}
+	}
+	if st, ok2 := data["stealth"].(map[string]interface{}); ok2 {
+		if http, ok3 := st["http"].(map[string]interface{}); ok3 {
+			if v, ok4 := http["jitterMinMs"].(float64); ok4 {
+				jitterMin = int(v)
+			}
+			if v, ok4 := http["jitterMaxMs"].(float64); ok4 {
+				jitterMax = int(v)
+			}
+		}
+	}
+	return order, jitterMin, jitterMax, len(order) > 0 || jitterMax > 0
 }
 
 // ensureDNSCompleted checks the campaign phase table and ensures DNS phase is marked completed
@@ -473,8 +526,70 @@ func (s *httpValidationService) prepareGeneratedDomains(domains []string) []*mod
 
 // getPersonaAndProxy retrieves persona and proxy configuration for HTTP validation
 func (s *httpValidationService) getPersonaAndProxy(ctx context.Context, campaignID uuid.UUID) (*models.Persona, *models.Proxy, error) {
-	// TODO: Query actual persona and proxy from campaign configuration
-	// For now, return nil which means use default HTTP client settings
+	// Default: no persona/proxy -> engine will use app defaults
+	var exec store.Querier
+	if q, ok := s.deps.DB.(store.Querier); ok {
+		exec = q
+	}
+
+	// Try canonical HTTP params table first
+	if s.store != nil {
+		if params, err := s.store.GetHTTPKeywordParams(ctx, exec, campaignID); err == nil && params != nil {
+			// Resolve persona (first ID for now)
+			var persona *models.Persona
+			if len(params.PersonaIDs) > 0 && s.personaStore != nil {
+				if p, err := s.personaStore.GetPersonaByID(ctx, exec, params.PersonaIDs[0]); err == nil {
+					persona = p
+				} else if s.deps.Logger != nil {
+					s.deps.Logger.Warn(ctx, "Failed to load persona by ID", map[string]interface{}{"campaign_id": campaignID, "error": err.Error()})
+				}
+			}
+
+			// Resolve proxy preference: explicit ProxyIDs first, else by persona IDs, else none
+			var proxy *models.Proxy
+			if params.ProxyIDs != nil && len(*params.ProxyIDs) > 0 && s.proxyStore != nil {
+				if p, err := s.proxyStore.GetProxyByID(ctx, exec, (*params.ProxyIDs)[0]); err == nil {
+					proxy = p
+				} else if s.deps.Logger != nil {
+					s.deps.Logger.Warn(ctx, "Failed to load proxy by ID", map[string]interface{}{"campaign_id": campaignID, "error": err.Error()})
+				}
+			} else if s.proxyStore != nil && len(params.PersonaIDs) > 0 {
+				if proxies, err := s.proxyStore.GetProxiesByPersonaIDs(ctx, exec, params.PersonaIDs); err == nil {
+					// Pick the first healthy & enabled if available
+					for _, pr := range proxies {
+						if pr != nil && pr.IsEnabled && pr.IsHealthy {
+							proxy = pr
+							break
+						}
+					}
+					// Fallback to first available
+					if proxy == nil && len(proxies) > 0 {
+						proxy = proxies[0]
+					}
+				}
+			}
+
+			return persona, proxy, nil
+		}
+	}
+
+	// Fallback: read phase configuration JSON for HTTP (HTTPPhaseConfigRequest)
+	if s.store != nil {
+		if phase, err := s.store.GetCampaignPhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation); err == nil && phase != nil && phase.Configuration != nil {
+			var cfg models.HTTPPhaseConfigRequest
+			if uErr := json.Unmarshal(*phase.Configuration, &cfg); uErr == nil {
+				// cfg.PersonaIDs are strings; parse first
+				if len(cfg.PersonaIDs) > 0 && s.personaStore != nil {
+					if pid, pErr := uuid.Parse(cfg.PersonaIDs[0]); pErr == nil {
+						if p, gErr := s.personaStore.GetPersonaByID(ctx, exec, pid); gErr == nil {
+							return p, nil, nil
+						}
+					}
+				}
+			}
+		}
+	}
+
 	return nil, nil, nil
 }
 

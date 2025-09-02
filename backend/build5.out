@@ -1,0 +1,3 @@
+# github.com/fntelecomllc/studio/backend/internal/services
+internal/services/interfaces.go:287:88: undefined: RandomizedDomain
+internal/services/interfaces.go:288:89: undefined: RandomizedDomain

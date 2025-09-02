@@ -13,6 +13,6 @@ post:
               - type: object
                 properties:
                   data:
-                    $ref: '../../openapi.yaml#/components/schemas/SessionResponse'
+                    $ref: '../../components/schemas/all.yaml#/SessionResponse'
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

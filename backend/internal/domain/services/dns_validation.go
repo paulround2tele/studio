@@ -3,8 +3,10 @@ package services
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"sync"
 	"time"
 
@@ -234,6 +236,15 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 	}
 
 	domains := execution.domainsToValidate
+
+	// Load optional stealth runtime config and order from campaign domains data
+	jitterMin, jitterMax := 0, 0
+	if order, jMin, jMax, ok := s.loadStealthForDNS(execution.cancelCtx, execution.campaignID); ok {
+		if len(order) > 0 {
+			domains = order
+		}
+		jitterMin, jitterMax = jMin, jMax
+	}
 	var processedCount int64
 
 	// Process domains in batches
@@ -324,6 +335,12 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 						"campaign_id": campaignID,
 						"error":       err.Error(),
 					})
+				}
+
+				// Apply stealth jitter between batches if configured
+				if jitterMax > 0 {
+					delay := calcJitterMillis(jitterMin, jitterMax)
+					time.Sleep(time.Duration(delay) * time.Millisecond)
 				}
 			}
 		}
@@ -519,6 +536,11 @@ func (s *dnsValidationService) getDomainsToValidate(ctx context.Context, campaig
 		exec = q
 	}
 
+	// If a stealth order is present in domains data, use it first
+	if order, _, _, ok := s.loadStealthForDNS(ctx, campaignID); ok && len(order) > 0 {
+		return order, nil
+	}
+
 	// Fetch all pages using cursor pagination
 	var after string
 	all := make([]string, 0, 2048)
@@ -541,6 +563,65 @@ func (s *dnsValidationService) getDomainsToValidate(ctx context.Context, campaig
 		after = page.PageInfo.EndCursor
 	}
 	return all, nil
+}
+
+// loadStealthForDNS reads stealth order and jitter from campaign domains data
+func (s *dnsValidationService) loadStealthForDNS(ctx context.Context, campaignID uuid.UUID) (order []string, jitterMin int, jitterMax int, ok bool) {
+	if s.store == nil {
+		return nil, 0, 0, false
+	}
+	var exec store.Querier
+	if q, qok := s.deps.DB.(store.Querier); qok {
+		exec = q
+	}
+	raw, err := s.store.GetCampaignDomainsData(ctx, exec, campaignID)
+	if err != nil || raw == nil {
+		return nil, 0, 0, false
+	}
+	var data map[string]interface{}
+	if err := json.Unmarshal(*raw, &data); err != nil {
+		return nil, 0, 0, false
+	}
+	// order
+	if arr, ok2 := data["stealth_order_dns"].([]interface{}); ok2 {
+		order = make([]string, 0, len(arr))
+		for _, v := range arr {
+			if s, ok3 := v.(string); ok3 {
+				order = append(order, s)
+			}
+		}
+	}
+	// jitter
+	if st, ok2 := data["stealth"].(map[string]interface{}); ok2 {
+		if dns, ok3 := st["dns"].(map[string]interface{}); ok3 {
+			if v, ok4 := dns["jitterMinMs"].(float64); ok4 {
+				jitterMin = int(v)
+			}
+			if v, ok4 := dns["jitterMaxMs"].(float64); ok4 {
+				jitterMax = int(v)
+			}
+		}
+	}
+	return order, jitterMin, jitterMax, len(order) > 0 || jitterMax > 0
+}
+
+// calcJitterMillis returns a random millisecond value in [min,max]
+func calcJitterMillis(min, max int) int {
+	if max <= 0 || max < min {
+		return 0
+	}
+	if min < 0 {
+		min = 0
+	}
+	delta := max - min
+	if delta <= 0 {
+		return max
+	}
+	n, err := rand.Int(rand.Reader, big.NewInt(int64(delta+1)))
+	if err != nil {
+		return max
+	}
+	return min + int(n.Int64())
 }
 
 func (s *dnsValidationService) storeValidationResults(ctx context.Context, campaignID uuid.UUID, results map[string]bool) error {

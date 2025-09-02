@@ -2177,6 +2177,70 @@ paths:
           $ref: '#/components/responses/RateLimitExceeded'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /config/stealth:
+    get:
+      tags:
+        - server-settings
+      security:
+        - cookieAuth: []
+      summary: Get stealth configuration
+      operationId: config_get_stealth
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          enabled:
+                            type: boolean
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - server-settings
+      security:
+        - cookieAuth: []
+      summary: Update stealth configuration
+      operationId: config_update_stealth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          enabled:
+                            type: boolean
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /monitoring/performance/summary:
     get:
       tags:
@@ -3003,6 +3067,233 @@ paths:
                         $ref: '#/components/schemas/CampaignDomainsListResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/state:
+    get:
+      tags:
+        - campaigns
+      summary: Get campaign state
+      operationId: campaigns_state_get
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CampaignState'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - campaigns
+      summary: Update campaign state
+      operationId: campaigns_state_put
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CampaignStateUpdate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CampaignState'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - campaigns
+      summary: Delete campaign state
+      operationId: campaigns_state_delete
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: No Content
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/phase-executions:
+    get:
+      tags:
+        - campaigns
+      summary: Get campaign state and phase executions
+      operationId: campaigns_phase_executions_list
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CampaignStateWithExecutions'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/phase-executions/{phaseType}:
+    get:
+      tags:
+        - campaigns
+      summary: Get phase execution by phase type
+      operationId: campaigns_phase_execution_get
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: phaseType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - discovery
+              - validation
+              - extraction
+              - analysis
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PhaseExecution'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - campaigns
+      summary: Update phase execution by phase type
+      operationId: campaigns_phase_execution_put
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: phaseType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - discovery
+              - validation
+              - extraction
+              - analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhaseExecutionUpdate'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PhaseExecution'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - campaigns
+      summary: Delete phase execution by phase type
+      operationId: campaigns_phase_execution_delete
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: phaseType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - discovery
+              - validation
+              - extraction
+              - analysis
+      responses:
+        '204':
+          description: No Content
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -4954,6 +5245,207 @@ components:
         - campaignId
         - items
         - total
+    CampaignStateEnum:
+      type: string
+      enum:
+        - draft
+        - running
+        - paused
+        - completed
+        - failed
+        - cancelled
+        - archived
+    CampaignModeEnum:
+      type: string
+      enum:
+        - full_sequence
+        - step_by_step
+    CampaignState:
+      type: object
+      properties:
+        campaignId:
+          type: string
+          format: uuid
+        currentState:
+          $ref: '#/components/schemas/CampaignStateEnum'
+        mode:
+          $ref: '#/components/schemas/CampaignModeEnum'
+        configuration:
+          type: object
+          additionalProperties: {}
+        version:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - campaignId
+        - currentState
+        - mode
+        - version
+        - createdAt
+        - updatedAt
+    CampaignStateUpdate:
+      type: object
+      properties:
+        currentState:
+          $ref: '#/components/schemas/CampaignStateEnum'
+        mode:
+          $ref: '#/components/schemas/CampaignModeEnum'
+        configuration:
+          type: object
+          additionalProperties: {}
+        version:
+          type: integer
+          description: Optional optimistic concurrency version; if provided must match current
+    ExecutionStatusEnum:
+      type: string
+      enum:
+        - not_started
+        - ready
+        - configured
+        - in_progress
+        - paused
+        - completed
+        - failed
+    PhaseExecution:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        campaignId:
+          type: string
+          format: uuid
+        phaseType:
+          type: string
+          description: Phase identifier
+          enum:
+            - discovery
+            - validation
+            - extraction
+            - analysis
+        status:
+          $ref: '#/components/schemas/ExecutionStatusEnum'
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        pausedAt:
+          type: string
+          format: date-time
+          nullable: true
+        failedAt:
+          type: string
+          format: date-time
+          nullable: true
+        progressPercentage:
+          type: number
+          format: float
+        totalItems:
+          type: integer
+          format: int64
+        processedItems:
+          type: integer
+          format: int64
+        successfulItems:
+          type: integer
+          format: int64
+        failedItems:
+          type: integer
+          format: int64
+        configuration:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        errorDetails:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        metrics:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - campaignId
+        - phaseType
+        - status
+        - createdAt
+        - updatedAt
+    CampaignStateWithExecutions:
+      type: object
+      properties:
+        campaignState:
+          $ref: '#/components/schemas/CampaignState'
+        phaseExecutions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PhaseExecution'
+      required:
+        - campaignState
+        - phaseExecutions
+    PhaseExecutionUpdate:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/ExecutionStatusEnum'
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        pausedAt:
+          type: string
+          format: date-time
+          nullable: true
+        failedAt:
+          type: string
+          format: date-time
+          nullable: true
+        progressPercentage:
+          type: number
+          format: float
+        totalItems:
+          type: integer
+          format: int64
+        processedItems:
+          type: integer
+          format: int64
+        successfulItems:
+          type: integer
+          format: int64
+        failedItems:
+          type: integer
+          format: int64
+        configuration:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        errorDetails:
+          type: object
+          additionalProperties: {}
+          nullable: true
+        metrics:
+          type: object
+          additionalProperties: {}
+          nullable: true
     PhaseStatusResponse:
       type: object
       properties:

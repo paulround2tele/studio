@@ -19,6 +19,7 @@ func (h *strictHandlers) FeatureFlagsGet(ctx context.Context, r gen.FeatureFlags
 		"enableOfflineMode":     cf.EnableOfflineMode,
 		"enableAnalytics":       cf.EnableAnalytics,
 		"enableDebugMode":       cf.EnableDebugMode,
+		"enableStealth":         cf.EnableStealth,
 	}
 	return gen.FeatureFlagsGet200JSONResponse{Success: boolPtr(true), RequestId: reqID(), Metadata: okMeta(), Data: &ff}, nil
 }
@@ -43,6 +44,9 @@ func (h *strictHandlers) FeatureFlagsUpdate(ctx context.Context, r gen.FeatureFl
 	if v, ok := body["enableDebugMode"]; ok {
 		h.deps.Config.Features.EnableDebugMode = v
 	}
+	if v, ok := body["enableStealth"]; ok {
+		h.deps.Config.Features.EnableStealth = v
+	}
 	if err := config.SaveAppConfig(h.deps.Config); err != nil {
 		return gen.FeatureFlagsUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to save feature flags", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
@@ -51,6 +55,7 @@ func (h *strictHandlers) FeatureFlagsUpdate(ctx context.Context, r gen.FeatureFl
 		"enableOfflineMode":     h.deps.Config.Features.EnableOfflineMode,
 		"enableAnalytics":       h.deps.Config.Features.EnableAnalytics,
 		"enableDebugMode":       h.deps.Config.Features.EnableDebugMode,
+		"enableStealth":         h.deps.Config.Features.EnableStealth,
 	}
 	return gen.FeatureFlagsUpdate200JSONResponse{Success: boolPtr(true), RequestId: reqID(), Metadata: okMeta(), Data: &ff}, nil
 }

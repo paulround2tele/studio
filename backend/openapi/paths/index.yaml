@@ -92,6 +92,9 @@
 "/config/features":
   $ref: "./config/features.yaml"
 
+"/config/stealth":
+  $ref: "./config/stealth.yaml"
+
 "/monitoring/performance/summary":
   $ref: "./monitoring/performance-summary.yaml"
 "/monitoring/performance/slow":
@@ -151,6 +154,12 @@
   $ref: "./campaigns/progress.yaml"
 "/campaigns/{campaignId}/domains":
   $ref: "./campaigns/domains-list.yaml"
+"/campaigns/{campaignId}/state":
+  $ref: "./campaigns/state.yaml"
+"/campaigns/{campaignId}/phase-executions":
+  $ref: "./campaigns/phase-executions.yaml"
+"/campaigns/{campaignId}/phase-executions/{phaseType}":
+  $ref: "./campaigns/phase-execution-by-type.yaml"
 "/campaigns/{campaignId}/phases/{phase}/status":
   $ref: "./campaigns/phase-status.yaml"
 "/campaigns/{campaignId}/phases/{phase}/configure":

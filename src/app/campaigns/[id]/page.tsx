@@ -17,6 +17,7 @@ import CampaignProgress from '@/components/campaigns/CampaignProgress';
 import CampaignHeader from '@/components/campaigns/CampaignHeader';
 import CampaignControls from '@/components/campaigns/CampaignControls';
 import DomainsList from '@/components/campaigns/DomainsList';
+import CampaignPhaseManager from '@/components/campaigns/CampaignPhaseManager';
 
 interface _CampaignPageParams {
   id: string;
@@ -126,6 +127,9 @@ export default function CampaignPage() {
 
   {/* Generated domains table */}
   <DomainsList campaignId={campaign.id} />
+
+  {/* New: Phase executions/state manager using composite + per-phase endpoints */}
+  <CampaignPhaseManager campaignId={campaign.id} />
     </div>
   );
 }

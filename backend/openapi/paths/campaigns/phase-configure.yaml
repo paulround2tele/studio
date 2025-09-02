@@ -15,7 +15,7 @@ post:
     required: true
     content:
       application/json:
-        schema: { $ref: '../../openapi.yaml#/components/schemas/PhaseConfigurationRequest' }
+        schema: { $ref: '../../components/schemas/all.yaml#/PhaseConfigurationRequest' }
   responses:
     '200':
       description: Configured
@@ -26,7 +26,7 @@ post:
               - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
-                  data: { $ref: '../../openapi.yaml#/components/schemas/PhaseStatusResponse' }
+                  data: { $ref: '../../components/schemas/all.yaml#/PhaseStatusResponse' }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }

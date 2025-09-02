@@ -1,0 +1,122 @@
+[
+  {
+    "title": "[Backend][Domain] DomainGeneration: integrate transaction with store for atomic operations",
+    "labels": ["backend", "domain-services", "important", "tech-debt"],
+    "body": "Integrate proper transaction handling via the store interface for domain generation to ensure atomic updates.\n\n- File: `backend/internal/domain/services/domain_generation.go` (around line 712)\n- Note: Currently noted as `TODO: integrate with actual store interface`.\n\nAcceptance Criteria:\n- Use store transaction abstraction (sqlx/tx wrapper) during generation and persistence\n- Rollback on failure; commit only on success\n- Tests cover partial failure and rollback behavior"
+  },
+  {
+    "title": "[Backend][HTTP Validation] Load persona & proxy from campaign configuration",
+    "labels": ["backend", "http-validation", "important"],
+    "body": "Query and use persona and proxy settings from the campaign configuration when running HTTP validation.\n\n- File: `backend/internal/domain/services/http_validation.go` (around line 525)\n- Note: `TODO: Query actual persona and proxy from campaign configuration`.\n\nAcceptance Criteria:\n- Fetch persona(s) and proxy (or pool) from store/config by campaign ID\n- Respect stealth toggle and persona/proxy overrides on batch\n- Add unit/integration test covering persona/proxy selection"
+  },
+  {
+    "title": "[Backend][Analysis] Wire analysis config + personas/proxy from store",
+    "labels": ["backend", "analysis", "important"],
+    "body": "Implement fetching stored analysis configuration and associated personas/proxy selections.\n\n- File: `backend/internal/domain/services/analysis.go` (around lines 536, 545)\n- Notes: `TODO: Implement actual query to get stored analysis config`; `TODO: Query actual personas and proxy from store`.\n\nAcceptance Criteria:\n- Load analysis config per campaign from store\n- Load personas/proxy per config and use during content fetch\n- Tests verify config application and correct persona/proxy usage"
+  },
+  {
+    "title": "[Backend][Orchestrator] Optional auto-advance to next phase",
+    "labels": ["backend", "orchestrator", "nice-to-have"],
+    "body": "Add optional auto-advance behavior to move to the next phase upon completion when configured.\n\n- File: `backend/internal/application/orchestrator.go` (around line 436)\n- Note: `TODO: Auto-advance to next phase if configured`.\n\nAcceptance Criteria:\n- Config flag to enable auto-advance per campaign\n- Safe transitions with state persisted and SSE notifications\n- Tests for enabled/disabled behavior"
+  },
+  {
+    "title": "[Backend][Orchestrator] Persist campaign status updates via store",
+    "labels": ["backend", "orchestrator", "important"],
+    "body": "Ensure campaign status transitions are persisted through the store interface.\n\n- File: `backend/internal/application/orchestrator.go` (around line 502)\n- Note: `TODO: Add campaign status update to store interface`.\n\nAcceptance Criteria:\n- Store exposes method(s) to update campaign lifecycle status\n- Orchestrator calls store on state changes\n- Tests assert persisted status aligns with emitted SSE"
+  },
+  {
+    "title": "[Backend][Orchestrator] Post-completion workflows hooks",
+    "labels": ["backend", "orchestrator", "nice-to-have"],
+    "body": "Add hooks to trigger post-completion workflows (e.g., summarization, exports).\n\n- File: `backend/internal/application/orchestrator.go` (around line 556)\n- Note: `TODO: Trigger any post-completion workflows`.\n\nAcceptance Criteria:\n- Hook interface/observer pattern for post-completion\n- At least one example action guarded by feature flag\n- Tests for hook invocation"
+  },
+  {
+    "title": "[Backend][Store] Implement CampaignState CRUD in Postgres store",
+    "labels": ["backend", "store", "critical"],
+    "body": "Provide full CRUD for CampaignState in Postgres store to support orchestration/state views.\n\n- File: `backend/internal/store/postgres/campaign_store.go` (around lines 1987-2004)\n- Notes indicate placeholders for create/get/update/delete.\n\nAcceptance Criteria:\n- SQL implementations for CampaignState CRUD\n- Migrations if needed for schema alignment\n- Unit tests against test DB"
+  },
+  {
+    "title": "[Backend][Store] Implement PhaseExecution CRUD + list in Postgres store",
+    "labels": ["backend", "store", "critical"],
+    "body": "Implement create/get/get-all/update/delete for PhaseExecution, enabling detailed phase run history.\n\n- File: `backend/internal/store/postgres/campaign_store.go` (around lines 2008-2030)\n\nAcceptance Criteria:\n- SQL for PhaseExecution CRUD + list by campaign/phase\n- Indexing for common queries\n- Unit tests against test DB"
+  },
+  {
+    "title": "[Backend][Store] Combined retrieval: CampaignState with PhaseExecutions",
+    "labels": ["backend", "store", "important"],
+    "body": "Add a convenience method to fetch CampaignState with related PhaseExecutions in one call.\n\n- File: `backend/internal/store/postgres/campaign_store.go` (around line 2035)\n\nAcceptance Criteria:\n- Single query (with joins) or efficient batched retrieval\n- DTO mapping for combined result\n- Tests for correctness and performance"
+  },
+  {
+    "title": "[Backend][Monitoring] Add SetCampaignLimits to ResourceMonitor",
+    "labels": ["backend", "monitoring", "nice-to-have"],
+    "body": "Expose method to set per-campaign resource limits in ResourceMonitor.\n\n- File: `backend/internal/monitoring/monitoring_service.go` (around line 304)\n\nAcceptance Criteria:\n- API on ResourceMonitor and integration point in services\n- Tests cover applying and enforcing limits"
+  },
+  {
+    "title": "[Backend][Monitoring] Optional history storage in ResourceMonitor",
+    "labels": ["backend", "monitoring", "nice-to-have"],
+    "body": "Implement (optional) historical metrics storage if needed.\n\n- File: `backend/internal/monitoring/resource_monitor.go` (around line 320)\n\nAcceptance Criteria:\n- Pluggable history sink (in-memory/DB)\n- Config flags to enable/disable\n- Basic tests"
+  },
+  {
+    "title": "[Backend][Config/Keywords] Add SaveKeywordSets support (future)",
+    "labels": ["backend", "config", "defer"],
+    "body": "Optional capability to persist keyword sets via config path if needed later.\n\n- File: `backend/internal/config/keywords.go` (around line 80)\n\nAcceptance Criteria:\n- Decide scope and API; implement only if required"
+  },
+  {
+    "title": "[Backend][Session] Replace context.TODO() with proper contexts in session service",
+    "labels": ["backend", "session", "tech-debt"],
+    "body": "Replace `context.TODO()` usages with propagated contexts in session service audit logging.\n\n- File: `backend/internal/services/session_service.go` (around lines 196, 245, 251, 329)\n\nAcceptance Criteria:\n- Pass request-scoped contexts through service layer\n- No use of context.TODO() in hot paths"
+  },
+  {
+    "title": "[Frontend][Keyword Sets] Use SSE for real-time updates on listing page",
+    "labels": ["frontend", "sse", "nice-to-have"],
+    "body": "Replace any polling/placeholder with SSE for keyword sets page.\n\n- File: `src/app/keyword-sets/page.tsx` (around line 40)\n\nAcceptance Criteria:\n- Subscribe to SSE stream and update list incrementally\n- Graceful fallback when SSE not available"
+  },
+  {
+    "title": "[Frontend][Keyword Sets] Fix once proper API is available (blocked)",
+    "labels": ["frontend", "keyword-sets", "blocked"],
+    "body": "Adjust keyword set edit page once proper keyword sets API is finalized.\n\n- File: `src/app/keyword-sets/[id]/edit/page.tsx` (around line 37)\n\nBlocked By:\n- Backend keyword sets API endpoints\n\nAcceptance Criteria:\n- Wire to generated client methods; remove placeholders"
+  },
+  {
+    "title": "[Frontend][Campaigns] Fix enum schema mismatches in CampaignFormV2",
+    "labels": ["frontend", "type-safety", "important"],
+    "body": "Resolve enum mismatches and remove `any` usage in CampaignFormV2.\n\n- File: `src/components/campaigns/CampaignFormV2.tsx` (around line 78)\n\nAcceptance Criteria:\n- Align enums with generated OpenAPI types\n- No `any` casts for enums"
+  },
+  {
+    "title": "[Frontend][Campaigns] Separate UI-only state slice for campaign settings",
+    "labels": ["frontend", "state", "nice-to-have"],
+    "body": "Create a dedicated state slice for frontend-only campaign settings.\n\n- File: `src/components/campaigns/controls/CampaignModeToggle.tsx` (around line 56)\n\nAcceptance Criteria:\n- Separate UI state from API-backed state\n- Types and tests updated"
+  },
+  {
+    "title": "[Frontend][Campaigns] Use enriched generated types on edit page (blocked)",
+    "labels": ["frontend", "type-safety", "blocked"],
+    "body": "Replace custom types with generated enriched campaign types once spec exposes them.\n\n- File: `src/app/campaigns/[id]/edit/page.tsx` (around line 7)\n\nBlocked By:\n- OpenAPI spec exposing enriched campaign types\n\nAcceptance Criteria:\n- Use generated types exclusively; remove TODO"
+  },
+  {
+    "title": "[Frontend][Cleanup] Remove legacy .bak dashboard component or migrate",
+    "labels": ["frontend", "cleanup", "nice-to-have"],
+    "body": "Delete `PhaseDashboard-AMATEUR-ORIGINAL-DISASTER.tsx.bak` or migrate SSE note if relevant.\n\n- File: `src/components/campaigns/PhaseDashboard-AMATEUR-ORIGINAL-DISASTER.tsx.bak` (around line 421)\n\nAcceptance Criteria:\n- Remove .bak file from repo or restore into an archive if needed"
+  },
+  {
+    "title": "[Frontend][Hooks] Calculate failed count from domain status in useDomainData",
+    "labels": ["frontend", "ux", "nice-to-have"],
+    "body": "Derive and render failed count based on domain status.\n\n- File: `src/hooks/useDomainData.ts` (around line 247)\n\nAcceptance Criteria:\n- Implement failure aggregation\n- Unit test for calculation"
+  },
+  {
+    "title": "[Frontend][Types] Map DomainGenerationParams to generated model",
+    "labels": ["frontend", "type-safety", "important"],
+    "body": "Replace `any` with the generated model for domain generation params.\n\n- File: `src/lib/domain-generator-utils.ts` (around line 8)\n\nAcceptance Criteria:\n- Import and use generated types\n- Remove `any`"
+  },
+  {
+    "title": "[Frontend][Types] Map domain calculation config to generated model",
+    "labels": ["frontend", "type-safety", "important"],
+    "body": "Use generated OpenAPI types for domain calculation utilities.\n\n- File: `src/lib/utils/domainCalculation.ts` (around line 5)\n\nAcceptance Criteria:\n- Replace custom shape with generated types\n- Update call sites"
+  },
+  {
+    "title": "[Frontend][Hooks] Implement API integration in useCampaignFormData (blocked)",
+    "labels": ["frontend", "api", "blocked"],
+    "body": "Implement proper API integration for campaign form data when endpoints are available.\n\n- File: `src/lib/hooks/useCampaignFormData.ts` (around line 39)\n\nBlocked By:\n- Backend endpoints for campaign form data\n\nAcceptance Criteria:\n- Replace placeholders with generated client calls"
+  },
+  {
+    "title": "[Frontend][Store] Fix middleware integration in Phase 3 cleanup",
+    "labels": ["frontend", "state", "nice-to-have"],
+    "body": "Complete planned middleware integration improvements.\n\n- File: `src/store/index.ts` (around line 27)\n\nAcceptance Criteria:\n- Middleware ordering and composition finalized\n- No console warnings in dev"
+  }
+]

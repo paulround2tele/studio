@@ -40,6 +40,8 @@ import type { BulkResourceAllocationRequest } from '../models';
 // @ts-ignore
 import type { BulkValidateDNS200Response } from '../models';
 // @ts-ignore
+import type { CampaignStateUpdate } from '../models';
+// @ts-ignore
 import type { CampaignsBulkOperationsList200Response } from '../models';
 // @ts-ignore
 import type { CampaignsCreate201Response } from '../models';
@@ -50,9 +52,15 @@ import type { CampaignsDomainsList200Response } from '../models';
 // @ts-ignore
 import type { CampaignsList200Response } from '../models';
 // @ts-ignore
+import type { CampaignsPhaseExecutionGet200Response } from '../models';
+// @ts-ignore
+import type { CampaignsPhaseExecutionsList200Response } from '../models';
+// @ts-ignore
 import type { CampaignsPhaseStatus200Response } from '../models';
 // @ts-ignore
 import type { CampaignsProgress200Response } from '../models';
+// @ts-ignore
+import type { CampaignsStateGet200Response } from '../models';
 // @ts-ignore
 import type { CancelBulkOperation200Response } from '../models';
 // @ts-ignore
@@ -67,6 +75,8 @@ import type { GetBulkResourceStatus200Response } from '../models';
 import type { PatternOffsetRequest } from '../models';
 // @ts-ignore
 import type { PhaseConfigurationRequest } from '../models';
+// @ts-ignore
+import type { PhaseExecutionUpdate } from '../models';
 // @ts-ignore
 import type { UpdateCampaignRequest } from '../models';
 /**
@@ -571,6 +581,168 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
         },
         /**
          * 
+         * @summary Delete phase execution by phase type
+         * @param {string} campaignId 
+         * @param {CampaignsPhaseExecutionDeletePhaseTypeEnum} phaseType 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsPhaseExecutionDelete: async (campaignId: string, phaseType: CampaignsPhaseExecutionDeletePhaseTypeEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('campaignsPhaseExecutionDelete', 'campaignId', campaignId)
+            // verify required parameter 'phaseType' is not null or undefined
+            assertParamExists('campaignsPhaseExecutionDelete', 'phaseType', phaseType)
+            const localVarPath = `/campaigns/{campaignId}/phase-executions/{phaseType}`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)))
+                .replace(`{${"phaseType"}}`, encodeURIComponent(String(phaseType)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication cookieAuth required
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get phase execution by phase type
+         * @param {string} campaignId 
+         * @param {CampaignsPhaseExecutionGetPhaseTypeEnum} phaseType 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsPhaseExecutionGet: async (campaignId: string, phaseType: CampaignsPhaseExecutionGetPhaseTypeEnum, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('campaignsPhaseExecutionGet', 'campaignId', campaignId)
+            // verify required parameter 'phaseType' is not null or undefined
+            assertParamExists('campaignsPhaseExecutionGet', 'phaseType', phaseType)
+            const localVarPath = `/campaigns/{campaignId}/phase-executions/{phaseType}`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)))
+                .replace(`{${"phaseType"}}`, encodeURIComponent(String(phaseType)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication cookieAuth required
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Update phase execution by phase type
+         * @param {string} campaignId 
+         * @param {CampaignsPhaseExecutionPutPhaseTypeEnum} phaseType 
+         * @param {PhaseExecutionUpdate} phaseExecutionUpdate 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsPhaseExecutionPut: async (campaignId: string, phaseType: CampaignsPhaseExecutionPutPhaseTypeEnum, phaseExecutionUpdate: PhaseExecutionUpdate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('campaignsPhaseExecutionPut', 'campaignId', campaignId)
+            // verify required parameter 'phaseType' is not null or undefined
+            assertParamExists('campaignsPhaseExecutionPut', 'phaseType', phaseType)
+            // verify required parameter 'phaseExecutionUpdate' is not null or undefined
+            assertParamExists('campaignsPhaseExecutionPut', 'phaseExecutionUpdate', phaseExecutionUpdate)
+            const localVarPath = `/campaigns/{campaignId}/phase-executions/{phaseType}`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)))
+                .replace(`{${"phaseType"}}`, encodeURIComponent(String(phaseType)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication cookieAuth required
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(phaseExecutionUpdate, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get campaign state and phase executions
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsPhaseExecutionsList: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('campaignsPhaseExecutionsList', 'campaignId', campaignId)
+            const localVarPath = `/campaigns/{campaignId}/phase-executions`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication cookieAuth required
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary Start campaign phase
          * @param {string} campaignId 
          * @param {CampaignsPhaseStartPhaseEnum} phase 
@@ -719,6 +891,120 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Delete campaign state
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsStateDelete: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('campaignsStateDelete', 'campaignId', campaignId)
+            const localVarPath = `/campaigns/{campaignId}/state`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication cookieAuth required
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get campaign state
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsStateGet: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('campaignsStateGet', 'campaignId', campaignId)
+            const localVarPath = `/campaigns/{campaignId}/state`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication cookieAuth required
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Update campaign state
+         * @param {string} campaignId 
+         * @param {CampaignStateUpdate} campaignStateUpdate 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsStatePut: async (campaignId: string, campaignStateUpdate: CampaignStateUpdate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('campaignsStatePut', 'campaignId', campaignId)
+            // verify required parameter 'campaignStateUpdate' is not null or undefined
+            assertParamExists('campaignsStatePut', 'campaignStateUpdate', campaignStateUpdate)
+            const localVarPath = `/campaigns/{campaignId}/state`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication cookieAuth required
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(campaignStateUpdate, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1058,6 +1344,62 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @summary Delete phase execution by phase type
+         * @param {string} campaignId 
+         * @param {CampaignsPhaseExecutionDeletePhaseTypeEnum} phaseType 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async campaignsPhaseExecutionDelete(campaignId: string, phaseType: CampaignsPhaseExecutionDeletePhaseTypeEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsPhaseExecutionDelete(campaignId, phaseType, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsPhaseExecutionDelete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get phase execution by phase type
+         * @param {string} campaignId 
+         * @param {CampaignsPhaseExecutionGetPhaseTypeEnum} phaseType 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async campaignsPhaseExecutionGet(campaignId: string, phaseType: CampaignsPhaseExecutionGetPhaseTypeEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsPhaseExecutionGet200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsPhaseExecutionGet(campaignId, phaseType, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsPhaseExecutionGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Update phase execution by phase type
+         * @param {string} campaignId 
+         * @param {CampaignsPhaseExecutionPutPhaseTypeEnum} phaseType 
+         * @param {PhaseExecutionUpdate} phaseExecutionUpdate 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async campaignsPhaseExecutionPut(campaignId: string, phaseType: CampaignsPhaseExecutionPutPhaseTypeEnum, phaseExecutionUpdate: PhaseExecutionUpdate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsPhaseExecutionGet200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsPhaseExecutionPut(campaignId, phaseType, phaseExecutionUpdate, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsPhaseExecutionPut']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get campaign state and phase executions
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async campaignsPhaseExecutionsList(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsPhaseExecutionsList200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsPhaseExecutionsList(campaignId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsPhaseExecutionsList']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary Start campaign phase
          * @param {string} campaignId 
          * @param {CampaignsPhaseStartPhaseEnum} phase 
@@ -1109,6 +1451,46 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsProgress(campaignId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsProgress']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Delete campaign state
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async campaignsStateDelete(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsStateDelete(campaignId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsStateDelete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get campaign state
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async campaignsStateGet(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsStateGet200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsStateGet(campaignId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsStateGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Update campaign state
+         * @param {string} campaignId 
+         * @param {CampaignStateUpdate} campaignStateUpdate 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async campaignsStatePut(campaignId: string, campaignStateUpdate: CampaignStateUpdate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsStateGet200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsStatePut(campaignId, campaignStateUpdate, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsStatePut']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -1308,6 +1690,50 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
         },
         /**
          * 
+         * @summary Delete phase execution by phase type
+         * @param {string} campaignId 
+         * @param {CampaignsPhaseExecutionDeletePhaseTypeEnum} phaseType 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsPhaseExecutionDelete(campaignId: string, phaseType: CampaignsPhaseExecutionDeletePhaseTypeEnum, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.campaignsPhaseExecutionDelete(campaignId, phaseType, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get phase execution by phase type
+         * @param {string} campaignId 
+         * @param {CampaignsPhaseExecutionGetPhaseTypeEnum} phaseType 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsPhaseExecutionGet(campaignId: string, phaseType: CampaignsPhaseExecutionGetPhaseTypeEnum, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsPhaseExecutionGet200Response> {
+            return localVarFp.campaignsPhaseExecutionGet(campaignId, phaseType, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Update phase execution by phase type
+         * @param {string} campaignId 
+         * @param {CampaignsPhaseExecutionPutPhaseTypeEnum} phaseType 
+         * @param {PhaseExecutionUpdate} phaseExecutionUpdate 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsPhaseExecutionPut(campaignId: string, phaseType: CampaignsPhaseExecutionPutPhaseTypeEnum, phaseExecutionUpdate: PhaseExecutionUpdate, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsPhaseExecutionGet200Response> {
+            return localVarFp.campaignsPhaseExecutionPut(campaignId, phaseType, phaseExecutionUpdate, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get campaign state and phase executions
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsPhaseExecutionsList(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsPhaseExecutionsList200Response> {
+            return localVarFp.campaignsPhaseExecutionsList(campaignId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary Start campaign phase
          * @param {string} campaignId 
          * @param {CampaignsPhaseStartPhaseEnum} phase 
@@ -1348,6 +1774,37 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          */
         campaignsProgress(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsProgress200Response> {
             return localVarFp.campaignsProgress(campaignId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Delete campaign state
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsStateDelete(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
+            return localVarFp.campaignsStateDelete(campaignId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get campaign state
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsStateGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsStateGet200Response> {
+            return localVarFp.campaignsStateGet(campaignId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Update campaign state
+         * @param {string} campaignId 
+         * @param {CampaignStateUpdate} campaignStateUpdate 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        campaignsStatePut(campaignId: string, campaignStateUpdate: CampaignStateUpdate, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsStateGet200Response> {
+            return localVarFp.campaignsStatePut(campaignId, campaignStateUpdate, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1533,6 +1990,50 @@ export interface CampaignsApiInterface {
 
     /**
      * 
+     * @summary Delete phase execution by phase type
+     * @param {string} campaignId 
+     * @param {CampaignsPhaseExecutionDeletePhaseTypeEnum} phaseType 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    campaignsPhaseExecutionDelete(campaignId: string, phaseType: CampaignsPhaseExecutionDeletePhaseTypeEnum, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+
+    /**
+     * 
+     * @summary Get phase execution by phase type
+     * @param {string} campaignId 
+     * @param {CampaignsPhaseExecutionGetPhaseTypeEnum} phaseType 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    campaignsPhaseExecutionGet(campaignId: string, phaseType: CampaignsPhaseExecutionGetPhaseTypeEnum, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsPhaseExecutionGet200Response>;
+
+    /**
+     * 
+     * @summary Update phase execution by phase type
+     * @param {string} campaignId 
+     * @param {CampaignsPhaseExecutionPutPhaseTypeEnum} phaseType 
+     * @param {PhaseExecutionUpdate} phaseExecutionUpdate 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    campaignsPhaseExecutionPut(campaignId: string, phaseType: CampaignsPhaseExecutionPutPhaseTypeEnum, phaseExecutionUpdate: PhaseExecutionUpdate, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsPhaseExecutionGet200Response>;
+
+    /**
+     * 
+     * @summary Get campaign state and phase executions
+     * @param {string} campaignId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    campaignsPhaseExecutionsList(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsPhaseExecutionsList200Response>;
+
+    /**
+     * 
      * @summary Start campaign phase
      * @param {string} campaignId 
      * @param {CampaignsPhaseStartPhaseEnum} phase 
@@ -1573,6 +2074,37 @@ export interface CampaignsApiInterface {
      * @memberof CampaignsApiInterface
      */
     campaignsProgress(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsProgress200Response>;
+
+    /**
+     * 
+     * @summary Delete campaign state
+     * @param {string} campaignId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    campaignsStateDelete(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<void>;
+
+    /**
+     * 
+     * @summary Get campaign state
+     * @param {string} campaignId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    campaignsStateGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsStateGet200Response>;
+
+    /**
+     * 
+     * @summary Update campaign state
+     * @param {string} campaignId 
+     * @param {CampaignStateUpdate} campaignStateUpdate 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApiInterface
+     */
+    campaignsStatePut(campaignId: string, campaignStateUpdate: CampaignStateUpdate, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsStateGet200Response>;
 
     /**
      * 
@@ -1784,6 +2316,58 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
 
     /**
      * 
+     * @summary Delete phase execution by phase type
+     * @param {string} campaignId 
+     * @param {CampaignsPhaseExecutionDeletePhaseTypeEnum} phaseType 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public campaignsPhaseExecutionDelete(campaignId: string, phaseType: CampaignsPhaseExecutionDeletePhaseTypeEnum, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsPhaseExecutionDelete(campaignId, phaseType, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get phase execution by phase type
+     * @param {string} campaignId 
+     * @param {CampaignsPhaseExecutionGetPhaseTypeEnum} phaseType 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public campaignsPhaseExecutionGet(campaignId: string, phaseType: CampaignsPhaseExecutionGetPhaseTypeEnum, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsPhaseExecutionGet(campaignId, phaseType, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Update phase execution by phase type
+     * @param {string} campaignId 
+     * @param {CampaignsPhaseExecutionPutPhaseTypeEnum} phaseType 
+     * @param {PhaseExecutionUpdate} phaseExecutionUpdate 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public campaignsPhaseExecutionPut(campaignId: string, phaseType: CampaignsPhaseExecutionPutPhaseTypeEnum, phaseExecutionUpdate: PhaseExecutionUpdate, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsPhaseExecutionPut(campaignId, phaseType, phaseExecutionUpdate, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get campaign state and phase executions
+     * @param {string} campaignId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public campaignsPhaseExecutionsList(campaignId: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsPhaseExecutionsList(campaignId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @summary Start campaign phase
      * @param {string} campaignId 
      * @param {CampaignsPhaseStartPhaseEnum} phase 
@@ -1831,6 +2415,43 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
      */
     public campaignsProgress(campaignId: string, options?: RawAxiosRequestConfig) {
         return CampaignsApiFp(this.configuration).campaignsProgress(campaignId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Delete campaign state
+     * @param {string} campaignId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public campaignsStateDelete(campaignId: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsStateDelete(campaignId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get campaign state
+     * @param {string} campaignId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public campaignsStateGet(campaignId: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsStateGet(campaignId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Update campaign state
+     * @param {string} campaignId 
+     * @param {CampaignStateUpdate} campaignStateUpdate 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof CampaignsApi
+     */
+    public campaignsStatePut(campaignId: string, campaignStateUpdate: CampaignStateUpdate, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsStatePut(campaignId, campaignStateUpdate, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1888,6 +2509,36 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
   * @enum {string}
   */
 export enum CampaignsPhaseConfigurePhaseEnum {
+    discovery = 'discovery',
+    validation = 'validation',
+    extraction = 'extraction',
+    analysis = 'analysis'
+}
+/**
+  * @export
+  * @enum {string}
+  */
+export enum CampaignsPhaseExecutionDeletePhaseTypeEnum {
+    discovery = 'discovery',
+    validation = 'validation',
+    extraction = 'extraction',
+    analysis = 'analysis'
+}
+/**
+  * @export
+  * @enum {string}
+  */
+export enum CampaignsPhaseExecutionGetPhaseTypeEnum {
+    discovery = 'discovery',
+    validation = 'validation',
+    extraction = 'extraction',
+    analysis = 'analysis'
+}
+/**
+  * @export
+  * @enum {string}
+  */
+export enum CampaignsPhaseExecutionPutPhaseTypeEnum {
     discovery = 'discovery',
     validation = 'validation',
     extraction = 'extraction',

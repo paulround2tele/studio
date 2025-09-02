@@ -14,7 +14,7 @@ get:
                 properties:
                   data:
                     type: array
-                    items: { $ref: '../../openapi.yaml#/components/schemas/CampaignResponse' }
+                    items: { $ref: '../../components/schemas/all.yaml#/CampaignResponse' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
 post:
@@ -25,7 +25,7 @@ post:
     required: true
     content:
       application/json:
-          schema: { $ref: '../../openapi.yaml#/components/schemas/CreateCampaignRequest' }
+          schema: { $ref: '../../components/schemas/all.yaml#/CreateCampaignRequest' }
   responses:
     '201':
       description: Created
@@ -36,7 +36,7 @@ post:
               - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
-                  data: { $ref: '../../openapi.yaml#/components/schemas/CampaignResponse' }
+                  data: { $ref: '../../components/schemas/all.yaml#/CampaignResponse' }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '409': { $ref: '../../components/responses.yaml#/Conflict' }

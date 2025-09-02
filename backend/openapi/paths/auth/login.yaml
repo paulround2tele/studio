@@ -6,7 +6,7 @@ post:
     required: true
     content:
       application/json:
-          schema: { $ref: '../../openapi.yaml#/components/schemas/LoginRequest' }
+          schema: { $ref: '../../components/schemas/all.yaml#/LoginRequest' }
   responses:
     '200':
       description: Login successful
@@ -17,7 +17,21 @@ post:
               - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
-                  data: { $ref: '../../openapi.yaml#/components/schemas/SessionResponse' }
+                  data: { $ref: '../../components/schemas/all.yaml#/SessionResponse' }
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                  
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }

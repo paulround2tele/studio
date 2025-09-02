@@ -60,6 +60,7 @@ type FeatureFlags struct {
 	EnableOfflineMode     bool `json:"enableOfflineMode"`
 	EnableAnalytics       bool `json:"enableAnalytics"`
 	EnableDebugMode       bool `json:"enableDebugMode"`
+	EnableStealth         bool `json:"enableStealth"`
 }
 
 // ServerConfig defines server-specific settings.

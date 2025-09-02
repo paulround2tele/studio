@@ -1,6 +1,6 @@
 # DomainFlow Backend
 
-Go-based REST API server with OpenAPI 3.0.3 specification, real-time WebSocket support, and standardized `/api/v2` routing.
+Go-based REST API server with OpenAPI 3.1 specification, Chi strict server, and Server-Sent Events (SSE) for real-time updates. All endpoints are under `/api/v2`.
 
 ## 🏗️ Architecture Overview
 
@@ -19,12 +19,12 @@ All endpoints follow the standardized `/api/v2` prefix pattern:
 ```
 
 ### Technology Stack
-- **Framework**: Gin web framework for high-performance HTTP routing
+- **Framework**: Chi strict server generated via oapi-codegen (OpenAPI 3.1)
 - **Database**: PostgreSQL with optimized queries and proper indexing
 - **Authentication**: Session-based auth with secure middleware
-- **Real-time**: WebSocket support for live updates
-- **Documentation**: Auto-generated OpenAPI 3.0.3 specification
-- **Validation**: Request/response validation with structured error handling
+- **Real-time**: Server-Sent Events (SSE) for live updates
+- **Documentation**: Modular OpenAPI 3.1 spec bundled with Redocly
+- **Validation**: Request/response validation with generated types
 
 ## 🚀 Quick Start
 
@@ -42,7 +42,7 @@ cd backend
 # Install dependencies
 go mod download
 
-# Set up environment variables
+# Configure database (or use config.json)
 export DB_HOST=localhost
 export DB_PORT=5432
 export DB_USER=your_user
@@ -50,11 +50,11 @@ export DB_PASSWORD=your_password
 export DB_NAME=domainflow_dev
 export SERVER_PORT=8080
 
-# Run database migrations
-go run cmd/migrate/main.go
+# Run database migrations (enhanced runner)
+go run ./cmd/migrate -dsn "postgres://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME?sslmode=disable" -direction up
 
-# Start development server
-go run cmd/apiserver/main.go
+# Start development server (Chi)
+go run ./cmd/apiserver
 ```
 
 The server will start on `http://localhost:8080` with all endpoints under `/api/v2/`.
@@ -74,12 +74,12 @@ backend/
 │   ├── models/            # Data models and DTOs
 │   ├── middleware/        # HTTP middleware
 │   ├── config/            # Configuration management
-│   └── websocket/         # WebSocket handling
+│   └── services/          # Includes SSE service (replaces WebSockets)
 ├── database/              # Database schema and migrations
 │   ├── migrations/        # SQL migration files
 │   └── schema.sql         # Complete database schema
 └── docs/                  # Generated documentation
-    └── openapi-3.yaml     # OpenAPI specification
+    └── openapi-3.yaml     # (legacy) OpenAPI specification
 ```
 
 ## 🔧 Configuration
@@ -137,11 +137,11 @@ go build -o bin/apiserver cmd/apiserver/main.go
 ### API Documentation
 
 ```bash
-# Generate OpenAPI specification
-go run cmd/generate-openapi/main.go
+# Bundle and generate server/types from OpenAPI 3.1
+make openapi
 
-# View generated spec
-cat docs/openapi-3.yaml
+# Bundled spec location
+cat openapi/dist/openapi.yaml
 ```
 
 ### Testing
@@ -163,14 +163,13 @@ go test -v ./internal/api/...
 ### Database Migrations
 
 ```bash
-# Create new migration
-# (Manually create files in database/migrations/)
+# Create new migration (add files under database/migrations/)
 
-# Run migrations
-go run cmd/migrate/main.go
+# Run migrations (up)
+go run ./cmd/migrate -dsn "postgres://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME?sslmode=disable" -direction up
 
-# Check migration status
-go run cmd/migrate/main.go -status
+# Roll back (down)
+go run ./cmd/migrate -dsn "postgres://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME?sslmode=disable" -direction down
 ```
 
 ## 📊 API Endpoints
@@ -225,21 +224,15 @@ GET    /api/v2/health/ready   # Readiness check
 GET    /api/v2/health/live    # Liveness check
 ```
 
-## 🔌 WebSocket Support
+## 🔌 Real-time via SSE
 
-Real-time updates via WebSocket connections:
+Server-Sent Events provide real-time updates:
 
 ```
-WS     /api/v2/ws             # WebSocket endpoint
+GET /api/v2/sse/events                          # All-user event stream
+GET /api/v2/sse/campaigns/{campaignId}/events   # Campaign-scoped stream
+GET /api/v2/sse/events/stats                    # SSE stats
 ```
-
-### WebSocket Events
-- `campaign_progress` - Campaign execution updates
-- `domain_generated` - New domain generation results  
-- `dns_validation` - DNS validation results
-- `http_validation` - HTTP validation results
-- `persona_created` - Persona management updates
-- `keyword_set_created` - Keyword set updates
 
 ## 🏭 Production Deployment
 
@@ -280,7 +273,7 @@ CMD ["./apiserver"]
 - **Indexes**: Optimized database indexes for common queries
 - **Caching**: In-memory caching for frequently accessed data
 - **Rate Limiting**: Request rate limiting to prevent abuse
-- **WebSocket**: Efficient real-time updates eliminate polling
+- **SSE**: Efficient real-time updates eliminate polling
 
 ## 🛡️ Security
 
@@ -325,7 +318,7 @@ curl http://localhost:8080/api/v2/health/live
 ### Metrics
 - HTTP request duration and status codes
 - Database query performance
-- WebSocket connection counts
+- SSE connection counts
 - Memory and CPU usage tracking
 
 ## 🤝 Contributing
@@ -340,7 +333,7 @@ curl http://localhost:8080/api/v2/health/live
 - Unit tests for all service layer functions
 - Integration tests for API endpoints
 - Database tests with transaction rollback
-- WebSocket connection testing
+- SSE connection testing
 
 ### Pull Request Process
 1. Create feature branch from `main`
@@ -351,7 +344,7 @@ curl http://localhost:8080/api/v2/health/live
 
 ## 📚 Additional Resources
 
-- **[OpenAPI Spec](docs/openapi-3.yaml)** - Complete API specification
+- **OpenAPI Spec** - See `backend/openapi/dist/openapi.yaml` (bundled)
 - **[Database Schema](database/schema.sql)** - Database structure
 - **[Migration Guide](database/CHANGELOG.md)** - Database changes
 - **[Architecture Docs](../docs/ARCHITECTURE.md)** - System design

@@ -270,24 +270,7 @@ type WorkerCompatibleService interface {
 	HandleCampaignCompletion(ctx context.Context, campaignID uuid.UUID) error
 }
 
-// Legacy interfaces kept for stealth integration compatibility only
-// TODO: Refactor stealth integration to use orchestrator pattern
-type DNSCampaignService interface {
-	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, *models.DNSValidationCampaignParams, error)
-	ProcessDNSValidationCampaignBatch(ctx context.Context, campaignID uuid.UUID) (done bool, processedCount int, err error)
-}
-
-type HTTPKeywordCampaignService interface {
-	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, *models.HTTPKeywordCampaignParams, error)
-	ProcessHTTPKeywordCampaignBatch(ctx context.Context, campaignID uuid.UUID) (done bool, processedCount int, err error)
-}
-
-// StealthCompatibleService provides stealth-aware validation methods for orchestrator
-type StealthCompatibleService interface {
-	ProcessDNSValidationWithStealth(ctx context.Context, campaignID uuid.UUID, domains []*RandomizedDomain) (done bool, processedCount int, err error)
-	ProcessHTTPValidationWithStealth(ctx context.Context, campaignID uuid.UUID, domains []*RandomizedDomain) (done bool, processedCount int, err error)
-	GetCampaignDetails(ctx context.Context, campaignID uuid.UUID) (*models.LeadGenerationCampaign, interface{}, error)
-}
+// Legacy campaign service interfaces removed as part of phase service migration
 
 // PhaseConfig contains configuration for any phase type in a lead generation campaign
 type PhaseConfig struct {

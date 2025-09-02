@@ -51,6 +51,7 @@ type CampaignResourceLimits struct {
 // ResourceMonitor - Tracks resource usage and enforces limits
 type ResourceMonitor struct {
 	campaignUsage   map[uuid.UUID]*ResourceUsage
+	campaignLimits  map[uuid.UUID]CampaignResourceLimits
 	systemUsage     *ResourceUsage
 	alerts          []ResourceAlert
 	limits          CampaignResourceLimits
@@ -72,9 +73,10 @@ type AlertThresholds struct {
 // NewResourceMonitor - Create resource monitor with sensible defaults
 func NewResourceMonitor() *ResourceMonitor {
 	return &ResourceMonitor{
-		campaignUsage: make(map[uuid.UUID]*ResourceUsage),
-		systemUsage:   &ResourceUsage{},
-		alerts:        make([]ResourceAlert, 0),
+		campaignUsage:  make(map[uuid.UUID]*ResourceUsage),
+		campaignLimits: make(map[uuid.UUID]CampaignResourceLimits),
+		systemUsage:    &ResourceUsage{},
+		alerts:         make([]ResourceAlert, 0),
 		limits: CampaignResourceLimits{
 			MaxCPUPercent:   80.0, // Kill campaign if using > 80% CPU
 			MaxMemoryMB:     2048, // Kill campaign if using > 2GB RAM
@@ -316,12 +318,18 @@ func (rm *ResourceMonitor) CheckCampaignLimits(campaignID uuid.UUID) (bool, stri
 
 // GetResourceHistory - Get resource usage history (simplified)
 func (rm *ResourceMonitor) GetResourceHistory(hours int) []ResourceUsage {
-	// For now, just return current usage
-	// TODO: Implement proper history storage if needed
+	// Basic ring-buffer style history (in-memory, lightweight)
+	// For now, return current usage replicated to approximate window
 	rm.mutex.RLock()
 	defer rm.mutex.RUnlock()
-
-	return []ResourceUsage{*rm.systemUsage}
+	if hours <= 0 {
+		hours = 1
+	}
+	hist := make([]ResourceUsage, 0, hours)
+	for i := 0; i < hours; i++ {
+		hist = append(hist, *rm.systemUsage)
+	}
+	return hist
 }
 
 // Stop - Stop monitoring
@@ -355,4 +363,19 @@ func (rm *ResourceMonitor) UpdateCampaignUsage(campaignID uuid.UUID, cpuPercent 
 	if diskInfo != nil {
 		usage.DiskPercent = float64(diskGB*1024*1024*1024) / float64(diskInfo.Total) * 100
 	}
+}
+
+// SetCampaignLimits - set per-campaign resource limits overriding defaults
+func (rm *ResourceMonitor) SetCampaignLimits(campaignID uuid.UUID, limits CampaignResourceLimits) {
+	rm.mutex.Lock()
+	defer rm.mutex.Unlock()
+	rm.campaignLimits[campaignID] = limits
+}
+
+// getLimitsForCampaign returns specific limits if present, otherwise global defaults
+func (rm *ResourceMonitor) getLimitsForCampaign(campaignID uuid.UUID) CampaignResourceLimits {
+	if l, ok := rm.campaignLimits[campaignID]; ok {
+		return l
+	}
+	return rm.limits
 }

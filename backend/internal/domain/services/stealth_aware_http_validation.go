@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 
-	legacyservices "github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/google/uuid"
 )
 
@@ -15,10 +14,10 @@ type StealthAwareHTTPValidationService interface {
 	HTTPValidationService
 
 	// ExecuteWithStealth runs HTTP validation with stealth domain randomization
-	ExecuteWithStealth(ctx context.Context, campaignID uuid.UUID, stealthConfig *legacyservices.StealthConfig) (<-chan PhaseProgress, error)
+	ExecuteWithStealth(ctx context.Context, campaignID uuid.UUID) (<-chan PhaseProgress, error)
 
 	// EnableStealthMode configures the service to use stealth by default
-	EnableStealthMode(config *legacyservices.StealthConfig)
+	EnableStealthMode()
 
 	// DisableStealthMode returns to normal sequential validation
 	DisableStealthMode()
@@ -29,7 +28,6 @@ type stealthAwareHTTPService struct {
 	HTTPValidationService // Embed the standard service
 	stealthIntegration    StealthIntegration
 	stealthEnabled        bool
-	defaultStealthConfig  *legacyservices.StealthConfig
 }
 
 // NewStealthAwareHTTPValidationService creates an HTTP validation service with stealth capabilities
@@ -45,7 +43,7 @@ func NewStealthAwareHTTPValidationService(
 }
 
 // ExecuteWithStealth runs HTTP validation with stealth domain randomization
-func (s *stealthAwareHTTPService) ExecuteWithStealth(ctx context.Context, campaignID uuid.UUID, stealthConfig *legacyservices.StealthConfig) (<-chan PhaseProgress, error) {
+func (s *stealthAwareHTTPService) ExecuteWithStealth(ctx context.Context, campaignID uuid.UUID) (<-chan PhaseProgress, error) {
 	log.Printf("StealthAwareHTTP: Starting stealth HTTP validation for campaign %s", campaignID)
 
 	// Get domains that need HTTP validation from stealth integration
@@ -75,24 +73,22 @@ func (s *stealthAwareHTTPService) ExecuteWithStealth(ctx context.Context, campai
 }
 
 // EnableStealthMode configures the service to use stealth by default
-func (s *stealthAwareHTTPService) EnableStealthMode(config *legacyservices.StealthConfig) {
+func (s *stealthAwareHTTPService) EnableStealthMode() {
 	s.stealthEnabled = true
-	s.defaultStealthConfig = config
-	log.Printf("StealthAwareHTTP: Stealth mode enabled with strategy: %s", config.ShuffleStrategy)
+	log.Printf("StealthAwareHTTP: Stealth mode enabled")
 }
 
 // DisableStealthMode returns to normal sequential validation
 func (s *stealthAwareHTTPService) DisableStealthMode() {
 	s.stealthEnabled = false
-	s.defaultStealthConfig = nil
 	log.Printf("StealthAwareHTTP: Stealth mode disabled")
 }
 
 // Execute override - uses stealth if enabled, otherwise standard execution
 func (s *stealthAwareHTTPService) Execute(ctx context.Context, campaignID uuid.UUID) (<-chan PhaseProgress, error) {
-	if s.stealthEnabled && s.defaultStealthConfig != nil {
+	if s.stealthEnabled {
 		log.Printf("StealthAwareHTTP: Using stealth mode for campaign %s", campaignID)
-		return s.ExecuteWithStealth(ctx, campaignID, s.defaultStealthConfig)
+		return s.ExecuteWithStealth(ctx, campaignID)
 	}
 
 	log.Printf("StealthAwareHTTP: Using standard mode for campaign %s", campaignID)

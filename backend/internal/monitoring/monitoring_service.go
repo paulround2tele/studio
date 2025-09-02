@@ -301,9 +301,8 @@ type MonitoringStats struct {
 
 // SetCampaignResourceLimits - Set resource limits for a campaign
 func (ms *MonitoringService) SetCampaignResourceLimits(campaignID uuid.UUID, limits CampaignResourceLimits) {
-	// TODO: Need to add SetCampaignLimits method to ResourceMonitor
-	// For now, just register the campaign
 	ms.ResourceMonitor.RegisterCampaign(campaignID)
+	ms.ResourceMonitor.SetCampaignLimits(campaignID, limits)
 }
 
 // GetCampaignResourceUsage - Get resource usage for a specific campaign

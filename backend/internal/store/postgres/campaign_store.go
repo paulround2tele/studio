@@ -1986,54 +1986,257 @@ func (s *campaignStorePostgres) FailPhase(ctx context.Context, exec store.Querie
 
 // Campaign state operations - TODO: Implement proper functionality
 func (s *campaignStorePostgres) CreateCampaignState(ctx context.Context, exec store.Querier, state *models.CampaignState) error {
-	// TODO: Implement campaign state creation
-	return fmt.Errorf("CreateCampaignState not yet implemented")
+	if exec == nil {
+		exec = s.db
+	}
+	if state == nil {
+		return fmt.Errorf("state is nil")
+	}
+	query := `
+		INSERT INTO campaign_states (campaign_id, current_state, mode, configuration, version, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
+		ON CONFLICT (campaign_id) DO UPDATE SET
+			current_state = EXCLUDED.current_state,
+			mode = EXCLUDED.mode,
+			configuration = EXCLUDED.configuration,
+			version = EXCLUDED.version,
+			updated_at = NOW()
+	`
+	_, err := exec.ExecContext(ctx, query,
+		state.CampaignID, state.CurrentState, state.Mode, state.Configuration, state.Version,
+	)
+	if err != nil {
+		return fmt.Errorf("CreateCampaignState failed: %w", err)
+	}
+	return nil
 }
 
 func (s *campaignStorePostgres) GetCampaignState(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*models.CampaignState, error) {
-	// TODO: Implement campaign state retrieval
-	return nil, fmt.Errorf("GetCampaignState not yet implemented")
+	if exec == nil {
+		exec = s.db
+	}
+	query := `
+		SELECT campaign_id, current_state, mode, configuration, version, created_at, updated_at
+		FROM campaign_states WHERE campaign_id = $1`
+	var state models.CampaignState
+	if err := exec.GetContext(ctx, &state, query, campaignID); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, store.ErrNotFound
+		}
+		return nil, fmt.Errorf("GetCampaignState failed: %w", err)
+	}
+	return &state, nil
 }
 
 func (s *campaignStorePostgres) UpdateCampaignState(ctx context.Context, exec store.Querier, state *models.CampaignState) error {
-	// TODO: Implement campaign state update
-	return fmt.Errorf("UpdateCampaignState not yet implemented")
+	if exec == nil {
+		exec = s.db
+	}
+	if state == nil {
+		return fmt.Errorf("state is nil")
+	}
+	query := `
+		UPDATE campaign_states
+		SET current_state = $1,
+			mode = $2,
+			configuration = $3,
+			version = $4,
+			updated_at = NOW()
+		WHERE campaign_id = $5`
+	res, err := exec.ExecContext(ctx, query, state.CurrentState, state.Mode, state.Configuration, state.Version, state.CampaignID)
+	if err != nil {
+		return fmt.Errorf("UpdateCampaignState failed: %w", err)
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return store.ErrNotFound
+	}
+	return nil
 }
 
 func (s *campaignStorePostgres) DeleteCampaignState(ctx context.Context, exec store.Querier, campaignID uuid.UUID) error {
-	// TODO: Implement campaign state deletion
-	return fmt.Errorf("DeleteCampaignState not yet implemented")
+	if exec == nil {
+		exec = s.db
+	}
+	query := `DELETE FROM campaign_states WHERE campaign_id = $1`
+	res, err := exec.ExecContext(ctx, query, campaignID)
+	if err != nil {
+		return fmt.Errorf("DeleteCampaignState failed: %w", err)
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return store.ErrNotFound
+	}
+	return nil
 }
 
 // Phase execution operations - TODO: Implement proper functionality
 func (s *campaignStorePostgres) CreatePhaseExecution(ctx context.Context, exec store.Querier, execution *models.PhaseExecution) error {
-	// TODO: Implement phase execution creation
-	return fmt.Errorf("CreatePhaseExecution not yet implemented")
+	if exec == nil {
+		exec = s.db
+	}
+	if execution == nil {
+		return fmt.Errorf("execution is nil")
+	}
+	// Ensure ID
+	if execution.ID == uuid.Nil {
+		execution.ID = uuid.New()
+	}
+	query := `
+		INSERT INTO phase_executions (
+			id, campaign_id, phase_type, status, started_at, completed_at, paused_at, failed_at,
+			progress_percentage, total_items, processed_items, successful_items, failed_items,
+			configuration, error_details, metrics, created_at, updated_at
+		) VALUES (
+			$1, $2, $3, $4, $5, $6, $7, $8,
+			$9, $10, $11, $12, $13,
+			$14, $15, $16, NOW(), NOW()
+		) ON CONFLICT (campaign_id, phase_type) DO UPDATE SET
+			status = EXCLUDED.status,
+			started_at = COALESCE(EXCLUDED.started_at, phase_executions.started_at),
+			completed_at = COALESCE(EXCLUDED.completed_at, phase_executions.completed_at),
+			paused_at = COALESCE(EXCLUDED.paused_at, phase_executions.paused_at),
+			failed_at = COALESCE(EXCLUDED.failed_at, phase_executions.failed_at),
+			progress_percentage = EXCLUDED.progress_percentage,
+			total_items = EXCLUDED.total_items,
+			processed_items = EXCLUDED.processed_items,
+			successful_items = EXCLUDED.successful_items,
+			failed_items = EXCLUDED.failed_items,
+			configuration = COALESCE(EXCLUDED.configuration, phase_executions.configuration),
+			error_details = COALESCE(EXCLUDED.error_details, phase_executions.error_details),
+			metrics = COALESCE(EXCLUDED.metrics, phase_executions.metrics),
+			updated_at = NOW()`
+	_, err := exec.ExecContext(ctx, query,
+		execution.ID, execution.CampaignID, execution.PhaseType, execution.Status,
+		execution.StartedAt, execution.CompletedAt, execution.PausedAt, execution.FailedAt,
+		execution.ProgressPercentage, execution.TotalItems, execution.ProcessedItems, execution.SuccessfulItems, execution.FailedItems,
+		execution.Configuration, execution.ErrorDetails, execution.Metrics,
+	)
+	if err != nil {
+		return fmt.Errorf("CreatePhaseExecution failed: %w", err)
+	}
+	return nil
 }
 
 func (s *campaignStorePostgres) GetPhaseExecution(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) (*models.PhaseExecution, error) {
-	// TODO: Implement phase execution retrieval
-	return nil, fmt.Errorf("GetPhaseExecution not yet implemented")
+	if exec == nil {
+		exec = s.db
+	}
+	query := `
+		SELECT id, campaign_id, phase_type, status, started_at, completed_at, paused_at, failed_at,
+			   progress_percentage, total_items, processed_items, successful_items, failed_items,
+			   configuration, error_details, metrics, created_at, updated_at
+		FROM phase_executions WHERE campaign_id = $1 AND phase_type = $2`
+	var pe models.PhaseExecution
+	if err := exec.GetContext(ctx, &pe, query, campaignID, phaseType); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, store.ErrNotFound
+		}
+		return nil, fmt.Errorf("GetPhaseExecution failed: %w", err)
+	}
+	return &pe, nil
 }
 
 func (s *campaignStorePostgres) GetPhaseExecutionsByCampaign(ctx context.Context, exec store.Querier, campaignID uuid.UUID) ([]*models.PhaseExecution, error) {
-	// TODO: Implement phase executions retrieval
-	return nil, fmt.Errorf("GetPhaseExecutionsByCampaign not yet implemented")
+	if exec == nil {
+		exec = s.db
+	}
+	query := `
+		SELECT id, campaign_id, phase_type, status, started_at, completed_at, paused_at, failed_at,
+			   progress_percentage, total_items, processed_items, successful_items, failed_items,
+			   configuration, error_details, metrics, created_at, updated_at
+		FROM phase_executions WHERE campaign_id = $1 ORDER BY created_at ASC`
+	var list []*models.PhaseExecution
+	if err := exec.SelectContext(ctx, &list, query, campaignID); err != nil {
+		return nil, fmt.Errorf("GetPhaseExecutionsByCampaign failed: %w", err)
+	}
+	return list, nil
 }
 
 func (s *campaignStorePostgres) UpdatePhaseExecution(ctx context.Context, exec store.Querier, execution *models.PhaseExecution) error {
-	// TODO: Implement phase execution update
-	return fmt.Errorf("UpdatePhaseExecution not yet implemented")
+	if exec == nil {
+		exec = s.db
+	}
+	if execution == nil || execution.ID == uuid.Nil {
+		return fmt.Errorf("execution or execution.ID is nil")
+	}
+	query := `
+		UPDATE phase_executions SET
+			status = $1,
+			started_at = $2,
+			completed_at = $3,
+			paused_at = $4,
+			failed_at = $5,
+			progress_percentage = $6,
+			total_items = $7,
+			processed_items = $8,
+			successful_items = $9,
+			failed_items = $10,
+			configuration = $11,
+			error_details = $12,
+			metrics = $13,
+			updated_at = NOW()
+		WHERE id = $14`
+	res, err := exec.ExecContext(ctx, query,
+		execution.Status,
+		execution.StartedAt,
+		execution.CompletedAt,
+		execution.PausedAt,
+		execution.FailedAt,
+		execution.ProgressPercentage,
+		execution.TotalItems,
+		execution.ProcessedItems,
+		execution.SuccessfulItems,
+		execution.FailedItems,
+		execution.Configuration,
+		execution.ErrorDetails,
+		execution.Metrics,
+		execution.ID,
+	)
+	if err != nil {
+		return fmt.Errorf("UpdatePhaseExecution failed: %w", err)
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return store.ErrNotFound
+	}
+	return nil
 }
 
 func (s *campaignStorePostgres) DeletePhaseExecution(ctx context.Context, exec store.Querier, id uuid.UUID) error {
-	// TODO: Implement phase execution deletion
-	return fmt.Errorf("DeletePhaseExecution not yet implemented")
+	if exec == nil {
+		exec = s.db
+	}
+	query := `DELETE FROM phase_executions WHERE id = $1`
+	res, err := exec.ExecContext(ctx, query, id)
+	if err != nil {
+		return fmt.Errorf("DeletePhaseExecution failed: %w", err)
+	}
+	if rows, _ := res.RowsAffected(); rows == 0 {
+		return store.ErrNotFound
+	}
+	return nil
 }
 
 func (s *campaignStorePostgres) GetCampaignStateWithExecutions(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (*models.CampaignStateWithExecution, error) {
-	// TODO: Implement combined campaign state and executions retrieval
-	return nil, fmt.Errorf("GetCampaignStateWithExecutions not yet implemented")
+	if exec == nil {
+		exec = s.db
+	}
+	state, err := s.GetCampaignState(ctx, exec, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	execs, err := s.GetPhaseExecutionsByCampaign(ctx, exec, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	result := &models.CampaignStateWithExecution{
+		CampaignState:   *state,
+		PhaseExecutions: make([]models.PhaseExecution, 0, len(execs)),
+	}
+	for _, pe := range execs {
+		if pe != nil {
+			result.PhaseExecutions = append(result.PhaseExecutions, *pe)
+		}
+	}
+	return result, nil
 }
 
 var _ store.CampaignStore = (*campaignStorePostgres)(nil)

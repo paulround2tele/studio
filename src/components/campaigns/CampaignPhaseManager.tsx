@@ -20,6 +20,7 @@ import DNSValidationConfig from './configuration/DNSValidationConfig';
 import HTTPKeywordValidationConfig from './configuration/HTTPKeywordValidationConfig';
 import DomainGenerationConfig from './configuration/DomainGenerationConfig';
 import AnalysisConfig from './configuration/AnalysisConfig';
+import { useCampaignPhaseEvents } from '@/lib/hooks/useCampaignPhaseEvents';
 
 interface CampaignPhaseManagerProps {
   campaignId: string;
@@ -37,6 +38,8 @@ interface PhaseManagerFormData {
 export const CampaignPhaseManager: React.FC<CampaignPhaseManagerProps> = ({ campaignId }) => {
   const { toast } = useToast();
   const [_selectedPhase, _setSelectedPhase] = useState<CampaignCurrentPhaseEnum | ''>('');
+  // Live updates: invalidate campaign-state on SSE phase events
+  useCampaignPhaseEvents(campaignId);
   
   const [configurePhase, { isLoading: isConfiguring }] = useConfigurePhaseStandaloneMutation();
   const [startPhase, { isLoading: isStarting }] = useStartPhaseStandaloneMutation();

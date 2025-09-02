@@ -11,6 +11,7 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**configGetProxyManager**](#configgetproxymanager) | **GET** /config/proxy-manager | Get proxy manager configuration|
 |[**configGetRateLimiter**](#configgetratelimiter) | **GET** /config/rate-limit | Get rate limiter configuration|
 |[**configGetServer**](#configgetserver) | **GET** /config/server | Get server configuration|
+|[**configGetStealth**](#configgetstealth) | **GET** /config/stealth | Get stealth configuration|
 |[**configGetWorker**](#configgetworker) | **GET** /config/worker | Get worker configuration|
 |[**configUpdateAuth**](#configupdateauth) | **PUT** /config/auth | Update authentication configuration|
 |[**configUpdateDns**](#configupdatedns) | **PUT** /config/dns | Update DNS configuration|
@@ -19,6 +20,7 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**configUpdateProxyManager**](#configupdateproxymanager) | **PUT** /config/proxy-manager | Update proxy manager configuration|
 |[**configUpdateRateLimiter**](#configupdateratelimiter) | **PUT** /config/rate-limit | Update rate limiter configuration|
 |[**configUpdateServer**](#configupdateserver) | **PUT** /config/server | Update server configuration|
+|[**configUpdateStealth**](#configupdatestealth) | **PUT** /config/stealth | Update stealth configuration|
 |[**configUpdateWorker**](#configupdateworker) | **PUT** /config/worker | Update worker configuration|
 
 # **configGetAuth**
@@ -346,6 +348,51 @@ This endpoint does not have any parameters.
 |**401** | Unauthorized |  -  |
 |**403** | Forbidden |  -  |
 |**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **configGetStealth**
+> ConfigGetStealth200Response configGetStealth()
+
+
+### Example
+
+```typescript
+import {
+    ServerSettingsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ServerSettingsApi(configuration);
+
+const { status, data } = await apiInstance.configGetStealth();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**ConfigGetStealth200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**401** | Unauthorized |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -796,6 +843,60 @@ const { status, data } = await apiInstance.configUpdateServer(
 |**409** | Conflict |  -  |
 |**422** | Validation Error |  -  |
 |**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **configUpdateStealth**
+> ConfigGetStealth200Response configUpdateStealth(configGetStealth200ResponseAllOfData)
+
+
+### Example
+
+```typescript
+import {
+    ServerSettingsApi,
+    Configuration,
+    ConfigGetStealth200ResponseAllOfData
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ServerSettingsApi(configuration);
+
+let configGetStealth200ResponseAllOfData: ConfigGetStealth200ResponseAllOfData; //
+
+const { status, data } = await apiInstance.configUpdateStealth(
+    configGetStealth200ResponseAllOfData
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **configGetStealth200ResponseAllOfData** | **ConfigGetStealth200ResponseAllOfData**|  | |
+
+
+### Return type
+
+**ConfigGetStealth200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

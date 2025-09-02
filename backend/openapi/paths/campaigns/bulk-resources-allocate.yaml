@@ -6,7 +6,7 @@ post:
     required: true
     content:
       application/json:
-          schema: { $ref: '../../openapi.yaml#/components/schemas/BulkResourceAllocationRequest' }
+          schema: { $ref: '../../components/schemas/all.yaml#/BulkResourceAllocationRequest' }
   responses:
     '200':
       description: Bulk resources allocated successfully
@@ -17,7 +17,7 @@ post:
               - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
               - type: object
                 properties:
-                  data: { $ref: '../../openapi.yaml#/components/schemas/BulkResourceAllocationResponse' }
+                  data: { $ref: '../../components/schemas/all.yaml#/BulkResourceAllocationResponse' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }

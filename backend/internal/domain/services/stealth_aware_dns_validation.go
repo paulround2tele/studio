@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 
-	legacyservices "github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/google/uuid"
 )
 
@@ -15,10 +14,10 @@ type StealthAwareDNSValidationService interface {
 	DNSValidationService
 
 	// ExecuteWithStealth runs DNS validation with stealth domain randomization
-	ExecuteWithStealth(ctx context.Context, campaignID uuid.UUID, stealthConfig *legacyservices.StealthConfig) (<-chan PhaseProgress, error)
+	ExecuteWithStealth(ctx context.Context, campaignID uuid.UUID) (<-chan PhaseProgress, error)
 
 	// EnableStealthMode configures the service to use stealth by default
-	EnableStealthMode(config *legacyservices.StealthConfig)
+	EnableStealthMode()
 
 	// DisableStealthMode returns to normal sequential validation
 	DisableStealthMode()
@@ -29,7 +28,6 @@ type stealthAwareDNSService struct {
 	DNSValidationService // Embed the standard service
 	stealthIntegration   StealthIntegration
 	stealthEnabled       bool
-	defaultStealthConfig *legacyservices.StealthConfig
 }
 
 // NewStealthAwareDNSValidationService creates a DNS validation service with stealth capabilities
@@ -45,7 +43,7 @@ func NewStealthAwareDNSValidationService(
 }
 
 // ExecuteWithStealth runs DNS validation with stealth domain randomization
-func (s *stealthAwareDNSService) ExecuteWithStealth(ctx context.Context, campaignID uuid.UUID, stealthConfig *legacyservices.StealthConfig) (<-chan PhaseProgress, error) {
+func (s *stealthAwareDNSService) ExecuteWithStealth(ctx context.Context, campaignID uuid.UUID) (<-chan PhaseProgress, error) {
 	log.Printf("StealthAwareDNS: Starting stealth DNS validation for campaign %s", campaignID)
 
 	// Get domains that need DNS validation from stealth integration
@@ -74,24 +72,22 @@ func (s *stealthAwareDNSService) ExecuteWithStealth(ctx context.Context, campaig
 }
 
 // EnableStealthMode configures the service to use stealth by default
-func (s *stealthAwareDNSService) EnableStealthMode(config *legacyservices.StealthConfig) {
+func (s *stealthAwareDNSService) EnableStealthMode() {
 	s.stealthEnabled = true
-	s.defaultStealthConfig = config
-	log.Printf("StealthAwareDNS: Stealth mode enabled with strategy: %s", config.ShuffleStrategy)
+	log.Printf("StealthAwareDNS: Stealth mode enabled")
 }
 
 // DisableStealthMode returns to normal sequential validation
 func (s *stealthAwareDNSService) DisableStealthMode() {
 	s.stealthEnabled = false
-	s.defaultStealthConfig = nil
 	log.Printf("StealthAwareDNS: Stealth mode disabled")
 }
 
 // Execute override - uses stealth if enabled, otherwise standard execution
 func (s *stealthAwareDNSService) Execute(ctx context.Context, campaignID uuid.UUID) (<-chan PhaseProgress, error) {
-	if s.stealthEnabled && s.defaultStealthConfig != nil {
+	if s.stealthEnabled {
 		log.Printf("StealthAwareDNS: Using stealth mode for campaign %s", campaignID)
-		return s.ExecuteWithStealth(ctx, campaignID, s.defaultStealthConfig)
+		return s.ExecuteWithStealth(ctx, campaignID)
 	}
 
 	log.Printf("StealthAwareDNS: Using standard mode for campaign %s", campaignID)
