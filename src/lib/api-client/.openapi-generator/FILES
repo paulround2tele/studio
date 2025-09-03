@@ -98,6 +98,7 @@ docs/CampaignsBulkOperationsList200ResponseAllOfDataInner.md
 docs/CampaignsCreate201Response.md
 docs/CampaignsDomainGenerationPatternOffset200Response.md
 docs/CampaignsDomainsList200Response.md
+docs/CampaignsEnrichedGet200Response.md
 docs/CampaignsList200Response.md
 docs/CampaignsPhaseExecutionGet200Response.md
 docs/CampaignsPhaseExecutionsList200Response.md
@@ -130,6 +131,7 @@ docs/DatabaseValue.md
 docs/DbBulkQuery200Response.md
 docs/DbBulkStats200Response.md
 docs/DomainListItem.md
+docs/EnrichedCampaignResponse.md
 docs/ErrorCode.md
 docs/ErrorEnvelope.md
 docs/ExecutionStatusEnum.md
@@ -309,6 +311,7 @@ models/campaigns-bulk-operations-list200-response.ts
 models/campaigns-create201-response.ts
 models/campaigns-domain-generation-pattern-offset200-response.ts
 models/campaigns-domains-list200-response.ts
+models/campaigns-enriched-get200-response.ts
 models/campaigns-list200-response.ts
 models/campaigns-phase-execution-get200-response.ts
 models/campaigns-phase-executions-list200-response.ts
@@ -340,6 +343,7 @@ models/db-bulk-query200-response.ts
 models/db-bulk-stats200-response.ts
 models/dnsvalidator-config-json.ts
 models/domain-list-item.ts
+models/enriched-campaign-response.ts
 models/error-code.ts
 models/error-envelope.ts
 models/execution-status-enum.ts

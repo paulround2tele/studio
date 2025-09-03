@@ -2,16 +2,11 @@
 // Production domain calculation utilities
 // Uses backend OpenAPI types exclusively
 
-// TODO: map to generated model when available
-type DomainGenerationParams = {
-  patternType?: 'prefix' | 'suffix' | 'both';
-  characterSet?: string;
-  variableLength?: number;
-  // Optional explicit per-side lengths when patternType is 'both'
+import type { ServicesDomainGenerationPhaseConfig } from '@/lib/api-client/models/services-domain-generation-phase-config';
+type DomainGenerationParams = ServicesDomainGenerationPhaseConfig & {
+  // Optional explicit per-side lengths when patternType is 'both'; not in backend yet
   prefixVariableLength?: number;
   suffixVariableLength?: number;
-  constantString?: string;
-  tlds?: string[];
 };
 
 /**
@@ -21,7 +16,7 @@ type DomainGenerationParams = {
 export function calculateMaxTheoreticalDomains(config: DomainGenerationParams): number {
   if (!config) return 0;
 
-  const { patternType, characterSet, variableLength, prefixVariableLength, suffixVariableLength } = config;
+  const { patternType, characterSet, variableLength, prefixVariableLength, suffixVariableLength } = config as any;
   const charSetLength = characterSet?.length || 26;
 
   switch (patternType) {

@@ -2,6 +2,8 @@
 
 import React, { memo, useMemo, useCallback } from 'react';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
+import type { PhaseExecution } from '@/lib/api-client/models/phase-execution';
+import type { CampaignState } from '@/lib/api-client/models/campaign-state';
 import { CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
 import { CheckCircle, AlertTriangle, Clock, Loader2, WorkflowIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -13,7 +15,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-interface CampaignProgressProps { campaign: Campaign }
+interface CampaignProgressProps {
+  campaign: Campaign;
+  phaseExecutions?: PhaseExecution[];
+  state?: CampaignState;
+}
 
 // PROFESSIONAL PHASE DISPLAY NAMES using ACTUAL OpenAPI ENUM VALUES
 const phaseDisplayNames: Record<CampaignCurrentPhaseEnum, string> = {
@@ -55,11 +61,38 @@ const PhaseStatusIcon = memo(({ status }: { status: PhaseStatus }) => {
 
 PhaseStatusIcon.displayName = 'PhaseStatusIcon';
 
-export function CampaignProgress({ campaign }: CampaignProgressProps) {
+export function CampaignProgress({ campaign, phaseExecutions, state }: CampaignProgressProps) {
   const { currentPhase, status } = campaign;
 
   // Derive a per-phase status from overall status for UI continuity
+  // Build a lookup from phase type to execution info when enriched data is provided
+  const execByPhase = useMemo(() => {
+    const map = new Map<CampaignCurrentPhaseEnum, PhaseExecution>();
+    if (Array.isArray(phaseExecutions)) {
+      for (const exec of phaseExecutions) {
+        // Last write wins; a future enhancement could sort by updatedAt
+        // @ts-expect-error phaseType enum is compatible with CampaignCurrentPhaseEnum
+        map.set(exec.phaseType as CampaignCurrentPhaseEnum, exec);
+      }
+    }
+    return map;
+  }, [phaseExecutions]);
+
   const phaseStatus: PhaseStatus | null = useMemo(() => {
+    // Prefer execution-derived status for current phase when available
+    if (currentPhase && execByPhase.has(currentPhase)) {
+      const exec = execByPhase.get(currentPhase)!;
+      switch (exec.status) {
+        case 'completed': return 'completed';
+        case 'failed': return 'failed';
+        case 'paused': return 'paused';
+        case 'in_progress':
+          return 'in_progress';
+        default:
+          return 'not_started';
+      }
+    }
+    // Fallback to campaign-level status
     switch (status) {
       case 'completed': return 'completed';
       case 'failed': return 'failed';
@@ -68,7 +101,7 @@ export function CampaignProgress({ campaign }: CampaignProgressProps) {
       case 'draft':
       default: return 'not_started';
     }
-  }, [status]);
+  }, [status, currentPhase, execByPhase]);
 
   const progressPercentage = useMemo(() => {
     if (!currentPhase) return 0;
@@ -80,11 +113,22 @@ export function CampaignProgress({ campaign }: CampaignProgressProps) {
     const apiPercent = campaign.progress?.percentComplete;
     if (typeof apiPercent === 'number') return Math.max(0, Math.min(100, apiPercent));
 
+    // Next, prefer execution progress for the current phase
+    if (currentPhase && execByPhase.has(currentPhase)) {
+      const exec = execByPhase.get(currentPhase)!;
+      if (typeof exec.progressPercentage === 'number') {
+        // Compute an overall percentage based on phase position and intra-phase progress
+        const completedPhases = Math.max(0, PHASE_ORDER.indexOf(currentPhase));
+        const perPhaseShare = 100 / PHASE_ORDER.length;
+        return Math.max(0, Math.min(100, (completedPhases * perPhaseShare) + (perPhaseShare * (exec.progressPercentage / 100))));
+      }
+    }
+
     const baseProgress = (currentIndex / PHASE_ORDER.length) * 100;
     if (phaseStatus === 'completed') return Math.min(((currentIndex + 1) / PHASE_ORDER.length) * 100, 100);
     if (phaseStatus === 'in_progress') return baseProgress + (25 / PHASE_ORDER.length);
     return baseProgress;
-  }, [currentPhase, phaseStatus, campaign.progress?.percentComplete]);
+  }, [currentPhase, phaseStatus, campaign.progress?.percentComplete, execByPhase]);
 
   const currentPhaseDisplay = useMemo(() => {
     return currentPhase ? phaseDisplayNames[currentPhase] : 'Unknown Phase';
@@ -142,7 +186,22 @@ export function CampaignProgress({ campaign }: CampaignProgressProps) {
             {PHASE_ORDER.map((phase, index) => {
               const isCurrentPhase = phase === currentPhase;
               const isPastPhase = currentPhase && PHASE_ORDER.indexOf(currentPhase) > index;
-              const displayStatus = isCurrentPhase ? phaseStatus : (isPastPhase ? 'completed' : 'not_started');
+              // Derive display status with enriched phase executions if present
+              let displayStatus: PhaseStatus = 'not_started';
+              const exec = execByPhase.get(phase);
+              if (exec) {
+                switch (exec.status) {
+                  case 'completed': displayStatus = 'completed'; break;
+                  case 'failed': displayStatus = 'failed'; break;
+                  case 'paused': displayStatus = 'paused'; break;
+                  case 'in_progress': displayStatus = 'in_progress'; break;
+                  default: displayStatus = 'not_started';
+                }
+              } else if (isCurrentPhase) {
+                displayStatus = phaseStatus ?? 'not_started';
+              } else if (isPastPhase) {
+                displayStatus = 'completed';
+              }
               
               return (
                 <Tooltip key={phase} delayDuration={300}>
@@ -152,7 +211,7 @@ export function CampaignProgress({ campaign }: CampaignProgressProps) {
                       isCurrentPhase && "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800",
                       !isCurrentPhase && "hover:bg-gray-50 dark:hover:bg-gray-800"
                     )}>
-                      <PhaseStatusIcon status={displayStatus as PhaseStatus} />
+                      <PhaseStatusIcon status={displayStatus} />
                       <div className="flex-1">
                         <div className="flex items-center space-x-2">
                           <span className={cn(
@@ -177,6 +236,12 @@ export function CampaignProgress({ campaign }: CampaignProgressProps) {
                         <>
                           <br />
                           Status: {phaseStatus.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          {execByPhase.get(phase)?.progressPercentage != null && (
+                            <>
+                              <br />
+                              Phase Progress: {Math.round(execByPhase.get(phase)!.progressPercentage!)}%
+                            </>
+                          )}
                         </>
                       )}
                     </p>

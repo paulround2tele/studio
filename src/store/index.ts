@@ -3,12 +3,14 @@ import { campaignApi } from './api/campaignApi';
 import { bulkOperationsApi } from './api/bulkOperationsApi';
 import campaignSlice from './slices/campaignSlice';
 import bulkOperationsSlice from './slices/bulkOperationsSlice';
-// import { campaignStateSyncMiddleware } from './middleware/campaignStateSyncMiddleware';
+import campaignUiSlice from './ui/campaignUiSlice';
+import { campaignStateSyncMiddleware } from './middleware/campaignStateSyncMiddleware';
 
 export const store = configureStore({
   reducer: {
     campaign: campaignSlice,
     bulkOperations: bulkOperationsSlice,
+  campaignUI: campaignUiSlice,
     // Add the generated reducers as specific top-level slices
     [campaignApi.reducerPath]: campaignApi.reducer,
     [bulkOperationsApi.reducerPath]: bulkOperationsApi.reducer,
@@ -21,10 +23,9 @@ export const store = configureStore({
         ignoredActionPaths: ['meta.arg', 'payload.timestamp'],
       },
     })
-    .concat(campaignApi.middleware)
-    .concat(bulkOperationsApi.middleware),
-    // Note: campaignStateSyncMiddleware temporarily disabled due to circular dependency
-    // TODO: Fix middleware integration in Phase 3 cleanup
+  .concat(campaignApi.middleware)
+  .concat(bulkOperationsApi.middleware)
+  .concat(campaignStateSyncMiddleware),
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself

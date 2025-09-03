@@ -1,0 +1,24 @@
+get:
+  tags: [campaigns]
+  summary: Get enriched campaign details
+  description: Returns campaign with state and recent phase executions as a single enriched read model
+  operationId: campaigns_enriched_get
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    $ref: '../../components/schemas/all.yaml#/EnrichedCampaignResponse'
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

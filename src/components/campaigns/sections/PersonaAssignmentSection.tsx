@@ -13,10 +13,7 @@ interface Persona {
   name?: string;
 }
 
-interface Proxy {
-  id?: string;
-  name?: string;
-}
+interface Proxy { id?: string; name?: string; host?: string; port?: number }
 
 interface PersonaAssignmentSectionProps {
   control: Control<any>;
@@ -37,7 +34,7 @@ export const PersonaAssignmentSection: React.FC<PersonaAssignmentSectionProps> =
   proxies: _proxies = [],
   needsHttpPersona: _needsHttpPersona = false,
   needsDnsPersona: _needsDnsPersona = false,
-  noneValuePlaceholder = "none-default",
+  noneValuePlaceholder = "__none__",
   disabled = false,
   isLoadingData = false
 }) => {
@@ -54,11 +51,11 @@ export const PersonaAssignmentSection: React.FC<PersonaAssignmentSectionProps> =
         {/* DNS Persona Selection */}
         <FormField
           control={control}
-          name="dnsPersonaId"
+          name="assignedDnsPersonaId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>DNS Persona</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={disabled || isLoadingData}>
+              <Select onValueChange={field.onChange} value={field.value} disabled={disabled || isLoadingData}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder={isLoadingData ? "Loading DNS personas..." : "Select DNS persona"} />
@@ -82,11 +79,11 @@ export const PersonaAssignmentSection: React.FC<PersonaAssignmentSectionProps> =
         {/* HTTP Persona Selection */}
         <FormField
           control={control}
-          name="httpPersonaId"
+          name="assignedHttpPersonaId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>HTTP Persona</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value} disabled={disabled || isLoadingData}>
+              <Select onValueChange={field.onChange} value={field.value} disabled={disabled || isLoadingData}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder={isLoadingData ? "Loading HTTP personas..." : "Select HTTP persona"} />
@@ -107,12 +104,32 @@ export const PersonaAssignmentSection: React.FC<PersonaAssignmentSectionProps> =
           )}
         />
 
-        {/* Display selected personas info - this would need access to form values */}
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">
-            Selected personas will be used for campaign execution according to the configured phase settings.
-          </p>
-        </div>
+        {/* Proxy Selection */}
+        <FormField
+          control={control}
+          name="assignedProxyId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Proxy (Optional)</FormLabel>
+              <FormControl>
+                <Select onValueChange={field.onChange} value={field.value} disabled={disabled || isLoadingData}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={isLoadingData ? "Loading proxies..." : "Select proxy (optional)"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={noneValuePlaceholder}>No proxy</SelectItem>
+                    { (_proxies as Proxy[])?.filter((p: Proxy) => p.id).map((p: Proxy) => (
+                      <SelectItem key={p.id} value={p.id!}>
+                        {p.host ? `${p.host}${p.port ? `:${p.port}` : ''}` : (p.name || 'Unnamed proxy')}
+                      </SelectItem>
+                    )) }
+                  </SelectContent>
+                </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </CardContent>
     </Card>
   );

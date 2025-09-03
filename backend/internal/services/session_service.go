@@ -193,7 +193,7 @@ func (s *SessionService) CreateSession(userID uuid.UUID, ipAddress, userAgent st
 	)
 
 	// Log audit event for session creation
-	s.logAuditEvent(context.TODO(), sessionID, userID, "session_created", fmt.Sprintf("Session created for user %s", userID))
+	s.logAuditEvent(context.Background(), sessionID, userID, "session_created", fmt.Sprintf("Session created for user %s", userID))
 
 	return session, nil
 }
@@ -242,13 +242,13 @@ func (s *SessionService) ValidateSession(sessionID, clientIP string) (*SessionDa
 	idleTime := now.Sub(session.LastActivity)
 	if idleTime > s.config.IdleTimeout+time.Minute { // Add 1-minute grace period
 		s.invalidateSession(sessionID)
-		s.logAuditEvent(context.TODO(), sessionID, session.UserID, "session_expired", "Session expired due to idle timeout")
+		s.logAuditEvent(context.Background(), sessionID, session.UserID, "session_expired", "Session expired due to idle timeout")
 		return nil, ErrSessionExpired
 	}
 
 	// Enhanced security checks (only if enabled in config)
 	if err := s.validateSessionSecurity(session, clientIP, ""); err != nil {
-		s.logAuditEvent(context.TODO(), sessionID, session.UserID, "session_security_violation", fmt.Sprintf("Security violation: %s", err.Error()))
+		s.logAuditEvent(context.Background(), sessionID, session.UserID, "session_security_violation", fmt.Sprintf("Security violation: %s", err.Error()))
 		s.invalidateSession(sessionID)
 		return nil, err
 	}
@@ -326,7 +326,7 @@ func (s *SessionService) InvalidateAllUserSessions(userID uuid.UUID) error {
 	_, err := s.db.Exec(query, userID)
 
 	if err == nil {
-		s.logAuditEvent(context.TODO(), "", userID, "all_sessions_invalidated", fmt.Sprintf("All sessions invalidated for user %s", userID))
+		s.logAuditEvent(context.Background(), "", userID, "all_sessions_invalidated", fmt.Sprintf("All sessions invalidated for user %s", userID))
 	}
 
 	return err

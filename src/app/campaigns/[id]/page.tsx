@@ -1,15 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Briefcase, Loader2, ArrowLeft } from 'lucide-react';
 
-// PROFESSIONAL: Direct OpenAPI client imports - no amateur wrappers
-import { CampaignsApi } from '@/lib/api-client';
-import { apiConfiguration } from '@/lib/api/config';
 import type { CampaignResponse } from '@/lib/api-client/models';
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
+import { useGetCampaignEnrichedQuery } from '@/store/api/campaignApi';
 
 // Professional components using real OpenAPI types
 import PageHeader from '@/components/shared/PageHeader';
@@ -27,30 +24,11 @@ export default function CampaignPage() {
   const params = useParams();
   const router = useRouter();
   const campaignId = params?.id as string;
-
-  // Professional state management - no amateur RTK Query wrapper crimes
-  const [campaign, setCampaign] = useState<CampaignResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-  const fetchCampaign = async () => {
-      try {
-        setLoading(true);
-  const api = new CampaignsApi(apiConfiguration);
-    // Fetch a single campaign by id and unwrap the SuccessEnvelope
-    const response = await api.campaignsGet(campaignId);
-    const data = extractResponseData<CampaignResponse>(response);
-    if (data) setCampaign(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch campaigns');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-  fetchCampaign();
-  }, [campaignId]);
+  // Use enriched campaign endpoint via RTK Query
+  const { data: enriched, isLoading: loading, error } = useGetCampaignEnrichedQuery(campaignId);
+  const campaign: CampaignResponse | null = enriched?.campaign ?? null;
+  const phaseExecutions = enriched?.phaseExecutions;
+  const state = enriched?.state;
 
   const handleBack = () => {
     router.push('/campaigns');
@@ -76,7 +54,7 @@ export default function CampaignPage() {
             Error Loading Campaign
           </h2>
           <p className="text-gray-600 dark:text-gray-400 max-w-md">
-            {error}
+            {typeof error === 'string' ? error : 'Failed to fetch campaign'}
           </p>
           <Button onClick={() => window.location.reload()} variant="outline">
             Try Again
@@ -117,10 +95,10 @@ export default function CampaignPage() {
       />
 
       {/* Professional campaign header with real OpenAPI types */}
-      <CampaignHeader campaign={campaign} />
+  <CampaignHeader campaign={campaign} state={state} phaseExecutions={phaseExecutions} />
       
       {/* Professional campaign progress using real enum values */}
-      <CampaignProgress campaign={campaign} />
+  <CampaignProgress campaign={campaign} state={state} phaseExecutions={phaseExecutions} />
       
       {/* Professional campaign controls (disaster recovery component) */}
       <CampaignControls campaign={campaign} />

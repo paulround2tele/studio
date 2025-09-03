@@ -26,6 +26,10 @@ const (
 	SSEEventDomainGenerated   SSEEventType = "domain_generated"
 	SSEEventDomainValidated   SSEEventType = "domain_validated"
 	SSEEventAnalysisCompleted SSEEventType = "analysis_completed"
+	// Keyword set lifecycle events
+	SSEEventKeywordSetCreated SSEEventType = "keyword_set_created"
+	SSEEventKeywordSetUpdated SSEEventType = "keyword_set_updated"
+	SSEEventKeywordSetDeleted SSEEventType = "keyword_set_deleted"
 	SSEEventKeepAlive         SSEEventType = "keep_alive"
 	SSEEventError             SSEEventType = "error"
 )

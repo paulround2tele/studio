@@ -1299,6 +1299,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/campaigns/{campaignId}/enriched": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get enriched campaign details
+         * @description Returns campaign with state and recent phase executions as a single enriched read model
+         */
+        get: operations["campaigns_enriched_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/campaigns/{campaignId}/phases/{phase}/status": {
         parameters: {
             query?: never;
@@ -2278,6 +2298,12 @@ export interface components {
             metrics?: {
                 [key: string]: unknown;
             } | null;
+        };
+        /** @description Read-optimized composite model for campaign detail pages */
+        EnrichedCampaignResponse: {
+            campaign: components["schemas"]["CampaignResponse"];
+            state?: components["schemas"]["CampaignState"];
+            phaseExecutions?: components["schemas"]["PhaseExecution"][];
         };
         PhaseStatusResponse: {
             /** @enum {string} */
@@ -5580,6 +5606,32 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_enriched_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["EnrichedCampaignResponse"];
+                    };
+                };
             };
             404: components["responses"]["NotFound"];
             500: components["responses"]["InternalServerError"];

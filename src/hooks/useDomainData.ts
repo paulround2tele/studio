@@ -133,16 +133,44 @@ export function useDomainData(
     setTotal(pageTotal);
     setHasMore((offset + filtered.length) < pageTotal);
 
+    // Helpers for status evaluation
+    const isFailedStatus = (s?: unknown) => {
+      if (!s || typeof s !== 'string') return false;
+      const v = s.toLowerCase();
+      return v === 'error' || v === 'failed' || v === 'timeout' || v === 'invalid' || v === 'unresolved';
+    };
+    const isOkStatus = (s?: unknown) => {
+      if (!s || typeof s !== 'string') return false;
+      const v = s.toLowerCase();
+      return v === 'ok' || v === 'valid' || v === 'resolved' || v === 'validated' || v === 'success' || v === 'succeeded';
+    };
+    const isLeadMatched = (s?: unknown) => {
+      if (!s || typeof s !== 'string') return false;
+      const v = s.toLowerCase();
+      return v === 'match' || v === 'matched';
+    };
+
+    // Build an accumulated view for counting across loaded pages
+    const accumulated = offset > 0 ? [...domains, ...filtered] : filtered;
+
+    // Calculate counts from accumulated data (best effort with paginated data)
+    const failedCount = accumulated.reduce((acc, d) => {
+      return acc + (isFailedStatus(d.dnsStatus) || isFailedStatus(d.httpStatus) || isFailedStatus(d.leadStatus) ? 1 : 0);
+    }, 0);
+    const dnsValidatedCount = accumulated.reduce((acc, d) => acc + (isOkStatus(d.dnsStatus) ? 1 : 0), 0);
+    const httpValidatedCount = accumulated.reduce((acc, d) => acc + (isOkStatus(d.httpStatus) ? 1 : 0), 0);
+    const leadsGeneratedCount = accumulated.reduce((acc, d) => acc + (isLeadMatched(d.leadStatus) ? 1 : 0), 0);
+
     // Minimal summary (domain list endpoint doesn't include phase details)
     const summary: DomainStatusSummary = {
       campaignId,
       summary: {
         total: pageTotal,
         generated: pageTotal,
-        dnsValidated: 0,
-        httpValidated: 0,
-        leadsGenerated: 0,
-        failed: 0,
+        dnsValidated: dnsValidatedCount,
+        httpValidated: httpValidatedCount,
+        leadsGenerated: leadsGeneratedCount,
+        failed: failedCount,
       },
       currentPhase: 'unknown',
       phaseStatus: 'unknown',
@@ -226,7 +254,8 @@ export function useDomainStatusSummary(
 
       // Use the new domains list endpoint and compute a minimal summary
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      const res = await fetch(`${apiUrl}/api/v2/campaigns/${campaignId}/domains?limit=1&offset=0`, {
+      // Fetch a page of domains to approximate counts
+      const res = await fetch(`${apiUrl}/api/v2/campaigns/${campaignId}/domains?limit=100&offset=0`, {
         method: 'GET',
         credentials: 'include',
         headers: { 'Accept': 'application/json' },
@@ -234,6 +263,29 @@ export function useDomainStatusSummary(
       if (!res.ok) throw new Error(`Domains list failed: ${res.status}`);
       const json = await res.json();
       const total = json?.data?.total ?? 0;
+      const items: GeneratedDomainLite[] = (json?.data?.items as GeneratedDomainLite[]) || [];
+
+      // Compute approximate counts from the first page
+      const isFailedStatus = (s?: unknown) => {
+        if (!s || typeof s !== 'string') return false;
+        const v = s.toLowerCase();
+        return v === 'error' || v === 'failed' || v === 'timeout' || v === 'invalid' || v === 'unresolved';
+      };
+      const isOkStatus = (s?: unknown) => {
+        if (!s || typeof s !== 'string') return false;
+        const v = s.toLowerCase();
+        return v === 'ok' || v === 'valid' || v === 'resolved' || v === 'validated' || v === 'success' || v === 'succeeded';
+      };
+      const isLeadMatched = (s?: unknown) => {
+        if (!s || typeof s !== 'string') return false;
+        const v = s.toLowerCase();
+        return v === 'match' || v === 'matched';
+      };
+
+      const failedCount = items.reduce((acc, d) => acc + (isFailedStatus(d.dnsStatus) || isFailedStatus(d.httpStatus) || isFailedStatus(d.leadStatus) ? 1 : 0), 0);
+      const dnsValidatedCount = items.reduce((acc, d) => acc + (isOkStatus(d.dnsStatus) ? 1 : 0), 0);
+      const httpValidatedCount = items.reduce((acc, d) => acc + (isOkStatus(d.httpStatus) ? 1 : 0), 0);
+      const leadsGeneratedCount = items.reduce((acc, d) => acc + (isLeadMatched(d.leadStatus) ? 1 : 0), 0);
 
       // Build status summary from the domains list
       const summary: DomainStatusSummary = {
@@ -241,10 +293,10 @@ export function useDomainStatusSummary(
         summary: {
           total,
           generated: total,
-          dnsValidated: 0,
-          httpValidated: 0,
-          leadsGenerated: 0,
-          failed: 0 // TODO: Calculate from domain status
+          dnsValidated: dnsValidatedCount,
+          httpValidated: httpValidatedCount,
+          leadsGenerated: leadsGeneratedCount,
+          failed: failedCount
         },
         currentPhase: 'unknown',
         phaseStatus: 'unknown'

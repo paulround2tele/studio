@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Zap, Clock, Info } from 'lucide-react';
 import { useAppDispatch } from '@/store/hooks';
+import { setFullSequenceMode } from '@/store/ui/campaignUiSlice';
 import { useToast } from '@/hooks/use-toast';
 
 interface CampaignModeToggleProps {
@@ -35,7 +36,7 @@ const modeConfig = {
 };
 
 export function CampaignModeToggle({
-  campaignId: _campaignId,
+  campaignId,
   currentMode,
   disabled,
   className,
@@ -53,13 +54,11 @@ export function CampaignModeToggle({
 
   const handleModeToggle = async () => {
     try {
-      // TODO: Create separate UI state slice for frontend-only campaign settings
-      // 'fullSequenceMode' is not part of the Campaign model from backend
-      // dispatch(updateCampaignField({ field: 'fullSequenceMode', value: otherMode }));
+  _dispatch(setFullSequenceMode({ campaignId, value: otherMode }));
 
       toast({
         title: 'Campaign Mode Updated',
-        description: `Switched to ${otherConfig.label} mode (client-side only)`,
+  description: `Switched to ${otherConfig.label} mode (client-side only)`,
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to update campaign mode';

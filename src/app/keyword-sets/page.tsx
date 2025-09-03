@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Plus, Edit } from 'lucide-react';
 import { keywordSetsApi } from '@/lib/api-client/compat';
 import type { KeywordSetResponse as ApiKeywordSetResponse } from '@/lib/api-client/models';
+import { useSSE } from '@/hooks/useSSE';
 
 type KeywordSet = ApiKeywordSetResponse;
 
@@ -36,9 +37,19 @@ export default function KeywordSetsPage() {
 
   useEffect(() => {
     loadSets();
-    
-    // TODO: Replace with Server-Sent Events (SSE) for real-time updates
-    // WebSocket infrastructure removed during RTK consolidation
+    // Subscribe to global SSE and refresh on keyword set lifecycle events
+    const url = `/api/v2/sse/events`;
+    const { close } = useSSE(url, (evt) => {
+      const t = evt.event;
+      if (t === 'keyword_set_created' || t === 'keyword_set_updated' || t === 'keyword_set_deleted') {
+        // Lightweight refetch
+        loadSets();
+      }
+    }, { autoReconnect: true, maxReconnectAttempts: 10, reconnectDelay: 2000, withCredentials: true });
+
+    return () => {
+      close();
+    };
   }, [loadSets]);
 
   return (

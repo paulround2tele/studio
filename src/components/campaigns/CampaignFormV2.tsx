@@ -74,9 +74,8 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
         // Convert to API request using auto-generated types
         const apiRequest = formToApiRequest(data);
 
-        // Use professional RTK Query mutation with proper type casting
-        // TODO: Fix schema mismatches between enums - using any for now
-        const campaignData = await createCampaign(apiRequest as any).unwrap();
+  // Use professional RTK Query mutation with correct types (no any)
+  const campaignData = await createCampaign(apiRequest).unwrap();
         if (!campaignData || !campaignData.id) {
           throw new Error('Campaign creation succeeded but no campaign ID returned');
         }

@@ -3298,6 +3298,36 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/enriched:
+    get:
+      tags:
+        - campaigns
+      summary: Get enriched campaign details
+      description: Returns campaign with state and recent phase executions as a single enriched read model
+      operationId: campaigns_enriched_get
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/EnrichedCampaignResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /campaigns/{campaignId}/phases/{phase}/status:
     get:
       tags:
@@ -5446,6 +5476,20 @@ components:
           type: object
           additionalProperties: {}
           nullable: true
+    EnrichedCampaignResponse:
+      type: object
+      description: Read-optimized composite model for campaign detail pages
+      properties:
+        campaign:
+          $ref: '#/components/schemas/CampaignResponse'
+        state:
+          $ref: '#/components/schemas/CampaignState'
+        phaseExecutions:
+          type: array
+          items:
+            $ref: '#/components/schemas/PhaseExecution'
+      required:
+        - campaign
     PhaseStatusResponse:
       type: object
       properties:

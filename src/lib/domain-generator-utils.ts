@@ -4,8 +4,8 @@
  * This includes generating the Nth character combination and constructing a domain from an index.
  * Uses backend OpenAPI types exclusively - no frontend duplication
  */
-// Temporary placeholder for domain config types until modeled in OpenAPI
-type DomainGenerationParams = any; // TODO: map to generated model when available
+import type { ServicesDomainGenerationPhaseConfig } from '@/lib/api-client/models/services-domain-generation-phase-config';
+type DomainGenerationParams = ServicesDomainGenerationPhaseConfig;
 
 // Constants for SLD validation
 const MAX_SLD_LENGTH = 63;

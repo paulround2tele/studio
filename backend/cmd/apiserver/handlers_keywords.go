@@ -13,6 +13,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/contentfetcher"
 	"github.com/fntelecomllc/studio/backend/internal/keywordextractor"
 	"github.com/fntelecomllc/studio/backend/internal/models"
+	"github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
@@ -522,6 +523,30 @@ func (h *strictHandlers) KeywordSetsCreate(ctx context.Context, r gen.KeywordSet
 		RequestId: reqID(),
 		Success:   boolPtr(true),
 	}
+	// Broadcast SSE event to the current user listeners
+	if h.deps != nil && h.deps.SSE != nil {
+		var userID *uuid.UUID
+		if v := ctx.Value("user_id"); v != nil {
+			if s, ok := v.(string); ok && s != "" {
+				if uid, err := uuid.Parse(s); err == nil {
+					userID = &uid
+				}
+			}
+		}
+		if userID != nil {
+			evt := services.SSEEvent{
+				Event:  services.SSEEventKeywordSetCreated,
+				UserID: userID,
+				Data: map[string]interface{}{
+					"keyword_set_id": ks.ID.String(),
+					"name":           ks.Name,
+					"timestamp":      time.Now().UTC(),
+				},
+				Timestamp: time.Now(),
+			}
+			h.deps.SSE.BroadcastToUser(*userID, evt)
+		}
+	}
 	return resp, nil
 }
 
@@ -547,6 +572,29 @@ func (h *strictHandlers) KeywordSetsDelete(ctx context.Context, r gen.KeywordSet
 	}
 	if err := tx.Commit(); err != nil {
 		return gen.KeywordSetsDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "tx commit failed", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Broadcast SSE delete event
+	if h.deps != nil && h.deps.SSE != nil {
+		var userID *uuid.UUID
+		if v := ctx.Value("user_id"); v != nil {
+			if s, ok := v.(string); ok && s != "" {
+				if uid, err := uuid.Parse(s); err == nil {
+					userID = &uid
+				}
+			}
+		}
+		if userID != nil {
+			evt := services.SSEEvent{
+				Event:  services.SSEEventKeywordSetDeleted,
+				UserID: userID,
+				Data: map[string]interface{}{
+					"keyword_set_id": setID.String(),
+					"timestamp":      time.Now().UTC(),
+				},
+				Timestamp: time.Now(),
+			}
+			h.deps.SSE.BroadcastToUser(*userID, evt)
+		}
 	}
 	return gen.KeywordSetsDelete204Response{}, nil
 }
@@ -714,6 +762,29 @@ func (h *strictHandlers) KeywordSetsUpdate(ctx context.Context, r gen.KeywordSet
 		}(),
 		RuleCount: count,
 	}, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}
+	// Broadcast SSE update event
+	if h.deps != nil && h.deps.SSE != nil {
+		var userID *uuid.UUID
+		if v := ctx.Value("user_id"); v != nil {
+			if s, ok := v.(string); ok && s != "" {
+				if uid, err := uuid.Parse(s); err == nil {
+					userID = &uid
+				}
+			}
+		}
+		if userID != nil {
+			evt := services.SSEEvent{
+				Event:  services.SSEEventKeywordSetUpdated,
+				UserID: userID,
+				Data: map[string]interface{}{
+					"keyword_set_id": setID.String(),
+					"timestamp":      time.Now().UTC(),
+				},
+				Timestamp: time.Now(),
+			}
+			h.deps.SSE.BroadcastToUser(*userID, evt)
+		}
+	}
 	return resp, nil
 }
 

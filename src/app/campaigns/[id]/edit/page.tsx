@@ -2,9 +2,9 @@
 "use client";
 
 import PageHeader from '@/components/shared/PageHeader';
-import { useGetCampaignsStandaloneQuery } from '@/store/api/campaignApi';
+import { useGetCampaignEnrichedQuery } from '@/store/api/campaignApi';
+import type { CampaignResponse } from '@/lib/api-client/models';
 
-// TODO: Replace with generated enriched campaign types if/when added to OpenAPI spec
 import { FilePenLine, AlertCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { Suspense } from 'react';
@@ -16,10 +16,9 @@ function EditCampaignPageContent() {
   const router = useRouter();
 
   const campaignId = params.id as string;
-  
-  // RTK Query: Use centralized campaigns query and find specific campaign
-  const { data: campaigns, isLoading: loading, error } = useGetCampaignsStandaloneQuery();
-  const campaignData = (campaigns || []).find((c: any) => c.id === campaignId);
+
+  const { data: enriched, isLoading: loading, error } = useGetCampaignEnrichedQuery(campaignId);
+  const campaignData: CampaignResponse | undefined = enriched?.campaign;
 
   if (loading) {
     return (
@@ -37,16 +36,17 @@ function EditCampaignPageContent() {
   }
 
   if (error || !campaignData) {
+    const description = typeof error === 'string'
+      ? error
+      : (error && typeof error === 'object' && (error as any).data?.message)
+        || (error && typeof error === 'object' && (error as any).message)
+        || 'Campaign data could not be loaded or found.';
     return (
        <div className="text-center py-10">
         <AlertCircle className="mx-auto h-12 w-12 text-destructive" />
         <PageHeader 
           title="Error Loading Campaign" 
-          description={
-            typeof error === 'string' 
-              ? error 
-              : "Campaign data could not be loaded or found."
-          } 
+          description={description}
           icon={FilePenLine} 
         />
         <Button onClick={() => router.push('/campaigns')} className="mt-6">Back to Campaigns</Button>

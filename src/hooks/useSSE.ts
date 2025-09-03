@@ -232,6 +232,10 @@ export function useSSE(
         'domain_generated',
         'domain_validated',
         'analysis_completed',
+  // Keyword set lifecycle events
+  'keyword_set_created',
+  'keyword_set_updated',
+  'keyword_set_deleted',
         'keep_alive',
         'error',
       ];

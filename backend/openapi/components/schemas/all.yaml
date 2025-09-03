@@ -210,6 +210,20 @@ CampaignStateWithExecutions:
       items: { $ref: '#/PhaseExecution' }
   required: [campaignState, phaseExecutions]
 
+# Enriched composite view for UI read models
+EnrichedCampaignResponse:
+  type: object
+  description: Read-optimized composite model for campaign detail pages
+  properties:
+    campaign:
+      $ref: '#/CampaignResponse'
+    state:
+      $ref: '#/CampaignState'
+    phaseExecutions:
+      type: array
+      items: { $ref: '#/PhaseExecution' }
+  required: [campaign]
+
 # --- Campaign Domains Listing & Pattern Offset Schemas ---
 DomainListItem:
   type: object

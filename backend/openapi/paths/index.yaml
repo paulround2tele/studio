@@ -160,6 +160,8 @@
   $ref: "./campaigns/phase-executions.yaml"
 "/campaigns/{campaignId}/phase-executions/{phaseType}":
   $ref: "./campaigns/phase-execution-by-type.yaml"
+"/campaigns/{campaignId}/enriched":
+  $ref: "./campaigns/enriched.yaml"
 "/campaigns/{campaignId}/phases/{phase}/status":
   $ref: "./campaigns/phase-status.yaml"
 "/campaigns/{campaignId}/phases/{phase}/configure":

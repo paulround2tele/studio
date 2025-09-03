@@ -18,6 +18,50 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// CampaignsEnrichedGet implements GET /campaigns/{campaignId}/enriched (strict)
+func (h *strictHandlers) CampaignsEnrichedGet(ctx context.Context, r gen.CampaignsEnrichedGetRequestObject) (gen.CampaignsEnrichedGetResponseObject, error) {
+	if h.deps == nil || h.deps.DB == nil || h.deps.Stores.Campaign == nil {
+		return gen.CampaignsEnrichedGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Load campaign
+	c, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
+	if err != nil {
+		if err == store.ErrNotFound {
+			return gen.CampaignsEnrichedGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+		return gen.CampaignsEnrichedGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	campaignResp := mapCampaignToResponse(c)
+
+	// State and executions
+	var apiState *gen.CampaignState
+	if st, stErr := h.deps.Stores.Campaign.GetCampaignState(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); stErr == nil && st != nil {
+		s := gen.CampaignState{CampaignId: openapi_types.UUID(st.CampaignID), CurrentState: gen.CampaignStateEnum(st.CurrentState), Mode: gen.CampaignModeEnum(st.Mode), Version: st.Version, CreatedAt: st.CreatedAt, UpdatedAt: st.UpdatedAt}
+		if len(st.Configuration) > 0 {
+			var m map[string]interface{}
+			_ = json.Unmarshal(st.Configuration, &m)
+			s.Configuration = &m
+		}
+		apiState = &s
+	}
+	execs := []gen.PhaseExecution{}
+	if list, peErr := h.deps.Stores.Campaign.GetPhaseExecutionsByCampaign(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); peErr == nil {
+		for _, pe := range list {
+			if pe != nil {
+				execs = append(execs, mapPhaseExecutionToAPI(*pe))
+			}
+		}
+	}
+	enriched := gen.EnrichedCampaignResponse{Campaign: campaignResp}
+	if apiState != nil {
+		enriched.State = apiState
+	}
+	if len(execs) > 0 {
+		enriched.PhaseExecutions = &execs
+	}
+	return gen.CampaignsEnrichedGet200JSONResponse{Data: &enriched, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+}
+
 // mapToDomainGenerationConfig converts a generic map into the typed DomainGenerationConfig expected by the domain generation service
 func mapToDomainGenerationConfig(in map[string]interface{}) (domainservices.DomainGenerationConfig, error) {
 	var cfg domainservices.DomainGenerationConfig

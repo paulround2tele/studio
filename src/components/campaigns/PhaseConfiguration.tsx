@@ -252,14 +252,9 @@ export const PhaseConfiguration: React.FC<PhaseConfigurationProps> = ({
             <PersonaAssignmentSection 
               control={form.control}
               disabled={isSubmitting}
-              httpPersonas={httpPersonas.map(p => ({ id: p.id || '', name: p.name || '' }))}
-              dnsPersonas={dnsPersonas.map(p => ({ id: p.id || '', name: p.name || '' }))}
-              proxies={proxies.map(p => ({ 
-                id: p.id || '', 
-                name: p.name, 
-                host: p.host, 
-                port: p.port ? parseInt(p.port.toString()) : undefined 
-              }))}
+              httpPersonas={httpPersonas.map(p => ({ id: p.id, name: p.name }))}
+              dnsPersonas={dnsPersonas.map(p => ({ id: p.id, name: p.name }))}
+              proxies={proxies.map(p => ({ id: p.id, host: p.host, port: p.port }))}
               needsHttpPersona={needsHttpPersona}
               needsDnsPersona={needsDnsPersona}
               noneValuePlaceholder={CampaignFormConstants.NONE_VALUE_PLACEHOLDER}

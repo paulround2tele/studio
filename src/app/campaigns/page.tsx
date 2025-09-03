@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, RefreshCw, Activity, Database, Globe, BarChart3 } from "lucide-react";
 import { useRTKCampaignsList } from "@/providers/RTKCampaignDataProvider";
+import type { CampaignLite } from "@/providers/RTKCampaignDataProvider";
+import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
@@ -53,24 +55,24 @@ export default function CampaignsPage() {
 
   // Transform enriched campaigns to legacy format for compatibility
   const campaigns = useMemo(() => {
-    return enrichedCampaigns.map((campaign: any) => {
+    return enrichedCampaigns.map((campaign: CampaignLite) => {
       // Now properly handle GeneratedDomain[] array instead of string[]
-      const domains = campaign.domains || [];
-      const leads = campaign.leads || [];
+      const domains = (campaign.domains || []) as DomainListItem[];
+      const leads = (campaign.leads || []) as unknown[];
       
       // Calculate DNS validation stats from rich domain objects
-      const dnsValidatedCount = domains.filter((domain: any) =>
-        domain && typeof domain === 'object' && domain.dnsStatus === 'ok'
+      const dnsValidatedCount = domains.filter((domain) =>
+        domain && typeof domain === 'object' && (domain as DomainListItem).dnsStatus === 'ok'
       ).length;
       
       // Calculate HTTP validation stats
-      const httpValidatedCount = domains.filter((domain: any) =>
-        domain && typeof domain === 'object' && domain.httpStatus === 'ok'
+      const httpValidatedCount = domains.filter((domain) =>
+        domain && typeof domain === 'object' && (domain as DomainListItem).httpStatus === 'ok'
       ).length;
       
       // Calculate lead generation stats
-      const leadsFoundCount = domains.filter((domain: any) =>
-        domain && typeof domain === 'object' && domain.leadStatus === 'match'
+      const leadsFoundCount = domains.filter((domain) =>
+        domain && typeof domain === 'object' && (domain as DomainListItem).leadStatus === 'match'
       ).length;
 
       return {
@@ -78,7 +80,7 @@ export default function CampaignsPage() {
         name: campaign.name,
   // Prefer API phase names; fall back to discovery to avoid engine/API mismatch
   currentPhase: campaign.currentPhase || 'discovery',
-        phaseStatus: campaign.phaseStatus || 'not_started',
+  phaseStatus: 'not_started',
         totalItems: domains.length,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -90,9 +92,9 @@ export default function CampaignsPage() {
         leadsFound: leadsFoundCount,
         domainsData: domains,
         leadsData: leads,
-        dnsResults: campaign.statistics?.dns,
-        httpResults: campaign.statistics?.http,
-        analysisResults: campaign.statistics?.analysis
+  dnsResults: undefined,
+  httpResults: undefined,
+  analysisResults: undefined
       };
     });
   }, [enrichedCampaigns]);
@@ -200,7 +202,7 @@ export default function CampaignsPage() {
         </Card>
       ) : (
         <div className="grid gap-4">
-          {campaigns.map((campaign: any) => (
+          {campaigns.map((campaign: CampaignData) => (
             <Card key={campaign.campaignId} className="hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-center justify-between">

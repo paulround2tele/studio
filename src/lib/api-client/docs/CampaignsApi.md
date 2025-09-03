@@ -14,6 +14,7 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**campaignsDelete**](#campaignsdelete) | **DELETE** /campaigns/{campaignId} | Delete campaign|
 |[**campaignsDomainGenerationPatternOffset**](#campaignsdomaingenerationpatternoffset) | **POST** /campaigns/domain-generation/pattern-offset | Get current global pattern offset for domain generation config|
 |[**campaignsDomainsList**](#campaignsdomainslist) | **GET** /campaigns/{campaignId}/domains | List generated domains for a campaign|
+|[**campaignsEnrichedGet**](#campaignsenrichedget) | **GET** /campaigns/{campaignId}/enriched | Get enriched campaign details|
 |[**campaignsGet**](#campaignsget) | **GET** /campaigns/{campaignId} | Get campaign|
 |[**campaignsList**](#campaignslist) | **GET** /campaigns | List campaigns|
 |[**campaignsPhaseConfigure**](#campaignsphaseconfigure) | **POST** /campaigns/{campaignId}/phases/{phase}/configure | Configure campaign phase|
@@ -573,6 +574,59 @@ const { status, data } = await apiInstance.campaignsDomainsList(
 |-------------|-------------|------------------|
 |**200** | OK |  -  |
 |**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsEnrichedGet**
+> CampaignsEnrichedGet200Response campaignsEnrichedGet()
+
+Returns campaign with state and recent phase executions as a single enriched read model
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsEnrichedGet(
+    campaignId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**CampaignsEnrichedGet200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
 |**404** | Not Found |  -  |
 |**500** | Internal Server Error |  -  |
 

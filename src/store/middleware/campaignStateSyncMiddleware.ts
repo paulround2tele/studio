@@ -9,12 +9,11 @@ import {
   failPhaseTransition,
   setConnectionStatus
 } from '../slices/campaignSlice';
-import type { RootState, AppDispatch } from '../index';
 import type { CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
 import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 
 // Middleware to handle campaign state synchronization
-export const campaignStateSyncMiddleware: Middleware<unknown, RootState, AppDispatch> = (store) => (next) => (action) => {
+export const campaignStateSyncMiddleware: Middleware = (store) => (next) => (action) => {
   const result = next(action);
 
   // Handle successful phase transitions
@@ -45,7 +44,7 @@ export const campaignStateSyncMiddleware: Middleware<unknown, RootState, AppDisp
 };
 
 // Helper function to initialize campaign state sync
-export const initializeCampaignSync = (_campaignId: string) => (dispatch: AppDispatch) => {
+export const initializeCampaignSync = (_campaignId: string) => (dispatch: any) => {
   // Set connection status
   dispatch(setConnectionStatus('connected'));
   
@@ -54,7 +53,7 @@ export const initializeCampaignSync = (_campaignId: string) => (dispatch: AppDis
 };
 
 // Phase transition helper with proper Redux integration
-export const performPhaseTransition = (campaignId: string, phase: string) => (dispatch: AppDispatch) => {
+export const performPhaseTransition = (campaignId: string, phase: string) => (dispatch: any) => {
   // Start transition in Redux
   dispatch(startPhaseTransition(phase));
   

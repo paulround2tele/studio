@@ -16,6 +16,7 @@ import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { validateUUID } from '@/lib/utils/uuidValidation';
 import type { CampaignResponse } from '@/lib/api-client/models/campaign-response';
 import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
+import { useCampaignFormData } from '@/lib/hooks/useCampaignFormData';
 
 // Phase configuration form interface
 interface PhaseConfigurationFormValues {
@@ -58,6 +59,7 @@ export const ModernPhaseConfiguration: React.FC<ModernPhaseConfigurationProps> =
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [startPhase] = useStartPhaseStandaloneMutation();
+  const { httpPersonas, dnsPersonas, proxies, isLoading: loadingData, error: loadError, refetch } = useCampaignFormData(false);
 
   // Form setup with proper defaults
   const form = useForm<PhaseConfigurationFormValues>({
@@ -201,6 +203,11 @@ export const ModernPhaseConfiguration: React.FC<ModernPhaseConfigurationProps> =
               disabled={isSubmitting}
               needsDnsPersona={needsDnsPersona}
               needsHttpPersona={needsHttpPersona}
+              httpPersonas={httpPersonas.map(p => ({ id: p.id, name: p.name }))}
+              dnsPersonas={dnsPersonas.map(p => ({ id: p.id, name: p.name }))}
+              proxies={proxies.map(p => ({ id: p.id, host: p.host, port: p.port }))}
+              noneValuePlaceholder="__none__"
+              isLoadingData={loadingData}
             />
 
             {/* Performance tuning */}

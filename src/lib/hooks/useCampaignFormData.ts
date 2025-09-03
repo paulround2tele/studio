@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { PersonaResponse as Persona } from '@/lib/api-client/models';
+import { PersonaType } from '@/lib/api-client/models/persona-type';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 import type { ModelsProxy as ProxyType } from '@/lib/api-client/models/models-proxy';
-// import { apiClient } from '@/lib/api-client';
-// import { transformCampaignsToViewModels } from '@/lib/utils/campaignTransforms'; // DISABLED during cleanup
+import { PersonasApi, ProxiesApi, CampaignsApi } from '@/lib/api-client';
+import { apiConfiguration as config } from '@/lib/api/config';
 
 type HttpPersona = Persona;
 type DnsPersona = Persona;
@@ -28,21 +29,39 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
   const [proxies, setProxies] = useState<ProxyType[]>([]);
   const [sourceCampaigns, setSourceCampaigns] = useState<Campaign[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   // Memoize the data fetching function to prevent unnecessary re-creations
   const fetchData = useCallback(async () => {
     setIsLoading(true);
     
     try {
-      // STUB: Current API client doesn't have these methods
-      // TODO: Implement proper API integration when endpoints are available
-      setHttpPersonas([]);
-      setDnsPersonas([]);
-      setProxies([]);
-      setSourceCampaigns([]);
+      setError(null);
+      const personasApi = new PersonasApi(config);
+      const proxiesApi = new ProxiesApi(config);
+      const campaignsApi = new CampaignsApi(config);
+
+  // Load personas and filter by type using generated enum
+  const personasResp = await personasApi.personasList();
+  const personasData = (await import('@/lib/utils/apiResponseHelpers')).extractResponseData<Persona[]>(personasResp) || [];
+  const httpPs = personasData.filter(p => p.personaType === PersonaType.http);
+  const dnsPs = personasData.filter(p => p.personaType === PersonaType.dns);
+      setHttpPersonas(httpPs);
+      setDnsPersonas(dnsPs);
+
+      // Load proxies
+      const proxiesResp = await proxiesApi.proxiesList();
+      const proxiesData = (await import('@/lib/utils/apiResponseHelpers')).extractResponseData<ProxyType[]>(proxiesResp) || [];
+      setProxies(proxiesData);
+
+      // Load source campaigns (simple list)
+      const campaignsResp = await campaignsApi.campaignsList();
+      const campaignsData = (await import('@/lib/utils/apiResponseHelpers')).extractResponseData<Campaign[]>(campaignsResp) || [];
+      setSourceCampaigns(campaignsData);
     } catch (error) {
       console.error('Error loading form data:', error);
+      const message = (error as any)?.message || (error as any)?.response?.data?.message || 'Failed to load form data';
+      setError(message);
     } finally {
       setIsLoading(false);
     }

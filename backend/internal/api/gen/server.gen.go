@@ -944,6 +944,13 @@ type DomainListItem struct {
 	Offset     *int64  `json:"offset,omitempty"`
 }
 
+// EnrichedCampaignResponse Read-optimized composite model for campaign detail pages
+type EnrichedCampaignResponse struct {
+	Campaign        CampaignResponse  `json:"campaign"`
+	PhaseExecutions *[]PhaseExecution `json:"phaseExecutions,omitempty"`
+	State           *CampaignState    `json:"state,omitempty"`
+}
+
 // ErrorCode Stable error code space
 type ErrorCode string
 
@@ -1774,6 +1781,9 @@ type ServerInterface interface {
 	// List generated domains for a campaign
 	// (GET /campaigns/{campaignId}/domains)
 	CampaignsDomainsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsDomainsListParams)
+	// Get enriched campaign details
+	// (GET /campaigns/{campaignId}/enriched)
+	CampaignsEnrichedGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
 	// Get campaign state and phase executions
 	// (GET /campaigns/{campaignId}/phase-executions)
 	CampaignsPhaseExecutionsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
@@ -2185,6 +2195,12 @@ func (_ Unimplemented) CampaignsUpdate(w http.ResponseWriter, r *http.Request, c
 // List generated domains for a campaign
 // (GET /campaigns/{campaignId}/domains)
 func (_ Unimplemented) CampaignsDomainsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsDomainsListParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get enriched campaign details
+// (GET /campaigns/{campaignId}/enriched)
+func (_ Unimplemented) CampaignsEnrichedGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3268,6 +3284,37 @@ func (siw *ServerInterfaceWrapper) CampaignsDomainsList(w http.ResponseWriter, r
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CampaignsDomainsList(w, r, campaignId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CampaignsEnrichedGet operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsEnrichedGet(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsEnrichedGet(w, r, campaignId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6104,6 +6151,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/campaigns/{campaignId}/domains", wrapper.CampaignsDomainsList)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/campaigns/{campaignId}/enriched", wrapper.CampaignsEnrichedGet)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/campaigns/{campaignId}/phase-executions", wrapper.CampaignsPhaseExecutionsList)
 	})
 	r.Group(func(r chi.Router) {
@@ -7663,6 +7713,51 @@ type CampaignsDomainsList500JSONResponse struct {
 }
 
 func (response CampaignsDomainsList500JSONResponse) VisitCampaignsDomainsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsEnrichedGetRequestObject struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+}
+
+type CampaignsEnrichedGetResponseObject interface {
+	VisitCampaignsEnrichedGetResponse(w http.ResponseWriter) error
+}
+
+type CampaignsEnrichedGet200JSONResponse struct {
+	// Data Read-optimized composite model for campaign detail pages
+	Data      *EnrichedCampaignResponse `json:"data,omitempty"`
+	Metadata  *Metadata                 `json:"metadata,omitempty"`
+	RequestId string                    `json:"requestId"`
+
+	// Success Always true for success envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response CampaignsEnrichedGet200JSONResponse) VisitCampaignsEnrichedGetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsEnrichedGet404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsEnrichedGet404JSONResponse) VisitCampaignsEnrichedGetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsEnrichedGet500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsEnrichedGet500JSONResponse) VisitCampaignsEnrichedGetResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -13494,6 +13589,9 @@ type StrictServerInterface interface {
 	// List generated domains for a campaign
 	// (GET /campaigns/{campaignId}/domains)
 	CampaignsDomainsList(ctx context.Context, request CampaignsDomainsListRequestObject) (CampaignsDomainsListResponseObject, error)
+	// Get enriched campaign details
+	// (GET /campaigns/{campaignId}/enriched)
+	CampaignsEnrichedGet(ctx context.Context, request CampaignsEnrichedGetRequestObject) (CampaignsEnrichedGetResponseObject, error)
 	// Get campaign state and phase executions
 	// (GET /campaigns/{campaignId}/phase-executions)
 	CampaignsPhaseExecutionsList(ctx context.Context, request CampaignsPhaseExecutionsListRequestObject) (CampaignsPhaseExecutionsListResponseObject, error)
@@ -14389,6 +14487,32 @@ func (sh *strictHandler) CampaignsDomainsList(w http.ResponseWriter, r *http.Req
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CampaignsDomainsListResponseObject); ok {
 		if err := validResponse.VisitCampaignsDomainsListResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CampaignsEnrichedGet operation middleware
+func (sh *strictHandler) CampaignsEnrichedGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	var request CampaignsEnrichedGetRequestObject
+
+	request.CampaignId = campaignId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsEnrichedGet(ctx, request.(CampaignsEnrichedGetRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsEnrichedGet")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsEnrichedGetResponseObject); ok {
+		if err := validResponse.VisitCampaignsEnrichedGetResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

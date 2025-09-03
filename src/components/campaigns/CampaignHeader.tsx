@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { Briefcase, RefreshCw, CheckCircle, AlertCircle, Clock, Pause, Play, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { CampaignResponse } from '@/lib/api-client/models';
+import type { CampaignState } from '@/lib/api-client/models/campaign-state';
+import type { PhaseExecution } from '@/lib/api-client/models/phase-execution';
 
 export interface CampaignHeaderProps {
   campaign: CampaignResponse;
@@ -17,6 +19,8 @@ export interface CampaignHeaderProps {
   onRefresh?: () => void;
   totalDomains?: number;
   className?: string;
+  state?: CampaignState;
+  phaseExecutions?: PhaseExecution[];
 }
 
 type PhaseStatus = 'not_started' | 'in_progress' | 'completed' | 'failed' | 'paused';
@@ -76,7 +80,9 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
   loading = false,
   onRefresh,
   totalDomains = 0,
-  className
+  className,
+  state,
+  phaseExecutions
 }) => {
   const campaignPhase = campaign.currentPhase || 'discovery';
   const campaignStatus: PhaseStatus = (() => {
@@ -115,6 +121,11 @@ export const CampaignHeader: React.FC<CampaignHeaderProps> = ({
                 {campaign.createdAt && (
                   <span className="ml-2 text-xs opacity-70">
                     Created {formatDate(campaign.createdAt)}
+                  </span>
+                )}
+                {state?.currentState && (
+                  <span className="ml-2 text-xs opacity-70">
+                    • State: {state.currentState}
                   </span>
                 )}
               </CardDescription>

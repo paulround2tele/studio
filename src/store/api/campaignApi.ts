@@ -6,6 +6,11 @@
 
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { CampaignsApi } from '@/lib/api-client';
+import {
+  CampaignsPhaseConfigurePhaseEnum,
+  CampaignsPhaseStartPhaseEnum,
+  CampaignsPhaseStatusPhaseEnum,
+} from '@/lib/api-client/apis/campaigns-api';
 import { apiConfiguration } from '@/lib/api/config';
 import type {
   ServicesCreateLeadGenerationCampaignRequest,
@@ -17,6 +22,7 @@ import type { PhaseStatusResponse } from '@/lib/api-client/models/phase-status-r
 import type { CampaignDomainsListResponse } from '@/lib/api-client/models/campaign-domains-list-response';
 import type { PatternOffsetRequest } from '@/lib/api-client/models/pattern-offset-request';
 import type { PatternOffsetResponse } from '@/lib/api-client/models/pattern-offset-response';
+import type { EnrichedCampaignResponse } from '@/lib/api-client/models/enriched-campaign-response';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 // Centralized API configuration targeting /api/v2
@@ -30,10 +36,10 @@ export const campaignApi = createApi({
   tagTypes: ['Campaign', 'CampaignList', 'CampaignProgress', 'CampaignDomains', 'CampaignPhase'],
   endpoints: (builder) => ({
     // Campaign CRUD operations
-    createCampaign: builder.mutation<CampaignResponse, ServicesCreateLeadGenerationCampaignRequest>({
+  createCampaign: builder.mutation<CampaignResponse, ServicesCreateLeadGenerationCampaignRequest>({
       queryFn: async (request) => {
         try {
-          const response = await campaignsApi.campaignsCreate(request as any);
+          const response = await campaignsApi.campaignsCreate(request);
           const data = extractResponseData<CampaignResponse>(response);
           if (!data) return { error: { status: 500, data: 'Empty campaign response' } as any };
           return { data };
@@ -42,6 +48,25 @@ export const campaignApi = createApi({
         }
       },
       invalidatesTags: ['Campaign', 'CampaignList'],
+    }),
+
+  // Enriched campaign detail (read-optimized)
+  getCampaignEnriched: builder.query<EnrichedCampaignResponse, string>({
+      queryFn: async (campaignId) => {
+        try {
+      // Use generated client method and unwrap SuccessEnvelope -> EnrichedCampaignResponse
+      const response = await campaignsApi.campaignsEnrichedGet(campaignId);
+      const data = extractResponseData<EnrichedCampaignResponse>(response);
+          if (!data) return { error: { status: 500, data: 'Empty enriched campaign response' } as any };
+          return { data };
+        } catch (error: any) {
+          return { error: error?.response?.data || error?.message };
+        }
+      },
+      providesTags: (result, error, campaignId) => [
+        { type: 'Campaign', id: campaignId },
+        { type: 'CampaignProgress', id: campaignId },
+      ],
     }),
 
     // Campaign listing
@@ -103,10 +128,12 @@ export const campaignApi = createApi({
     >({
       queryFn: async ({ campaignId, phase, config }) => {
         try {
+          // Map string phase to generated enum
+          const phaseEnum: CampaignsPhaseConfigurePhaseEnum = (phase as CampaignsPhaseConfigurePhaseEnum);
           const response = await campaignsApi.campaignsPhaseConfigure(
             campaignId,
-            phase as any,
-            config as any,
+            phaseEnum,
+            config,
           );
           const data = extractResponseData<PhaseStatusResponse>(response);
           if (!data) return { error: { status: 500, data: 'Empty phase configure response' } as any };
@@ -129,7 +156,8 @@ export const campaignApi = createApi({
     >({
       queryFn: async ({ campaignId, phase }) => {
         try {
-          const response = await campaignsApi.campaignsPhaseStart(campaignId, phase as any);
+          const phaseEnum: CampaignsPhaseStartPhaseEnum = (phase as CampaignsPhaseStartPhaseEnum);
+          const response = await campaignsApi.campaignsPhaseStart(campaignId, phaseEnum);
           const data = extractResponseData<PhaseStatusResponse>(response);
           if (!data) return { error: { status: 500, data: 'Empty phase start response' } as any };
           return { data };
@@ -147,13 +175,14 @@ export const campaignApi = createApi({
       ],
     }),
 
-    getPhaseStatusStandalone: builder.query<
+  getPhaseStatusStandalone: builder.query<
       PhaseStatusResponse,
       { campaignId: string; phase: string }
     >({
       queryFn: async ({ campaignId, phase }) => {
         try {
-          const response = await campaignsApi.campaignsPhaseStatus(campaignId, phase as any);
+      const phaseEnum: CampaignsPhaseStatusPhaseEnum = (phase as CampaignsPhaseStatusPhaseEnum);
+      const response = await campaignsApi.campaignsPhaseStatus(campaignId, phaseEnum);
           const data = extractResponseData<PhaseStatusResponse>(response);
           if (!data) return { error: { status: 500, data: 'Empty phase status response' } as any };
           return { data };
@@ -196,6 +225,7 @@ export const {
   useStartPhaseStandaloneMutation,
   useGetPhaseStatusStandaloneQuery,
   useGetPatternOffsetQuery,
+  useGetCampaignEnrichedQuery,
 } = campaignApi;
 
 // Export the reducer for the store configuration

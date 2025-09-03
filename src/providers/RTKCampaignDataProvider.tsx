@@ -9,7 +9,7 @@ const { useGetCampaignsStandaloneQuery } = campaignApi;
 // Envelope helpers no longer needed for campaign list; keep for other APIs if required
 
 // Modern campaign data context using RTK Query
-type CampaignLite = {
+export type CampaignLite = {
   id: string;
   name: string;
   currentPhase?: string;
