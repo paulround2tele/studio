@@ -1,14 +1,15 @@
 import { useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useDispatch } from 'react-redux';
 import { useSSE } from '@/hooks/useSSE';
 import { useToast } from '@/hooks/use-toast';
+import { campaignApi } from '@/store/api/campaignApi';
 
 /**
  * Subscribes to campaign-specific SSE events and invalidates the campaign-state query
  * on relevant phase/campaign changes so UI auto-refreshes without polling.
  */
 export function useCampaignPhaseEvents(campaignId: string | null | undefined) {
-  const queryClient = useQueryClient();
+  const dispatch = useDispatch();
   const { toast } = useToast();
 
   // Build SSE URL (Next.js rewrite proxies to backend localhost:8080)
@@ -23,29 +24,56 @@ export function useCampaignPhaseEvents(campaignId: string | null | undefined) {
       const phase = (data.phase as string) || 'phase';
       switch (type) {
         case 'campaign_progress': {
-          // Only invalidate on progress to keep UI up-to-date
-          queryClient.invalidateQueries({ queryKey: ['campaign-state', campaignId] });
+          // Invalidate RTK Query caches for this campaign
+          dispatch(
+            campaignApi.util.invalidateTags([
+              { type: 'Campaign', id: campaignId },
+              { type: 'CampaignProgress', id: campaignId },
+            ])
+          );
           break;
         }
         case 'phase_started': {
           toast({ title: 'Phase started', description: `Phase ${phase} has started.` });
-          queryClient.invalidateQueries({ queryKey: ['campaign-state', campaignId] });
+          dispatch(
+            campaignApi.util.invalidateTags([
+              { type: 'Campaign', id: campaignId },
+              { type: 'CampaignProgress', id: campaignId },
+            ])
+          );
           break;
         }
         case 'phase_completed': {
           toast({ title: 'Phase completed', description: `Phase ${phase} completed successfully.` });
-          queryClient.invalidateQueries({ queryKey: ['campaign-state', campaignId] });
+          dispatch(
+            campaignApi.util.invalidateTags([
+              { type: 'Campaign', id: campaignId },
+              { type: 'CampaignProgress', id: campaignId },
+              { type: 'CampaignDomains', id: campaignId },
+            ])
+          );
           break;
         }
         case 'phase_failed': {
           const err = (data.error as string) || 'Unknown error';
           toast({ title: 'Phase failed', description: `Phase ${phase} failed: ${err}`, variant: 'destructive' });
-          queryClient.invalidateQueries({ queryKey: ['campaign-state', campaignId] });
+          dispatch(
+            campaignApi.util.invalidateTags([
+              { type: 'Campaign', id: campaignId },
+              { type: 'CampaignProgress', id: campaignId },
+            ])
+          );
           break;
         }
         case 'campaign_completed': {
           toast({ title: 'Campaign completed', description: 'Campaign finished successfully.' });
-          queryClient.invalidateQueries({ queryKey: ['campaign-state', campaignId] });
+          dispatch(
+            campaignApi.util.invalidateTags([
+              { type: 'Campaign', id: campaignId },
+              { type: 'CampaignProgress', id: campaignId },
+              { type: 'CampaignDomains', id: campaignId },
+            ])
+          );
           break;
         }
         default: {
@@ -64,7 +92,12 @@ export function useCampaignPhaseEvents(campaignId: string | null | undefined) {
   // Optional: trigger initial refetch when SSE becomes connected
   useEffect(() => {
     if (isConnected && campaignId) {
-      queryClient.invalidateQueries({ queryKey: ['campaign-state', campaignId] });
+      dispatch(
+        campaignApi.util.invalidateTags([
+          { type: 'Campaign', id: campaignId },
+          { type: 'CampaignProgress', id: campaignId },
+        ])
+      );
     }
-  }, [isConnected, campaignId, queryClient]);
+  }, [isConnected, campaignId, dispatch]);
 }
