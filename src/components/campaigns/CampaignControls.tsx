@@ -11,6 +11,9 @@ import HTTPValidationConfigModal from '@/components/campaigns/modals/HTTPValidat
 import AnalysisConfigModal from '@/components/campaigns/modals/AnalysisConfigModal';
 import DiscoveryConfigModal from '@/components/campaigns/modals/DiscoveryConfigModal';
 import { useCampaignSSE } from '@/hooks/useCampaignSSE';
+import { useAppDispatch } from '@/store/hooks';
+import { setBlockedPhase, setFullSequenceMode } from '@/store/ui/campaignUiSlice';
+import { SequenceBlockedBanner } from './SequenceBlockedBanner';
 import { normalizeToApiPhase, apiToEnginePhase } from '@/lib/utils/phaseNames';
 import { useToast } from '@/hooks/use-toast';
 
@@ -29,8 +32,19 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
   const [startPhase] = useStartPhaseStandaloneMutation();
   const { toast } = useToast();
 
-  // Live progress via SSE
-  const { lastProgress, isConnected } = useCampaignSSE({ campaignId: campaign.id });
+  const dispatch = useAppDispatch();
+  // Live progress via SSE with extended callbacks
+  const { lastProgress, isConnected } = useCampaignSSE({
+    campaignId: campaign.id,
+    events: {
+      onModeChanged: (cid, mode) => {
+        if (cid === campaign.id) dispatch(setFullSequenceMode({ campaignId: campaign.id, value: mode === 'full_sequence' }));
+      },
+      onChainBlocked: (cid, data) => {
+        if (cid === campaign.id) dispatch(setBlockedPhase({ campaignId: campaign.id, phase: (data as any)?.missing_phase || (data as any)?.phase }));
+      }
+    }
+  });
   const { data: discoveryStatus } = useGetPhaseStatusStandaloneQuery({ campaignId: campaign.id, phase: 'discovery' as any });
   const { data: dnsStatus } = useGetPhaseStatusStandaloneQuery({ campaignId: campaign.id, phase: 'validation' as any });
   const { data: httpStatus } = useGetPhaseStatusStandaloneQuery({ campaignId: campaign.id, phase: 'extraction' as any });
@@ -263,7 +277,9 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
   }, [campaign.id, startPhase, toast]);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="flex flex-col gap-4">
+      <SequenceBlockedBanner campaignId={campaign.id} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <PhaseCard
   phase={discoveryPhase as any}
         isActive={campaign.currentPhase === 'discovery'}
@@ -276,7 +292,7 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
   onResume={handleStartDiscovery}
         onConfigure={() => setDiscoveryModalOpen(true)}
         liveConnected={isConnected}
-      />
+  />
 
       <PhaseCard
         phase={dnsPhase as any}
@@ -289,7 +305,7 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
   onResume={handleStartDNS}
         onConfigure={handleConfigure}
   liveConnected={isConnected}
-      />
+  />
 
       <PhaseCard
         phase={httpPhase as any}
@@ -304,7 +320,7 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
   onResume={handleStartHTTP}
         onConfigure={() => setHTTPModalOpen(true)}
   liveConnected={isConnected}
-      />
+  />
 
       <PhaseCard
         phase={analysisPhase as any}
@@ -319,12 +335,12 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
   onResume={handleStartAnalysis}
         onConfigure={() => setAnalysisModalOpen(true)}
         liveConnected={isConnected}
-      />
+  />
 
   {/* Quick actions removed: unified into Phase cards */}
 
       {/* Discovery Configuration Modal */}
-      <DiscoveryConfigModal
+  <DiscoveryConfigModal
         isOpen={isDiscoveryModalOpen}
         onClose={() => setDiscoveryModalOpen(false)}
         campaignId={campaign.id}
@@ -332,7 +348,7 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
       />
 
       {/* DNS Configuration Modal */}
-      <DNSValidationConfigModal
+  <DNSValidationConfigModal
         isOpen={isDNSModalOpen}
         onClose={() => setDNSModalOpen(false)}
         campaignId={campaign.id}
@@ -340,7 +356,7 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
       />
 
       {/* HTTP Configuration Modal */}
-      <HTTPValidationConfigModal
+  <HTTPValidationConfigModal
         isOpen={isHTTPModalOpen}
         onClose={() => setHTTPModalOpen(false)}
         campaignId={campaign.id}
@@ -348,12 +364,13 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
       />
 
       {/* Analysis Configuration Modal */}
-      <AnalysisConfigModal
+  <AnalysisConfigModal
         isOpen={isAnalysisModalOpen}
         onClose={() => setAnalysisModalOpen(false)}
         campaignId={campaign.id}
         onConfigured={() => setAnalysisModalOpen(false)}
       />
+      </div>
     </div>
   );
 };
