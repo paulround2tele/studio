@@ -1,15 +1,15 @@
 package testutil
 
 import (
+	"context"
 	"os"
+	"os/exec"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	pg_store "github.com/fntelecomllc/studio/backend/internal/store/postgres"
-	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -55,34 +55,40 @@ func SetupTestDatabase(t *testing.T) (*sqlx.DB, func()) {
 		t.Fatalf("Failed to connect to test database: %v", err)
 	}
 
-	_, err = testDB.Exec(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`)
+	// Clean database by dropping schema
+	_, err = testDB.Exec("DROP SCHEMA IF EXISTS public CASCADE")
 	if err != nil {
-		t.Fatalf("Failed to create uuid-ossp extension: %v", err)
+		t.Logf("Could not drop schema (non-fatal): %v", err)
 	}
-
-	migrationsURL := "file://../../database/migrations"
-
-	m, err := migrate.New(migrationsURL, testDSN)
+	_, err = testDB.Exec("CREATE SCHEMA public")
 	if err != nil {
-		t.Fatalf("Failed to create migrator: %v", err)
+		t.Fatalf("Failed to recreate public schema: %v", err)
 	}
 
-	// Force drop any existing schema to ensure a clean state
-	if err := m.Drop(); err != nil && err != migrate.ErrNoChange {
-		t.Logf("Could not drop database (might be first run): %v", err)
+	// Create required extensions after schema recreation
+	for _, ext := range []string{"uuid-ossp", "pgcrypto"} {
+		if _, err := testDB.Exec("CREATE EXTENSION IF NOT EXISTS \"" + ext + "\""); err != nil {
+			t.Fatalf("Failed to create extension %s: %v", ext, err)
+		}
 	}
 
-	// Re-create the migrator after dropping the database
-	m, err = migrate.New(migrationsURL, testDSN)
+	// Use in-repo custom migration tool (go run) to handle CONCURRENTLY
+	t.Logf("Running migrations via custom migrate tool (go run ./cmd/migrate)")
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "go", "run", "./cmd/migrate", "-dsn", testDSN, "-migrations", "database/migrations", "-direction", "up")
+	cmd.Dir = "/home/vboxuser/studio/backend"
+	cmd.Env = append(os.Environ(), "POSTGRES_DSN="+testDSN)
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		t.Fatalf("Failed to re-create migrator: %v", err)
+		// Include tail of output for brevity if large
+		o := string(output)
+		if len(o) > 4000 {
+			o = o[len(o)-4000:]
+		}
+		t.Fatalf("Migrations failed: %v\nOutput (tail):\n%s", err, o)
 	}
-
-	t.Logf("Running migrations from: %s", migrationsURL)
-	err = m.Up()
-	if err != nil && err != migrate.ErrNoChange {
-		t.Fatalf("Failed to run migrations: %v", err)
-	}
+	t.Logf("Migrations succeeded. Output:\n%s", string(output))
 
 	return testDB, func() {
 		// The cleanup function could be used to drop tables or close the connection

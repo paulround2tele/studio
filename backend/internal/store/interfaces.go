@@ -130,6 +130,16 @@ type CampaignStore interface {
 	BulkDeleteCampaignsByIDs(ctx context.Context, exec Querier, campaignIDs []uuid.UUID) error
 	UpdateDomainsBulkDNSStatus(ctx context.Context, exec Querier, results []models.DNSValidationResult) error
 	UpdateDomainsBulkHTTPStatus(ctx context.Context, exec Querier, results []models.HTTPKeywordResult) error
+
+	// Phase configuration storage (explicit per-phase user config)
+	UpsertPhaseConfig(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, config json.RawMessage) error
+	GetPhaseConfig(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) (*json.RawMessage, error)
+	ListPhaseConfigs(ctx context.Context, exec Querier, campaignID uuid.UUID) (map[models.PhaseTypeEnum]json.RawMessage, error)
+
+	// Mode update (full_sequence | step_by_step)
+	UpdateCampaignMode(ctx context.Context, exec Querier, campaignID uuid.UUID, mode string) error
+	// GetCampaignMode returns the execution mode (step_by_step or full_sequence) for a campaign.
+	GetCampaignMode(ctx context.Context, exec Querier, campaignID uuid.UUID) (string, error)
 }
 
 // ListCampaignsFilter and ListValidationResultsFilter remain the same

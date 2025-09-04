@@ -4,6 +4,9 @@
 -- =============================================
 -- Fix start_campaign stored procedure
 -- =============================================
+-- Drop existing function first to avoid parameter name conflicts
+DROP FUNCTION IF EXISTS start_campaign(UUID, UUID, BOOLEAN);
+
 CREATE OR REPLACE FUNCTION start_campaign(
     p_campaign_id UUID,
     p_user_id UUID,

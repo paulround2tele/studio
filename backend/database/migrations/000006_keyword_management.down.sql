@@ -24,4 +24,3 @@ DROP TABLE IF EXISTS keyword_rules;
 DROP TABLE IF EXISTS keyword_sets;
 
 -- Drop enums
-DROP TYPE IF EXISTS keyword_rule_type_enum;

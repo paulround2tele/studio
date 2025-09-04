@@ -1,0 +1,36 @@
+patch:
+  tags: [campaigns]
+  summary: Update campaign execution mode
+  operationId: campaigns_mode_update
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            mode: { $ref: '../../components/schemas/all.yaml#/CampaignModeEnum' }
+          required: [mode]
+  responses:
+    '200':
+      description: Mode updated
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      mode: { $ref: '../../components/schemas/all.yaml#/CampaignModeEnum' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

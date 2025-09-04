@@ -656,12 +656,22 @@ func (s *domainGenerationService) storeGeneratedDomains(ctx context.Context, cam
 	// Prepare payload in the expected shape and append to existing array (not overwrite)
 	items := make([]map[string]interface{}, len(genModels))
 	for i, gd := range genModels {
-		items[i] = map[string]interface{}{
+		entry := map[string]interface{}{
 			"id":          gd.ID.String(),
 			"domain_name": gd.DomainName,
 			"offset":      gd.OffsetIndex,
 			"created_at":  now.Format(time.RFC3339),
 		}
+		if gd.DNSStatus != nil {
+			entry["dns_status"] = string(*gd.DNSStatus)
+		}
+		if gd.HTTPStatus != nil {
+			entry["http_status"] = string(*gd.HTTPStatus)
+		}
+		if gd.LeadStatus != nil {
+			entry["lead_status"] = string(*gd.LeadStatus)
+		}
+		items[i] = entry
 	}
 	payload := map[string]interface{}{
 		"domains":      items,
@@ -786,12 +796,22 @@ func (s *domainGenerationService) storeGeneratedDomainsWithExec(ctx context.Cont
 	}
 	items := make([]map[string]interface{}, len(genModels))
 	for i, gd := range genModels {
-		items[i] = map[string]interface{}{
+		entry := map[string]interface{}{
 			"id":          gd.ID.String(),
 			"domain_name": gd.DomainName,
 			"offset":      gd.OffsetIndex,
 			"created_at":  now.Format(time.RFC3339),
 		}
+		if gd.DNSStatus != nil {
+			entry["dns_status"] = string(*gd.DNSStatus)
+		}
+		if gd.HTTPStatus != nil {
+			entry["http_status"] = string(*gd.HTTPStatus)
+		}
+		if gd.LeadStatus != nil {
+			entry["lead_status"] = string(*gd.LeadStatus)
+		}
+		items[i] = entry
 	}
 	payload := map[string]interface{}{
 		"domains":      items,

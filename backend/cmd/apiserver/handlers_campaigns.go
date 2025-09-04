@@ -4,15 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
+	application "github.com/fntelecomllc/studio/backend/internal/application"
 	domainservices "github.com/fntelecomllc/studio/backend/internal/domain/services"
 	"github.com/fntelecomllc/studio/backend/internal/domainexpert"
 	"github.com/fntelecomllc/studio/backend/internal/models"
+	"github.com/fntelecomllc/studio/backend/internal/services"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
@@ -22,6 +25,9 @@ import (
 func (h *strictHandlers) CampaignsEnrichedGet(ctx context.Context, r gen.CampaignsEnrichedGetRequestObject) (gen.CampaignsEnrichedGetResponseObject, error) {
 	if h.deps == nil || h.deps.DB == nil || h.deps.Stores.Campaign == nil {
 		return gen.CampaignsEnrichedGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	if h.deps.Logger != nil {
+		h.deps.Logger.Info(ctx, "campaigns.enriched.get", map[string]interface{}{"campaign_id": r.CampaignId})
 	}
 	// Load campaign
 	c, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
@@ -53,6 +59,28 @@ func (h *strictHandlers) CampaignsEnrichedGet(ctx context.Context, r gen.Campaig
 		}
 	}
 	enriched := gen.EnrichedCampaignResponse{Campaign: campaignResp}
+
+	// Add configsPresent map (phase -> bool) for UI readiness
+	if h.deps.Stores.Campaign != nil {
+		if cfgs, err := h.deps.Stores.Campaign.ListPhaseConfigs(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err == nil {
+			present := map[string]bool{}
+			for p := range cfgs {
+				present[string(p)] = true
+			}
+			// inject via State.Configuration.extra or create metadata
+			if enriched.State == nil {
+				// create minimal state placeholder if absent to carry configsPresent
+				mode := gen.CampaignModeEnum("step_by_step")
+				st := gen.CampaignState{CampaignId: openapi_types.UUID(c.ID), Mode: mode, CurrentState: gen.CampaignStateEnum("draft"), Version: 1, CreatedAt: c.CreatedAt, UpdatedAt: c.UpdatedAt}
+				enriched.State = &st
+			}
+			if enriched.State.Configuration == nil {
+				m := map[string]interface{}{}
+				enriched.State.Configuration = &m
+			}
+			(*enriched.State.Configuration)["configsPresent"] = present
+		}
+	}
 	if apiState != nil {
 		enriched.State = apiState
 	}
@@ -344,6 +372,48 @@ func (h *strictHandlers) CampaignsUpdate(ctx context.Context, r gen.CampaignsUpd
 	return gen.CampaignsUpdate200JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
 }
 
+// CampaignsModeUpdate implements PATCH /campaigns/{campaignId}/mode (strict spec)
+func (h *strictHandlers) CampaignsModeUpdate(ctx context.Context, r gen.CampaignsModeUpdateRequestObject) (gen.CampaignsModeUpdateResponseObject, error) {
+	if h.deps == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
+		return gen.CampaignsModeUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	if r.Body == nil || r.Body.Mode == "" {
+		return gen.CampaignsModeUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "mode is required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	mode := string(r.Body.Mode)
+	if mode != "full_sequence" && mode != "step_by_step" {
+		return gen.CampaignsModeUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid mode", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	campaignID := uuid.UUID(r.CampaignId)
+	c, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, campaignID)
+	if err != nil {
+		if err == store.ErrNotFound {
+			return gen.CampaignsModeUpdate404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+		return gen.CampaignsModeUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	if err := h.deps.Stores.Campaign.UpdateCampaignMode(ctx, h.deps.DB, campaignID, mode); err != nil {
+		return gen.CampaignsModeUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to update mode", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	if h.deps.Metrics != nil {
+		h.deps.Metrics.IncModeChanges()
+	}
+	if h.deps.Logger != nil {
+		h.deps.Logger.Info(ctx, "campaign.mode.updated", map[string]interface{}{"campaign_id": campaignID, "mode": mode})
+	}
+	if h.deps.SSE != nil && c.UserID != nil {
+		evt := services.CreateModeChangedEvent(campaignID, *c.UserID, mode)
+		h.deps.SSE.BroadcastToCampaign(campaignID, evt)
+	}
+	// Successful response: data.mode per spec
+	// build mode pointer
+	modeEnum := gen.CampaignModeEnum(mode)
+	resp := gen.CampaignsModeUpdate200JSONResponse{Data: &struct {
+		Mode *gen.CampaignModeEnum `json:"mode,omitempty"`
+	}{Mode: &modeEnum}, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}
+	return resp, nil
+}
+
 // CampaignsDelete implements DELETE /campaigns/{campaignId}
 func (h *strictHandlers) CampaignsDelete(ctx context.Context, r gen.CampaignsDeleteRequestObject) (gen.CampaignsDeleteResponseObject, error) {
 	if h.deps == nil || h.deps.DB == nil || h.deps.Stores.Campaign == nil {
@@ -375,17 +445,52 @@ func (h *strictHandlers) CampaignsPhaseConfigure(ctx context.Context, r gen.Camp
 		return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid phase", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	var cfg interface{}
+	var rawToPersist []byte
 	if r.Body != nil {
-		// For discovery (domain_generation) map the incoming configuration map into the typed config the service expects
-		if phaseModel == models.PhaseTypeDomainGeneration {
-			if typed, err := mapToDomainGenerationConfig(r.Body.Configuration); err == nil {
+		incoming := r.Body.Configuration
+		if incoming == nil {
+			incoming = map[string]interface{}{}
+		}
+		// Minimal validation per phase
+		switch phaseModel {
+		case models.PhaseTypeDomainGeneration:
+			if typed, err := mapToDomainGenerationConfig(incoming); err == nil {
 				cfg = typed
 			} else {
 				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid domain generation configuration: " + err.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 			}
-		} else {
-			// Pass through the phase-specific configuration map for other phases (will be interpreted by respective services)
-			cfg = r.Body.Configuration
+		case models.PhaseTypeDNSValidation, models.PhaseTypeHTTPKeywordValidation:
+			// Expect personaIds slice
+			if idsRaw, ok := incoming["personaIds"]; ok {
+				if arr, ok2 := idsRaw.([]interface{}); !ok2 || len(arr) == 0 {
+					return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "personaIds must be a non-empty array", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+				}
+			} else {
+				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "personaIds required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+			cfg = incoming
+		case models.PhaseTypeAnalysis:
+			kw, ok := incoming["keyword"].(string)
+			if !ok || strings.TrimSpace(kw) == "" {
+				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "keyword required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+			cfg = incoming
+		default:
+			cfg = incoming
+		}
+		// Marshal original (possibly normalized) config for persistence
+		if b, err := json.Marshal(incoming); err == nil {
+			rawToPersist = b
+		}
+	}
+	// Persist config JSON if available
+	if len(rawToPersist) > 0 {
+		rawMsg := json.RawMessage(rawToPersist)
+		if err := h.deps.Stores.Campaign.UpsertPhaseConfig(ctx, h.deps.DB, uuid.UUID(r.CampaignId), phaseModel, rawMsg); err != nil {
+			return gen.CampaignsPhaseConfigure500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to persist phase configuration", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+		if h.deps.Metrics != nil {
+			h.deps.Metrics.IncPhaseConfigUpdates()
 		}
 	}
 	if err := h.deps.Orchestrator.ConfigurePhase(ctx, uuid.UUID(r.CampaignId), phaseModel, cfg); err != nil {
@@ -416,11 +521,29 @@ func (h *strictHandlers) CampaignsPhaseStart(ctx context.Context, r gen.Campaign
 		return gen.CampaignsPhaseStart400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid phase", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if err := h.deps.Orchestrator.StartPhaseInternal(ctx, uuid.UUID(r.CampaignId), phaseModel); err != nil {
-		// If service reports not configured or precondition failure, return 400
+		if errors.Is(err, application.ErrMissingPhaseConfigs) {
+			missing := []string{}
+			// Attempt typed extraction using concrete error type
+			var mpe *application.MissingPhaseConfigsError
+			if errors.As(err, &mpe) && mpe != nil {
+				missing = mpe.Missing
+			}
+			conflict := gen.CampaignsPhaseStart409JSONResponse{Error: gen.ApiError{Message: "missing required phase configurations", Code: gen.CONFLICT, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}
+			if len(missing) > 0 {
+				conflict.MissingPhases = &missing
+			}
+			if h.deps.Logger != nil {
+				h.deps.Logger.Warn(ctx, "campaign.phase.start.blocked_missing_configs", map[string]interface{}{"campaign_id": r.CampaignId, "phase": phaseModel, "missing": missing})
+			}
+			return conflict, nil
+		}
 		if strings.Contains(err.Error(), "not configured") || strings.Contains(err.Error(), "cannot start") {
 			return gen.CampaignsPhaseStart400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "failed to start phase: " + err.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
 		return gen.CampaignsPhaseStart500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to start phase: " + err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	if h.deps.Logger != nil {
+		h.deps.Logger.Info(ctx, "campaign.phase.start", map[string]interface{}{"campaign_id": r.CampaignId, "phase": phaseModel})
 	}
 	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, uuid.UUID(r.CampaignId), phaseModel)
 	data := buildPhaseStatusResponse(phaseModel, st)
@@ -445,6 +568,45 @@ func (h *strictHandlers) CampaignsPhaseStatus(ctx context.Context, r gen.Campaig
 	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, uuid.UUID(r.CampaignId), phaseModel)
 	data := buildPhaseStatusResponse(phaseModel, st)
 	return gen.CampaignsPhaseStatus200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+}
+
+// CampaignsPhaseConfigsList implements GET /campaigns/{campaignId}/configs
+func (h *strictHandlers) CampaignsPhaseConfigsList(ctx context.Context, r gen.CampaignsPhaseConfigsListRequestObject) (gen.CampaignsPhaseConfigsListResponseObject, error) {
+	if h.deps == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
+		return gen.CampaignsPhaseConfigsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Ensure campaign exists
+	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
+		if err == store.ErrNotFound {
+			return gen.CampaignsPhaseConfigsList404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+		return gen.CampaignsPhaseConfigsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	cfgs, err := h.deps.Stores.Campaign.ListPhaseConfigs(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
+	if err != nil {
+		return gen.CampaignsPhaseConfigsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to list configs", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	present := map[string]bool{}
+	configsOut := map[string]map[string]interface{}{}
+	for p, raw := range cfgs {
+		present[string(p)] = true
+		if len(raw) > 0 {
+			var m map[string]interface{}
+			if err := json.Unmarshal(raw, &m); err == nil {
+				configsOut[string(p)] = m
+			}
+		}
+	}
+	cid := openapi_types.UUID(r.CampaignId)
+	if h.deps.Logger != nil {
+		h.deps.Logger.Info(ctx, "campaign.phase.configs.list", map[string]interface{}{"campaign_id": r.CampaignId, "configs_present_count": len(present)})
+	}
+	data := &struct {
+		CampaignId     *openapi_types.UUID                `json:"campaignId,omitempty"`
+		Configs        *map[string]map[string]interface{} `json:"configs,omitempty"`
+		ConfigsPresent *map[string]bool                   `json:"configsPresent,omitempty"`
+	}{CampaignId: &cid, Configs: &configsOut, ConfigsPresent: &present}
+	return gen.CampaignsPhaseConfigsList200JSONResponse{Data: data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
 }
 
 // mapCampaignToResponse converts a models.LeadGenerationCampaign to API response
@@ -686,11 +848,13 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 			}
 		}
 	}
+	log.Printf("CampaignsDomainsList: campaign=%s jsonb_items=%d", uuid.UUID(r.CampaignId), len(items))
 	// Fallback: if JSONB is empty (common in older runs), fetch from generated_domains table
 	if len(items) == 0 {
 		// Fetch up to a page worth directly from DB preserving order by offset_index
 		list, err := h.deps.Stores.Campaign.GetGeneratedDomainsByCampaign(ctx, h.deps.DB, uuid.UUID(r.CampaignId), 1000, 0)
 		if err == nil && len(list) > 0 {
+			log.Printf("CampaignsDomainsList: campaign=%s fallback_table_items=%d", uuid.UUID(r.CampaignId), len(list))
 			for _, gd := range list {
 				m := map[string]interface{}{
 					"id":          gd.ID.String(),
@@ -706,8 +870,32 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 				if gd.HTTPStatus != nil {
 					m["http_status"] = string(*gd.HTTPStatus)
 				}
+				if gd.LeadStatus != nil {
+					m["lead_status"] = string(*gd.LeadStatus)
+				}
 				items = append(items, m)
 			}
+			// Best-effort backfill: if JSONB was empty, persist the fetched items for future fast reads
+			// Avoid blocking the response on failures
+			// Build minimal JSONB payload matching expected shape
+			go func(campaignID uuid.UUID, batch []map[string]interface{}) {
+				defer func() { _ = recover() }()
+				payload := map[string]interface{}{
+					"domains":      batch,
+					"last_updated": time.Now().Format(time.RFC3339),
+				}
+				b, err := json.Marshal(payload)
+				if err != nil {
+					log.Printf("CampaignsDomainsList: failed to marshal backfill payload: %v", err)
+					return
+				}
+				raw := json.RawMessage(b)
+				if err := h.deps.Stores.Campaign.UpdateCampaignDomainsData(context.Background(), h.deps.DB, campaignID, &raw); err != nil {
+					log.Printf("CampaignsDomainsList: backfill UpdateCampaignDomainsData failed for campaign=%s: %v", campaignID, err)
+				} else {
+					log.Printf("CampaignsDomainsList: backfilled domains_data for campaign=%s with %d items", campaignID, len(batch))
+				}
+			}(uuid.UUID(r.CampaignId), items)
 		}
 	}
 	total := len(items)

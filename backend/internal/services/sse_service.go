@@ -23,9 +23,12 @@ const (
 	SSEEventPhaseStarted      SSEEventType = "phase_started"
 	SSEEventPhaseCompleted    SSEEventType = "phase_completed"
 	SSEEventPhaseFailed       SSEEventType = "phase_failed"
+	SSEEventPhaseAutoStarted  SSEEventType = "phase_auto_started"
 	SSEEventDomainGenerated   SSEEventType = "domain_generated"
 	SSEEventDomainValidated   SSEEventType = "domain_validated"
 	SSEEventAnalysisCompleted SSEEventType = "analysis_completed"
+	SSEEventModeChanged       SSEEventType = "mode_changed"
+	SSEEventChainBlocked      SSEEventType = "chain_blocked"
 	// Keyword set lifecycle events
 	SSEEventKeywordSetCreated SSEEventType = "keyword_set_created"
 	SSEEventKeywordSetUpdated SSEEventType = "keyword_set_updated"
@@ -391,5 +394,52 @@ func CreateCampaignCompletedEvent(campaignID uuid.UUID, userID uuid.UUID, meta m
 		UserID:     &userID,
 		Data:       data,
 		Timestamp:  time.Now(),
+	}
+}
+
+// CreateModeChangedEvent emits when campaign execution mode changes
+func CreateModeChangedEvent(campaignID uuid.UUID, userID uuid.UUID, mode string) SSEEvent {
+	return SSEEvent{
+		Event:      SSEEventModeChanged,
+		CampaignID: &campaignID,
+		UserID:     &userID,
+		Data: map[string]interface{}{
+			"campaign_id": campaignID.String(),
+			"mode":        mode,
+			"message":     fmt.Sprintf("Campaign mode changed to %s", mode),
+		},
+		Timestamp: time.Now(),
+	}
+}
+
+// CreatePhaseAutoStartedEvent emits when a phase is started automatically (chained) in full_sequence mode
+func CreatePhaseAutoStartedEvent(campaignID uuid.UUID, userID uuid.UUID, phase models.PhaseTypeEnum) SSEEvent {
+	return SSEEvent{
+		Event:      SSEEventPhaseAutoStarted,
+		CampaignID: &campaignID,
+		UserID:     &userID,
+		Data: map[string]interface{}{
+			"campaign_id": campaignID.String(),
+			"phase":       string(phase),
+			"message":     fmt.Sprintf("Phase %s auto-started", phase),
+		},
+		Timestamp: time.Now(),
+	}
+}
+
+// CreateChainBlockedEvent emits when full_sequence chain cannot proceed due to missing config
+func CreateChainBlockedEvent(campaignID uuid.UUID, userID uuid.UUID, missing []string, fromPhase models.PhaseTypeEnum, nextPhase string) SSEEvent {
+	return SSEEvent{
+		Event:      SSEEventChainBlocked,
+		CampaignID: &campaignID,
+		UserID:     &userID,
+		Data: map[string]interface{}{
+			"campaign_id":    campaignID.String(),
+			"missing_phases": missing,
+			"from_phase":     string(fromPhase),
+			"next_phase":     nextPhase,
+			"message":        "Auto chaining blocked: missing required phase configuration",
+		},
+		Timestamp: time.Now(),
 	}
 }

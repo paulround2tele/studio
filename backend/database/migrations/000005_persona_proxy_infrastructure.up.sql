@@ -107,59 +107,59 @@ CREATE TABLE IF NOT EXISTS proxy_pool_memberships (
 );
 
 -- Indexes for personas table
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_personas_name ON personas(name);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_personas_persona_type ON personas(persona_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_personas_is_enabled ON personas(is_enabled) WHERE is_enabled = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_personas_status ON personas(status) WHERE status IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_personas_created_at ON personas(created_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_personas_updated_at ON personas(updated_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_personas_last_tested ON personas(last_tested) WHERE last_tested IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_personas_name ON personas(name);
+CREATE INDEX IF NOT EXISTS idx_personas_persona_type ON personas(persona_type);
+CREATE INDEX IF NOT EXISTS idx_personas_is_enabled ON personas(is_enabled) WHERE is_enabled = TRUE;
+CREATE INDEX IF NOT EXISTS idx_personas_status ON personas(status) WHERE status IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_personas_created_at ON personas(created_at);
+CREATE INDEX IF NOT EXISTS idx_personas_updated_at ON personas(updated_at);
+CREATE INDEX IF NOT EXISTS idx_personas_last_tested ON personas(last_tested) WHERE last_tested IS NOT NULL;
 
 -- GIN index for persona config details JSONB
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_personas_config_details_gin ON personas USING GIN(config_details);
+CREATE INDEX IF NOT EXISTS idx_personas_config_details_gin ON personas USING GIN(config_details);
 
 -- GIN index for persona tags array
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_personas_tags_gin ON personas USING GIN(tags) WHERE tags IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_personas_tags_gin ON personas USING GIN(tags) WHERE tags IS NOT NULL;
 
 -- Indexes for proxies table
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxies_name ON proxies(name);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxies_protocol ON proxies(protocol) WHERE protocol IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxies_is_enabled ON proxies(is_enabled) WHERE is_enabled = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxies_is_healthy ON proxies(is_healthy);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxies_status ON proxies(status) WHERE status IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxies_host ON proxies(host) WHERE host IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxies_port ON proxies(port) WHERE port IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxies_last_checked_at ON proxies(last_checked_at) WHERE last_checked_at IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxies_latency_ms ON proxies(latency_ms) WHERE latency_ms IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxies_country_code ON proxies(country_code) WHERE country_code IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxies_provider ON proxies(provider) WHERE provider IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxies_created_at ON proxies(created_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxies_updated_at ON proxies(updated_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxies_last_tested ON proxies(last_tested) WHERE last_tested IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_proxies_name ON proxies(name);
+CREATE INDEX IF NOT EXISTS idx_proxies_protocol ON proxies(protocol) WHERE protocol IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_proxies_is_enabled ON proxies(is_enabled) WHERE is_enabled = TRUE;
+CREATE INDEX IF NOT EXISTS idx_proxies_is_healthy ON proxies(is_healthy);
+CREATE INDEX IF NOT EXISTS idx_proxies_status ON proxies(status) WHERE status IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_proxies_host ON proxies(host) WHERE host IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_proxies_port ON proxies(port) WHERE port IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_proxies_last_checked_at ON proxies(last_checked_at) WHERE last_checked_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_proxies_latency_ms ON proxies(latency_ms) WHERE latency_ms IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_proxies_country_code ON proxies(country_code) WHERE country_code IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_proxies_provider ON proxies(provider) WHERE provider IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_proxies_created_at ON proxies(created_at);
+CREATE INDEX IF NOT EXISTS idx_proxies_updated_at ON proxies(updated_at);
+CREATE INDEX IF NOT EXISTS idx_proxies_last_tested ON proxies(last_tested) WHERE last_tested IS NOT NULL;
 
 -- Composite indexes for common proxy queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxies_enabled_healthy ON proxies(is_enabled, is_healthy) WHERE is_enabled = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxies_protocol_enabled ON proxies(protocol, is_enabled) WHERE is_enabled = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxies_country_enabled ON proxies(country_code, is_enabled) WHERE country_code IS NOT NULL AND is_enabled = TRUE;
+CREATE INDEX IF NOT EXISTS idx_proxies_enabled_healthy ON proxies(is_enabled, is_healthy) WHERE is_enabled = TRUE;
+CREATE INDEX IF NOT EXISTS idx_proxies_protocol_enabled ON proxies(protocol, is_enabled) WHERE is_enabled = TRUE;
+CREATE INDEX IF NOT EXISTS idx_proxies_country_enabled ON proxies(country_code, is_enabled) WHERE country_code IS NOT NULL AND is_enabled = TRUE;
 
 -- Indexes for proxy pools table
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxy_pools_name ON proxy_pools(name);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxy_pools_is_enabled ON proxy_pools(is_enabled) WHERE is_enabled = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxy_pools_pool_strategy ON proxy_pools(pool_strategy) WHERE pool_strategy IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxy_pools_health_check_enabled ON proxy_pools(health_check_enabled) WHERE health_check_enabled = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxy_pools_created_at ON proxy_pools(created_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxy_pools_updated_at ON proxy_pools(updated_at);
+CREATE INDEX IF NOT EXISTS idx_proxy_pools_name ON proxy_pools(name);
+CREATE INDEX IF NOT EXISTS idx_proxy_pools_is_enabled ON proxy_pools(is_enabled) WHERE is_enabled = TRUE;
+CREATE INDEX IF NOT EXISTS idx_proxy_pools_pool_strategy ON proxy_pools(pool_strategy) WHERE pool_strategy IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_proxy_pools_health_check_enabled ON proxy_pools(health_check_enabled) WHERE health_check_enabled = TRUE;
+CREATE INDEX IF NOT EXISTS idx_proxy_pools_created_at ON proxy_pools(created_at);
+CREATE INDEX IF NOT EXISTS idx_proxy_pools_updated_at ON proxy_pools(updated_at);
 
 -- Indexes for proxy pool memberships table
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxy_pool_memberships_pool_id ON proxy_pool_memberships(pool_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxy_pool_memberships_proxy_id ON proxy_pool_memberships(proxy_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxy_pool_memberships_is_active ON proxy_pool_memberships(is_active) WHERE is_active = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxy_pool_memberships_weight ON proxy_pool_memberships(weight) WHERE weight IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxy_pool_memberships_added_at ON proxy_pool_memberships(added_at);
+CREATE INDEX IF NOT EXISTS idx_proxy_pool_memberships_pool_id ON proxy_pool_memberships(pool_id);
+CREATE INDEX IF NOT EXISTS idx_proxy_pool_memberships_proxy_id ON proxy_pool_memberships(proxy_id);
+CREATE INDEX IF NOT EXISTS idx_proxy_pool_memberships_is_active ON proxy_pool_memberships(is_active) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_proxy_pool_memberships_weight ON proxy_pool_memberships(weight) WHERE weight IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_proxy_pool_memberships_added_at ON proxy_pool_memberships(added_at);
 
 -- Composite indexes for pool membership queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxy_pool_memberships_pool_active ON proxy_pool_memberships(pool_id, is_active) WHERE is_active = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_proxy_pool_memberships_pool_weight ON proxy_pool_memberships(pool_id, weight DESC) WHERE is_active = TRUE AND weight IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_proxy_pool_memberships_pool_active ON proxy_pool_memberships(pool_id, is_active) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_proxy_pool_memberships_pool_weight ON proxy_pool_memberships(pool_id, weight DESC) WHERE is_active = TRUE AND weight IS NOT NULL;
 
 -- Add foreign key constraints for personas referenced in validation results
 ALTER TABLE dns_validation_results 

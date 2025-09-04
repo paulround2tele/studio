@@ -6,7 +6,7 @@
  * 
  * The professional architecture handles persona assignments through:
  * - PersonaAssignmentSection.tsx in /configuration/ directory
- * - Phase-specific persona management via CampaignPhaseManager
+ * - Phase-specific persona management via CampaignControls modals
  * - Proper OpenAPI integration with validated persona types
  * 
  * This component has been professionally decommissioned.

@@ -263,78 +263,78 @@ CREATE TABLE IF NOT EXISTS cache_metrics (
 );
 
 -- Indexes for cache configurations
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_configurations_cache_name ON cache_configurations(cache_name);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_configurations_cache_type ON cache_configurations(cache_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_configurations_active ON cache_configurations(active) WHERE active = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_configurations_service_name ON cache_configurations(service_name) WHERE service_name IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_configurations_environment ON cache_configurations(environment);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_configurations_created_by ON cache_configurations(created_by) WHERE created_by IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_configurations_cache_name ON cache_configurations(cache_name);
+CREATE INDEX IF NOT EXISTS idx_cache_configurations_cache_type ON cache_configurations(cache_type);
+CREATE INDEX IF NOT EXISTS idx_cache_configurations_active ON cache_configurations(active) WHERE active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_cache_configurations_service_name ON cache_configurations(service_name) WHERE service_name IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_configurations_environment ON cache_configurations(environment);
+CREATE INDEX IF NOT EXISTS idx_cache_configurations_created_by ON cache_configurations(created_by) WHERE created_by IS NOT NULL;
 
 -- GIN indexes for JSONB columns in cache configurations
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_configurations_eviction_policy_gin ON cache_configurations USING GIN(eviction_policy) WHERE eviction_policy IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_configurations_connection_config_gin ON cache_configurations USING GIN(connection_config) WHERE connection_config IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_configurations_eviction_policy_gin ON cache_configurations USING GIN(eviction_policy) WHERE eviction_policy IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_configurations_connection_config_gin ON cache_configurations USING GIN(connection_config) WHERE connection_config IS NOT NULL;
 
 -- Indexes for cache entries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_entries_cache_configuration_id ON cache_entries(cache_configuration_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_entries_cache_key ON cache_entries(cache_key);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_entries_expires_at ON cache_entries(expires_at) WHERE expires_at IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_entries_status ON cache_entries(status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_entries_last_accessed_at ON cache_entries(last_accessed_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_entries_campaign_id ON cache_entries(campaign_id) WHERE campaign_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_entries_user_id ON cache_entries(user_id) WHERE user_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_entries_locked ON cache_entries(locked) WHERE locked = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_entries_size_bytes ON cache_entries(size_bytes);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_entries_access_count ON cache_entries(access_count);
+CREATE INDEX IF NOT EXISTS idx_cache_entries_cache_configuration_id ON cache_entries(cache_configuration_id);
+CREATE INDEX IF NOT EXISTS idx_cache_entries_cache_key ON cache_entries(cache_key);
+CREATE INDEX IF NOT EXISTS idx_cache_entries_expires_at ON cache_entries(expires_at) WHERE expires_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_entries_status ON cache_entries(status);
+CREATE INDEX IF NOT EXISTS idx_cache_entries_last_accessed_at ON cache_entries(last_accessed_at);
+CREATE INDEX IF NOT EXISTS idx_cache_entries_campaign_id ON cache_entries(campaign_id) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_entries_user_id ON cache_entries(user_id) WHERE user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_entries_locked ON cache_entries(locked) WHERE locked = TRUE;
+CREATE INDEX IF NOT EXISTS idx_cache_entries_size_bytes ON cache_entries(size_bytes);
+CREATE INDEX IF NOT EXISTS idx_cache_entries_access_count ON cache_entries(access_count);
 
 -- Composite indexes for cache entries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_entries_config_status ON cache_entries(cache_configuration_id, status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_entries_config_key_status ON cache_entries(cache_configuration_id, cache_key, status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_entries_expired ON cache_entries(expires_at, status) WHERE status = 'active';
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_entries_lru_eviction ON cache_entries(cache_configuration_id, last_accessed_at) WHERE status = 'active';
+CREATE INDEX IF NOT EXISTS idx_cache_entries_config_status ON cache_entries(cache_configuration_id, status);
+CREATE INDEX IF NOT EXISTS idx_cache_entries_config_key_status ON cache_entries(cache_configuration_id, cache_key, status);
+CREATE INDEX IF NOT EXISTS idx_cache_entries_expired ON cache_entries(expires_at, status) WHERE status = 'active';
+CREATE INDEX IF NOT EXISTS idx_cache_entries_lru_eviction ON cache_entries(cache_configuration_id, last_accessed_at) WHERE status = 'active';
 
 -- GIN indexes for array columns in cache entries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_entries_dependency_keys_gin ON cache_entries USING GIN(dependency_keys) WHERE dependency_keys IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_entries_invalidation_tags_gin ON cache_entries USING GIN(invalidation_tags) WHERE invalidation_tags IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_entries_dependency_keys_gin ON cache_entries USING GIN(dependency_keys) WHERE dependency_keys IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_entries_invalidation_tags_gin ON cache_entries USING GIN(invalidation_tags) WHERE invalidation_tags IS NOT NULL;
 
 -- Indexes for cache invalidation log
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidation_log_cache_configuration_id ON cache_invalidation_log(cache_configuration_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidation_log_invalidation_type ON cache_invalidation_log(invalidation_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidation_log_invalidated_at ON cache_invalidation_log(invalidated_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidation_log_triggered_by ON cache_invalidation_log(triggered_by) WHERE triggered_by IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidation_log_automatic ON cache_invalidation_log(automatic);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidation_log_success ON cache_invalidation_log(success) WHERE success = FALSE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidation_log_campaign_id ON cache_invalidation_log(campaign_id) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_invalidation_log_cache_configuration_id ON cache_invalidation_log(cache_configuration_id);
+CREATE INDEX IF NOT EXISTS idx_cache_invalidation_log_invalidation_type ON cache_invalidation_log(invalidation_type);
+CREATE INDEX IF NOT EXISTS idx_cache_invalidation_log_invalidated_at ON cache_invalidation_log(invalidated_at);
+CREATE INDEX IF NOT EXISTS idx_cache_invalidation_log_triggered_by ON cache_invalidation_log(triggered_by) WHERE triggered_by IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_invalidation_log_automatic ON cache_invalidation_log(automatic);
+CREATE INDEX IF NOT EXISTS idx_cache_invalidation_log_success ON cache_invalidation_log(success) WHERE success = FALSE;
+CREATE INDEX IF NOT EXISTS idx_cache_invalidation_log_campaign_id ON cache_invalidation_log(campaign_id) WHERE campaign_id IS NOT NULL;
 
 -- GIN indexes for array columns in cache invalidation log
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidation_log_keys_invalidated_gin ON cache_invalidation_log USING GIN(keys_invalidated) WHERE keys_invalidated IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidation_log_tags_used_gin ON cache_invalidation_log USING GIN(tags_used) WHERE tags_used IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_invalidation_log_keys_invalidated_gin ON cache_invalidation_log USING GIN(keys_invalidated) WHERE keys_invalidated IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_invalidation_log_tags_used_gin ON cache_invalidation_log USING GIN(tags_used) WHERE tags_used IS NOT NULL;
 
 -- Indexes for cache invalidations
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidations_cache_configuration_id ON cache_invalidations(cache_configuration_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidations_invalidation_type ON cache_invalidations(invalidation_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidations_status ON cache_invalidations(status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidations_scheduled_for ON cache_invalidations(scheduled_for);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidations_priority ON cache_invalidations(priority);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidations_requested_by ON cache_invalidations(requested_by) WHERE requested_by IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidations_campaign_id ON cache_invalidations(campaign_id) WHERE campaign_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidations_depends_on ON cache_invalidations(depends_on) WHERE depends_on IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_invalidations_cache_configuration_id ON cache_invalidations(cache_configuration_id);
+CREATE INDEX IF NOT EXISTS idx_cache_invalidations_invalidation_type ON cache_invalidations(invalidation_type);
+CREATE INDEX IF NOT EXISTS idx_cache_invalidations_status ON cache_invalidations(status);
+CREATE INDEX IF NOT EXISTS idx_cache_invalidations_scheduled_for ON cache_invalidations(scheduled_for);
+CREATE INDEX IF NOT EXISTS idx_cache_invalidations_priority ON cache_invalidations(priority);
+CREATE INDEX IF NOT EXISTS idx_cache_invalidations_requested_by ON cache_invalidations(requested_by) WHERE requested_by IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_invalidations_campaign_id ON cache_invalidations(campaign_id) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_invalidations_depends_on ON cache_invalidations(depends_on) WHERE depends_on IS NOT NULL;
 
 -- Composite indexes for cache invalidations processing
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidations_pending ON cache_invalidations(status, priority DESC, scheduled_for) WHERE status = 'pending';
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidations_processing ON cache_invalidations(status, processed_at) WHERE status = 'processing';
+CREATE INDEX IF NOT EXISTS idx_cache_invalidations_pending ON cache_invalidations(status, priority DESC, scheduled_for) WHERE status = 'pending';
+CREATE INDEX IF NOT EXISTS idx_cache_invalidations_processing ON cache_invalidations(status, processed_at) WHERE status = 'processing';
 
 -- GIN indexes for array columns in cache invalidations
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_invalidations_tags_gin ON cache_invalidations USING GIN(tags) WHERE tags IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_invalidations_tags_gin ON cache_invalidations USING GIN(tags) WHERE tags IS NOT NULL;
 
 -- Indexes for cache metrics
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_metrics_cache_configuration_id ON cache_metrics(cache_configuration_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_metrics_period_start ON cache_metrics(period_start);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_metrics_period_end ON cache_metrics(period_end);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_metrics_recorded_at ON cache_metrics(recorded_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_metrics_hit_ratio ON cache_metrics(hit_ratio);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_metrics_service_name ON cache_metrics(service_name) WHERE service_name IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_metrics_environment ON cache_metrics(environment) WHERE environment IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_metrics_cache_configuration_id ON cache_metrics(cache_configuration_id);
+CREATE INDEX IF NOT EXISTS idx_cache_metrics_period_start ON cache_metrics(period_start);
+CREATE INDEX IF NOT EXISTS idx_cache_metrics_period_end ON cache_metrics(period_end);
+CREATE INDEX IF NOT EXISTS idx_cache_metrics_recorded_at ON cache_metrics(recorded_at);
+CREATE INDEX IF NOT EXISTS idx_cache_metrics_hit_ratio ON cache_metrics(hit_ratio);
+CREATE INDEX IF NOT EXISTS idx_cache_metrics_service_name ON cache_metrics(service_name) WHERE service_name IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_cache_metrics_environment ON cache_metrics(environment) WHERE environment IS NOT NULL;
 
 -- Composite indexes for cache metrics analysis
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_metrics_config_period ON cache_metrics(cache_configuration_id, period_start DESC);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_cache_metrics_performance ON cache_metrics(cache_configuration_id, hit_ratio DESC, avg_response_time_ms);
+CREATE INDEX IF NOT EXISTS idx_cache_metrics_config_period ON cache_metrics(cache_configuration_id, period_start DESC);
+CREATE INDEX IF NOT EXISTS idx_cache_metrics_performance ON cache_metrics(cache_configuration_id, hit_ratio DESC, avg_response_time_ms);

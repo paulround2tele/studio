@@ -2,6 +2,8 @@
 
 import React, { useMemo, useState, useCallback } from 'react';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
+import type { PhaseExecution } from '@/lib/api-client/models/phase-execution';
+import type { CampaignState } from '@/lib/api-client/models/campaign-state';
 import { PhaseCard } from '@/components/campaigns/PhaseCard';
 import DNSValidationConfigModal from '@/components/campaigns/modals/DNSValidationConfigModal';
 import { useStartPhaseStandaloneMutation, useGetPhaseStatusStandaloneQuery } from '@/store/api/campaignApi';
@@ -14,9 +16,11 @@ import { useToast } from '@/hooks/use-toast';
 
 interface CampaignControlsProps {
   campaign: Campaign;
+  phaseExecutions?: PhaseExecution[];
+  state?: CampaignState;
 }
 
-const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign }) => {
+const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExecutions, state }) => {
   const [isDNSModalOpen, setDNSModalOpen] = useState(false);
   const [isHTTPModalOpen, setHTTPModalOpen] = useState(false);
   const [isDiscoveryModalOpen, setDiscoveryModalOpen] = useState(false);
@@ -39,6 +43,8 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign }) => {
         return 'pending';
       case 'configured':
         return 'configured';
+      case 'in_progress':
+        return 'running';
       case 'running':
         return 'running';
       case 'paused':
@@ -51,6 +57,17 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign }) => {
         return 'pending';
     }
   }, []);
+
+  // Prefer enriched phase executions when available
+  const execByPhase = useMemo(() => {
+    const map = new Map<string, PhaseExecution>();
+    if (Array.isArray(phaseExecutions)) {
+      for (const exec of phaseExecutions) {
+        map.set(exec.phaseType, exec);
+      }
+    }
+    return map;
+  }, [phaseExecutions]);
 
   // Helper to compute simple status for a given API-phase name
   const computePhaseStatus = useCallback((apiPhase: 'discovery' | 'validation' | 'extraction' | 'analysis') => {
@@ -65,56 +82,72 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign }) => {
   }, [campaign.status, campaign.currentPhase, lastProgress?.current_phase]);
 
   const discoveryPhase = useMemo(() => {
+    const exec = execByPhase.get('discovery');
+    const status = exec ? toCardStatus(exec.status as any) : (toCardStatus(discoveryStatus?.status) || computePhaseStatus('discovery'));
     return {
       id: 'discovery',
       name: 'Discovery',
-      status: toCardStatus(discoveryStatus?.status) || computePhaseStatus('discovery'),
+      status,
       progress: Math.round(
-        lastProgress?.current_phase === apiToEnginePhase('discovery')
-          ? lastProgress.progress_pct
-          : campaign?.progress?.percentComplete || 0
+        exec?.progressPercentage != null
+          ? exec.progressPercentage
+          : lastProgress?.current_phase === apiToEnginePhase('discovery')
+            ? lastProgress.progress_pct
+            : campaign?.progress?.percentComplete || 0
       ),
     } as const;
-  }, [campaign, lastProgress, discoveryStatus?.status, computePhaseStatus, toCardStatus]);
+  }, [campaign, lastProgress, discoveryStatus?.status, computePhaseStatus, toCardStatus, execByPhase]);
 
   const dnsPhase = useMemo(() => {
+    const exec = execByPhase.get('validation');
+    const status = exec ? toCardStatus(exec.status as any) : (toCardStatus(dnsStatus?.status) || computePhaseStatus('validation'));
     return {
       id: 'dns_validation',
       name: 'DNS Validation',
-      status: toCardStatus(dnsStatus?.status) || computePhaseStatus('validation'),
+      status,
       progress: Math.round(
-        lastProgress?.current_phase === apiToEnginePhase('validation')
-          ? lastProgress.progress_pct
-          : campaign?.progress?.percentComplete || 0
+        exec?.progressPercentage != null
+          ? exec.progressPercentage
+          : lastProgress?.current_phase === apiToEnginePhase('validation')
+            ? lastProgress.progress_pct
+            : campaign?.progress?.percentComplete || 0
       ),
     } as const;
-  }, [campaign, lastProgress, dnsStatus?.status, computePhaseStatus, toCardStatus]);
+  }, [campaign, lastProgress, dnsStatus?.status, computePhaseStatus, toCardStatus, execByPhase]);
 
   const httpPhase = useMemo(() => {
+    const exec = execByPhase.get('extraction');
+    const status = exec ? toCardStatus(exec.status as any) : (toCardStatus(httpStatus?.status) || computePhaseStatus('extraction'));
     return {
       id: 'http_keyword_validation',
       name: 'HTTP Validation',
-      status: toCardStatus(httpStatus?.status) || computePhaseStatus('extraction'),
+      status,
       progress: Math.round(
-        lastProgress?.current_phase === apiToEnginePhase('extraction')
-          ? lastProgress.progress_pct
-          : campaign?.progress?.percentComplete || 0
+        exec?.progressPercentage != null
+          ? exec.progressPercentage
+          : lastProgress?.current_phase === apiToEnginePhase('extraction')
+            ? lastProgress.progress_pct
+            : campaign?.progress?.percentComplete || 0
       ),
     } as const;
-  }, [campaign, lastProgress, httpStatus?.status, computePhaseStatus, toCardStatus]);
+  }, [campaign, lastProgress, httpStatus?.status, computePhaseStatus, toCardStatus, execByPhase]);
 
   const analysisPhase = useMemo(() => {
+    const exec = execByPhase.get('analysis');
+    const status = exec ? toCardStatus(exec.status as any) : (toCardStatus(analysisStatus?.status) || computePhaseStatus('analysis'));
     return {
       id: 'analysis',
       name: 'Analysis',
-      status: toCardStatus(analysisStatus?.status) || computePhaseStatus('analysis'),
+      status,
       progress: Math.round(
-        lastProgress?.current_phase === apiToEnginePhase('analysis')
-          ? lastProgress.progress_pct
-          : campaign?.progress?.percentComplete || 0
+        exec?.progressPercentage != null
+          ? exec.progressPercentage
+          : lastProgress?.current_phase === apiToEnginePhase('analysis')
+            ? lastProgress.progress_pct
+            : campaign?.progress?.percentComplete || 0
       ),
     } as const;
-  }, [campaign, lastProgress, analysisStatus?.status, computePhaseStatus, toCardStatus]);
+  }, [campaign, lastProgress, analysisStatus?.status, computePhaseStatus, toCardStatus, execByPhase]);
 
   // Simple backend-order guards: assume validation must run before http_keyword_validation completes
   const canStartDiscovery = useMemo(() => {

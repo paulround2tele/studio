@@ -63,38 +63,38 @@ CREATE TYPE keyword_rule_type_enum AS ENUM (
 );
 
 -- Indexes for campaign state management
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_events_campaign_id ON campaign_state_events(campaign_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_events_event_type ON campaign_state_events(event_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_events_sequence_number ON campaign_state_events(sequence_number);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_events_occurred_at ON campaign_state_events(occurred_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_events_processing_status ON campaign_state_events(processing_status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_events_correlation_id ON campaign_state_events(correlation_id) WHERE correlation_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_events_source_target ON campaign_state_events(source_state, target_state) WHERE source_state IS NOT NULL AND target_state IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_state_events_campaign_id ON campaign_state_events(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_campaign_state_events_event_type ON campaign_state_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_campaign_state_events_sequence_number ON campaign_state_events(sequence_number);
+CREATE INDEX IF NOT EXISTS idx_campaign_state_events_occurred_at ON campaign_state_events(occurred_at);
+CREATE INDEX IF NOT EXISTS idx_campaign_state_events_processing_status ON campaign_state_events(processing_status);
+CREATE INDEX IF NOT EXISTS idx_campaign_state_events_correlation_id ON campaign_state_events(correlation_id) WHERE correlation_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_state_events_source_target ON campaign_state_events(source_state, target_state) WHERE source_state IS NOT NULL AND target_state IS NOT NULL;
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_snapshots_campaign_id ON campaign_state_snapshots(campaign_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_snapshots_current_state ON campaign_state_snapshots(current_state);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_snapshots_last_event_sequence ON campaign_state_snapshots(last_event_sequence);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_snapshots_created_at ON campaign_state_snapshots(created_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_snapshots_is_valid ON campaign_state_snapshots(is_valid) WHERE is_valid = TRUE;
+CREATE INDEX IF NOT EXISTS idx_campaign_state_snapshots_campaign_id ON campaign_state_snapshots(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_campaign_state_snapshots_current_state ON campaign_state_snapshots(current_state);
+CREATE INDEX IF NOT EXISTS idx_campaign_state_snapshots_last_event_sequence ON campaign_state_snapshots(last_event_sequence);
+CREATE INDEX IF NOT EXISTS idx_campaign_state_snapshots_created_at ON campaign_state_snapshots(created_at);
+CREATE INDEX IF NOT EXISTS idx_campaign_state_snapshots_is_valid ON campaign_state_snapshots(is_valid) WHERE is_valid = TRUE;
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_transitions_state_event_id ON campaign_state_transitions(state_event_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_transitions_campaign_id ON campaign_state_transitions(campaign_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_transitions_from_to_state ON campaign_state_transitions(from_state, to_state);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_transitions_is_valid ON campaign_state_transitions(is_valid_transition);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_transitions_initiated_at ON campaign_state_transitions(initiated_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_transitions_completed_at ON campaign_state_transitions(completed_at) WHERE completed_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_state_transitions_state_event_id ON campaign_state_transitions(state_event_id);
+CREATE INDEX IF NOT EXISTS idx_campaign_state_transitions_campaign_id ON campaign_state_transitions(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_campaign_state_transitions_from_to_state ON campaign_state_transitions(from_state, to_state);
+CREATE INDEX IF NOT EXISTS idx_campaign_state_transitions_is_valid ON campaign_state_transitions(is_valid_transition);
+CREATE INDEX IF NOT EXISTS idx_campaign_state_transitions_initiated_at ON campaign_state_transitions(initiated_at);
+CREATE INDEX IF NOT EXISTS idx_campaign_state_transitions_completed_at ON campaign_state_transitions(completed_at) WHERE completed_at IS NOT NULL;
 
 -- GIN indexes for JSONB columns in state management
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_events_event_data_gin ON campaign_state_events USING GIN(event_data);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_events_operation_context_gin ON campaign_state_events USING GIN(operation_context);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_snapshots_state_data_gin ON campaign_state_snapshots USING GIN(state_data);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_snapshots_snapshot_metadata_gin ON campaign_state_snapshots USING GIN(snapshot_metadata);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_transitions_validation_errors_gin ON campaign_state_transitions USING GIN(validation_errors) WHERE validation_errors IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_transitions_transition_metadata_gin ON campaign_state_transitions USING GIN(transition_metadata) WHERE transition_metadata IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_state_events_event_data_gin ON campaign_state_events USING GIN(event_data);
+CREATE INDEX IF NOT EXISTS idx_campaign_state_events_operation_context_gin ON campaign_state_events USING GIN(operation_context);
+CREATE INDEX IF NOT EXISTS idx_campaign_state_snapshots_state_data_gin ON campaign_state_snapshots USING GIN(state_data);
+CREATE INDEX IF NOT EXISTS idx_campaign_state_snapshots_snapshot_metadata_gin ON campaign_state_snapshots USING GIN(snapshot_metadata);
+CREATE INDEX IF NOT EXISTS idx_campaign_state_transitions_validation_errors_gin ON campaign_state_transitions USING GIN(validation_errors) WHERE validation_errors IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_state_transitions_transition_metadata_gin ON campaign_state_transitions USING GIN(transition_metadata) WHERE transition_metadata IS NOT NULL;
 
 -- Unique constraints for state management
-CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_events_sequence_unique ON campaign_state_events(campaign_id, sequence_number);
-CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_state_snapshots_latest ON campaign_state_snapshots(campaign_id, created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_campaign_state_events_sequence_unique ON campaign_state_events(campaign_id, sequence_number);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_campaign_state_snapshots_latest ON campaign_state_snapshots(campaign_id, created_at DESC);
 
 -- Add foreign key constraint to link current_phase_id in campaigns to campaign_phases
 ALTER TABLE lead_generation_campaigns 

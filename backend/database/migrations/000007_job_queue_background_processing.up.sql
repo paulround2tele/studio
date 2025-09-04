@@ -25,67 +25,67 @@ CREATE TABLE IF NOT EXISTS campaign_jobs (
 );
 
 -- Indexes for campaign jobs - optimized for job queue operations
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_campaign_id ON campaign_jobs(campaign_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_job_type ON campaign_jobs(job_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_status ON campaign_jobs(status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_scheduled_at ON campaign_jobs(scheduled_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_created_at ON campaign_jobs(created_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_updated_at ON campaign_jobs(updated_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_next_execution_at ON campaign_jobs(next_execution_at) WHERE next_execution_at IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_processing_server_id ON campaign_jobs(processing_server_id) WHERE processing_server_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_business_status ON campaign_jobs(business_status) WHERE business_status IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_locked_at ON campaign_jobs(locked_at) WHERE locked_at IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_locked_by ON campaign_jobs(locked_by) WHERE locked_by IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_last_attempted_at ON campaign_jobs(last_attempted_at) WHERE last_attempted_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_campaign_id ON campaign_jobs(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_job_type ON campaign_jobs(job_type);
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_status ON campaign_jobs(status);
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_scheduled_at ON campaign_jobs(scheduled_at);
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_created_at ON campaign_jobs(created_at);
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_updated_at ON campaign_jobs(updated_at);
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_next_execution_at ON campaign_jobs(next_execution_at) WHERE next_execution_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_processing_server_id ON campaign_jobs(processing_server_id) WHERE processing_server_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_business_status ON campaign_jobs(business_status) WHERE business_status IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_locked_at ON campaign_jobs(locked_at) WHERE locked_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_locked_by ON campaign_jobs(locked_by) WHERE locked_by IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_last_attempted_at ON campaign_jobs(last_attempted_at) WHERE last_attempted_at IS NOT NULL;
 
 -- Composite indexes optimized for job queue queries
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_status_scheduled ON campaign_jobs(status, scheduled_at) 
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_status_scheduled ON campaign_jobs(status, scheduled_at) 
 WHERE status IN ('queued', 'pending');
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_next_queued ON campaign_jobs(status, scheduled_at, created_at)
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_next_queued ON campaign_jobs(status, scheduled_at, created_at)
 WHERE status = 'queued';
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_retry_ready ON campaign_jobs(business_status, next_execution_at)
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_retry_ready ON campaign_jobs(business_status, next_execution_at)
 WHERE business_status = 'retry';
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_type_status ON campaign_jobs(job_type, status, scheduled_at) 
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_type_status ON campaign_jobs(job_type, status, scheduled_at) 
 WHERE status IN ('queued', 'pending');
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_processing_server ON campaign_jobs(processing_server_id, status, updated_at) 
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_processing_server ON campaign_jobs(processing_server_id, status, updated_at) 
 WHERE processing_server_id IS NOT NULL AND status = 'running';
 
 -- Index for job queue worker selection with skip locked optimization
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_queue_worker_selection ON campaign_jobs(
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_queue_worker_selection ON campaign_jobs(
     COALESCE(scheduled_at, '1970-01-01'::timestamptz), 
     created_at
 ) WHERE (status = 'queued' OR business_status = 'retry');
 
 -- GIN index for job payload JSONB
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_payload_gin ON campaign_jobs USING GIN(job_payload) WHERE job_payload IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_payload_gin ON campaign_jobs USING GIN(job_payload) WHERE job_payload IS NOT NULL;
 
 -- Partial indexes for specific job statuses
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_failed ON campaign_jobs(campaign_id, job_type, last_attempted_at) 
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_failed ON campaign_jobs(campaign_id, job_type, last_attempted_at) 
 WHERE status = 'failed';
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_completed ON campaign_jobs(campaign_id, job_type, updated_at) 
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_completed ON campaign_jobs(campaign_id, job_type, updated_at) 
 WHERE status = 'completed';
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_running ON campaign_jobs(processing_server_id, locked_at) 
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_running ON campaign_jobs(processing_server_id, locked_at) 
 WHERE status = 'running';
 
 -- Partial indexes for job cleanup and monitoring
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_stale_running ON campaign_jobs(locked_at, processing_server_id)
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_stale_running ON campaign_jobs(locked_at, processing_server_id)
 WHERE status = 'running';
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_long_running ON campaign_jobs(locked_at, job_type)
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_long_running ON campaign_jobs(locked_at, job_type)
 WHERE status = 'running';
 
 -- Index for job retry logic
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_retry_candidates ON campaign_jobs(attempts, max_attempts, last_attempted_at) 
+CREATE INDEX IF NOT EXISTS idx_campaign_jobs_retry_candidates ON campaign_jobs(attempts, max_attempts, last_attempted_at) 
 WHERE status = 'failed' AND attempts < max_attempts;
 
 -- Unique constraint to prevent duplicate job scheduling
-CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_jobs_unique_pending 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_campaign_jobs_unique_pending 
 ON campaign_jobs(campaign_id, job_type) 
 WHERE status IN ('pending', 'queued', 'running');
 

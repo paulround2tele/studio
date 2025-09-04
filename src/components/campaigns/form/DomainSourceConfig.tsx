@@ -6,8 +6,8 @@
  * 
  * The professional architecture handles domain generation through:
  * - CampaignFormV2.tsx: Creates campaigns with DomainGenerationPhaseConfig
- * - CampaignPhaseManager.tsx: Manages individual phases with OpenAPI types
- * - Phase-specific config components in /configuration/ directory
+ * - CampaignControls.tsx: Authoritative phase orchestration UI (config + start)
+ * - Phase-specific config modals/components in /configuration/ and /modals
  * 
  * This component has been professionally decommissioned.
  */
@@ -23,7 +23,7 @@ const DomainSourceConfig = () => {
       <AlertDescription className="text-amber-800">
         <strong>Component Decommissioned</strong><br/>
         This amateur component has been replaced by professional phase-centric architecture.
-        Domain generation is now handled through CampaignPhaseManager with proper OpenAPI integration.
+  Domain generation is now handled via CampaignControls + DiscoveryConfigModal with proper OpenAPI integration.
       </AlertDescription>
     </Alert>
   );

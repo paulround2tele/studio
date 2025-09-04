@@ -92,25 +92,25 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 );
 
 -- Indexes for authentication tables
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_email ON users(email);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_is_active ON users(is_active) WHERE is_active = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_email_verified ON users(email_verified) WHERE email_verified = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_locked_until ON users(locked_until) WHERE locked_until IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_is_active ON users(is_active) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_users_email_verified ON users(email_verified) WHERE email_verified = TRUE;
+CREATE INDEX IF NOT EXISTS idx_users_locked_until ON users(locked_until) WHERE locked_until IS NOT NULL;
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_sessions_is_active ON sessions(is_active) WHERE is_active = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_sessions_last_activity ON sessions(last_activity_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_is_active ON sessions(is_active) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_sessions_last_activity ON sessions(last_activity_at);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_auth_audit_logs_user_id ON auth_audit_logs(user_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_auth_audit_logs_event_type ON auth_audit_logs(event_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_auth_audit_logs_created_at ON auth_audit_logs(created_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_auth_audit_logs_risk_score ON auth_audit_logs(risk_score) WHERE risk_score > 50;
+CREATE INDEX IF NOT EXISTS idx_auth_audit_logs_user_id ON auth_audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_auth_audit_logs_event_type ON auth_audit_logs(event_type);
+CREATE INDEX IF NOT EXISTS idx_auth_audit_logs_created_at ON auth_audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_auth_audit_logs_risk_score ON auth_audit_logs(risk_score) WHERE risk_score > 50;
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_password_reset_tokens_user_id ON password_reset_tokens(user_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_password_reset_tokens_token_hash ON password_reset_tokens(token_hash);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_password_reset_tokens_expires_at ON password_reset_tokens(expires_at);
+CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id ON password_reset_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_token_hash ON password_reset_tokens(token_hash);
+CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_expires_at ON password_reset_tokens(expires_at);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_rate_limits_identifier_action ON rate_limits(identifier, action);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_rate_limits_window_start ON rate_limits(window_start);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_rate_limits_blocked_until ON rate_limits(blocked_until) WHERE blocked_until IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_rate_limits_identifier_action ON rate_limits(identifier, action);
+CREATE INDEX IF NOT EXISTS idx_rate_limits_window_start ON rate_limits(window_start);
+CREATE INDEX IF NOT EXISTS idx_rate_limits_blocked_until ON rate_limits(blocked_until) WHERE blocked_until IS NOT NULL;

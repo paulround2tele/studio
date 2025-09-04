@@ -46,11 +46,23 @@ type AppDeps struct {
 	SSE          *services.SSEService
 	Orchestrator *application.CampaignOrchestrator
 	BulkOps      *BulkOpsTracker
+	// Internal lightweight metrics (in-memory counters) until Prom/OTel integration
+	Metrics *RuntimeMetrics
 	// Monitoring suite
 	Monitoring *monitoring.MonitoringService
 	Cleanup    *monitoring.CleanupService
 	// Auth/session
 	Session *services.SessionService
+	// Logger available to handlers (simple structured logger)
+	Logger HandlerLogger
+}
+
+// HandlerLogger defines the minimal logging surface required at the HTTP handler layer.
+// We keep this narrow to allow pluggable implementations later (zap, zerolog, etc.).
+type HandlerLogger interface {
+	Info(ctx context.Context, msg string, fields map[string]interface{})
+	Warn(ctx context.Context, msg string, fields map[string]interface{})
+	Error(ctx context.Context, msg string, err error, fields map[string]interface{})
 }
 
 // eventBusAdapter bridges domain EventBus to the legacy SSE service
@@ -226,6 +238,7 @@ func initAppDependencies() (*AppDeps, error) {
 
 	// Domain services deps and implementations
 	simpleLogger := &SimpleLogger{}
+	deps.Logger = simpleLogger
 	// Initialize infrastructure adapters using existing connections
 	var auditLogger = domaininfra.NewAuditService()
 	var rawSQL *sql.DB
@@ -281,6 +294,7 @@ func initAppDependencies() (*AppDeps, error) {
 			stealthAwareHTTP,
 			analysisSvc,
 			deps.SSE,
+			deps.Metrics,
 		)
 
 		// Register post-completion hooks
@@ -297,6 +311,9 @@ func initAppDependencies() (*AppDeps, error) {
 
 	// In-memory bulk operations tracker
 	deps.BulkOps = NewBulkOpsTracker()
+
+	// Initialize runtime metrics container
+	deps.Metrics = NewRuntimeMetrics()
 
 	return deps, nil
 }

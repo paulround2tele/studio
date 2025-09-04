@@ -15,11 +15,29 @@ import (
 	"github.com/google/uuid"
 )
 
+// Typed errors for campaign orchestration
+var (
+	// ErrMissingPhaseConfigs signals one or more downstream phase configurations are missing.
+	ErrMissingPhaseConfigs = fmt.Errorf("missing_phase_configs")
+)
+
+// MissingPhaseConfigsError wraps ErrMissingPhaseConfigs with the concrete missing phases list.
+type MissingPhaseConfigsError struct {
+	Missing []string
+}
+
+func (e *MissingPhaseConfigsError) Error() string {
+	return fmt.Sprintf("%v: %v", ErrMissingPhaseConfigs, e.Missing)
+}
+func (e *MissingPhaseConfigsError) Unwrap() error { return ErrMissingPhaseConfigs }
+
 // CampaignOrchestrator coordinates the execution of campaign phases
 // It replaces the massive monolithic services with focused domain services
 type CampaignOrchestrator struct {
 	store store.CampaignStore
 	deps  domainservices.Dependencies
+
+	metrics OrchestratorMetrics
 
 	// Domain services that orchestrate engines
 	domainGenerationSvc domainservices.DomainGenerationService
@@ -27,12 +45,15 @@ type CampaignOrchestrator struct {
 	httpValidationSvc   domainservices.HTTPValidationService
 	analysisSvc         domainservices.AnalysisService
 
-	// Real-time communication
-	sseService *services.SSEService
+	// Real-time communication (interface to allow test stubs)
+	sseService SSEBroadcaster
 
 	// Execution tracking
 	mu                 sync.RWMutex
 	campaignExecutions map[uuid.UUID]*CampaignExecution
+
+	// in-flight auto starts to prevent duplicate chaining (campaignID+phase key)
+	autoStartInProgress map[string]struct{}
 
 	// Optional post-completion hooks
 	hooks []PostCompletionHook
@@ -50,6 +71,34 @@ type CampaignExecution struct {
 }
 
 // NewCampaignOrchestrator creates a new campaign orchestrator
+
+// OrchestratorMetrics defines metrics operations the orchestrator will call.
+type OrchestratorMetrics interface {
+	IncPhaseStarts()
+	IncPhaseCompletions()
+	IncPhaseFailures()
+	IncPhaseAutoStarts()
+	IncChainBlocked()
+	IncCampaignCompletions()
+	RecordPhaseDuration(phase string, d time.Duration)
+}
+
+// noopMetrics provides no-op implementations when metrics are not configured.
+type noopMetrics struct{}
+
+func (n *noopMetrics) IncPhaseStarts()                           {}
+func (n *noopMetrics) IncPhaseCompletions()                      {}
+func (n *noopMetrics) IncPhaseFailures()                         {}
+func (n *noopMetrics) IncPhaseAutoStarts()                       {}
+func (n *noopMetrics) IncChainBlocked()                          {}
+func (n *noopMetrics) IncCampaignCompletions()                   {}
+func (n *noopMetrics) RecordPhaseDuration(string, time.Duration) {}
+
+// SSEBroadcaster minimal interface needed from SSE service
+type SSEBroadcaster interface {
+	BroadcastToCampaign(campaignID uuid.UUID, event services.SSEEvent)
+}
+
 func NewCampaignOrchestrator(
 	store store.CampaignStore,
 	deps domainservices.Dependencies,
@@ -57,8 +106,12 @@ func NewCampaignOrchestrator(
 	dnsValidationSvc domainservices.DNSValidationService,
 	httpValidationSvc domainservices.HTTPValidationService,
 	analysisSvc domainservices.AnalysisService,
-	sseService *services.SSEService,
+	sseService SSEBroadcaster,
+	metrics OrchestratorMetrics,
 ) *CampaignOrchestrator {
+	if metrics == nil {
+		metrics = &noopMetrics{}
+	}
 	return &CampaignOrchestrator{
 		store:               store,
 		deps:                deps,
@@ -67,7 +120,9 @@ func NewCampaignOrchestrator(
 		httpValidationSvc:   httpValidationSvc,
 		analysisSvc:         analysisSvc,
 		sseService:          sseService,
+		metrics:             metrics,
 		campaignExecutions:  make(map[uuid.UUID]*CampaignExecution),
+		autoStartInProgress: make(map[string]struct{}),
 		hooks:               make([]PostCompletionHook, 0),
 	}
 }
@@ -132,6 +187,18 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 		"campaign_id": campaignID,
 		"phase":       phase,
 	})
+	// Idempotency guard: ignore duplicate start if same phase already in progress
+	o.mu.RLock()
+	if exec, ok := o.campaignExecutions[campaignID]; ok && exec.CurrentPhase == phase && exec.OverallStatus == models.PhaseStatusInProgress {
+		o.mu.RUnlock()
+		o.deps.Logger.Debug(ctx, "Duplicate start ignored (phase already running)", map[string]interface{}{"campaign_id": campaignID, "phase": phase})
+		return nil
+	}
+	o.mu.RUnlock()
+
+	// Metrics: count phase starts
+	if o.deps.Logger != nil { /* logger present - no-op */
+	}
 
 	// Get campaign to extract user ID for SSE - use DB from deps
 	querier, ok := o.deps.DB.(store.Querier)
@@ -143,12 +210,31 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 	if err != nil {
 		return fmt.Errorf("failed to get campaign for SSE broadcasting: %w", err)
 	}
-
-	// Broadcast phase started event
-	if o.sseService != nil && campaign.UserID != nil {
-		phaseStartedEvent := services.CreatePhaseStartedEvent(campaignID, *campaign.UserID, phase)
-		o.sseService.BroadcastToCampaign(campaignID, phaseStartedEvent)
+	var cachedUserID *uuid.UUID
+	if campaign.UserID != nil { // cache for reuse
+		cachedUserID = campaign.UserID
 	}
+
+	// Read mode (default step_by_step) for readiness gating when starting the first phase in full_sequence
+	mode, _ := o.store.GetCampaignMode(ctx, querier, campaignID)
+	if mode == "full_sequence" && phase == models.PhaseTypeDomainGeneration {
+		// Relaxed initial gating: require only the immediate next phase (dns_validation)
+		// Subsequent missing configs are enforced mid-chain by handlePhaseCompletion.
+		configs, _ := o.store.ListPhaseConfigs(ctx, querier, campaignID)
+		if _, ok := configs[models.PhaseTypeDNSValidation]; !ok {
+			missing := []string{string(models.PhaseTypeDNSValidation)}
+			if o.sseService != nil && cachedUserID != nil {
+				// next_phase set to the missing immediate next phase
+				evt := services.CreateChainBlockedEvent(campaignID, *cachedUserID, missing, phase, missing[0])
+				o.sseService.BroadcastToCampaign(campaignID, evt)
+			}
+			o.deps.Logger.Warn(ctx, "Full sequence start blocked: missing immediate next phase config", map[string]interface{}{"campaign_id": campaignID, "missing_phase": models.PhaseTypeDNSValidation})
+			o.metrics.IncChainBlocked()
+			return &MissingPhaseConfigsError{Missing: missing}
+		}
+	}
+
+	// Broadcast phase started event will occur after successful Execute
 
 	// Get the appropriate domain service for the phase
 	service, err := o.getPhaseService(phase)
@@ -161,18 +247,42 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 	// handler returns or the client disconnects, which previously caused premature
 	// phase failures (status=failed, "Execution cancelled").
 	// Use a background-derived context for execution and monitoring.
-	execCtx, _ := context.WithCancel(context.Background())
+	execCtx, cancelFn := context.WithCancel(context.Background())
+	// Non-blocking cleanup when execution finishes
+	go func() { <-execCtx.Done(); cancelFn() }()
 
 	// Start phase execution with background-derived context
 	progressCh, err := service.Execute(execCtx, campaignID)
 	if err != nil {
 		// Broadcast phase failed event
-		if o.sseService != nil && campaign.UserID != nil {
-			phaseFailedEvent := services.CreatePhaseFailedEvent(campaignID, *campaign.UserID, phase, err.Error())
+		if o.sseService != nil && cachedUserID != nil {
+			phaseFailedEvent := services.CreatePhaseFailedEvent(campaignID, *cachedUserID, phase, err.Error())
 			o.sseService.BroadcastToCampaign(campaignID, phaseFailedEvent)
 		}
+		// Metrics: failed start counts as a phase failure
+		o.metrics.IncPhaseFailures()
 		return fmt.Errorf("failed to start phase %s: %w", phase, err)
 	}
+
+	// Successful start: now broadcast started + increment metric
+	if o.sseService != nil && cachedUserID != nil {
+		phaseStartedEvent := services.CreatePhaseStartedEvent(campaignID, *cachedUserID, phase)
+		o.sseService.BroadcastToCampaign(campaignID, phaseStartedEvent)
+	}
+	o.metrics.IncPhaseStarts()
+
+	// Ensure an execution record exists (StartPhaseInternal may be called without prior ConfigurePhase)
+	o.mu.Lock()
+	if _, exists := o.campaignExecutions[campaignID]; !exists {
+		o.campaignExecutions[campaignID] = &CampaignExecution{
+			CampaignID:    campaignID,
+			CurrentPhase:  phase,
+			PhaseStatuses: make(map[models.PhaseTypeEnum]*domainservices.PhaseStatus),
+			StartedAt:     time.Now(),
+			OverallStatus: models.PhaseStatusInProgress,
+		}
+	}
+	o.mu.Unlock()
 
 	// Persist campaign phase fields and overall status at phase start
 	if querier, ok := o.deps.DB.(store.Querier); ok {
@@ -301,6 +411,7 @@ func (o *CampaignOrchestrator) CancelPhase(ctx context.Context, campaignID uuid.
 	if err := service.Cancel(ctx, campaignID); err != nil {
 		return fmt.Errorf("failed to cancel phase %s: %w", phase, err)
 	}
+	// (Optional) Could add a dedicated cancellation metric in future.
 
 	o.deps.Logger.Info(ctx, "Phase cancelled successfully", map[string]interface{}{
 		"campaign_id": campaignID,
@@ -451,6 +562,17 @@ func (o *CampaignOrchestrator) handlePhaseCompletion(ctx context.Context, campai
 		"campaign_id": campaignID,
 		"phase":       phase,
 	})
+	// Attempt to record duration metrics if timestamps available
+	if service, err := o.getPhaseService(phase); err == nil {
+		if st, err2 := service.GetStatus(ctx, campaignID); err2 == nil && st != nil && st.StartedAt != nil && st.CompletedAt != nil {
+			start := *st.StartedAt
+			end := *st.CompletedAt
+			if end.After(start) {
+				// Record phase duration metric
+				o.metrics.RecordPhaseDuration(string(phase), end.Sub(start))
+			}
+		}
+	}
 
 	// Get final phase status
 	service, err := o.getPhaseService(phase)
@@ -472,9 +594,11 @@ func (o *CampaignOrchestrator) handlePhaseCompletion(ctx context.Context, campai
 	}
 
 	// Broadcast phase completed event via SSE with final stats if available
+	var cachedUserID *uuid.UUID
 	if o.sseService != nil {
 		if querier, ok := o.deps.DB.(store.Querier); ok {
 			if campaign, err := o.store.GetCampaignByID(ctx, querier, campaignID); err == nil && campaign.UserID != nil {
+				cachedUserID = campaign.UserID
 				results := map[string]interface{}{
 					"status":          string(finalStatus.Status),
 					"progress_pct":    finalStatus.ProgressPct,
@@ -498,67 +622,89 @@ func (o *CampaignOrchestrator) handlePhaseCompletion(ctx context.Context, campai
 	}
 	o.mu.Unlock()
 
-	// Auto-advance to next phase if configured and phase completed successfully
+	// Auto-advance logic only for successful completion; record failures otherwise
+	if finalStatus != nil && finalStatus.Status == models.PhaseStatusFailed {
+		// Metrics: runtime failure
+		o.metrics.IncPhaseFailures()
+		return
+	}
 	if finalStatus != nil && finalStatus.Status == models.PhaseStatusCompleted {
-		// If this was the last phase, finalize campaign execution
+		// Metrics: phase completion
+		o.metrics.IncPhaseCompletions()
 		if o.isLastPhase(phase) {
 			_ = o.HandleCampaignCompletion(ctx, campaignID)
 			return
 		}
-
-		// Check campaign flags to determine if we should auto-advance
 		querier, ok := o.deps.DB.(store.Querier)
 		if !ok {
-			o.deps.Logger.Warn(ctx, "Auto-advance skipped: invalid DB interface", map[string]interface{}{
-				"campaign_id": campaignID,
-			})
+			o.deps.Logger.Warn(ctx, "Auto-advance skipped: invalid DB interface", map[string]interface{}{"campaign_id": campaignID})
 			return
 		}
-
-		campaign, err := o.store.GetCampaignByID(ctx, querier, campaignID)
+		mode, err := o.store.GetCampaignMode(ctx, querier, campaignID)
 		if err != nil {
-			o.deps.Logger.Error(ctx, "Auto-advance: failed to load campaign", err, map[string]interface{}{
-				"campaign_id": campaignID,
-			})
+			o.deps.Logger.Warn(ctx, "Auto-advance: failed to fetch campaign mode", map[string]interface{}{"campaign_id": campaignID, "error": err.Error()})
 			return
 		}
-
-		if campaign != nil && (campaign.IsFullSequenceMode || campaign.AutoAdvancePhases) {
-			// Determine next phase in sequence
-			next, ok := o.nextPhase(phase)
-			if !ok {
+		if mode != "full_sequence" { // no auto-advance in step_by_step
+			return
+		}
+		// Determine next phase in sequence
+		next, ok := o.nextPhase(phase)
+		if !ok {
+			return
+		}
+		// Mid-chain config gating: ensure config exists for next phase; else emit chain_blocked and stop.
+		if configs, err2 := o.store.ListPhaseConfigs(ctx, querier, campaignID); err2 == nil {
+			if _, okc := configs[next]; !okc { // Missing ONLY next; we don't look further yet
+				if o.sseService != nil && cachedUserID != nil {
+					missing := []string{string(next)}
+					evt := services.CreateChainBlockedEvent(campaignID, *cachedUserID, missing, phase, string(next))
+					o.sseService.BroadcastToCampaign(campaignID, evt)
+				}
+				o.deps.Logger.Warn(ctx, "Auto-advance blocked: missing next phase config", map[string]interface{}{"campaign_id": campaignID, "next_phase": next})
+				o.metrics.IncChainBlocked()
 				return
 			}
-
-			// Ensure next phase isn't already completed
-			if nextPhaseRow, err := o.store.GetCampaignPhase(ctx, querier, campaignID, next); err == nil {
-				if nextPhaseRow.Status == models.PhaseStatusCompleted {
-					// Already completed; attempt to chain to following phase
-					if chainedNext, ok2 := o.nextPhase(next); ok2 {
-						next = chainedNext
-					} else {
-						_ = o.HandleCampaignCompletion(ctx, campaignID)
-						return
-					}
+		}
+		// Ensure next phase isn't already completed
+		if nextPhaseRow, err := o.store.GetCampaignPhase(ctx, querier, campaignID, next); err == nil {
+			if nextPhaseRow.Status == models.PhaseStatusCompleted {
+				if chainedNext, ok2 := o.nextPhase(next); ok2 { // chain again if needed
+					next = chainedNext
+				} else {
+					_ = o.HandleCampaignCompletion(ctx, campaignID)
+					return
 				}
 			}
+		}
+		key := campaignID.String() + ":" + string(next)
+		o.mu.Lock()
+		if _, exists := o.autoStartInProgress[key]; exists {
+			o.mu.Unlock()
+			return
+		}
+		o.autoStartInProgress[key] = struct{}{}
+		o.mu.Unlock()
 
-			o.deps.Logger.Info(ctx, "Auto-advancing to next phase", map[string]interface{}{
-				"campaign_id": campaignID,
-				"from_phase":  phase,
-				"to_phase":    next,
-			})
+		defer func() {
+			o.mu.Lock()
+			delete(o.autoStartInProgress, key)
+			o.mu.Unlock()
+		}()
 
-			// Start next phase using orchestrator; it will manage SSE start events and monitoring
-			if err := o.StartPhaseInternal(ctx, campaignID, next); err != nil {
-				o.deps.Logger.Error(ctx, "Failed to auto-advance to next phase", err, map[string]interface{}{
-					"campaign_id": campaignID,
-					"from_phase":  phase,
-					"to_phase":    next,
-				})
-			}
+		o.deps.Logger.Info(ctx, "Auto-advancing to next phase (full_sequence mode)", map[string]interface{}{"campaign_id": campaignID, "from_phase": phase, "to_phase": next})
+		if o.sseService != nil && cachedUserID != nil {
+			evt := services.CreatePhaseAutoStartedEvent(campaignID, *cachedUserID, next)
+			o.sseService.BroadcastToCampaign(campaignID, evt)
+		}
+		if err := o.StartPhaseInternal(ctx, campaignID, next); err != nil {
+			o.deps.Logger.Error(ctx, "Failed to auto-advance to next phase", err, map[string]interface{}{"campaign_id": campaignID, "from_phase": phase, "to_phase": next})
+		} else {
+			// Metrics: auto-start only on success
+			o.metrics.IncPhaseAutoStarts()
 		}
 	}
+	// NOTE: Runtime metrics extraction currently not wired; function stub removed to avoid confusion.
 }
 
 // isLastPhase checks if the given phase is the last phase in the campaign
@@ -718,19 +864,28 @@ func (o *CampaignOrchestrator) HandleCampaignCompletion(ctx context.Context, cam
 				"error":       err.Error(),
 			})
 		}
-		// Broadcast CampaignCompleted SSE
-		if campaign, err := o.store.GetCampaignByID(ctx, querier, campaignID); err == nil && campaign.UserID != nil && o.sseService != nil {
+		// Broadcast CampaignCompleted SSE (even if user_id missing)
+		if campaign, err := o.store.GetCampaignByID(ctx, querier, campaignID); err == nil && o.sseService != nil {
 			meta := map[string]interface{}{
 				"duration_ms":    now.Sub(execution.StartedAt).Milliseconds(),
 				"overall_status": string(execution.OverallStatus),
 			}
-			evt := services.CreateCampaignCompletedEvent(campaignID, *campaign.UserID, meta)
-			o.sseService.BroadcastToCampaign(campaignID, evt)
+			if campaign.UserID != nil {
+				evt := services.CreateCampaignCompletedEvent(campaignID, *campaign.UserID, meta)
+				o.sseService.BroadcastToCampaign(campaignID, evt)
+			} else {
+				// fallback event without user context
+				evt := services.SSEEvent{Event: services.SSEEventCampaignCompleted, CampaignID: &campaignID, Data: meta, Timestamp: time.Now()}
+				o.sseService.BroadcastToCampaign(campaignID, evt)
+			}
 		}
 	}
 
 	// Trigger any post-completion workflows (feature-guarded)
 	go o.runPostCompletionHooks(context.Background(), campaignID)
+
+	// Metrics: campaign completion
+	o.metrics.IncCampaignCompletions()
 
 	return nil
 }

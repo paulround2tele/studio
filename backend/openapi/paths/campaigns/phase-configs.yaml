@@ -1,0 +1,33 @@
+get:
+  tags: [campaigns]
+  summary: List stored phase configurations for a campaign
+  operationId: campaigns_phase_configs_list
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    '200':
+      description: Phase configurations summary
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      campaignId: { type: string, format: uuid }
+                      configsPresent:
+                        type: object
+                        additionalProperties: { type: boolean }
+                      configs:
+                        type: object
+                        additionalProperties: { type: object }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

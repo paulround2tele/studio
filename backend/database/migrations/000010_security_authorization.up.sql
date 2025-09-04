@@ -223,77 +223,77 @@ CREATE TABLE IF NOT EXISTS campaign_access_grants (
 );
 
 -- Indexes for security events
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_event_type ON security_events(event_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_user_id ON security_events(user_id) WHERE user_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_session_id ON security_events(session_id) WHERE session_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_event_timestamp ON security_events(event_timestamp);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_ip_address ON security_events(ip_address);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_severity ON security_events(severity);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_threat_detected ON security_events(threat_detected) WHERE threat_detected = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_campaign_id ON security_events(campaign_id) WHERE campaign_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_resource_type ON security_events(resource_type) WHERE resource_type IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_investigated ON security_events(investigated) WHERE investigated = FALSE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_resolved ON security_events(resolved) WHERE resolved = FALSE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_compliance_relevant ON security_events(compliance_relevant) WHERE compliance_relevant = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_archived ON security_events(archived) WHERE archived = FALSE;
+CREATE INDEX IF NOT EXISTS idx_security_events_event_type ON security_events(event_type);
+CREATE INDEX IF NOT EXISTS idx_security_events_user_id ON security_events(user_id) WHERE user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_security_events_session_id ON security_events(session_id) WHERE session_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_security_events_event_timestamp ON security_events(event_timestamp);
+CREATE INDEX IF NOT EXISTS idx_security_events_ip_address ON security_events(ip_address);
+CREATE INDEX IF NOT EXISTS idx_security_events_severity ON security_events(severity);
+CREATE INDEX IF NOT EXISTS idx_security_events_threat_detected ON security_events(threat_detected) WHERE threat_detected = TRUE;
+CREATE INDEX IF NOT EXISTS idx_security_events_campaign_id ON security_events(campaign_id) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_security_events_resource_type ON security_events(resource_type) WHERE resource_type IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_security_events_investigated ON security_events(investigated) WHERE investigated = FALSE;
+CREATE INDEX IF NOT EXISTS idx_security_events_resolved ON security_events(resolved) WHERE resolved = FALSE;
+CREATE INDEX IF NOT EXISTS idx_security_events_compliance_relevant ON security_events(compliance_relevant) WHERE compliance_relevant = TRUE;
+CREATE INDEX IF NOT EXISTS idx_security_events_archived ON security_events(archived) WHERE archived = FALSE;
 
 -- Composite indexes for security analysis
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_user_type_time ON security_events(user_id, event_type, event_timestamp DESC) WHERE user_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_ip_type_time ON security_events(ip_address, event_type, event_timestamp DESC);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_severity_time ON security_events(severity, event_timestamp DESC) WHERE severity IN ('critical', 'high');
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_threat_time ON security_events(threat_detected, event_timestamp DESC) WHERE threat_detected = TRUE;
+CREATE INDEX IF NOT EXISTS idx_security_events_user_type_time ON security_events(user_id, event_type, event_timestamp DESC) WHERE user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_security_events_ip_type_time ON security_events(ip_address, event_type, event_timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_security_events_severity_time ON security_events(severity, event_timestamp DESC) WHERE severity IN ('critical', 'high');
+CREATE INDEX IF NOT EXISTS idx_security_events_threat_time ON security_events(threat_detected, event_timestamp DESC) WHERE threat_detected = TRUE;
 
 -- GIN indexes for JSONB columns in security events
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_additional_data_gin ON security_events USING GIN(additional_data) WHERE additional_data IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_security_events_response_actions_gin ON security_events USING GIN(response_actions) WHERE response_actions IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_security_events_additional_data_gin ON security_events USING GIN(additional_data) WHERE additional_data IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_security_events_response_actions_gin ON security_events USING GIN(response_actions) WHERE response_actions IS NOT NULL;
 
 -- Indexes for authorization decisions
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_authorization_decisions_user_id ON authorization_decisions(user_id) WHERE user_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_authorization_decisions_session_id ON authorization_decisions(session_id) WHERE session_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_authorization_decisions_resource_type ON authorization_decisions(resource_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_authorization_decisions_resource_id ON authorization_decisions(resource_id) WHERE resource_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_authorization_decisions_decision ON authorization_decisions(decision);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_authorization_decisions_decision_timestamp ON authorization_decisions(decision_timestamp);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_authorization_decisions_campaign_id ON authorization_decisions(campaign_id) WHERE campaign_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_authorization_decisions_cache_hit ON authorization_decisions(cache_hit);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_authorization_decisions_follow_up_required ON authorization_decisions(follow_up_required) WHERE follow_up_required = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_authorization_decisions_reviewed ON authorization_decisions(reviewed) WHERE reviewed = FALSE;
+CREATE INDEX IF NOT EXISTS idx_authorization_decisions_user_id ON authorization_decisions(user_id) WHERE user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_authorization_decisions_session_id ON authorization_decisions(session_id) WHERE session_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_authorization_decisions_resource_type ON authorization_decisions(resource_type);
+CREATE INDEX IF NOT EXISTS idx_authorization_decisions_resource_id ON authorization_decisions(resource_id) WHERE resource_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_authorization_decisions_decision ON authorization_decisions(decision);
+CREATE INDEX IF NOT EXISTS idx_authorization_decisions_decision_timestamp ON authorization_decisions(decision_timestamp);
+CREATE INDEX IF NOT EXISTS idx_authorization_decisions_campaign_id ON authorization_decisions(campaign_id) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_authorization_decisions_cache_hit ON authorization_decisions(cache_hit);
+CREATE INDEX IF NOT EXISTS idx_authorization_decisions_follow_up_required ON authorization_decisions(follow_up_required) WHERE follow_up_required = TRUE;
+CREATE INDEX IF NOT EXISTS idx_authorization_decisions_reviewed ON authorization_decisions(reviewed) WHERE reviewed = FALSE;
 
 -- Composite indexes for authorization analysis
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_authorization_decisions_user_resource ON authorization_decisions(user_id, resource_type, decision_timestamp DESC) WHERE user_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_authorization_decisions_denied_access ON authorization_decisions(decision, decision_timestamp DESC) WHERE decision = 'deny';
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_authorization_decisions_resource_decision ON authorization_decisions(resource_type, resource_id, decision, decision_timestamp DESC) WHERE resource_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_authorization_decisions_user_resource ON authorization_decisions(user_id, resource_type, decision_timestamp DESC) WHERE user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_authorization_decisions_denied_access ON authorization_decisions(decision, decision_timestamp DESC) WHERE decision = 'deny';
+CREATE INDEX IF NOT EXISTS idx_authorization_decisions_resource_decision ON authorization_decisions(resource_type, resource_id, decision, decision_timestamp DESC) WHERE resource_id IS NOT NULL;
 
 -- GIN indexes for JSONB columns in authorization decisions
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_authorization_decisions_conditions_met_gin ON authorization_decisions USING GIN(conditions_met) WHERE conditions_met IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_authorization_decisions_additional_context_gin ON authorization_decisions USING GIN(additional_context) WHERE additional_context IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_authorization_decisions_risk_factors_gin ON authorization_decisions USING GIN(risk_factors) WHERE risk_factors IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_authorization_decisions_conditions_met_gin ON authorization_decisions USING GIN(conditions_met) WHERE conditions_met IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_authorization_decisions_additional_context_gin ON authorization_decisions USING GIN(additional_context) WHERE additional_context IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_authorization_decisions_risk_factors_gin ON authorization_decisions USING GIN(risk_factors) WHERE risk_factors IS NOT NULL;
 
 -- GIN indexes for array columns in authorization decisions
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_authorization_decisions_permissions_checked_gin ON authorization_decisions USING GIN(permissions_checked) WHERE permissions_checked IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_authorization_decisions_compliance_tags_gin ON authorization_decisions USING GIN(compliance_tags) WHERE compliance_tags IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_authorization_decisions_permissions_checked_gin ON authorization_decisions USING GIN(permissions_checked) WHERE permissions_checked IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_authorization_decisions_compliance_tags_gin ON authorization_decisions USING GIN(compliance_tags) WHERE compliance_tags IS NOT NULL;
 
 -- Indexes for campaign access grants
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_campaign_id ON campaign_access_grants(campaign_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_user_id ON campaign_access_grants(user_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_access_type ON campaign_access_grants(access_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_granted_by ON campaign_access_grants(granted_by);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_granted_at ON campaign_access_grants(granted_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_expires_at ON campaign_access_grants(expires_at) WHERE expires_at IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_active ON campaign_access_grants(active) WHERE active = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_revoked ON campaign_access_grants(revoked) WHERE revoked = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_last_used_at ON campaign_access_grants(last_used_at) WHERE last_used_at IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_inherited_from ON campaign_access_grants(inherited_from) WHERE inherited_from IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_can_delegate ON campaign_access_grants(can_delegate) WHERE can_delegate = TRUE;
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_campaign_id ON campaign_access_grants(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_user_id ON campaign_access_grants(user_id);
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_access_type ON campaign_access_grants(access_type);
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_granted_by ON campaign_access_grants(granted_by);
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_granted_at ON campaign_access_grants(granted_at);
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_expires_at ON campaign_access_grants(expires_at) WHERE expires_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_active ON campaign_access_grants(active) WHERE active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_revoked ON campaign_access_grants(revoked) WHERE revoked = TRUE;
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_last_used_at ON campaign_access_grants(last_used_at) WHERE last_used_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_inherited_from ON campaign_access_grants(inherited_from) WHERE inherited_from IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_can_delegate ON campaign_access_grants(can_delegate) WHERE can_delegate = TRUE;
 
 -- Composite indexes for campaign access management
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_user_campaign ON campaign_access_grants(user_id, campaign_id, active) WHERE active = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_campaign_type ON campaign_access_grants(campaign_id, access_type, active) WHERE active = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_expiring_soon ON campaign_access_grants(expires_at, active) WHERE expires_at IS NOT NULL AND active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_user_campaign ON campaign_access_grants(user_id, campaign_id, active) WHERE active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_campaign_type ON campaign_access_grants(campaign_id, access_type, active) WHERE active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_expiring_soon ON campaign_access_grants(expires_at, active) WHERE expires_at IS NOT NULL AND active = TRUE;
 
 -- GIN indexes for array and JSONB columns in campaign access grants
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_phase_restrictions_gin ON campaign_access_grants USING GIN(phase_restrictions) WHERE phase_restrictions IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_ip_restrictions_gin ON campaign_access_grants USING GIN(ip_restrictions) WHERE ip_restrictions IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_time_restrictions_gin ON campaign_access_grants USING GIN(time_restrictions) WHERE time_restrictions IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_conditions_gin ON campaign_access_grants USING GIN(conditions) WHERE conditions IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_access_grants_access_pattern_gin ON campaign_access_grants USING GIN(access_pattern) WHERE access_pattern IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_phase_restrictions_gin ON campaign_access_grants USING GIN(phase_restrictions) WHERE phase_restrictions IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_ip_restrictions_gin ON campaign_access_grants USING GIN(ip_restrictions) WHERE ip_restrictions IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_time_restrictions_gin ON campaign_access_grants USING GIN(time_restrictions) WHERE time_restrictions IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_conditions_gin ON campaign_access_grants USING GIN(conditions) WHERE conditions IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_access_grants_access_pattern_gin ON campaign_access_grants USING GIN(access_pattern) WHERE access_pattern IS NOT NULL;

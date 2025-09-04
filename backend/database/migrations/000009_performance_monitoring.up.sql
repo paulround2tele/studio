@@ -103,71 +103,71 @@ CREATE TABLE IF NOT EXISTS pagination_performance_metrics (
 );
 
 -- Indexes for query performance metrics
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_query_performance_metrics_query_hash ON query_performance_metrics(query_hash);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_query_performance_metrics_query_type ON query_performance_metrics(query_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_query_performance_metrics_executed_at ON query_performance_metrics(executed_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_query_performance_metrics_execution_time ON query_performance_metrics(execution_time_ms);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_query_performance_metrics_service_name ON query_performance_metrics(service_name);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_query_performance_metrics_campaign_id ON query_performance_metrics(campaign_id) WHERE campaign_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_query_performance_metrics_campaign_phase ON query_performance_metrics(campaign_phase) WHERE campaign_phase IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_query_performance_metrics_performance_category ON query_performance_metrics(performance_category);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_query_performance_metrics_needs_optimization ON query_performance_metrics(needs_optimization) WHERE needs_optimization = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_query_performance_metrics_user_id ON query_performance_metrics(user_id) WHERE user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_query_performance_metrics_query_hash ON query_performance_metrics(query_hash);
+CREATE INDEX IF NOT EXISTS idx_query_performance_metrics_query_type ON query_performance_metrics(query_type);
+CREATE INDEX IF NOT EXISTS idx_query_performance_metrics_executed_at ON query_performance_metrics(executed_at);
+CREATE INDEX IF NOT EXISTS idx_query_performance_metrics_execution_time ON query_performance_metrics(execution_time_ms);
+CREATE INDEX IF NOT EXISTS idx_query_performance_metrics_service_name ON query_performance_metrics(service_name);
+CREATE INDEX IF NOT EXISTS idx_query_performance_metrics_campaign_id ON query_performance_metrics(campaign_id) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_query_performance_metrics_campaign_phase ON query_performance_metrics(campaign_phase) WHERE campaign_phase IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_query_performance_metrics_performance_category ON query_performance_metrics(performance_category);
+CREATE INDEX IF NOT EXISTS idx_query_performance_metrics_needs_optimization ON query_performance_metrics(needs_optimization) WHERE needs_optimization = TRUE;
+CREATE INDEX IF NOT EXISTS idx_query_performance_metrics_user_id ON query_performance_metrics(user_id) WHERE user_id IS NOT NULL;
 
 -- Composite indexes for performance analysis
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_query_performance_metrics_type_time ON query_performance_metrics(query_type, execution_time_ms DESC);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_query_performance_metrics_service_time ON query_performance_metrics(service_name, executed_at DESC);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_query_performance_metrics_slow_queries ON query_performance_metrics(execution_time_ms DESC, executed_at DESC) WHERE execution_time_ms > 1000;
+CREATE INDEX IF NOT EXISTS idx_query_performance_metrics_type_time ON query_performance_metrics(query_type, execution_time_ms DESC);
+CREATE INDEX IF NOT EXISTS idx_query_performance_metrics_service_time ON query_performance_metrics(service_name, executed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_query_performance_metrics_slow_queries ON query_performance_metrics(execution_time_ms DESC, executed_at DESC) WHERE execution_time_ms > 1000;
 
 -- GIN indexes for JSONB columns
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_query_performance_metrics_table_names_gin ON query_performance_metrics USING GIN(table_names);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_query_performance_metrics_index_usage_gin ON query_performance_metrics USING GIN(index_usage) WHERE index_usage IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_query_performance_metrics_query_plan_gin ON query_performance_metrics USING GIN(query_plan) WHERE query_plan IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_query_performance_metrics_optimization_suggestions_gin ON query_performance_metrics USING GIN(optimization_suggestions) WHERE optimization_suggestions IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_query_performance_metrics_table_names_gin ON query_performance_metrics USING GIN(table_names);
+CREATE INDEX IF NOT EXISTS idx_query_performance_metrics_index_usage_gin ON query_performance_metrics USING GIN(index_usage) WHERE index_usage IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_query_performance_metrics_query_plan_gin ON query_performance_metrics USING GIN(query_plan) WHERE query_plan IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_query_performance_metrics_optimization_suggestions_gin ON query_performance_metrics USING GIN(optimization_suggestions) WHERE optimization_suggestions IS NOT NULL;
 
 -- Indexes for resource utilization metrics
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_resource_utilization_metrics_service_name ON resource_utilization_metrics(service_name);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_resource_utilization_metrics_resource_type ON resource_utilization_metrics(resource_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_resource_utilization_metrics_recorded_at ON resource_utilization_metrics(recorded_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_resource_utilization_metrics_utilization_pct ON resource_utilization_metrics(utilization_pct);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_resource_utilization_metrics_bottleneck_detected ON resource_utilization_metrics(bottleneck_detected) WHERE bottleneck_detected = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_resource_utilization_metrics_campaign_id ON resource_utilization_metrics(campaign_id) WHERE campaign_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_resource_utilization_metrics_campaign_phase ON resource_utilization_metrics(campaign_phase) WHERE campaign_phase IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_resource_utilization_metrics_component ON resource_utilization_metrics(component) WHERE component IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_resource_utilization_metrics_service_name ON resource_utilization_metrics(service_name);
+CREATE INDEX IF NOT EXISTS idx_resource_utilization_metrics_resource_type ON resource_utilization_metrics(resource_type);
+CREATE INDEX IF NOT EXISTS idx_resource_utilization_metrics_recorded_at ON resource_utilization_metrics(recorded_at);
+CREATE INDEX IF NOT EXISTS idx_resource_utilization_metrics_utilization_pct ON resource_utilization_metrics(utilization_pct);
+CREATE INDEX IF NOT EXISTS idx_resource_utilization_metrics_bottleneck_detected ON resource_utilization_metrics(bottleneck_detected) WHERE bottleneck_detected = TRUE;
+CREATE INDEX IF NOT EXISTS idx_resource_utilization_metrics_campaign_id ON resource_utilization_metrics(campaign_id) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_resource_utilization_metrics_campaign_phase ON resource_utilization_metrics(campaign_phase) WHERE campaign_phase IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_resource_utilization_metrics_component ON resource_utilization_metrics(component) WHERE component IS NOT NULL;
 
 -- Composite indexes for resource monitoring
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_resource_utilization_metrics_service_resource ON resource_utilization_metrics(service_name, resource_type, recorded_at DESC);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_resource_utilization_metrics_high_utilization ON resource_utilization_metrics(utilization_pct DESC, recorded_at DESC) WHERE utilization_pct > 80;
+CREATE INDEX IF NOT EXISTS idx_resource_utilization_metrics_service_resource ON resource_utilization_metrics(service_name, resource_type, recorded_at DESC);
+CREATE INDEX IF NOT EXISTS idx_resource_utilization_metrics_high_utilization ON resource_utilization_metrics(utilization_pct DESC, recorded_at DESC) WHERE utilization_pct > 80;
 
 -- GIN index for optimization data
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_resource_utilization_metrics_optimization_gin ON resource_utilization_metrics USING GIN(optimization_applied) WHERE optimization_applied IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_resource_utilization_metrics_optimization_gin ON resource_utilization_metrics USING GIN(optimization_applied) WHERE optimization_applied IS NOT NULL;
 
 -- Indexes for connection pool metrics
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_connection_pool_metrics_recorded_at ON connection_pool_metrics(recorded_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_connection_pool_metrics_pool_utilization ON connection_pool_metrics(pool_utilization_percent);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_connection_pool_metrics_service_name ON connection_pool_metrics(service_name) WHERE service_name IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_connection_pool_metrics_database_name ON connection_pool_metrics(database_name) WHERE database_name IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_connection_pool_metrics_connection_errors ON connection_pool_metrics(connection_errors) WHERE connection_errors > 0;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_connection_pool_metrics_wait_count ON connection_pool_metrics(wait_count) WHERE wait_count > 0;
+CREATE INDEX IF NOT EXISTS idx_connection_pool_metrics_recorded_at ON connection_pool_metrics(recorded_at);
+CREATE INDEX IF NOT EXISTS idx_connection_pool_metrics_pool_utilization ON connection_pool_metrics(pool_utilization_percent);
+CREATE INDEX IF NOT EXISTS idx_connection_pool_metrics_service_name ON connection_pool_metrics(service_name) WHERE service_name IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_connection_pool_metrics_database_name ON connection_pool_metrics(database_name) WHERE database_name IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_connection_pool_metrics_connection_errors ON connection_pool_metrics(connection_errors) WHERE connection_errors > 0;
+CREATE INDEX IF NOT EXISTS idx_connection_pool_metrics_wait_count ON connection_pool_metrics(wait_count) WHERE wait_count > 0;
 
 -- Composite indexes for connection pool analysis
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_connection_pool_metrics_service_utilization ON connection_pool_metrics(service_name, pool_utilization_percent DESC, recorded_at DESC) WHERE service_name IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_connection_pool_metrics_high_utilization ON connection_pool_metrics(pool_utilization_percent DESC, recorded_at DESC) WHERE pool_utilization_percent > 80;
+CREATE INDEX IF NOT EXISTS idx_connection_pool_metrics_service_utilization ON connection_pool_metrics(service_name, pool_utilization_percent DESC, recorded_at DESC) WHERE service_name IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_connection_pool_metrics_high_utilization ON connection_pool_metrics(pool_utilization_percent DESC, recorded_at DESC) WHERE pool_utilization_percent > 80;
 
 -- Indexes for pagination performance metrics
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pagination_performance_metrics_table_name ON pagination_performance_metrics(table_name);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pagination_performance_metrics_pagination_type ON pagination_performance_metrics(pagination_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pagination_performance_metrics_recorded_at ON pagination_performance_metrics(recorded_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pagination_performance_metrics_execution_time ON pagination_performance_metrics(execution_time_ms);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pagination_performance_metrics_page_size ON pagination_performance_metrics(page_size);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pagination_performance_metrics_service_name ON pagination_performance_metrics(service_name) WHERE service_name IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pagination_performance_metrics_campaign_id ON pagination_performance_metrics(campaign_id) WHERE campaign_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pagination_performance_metrics_user_id ON pagination_performance_metrics(user_id) WHERE user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pagination_performance_metrics_table_name ON pagination_performance_metrics(table_name);
+CREATE INDEX IF NOT EXISTS idx_pagination_performance_metrics_pagination_type ON pagination_performance_metrics(pagination_type);
+CREATE INDEX IF NOT EXISTS idx_pagination_performance_metrics_recorded_at ON pagination_performance_metrics(recorded_at);
+CREATE INDEX IF NOT EXISTS idx_pagination_performance_metrics_execution_time ON pagination_performance_metrics(execution_time_ms);
+CREATE INDEX IF NOT EXISTS idx_pagination_performance_metrics_page_size ON pagination_performance_metrics(page_size);
+CREATE INDEX IF NOT EXISTS idx_pagination_performance_metrics_service_name ON pagination_performance_metrics(service_name) WHERE service_name IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pagination_performance_metrics_campaign_id ON pagination_performance_metrics(campaign_id) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pagination_performance_metrics_user_id ON pagination_performance_metrics(user_id) WHERE user_id IS NOT NULL;
 
 -- Composite indexes for pagination analysis
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pagination_performance_metrics_table_type ON pagination_performance_metrics(table_name, pagination_type, execution_time_ms DESC);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pagination_performance_metrics_slow_pagination ON pagination_performance_metrics(execution_time_ms DESC, recorded_at DESC) WHERE execution_time_ms > 100;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pagination_performance_metrics_large_pages ON pagination_performance_metrics(page_size DESC, execution_time_ms DESC) WHERE page_size > 1000;
+CREATE INDEX IF NOT EXISTS idx_pagination_performance_metrics_table_type ON pagination_performance_metrics(table_name, pagination_type, execution_time_ms DESC);
+CREATE INDEX IF NOT EXISTS idx_pagination_performance_metrics_slow_pagination ON pagination_performance_metrics(execution_time_ms DESC, recorded_at DESC) WHERE execution_time_ms > 100;
+CREATE INDEX IF NOT EXISTS idx_pagination_performance_metrics_large_pages ON pagination_performance_metrics(page_size DESC, execution_time_ms DESC) WHERE page_size > 1000;
 
 -- Add performance category check constraint
 ALTER TABLE query_performance_metrics 

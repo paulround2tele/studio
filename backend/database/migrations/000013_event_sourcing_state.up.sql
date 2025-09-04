@@ -304,107 +304,107 @@ CREATE TABLE IF NOT EXISTS config_versions (
 );
 
 -- Indexes for event store
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_event_id ON event_store(event_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_event_type ON event_store(event_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_aggregate_id ON event_store(aggregate_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_aggregate_type ON event_store(aggregate_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_event_timestamp ON event_store(event_timestamp);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_sequence_number ON event_store(sequence_number);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_user_id ON event_store(user_id) WHERE user_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_session_id ON event_store(session_id) WHERE session_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_campaign_id ON event_store(campaign_id) WHERE campaign_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_campaign_phase ON event_store(campaign_phase) WHERE campaign_phase IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_causation_id ON event_store(causation_id) WHERE causation_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_correlation_id ON event_store(correlation_id) WHERE correlation_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_parent_event_id ON event_store(parent_event_id) WHERE parent_event_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_processing_status ON event_store(processing_status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_is_snapshot ON event_store(is_snapshot) WHERE is_snapshot = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_compacted ON event_store(compacted) WHERE compacted = FALSE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_archived ON event_store(archived) WHERE archived = FALSE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_partition_key ON event_store(partition_key);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_retry_after ON event_store(retry_after) WHERE retry_after IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_store_event_id ON event_store(event_id);
+CREATE INDEX IF NOT EXISTS idx_event_store_event_type ON event_store(event_type);
+CREATE INDEX IF NOT EXISTS idx_event_store_aggregate_id ON event_store(aggregate_id);
+CREATE INDEX IF NOT EXISTS idx_event_store_aggregate_type ON event_store(aggregate_type);
+CREATE INDEX IF NOT EXISTS idx_event_store_event_timestamp ON event_store(event_timestamp);
+CREATE INDEX IF NOT EXISTS idx_event_store_sequence_number ON event_store(sequence_number);
+CREATE INDEX IF NOT EXISTS idx_event_store_user_id ON event_store(user_id) WHERE user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_store_session_id ON event_store(session_id) WHERE session_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_store_campaign_id ON event_store(campaign_id) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_store_campaign_phase ON event_store(campaign_phase) WHERE campaign_phase IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_store_causation_id ON event_store(causation_id) WHERE causation_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_store_correlation_id ON event_store(correlation_id) WHERE correlation_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_store_parent_event_id ON event_store(parent_event_id) WHERE parent_event_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_store_processing_status ON event_store(processing_status);
+CREATE INDEX IF NOT EXISTS idx_event_store_is_snapshot ON event_store(is_snapshot) WHERE is_snapshot = TRUE;
+CREATE INDEX IF NOT EXISTS idx_event_store_compacted ON event_store(compacted) WHERE compacted = FALSE;
+CREATE INDEX IF NOT EXISTS idx_event_store_archived ON event_store(archived) WHERE archived = FALSE;
+CREATE INDEX IF NOT EXISTS idx_event_store_partition_key ON event_store(partition_key);
+CREATE INDEX IF NOT EXISTS idx_event_store_retry_after ON event_store(retry_after) WHERE retry_after IS NOT NULL;
 
 -- Composite indexes for event store
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_aggregate_version ON event_store(aggregate_id, aggregate_version);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_aggregate_sequence ON event_store(aggregate_id, sequence_number);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_type_timestamp ON event_store(event_type, event_timestamp DESC);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_campaign_type_timestamp ON event_store(campaign_id, event_type, event_timestamp DESC) WHERE campaign_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_processing_pending ON event_store(processing_status, sequence_number) WHERE processing_status = 'pending';
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_user_timestamp ON event_store(user_id, event_timestamp DESC) WHERE user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_store_aggregate_version ON event_store(aggregate_id, aggregate_version);
+CREATE INDEX IF NOT EXISTS idx_event_store_aggregate_sequence ON event_store(aggregate_id, sequence_number);
+CREATE INDEX IF NOT EXISTS idx_event_store_type_timestamp ON event_store(event_type, event_timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_event_store_campaign_type_timestamp ON event_store(campaign_id, event_type, event_timestamp DESC) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_store_processing_pending ON event_store(processing_status, sequence_number) WHERE processing_status = 'pending';
+CREATE INDEX IF NOT EXISTS idx_event_store_user_timestamp ON event_store(user_id, event_timestamp DESC) WHERE user_id IS NOT NULL;
 
 -- GIN indexes for JSONB columns in event store
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_event_data_gin ON event_store USING GIN(event_data);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_store_event_metadata_gin ON event_store USING GIN(event_metadata) WHERE event_metadata IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_store_event_data_gin ON event_store USING GIN(event_data);
+CREATE INDEX IF NOT EXISTS idx_event_store_event_metadata_gin ON event_store USING GIN(event_metadata) WHERE event_metadata IS NOT NULL;
 
 -- Indexes for event projections
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_projections_projection_name ON event_projections(projection_name);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_projections_projection_type ON event_projections(projection_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_projections_status ON event_projections(status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_projections_current_position ON event_projections(current_position);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_projections_last_processed_event_id ON event_projections(last_processed_event_id) WHERE last_processed_event_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_projections_created_by ON event_projections(created_by) WHERE created_by IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_projections_campaign_id ON event_projections(campaign_id) WHERE campaign_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_projections_campaign_specific ON event_projections(campaign_specific) WHERE campaign_specific = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_projections_monitoring_enabled ON event_projections(monitoring_enabled) WHERE monitoring_enabled = TRUE;
+CREATE INDEX IF NOT EXISTS idx_event_projections_projection_name ON event_projections(projection_name);
+CREATE INDEX IF NOT EXISTS idx_event_projections_projection_type ON event_projections(projection_type);
+CREATE INDEX IF NOT EXISTS idx_event_projections_status ON event_projections(status);
+CREATE INDEX IF NOT EXISTS idx_event_projections_current_position ON event_projections(current_position);
+CREATE INDEX IF NOT EXISTS idx_event_projections_last_processed_event_id ON event_projections(last_processed_event_id) WHERE last_processed_event_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_projections_created_by ON event_projections(created_by) WHERE created_by IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_projections_campaign_id ON event_projections(campaign_id) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_projections_campaign_specific ON event_projections(campaign_specific) WHERE campaign_specific = TRUE;
+CREATE INDEX IF NOT EXISTS idx_event_projections_monitoring_enabled ON event_projections(monitoring_enabled) WHERE monitoring_enabled = TRUE;
 
 -- Composite indexes for event projections
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_projections_status_position ON event_projections(status, current_position);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_projections_lag_monitoring ON event_projections(processing_lag_ms DESC, status) WHERE monitoring_enabled = TRUE;
+CREATE INDEX IF NOT EXISTS idx_event_projections_status_position ON event_projections(status, current_position);
+CREATE INDEX IF NOT EXISTS idx_event_projections_lag_monitoring ON event_projections(processing_lag_ms DESC, status) WHERE monitoring_enabled = TRUE;
 
 -- GIN indexes for array and JSONB columns in event projections
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_projections_event_filters_gin ON event_projections USING GIN(event_filters) WHERE event_filters IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_event_projections_dependencies_gin ON event_projections USING GIN(dependencies) WHERE dependencies IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_projections_event_filters_gin ON event_projections USING GIN(event_filters) WHERE event_filters IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_projections_dependencies_gin ON event_projections USING GIN(dependencies) WHERE dependencies IS NOT NULL;
 
 -- Indexes for config locks
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_locks_lock_name ON config_locks(lock_name);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_locks_lock_type ON config_locks(lock_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_locks_locked_by ON config_locks(locked_by);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_locks_locked_at ON config_locks(locked_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_locks_expires_at ON config_locks(expires_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_locks_session_id ON config_locks(session_id) WHERE session_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_locks_resource_type ON config_locks(resource_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_locks_resource_id ON config_locks(resource_id) WHERE resource_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_locks_parent_lock_id ON config_locks(parent_lock_id) WHERE parent_lock_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_locks_active ON config_locks(active) WHERE active = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_locks_campaign_id ON config_locks(campaign_id) WHERE campaign_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_locks_auto_renewal_enabled ON config_locks(auto_renewal_enabled) WHERE auto_renewal_enabled = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_locks_last_heartbeat ON config_locks(last_heartbeat) WHERE auto_renewal_enabled = TRUE;
+CREATE INDEX IF NOT EXISTS idx_config_locks_lock_name ON config_locks(lock_name);
+CREATE INDEX IF NOT EXISTS idx_config_locks_lock_type ON config_locks(lock_type);
+CREATE INDEX IF NOT EXISTS idx_config_locks_locked_by ON config_locks(locked_by);
+CREATE INDEX IF NOT EXISTS idx_config_locks_locked_at ON config_locks(locked_at);
+CREATE INDEX IF NOT EXISTS idx_config_locks_expires_at ON config_locks(expires_at);
+CREATE INDEX IF NOT EXISTS idx_config_locks_session_id ON config_locks(session_id) WHERE session_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_config_locks_resource_type ON config_locks(resource_type);
+CREATE INDEX IF NOT EXISTS idx_config_locks_resource_id ON config_locks(resource_id) WHERE resource_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_config_locks_parent_lock_id ON config_locks(parent_lock_id) WHERE parent_lock_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_config_locks_active ON config_locks(active) WHERE active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_config_locks_campaign_id ON config_locks(campaign_id) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_config_locks_auto_renewal_enabled ON config_locks(auto_renewal_enabled) WHERE auto_renewal_enabled = TRUE;
+CREATE INDEX IF NOT EXISTS idx_config_locks_last_heartbeat ON config_locks(last_heartbeat) WHERE auto_renewal_enabled = TRUE;
 
 -- Composite indexes for config locks
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_locks_resource_active ON config_locks(resource_type, resource_id, active) WHERE active = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_locks_expiring_soon ON config_locks(expires_at, active) WHERE active = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_locks_stale_heartbeat ON config_locks(last_heartbeat, auto_renewal_enabled, active) WHERE auto_renewal_enabled = TRUE AND active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_config_locks_resource_active ON config_locks(resource_type, resource_id, active) WHERE active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_config_locks_expiring_soon ON config_locks(expires_at, active) WHERE active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_config_locks_stale_heartbeat ON config_locks(last_heartbeat, auto_renewal_enabled, active) WHERE auto_renewal_enabled = TRUE AND active = TRUE;
 
 -- Indexes for config versions
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_config_key ON config_versions(config_key);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_version_number ON config_versions(version_number);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_created_at ON config_versions(created_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_created_by ON config_versions(created_by);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_is_current ON config_versions(is_current) WHERE is_current = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_is_active ON config_versions(is_active) WHERE is_active = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_change_type ON config_versions(change_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_validation_status ON config_versions(validation_status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_deployed ON config_versions(deployed);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_deployed_by ON config_versions(deployed_by) WHERE deployed_by IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_deployment_environment ON config_versions(deployment_environment) WHERE deployment_environment IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_rollback_version ON config_versions(rollback_version) WHERE rollback_version IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_can_rollback ON config_versions(can_rollback) WHERE can_rollback = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_affects_campaigns ON config_versions(affects_campaigns) WHERE affects_campaigns = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_campaign_id ON config_versions(campaign_id) WHERE campaign_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_approval_required ON config_versions(approval_required) WHERE approval_required = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_approved ON config_versions(approved) WHERE approval_required = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_approved_by ON config_versions(approved_by) WHERE approved_by IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_config_versions_config_key ON config_versions(config_key);
+CREATE INDEX IF NOT EXISTS idx_config_versions_version_number ON config_versions(version_number);
+CREATE INDEX IF NOT EXISTS idx_config_versions_created_at ON config_versions(created_at);
+CREATE INDEX IF NOT EXISTS idx_config_versions_created_by ON config_versions(created_by);
+CREATE INDEX IF NOT EXISTS idx_config_versions_is_current ON config_versions(is_current) WHERE is_current = TRUE;
+CREATE INDEX IF NOT EXISTS idx_config_versions_is_active ON config_versions(is_active) WHERE is_active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_config_versions_change_type ON config_versions(change_type);
+CREATE INDEX IF NOT EXISTS idx_config_versions_validation_status ON config_versions(validation_status);
+CREATE INDEX IF NOT EXISTS idx_config_versions_deployed ON config_versions(deployed);
+CREATE INDEX IF NOT EXISTS idx_config_versions_deployed_by ON config_versions(deployed_by) WHERE deployed_by IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_config_versions_deployment_environment ON config_versions(deployment_environment) WHERE deployment_environment IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_config_versions_rollback_version ON config_versions(rollback_version) WHERE rollback_version IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_config_versions_can_rollback ON config_versions(can_rollback) WHERE can_rollback = TRUE;
+CREATE INDEX IF NOT EXISTS idx_config_versions_affects_campaigns ON config_versions(affects_campaigns) WHERE affects_campaigns = TRUE;
+CREATE INDEX IF NOT EXISTS idx_config_versions_campaign_id ON config_versions(campaign_id) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_config_versions_approval_required ON config_versions(approval_required) WHERE approval_required = TRUE;
+CREATE INDEX IF NOT EXISTS idx_config_versions_approved ON config_versions(approved) WHERE approval_required = TRUE;
+CREATE INDEX IF NOT EXISTS idx_config_versions_approved_by ON config_versions(approved_by) WHERE approved_by IS NOT NULL;
 
 -- Composite indexes for config versions
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_key_version ON config_versions(config_key, version_number);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_key_current ON config_versions(config_key, is_current) WHERE is_current = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_pending_approval ON config_versions(approval_required, approved, created_at DESC) WHERE approval_required = TRUE AND approved = FALSE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_pending_deployment ON config_versions(deployed, approved, created_at DESC) WHERE deployed = FALSE AND (approval_required = FALSE OR approved = TRUE);
+CREATE INDEX IF NOT EXISTS idx_config_versions_key_version ON config_versions(config_key, version_number);
+CREATE INDEX IF NOT EXISTS idx_config_versions_key_current ON config_versions(config_key, is_current) WHERE is_current = TRUE;
+CREATE INDEX IF NOT EXISTS idx_config_versions_pending_approval ON config_versions(approval_required, approved, created_at DESC) WHERE approval_required = TRUE AND approved = FALSE;
+CREATE INDEX IF NOT EXISTS idx_config_versions_pending_deployment ON config_versions(deployed, approved, created_at DESC) WHERE deployed = FALSE AND (approval_required = FALSE OR approved = TRUE);
 
 -- GIN indexes for array and JSONB columns in config versions
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_config_value_gin ON config_versions USING GIN(config_value);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_validation_errors_gin ON config_versions USING GIN(validation_errors) WHERE validation_errors IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_rollback_metadata_gin ON config_versions USING GIN(rollback_metadata) WHERE rollback_metadata IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_affected_services_gin ON config_versions USING GIN(affected_services) WHERE affected_services IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_dependency_configs_gin ON config_versions USING GIN(dependency_configs) WHERE dependency_configs IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_config_versions_audit_trail_gin ON config_versions USING GIN(audit_trail) WHERE audit_trail IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_config_versions_config_value_gin ON config_versions USING GIN(config_value);
+CREATE INDEX IF NOT EXISTS idx_config_versions_validation_errors_gin ON config_versions USING GIN(validation_errors) WHERE validation_errors IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_config_versions_rollback_metadata_gin ON config_versions USING GIN(rollback_metadata) WHERE rollback_metadata IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_config_versions_affected_services_gin ON config_versions USING GIN(affected_services) WHERE affected_services IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_config_versions_dependency_configs_gin ON config_versions USING GIN(dependency_configs) WHERE dependency_configs IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_config_versions_audit_trail_gin ON config_versions USING GIN(audit_trail) WHERE audit_trail IS NOT NULL;

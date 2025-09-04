@@ -47,11 +47,11 @@ BEGIN
         new_data := to_jsonb(NEW);
         resource_id := (NEW.id)::UUID;
         -- Try to extract user context from NEW record
-        IF NEW ? 'user_id' THEN
+        IF to_jsonb(NEW) ? 'user_id' THEN
             user_id_val := (NEW.user_id)::UUID;
-        ELSIF NEW ? 'created_by' THEN
+        ELSIF to_jsonb(NEW) ? 'created_by' THEN
             user_id_val := (NEW.created_by)::UUID;
-        ELSIF NEW ? 'updated_by' THEN
+        ELSIF to_jsonb(NEW) ? 'updated_by' THEN
             user_id_val := (NEW.updated_by)::UUID;
         END IF;
     ELSIF TG_OP = 'INSERT' THEN
@@ -61,9 +61,9 @@ BEGIN
         new_data := to_jsonb(NEW);
         resource_id := (NEW.id)::UUID;
         -- Try to extract user context from NEW record
-        IF NEW ? 'user_id' THEN
+        IF to_jsonb(NEW) ? 'user_id' THEN
             user_id_val := (NEW.user_id)::UUID;
-        ELSIF NEW ? 'created_by' THEN
+        ELSIF to_jsonb(NEW) ? 'created_by' THEN
             user_id_val := (NEW.created_by)::UUID;
         END IF;
     END IF;
@@ -71,21 +71,17 @@ BEGIN
     -- Insert audit log entry
     INSERT INTO audit_logs (
         user_id,
-        action_type,
-        resource_type,
-        resource_id,
-        old_data,
-        new_data,
-        additional_data,
-        ip_address,
+        action,
+        entity_type,
+        entity_id,
+        details,
+        client_ip,
         user_agent
     ) VALUES (
         user_id_val,
         audit_action,
         TG_TABLE_NAME,
         resource_id,
-        old_data,
-        new_data,
         audit_data,
         COALESCE(current_setting('app.current_ip', true), '127.0.0.1')::INET,
         current_setting('app.current_user_agent', true)

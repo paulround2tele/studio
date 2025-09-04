@@ -186,25 +186,25 @@ CREATE TABLE IF NOT EXISTS campaign_phases (
 );
 
 -- Indexes for campaign management core
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_lead_generation_campaigns_user_id ON lead_generation_campaigns(user_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_lead_generation_campaigns_current_phase ON lead_generation_campaigns(current_phase);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_lead_generation_campaigns_phase_status ON lead_generation_campaigns(phase_status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_lead_generation_campaigns_created_at ON lead_generation_campaigns(created_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_lead_generation_campaigns_updated_at ON lead_generation_campaigns(updated_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_lead_generation_campaigns_business_status ON lead_generation_campaigns(business_status) WHERE business_status IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_lead_generation_campaigns_completed_at ON lead_generation_campaigns(completed_at) WHERE completed_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_lead_generation_campaigns_user_id ON lead_generation_campaigns(user_id);
+CREATE INDEX IF NOT EXISTS idx_lead_generation_campaigns_current_phase ON lead_generation_campaigns(current_phase);
+CREATE INDEX IF NOT EXISTS idx_lead_generation_campaigns_phase_status ON lead_generation_campaigns(phase_status);
+CREATE INDEX IF NOT EXISTS idx_lead_generation_campaigns_created_at ON lead_generation_campaigns(created_at);
+CREATE INDEX IF NOT EXISTS idx_lead_generation_campaigns_updated_at ON lead_generation_campaigns(updated_at);
+CREATE INDEX IF NOT EXISTS idx_lead_generation_campaigns_business_status ON lead_generation_campaigns(business_status) WHERE business_status IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_lead_generation_campaigns_completed_at ON lead_generation_campaigns(completed_at) WHERE completed_at IS NOT NULL;
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_phases_campaign_id ON campaign_phases(campaign_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_phases_phase_type ON campaign_phases(phase_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_phases_status ON campaign_phases(status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_phases_phase_order ON campaign_phases(phase_order);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_phases_started_at ON campaign_phases(started_at) WHERE started_at IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_phases_completed_at ON campaign_phases(completed_at) WHERE completed_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_phases_campaign_id ON campaign_phases(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_campaign_phases_phase_type ON campaign_phases(phase_type);
+CREATE INDEX IF NOT EXISTS idx_campaign_phases_status ON campaign_phases(status);
+CREATE INDEX IF NOT EXISTS idx_campaign_phases_phase_order ON campaign_phases(phase_order);
+CREATE INDEX IF NOT EXISTS idx_campaign_phases_started_at ON campaign_phases(started_at) WHERE started_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_phases_completed_at ON campaign_phases(completed_at) WHERE completed_at IS NOT NULL;
 
 -- GIN indexes for JSONB columns
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_lead_generation_campaigns_domains_data_gin ON lead_generation_campaigns USING GIN(domains_data) WHERE domains_data IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_lead_generation_campaigns_dns_results_gin ON lead_generation_campaigns USING GIN(dns_results) WHERE dns_results IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_lead_generation_campaigns_http_results_gin ON lead_generation_campaigns USING GIN(http_results) WHERE http_results IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_lead_generation_campaigns_analysis_results_gin ON lead_generation_campaigns USING GIN(analysis_results) WHERE analysis_results IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_lead_generation_campaigns_metadata_gin ON lead_generation_campaigns USING GIN(metadata) WHERE metadata IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_campaign_phases_configuration_gin ON campaign_phases USING GIN(configuration) WHERE configuration IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_lead_generation_campaigns_domains_data_gin ON lead_generation_campaigns USING GIN(domains_data) WHERE domains_data IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_lead_generation_campaigns_dns_results_gin ON lead_generation_campaigns USING GIN(dns_results) WHERE dns_results IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_lead_generation_campaigns_http_results_gin ON lead_generation_campaigns USING GIN(http_results) WHERE http_results IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_lead_generation_campaigns_analysis_results_gin ON lead_generation_campaigns USING GIN(analysis_results) WHERE analysis_results IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_lead_generation_campaigns_metadata_gin ON lead_generation_campaigns USING GIN(metadata) WHERE metadata IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_campaign_phases_configuration_gin ON campaign_phases USING GIN(configuration) WHERE configuration IS NOT NULL;

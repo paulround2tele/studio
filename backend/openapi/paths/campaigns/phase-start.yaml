@@ -25,4 +25,17 @@ post:
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '409':
+      description: Missing downstream phase configurations (full_sequence mode gating)
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/ErrorEnvelope'
+              - type: object
+                properties:
+                  missingPhases:
+                    type: array
+                    items: { type: string }
+                    description: Phase identifiers that lack configuration
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

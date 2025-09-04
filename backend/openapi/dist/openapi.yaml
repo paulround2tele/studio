@@ -3459,6 +3459,112 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          description: Missing downstream phase configurations (full_sequence mode gating)
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ErrorEnvelope'
+                  - type: object
+                    properties:
+                      missingPhases:
+                        type: array
+                        items:
+                          type: string
+                        description: Phase identifiers that lack configuration
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/mode:
+    patch:
+      tags:
+        - campaigns
+      summary: Update campaign execution mode
+      operationId: campaigns_mode_update
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mode:
+                  $ref: '#/components/schemas/CampaignModeEnum'
+              required:
+                - mode
+      responses:
+        '200':
+          description: Mode updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          mode:
+                            $ref: '#/components/schemas/CampaignModeEnum'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/configs:
+    get:
+      tags:
+        - campaigns
+      summary: List stored phase configurations for a campaign
+      operationId: campaigns_phase_configs_list
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Phase configurations summary
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          campaignId:
+                            type: string
+                            format: uuid
+                          configsPresent:
+                            type: object
+                            additionalProperties:
+                              type: boolean
+                          configs:
+                            type: object
+                            additionalProperties:
+                              type: object
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /campaigns/{campaignId}/phases/{phase}/stop:

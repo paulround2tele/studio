@@ -37,6 +37,10 @@ func (s *campaignStorePostgres) BeginTxx(ctx context.Context, opts *sql.TxOption
 // --- Campaign CRUD --- //
 
 func (s *campaignStorePostgres) CreateCampaign(ctx context.Context, exec store.Querier, campaign *models.LeadGenerationCampaign) error {
+	// Allow nil exec (common in tests) by defaulting to store DB
+	if exec == nil {
+		exec = s.db
+	}
 	// DEBUG: Log what we're about to store
 	metadataStr := "NULL"
 	if campaign.Metadata != nil {
@@ -70,12 +74,10 @@ func (s *campaignStorePostgres) CreateCampaign(ctx context.Context, exec store.Q
 	query := `INSERT INTO lead_generation_campaigns (
 		id, name, current_phase, phase_status, user_id, created_at, updated_at, metadata,
 		campaign_type, total_phases, completed_phases, overall_progress,
-		is_full_sequence_mode, auto_advance_phases,
 		progress_percentage, total_items, processed_items, successful_items, failed_items
 	) VALUES (
 		:id, :name, :current_phase, :phase_status, :user_id, :created_at, :updated_at, :metadata,
 		:campaign_type, :total_phases, :completed_phases, :overall_progress,
-		:is_full_sequence_mode, :auto_advance_phases,
 		:progress_percentage, :total_items, :processed_items, :successful_items, :failed_items
 	)`
 	_, err := exec.NamedExecContext(ctx, query, campaign)
@@ -90,6 +92,9 @@ func (s *campaignStorePostgres) CreateCampaign(ctx context.Context, exec store.Q
 }
 
 func (s *campaignStorePostgres) GetCampaignByID(ctx context.Context, exec store.Querier, id uuid.UUID) (*models.LeadGenerationCampaign, error) {
+	if exec == nil {
+		exec = s.db
+	}
 	log.Printf("DEBUG GetCampaignByID: About to SELECT campaign %s", id)
 
 	campaign := &models.LeadGenerationCampaign{}
@@ -97,7 +102,6 @@ func (s *campaignStorePostgres) GetCampaignByID(ctx context.Context, exec store.
 	                 started_at, completed_at, progress_percentage, total_items, processed_items,
 	                 successful_items, failed_items, metadata, error_message, business_status,
 	                 campaign_type, total_phases, completed_phases, overall_progress,
-	                 is_full_sequence_mode, auto_advance_phases,
 	                 domains_data, dns_results, http_results, analysis_results
 	             FROM lead_generation_campaigns WHERE id = $1`
 	err := exec.GetContext(ctx, campaign, query, id)
@@ -464,6 +468,11 @@ func (s *campaignStorePostgres) CreateGeneratedDomains(ctx context.Context, exec
 			pending := models.DomainHTTPStatusPending
 			domain.HTTPStatus = &pending
 			log.Printf("DEBUG [CreateGeneratedDomains]: Initialized HTTP status to 'pending' for domain %s", domain.DomainName)
+		}
+		if domain.LeadStatus == nil {
+			pending := models.DomainLeadStatusPending
+			domain.LeadStatus = &pending
+			log.Printf("DEBUG [CreateGeneratedDomains]: Initialized LEAD status to 'pending' for domain %s", domain.DomainName)
 		}
 		if !domain.LeadScore.Valid {
 			domain.LeadScore = sql.NullFloat64{Float64: 0.0, Valid: true}
@@ -2237,6 +2246,87 @@ func (s *campaignStorePostgres) GetCampaignStateWithExecutions(ctx context.Conte
 		}
 	}
 	return result, nil
+}
+
+// UpsertPhaseConfig stores or updates explicit user configuration for a phase.
+func (s *campaignStorePostgres) UpsertPhaseConfig(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, config json.RawMessage) error {
+	if exec == nil {
+		exec = s.db
+	}
+	query := `INSERT INTO phase_configurations (campaign_id, phase, config, updated_at)
+			  VALUES ($1, $2, $3, NOW())
+			  ON CONFLICT (campaign_id, phase) DO UPDATE SET config = EXCLUDED.config, updated_at = NOW()`
+	if _, err := exec.ExecContext(ctx, query, campaignID, string(phaseType), config); err != nil {
+		return fmt.Errorf("UpsertPhaseConfig failed: %w", err)
+	}
+	return nil
+}
+
+// GetPhaseConfig retrieves stored configuration JSON for a phase.
+func (s *campaignStorePostgres) GetPhaseConfig(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) (*json.RawMessage, error) {
+	if exec == nil {
+		exec = s.db
+	}
+	query := `SELECT config FROM phase_configurations WHERE campaign_id = $1 AND phase = $2`
+	var raw json.RawMessage
+	if err := exec.GetContext(ctx, &raw, query, campaignID, string(phaseType)); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, store.ErrNotFound
+		}
+		return nil, fmt.Errorf("GetPhaseConfig failed: %w", err)
+	}
+	return &raw, nil
+}
+
+// ListPhaseConfigs returns a map of phaseType -> config JSON for a campaign.
+func (s *campaignStorePostgres) ListPhaseConfigs(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (map[models.PhaseTypeEnum]json.RawMessage, error) {
+	if exec == nil {
+		exec = s.db
+	}
+	query := `SELECT phase, config FROM phase_configurations WHERE campaign_id = $1`
+	rows := []struct {
+		Phase  string          `json:"phase"`
+		Config json.RawMessage `json:"config"`
+	}{}
+	if err := exec.SelectContext(ctx, &rows, query, campaignID); err != nil {
+		return nil, fmt.Errorf("ListPhaseConfigs failed: %w", err)
+	}
+	out := make(map[models.PhaseTypeEnum]json.RawMessage, len(rows))
+	for _, r := range rows {
+		out[models.PhaseTypeEnum(r.Phase)] = r.Config
+	}
+	return out, nil
+}
+
+// UpdateCampaignMode sets the campaign execution mode in campaign_states (creating state row if missing).
+func (s *campaignStorePostgres) UpdateCampaignMode(ctx context.Context, exec store.Querier, campaignID uuid.UUID, mode string) error {
+	if exec == nil {
+		exec = s.db
+	}
+	// Upsert into campaign_states; preserve existing current_state & configuration/version if row exists
+	query := `INSERT INTO campaign_states (campaign_id, current_state, mode, configuration, version, created_at, updated_at)
+			  VALUES ($1, 'draft', $2, '{}'::jsonb, 1, NOW(), NOW())
+			  ON CONFLICT (campaign_id) DO UPDATE SET mode = EXCLUDED.mode, updated_at = NOW()`
+	if _, err := exec.ExecContext(ctx, query, campaignID, mode); err != nil {
+		return fmt.Errorf("UpdateCampaignMode failed: %w", err)
+	}
+	return nil
+}
+
+// GetCampaignMode fetches the current execution mode from campaign_states.
+func (s *campaignStorePostgres) GetCampaignMode(ctx context.Context, exec store.Querier, campaignID uuid.UUID) (string, error) {
+	if exec == nil {
+		exec = s.db
+	}
+	var mode string
+	q := `SELECT mode FROM campaign_states WHERE campaign_id = $1`
+	if err := exec.GetContext(ctx, &mode, q, campaignID); err != nil {
+		if err == sql.ErrNoRows {
+			return "step_by_step", nil // default behavior if not set
+		}
+		return "", fmt.Errorf("GetCampaignMode failed: %w", err)
+	}
+	return mode, nil
 }
 
 var _ store.CampaignStore = (*campaignStorePostgres)(nil)

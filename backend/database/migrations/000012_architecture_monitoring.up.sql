@@ -369,69 +369,69 @@ CREATE TABLE IF NOT EXISTS service_capacity_metrics (
 );
 
 -- Indexes for service architecture metrics
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_architecture_metrics_service_name ON service_architecture_metrics(service_name);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_architecture_metrics_service_type ON service_architecture_metrics(service_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_architecture_metrics_measurement_timestamp ON service_architecture_metrics(measurement_timestamp);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_architecture_metrics_environment ON service_architecture_metrics(environment);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_architecture_metrics_health_score ON service_architecture_metrics(health_score);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_architecture_metrics_availability_percent ON service_architecture_metrics(availability_percent);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_architecture_metrics_campaign_id ON service_architecture_metrics(campaign_id) WHERE campaign_id IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_architecture_metrics_alert_threshold_breached ON service_architecture_metrics(alert_threshold_breached) WHERE alert_threshold_breached = TRUE;
+CREATE INDEX IF NOT EXISTS idx_service_architecture_metrics_service_name ON service_architecture_metrics(service_name);
+CREATE INDEX IF NOT EXISTS idx_service_architecture_metrics_service_type ON service_architecture_metrics(service_type);
+CREATE INDEX IF NOT EXISTS idx_service_architecture_metrics_measurement_timestamp ON service_architecture_metrics(measurement_timestamp);
+CREATE INDEX IF NOT EXISTS idx_service_architecture_metrics_environment ON service_architecture_metrics(environment);
+CREATE INDEX IF NOT EXISTS idx_service_architecture_metrics_health_score ON service_architecture_metrics(health_score);
+CREATE INDEX IF NOT EXISTS idx_service_architecture_metrics_availability_percent ON service_architecture_metrics(availability_percent);
+CREATE INDEX IF NOT EXISTS idx_service_architecture_metrics_campaign_id ON service_architecture_metrics(campaign_id) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_service_architecture_metrics_alert_threshold_breached ON service_architecture_metrics(alert_threshold_breached) WHERE alert_threshold_breached = TRUE;
 
 -- Composite indexes for service metrics analysis
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_architecture_metrics_service_time ON service_architecture_metrics(service_name, measurement_timestamp DESC);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_architecture_metrics_env_health ON service_architecture_metrics(environment, health_score DESC, measurement_timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_service_architecture_metrics_service_time ON service_architecture_metrics(service_name, measurement_timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_service_architecture_metrics_env_health ON service_architecture_metrics(environment, health_score DESC, measurement_timestamp DESC);
 
 -- Indexes for service dependencies
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_dependencies_source_service ON service_dependencies(source_service);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_dependencies_target_service ON service_dependencies(target_service);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_dependencies_dependency_type ON service_dependencies(dependency_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_dependencies_is_critical ON service_dependencies(is_critical) WHERE is_critical = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_dependencies_health_status ON service_dependencies(health_status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_dependencies_environment ON service_dependencies(environment);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_dependencies_active ON service_dependencies(active) WHERE active = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_dependencies_campaign_id ON service_dependencies(campaign_id) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_service_dependencies_source_service ON service_dependencies(source_service);
+CREATE INDEX IF NOT EXISTS idx_service_dependencies_target_service ON service_dependencies(target_service);
+CREATE INDEX IF NOT EXISTS idx_service_dependencies_dependency_type ON service_dependencies(dependency_type);
+CREATE INDEX IF NOT EXISTS idx_service_dependencies_is_critical ON service_dependencies(is_critical) WHERE is_critical = TRUE;
+CREATE INDEX IF NOT EXISTS idx_service_dependencies_health_status ON service_dependencies(health_status);
+CREATE INDEX IF NOT EXISTS idx_service_dependencies_environment ON service_dependencies(environment);
+CREATE INDEX IF NOT EXISTS idx_service_dependencies_active ON service_dependencies(active) WHERE active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_service_dependencies_campaign_id ON service_dependencies(campaign_id) WHERE campaign_id IS NOT NULL;
 
 -- Composite indexes for dependency analysis
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_dependencies_source_target ON service_dependencies(source_service, target_service, active) WHERE active = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_dependencies_critical_unhealthy ON service_dependencies(is_critical, health_status) WHERE is_critical = TRUE AND health_status != 'healthy';
+CREATE INDEX IF NOT EXISTS idx_service_dependencies_source_target ON service_dependencies(source_service, target_service, active) WHERE active = TRUE;
+CREATE INDEX IF NOT EXISTS idx_service_dependencies_critical_unhealthy ON service_dependencies(is_critical, health_status) WHERE is_critical = TRUE AND health_status != 'healthy';
 
 -- Indexes for architecture refactor log
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_architecture_refactor_log_refactor_type ON architecture_refactor_log(refactor_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_architecture_refactor_log_status ON architecture_refactor_log(status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_architecture_refactor_log_risk_level ON architecture_refactor_log(risk_level);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_architecture_refactor_log_initiated_by ON architecture_refactor_log(initiated_by) WHERE initiated_by IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_architecture_refactor_log_approved_by ON architecture_refactor_log(approved_by) WHERE approved_by IS NOT NULL;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_architecture_refactor_log_created_at ON architecture_refactor_log(created_at);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_architecture_refactor_log_campaign_id ON architecture_refactor_log(campaign_id) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_architecture_refactor_log_refactor_type ON architecture_refactor_log(refactor_type);
+CREATE INDEX IF NOT EXISTS idx_architecture_refactor_log_status ON architecture_refactor_log(status);
+CREATE INDEX IF NOT EXISTS idx_architecture_refactor_log_risk_level ON architecture_refactor_log(risk_level);
+CREATE INDEX IF NOT EXISTS idx_architecture_refactor_log_initiated_by ON architecture_refactor_log(initiated_by) WHERE initiated_by IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_architecture_refactor_log_approved_by ON architecture_refactor_log(approved_by) WHERE approved_by IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_architecture_refactor_log_created_at ON architecture_refactor_log(created_at);
+CREATE INDEX IF NOT EXISTS idx_architecture_refactor_log_campaign_id ON architecture_refactor_log(campaign_id) WHERE campaign_id IS NOT NULL;
 
 -- GIN indexes for array columns in refactor log
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_architecture_refactor_log_services_affected_gin ON architecture_refactor_log USING GIN(services_affected);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_architecture_refactor_log_dependencies_changed_gin ON architecture_refactor_log USING GIN(dependencies_changed) WHERE dependencies_changed IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_architecture_refactor_log_services_affected_gin ON architecture_refactor_log USING GIN(services_affected);
+CREATE INDEX IF NOT EXISTS idx_architecture_refactor_log_dependencies_changed_gin ON architecture_refactor_log USING GIN(dependencies_changed) WHERE dependencies_changed IS NOT NULL;
 
 -- Indexes for communication patterns
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_communication_patterns_source_service ON communication_patterns(source_service);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_communication_patterns_target_service ON communication_patterns(target_service);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_communication_patterns_protocol ON communication_patterns(protocol);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_communication_patterns_environment ON communication_patterns(environment);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_communication_patterns_last_observed ON communication_patterns(last_observed);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_communication_patterns_success_rate_percent ON communication_patterns(success_rate_percent);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_communication_patterns_campaign_id ON communication_patterns(campaign_id) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_communication_patterns_source_service ON communication_patterns(source_service);
+CREATE INDEX IF NOT EXISTS idx_communication_patterns_target_service ON communication_patterns(target_service);
+CREATE INDEX IF NOT EXISTS idx_communication_patterns_protocol ON communication_patterns(protocol);
+CREATE INDEX IF NOT EXISTS idx_communication_patterns_environment ON communication_patterns(environment);
+CREATE INDEX IF NOT EXISTS idx_communication_patterns_last_observed ON communication_patterns(last_observed);
+CREATE INDEX IF NOT EXISTS idx_communication_patterns_success_rate_percent ON communication_patterns(success_rate_percent);
+CREATE INDEX IF NOT EXISTS idx_communication_patterns_campaign_id ON communication_patterns(campaign_id) WHERE campaign_id IS NOT NULL;
 
 -- Composite indexes for communication analysis
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_communication_patterns_source_target ON communication_patterns(source_service, target_service, protocol);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_communication_patterns_low_success_rate ON communication_patterns(success_rate_percent, last_observed DESC) WHERE success_rate_percent < 95;
+CREATE INDEX IF NOT EXISTS idx_communication_patterns_source_target ON communication_patterns(source_service, target_service, protocol);
+CREATE INDEX IF NOT EXISTS idx_communication_patterns_low_success_rate ON communication_patterns(success_rate_percent, last_observed DESC) WHERE success_rate_percent < 95;
 
 -- Indexes for service capacity metrics
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_capacity_metrics_service_name ON service_capacity_metrics(service_name);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_capacity_metrics_service_type ON service_capacity_metrics(service_type);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_capacity_metrics_measurement_timestamp ON service_capacity_metrics(measurement_timestamp);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_capacity_metrics_environment ON service_capacity_metrics(environment);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_capacity_metrics_capacity_alert_triggered ON service_capacity_metrics(capacity_alert_triggered) WHERE capacity_alert_triggered = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_capacity_metrics_scale_up_triggered ON service_capacity_metrics(scale_up_triggered) WHERE scale_up_triggered = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_capacity_metrics_performance_degraded ON service_capacity_metrics(performance_degraded) WHERE performance_degraded = TRUE;
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_capacity_metrics_campaign_id ON service_capacity_metrics(campaign_id) WHERE campaign_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_service_capacity_metrics_service_name ON service_capacity_metrics(service_name);
+CREATE INDEX IF NOT EXISTS idx_service_capacity_metrics_service_type ON service_capacity_metrics(service_type);
+CREATE INDEX IF NOT EXISTS idx_service_capacity_metrics_measurement_timestamp ON service_capacity_metrics(measurement_timestamp);
+CREATE INDEX IF NOT EXISTS idx_service_capacity_metrics_environment ON service_capacity_metrics(environment);
+CREATE INDEX IF NOT EXISTS idx_service_capacity_metrics_capacity_alert_triggered ON service_capacity_metrics(capacity_alert_triggered) WHERE capacity_alert_triggered = TRUE;
+CREATE INDEX IF NOT EXISTS idx_service_capacity_metrics_scale_up_triggered ON service_capacity_metrics(scale_up_triggered) WHERE scale_up_triggered = TRUE;
+CREATE INDEX IF NOT EXISTS idx_service_capacity_metrics_performance_degraded ON service_capacity_metrics(performance_degraded) WHERE performance_degraded = TRUE;
+CREATE INDEX IF NOT EXISTS idx_service_capacity_metrics_campaign_id ON service_capacity_metrics(campaign_id) WHERE campaign_id IS NOT NULL;
 
 -- Composite indexes for capacity analysis
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_capacity_metrics_service_time ON service_capacity_metrics(service_name, measurement_timestamp DESC);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_service_capacity_metrics_high_utilization ON service_capacity_metrics(request_capacity_utilization_percent DESC, memory_capacity_utilization_percent DESC) WHERE request_capacity_utilization_percent > 80 OR memory_capacity_utilization_percent > 80;
+CREATE INDEX IF NOT EXISTS idx_service_capacity_metrics_service_time ON service_capacity_metrics(service_name, measurement_timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_service_capacity_metrics_high_utilization ON service_capacity_metrics(request_capacity_utilization_percent DESC, memory_capacity_utilization_percent DESC) WHERE request_capacity_utilization_percent > 80 OR memory_capacity_utilization_percent > 80;

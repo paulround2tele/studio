@@ -291,10 +291,6 @@ type LeadGenerationCampaign struct {
 	CompletedPhases int            `db:"completed_phases" json:"completedPhases" validate:"gte=0,lte=4"`
 	OverallProgress *float64       `db:"overall_progress" json:"overallProgress,omitempty" validate:"omitempty,gte=0,lte=100"`
 
-	// Sequence mode configuration
-	IsFullSequenceMode bool `db:"is_full_sequence_mode" json:"isFullSequenceMode"`
-	AutoAdvancePhases  bool `db:"auto_advance_phases" json:"autoAdvancePhases"`
-
 	// JSONB columns for efficient phase data storage
 	DomainsData     *json.RawMessage `db:"domains_data" json:"domainsData,omitempty" gorm:"type:jsonb"`
 	DNSResults      *json.RawMessage `db:"dns_results" json:"dnsResults,omitempty" gorm:"type:jsonb"`
@@ -325,10 +321,9 @@ type LeadGenerationCampaign struct {
 	Phases []CampaignPhase `json:"phases,omitempty"`
 
 	// Transition fields
-	PhaseStatus      *PhaseStatusEnum `db:"phase_status" json:"phaseStatus,omitempty"` // Computed from current phase status
-	FullSequenceMode *bool            `json:"fullSequenceMode,omitempty"`              // Maps to IsFullSequenceMode
-	DNSConfig        *json.RawMessage `json:"dnsConfig,omitempty"`
-	HTTPConfig       *json.RawMessage `json:"httpConfig,omitempty"`
+	PhaseStatus *PhaseStatusEnum `db:"phase_status" json:"phaseStatus,omitempty"` // Computed from current phase status
+	DNSConfig   *json.RawMessage `json:"dnsConfig,omitempty"`
+	HTTPConfig  *json.RawMessage `json:"httpConfig,omitempty"`
 
 	// Content analysis data (from analysis phase)
 	ExtractedContent *[]ExtractedContentItem `json:"extractedContent,omitempty"`

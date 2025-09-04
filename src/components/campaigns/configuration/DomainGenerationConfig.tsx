@@ -50,8 +50,17 @@ export const DomainGenerationConfig: React.FC<DomainGenerationConfigProps> = ({
   });
 
   const maxPossible = useMemo(() => {
-    return calculateMaxTheoreticalDomains({ patternType, characterSet, variableLength });
-  }, [patternType, characterSet, variableLength]);
+    // Provide full shape expected by calculator (constantString, tlds, and optional side lengths)
+    return calculateMaxTheoreticalDomains({
+      patternType,
+      characterSet,
+      variableLength,
+      constantString: constantString || '',
+      tlds: (tlds && tlds.length ? tlds : ['.com']) as any,
+      prefixVariableLength,
+      suffixVariableLength,
+    } as any);
+  }, [patternType, characterSet, variableLength, constantString, tlds, prefixVariableLength, suffixVariableLength]);
 
   const currentOffset = offsetData?.currentOffset ?? undefined;
   const remainingFromGlobal = useMemo(() => {
@@ -101,7 +110,15 @@ export const DomainGenerationConfig: React.FC<DomainGenerationConfigProps> = ({
           <div className="text-xs text-muted-foreground">Remaining possible</div>
           <div className="text-lg font-semibold">
             {currentOffset !== undefined
-              ? calculateRemainingDomains({ patternType, characterSet, variableLength }, currentOffset).toLocaleString()
+              ? calculateRemainingDomains({
+                  patternType,
+                  characterSet,
+                  variableLength,
+                  constantString: constantString || '',
+                  tlds: (tlds && tlds.length ? tlds : ['.com']) as any,
+                  prefixVariableLength,
+                  suffixVariableLength,
+                } as any, currentOffset).toLocaleString()
               : '—'}
           </div>
         </div>
@@ -349,7 +366,15 @@ export const DomainGenerationConfig: React.FC<DomainGenerationConfigProps> = ({
             </FormControl>
             <div className="text-xs text-muted-foreground">
               {currentOffset !== undefined
-                ? `Remaining possible: ${calculateRemainingDomains({ patternType, characterSet, variableLength }, currentOffset).toLocaleString()}`
+                ? `Remaining possible: ${calculateRemainingDomains({
+                    patternType,
+                    characterSet,
+                    variableLength,
+                    constantString: constantString || '',
+                    tlds: (tlds && tlds.length ? tlds : ['.com']) as any,
+                    prefixVariableLength,
+                    suffixVariableLength,
+                  } as any, currentOffset).toLocaleString()}`
                 : 'Enter pattern details to compute remaining capacity'}
             </div>
             <FormMessage />

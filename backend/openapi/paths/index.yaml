@@ -168,6 +168,10 @@
   $ref: "./campaigns/phase-configure.yaml"
 "/campaigns/{campaignId}/phases/{phase}/start":
   $ref: "./campaigns/phase-start.yaml"
+"/campaigns/{campaignId}/mode":
+  $ref: "./campaigns/mode-update.yaml"
+"/campaigns/{campaignId}/configs":
+  $ref: "./campaigns/phase-configs.yaml"
 "/campaigns/{campaignId}/phases/{phase}/stop":
   $ref: "./campaigns/phase-stop.yaml"
 "/campaigns/bulk/operations":

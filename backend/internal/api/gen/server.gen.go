@@ -1457,6 +1457,11 @@ type CampaignsDomainsListParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 }
 
+// CampaignsModeUpdateJSONBody defines parameters for CampaignsModeUpdate.
+type CampaignsModeUpdateJSONBody struct {
+	Mode CampaignModeEnum `json:"mode"`
+}
+
 // CampaignsPhaseExecutionDeleteParamsPhaseType defines parameters for CampaignsPhaseExecutionDelete.
 type CampaignsPhaseExecutionDeleteParamsPhaseType string
 
@@ -1626,6 +1631,9 @@ type CampaignsDomainGenerationPatternOffsetJSONRequestBody = PatternOffsetReques
 // CampaignsUpdateJSONRequestBody defines body for CampaignsUpdate for application/json ContentType.
 type CampaignsUpdateJSONRequestBody = UpdateCampaignRequest
 
+// CampaignsModeUpdateJSONRequestBody defines body for CampaignsModeUpdate for application/json ContentType.
+type CampaignsModeUpdateJSONRequestBody CampaignsModeUpdateJSONBody
+
 // CampaignsPhaseExecutionPutJSONRequestBody defines body for CampaignsPhaseExecutionPut for application/json ContentType.
 type CampaignsPhaseExecutionPutJSONRequestBody = PhaseExecutionUpdate
 
@@ -1778,12 +1786,18 @@ type ServerInterface interface {
 	// Update campaign
 	// (PUT /campaigns/{campaignId})
 	CampaignsUpdate(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
+	// List stored phase configurations for a campaign
+	// (GET /campaigns/{campaignId}/configs)
+	CampaignsPhaseConfigsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
 	// List generated domains for a campaign
 	// (GET /campaigns/{campaignId}/domains)
 	CampaignsDomainsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsDomainsListParams)
 	// Get enriched campaign details
 	// (GET /campaigns/{campaignId}/enriched)
 	CampaignsEnrichedGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
+	// Update campaign execution mode
+	// (PATCH /campaigns/{campaignId}/mode)
+	CampaignsModeUpdate(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
 	// Get campaign state and phase executions
 	// (GET /campaigns/{campaignId}/phase-executions)
 	CampaignsPhaseExecutionsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
@@ -2192,6 +2206,12 @@ func (_ Unimplemented) CampaignsUpdate(w http.ResponseWriter, r *http.Request, c
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// List stored phase configurations for a campaign
+// (GET /campaigns/{campaignId}/configs)
+func (_ Unimplemented) CampaignsPhaseConfigsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // List generated domains for a campaign
 // (GET /campaigns/{campaignId}/domains)
 func (_ Unimplemented) CampaignsDomainsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsDomainsListParams) {
@@ -2201,6 +2221,12 @@ func (_ Unimplemented) CampaignsDomainsList(w http.ResponseWriter, r *http.Reque
 // Get enriched campaign details
 // (GET /campaigns/{campaignId}/enriched)
 func (_ Unimplemented) CampaignsEnrichedGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update campaign execution mode
+// (PATCH /campaigns/{campaignId}/mode)
+func (_ Unimplemented) CampaignsModeUpdate(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3243,6 +3269,37 @@ func (siw *ServerInterfaceWrapper) CampaignsUpdate(w http.ResponseWriter, r *htt
 	handler.ServeHTTP(w, r)
 }
 
+// CampaignsPhaseConfigsList operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsPhaseConfigsList(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsPhaseConfigsList(w, r, campaignId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CampaignsDomainsList operation middleware
 func (siw *ServerInterfaceWrapper) CampaignsDomainsList(w http.ResponseWriter, r *http.Request) {
 
@@ -3315,6 +3372,37 @@ func (siw *ServerInterfaceWrapper) CampaignsEnrichedGet(w http.ResponseWriter, r
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CampaignsEnrichedGet(w, r, campaignId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CampaignsModeUpdate operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsModeUpdate(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsModeUpdate(w, r, campaignId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6148,10 +6236,16 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Put(options.BaseURL+"/campaigns/{campaignId}", wrapper.CampaignsUpdate)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/campaigns/{campaignId}/configs", wrapper.CampaignsPhaseConfigsList)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/campaigns/{campaignId}/domains", wrapper.CampaignsDomainsList)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/campaigns/{campaignId}/enriched", wrapper.CampaignsEnrichedGet)
+	})
+	r.Group(func(r chi.Router) {
+		r.Patch(options.BaseURL+"/campaigns/{campaignId}/mode", wrapper.CampaignsModeUpdate)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/campaigns/{campaignId}/phase-executions", wrapper.CampaignsPhaseExecutionsList)
@@ -7665,6 +7759,72 @@ func (response CampaignsUpdate500JSONResponse) VisitCampaignsUpdateResponse(w ht
 	return json.NewEncoder(w).Encode(response)
 }
 
+type CampaignsPhaseConfigsListRequestObject struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+}
+
+type CampaignsPhaseConfigsListResponseObject interface {
+	VisitCampaignsPhaseConfigsListResponse(w http.ResponseWriter) error
+}
+
+type CampaignsPhaseConfigsList200JSONResponse struct {
+	Data *struct {
+		CampaignId     *openapi_types.UUID                `json:"campaignId,omitempty"`
+		Configs        *map[string]map[string]interface{} `json:"configs,omitempty"`
+		ConfigsPresent *map[string]bool                   `json:"configsPresent,omitempty"`
+	} `json:"data,omitempty"`
+	Metadata  *Metadata `json:"metadata,omitempty"`
+	RequestId string    `json:"requestId"`
+
+	// Success Always true for success envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response CampaignsPhaseConfigsList200JSONResponse) VisitCampaignsPhaseConfigsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseConfigsList400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CampaignsPhaseConfigsList400JSONResponse) VisitCampaignsPhaseConfigsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseConfigsList401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CampaignsPhaseConfigsList401JSONResponse) VisitCampaignsPhaseConfigsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseConfigsList404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsPhaseConfigsList404JSONResponse) VisitCampaignsPhaseConfigsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseConfigsList500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsPhaseConfigsList500JSONResponse) VisitCampaignsPhaseConfigsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type CampaignsDomainsListRequestObject struct {
 	CampaignId openapi_types.UUID `json:"campaignId"`
 	Params     CampaignsDomainsListParams
@@ -7758,6 +7918,71 @@ type CampaignsEnrichedGet500JSONResponse struct {
 }
 
 func (response CampaignsEnrichedGet500JSONResponse) VisitCampaignsEnrichedGetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsModeUpdateRequestObject struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+	Body       *CampaignsModeUpdateJSONRequestBody
+}
+
+type CampaignsModeUpdateResponseObject interface {
+	VisitCampaignsModeUpdateResponse(w http.ResponseWriter) error
+}
+
+type CampaignsModeUpdate200JSONResponse struct {
+	Data *struct {
+		Mode *CampaignModeEnum `json:"mode,omitempty"`
+	} `json:"data,omitempty"`
+	Metadata  *Metadata `json:"metadata,omitempty"`
+	RequestId string    `json:"requestId"`
+
+	// Success Always true for success envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response CampaignsModeUpdate200JSONResponse) VisitCampaignsModeUpdateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsModeUpdate400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CampaignsModeUpdate400JSONResponse) VisitCampaignsModeUpdateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsModeUpdate401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CampaignsModeUpdate401JSONResponse) VisitCampaignsModeUpdateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsModeUpdate404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsModeUpdate404JSONResponse) VisitCampaignsModeUpdateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsModeUpdate500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsModeUpdate500JSONResponse) VisitCampaignsModeUpdateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -8057,6 +8282,24 @@ type CampaignsPhaseStart404JSONResponse struct{ NotFoundJSONResponse }
 func (response CampaignsPhaseStart404JSONResponse) VisitCampaignsPhaseStartResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsPhaseStart409JSONResponse struct {
+	Error ApiError `json:"error"`
+
+	// MissingPhases Phase identifiers that lack configuration
+	MissingPhases *[]string `json:"missingPhases,omitempty"`
+	RequestId     string    `json:"requestId"`
+
+	// Success Always false for error envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response CampaignsPhaseStart409JSONResponse) VisitCampaignsPhaseStartResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -13586,12 +13829,18 @@ type StrictServerInterface interface {
 	// Update campaign
 	// (PUT /campaigns/{campaignId})
 	CampaignsUpdate(ctx context.Context, request CampaignsUpdateRequestObject) (CampaignsUpdateResponseObject, error)
+	// List stored phase configurations for a campaign
+	// (GET /campaigns/{campaignId}/configs)
+	CampaignsPhaseConfigsList(ctx context.Context, request CampaignsPhaseConfigsListRequestObject) (CampaignsPhaseConfigsListResponseObject, error)
 	// List generated domains for a campaign
 	// (GET /campaigns/{campaignId}/domains)
 	CampaignsDomainsList(ctx context.Context, request CampaignsDomainsListRequestObject) (CampaignsDomainsListResponseObject, error)
 	// Get enriched campaign details
 	// (GET /campaigns/{campaignId}/enriched)
 	CampaignsEnrichedGet(ctx context.Context, request CampaignsEnrichedGetRequestObject) (CampaignsEnrichedGetResponseObject, error)
+	// Update campaign execution mode
+	// (PATCH /campaigns/{campaignId}/mode)
+	CampaignsModeUpdate(ctx context.Context, request CampaignsModeUpdateRequestObject) (CampaignsModeUpdateResponseObject, error)
 	// Get campaign state and phase executions
 	// (GET /campaigns/{campaignId}/phase-executions)
 	CampaignsPhaseExecutionsList(ctx context.Context, request CampaignsPhaseExecutionsListRequestObject) (CampaignsPhaseExecutionsListResponseObject, error)
@@ -14467,6 +14716,32 @@ func (sh *strictHandler) CampaignsUpdate(w http.ResponseWriter, r *http.Request,
 	}
 }
 
+// CampaignsPhaseConfigsList operation middleware
+func (sh *strictHandler) CampaignsPhaseConfigsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	var request CampaignsPhaseConfigsListRequestObject
+
+	request.CampaignId = campaignId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsPhaseConfigsList(ctx, request.(CampaignsPhaseConfigsListRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsPhaseConfigsList")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsPhaseConfigsListResponseObject); ok {
+		if err := validResponse.VisitCampaignsPhaseConfigsListResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // CampaignsDomainsList operation middleware
 func (sh *strictHandler) CampaignsDomainsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsDomainsListParams) {
 	var request CampaignsDomainsListRequestObject
@@ -14513,6 +14788,39 @@ func (sh *strictHandler) CampaignsEnrichedGet(w http.ResponseWriter, r *http.Req
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CampaignsEnrichedGetResponseObject); ok {
 		if err := validResponse.VisitCampaignsEnrichedGetResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CampaignsModeUpdate operation middleware
+func (sh *strictHandler) CampaignsModeUpdate(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	var request CampaignsModeUpdateRequestObject
+
+	request.CampaignId = campaignId
+
+	var body CampaignsModeUpdateJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsModeUpdate(ctx, request.(CampaignsModeUpdateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsModeUpdate")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsModeUpdateResponseObject); ok {
+		if err := validResponse.VisitCampaignsModeUpdateResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
