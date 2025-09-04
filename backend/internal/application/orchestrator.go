@@ -78,7 +78,6 @@ type OrchestratorMetrics interface {
 	IncPhaseCompletions()
 	IncPhaseFailures()
 	IncPhaseAutoStarts()
-	IncChainBlocked()
 	IncCampaignCompletions()
 	RecordPhaseDuration(phase string, d time.Duration)
 }
@@ -90,7 +89,6 @@ func (n *noopMetrics) IncPhaseStarts()                           {}
 func (n *noopMetrics) IncPhaseCompletions()                      {}
 func (n *noopMetrics) IncPhaseFailures()                         {}
 func (n *noopMetrics) IncPhaseAutoStarts()                       {}
-func (n *noopMetrics) IncChainBlocked()                          {}
 func (n *noopMetrics) IncCampaignCompletions()                   {}
 func (n *noopMetrics) RecordPhaseDuration(string, time.Duration) {}
 
@@ -218,19 +216,17 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 	// Read mode (default step_by_step) for readiness gating when starting the first phase in full_sequence
 	mode, _ := o.store.GetCampaignMode(ctx, querier, campaignID)
 	if mode == "full_sequence" && phase == models.PhaseTypeDomainGeneration {
-		// Relaxed initial gating: require only the immediate next phase (dns_validation)
-		// Subsequent missing configs are enforced mid-chain by handlePhaseCompletion.
+		// Strict model A: all configs must be present before any start (handled at API layer earlier ideally).
 		configs, _ := o.store.ListPhaseConfigs(ctx, querier, campaignID)
-		if _, ok := configs[models.PhaseTypeDNSValidation]; !ok {
-			missing := []string{string(models.PhaseTypeDNSValidation)}
-			if o.sseService != nil && cachedUserID != nil {
-				// next_phase set to the missing immediate next phase
-				evt := services.CreateChainBlockedEvent(campaignID, *cachedUserID, missing, phase, missing[0])
-				o.sseService.BroadcastToCampaign(campaignID, evt)
+		missingList := []string{}
+		for _, required := range []models.PhaseTypeEnum{models.PhaseTypeDNSValidation, models.PhaseTypeHTTPKeywordValidation, models.PhaseTypeAnalysis} {
+			if _, ok := configs[required]; !ok {
+				missingList = append(missingList, string(required))
 			}
-			o.deps.Logger.Warn(ctx, "Full sequence start blocked: missing immediate next phase config", map[string]interface{}{"campaign_id": campaignID, "missing_phase": models.PhaseTypeDNSValidation})
-			o.metrics.IncChainBlocked()
-			return &MissingPhaseConfigsError{Missing: missing}
+		}
+		if len(missingList) > 0 {
+			o.deps.Logger.Warn(ctx, "Full sequence start blocked: missing downstream phase configs", map[string]interface{}{"campaign_id": campaignID, "missing": missingList})
+			return &MissingPhaseConfigsError{Missing: missingList}
 		}
 	}
 
@@ -672,19 +668,7 @@ func (o *CampaignOrchestrator) handlePhaseCompletion(ctx context.Context, campai
 		if !ok {
 			return
 		}
-		// Mid-chain config gating: ensure config exists for next phase; else emit chain_blocked and stop.
-		if configs, err2 := o.store.ListPhaseConfigs(ctx, querier, campaignID); err2 == nil {
-			if _, okc := configs[next]; !okc { // Missing ONLY next; we don't look further yet
-				if o.sseService != nil && cachedUserID != nil {
-					missing := []string{string(next)}
-					evt := services.CreateChainBlockedEvent(campaignID, *cachedUserID, missing, phase, string(next))
-					o.sseService.BroadcastToCampaign(campaignID, evt)
-				}
-				o.deps.Logger.Warn(ctx, "Auto-advance blocked: missing next phase config", map[string]interface{}{"campaign_id": campaignID, "next_phase": next})
-				o.metrics.IncChainBlocked()
-				return
-			}
-		}
+		// Under strict model A mid-chain gating is removed; auto-advance simply attempts next phase assuming pre-validation.
 		// Ensure next phase isn't already completed
 		if nextPhaseRow, err := o.store.GetCampaignPhase(ctx, querier, campaignID, next); err == nil {
 			if nextPhaseRow.Status == models.PhaseStatusCompleted {

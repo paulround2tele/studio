@@ -115,7 +115,6 @@ type testMetrics struct {
 	phaseCompletions    int
 	phaseFailures       int
 	phaseAutoStarts     int
-	chainBlocked        int
 	campaignCompletions int
 	durations           map[string]time.Duration
 }
@@ -124,7 +123,6 @@ func (m *testMetrics) IncPhaseStarts()         { m.phaseStarts++ }
 func (m *testMetrics) IncPhaseCompletions()    { m.phaseCompletions++ }
 func (m *testMetrics) IncPhaseFailures()       { m.phaseFailures++ }
 func (m *testMetrics) IncPhaseAutoStarts()     { m.phaseAutoStarts++ }
-func (m *testMetrics) IncChainBlocked()        { m.chainBlocked++ }
 func (m *testMetrics) IncCampaignCompletions() { m.campaignCompletions++ }
 func (m *testMetrics) RecordPhaseDuration(p string, d time.Duration) {
 	if m.durations == nil {
@@ -266,54 +264,10 @@ func TestFirstPhaseMissingConfigsGated(t *testing.T) {
 	if !errors.As(err, &missingErr) {
 		t.Fatalf("expected MissingPhaseConfigsError got %T", err)
 	}
-	if metrics.chainBlocked != 1 {
-		t.Fatalf("expected chainBlocked=1 got %d", metrics.chainBlocked)
-	}
+	// Former gating metric removed under strict model A.
 }
 
-func TestMidChainMissingNextConfigBlocks(t *testing.T) {
-	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
-	cs := pg_store.NewCampaignStorePostgres(db)
-	logger := &testLogger{t: t}
-	deps := domainservices.Dependencies{Logger: logger, DB: db}
-	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
-	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
-	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
-	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
-	metrics := &testMetrics{}
-	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, analysisSvc, nil, metrics)
-
-	campaignID := createTestCampaign(t, cs)
-	if err := cs.UpdateCampaignMode(context.Background(), nil, campaignID, "full_sequence"); err != nil {
-		t.Fatalf("set mode: %v", err)
-	}
-
-	// Provide configs for domain + dns only; ensure http + analysis configs are ABSENT (some migrations may seed rows).
-	upsertConfig(t, cs, campaignID, models.PhaseTypeDomainGeneration)
-	upsertConfig(t, cs, campaignID, models.PhaseTypeDNSValidation)
-	// Force removal of http + analysis configs if present to simulate missing mid-chain configuration.
-	if _, err := db.Exec(`DELETE FROM phase_configurations WHERE campaign_id = $1 AND phase IN ('http_keyword_validation','analysis')`, campaignID); err != nil {
-		t.Fatalf("failed to delete downstream configs: %v", err)
-	}
-
-	if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDomainGeneration); err != nil {
-		t.Fatalf("start domain_generation: %v", err)
-	}
-
-	// Wait until DNS completes
-	waitUntil(t, 2*time.Second, func() bool {
-		st, _ := dnsSvc.GetStatus(context.Background(), campaignID)
-		return st.Status == models.PhaseStatusCompleted
-	})
-
-	// Wait for chainBlocked metric (auto-advance attempts HTTP, finds missing config)
-	waitUntil(t, 2*time.Second, func() bool { return metrics.chainBlocked > 0 })
-	// HTTP phase should NOT have started (status should be not started)
-	stHTTP, _ := httpSvc.GetStatus(context.Background(), campaignID)
-	if stHTTP.Status != models.PhaseStatusNotStarted {
-		t.Fatalf("expected http phase not started, got %s", stHTTP.Status)
-	}
-}
+// Removed TestMidChainMissingNextConfigBlocks: mid-chain gating eliminated in strict model A.
 
 func TestFailureThenRetryChainContinues(t *testing.T) {
 	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
@@ -395,45 +349,7 @@ func TestAuditTriggerNoAmbiguousKey(t *testing.T) {
 }
 
 // A. Unblock scenario: initially missing HTTP config blocks chain; adding config and manual start resumes chain.
-func TestMidChainUnblockAfterConfigAdded(t *testing.T) {
-	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
-	cs := pg_store.NewCampaignStorePostgres(db)
-	logger := &testLogger{t: t}
-	deps := domainservices.Dependencies{Logger: logger, DB: db}
-	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
-	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
-	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
-	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
-	metrics := &testMetrics{}
-	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, analysisSvc, nil, metrics)
-	campaignID := createTestCampaign(t, cs)
-	if err := cs.UpdateCampaignMode(context.Background(), nil, campaignID, "full_sequence"); err != nil {
-		t.Fatalf("mode: %v", err)
-	}
-	upsertConfig(t, cs, campaignID, models.PhaseTypeDomainGeneration)
-	upsertConfig(t, cs, campaignID, models.PhaseTypeDNSValidation)
-	if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDomainGeneration); err != nil {
-		t.Fatalf("start domain: %v", err)
-	}
-	waitUntil(t, 2*time.Second, func() bool {
-		st, _ := dnsSvc.GetStatus(context.Background(), campaignID)
-		return st.Status == models.PhaseStatusCompleted
-	})
-	waitUntil(t, 2*time.Second, func() bool { return metrics.chainBlocked > 0 })
-	// Add missing configs & manually start HTTP
-	upsertConfig(t, cs, campaignID, models.PhaseTypeHTTPKeywordValidation)
-	upsertConfig(t, cs, campaignID, models.PhaseTypeAnalysis)
-	if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeHTTPKeywordValidation); err != nil {
-		t.Fatalf("manual http start: %v", err)
-	}
-	waitUntil(t, 2*time.Second, func() bool {
-		st, _ := analysisSvc.GetStatus(context.Background(), campaignID)
-		return st.Status == models.PhaseStatusCompleted
-	})
-	if metrics.phaseCompletions < 3 {
-		t.Fatalf("expected at least 3 completions, got %d", metrics.phaseCompletions)
-	}
-}
+// Removed TestMidChainUnblockAfterConfigAdded: obsolete under strict model A.
 
 // B. SSE event ordering basic assertions.
 func TestSSEEventOrderingFullSequence(t *testing.T) {

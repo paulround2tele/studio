@@ -28,7 +28,6 @@ const (
 	SSEEventDomainValidated   SSEEventType = "domain_validated"
 	SSEEventAnalysisCompleted SSEEventType = "analysis_completed"
 	SSEEventModeChanged       SSEEventType = "mode_changed"
-	SSEEventChainBlocked      SSEEventType = "chain_blocked"
 	// Keyword set lifecycle events
 	SSEEventKeywordSetCreated SSEEventType = "keyword_set_created"
 	SSEEventKeywordSetUpdated SSEEventType = "keyword_set_updated"
@@ -422,23 +421,6 @@ func CreatePhaseAutoStartedEvent(campaignID uuid.UUID, userID uuid.UUID, phase m
 			"campaign_id": campaignID.String(),
 			"phase":       string(phase),
 			"message":     fmt.Sprintf("Phase %s auto-started", phase),
-		},
-		Timestamp: time.Now(),
-	}
-}
-
-// CreateChainBlockedEvent emits when full_sequence chain cannot proceed due to missing config
-func CreateChainBlockedEvent(campaignID uuid.UUID, userID uuid.UUID, missing []string, fromPhase models.PhaseTypeEnum, nextPhase string) SSEEvent {
-	return SSEEvent{
-		Event:      SSEEventChainBlocked,
-		CampaignID: &campaignID,
-		UserID:     &userID,
-		Data: map[string]interface{}{
-			"campaign_id":    campaignID.String(),
-			"missing_phases": missing,
-			"from_phase":     string(fromPhase),
-			"next_phase":     nextPhase,
-			"message":        "Auto chaining blocked: missing required phase configuration",
 		},
 		Timestamp: time.Now(),
 	}

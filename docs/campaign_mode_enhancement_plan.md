@@ -95,11 +95,10 @@ interface PhaseReadiness {
 Each step is shippable and reduces risk; stop early if scope pressures arise.
 
 ---
-## Acceptance Criteria (Initial Milestones)
-- After switching to full_sequence with missing configs, Preflight appears automatically (Milestone E). *(Before E, ensure A–C deliver blockedPhase + readiness but no UI yet).*  
-- chain_blocked event sets `blockedPhase` and a visible banner (after D).  
+## Acceptance Criteria (Initial Milestones - Updated for Strict Model A)
+- After switching to full_sequence with missing configs, Preflight appears automatically (Milestone E).  
 - Step by step mode shows actionable "Next" guidance (after F).  
-- Toggling back and forth preserves accurate mode & removes banners logically.  
+- Toggling back and forth preserves accurate mode.  
 
 ---
 ## Edge Cases & Handling

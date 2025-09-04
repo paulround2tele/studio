@@ -14,7 +14,6 @@ type RuntimeMetrics struct {
 	phaseAutoStarts     atomic.Int64
 	phaseCompletions    atomic.Int64
 	phaseFailures       atomic.Int64
-	chainBlocked        atomic.Int64
 	campaignCompletions atomic.Int64
 	phaseConfigUpdates  atomic.Int64
 	// Simple duration aggregations (nanoseconds accumulated)
@@ -32,7 +31,6 @@ func (m *RuntimeMetrics) IncPhaseStarts()         { m.phaseStarts.Add(1) }
 func (m *RuntimeMetrics) IncPhaseAutoStarts()     { m.phaseAutoStarts.Add(1) }
 func (m *RuntimeMetrics) IncPhaseCompletions()    { m.phaseCompletions.Add(1) }
 func (m *RuntimeMetrics) IncPhaseFailures()       { m.phaseFailures.Add(1) }
-func (m *RuntimeMetrics) IncChainBlocked()        { m.chainBlocked.Add(1) }
 func (m *RuntimeMetrics) IncCampaignCompletions() { m.campaignCompletions.Add(1) }
 func (m *RuntimeMetrics) IncPhaseConfigUpdates()  { m.phaseConfigUpdates.Add(1) }
 
@@ -58,7 +56,6 @@ func (m *RuntimeMetrics) Snapshot() map[string]int64 {
 		"phase_auto_starts_total":        m.phaseAutoStarts.Load(),
 		"phase_completions_total":        m.phaseCompletions.Load(),
 		"phase_failures_total":           m.phaseFailures.Load(),
-		"chain_blocked_total":            m.chainBlocked.Load(),
 		"campaign_completions_total":     m.campaignCompletions.Load(),
 		"phase_config_updates_total":     m.phaseConfigUpdates.Load(),
 		"domain_phase_duration_ns_sum":   m.domainPhaseDurationNs.Load(),

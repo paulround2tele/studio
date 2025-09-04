@@ -42,10 +42,10 @@ We will let a user set up *all* the campaign steps (phases) first, then press on
 - Add store methods for saving & retrieving phase configs (`UpsertPhaseConfig`, `GetPhaseConfig`).
 - Extend orchestrator to:
   1. On phase completion (COMPLETED), if mode = `full_sequence`, locate next phase.
-  2. Check config exists; if yes → start next phase; if not → emit "chain_blocked" event.
+  2. Check config exists; if missing under strict model A this situation should not occur (validated pre-start); if encountered log WARN and stop auto advance silently.
 - Add readiness checks before starting *first* phase in full sequence: ensure *all* downstream configs exist; otherwise reject start with 409 + list.
 - Add mode update handler: PATCH `/campaigns/{id}/mode` body `{ "mode": "full_sequence" | "step_by_step" }`.
-- Emit SSE events: `mode_changed`, `phase_auto_started`, `chain_blocked`.
+- Emit SSE events: `mode_changed`, `phase_auto_started`.
 - Update existing phase configure endpoint to write into `phase_configurations` instead of only memory/metadata.
 - Update phase start logic to require config present.
 
@@ -106,7 +106,7 @@ We will let a user set up *all* the campaign steps (phases) first, then press on
   - For each, confirm config exists (query `phase_configurations`).
   - If missing any: respond 409 (JSON body with `missingPhases` array) and do not start.
 - When auto-advancing:
-  - Just ensure next phase config exists; if missing → emit `chain_blocked` and stop chain.
+  - Just ensure next phase config exists; if missing (unexpected) log warning and stop chain (no event).
 
 ### 6. Auto-Advance Logic
 - Hook into phase completion event inside orchestrator.
@@ -120,12 +120,12 @@ We will let a user set up *all* the campaign steps (phases) first, then press on
 ### 7. Phase Status / Blocked State
 - Introduce logical status `WAITING_FOR_CONFIGURATION` (no DB schema change if we store it in execution state table or campaign_state.current_state).
 - When blocked: set campaign_state.current_state = `waiting_for_configuration` (or add prefix) OR add a separate flag in enrichment response; simplest is to emit event only and let UI infer.
-- Decision: Keep DB simple—just emit `chain_blocked` event; UI will show that next phase’s config is missing.
+- Decision: Under strict model A we removed dedicated blocked event; UI infers readiness before initial start only.
 
 ### 8. SSE Events (Payload Outline)
 - `mode_changed`: { campaignId, mode, timestamp }
 - `phase_auto_started`: { campaignId, phase, startedAt }
-- `chain_blocked`: { campaignId, nextPhase, reason:"missing_config", timestamp }
+// Removed historical `chain_blocked` event under strict model A.
 
 ### 9. Frontend Adjustments
 - Add mode toggle (calls PATCH). Cache mode in RTK Query store.
@@ -179,7 +179,7 @@ We will let a user set up *all* the campaign steps (phases) first, then press on
 |------|------------|
 | Starting chain without all configs | Pre-flight check + 409 response |
 | Duplicate auto start | In-memory lock + idempotent StartPhase |
-| Confusing UI when blocked | Explicit chain_blocked event + missing config list |
+| Confusing UI when blocked | Pre-start validation prevents mid-chain block |
 | Schema mismatch after removal of legacy fields | Single migration + test build before deploy |
 
 ### 16. Future Enhancements (Optional Later)
