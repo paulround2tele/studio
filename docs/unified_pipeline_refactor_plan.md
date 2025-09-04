@@ -56,10 +56,31 @@ Tasks:
 - Create TypeScript model `UIPipelinePhase` with combined view fields.
 - Remove `blockedPhase` from Redux slice; strip actions (`setBlockedPhase`, `clearBlockedPhase`).
 - Adjust `usePhaseReadiness` → rename to `usePipelineState` returning: `{ phases, allConfigured, activeConfigIndex, canStartFullSequence }`.
+ - Introduce `guidanceMessages` queue (array) in UI slice: items `{ id, message, phase?, severity }` (foundation for future multi-message guidance handling).
+ - Add placeholder execution fields to `UIPipelinePhase`: `durationMs?`, `attempts?`, `lastError?` (hydrated later via executions endpoints).
 Success Criteria:
 - Type errors resolved; app compiles; no references to blockedPhase remain.
+ - New hook `usePipelineState` exported; legacy hook optionally proxied until removal.
 Risk: Hidden coupling with components expecting old hook shape.
 Mitigation: Introduce adapter temporarily then remove in Phase 7 if needed.
+
+### Integrated Legacy Task Mapping (A–L)
+| Code | Task | Integrated Phase |
+|------|------|------------------|
+| A | Executions endpoints + hydration | Model placeholders P1, queries P3, UI consumption P6 |
+| B | 409 missingPhases handling | UI & logic P6 |
+| C | Optional auto-start on mode switch | Implement P5 |
+| D | Mode switch guard | Store flag P3, UI confirm P4/P6 |
+| E | Failure panel extended actions | P6 |
+| F | Conversion CTA (real PATCH) | P6 |
+| G | Dependency hint text helper | P3 util, consumed P5+ |
+| H | Config Progress Checklist | Selector P3, visual ribbon P4 |
+| I | phase_auto_started surfacing | SSE + toast P6 |
+| J | Timeline initial fetch + SSE append | P6 |
+| K | Detailed missing config panel w/ configure buttons | P4 structure, P5 forms wiring |
+| L | Guidance queue | Queue scaffold P1, population P6 |
+
+Obsolete (dropped due to strict model): auto-resume, userAutoResume flag, blockedPhase banner.
 
 ### Phase 2: Backend Cleanup
 Tasks:

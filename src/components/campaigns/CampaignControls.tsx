@@ -12,8 +12,7 @@ import AnalysisConfigModal from '@/components/campaigns/modals/AnalysisConfigMod
 import DiscoveryConfigModal from '@/components/campaigns/modals/DiscoveryConfigModal';
 import { useCampaignSSE } from '@/hooks/useCampaignSSE';
 import { useAppDispatch } from '@/store/hooks';
-import { setBlockedPhase, setFullSequenceMode, setLastFailedPhase, setGuidance } from '@/store/ui/campaignUiSlice';
-import { SequenceBlockedBanner } from './SequenceBlockedBanner';
+import { setFullSequenceMode, setLastFailedPhase, setGuidance } from '@/store/ui/campaignUiSlice';
 import { FullSequencePreflightWizard } from './FullSequencePreflightWizard';
 import { NextActionPanel } from './NextActionPanel';
 import { PhaseStepper } from './PhaseStepper';
@@ -48,7 +47,7 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
         if (cid === campaign.id) dispatch(setFullSequenceMode({ campaignId: campaign.id, value: mode === 'full_sequence' }));
       },
       onChainBlocked: (cid, data) => {
-        if (cid === campaign.id) dispatch(setBlockedPhase({ campaignId: campaign.id, phase: (data as any)?.missing_phase || (data as any)?.phase }));
+  // chain_blocked deprecated under strict model; ignoring event if received.
       }
       ,onPhaseFailed: (cid, ev) => {
         if (cid === campaign.id) {
@@ -291,7 +290,7 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
 
   return (
     <div className="flex flex-col gap-4">
-      <SequenceBlockedBanner campaignId={campaign.id} />
+  {/* Blocked banner removed under strict model */}
   <GuidanceBanner campaignId={campaign.id} />
       <FullSequencePreflightWizard campaignId={campaign.id} />
       <NextActionPanel campaignId={campaign.id} />

@@ -2,7 +2,7 @@
 import React from 'react';
 import { usePhaseReadiness } from '@/hooks/usePhaseReadiness';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { setPreflightOpen, clearBlockedPhase } from '@/store/ui/campaignUiSlice';
+import { setPreflightOpen } from '@/store/ui/campaignUiSlice';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
@@ -24,7 +24,7 @@ export const FullSequencePreflightWizard: React.FC<Props> = ({ campaignId, onClo
         <div className="space-y-4">
           <p className="text-sm text-gray-600">Review phase readiness before chaining begins.</p>
           <ul className="space-y-2">
-            {phases.map(p => (
+            {phases.map((p: any) => (
               <li key={p.phase} className="flex items-center justify-between border rounded px-3 py-2 text-sm">
                 <span className="font-medium capitalize">{p.phase}</span>
                 <span className="text-xs">{p.status || 'unknown'} {p.configured ? '✅' : '⚠️'}</span>
@@ -36,7 +36,7 @@ export const FullSequencePreflightWizard: React.FC<Props> = ({ campaignId, onClo
           )}
           <div className="flex gap-2 pt-2 justify-end">
             <Button variant="outline" onClick={close}>Close</Button>
-            <Button onClick={() => { dispatch(clearBlockedPhase({ campaignId })); close(); }}>Continue</Button>
+            <Button onClick={() => { close(); }}>Continue</Button>
           </div>
         </div>
       </DialogContent>

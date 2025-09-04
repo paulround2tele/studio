@@ -5,9 +5,9 @@ export interface CampaignUIState {
   // Keyed by campaignId
   byId: Record<string, {
     fullSequenceMode?: boolean;
-  blockedPhase?: string;
-  preflightOpen?: boolean;
-  guidance?: { message: string; phase?: string; severity: 'info' | 'warn' };
+  preflightOpen?: boolean; // legacy preflight (will be removed later)
+  guidance?: { message: string; phase?: string; severity: 'info' | 'warn' }; // single guidance (legacy)
+  guidanceMessages?: { id: string; message: string; phase?: string; severity: 'info' | 'warn' }[]; // new queue
   lastFailedPhase?: string;
     // Add more UI-only fields as needed
   }>;
@@ -26,11 +26,6 @@ const campaignUiSlice = createSlice({
       state.byId[campaignId] = state.byId[campaignId] || {};
       state.byId[campaignId].fullSequenceMode = value;
     },
-    setBlockedPhase(state, action: PayloadAction<{ campaignId: string; phase?: string }>) {
-      const { campaignId, phase } = action.payload;
-      state.byId[campaignId] = state.byId[campaignId] || {};
-      state.byId[campaignId].blockedPhase = phase;
-    },
     setPreflightOpen(state, action: PayloadAction<{ campaignId: string; open: boolean }>) {
       const { campaignId, open } = action.payload;
       state.byId[campaignId] = state.byId[campaignId] || {};
@@ -45,9 +40,19 @@ const campaignUiSlice = createSlice({
       const { campaignId } = action.payload;
       if (state.byId[campaignId]) state.byId[campaignId].guidance = undefined;
     },
-    clearBlockedPhase(state, action: PayloadAction<{ campaignId: string }>) {
-      const { campaignId } = action.payload;
-      if (state.byId[campaignId]) state.byId[campaignId].blockedPhase = undefined;
+    pushGuidanceMessage(state, action: PayloadAction<{ campaignId: string; msg: { id: string; message: string; phase?: string; severity: 'info' | 'warn' } }>) {
+      const { campaignId, msg } = action.payload;
+      state.byId[campaignId] = state.byId[campaignId] || {};
+      const arr = state.byId[campaignId].guidanceMessages || (state.byId[campaignId].guidanceMessages = []);
+      arr.unshift(msg);
+      if (arr.length > 5) arr.pop();
+    },
+    dismissGuidanceMessage(state, action: PayloadAction<{ campaignId: string; id: string }>) {
+      const { campaignId, id } = action.payload;
+      const arr = state.byId[campaignId]?.guidanceMessages;
+      if (arr) {
+        state.byId[campaignId]!.guidanceMessages = arr.filter(m => m.id !== id);
+      }
     },
     setLastFailedPhase(state, action: PayloadAction<{ campaignId: string; phase?: string }>) {
       const { campaignId, phase } = action.payload;
@@ -65,5 +70,5 @@ const campaignUiSlice = createSlice({
   },
 });
 
-export const { setFullSequenceMode, setBlockedPhase, setPreflightOpen, setGuidance, clearGuidance, clearBlockedPhase, setLastFailedPhase, hydrateCampaignUI, resetCampaignUI } = campaignUiSlice.actions;
+export const { setFullSequenceMode, setPreflightOpen, setGuidance, clearGuidance, setLastFailedPhase, hydrateCampaignUI, resetCampaignUI, pushGuidanceMessage, dismissGuidanceMessage } = campaignUiSlice.actions;
 export default campaignUiSlice.reducer;
