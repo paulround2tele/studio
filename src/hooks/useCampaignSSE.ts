@@ -29,6 +29,8 @@ export interface CampaignSSEEvents {
   onDomainValidated?: (campaignId: string, data: unknown) => void;
   onAnalysisCompleted?: (campaignId: string, data: unknown) => void;
   onError?: (campaignId: string, error: string) => void;
+  onModeChanged?: (campaignId: string, mode: 'full_sequence' | 'step_by_step') => void;
+  onChainBlocked?: (campaignId: string, data: { missing_phase?: string; message?: string } & Record<string, unknown>) => void;
 }
 
 export interface UseCampaignSSEOptions {
@@ -145,6 +147,20 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
 
       case 'analysis_completed':
         events.onAnalysisCompleted?.(campaignIdFromEvent, event.data);
+        break;
+
+      case 'mode_changed': {
+        const mode = (dataObj?.mode as string | undefined);
+        if (mode === 'full_sequence' || mode === 'step_by_step') {
+          events.onModeChanged?.(campaignIdFromEvent, mode);
+        } else {
+          console.warn('⚠️ mode_changed event with invalid mode value', dataObj);
+        }
+        break;
+      }
+
+      case 'chain_blocked':
+        events.onChainBlocked?.(campaignIdFromEvent, dataObj as any);
         break;
 
       case 'error':

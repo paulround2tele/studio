@@ -43,6 +43,7 @@ export function CampaignModeToggle({
 }: CampaignModeToggleProps) {
   const _dispatch = useAppDispatch();
   const { toast } = useToast();
+  const [pending, setPending] = React.useState(false);
 
   // Use the properly defined modeConfig with all required properties
   const currentConfig = modeConfig[currentMode ? 'full_sequence' : 'step_by_step'];
@@ -53,20 +54,45 @@ export function CampaignModeToggle({
   const OtherIcon = otherConfig.icon;
 
   const handleModeToggle = async () => {
+    if (pending) return;
+    const newModeBool = !currentMode;
+    const newMode = newModeBool ? 'full_sequence' : 'step_by_step';
     try {
-  _dispatch(setFullSequenceMode({ campaignId, value: otherMode }));
+      setPending(true);
+      // Optimistic update
+      _dispatch(setFullSequenceMode({ campaignId, value: newModeBool }));
 
+      const resp = await fetch(`/api/v2/campaigns/${campaignId}/mode`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: newMode }),
+        credentials: 'include',
+      });
+
+      if (!resp.ok) {
+        throw new Error(`Server responded ${resp.status}`);
+      }
+      const json = await resp.json().catch(() => null);
+      const authoritativeMode = json?.data?.mode as string | undefined;
+      if (authoritativeMode && (authoritativeMode === 'full_sequence' || authoritativeMode === 'step_by_step')) {
+        const authoritativeBool = authoritativeMode === 'full_sequence';
+        _dispatch(setFullSequenceMode({ campaignId, value: authoritativeBool }));
+      }
       toast({
         title: 'Campaign Mode Updated',
-  description: `Switched to ${otherConfig.label} mode (client-side only)`,
+        description: `Switched to ${newModeBool ? 'Full Sequence' : 'Step by Step'} mode`,
       });
     } catch (error) {
+      // Revert optimistic change
+      _dispatch(setFullSequenceMode({ campaignId, value: currentMode }));
       const errorMessage = error instanceof Error ? error.message : 'Failed to update campaign mode';
       toast({
         title: 'Mode Update Failed',
         description: errorMessage,
         variant: 'destructive',
       });
+    } finally {
+      setPending(false);
     }
   };
 
@@ -97,11 +123,15 @@ export function CampaignModeToggle({
         <Button
           variant="outline"
           onClick={handleModeToggle}
-          disabled={disabled}
+          disabled={disabled || pending}
           className="w-full"
         >
-          <OtherIcon className="h-4 w-4 mr-2" />
-          Switch to {otherConfig.label}
+          {pending ? 'Updating...' : (
+            <>
+              <OtherIcon className="h-4 w-4 mr-2" />
+              Switch to {otherConfig.label}
+            </>
+          )}
         </Button>
       </CardContent>
     </Card>
