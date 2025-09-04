@@ -8,6 +8,7 @@ export interface CampaignUIState {
   blockedPhase?: string;
   preflightOpen?: boolean;
   guidance?: { message: string; phase?: string; severity: 'info' | 'warn' };
+  lastFailedPhase?: string;
     // Add more UI-only fields as needed
   }>;
 }
@@ -40,6 +41,19 @@ const campaignUiSlice = createSlice({
       state.byId[campaignId] = state.byId[campaignId] || {};
       state.byId[campaignId].guidance = guidance;
     },
+    clearGuidance(state, action: PayloadAction<{ campaignId: string }>) {
+      const { campaignId } = action.payload;
+      if (state.byId[campaignId]) state.byId[campaignId].guidance = undefined;
+    },
+    clearBlockedPhase(state, action: PayloadAction<{ campaignId: string }>) {
+      const { campaignId } = action.payload;
+      if (state.byId[campaignId]) state.byId[campaignId].blockedPhase = undefined;
+    },
+    setLastFailedPhase(state, action: PayloadAction<{ campaignId: string; phase?: string }>) {
+      const { campaignId, phase } = action.payload;
+      state.byId[campaignId] = state.byId[campaignId] || {};
+      state.byId[campaignId].lastFailedPhase = phase;
+    },
     hydrateCampaignUI(state, action: PayloadAction<{ campaignId: string; data: Partial<CampaignUIState['byId'][string]> }>) {
       const { campaignId, data } = action.payload;
       state.byId[campaignId] = { ...(state.byId[campaignId] || {}), ...data };
@@ -51,5 +65,5 @@ const campaignUiSlice = createSlice({
   },
 });
 
-export const { setFullSequenceMode, setBlockedPhase, setPreflightOpen, setGuidance, hydrateCampaignUI, resetCampaignUI } = campaignUiSlice.actions;
+export const { setFullSequenceMode, setBlockedPhase, setPreflightOpen, setGuidance, clearGuidance, clearBlockedPhase, setLastFailedPhase, hydrateCampaignUI, resetCampaignUI } = campaignUiSlice.actions;
 export default campaignUiSlice.reducer;

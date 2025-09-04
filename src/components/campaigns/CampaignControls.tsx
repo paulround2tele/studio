@@ -12,8 +12,15 @@ import AnalysisConfigModal from '@/components/campaigns/modals/AnalysisConfigMod
 import DiscoveryConfigModal from '@/components/campaigns/modals/DiscoveryConfigModal';
 import { useCampaignSSE } from '@/hooks/useCampaignSSE';
 import { useAppDispatch } from '@/store/hooks';
-import { setBlockedPhase, setFullSequenceMode } from '@/store/ui/campaignUiSlice';
+import { setBlockedPhase, setFullSequenceMode, setLastFailedPhase, setGuidance } from '@/store/ui/campaignUiSlice';
 import { SequenceBlockedBanner } from './SequenceBlockedBanner';
+import { FullSequencePreflightWizard } from './FullSequencePreflightWizard';
+import { NextActionPanel } from './NextActionPanel';
+import { PhaseStepper } from './PhaseStepper';
+import { TimelineHistory } from './TimelineHistory';
+import { FailureContinuationPanel } from './FailureContinuationPanel';
+import { ConversionCTA } from './ConversionCTA';
+import { GuidanceBanner } from './GuidanceBanner';
 import { normalizeToApiPhase, apiToEnginePhase } from '@/lib/utils/phaseNames';
 import { useToast } from '@/hooks/use-toast';
 
@@ -42,6 +49,12 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
       },
       onChainBlocked: (cid, data) => {
         if (cid === campaign.id) dispatch(setBlockedPhase({ campaignId: campaign.id, phase: (data as any)?.missing_phase || (data as any)?.phase }));
+      }
+      ,onPhaseFailed: (cid, ev) => {
+        if (cid === campaign.id) {
+          dispatch(setLastFailedPhase({ campaignId: campaign.id, phase: ev.phase }));
+          dispatch(setGuidance({ campaignId: campaign.id, guidance: { message: `${ev.phase} failed: ${ev.error || ev.message}`, phase: ev.phase, severity: 'warn' } }));
+        }
       }
     }
   });
@@ -279,6 +292,12 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
   return (
     <div className="flex flex-col gap-4">
       <SequenceBlockedBanner campaignId={campaign.id} />
+  <GuidanceBanner campaignId={campaign.id} />
+      <FullSequencePreflightWizard campaignId={campaign.id} />
+      <NextActionPanel campaignId={campaign.id} />
+  <PhaseStepper campaignId={campaign.id} />
+  <FailureContinuationPanel campaignId={campaign.id} />
+  <ConversionCTA campaignId={campaign.id} />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <PhaseCard
   phase={discoveryPhase as any}
@@ -371,6 +390,7 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
         onConfigured={() => setAnalysisModalOpen(false)}
       />
       </div>
+  <TimelineHistory campaignId={campaign.id} />
     </div>
   );
 };

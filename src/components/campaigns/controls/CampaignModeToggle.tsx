@@ -6,7 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Zap, Clock, Info } from 'lucide-react';
 import { useAppDispatch } from '@/store/hooks';
-import { setFullSequenceMode } from '@/store/ui/campaignUiSlice';
+import { setFullSequenceMode, setPreflightOpen } from '@/store/ui/campaignUiSlice';
+import { usePhaseReadiness } from '@/hooks/usePhaseReadiness';
 import { useToast } from '@/hooks/use-toast';
 
 interface CampaignModeToggleProps {
@@ -42,6 +43,7 @@ export function CampaignModeToggle({
   className,
 }: CampaignModeToggleProps) {
   const _dispatch = useAppDispatch();
+  const { allConfigured } = usePhaseReadiness(campaignId);
   const { toast } = useToast();
   const [pending, setPending] = React.useState(false);
 
@@ -82,6 +84,9 @@ export function CampaignModeToggle({
         title: 'Campaign Mode Updated',
         description: `Switched to ${newModeBool ? 'Full Sequence' : 'Step by Step'} mode`,
       });
+      if (newModeBool && !allConfigured) {
+        _dispatch(setPreflightOpen({ campaignId, open: true }));
+      }
     } catch (error) {
       // Revert optimistic change
       _dispatch(setFullSequenceMode({ campaignId, value: currentMode }));

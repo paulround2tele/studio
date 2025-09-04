@@ -631,6 +631,25 @@ func (o *CampaignOrchestrator) handlePhaseCompletion(ctx context.Context, campai
 	if finalStatus != nil && finalStatus.Status == models.PhaseStatusCompleted {
 		// Metrics: phase completion
 		o.metrics.IncPhaseCompletions()
+		// Record duration if timestamps available
+		if finalStatus.StartedAt != nil && finalStatus.CompletedAt != nil {
+			elapsed := finalStatus.CompletedAt.Sub(*finalStatus.StartedAt)
+			// map internal model phase enum to string used by metrics recorder
+			var phaseKey string
+			switch phase {
+			case models.PhaseTypeDomainGeneration:
+				phaseKey = "domain_generation"
+			case models.PhaseTypeDNSValidation:
+				phaseKey = "dns_validation"
+			case models.PhaseTypeHTTPKeywordValidation:
+				phaseKey = "http_keyword_validation"
+			case models.PhaseTypeAnalysis:
+				phaseKey = "analysis"
+			}
+			if phaseKey != "" {
+				o.metrics.RecordPhaseDuration(phaseKey, elapsed)
+			}
+		}
 		if o.isLastPhase(phase) {
 			_ = o.HandleCampaignCompletion(ctx, campaignID)
 			return
