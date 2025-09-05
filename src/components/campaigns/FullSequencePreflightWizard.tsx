@@ -1,6 +1,6 @@
 "use client";
 import React from 'react';
-import { usePhaseReadiness } from '@/hooks/usePhaseReadiness';
+import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setPreflightOpen } from '@/store/ui/campaignUiSlice';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,11 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 interface Props { campaignId: string; onClose?: () => void; }
 
 export const FullSequencePreflightWizard: React.FC<Props> = ({ campaignId, onClose }) => {
-  const { phases, allConfigured, firstUnconfigured } = usePhaseReadiness(campaignId);
+  const selectOverview = React.useMemo(()=>pipelineSelectors.overview(campaignId),[campaignId]);
+  const overview = useAppSelector(selectOverview);
+  const phases = overview.phases;
+  const allConfigured = overview.config.allConfigured;
+  const firstUnconfigured = overview.config.firstMissing;
   const dispatch = useAppDispatch();
   const open = useAppSelector(s => s.campaignUI?.byId?.[campaignId]?.preflightOpen);
 
@@ -25,9 +29,9 @@ export const FullSequencePreflightWizard: React.FC<Props> = ({ campaignId, onClo
           <p className="text-sm text-gray-600">Review phase readiness before chaining begins.</p>
           <ul className="space-y-2">
             {phases.map((p: any) => (
-              <li key={p.phase} className="flex items-center justify-between border rounded px-3 py-2 text-sm">
-                <span className="font-medium capitalize">{p.phase}</span>
-                <span className="text-xs">{p.status || 'unknown'} {p.configured ? '✅' : '⚠️'}</span>
+              <li key={p.key} className="flex items-center justify-between border rounded px-3 py-2 text-sm">
+                <span className="font-medium capitalize">{p.key}</span>
+                <span className="text-xs">{p.statusRaw || p.execState} {p.configState === 'valid' ? '✅' : '⚠️'}</span>
               </li>
             ))}
           </ul>

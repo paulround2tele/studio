@@ -1,25 +1,28 @@
 "use client";
 import React, { useMemo } from 'react';
-import { usePhaseReadiness } from '@/hooks/usePhaseReadiness';
 import { useAppSelector } from '@/store/hooks';
+import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 export const NextActionPanel: React.FC<{ campaignId: string }> = ({ campaignId }) => {
-  const fullSequence = useAppSelector(s => s.campaignUI?.byId?.[campaignId]?.fullSequenceMode);
-  const { phases } = usePhaseReadiness(campaignId);
-  const next = useMemo(() => phases.find(p => !p.configured) || phases.find(p => p.canStart) , [phases]);
-  if (fullSequence) return null;
-  if (!next) return null;
+  const selectAuto = React.useMemo(()=>pipelineSelectors.autoAdvanceEnabled(campaignId),[campaignId]);
+  const selectNext = React.useMemo(()=>pipelineSelectors.nextUserAction(campaignId),[campaignId]);
+  const auto = useAppSelector(selectAuto);
+  const nextAction = useAppSelector(selectNext);
+  if (auto) return null;
+  if (!nextAction) return null;
+  if (nextAction.type === 'wait' || nextAction.type === 'watch') return null;
   return (
     <Card className="border-dashed">
       <CardHeader className="pb-2">
         <CardTitle className="text-sm">Next Recommended Step</CardTitle>
       </CardHeader>
       <CardContent className="text-sm text-gray-700">
-        {next.configured ? (
-          <span>Start <strong>{next.phase}</strong> when ready.</span>
-        ) : (
-          <span>Configure <strong>{next.phase}</strong> to progress toward full readiness.</span>
+        {nextAction.type === 'configure' && (
+          <span>Configure <strong>{nextAction.phase}</strong> to progress toward full readiness.</span>
+        )}
+        {nextAction.type === 'start' && (
+          <span>Start <strong>{nextAction.phase}</strong> when ready.</span>
         )}
       </CardContent>
     </Card>

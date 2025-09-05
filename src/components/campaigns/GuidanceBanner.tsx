@@ -1,12 +1,14 @@
 "use client";
 import React from 'react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
+import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
 import { clearGuidance } from '@/store/ui/campaignUiSlice';
 import { Button } from '@/components/ui/button';
 
 export const GuidanceBanner: React.FC<{ campaignId: string }> = ({ campaignId }) => {
   const dispatch = useAppDispatch();
-  const guidance = useAppSelector(s => s.campaignUI?.byId?.[campaignId]?.guidance);
+  const selectLatestGuidance = React.useMemo(()=>pipelineSelectors.latestGuidance(campaignId),[campaignId]);
+  const guidance = useAppSelector(selectLatestGuidance) || undefined; // keep legacy single guidance logic
   if (!guidance) return null;
   const color = guidance.severity === 'warn' ? 'bg-amber-50 border-amber-300 text-amber-900' : 'bg-blue-50 border-blue-300 text-blue-900';
   return (
