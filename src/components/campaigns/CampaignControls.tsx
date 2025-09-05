@@ -20,6 +20,7 @@ import { TimelineHistory } from './TimelineHistory';
 import { FailureContinuationPanel } from './FailureContinuationPanel';
 import { ConversionCTA } from './ConversionCTA';
 import { GuidanceBanner } from './GuidanceBanner';
+import { PipelineWorkspace } from './PipelineWorkspace';
 import { normalizeToApiPhase, apiToEnginePhase } from '@/lib/utils/phaseNames';
 import { useToast } from '@/hooks/use-toast';
 
@@ -30,6 +31,7 @@ interface CampaignControlsProps {
 }
 
 const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExecutions, state }) => {
+  const SHOW_PIPELINE_WORKSPACE = true; // Phase 4 feature flag (remove after Phase 6)
   const [isDNSModalOpen, setDNSModalOpen] = useState(false);
   const [isHTTPModalOpen, setHTTPModalOpen] = useState(false);
   const [isDiscoveryModalOpen, setDiscoveryModalOpen] = useState(false);
@@ -292,6 +294,9 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
     <div className="flex flex-col gap-4">
   {/* Blocked banner removed under strict model */}
   <GuidanceBanner campaignId={campaign.id} />
+      {SHOW_PIPELINE_WORKSPACE && (
+        <PipelineWorkspace campaignId={campaign.id} />
+      )}
       <FullSequencePreflightWizard campaignId={campaign.id} />
       <NextActionPanel campaignId={campaign.id} />
   <PhaseStepper campaignId={campaign.id} />

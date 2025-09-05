@@ -257,4 +257,27 @@ Deferred:
 Commit Pending: `[Pipeline P3] Frontend Store Refactor: selector suite + component integration` (will execute upon approval to commit).
 
 ---
+### Phase 4 Execution (Completed)
+Deliverables Implemented:
+1. `PipelineWorkspace` shell: header ribbon, phase rail, adaptive panel placeholder, gating reasons, start CTA.
+2. Mode toggle (auto / manual) wired to `fullSequenceMode` via selectors.
+3. Start button enabled only when `nextUserAction.type === 'start'` and no blocking reasons.
+4. Feature-flag integration inside `CampaignControls` (`SHOW_PIPELINE_WORKSPACE`) coexisting with legacy PhaseCards.
+5. Selectors-only data flow; no direct legacy hook usage inside workspace.
+
+Verification Checklist:
+- [x] TypeScript build clean.
+- [x] No runtime-only references to removed gating constructs.
+- [x] Phase rail reflects exec/config states (visual mapping: idle/running/completed/failed/configured).
+- [x] Start CTA disabled when config incomplete (reasons surfaced).
+- [x] Mode toggle updates state (inspected via selector reading after toggle).
+
+Deferred Explicitly to Later Phases:
+- Inline configuration forms (Phase 5).
+- Automatic execution flow & removal of PhaseCards (Phase 6).
+- Deletion of deprecated hook (Phase 7).
+
+No blocking gaps identified for Phase 5 start.
+
+---
 \n+---\n+### Phase 0 Baseline Execution (Completed)\n+Date: 2025-09-04\n+Commit: `b14984750f9708f62a9a56f8aa1bab8c025f5126` (branch `main`)\n+Working Tree Status: clean (no staged/unstaged changes before proceeding).\n+\n+Frontend Jest Tests:\n+- Result: PASS (3 suites, 51 tests).\n+- Coverage (summary): Statements 77.58%, Branches 70.51%, Functions 73.52%, Lines 77.58%.\n+\n+Backend Go Tests:\n+- Overall: Build/test run produced one failing package due to build errors in `internal/domain/services/test` (persona_proxy_resolution_test.go).\n+- Errors (abridged): undefined types `models.HTTPKeywordParams`; missing interface methods (`AppendDomainsData`, `BeginTxx`), undefined `services.HTTPValidationServiceImplForTest`.\n+- Other packages under `internal/application` and several config/service packages passed.\n+\n+Baseline Notes:\n+- The failing test package appears to reference deprecated or removed model/service symbols; will reassess during Phase 2 backend cleanup.\n+- No chain_blocked removal yet; references still present (expected pre-Phase 2).\n+\n+Actions Deferred:\n+- Do **not** fix the failing test now; handle after backend event cleanup to avoid double churn.\n+- Tagging baseline commit implicitly via this hash (optional lightweight tag can be added later: `git tag pre-unified-pipeline b149847`).\n+\n+Checklist Status Update:\n+- [x] Ensure working tree clean\n+- [x] Run frontend tests\n+- [x] Run backend build/tests (recorded failures)\n+- [x] Tag baseline commit (hash recorded; tag pending optional)\n+\n+---\n+*Baseline appended; proceed to Phase 1.*
