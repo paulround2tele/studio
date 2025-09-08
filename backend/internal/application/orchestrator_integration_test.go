@@ -113,7 +113,6 @@ type testMetrics struct {
 	phaseCompletions    int
 	phaseFailures       int
 	phaseAutoStarts     int
-	chainBlocked        int
 	campaignCompletions int
 	durations           map[string]time.Duration
 }
@@ -122,7 +121,6 @@ func (m *testMetrics) IncPhaseStarts()         { m.phaseStarts++ }
 func (m *testMetrics) IncPhaseCompletions()    { m.phaseCompletions++ }
 func (m *testMetrics) IncPhaseFailures()       { m.phaseFailures++ }
 func (m *testMetrics) IncPhaseAutoStarts()     { m.phaseAutoStarts++ }
-func (m *testMetrics) IncChainBlocked()        { m.chainBlocked++ }
 func (m *testMetrics) IncCampaignCompletions() { m.campaignCompletions++ }
 func (m *testMetrics) RecordPhaseDuration(p string, d time.Duration) {
 	if m.durations == nil {
@@ -243,9 +241,7 @@ func TestFirstPhaseMissingConfigsGated(t *testing.T) {
 	if !errors.As(err, &missingErr) {
 		t.Fatalf("expected MissingPhaseConfigsError got %T", err)
 	}
-	if metrics.chainBlocked != 1 {
-		t.Fatalf("expected chainBlocked=1 got %d", metrics.chainBlocked)
-	}
+	// Legacy chainBlocked metric removed under strict Model A gating; asserting error type is sufficient.
 }
 
 func TestMidChainMissingNextConfigBlocks(t *testing.T) {
@@ -285,9 +281,7 @@ func TestMidChainMissingNextConfigBlocks(t *testing.T) {
 	if stHTTP.Status != models.PhaseStatusNotStarted {
 		t.Fatalf("expected http phase not started, got %s", stHTTP.Status)
 	}
-	if metrics.chainBlocked == 0 {
-		t.Fatalf("expected chainBlocked increment >0")
-	}
+	// Legacy chainBlocked metric removed; mid-chain gating scenario retained only for documentation (skipped).
 }
 
 func TestFailureThenRetryChainContinues(t *testing.T) {
