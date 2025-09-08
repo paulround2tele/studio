@@ -3,6 +3,8 @@
 
 import type { Middleware } from '@reduxjs/toolkit';
 import { campaignApi } from '../api/campaignApi';
+// Exec slice integration for explicit start API calls only (SSE handled in hook)
+import { phaseStarted, phaseCompleted, phaseFailed } from '../slices/pipelineExecSlice';
 import { 
   startPhaseTransition,
   completePhaseTransition,
@@ -18,13 +20,12 @@ export const campaignStateSyncMiddleware: Middleware = (store) => (next) => (act
 
   // Handle successful phase transitions
   if (campaignApi.endpoints.startPhaseStandalone.matchFulfilled(action)) {
-  const { meta } = action;
-  const _campaignId = meta.arg.originalArgs.campaignId;
-    
-    // Auto-refetch campaign data to get updated state
+    const { meta } = action;
+    const _campaignId = meta.arg.originalArgs.campaignId;
+    // optimistic exec state start -> running handled earlier when initiating? we set here ensure started
+    store.dispatch(phaseStarted({ campaignId: _campaignId, phase: meta.arg.originalArgs.phase as any }));
+    // Refetch campaigns list to sync broader state
     store.dispatch(campaignApi.endpoints.getCampaignsStandalone.initiate() as any);
-    
-    // Complete the transition in Redux
     store.dispatch(completePhaseTransition());
   }
 
@@ -36,8 +37,7 @@ export const campaignStateSyncMiddleware: Middleware = (store) => (next) => (act
 
   // Handle campaign data updates (when campaigns list is refetched)
   if (campaignApi.endpoints.getCampaignsStandalone.matchFulfilled(action)) {
-    // Campaigns list was updated - this middleware doesn't need to do anything specific
-    // as the components will automatically receive the updated data
+    // No-op; store reducers update via RTK Query cache selectors
   }
 
   return result;
@@ -51,7 +51,6 @@ export const initializeCampaignSync = (_campaignId: string) => (dispatch: any) =
   // Fetch all campaigns (including the one we care about)
   dispatch(campaignApi.endpoints.getCampaignsStandalone.initiate() as any);
 };
-
 // Phase transition helper with proper Redux integration
 export const performPhaseTransition = (campaignId: string, phase: string) => (dispatch: any) => {
   // Start transition in Redux

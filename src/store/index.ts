@@ -4,6 +4,7 @@ import { bulkOperationsApi } from './api/bulkOperationsApi';
 import campaignSlice from './slices/campaignSlice';
 import bulkOperationsSlice from './slices/bulkOperationsSlice';
 import campaignUiSlice from './ui/campaignUiSlice';
+import pipelineExecReducer from './slices/pipelineExecSlice';
 import { campaignStateSyncMiddleware } from './middleware/campaignStateSyncMiddleware';
 
 export const store = configureStore({
@@ -11,6 +12,7 @@ export const store = configureStore({
     campaign: campaignSlice,
     bulkOperations: bulkOperationsSlice,
   campaignUI: campaignUiSlice,
+  pipelineExec: pipelineExecReducer,
     // Add the generated reducers as specific top-level slices
     [campaignApi.reducerPath]: campaignApi.reducer,
     [bulkOperationsApi.reducerPath]: bulkOperationsApi.reducer,

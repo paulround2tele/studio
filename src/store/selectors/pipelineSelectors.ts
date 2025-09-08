@@ -120,6 +120,18 @@ export const makeSelectExecSummary = (campaignId: string) => createSelector(
   phases => phases.reduce((acc, p) => { (acc as any)[p.execState] = ((acc as any)[p.execState]||0)+1; return acc; }, { idle:0, running:0, completed:0, failed:0 } as Record<string, number>)
 );
 
+// Exec runtime selectors
+export const selectExecState = (campaignId: string) => (state: RootState) => state.pipelineExec.byCampaign[campaignId] || {};
+export const selectPhaseExecRuntime = (campaignId: string, phase: PipelinePhaseKey) => (state: RootState) => {
+  return state.pipelineExec.byCampaign[campaignId]?.[phase];
+};
+
+export const selectRetryEligiblePhases = (campaignId: string) => (state: RootState): PipelinePhaseKey[] => {
+  const exec = state.pipelineExec.byCampaign[campaignId];
+  if (!exec) return [];
+  return (Object.keys(exec) as PipelinePhaseKey[]).filter(p => exec[p].status === 'failed');
+};
+
 export const makeSelectActiveExecutionPhase = (campaignId: string) => createSelector(
   makeSelectPipelinePhases(campaignId),
   phases => phases.find(p => p.execState === 'running')

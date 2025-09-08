@@ -120,26 +120,24 @@ Risks & Mitigation:
 - Edge: user switches phase mid-submit (submit buttons disabled while saving → minimal risk).
 
 ### Phase 6: Execution Flow & Auto-Advance Logic
-Status: In Progress (core workspace authority + auto-advance merged).
+Status: Completed.
 
-Implemented:
-- Removed `PhaseCard` component and all usages; `PipelineWorkspace` is sole surface.
-- Added `computeAutoStartPhase` utility and auto-advance effect (skips first phase; user initiates; subsequent phases auto-start when prior completes if mode enabled).
-- Simplified gating: start CTA still originates from selectors; workspace primary button triggers starts.
+Implemented Additions (since initial partial merge):
+1. Execution runtime slice `pipelineExecSlice` capturing per-phase `status`, `startedAt`, `completedAt`, `error`.
+2. SSE hook (`useCampaignSSE`) now dispatches `phaseStarted/phaseCompleted/phaseFailed` → real-time exec runtime state.
+3. Retry UI in `PipelineWorkspace`: renders buttons for failed phases (selector `selectRetryEligiblePhases`).
+4. Auto-advance behavioral Jest test `autoAdvanceExecution.test.ts` validating sequential next-phase selection post completion.
+5. Start middleware integration marks phase started on fulfilled mutation for optimistic progression.
 
-Remaining (Phase 6) TODO:
-1. Exec state hydration from SSE directly into a dedicated slice (currently implicit via RTK queries and rail status heuristics). (Planned minimal adapter or defer to Phase 7 if low impact.)
-2. Failure retry action integration (retry eligible detection present; UI action button pending).
-3. Add test validating auto-advance call ordering for consecutive configured phases (simulate sequence of status transitions).
+Validated Criteria:
+- Manual mode: initial phase not auto-started (auto-start helper requires prior start event).
+- Full sequence mode: `computeAutoStartPhase` returns expected next phase after each completion (verified by test).
+- PhaseCards fully removed; grep returns no active code references.
+- Retry buttons appear only when a phase has `failed` in runtime slice.
 
-Success Criteria (Adjusted):
-- Manual mode requires user start for each idle configured phase (validated by not auto-starting initial discovery phase).
-- Full sequence mode auto-starts next configured idle phase after prior completion (pending test).
-- No references to `PhaseCard` remain (grep clean).
-
-Risks / Mitigation:
-- Potential duplicate start requests if SSE delay > effect window: mitigate by server idempotency; can add local suppression map if needed.
-- Missing explicit exec slice could complicate future metrics: addressed in Phase 7 cleanup if required.
+Residual / Deferred (Phase 7 scope):
+- Enrich selectors to merge exec runtime timestamps into phase overview objects for duration metrics.
+- Add suppression guard if backend reveals any duplicate start side-effects (none observed yet).
 
 ### Phase 7: Deletion & Dead Code Purge
 Tasks:

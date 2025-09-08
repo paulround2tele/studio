@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import { useAppSelector } from '@/store/hooks';
-import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
+import { pipelineSelectors, selectRetryEligiblePhases } from '@/store/selectors/pipelineSelectors';
 import { useAppDispatch } from '@/store/hooks';
 import { setFullSequenceMode, setSelectedPhase } from '@/store/ui/campaignUiSlice';
 import DiscoveryConfigForm from '@/components/campaigns/workspace/forms/DiscoveryConfigForm';
@@ -30,6 +30,7 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
   const selectedPhase = useAppSelector(React.useMemo(()=>pipelineSelectors.selectedPhase(campaignId),[campaignId]));
   const selectStartCTA = React.useMemo(()=>pipelineSelectors.startCTAState(campaignId),[campaignId]);
   const startCTA = useAppSelector(selectStartCTA);
+  const retryEligible = useAppSelector(React.useMemo(()=>selectRetryEligiblePhases(campaignId),[campaignId]));
   const dispatch = useAppDispatch();
   const [startPhase, { isLoading: startLoading }] = useStartPhaseStandaloneMutation();
 
@@ -149,6 +150,16 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
         )}
         {guidance.latest && (
           <div className="mt-3 text-amber-700">Guidance: {guidance.latest.message}</div>
+        )}
+        {retryEligible.length > 0 && (
+          <div className="mt-4 border border-red-200 bg-red-50 p-3 rounded">
+            <div className="text-xs font-semibold text-red-700 mb-2">Retry Failed Phases</div>
+            <div className="flex flex-wrap gap-2">
+              {retryEligible.map(p => (
+                <Button key={p} size="sm" variant="destructive" className="text-[10px] py-1" onClick={()=>startPhase({ campaignId, phase: p as any })}>Retry {p}</Button>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>

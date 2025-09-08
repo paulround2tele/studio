@@ -1,6 +1,8 @@
 // File: src/hooks/useCampaignSSE.ts
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSSE, type SSEEvent } from './useSSE';
+import { useAppDispatch } from '@/store/hooks';
+import { phaseStarted, phaseCompleted, phaseFailed } from '@/store/slices/pipelineExecSlice';
 
 export interface CampaignProgress {
   current_phase: string;
@@ -96,6 +98,7 @@ export interface UseCampaignSSEReturn {
  */
 export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaignSSEReturn {
   const { campaignId, autoConnect = true, events = {} } = options;
+  const dispatch = useAppDispatch();
   
   const [lastProgress, setLastProgress] = useState<CampaignProgress | null>(null);
   
@@ -126,14 +129,17 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
         break;
 
       case 'phase_started':
+        dispatch(phaseStarted({ campaignId: campaignIdFromEvent, phase: (dataObj?.phase as any) }));
         events.onPhaseStarted?.(campaignIdFromEvent, dataObj as unknown as PhaseEvent);
         break;
 
       case 'phase_completed':
+        dispatch(phaseCompleted({ campaignId: campaignIdFromEvent, phase: (dataObj?.phase as any) }));
         events.onPhaseCompleted?.(campaignIdFromEvent, dataObj as unknown as PhaseEvent);
         break;
 
       case 'phase_failed':
+        dispatch(phaseFailed({ campaignId: campaignIdFromEvent, phase: (dataObj?.phase as any), error: (dataObj?.error as string|undefined) }));
         events.onPhaseFailed?.(campaignIdFromEvent, dataObj as unknown as PhaseEvent);
         break;
 
