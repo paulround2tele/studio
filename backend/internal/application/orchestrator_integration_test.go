@@ -212,6 +212,21 @@ func TestFullSequenceAutoAdvanceSuccess(t *testing.T) {
 	if metrics.phaseStarts < 4 {
 		t.Fatalf("expected >=4 phase starts got %d", metrics.phaseStarts)
 	}
+	if metrics.phaseCompletions != 4 {
+		t.Fatalf("expected 4 phase completions got %d", metrics.phaseCompletions)
+	}
+	if metrics.phaseAutoStarts != 3 { // domain manual, remaining 3 auto
+		t.Fatalf("expected 3 auto starts got %d", metrics.phaseAutoStarts)
+	}
+	if metrics.campaignCompletions != 1 {
+		t.Fatalf("expected 1 campaign completion got %d", metrics.campaignCompletions)
+	}
+	// Durations should exist for each phase
+	for _, ph := range []string{"domain_generation", "dns_validation", "http_keyword_validation", "analysis"} {
+		if d, ok := metrics.durations[ph]; !ok || d <= 0 {
+			t.Fatalf("expected duration recorded for %s", ph)
+		}
+	}
 }
 
 func TestFirstPhaseMissingConfigsGated(t *testing.T) {
@@ -319,7 +334,8 @@ func TestFailureThenRetryChainContinues(t *testing.T) {
 		return st.Status == models.PhaseStatusCompleted
 	})
 
-	// Auto attempt to start DNS should have failed.
+	// Auto attempt to start DNS should fail once (forced) and increment phaseFailures before we clear flag.
+	waitUntil(t, 2*time.Second, func() bool { return metrics.phaseFailures == 1 })
 	// Clear failure and manually start DNS.
 	dnsSvc.clearFail(campaignID)
 	if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDNSValidation); err != nil {
@@ -332,4 +348,73 @@ func TestFailureThenRetryChainContinues(t *testing.T) {
 	})
 	// Wait for async campaign completion handling
 	waitUntil(t, 2*time.Second, func() bool { return metrics.campaignCompletions > 0 })
+
+	// Metrics assertions: one failure (auto dns start), 4 completions, 4 starts (domain, dns manual, http auto, analysis auto)
+	if metrics.phaseFailures != 1 {
+		t.Fatalf("expected 1 phase failure got %d", metrics.phaseFailures)
+	}
+	if metrics.phaseCompletions != 4 {
+		t.Fatalf("expected 4 phase completions got %d", metrics.phaseCompletions)
+	}
+	if metrics.phaseStarts != 4 {
+		t.Fatalf("expected 4 phase starts got %d", metrics.phaseStarts)
+	}
+	if metrics.phaseAutoStarts != 2 { // http + analysis
+		t.Fatalf("expected 2 successful auto starts got %d", metrics.phaseAutoStarts)
+	}
+	if metrics.campaignCompletions != 1 {
+		t.Fatalf("expected 1 campaign completion got %d", metrics.campaignCompletions)
+	}
+	for _, ph := range []string{"domain_generation", "dns_validation", "http_keyword_validation", "analysis"} {
+		if d, ok := metrics.durations[ph]; !ok || d <= 0 {
+			t.Fatalf("expected duration recorded for %s", ph)
+		}
+	}
+}
+
+// TestPhaseStartFailureMetrics ensures metrics reflect a direct start failure (pre-execution) properly.
+func TestPhaseStartFailureMetrics(t *testing.T) {
+	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
+	cs := pg_store.NewCampaignStorePostgres(db)
+	logger := &testLogger{t: t}
+	deps := domainservices.Dependencies{Logger: logger, DB: db}
+	// Only need the failing phase service (domain) and minimal others
+	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
+	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
+	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
+	metrics := &testMetrics{}
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, analysisSvc, nil, metrics)
+
+	campaignID := createTestCampaign(t, cs)
+	if err := cs.UpdateCampaignMode(context.Background(), nil, campaignID, "full_sequence"); err != nil {
+		t.Fatalf("set mode: %v", err)
+	}
+	// Provide downstream configs so gating wouldn't block; we want an execution failure not gating error.
+	upsertConfig(t, cs, campaignID, models.PhaseTypeDomainGeneration)
+	upsertConfig(t, cs, campaignID, models.PhaseTypeDNSValidation)
+	upsertConfig(t, cs, campaignID, models.PhaseTypeHTTPKeywordValidation)
+	upsertConfig(t, cs, campaignID, models.PhaseTypeAnalysis)
+
+	// Force failure on first attempt
+	domainSvc.setFailOnce(campaignID)
+	err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDomainGeneration)
+	if err == nil {
+		t.Fatalf("expected start failure error, got nil")
+	}
+	if metrics.phaseFailures != 1 {
+		t.Fatalf("expected 1 phase failure got %d", metrics.phaseFailures)
+	}
+	if metrics.phaseStarts != 0 {
+		t.Fatalf("expected 0 successful phase starts got %d", metrics.phaseStarts)
+	}
+	if metrics.phaseCompletions != 0 {
+		t.Fatalf("expected 0 phase completions got %d", metrics.phaseCompletions)
+	}
+	if metrics.campaignCompletions != 0 {
+		t.Fatalf("expected 0 campaign completions got %d", metrics.campaignCompletions)
+	}
+	if len(metrics.durations) != 0 {
+		t.Fatalf("expected no durations recorded, got %d", len(metrics.durations))
+	}
 }
