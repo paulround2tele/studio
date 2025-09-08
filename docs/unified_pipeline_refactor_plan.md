@@ -102,18 +102,18 @@ Delta Implemented (current):
 - Implemented inline forms: `DiscoveryConfigForm`, `DNSValidationConfigForm`, `HTTPValidationConfigForm`, `AnalysisConfigForm` with direct reuse of prior modal logic.
 - Wired forms into `PipelineWorkspace` adaptive panel with dynamic status badge and edit/read-only toggle.
 
-Remaining Tasks to Complete Phase 5:
-1. Add guidance message push on successful configuration (minor enhancement).
-2. Add lightweight Jest test for `nextUserAction` progression after configuration.
-3. (Optional) Extract shared wrapper (`PhaseConfigPanel`) – deferred; current implementation acceptable for Phase 5 closure if time-constrained.
-4. Verify all phase config submissions update selectors (manual smoke & test).
-5. Commit final Phase 5 changes with tag `[Pipeline P5]` once tests added.
+Phase 5 Remaining Tasks (all completed except optional wrapper):
+1. Guidance message push on successful configuration: DONE.
+2. Jest test for `nextUserAction` progression: DONE (`nextUserActionProgression.test.ts`).
+3. Shared wrapper (`PhaseConfigPanel`): DEFERRED to potential polish (not required for acceptance).
+4. Selector update verification: DONE (test + manual smoke).
+5. Commit: DONE `[Pipeline P5] Inline configuration forms integrated into adaptive panel (modals removed)`.
 
-Success Criteria (Adjusted):
+Success Criteria (Verified):
 - Selecting unconfigured phase opens working form; save triggers readiness change visible in rail.
-- All forms submit successfully using existing RTK mutation; parity with modal behavior.
-- No active code references to removed modal components.
-- `nextUserAction` changes from configure->configure or configure->start as phases become valid.
+- All forms submit via existing RTK mutation; parity with modal behavior retained.
+- No active code references to removed modals (grep clean).
+- `nextUserAction` progression verified by test.
 
 Risks & Mitigation:
 - Missing automated regression coverage (Mitigate by adding targeted selector test now, full suite Phase 8).

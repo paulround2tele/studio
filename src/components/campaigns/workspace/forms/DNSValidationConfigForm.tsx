@@ -16,6 +16,8 @@ import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 import type { ModelsProxy } from '@/lib/api-client/models/models-proxy';
 import type { ModelsProxyPool } from '@/lib/api-client/models/models-proxy-pool';
 import { useConfigurePhaseStandaloneMutation } from '@/store/api/campaignApi';
+import { useAppDispatch } from '@/store/hooks';
+import { pushGuidanceMessage } from '@/store/ui/campaignUiSlice';
 import type { ApiDNSValidationConfig } from '@/lib/api-client/models/api-dnsvalidation-config';
 import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
 
@@ -26,6 +28,7 @@ const MAX_PERSONAS_SELECTED = 5;
 export const DNSValidationConfigForm: React.FC<Props> = ({ campaignId, onConfigured, readOnly }) => {
   const { toast } = useToast();
   const [configurePhase, { isLoading: saving }] = useConfigurePhaseStandaloneMutation();
+  const dispatch = useAppDispatch();
   const [dnsPersonas, setDnsPersonas] = useState<PersonaResponse[]>([]);
   const [proxyPools, setProxyPools] = useState<ModelsProxyPool[]>([]);
   const [loadingData, setLoadingData] = useState(true);
@@ -42,7 +45,7 @@ export const DNSValidationConfigForm: React.FC<Props> = ({ campaignId, onConfigu
   const handlePersonaToggle = (id:string) => { const cur = form.getValues('personaIds'); if(cur.includes(id)) form.setValue('personaIds', cur.filter(x=>x!==id)); else if(cur.length < MAX_PERSONAS_SELECTED) form.setValue('personaIds', [...cur, id]); else toast({ title:'Maximum personas reached', description:`Up to ${MAX_PERSONAS_SELECTED}`, variant:'destructive'}); };
   const handleProxyPoolSelect = (id:string) => { form.setValue('proxyPoolId', id === watchedProxyPoolId ? undefined : id); };
 
-  const onSubmit = async (data: FormValues) => { try { const dnsConfig: ApiDNSValidationConfig = { personaIds: data.personaIds, name: data.name }; const configRequest: PhaseConfigurationRequest = { configuration: { dnsValidation: dnsConfig }, proxyPoolId: data.proxyPoolId || undefined }; await configurePhase({ campaignId, phase: 'validation', config: configRequest }).unwrap(); toast({ title:'DNS validation configured' }); onConfigured?.(); } catch(e:any){ console.error(e); toast({ title:'Save failed', description:e?.data?.message||e?.message||'Try again', variant:'destructive'});} };
+  const onSubmit = async (data: FormValues) => { try { const dnsConfig: ApiDNSValidationConfig = { personaIds: data.personaIds, name: data.name }; const configRequest: PhaseConfigurationRequest = { configuration: { dnsValidation: dnsConfig }, proxyPoolId: data.proxyPoolId || undefined }; await configurePhase({ campaignId, phase: 'validation', config: configRequest }).unwrap(); toast({ title:'DNS validation configured' }); dispatch(pushGuidanceMessage({ campaignId, msg: { id: Date.now().toString(), message: 'DNS validation configured', phase: 'validation', severity: 'info' } })); onConfigured?.(); } catch(e:any){ console.error(e); toast({ title:'Save failed', description:e?.data?.message||e?.message||'Try again', variant:'destructive'});} };
 
   if (readOnly) { const v = form.getValues(); return (<div className="space-y-2 text-xs"><div><strong>Personas:</strong> {v.personaIds.length}</div><div><strong>Proxy Pool:</strong> {v.proxyPoolId||'—'}</div></div>); }
 

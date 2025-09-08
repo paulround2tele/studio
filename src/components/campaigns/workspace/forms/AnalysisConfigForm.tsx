@@ -9,6 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useConfigurePhaseStandaloneMutation } from '@/store/api/campaignApi';
+import { useAppDispatch } from '@/store/hooks';
+import { pushGuidanceMessage } from '@/store/ui/campaignUiSlice';
 import type { ApiAnalysisConfig } from '@/lib/api-client/models/api-analysis-config';
 import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
 
@@ -19,12 +21,13 @@ export const AnalysisConfigForm: React.FC<Props> = ({ campaignId, onConfigured, 
   const { toast } = useToast();
   const [configurePhase, { isLoading: saving }] = useConfigurePhaseStandaloneMutation();
   const form = useForm<FormValues>({ defaultValues: { analysisType: 'comprehensive', includeScreenshots: true, generateReport: true, customRules: [] }});
+  const dispatch = useAppDispatch();
 
   const addRule = () => { const cur=form.getValues('customRules'); form.setValue('customRules', [...cur, '']); };
   const updateRule = (i:number, v:string) => { const cur=[...form.getValues('customRules')]; cur[i]=v; form.setValue('customRules', cur); };
   const removeRule = (i:number) => { form.setValue('customRules', form.getValues('customRules').filter((_,idx)=>idx!==i)); };
 
-  const onSubmit = async (values: FormValues) => { try { const analysisConfig: ApiAnalysisConfig = { analysisType: values.analysisType as any, includeScreenshots: values.includeScreenshots, generateReport: values.generateReport, customRules: values.customRules.filter(r=>r.trim()!=='') }; const configRequest: PhaseConfigurationRequest = { configuration: { analysis: analysisConfig as any } }; await configurePhase({ campaignId, phase: 'analysis', config: configRequest }).unwrap(); toast({ title:'Analysis configured' }); onConfigured?.(); } catch(e){ console.error(e); toast({ title:'Save failed', description:'Try again', variant:'destructive'}); } };
+  const onSubmit = async (values: FormValues) => { try { const analysisConfig: ApiAnalysisConfig = { analysisType: values.analysisType as any, includeScreenshots: values.includeScreenshots, generateReport: values.generateReport, customRules: values.customRules.filter(r=>r.trim()!=='') }; const configRequest: PhaseConfigurationRequest = { configuration: { analysis: analysisConfig as any } }; await configurePhase({ campaignId, phase: 'analysis', config: configRequest }).unwrap(); toast({ title:'Analysis configured' }); dispatch(pushGuidanceMessage({ campaignId, msg: { id: Date.now().toString(), message: 'Analysis configured', phase: 'analysis', severity: 'info' } })); onConfigured?.(); } catch(e){ console.error(e); toast({ title:'Save failed', description:'Try again', variant:'destructive'}); } };
 
   if (readOnly) { const v=form.getValues(); return (<div className="space-y-2 text-xs"><div><strong>Type:</strong> {v.analysisType}</div><div><strong>Screenshots:</strong> {v.includeScreenshots? 'Yes':'No'}</div><div><strong>Report:</strong> {v.generateReport? 'Yes':'No'}</div><div><strong>Custom Rules:</strong> {v.customRules.length}</div></div>); }
 

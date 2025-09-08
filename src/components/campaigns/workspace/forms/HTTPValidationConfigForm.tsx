@@ -16,6 +16,8 @@ import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 import type { ModelsProxyPool } from '@/lib/api-client/models/models-proxy-pool';
 import type { KeywordSetResponse as ApiKeywordSet } from '@/lib/api-client/models/keyword-set-response';
 import { useConfigurePhaseStandaloneMutation } from '@/store/api/campaignApi';
+import { useAppDispatch } from '@/store/hooks';
+import { pushGuidanceMessage } from '@/store/ui/campaignUiSlice';
 import type { ApiHTTPValidationConfig } from '@/lib/api-client/models/api-httpvalidation-config';
 import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
 
@@ -26,6 +28,7 @@ const MAX_PERSONAS_SELECTED = 5;
 export const HTTPValidationConfigForm: React.FC<Props> = ({ campaignId, onConfigured, readOnly }) => {
   const { toast } = useToast();
   const [configurePhase, { isLoading: saving }] = useConfigurePhaseStandaloneMutation();
+  const dispatch = useAppDispatch();
   const [httpPersonas, setHttpPersonas] = useState<PersonaResponse[]>([]);
   const [keywordSets, setKeywordSets] = useState<ApiKeywordSet[]>([]);
   const [proxyPools, setProxyPools] = useState<ModelsProxyPool[]>([]);
@@ -48,7 +51,7 @@ export const HTTPValidationConfigForm: React.FC<Props> = ({ campaignId, onConfig
   const removeAdHocKeyword = (kw:string) => { form.setValue('adHocKeywords', form.getValues('adHocKeywords').filter(k=>k!==kw)); };
   const selectProxyPool = (id:string) => { form.setValue('proxyPoolId', watchedProxyPoolId===id? undefined : id); };
 
-  const onSubmit = async (data: FormValues) => { try { const httpConfig: ApiHTTPValidationConfig = { personaIds: data.personaIds, name: data.name, keywordSetIds: data.keywordSetIds, adHocKeywords: data.adHocKeywords } as any; const configRequest: PhaseConfigurationRequest = { configuration: { httpValidation: httpConfig }, proxyPoolId: data.proxyPoolId || undefined }; await configurePhase({ campaignId, phase: 'extraction', config: configRequest }).unwrap(); toast({ title:'HTTP validation configured' }); onConfigured?.(); } catch(e){ console.error(e); toast({ title:'Save failed', description:'Try again', variant:'destructive'}); } };
+  const onSubmit = async (data: FormValues) => { try { const httpConfig: ApiHTTPValidationConfig = { personaIds: data.personaIds, name: data.name, keywordSetIds: data.keywordSetIds, adHocKeywords: data.adHocKeywords } as any; const configRequest: PhaseConfigurationRequest = { configuration: { httpValidation: httpConfig }, proxyPoolId: data.proxyPoolId || undefined }; await configurePhase({ campaignId, phase: 'extraction', config: configRequest }).unwrap(); toast({ title:'HTTP validation configured' }); dispatch(pushGuidanceMessage({ campaignId, msg: { id: Date.now().toString(), message: 'HTTP validation configured', phase: 'extraction', severity: 'info' } })); onConfigured?.(); } catch(e){ console.error(e); toast({ title:'Save failed', description:'Try again', variant:'destructive'}); } };
 
   if (readOnly) { const v=form.getValues(); return (<div className="space-y-2 text-xs"><div><strong>Personas:</strong> {v.personaIds.length}</div><div><strong>Keyword Sets:</strong> {v.keywordSetIds.length}</div><div><strong>Custom Keywords:</strong> {v.adHocKeywords.length}</div><div><strong>Proxy Pool:</strong> {v.proxyPoolId || '—'}</div></div>); }
 
