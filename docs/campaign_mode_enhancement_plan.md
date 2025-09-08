@@ -11,13 +11,13 @@ This document captures the unified UX & technical implementation plan for enhanc
 4. Maintain graceful inter-mode transitions without race conditions or user confusion.
 
 ---
-## Current State (Baseline)
+## Current State (Baseline – Updated for Strict Model A)
 | Area | Status |
 |------|--------|
-| Backend chaining | Auto-advance implemented; emits `phase_*`, `mode_changed`, `chain_blocked` SSE. |
+| Backend chaining | Auto-advance implemented; emits `phase_started`, `phase_auto_started`, `phase_failed`, `phase_completed`, `campaign_progress`, `campaign_completed`, `mode_changed` SSE events. |
 | Mode persistence | PATCH `/campaigns/{id}/mode` implemented + optimistic toggle on frontend. |
-| Blocking logic | Auto chain halts when next phase missing config; emits `chain_blocked`. |
-| Frontend gaps | No preflight, no blocked banner, no next-action panel, no readiness abstraction. |
+| Mid-chain blocking | Removed. All required configuration must exist before initial start; missing config yields 409 start error instead of runtime block. |
+| Frontend gaps (historical) | No preflight, no next-action panel, no readiness abstraction (resolved in subsequent phases). |
 
 ---
 ## Foundational Model
@@ -29,34 +29,33 @@ interface PhaseReadiness {
   configured: boolean;                // derived from status
   dependenciesMet: boolean;           // gating (previous required phases complete)
   canStart: boolean;                  // dependenciesMet && (status in startable set)
-  blocked?: boolean;                  // chain_blocked targeted phase
   missingFields?: string[];           // (future) validation details
 }
 ```
 
 ### Redux (campaignUI slice additions)
 - `fullSequenceMode: boolean` (per campaign, existing)
-- `blockedPhase?: string`
 - `preflightOpen?: boolean`
-- `guidance?: { message: string; phase?: string; severity: 'info' | 'warn' }`
+- `guidance?: { message: string; phase?: string; severity: 'info' | 'warn' }` // generalized (no chain_blocked specific state)
 
-### SSE Event Handling
+### SSE Event Handling (Active Set)
 | Event | Action |
 |-------|--------|
 | `mode_changed` | Sync `fullSequenceMode` boolean. |
-| `chain_blocked` | Set `blockedPhase` and push guidance. |
-| `phase_*` | Implicitly refresh readiness via status queries / local recompute. |
+| `phase_started` / `phase_auto_started` | Mark phase running; refresh readiness. |
+| `phase_failed` | Mark failure; surface retry action. |
+| `phase_completed` | Mark completion and advance if in full_sequence. |
+| `campaign_progress` | Update aggregate progress metrics. |
+| `campaign_completed` | Finalize campaign; disable further auto-advance. |
 
 ---
 ## Full Sequence Enhancements
 | Feature | Description | Component |
 |---------|-------------|-----------|
 | Preflight Wizard | Checklist of all phases & config status after enabling mode. | `FullSequencePreflightWizard` |
-| Optional Auto-Start | Auto-start discovery if all phases pre-configured (feature flag). | Toggle handler logic |
-| Blocked Banner | Banner surfaces when `chain_blocked` SSE received. | `SequenceBlockedBanner` |
-| Inline Stepper | Horizontal (or vertical) status visualization of phases. | Augment `CampaignControls` |
-| Auto Resume (optional) | After config saved for blocked phase, restart automatically. | Config modal callback |
-| Failure Continuation Panel | On phase failure in full_sequence, show retry/stop sequence actions. | Extension to `PhaseCard` |
+| Optional Auto-Start | Auto-start first phase if all configs present. | Toggle handler logic |
+| Inline Stepper | Horizontal / vertical phase status visualization. | Augment `CampaignControls` |
+| Failure Continuation Panel | On phase failure, show retry/stop sequence actions. | Extension to `PhaseCard` |
 | Mode Switch Guard | Confirm before switching away mid-chain. | Toggle wrapper |
 
 ---
@@ -76,7 +75,6 @@ interface PhaseReadiness {
 |-----------|----------|
 | step_by_step → full_sequence (idle) | Open Preflight (unless all ready, then optional auto-start). |
 | step_by_step → full_sequence (mid-running) | Inform user chaining will begin after current completes. |
-| full_sequence → step_by_step (blocked) | Clear `blockedPhase`, keep progress; user handles next manually. |
 | full_sequence → step_by_step (active) | Confirm stop of auto-advance; future phases manual. |
 
 ---
@@ -95,10 +93,11 @@ interface PhaseReadiness {
 Each step is shippable and reduces risk; stop early if scope pressures arise.
 
 ---
-## Acceptance Criteria (Initial Milestones - Updated for Strict Model A)
-- After switching to full_sequence with missing configs, Preflight appears automatically (Milestone E).  
-- Step by step mode shows actionable "Next" guidance (after F).  
+## Acceptance Criteria (Milestones – Strict Model A)
+- Switching to full_sequence with missing configs opens Preflight (no mid-chain blocks).  
+- Step by step mode shows actionable "Next" guidance.  
 - Toggling back and forth preserves accurate mode.  
+- Failure in full_sequence pauses auto-advance until retry executed.  
 
 ---
 ## Edge Cases & Handling
@@ -106,7 +105,7 @@ Each step is shippable and reduces risk; stop early if scope pressures arise.
 |------|----------|
 | SSE arrives after manual toggle revert | Always trust latest SSE; overwrite. |
 | Rapid double toggles | Pending flag prevents re-entry. |
-| Config saved during blocked state | Clear blocked + optionally auto-resume. |
+| Config saved mid-run | If first phase not yet started, allow immediate start; otherwise normal chaining resumes. |
 | Phase failure mid auto chain | Stop chaining; show retry panel. |
 | Partial network outage | Optimistic state + retry surface in toasts. |
 
@@ -133,4 +132,20 @@ If preflight or banner introduces instability, feature-flag rendering (simple en
 - Log deltas in commit messages referencing step letter.
 
 ---
-*End of plan.*
+---
+## Legacy Notes (Deprecated Mid-Chain Blocking Model B)
+The earlier experimental "mid-chain blocking" design emitted a `chain_blocked` SSE event when the orchestrator encountered a missing configuration for the *next* phase. This has been fully removed under Strict Model A in favor of a simpler invariant: all required configuration must be present before the pipeline is started. Clients now receive an HTTP 409 on start attempts that violate readiness, avoiding additional runtime event complexity.
+
+Artifacts removed:
+- `chain_blocked` SSE event constant & handlers
+- `blockedPhase` UI state and banner component
+- Auto-resume logic tied specifically to unblocking
+
+Benefits of removal:
+- Simplified mental model (no transient blocked state mid-run)
+- Reduced SSE surface area & test matrix
+- Fewer race conditions around config saves vs. event ordering
+
+Historical references to `chain_blocked` persist only in timeline / changelog documents for archival accuracy.
+
+*End of plan (updated).* 

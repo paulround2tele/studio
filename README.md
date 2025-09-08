@@ -243,6 +243,55 @@ domainflow-studio/
 
 ## 🔌 API Documentation
 
+### OpenAPI Toolchain Pinning
+- Spec Version: 3.1.0 (bundled from modular sources under `backend/openapi/`)
+- Server Generation: oapi-codegen v2.5.0 (pinned via Makefile install line)
+- Client Generation: openapi-generator-cli 7.14.0 (pinned in `openapitools.json`)
+
+All regenerations should be deterministic. If generator versions must change, update both the Makefile and the `openapitools.json` pin, then regenerate and commit the diff with a `[Spec]` prefix.
+
+## 🔄 Unified Pipeline Orchestration
+The campaign execution pipeline auto-advances through ordered phases when launched in full sequence mode:
+
+```
+Domain Generation → DNS Validation → HTTP Keyword Validation → Analysis
+```
+
+### Execution Model (Strict Model A)
+- All required configurations (personas, proxies, keyword set, etc.) must be present before the initial start.
+- Missing configuration produces an HTTP 409 on start (no mid-chain blocking events).
+- Orchestrator emits structured Server-Sent Events (SSE) at each transition.
+
+### SSE Event Taxonomy
+| Event | Meaning |
+|-------|---------|
+| `phase_started` | User-initiated phase start. |
+| `phase_auto_started` | Auto chain advanced to next phase. |
+| `phase_failed` | Phase terminated with failure; auto-advance pauses. |
+| `phase_completed` | Phase finished successfully. |
+| `campaign_progress` | Incremental progress update (percentage + phase context). |
+| `campaign_completed` | Final phase completed; campaign terminal. |
+| `mode_changed` | Execution mode toggled (step_by_step ↔ full_sequence). |
+
+### Retry Semantics
+When a phase fails:
+1. UI derives `retryEligiblePhases` from last failed phase onward.
+2. User triggers a retry; orchestrator restarts the failed phase.
+3. On success, auto-advance resumes for remaining phases.
+
+### Metrics Collected
+- `phaseStarts`, `phaseAutoStarts`, `phaseFailures`, `phaseCompletions`, `campaignCompletions`, and per-phase duration metrics.
+
+### Frontend Selector Guarantees
+- Derived overview always supplies ordered phases with status & (when available) `durationMs`.
+- `nextUserAction` indicates the highest-priority user intervention (start, retry, or none).
+- Failure → retry path covered by dedicated unit tests ensuring correctness after each transition.
+
+Refer to `PIPELINE_CHANGELOG.md` for historical evolution and removal of legacy `chain_blocked` semantics. See detailed event payload fields in [`backend/SSE_EVENTS.md`](backend/SSE_EVENTS.md) and retry flow guide in [`docs/pipeline_retry_guide.md`](docs/pipeline_retry_guide.md).
+
+### CI Guard
+A lightweight CI guard script (`npm run api:ci-guard`) bundles & validates the OpenAPI spec, regenerates server (backend) + client artifacts, and fails if uncommitted diffs remain—preventing stale generated code from slipping into main.
+
 ### RTK Query Architecture
 
 The frontend uses **Redux Toolkit Query (RTK Query)** for unified API state management, providing:

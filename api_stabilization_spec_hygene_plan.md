@@ -66,14 +66,17 @@ Bulk: /resource/bulk/{action} with consistent verbs across personas, proxies, ke
 Exit criteria:
 
 Resource routes are consistent; no snowflake verbs or random paths.
-Phase 9 — OpenAPI Version Decision + Pinning
-Choose:
-3.0.3: fewer generator foot-guns.
-3.1: keep, but accept and pin a generator that supports it.
-Update Swag config and pin generator versions accordingly.
+Phase 9 — OpenAPI Version Decision + Pinning (COMPLETED)
+Decision: Remain on OpenAPI 3.1.0 to leverage enhanced JSON Schema alignment; stability acceptable with current toolchain.
+Pinned Toolchain:
+- oapi-codegen v2.5.0 (pinned in Makefile install line)
+- openapi-generator-cli 7.14.0 (pinned in root & backend openapitools.json)
+Actions Executed:
+- Confirmed all bundled spec roots declare `openapi: 3.1.0`.
+- Ensured no fallback / drift to earlier spec versions in scripts.
 Exit criteria:
-
-No “3.1 is beta” complaints (or they’re intentionally accepted and pinned).
+- All generation invokes 3.1.0 spec without warnings blocking CI.
+- Re-generation is reproducible (validated via `make openapi`).
 Phase 10 — CI Gates to Prevent Relapse
 CI runs npm run gen:openapi and npm run gen:all.
 Fail the build on:
