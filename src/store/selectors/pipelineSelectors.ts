@@ -121,13 +121,16 @@ export const makeSelectExecSummary = (campaignId: string) => createSelector(
 );
 
 // Exec runtime selectors
-export const selectExecState = (campaignId: string) => (state: RootState) => state.pipelineExec.byCampaign[campaignId] || {};
+// Use a frozen empty object to keep referential stability when slice absent
+const EMPTY_EXEC_RUNTIME: Record<string, any> = Object.freeze({});
+export const selectExecState = (campaignId: string) => (state: RootState) =>
+  (state as any).pipelineExec?.byCampaign?.[campaignId] || EMPTY_EXEC_RUNTIME;
 export const selectPhaseExecRuntime = (campaignId: string, phase: PipelinePhaseKey) => (state: RootState) => {
-  return state.pipelineExec.byCampaign[campaignId]?.[phase];
+  return (state as any).pipelineExec?.byCampaign?.[campaignId]?.[phase];
 };
 
 export const selectRetryEligiblePhases = (campaignId: string) => (state: RootState): PipelinePhaseKey[] => {
-  const exec = state.pipelineExec.byCampaign[campaignId];
+  const exec = (state as any).pipelineExec?.byCampaign?.[campaignId];
   if (!exec) return [];
   return (Object.keys(exec) as PipelinePhaseKey[]).filter(p => exec[p].status === 'failed');
 };

@@ -17,6 +17,8 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**campaignsEnrichedGet**](#campaignsenrichedget) | **GET** /campaigns/{campaignId}/enriched | Get enriched campaign details|
 |[**campaignsGet**](#campaignsget) | **GET** /campaigns/{campaignId} | Get campaign|
 |[**campaignsList**](#campaignslist) | **GET** /campaigns | List campaigns|
+|[**campaignsModeUpdate**](#campaignsmodeupdate) | **PATCH** /campaigns/{campaignId}/mode | Update campaign execution mode|
+|[**campaignsPhaseConfigsList**](#campaignsphaseconfigslist) | **GET** /campaigns/{campaignId}/configs | List stored phase configurations for a campaign|
 |[**campaignsPhaseConfigure**](#campaignsphaseconfigure) | **POST** /campaigns/{campaignId}/phases/{phase}/configure | Configure campaign phase|
 |[**campaignsPhaseExecutionDelete**](#campaignsphaseexecutiondelete) | **DELETE** /campaigns/{campaignId}/phase-executions/{phaseType} | Delete phase execution by phase type|
 |[**campaignsPhaseExecutionGet**](#campaignsphaseexecutionget) | **GET** /campaigns/{campaignId}/phase-executions/{phaseType} | Get phase execution by phase type|
@@ -730,6 +732,118 @@ This endpoint does not have any parameters.
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **campaignsModeUpdate**
+> CampaignsModeUpdate200Response campaignsModeUpdate(campaignsModeUpdateRequest)
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration,
+    CampaignsModeUpdateRequest
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+let campaignsModeUpdateRequest: CampaignsModeUpdateRequest; //
+
+const { status, data } = await apiInstance.campaignsModeUpdate(
+    campaignId,
+    campaignsModeUpdateRequest
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignsModeUpdateRequest** | **CampaignsModeUpdateRequest**|  | |
+| **campaignId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**CampaignsModeUpdate200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: application/json
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Mode updated |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsPhaseConfigsList**
+> CampaignsPhaseConfigsList200Response campaignsPhaseConfigsList()
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsPhaseConfigsList(
+    campaignId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**CampaignsPhaseConfigsList200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | Phase configurations summary |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **campaignsPhaseConfigure**
 > CampaignsPhaseStatus200Response campaignsPhaseConfigure(phaseConfigurationRequest)
 
@@ -1066,6 +1180,7 @@ const { status, data } = await apiInstance.campaignsPhaseStart(
 |**400** | Bad Request |  -  |
 |**401** | Unauthorized |  -  |
 |**404** | Not Found |  -  |
+|**409** | Missing downstream phase configurations (full_sequence mode gating) |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
