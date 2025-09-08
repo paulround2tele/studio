@@ -4,7 +4,6 @@ import React, { useMemo, useState, useCallback } from 'react';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 import type { PhaseExecution } from '@/lib/api-client/models/phase-execution';
 import type { CampaignState } from '@/lib/api-client/models/campaign-state';
-import { PhaseCard } from '@/components/campaigns/PhaseCard';
 import { useStartPhaseStandaloneMutation, useGetPhaseStatusStandaloneQuery } from '@/store/api/campaignApi';
 import { useCampaignSSE } from '@/hooks/useCampaignSSE';
 import { useAppDispatch } from '@/store/hooks';
@@ -27,7 +26,7 @@ interface CampaignControlsProps {
 }
 
 const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExecutions, state }) => {
-  const SHOW_PIPELINE_WORKSPACE = true; // Phase 4 feature flag (remove after Phase 6)
+  const SHOW_PIPELINE_WORKSPACE = true; // Always true; PhaseCards removed Phase 6
   const [startErrors, setStartErrors] = useState<{ [phase in 'discovery' | 'validation' | 'extraction' | 'analysis']?: string }>({});
   const [startPhase] = useStartPhaseStandaloneMutation();
   const { toast } = useToast();
@@ -56,27 +55,7 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
   const { data: httpStatus } = useGetPhaseStatusStandaloneQuery({ campaignId: campaign.id, phase: 'extraction' as any });
   const { data: analysisStatus } = useGetPhaseStatusStandaloneQuery({ campaignId: campaign.id, phase: 'analysis' as any });
 
-  // Map backend phase status -> UI status expected by PhaseCard
-  const toCardStatus = useCallback((s?: string): 'pending' | 'running' | 'completed' | 'failed' | 'paused' | 'configured' => {
-    switch (s) {
-      case 'not_started':
-        return 'pending';
-      case 'configured':
-        return 'configured';
-      case 'in_progress':
-        return 'running';
-      case 'running':
-        return 'running';
-      case 'paused':
-        return 'paused';
-      case 'completed':
-        return 'completed';
-      case 'failed':
-        return 'failed';
-      default:
-        return 'pending';
-    }
-  }, []);
+  // PhaseCards deprecated; status mapping retained only for potential transitional UI (can be removed later)
 
   // Prefer enriched phase executions when available
   const execByPhase = useMemo(() => {
@@ -101,118 +80,16 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
     return 'pending' as const;
   }, [campaign.status, campaign.currentPhase, lastProgress?.current_phase]);
 
-  const discoveryPhase = useMemo(() => {
-    const exec = execByPhase.get('discovery');
-    const status = exec ? toCardStatus(exec.status as any) : (toCardStatus(discoveryStatus?.status) || computePhaseStatus('discovery'));
-    return {
-      id: 'discovery',
-      name: 'Discovery',
-      status,
-      progress: Math.round(
-        exec?.progressPercentage != null
-          ? exec.progressPercentage
-          : lastProgress?.current_phase === apiToEnginePhase('discovery')
-            ? lastProgress.progress_pct
-            : campaign?.progress?.percentComplete || 0
-      ),
-    } as const;
-  }, [campaign, lastProgress, discoveryStatus?.status, computePhaseStatus, toCardStatus, execByPhase]);
+  // Removed legacy PhaseCard data objects (discoveryPhase, dnsPhase, httpPhase, analysisPhase)
 
-  const dnsPhase = useMemo(() => {
-    const exec = execByPhase.get('validation');
-    const status = exec ? toCardStatus(exec.status as any) : (toCardStatus(dnsStatus?.status) || computePhaseStatus('validation'));
-    return {
-      id: 'dns_validation',
-      name: 'DNS Validation',
-      status,
-      progress: Math.round(
-        exec?.progressPercentage != null
-          ? exec.progressPercentage
-          : lastProgress?.current_phase === apiToEnginePhase('validation')
-            ? lastProgress.progress_pct
-            : campaign?.progress?.percentComplete || 0
-      ),
-    } as const;
-  }, [campaign, lastProgress, dnsStatus?.status, computePhaseStatus, toCardStatus, execByPhase]);
 
-  const httpPhase = useMemo(() => {
-    const exec = execByPhase.get('extraction');
-    const status = exec ? toCardStatus(exec.status as any) : (toCardStatus(httpStatus?.status) || computePhaseStatus('extraction'));
-    return {
-      id: 'http_keyword_validation',
-      name: 'HTTP Validation',
-      status,
-      progress: Math.round(
-        exec?.progressPercentage != null
-          ? exec.progressPercentage
-          : lastProgress?.current_phase === apiToEnginePhase('extraction')
-            ? lastProgress.progress_pct
-            : campaign?.progress?.percentComplete || 0
-      ),
-    } as const;
-  }, [campaign, lastProgress, httpStatus?.status, computePhaseStatus, toCardStatus, execByPhase]);
 
-  const analysisPhase = useMemo(() => {
-    const exec = execByPhase.get('analysis');
-    const status = exec ? toCardStatus(exec.status as any) : (toCardStatus(analysisStatus?.status) || computePhaseStatus('analysis'));
-    return {
-      id: 'analysis',
-      name: 'Analysis',
-      status,
-      progress: Math.round(
-        exec?.progressPercentage != null
-          ? exec.progressPercentage
-          : lastProgress?.current_phase === apiToEnginePhase('analysis')
-            ? lastProgress.progress_pct
-            : campaign?.progress?.percentComplete || 0
-      ),
-    } as const;
-  }, [campaign, lastProgress, analysisStatus?.status, computePhaseStatus, toCardStatus, execByPhase]);
+  // Removed legacy PhaseCard compute blocks
 
   // Simple backend-order guards: assume validation must run before http_keyword_validation completes
-  const canStartDiscovery = useMemo(() => {
-    const s = discoveryStatus?.status;
-    return s === 'not_started' || s === 'configured' || s === 'paused';
-  }, [discoveryStatus?.status]);
-  const discoveryCompleted = discoveryStatus?.status === 'completed';
-  // Heuristic: discovery configured if we have any domain generation config in lastProgress or campaign metadata
-  const discoveryConfigured = useMemo(() => {
-    const st = discoveryStatus?.status;
-    return st === 'configured' || st === 'running' || st === 'completed' || st === 'paused';
-  }, [discoveryStatus]);
-  const discoveryStartDisabledReason = undefined;
-  const dnsConfigured = useMemo(() => {
-    const st = dnsStatus?.status;
-    return st === 'configured' || st === 'running' || st === 'completed' || st === 'paused';
-  }, [dnsStatus]);
-  const httpConfigured = useMemo(() => {
-    const st = httpStatus?.status;
-    return st === 'configured' || st === 'running' || st === 'completed' || st === 'paused';
-  }, [httpStatus]);
-  const analysisConfigured = useMemo(() => {
-    const st = analysisStatus?.status;
-    return st === 'configured' || st === 'running' || st === 'completed' || st === 'paused';
-  }, [analysisStatus]);
-  const canStartDNS = useMemo(() => {
-    const s = dnsStatus?.status;
-    return (s === 'not_started' || s === 'configured' || s === 'paused') && discoveryCompleted;
-  }, [dnsStatus?.status, discoveryCompleted]);
-  const validationCompleted = dnsStatus?.status === 'completed';
-  const canStartHTTP = useMemo(() => {
-    const s = httpStatus?.status;
-    return (s === 'not_started' || s === 'configured' || s === 'paused') && validationCompleted;
-  }, [httpStatus?.status, validationCompleted]);
-  const httpCompleted = httpStatus?.status === 'completed';
-  const canStartAnalysis = useMemo(() => {
-    const s = analysisStatus?.status;
-    return (s === 'not_started' || s === 'configured' || s === 'paused') && httpCompleted;
-  }, [analysisStatus?.status, httpCompleted]);
-  const canConfigure = true;
+  // Start gating logic now centralized in selectors + workspace; legacy canStart* removed.
 
-  const httpConfigureDisabledReason = validationCompleted ? undefined : 'Complete DNS Validation before configuring HTTP Validation.';
-  const httpStartDisabledReason = validationCompleted ? undefined : 'DNS Validation must be completed before starting HTTP Validation.';
-  const analysisConfigureDisabledReason = httpCompleted ? undefined : 'Complete HTTP Validation before configuring Analysis.';
-  const analysisStartDisabledReason = httpCompleted ? undefined : 'HTTP Validation must be completed before starting Analysis.';
+  // Legacy disabled reason strings removed; gating handled via selectors.
 
   const handleConfigure = useCallback(() => {
     // Placeholder: inline config handled via PipelineWorkspace (Phase 5). PhaseCards deprecated Phase 6.
@@ -230,51 +107,7 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
     );
   };
 
-  const handleStartDNS = useCallback(async () => {
-    try {
-      await startPhase({ campaignId: campaign.id, phase: 'validation' as any }).unwrap();
-      toast({ title: 'DNS Validation started', description: 'Phase transitioned to running.' });
-      setStartErrors((s) => ({ ...s, validation: undefined }));
-    } catch (e: any) {
-      const msg = extractErrorMessage(e);
-      setStartErrors((s) => ({ ...s, validation: msg }));
-      toast({ title: 'Failed to start DNS Validation', description: msg, variant: 'destructive' });
-    }
-  }, [campaign.id, startPhase, toast]);
-
-  const handleStartHTTP = useCallback(async () => {
-    try {
-      await startPhase({ campaignId: campaign.id, phase: 'extraction' as any }).unwrap();
-      toast({ title: 'HTTP Validation started', description: 'Phase transitioned to running.' });
-    } catch (e: any) {
-  const msg = extractErrorMessage(e);
-        // setDNSModalOpen(true); // Removed modal usage
-  toast({ title: 'Failed to start HTTP Validation', description: msg, variant: 'destructive' });
-    }
-  }, [campaign.id, startPhase, toast]);
-
-  const handleStartDiscovery = useCallback(async () => {
-    try {
-      await startPhase({ campaignId: campaign.id, phase: 'discovery' as any }).unwrap();
-      toast({ title: 'Discovery started', description: 'Domain generation has begun. Domains will appear below as they are persisted.' });
-      setStartErrors((s) => ({ ...s, discovery: undefined }));
-    } catch (e: any) {
-      const msg = extractErrorMessage(e);
-      setStartErrors((s) => ({ ...s, discovery: msg }));
-      toast({ title: 'Failed to start Discovery', description: msg, variant: 'destructive' });
-    }
-  }, [campaign.id, startPhase, toast, discoveryConfigured]);
-
-  const handleStartAnalysis = useCallback(async () => {
-    try {
-      await startPhase({ campaignId: campaign.id, phase: 'analysis' as any }).unwrap();
-      toast({ title: 'Analysis started', description: 'Phase transitioned to running.' });
-    } catch (e: any) {
-  const msg = extractErrorMessage(e);
-  setStartErrors((s) => ({ ...s, analysis: msg }));
-  toast({ title: 'Failed to start Analysis', description: msg, variant: 'destructive' });
-    }
-  }, [campaign.id, startPhase, toast]);
+  // Legacy manual start handlers removed; handled by workspace primary action + auto-advance.
 
   return (
     <div className="flex flex-col gap-4">
@@ -288,66 +121,7 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
   <PhaseStepper campaignId={campaign.id} />
   <FailureContinuationPanel campaignId={campaign.id} />
   <ConversionCTA campaignId={campaign.id} />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <PhaseCard
-  phase={discoveryPhase as any}
-        isActive={campaign.currentPhase === 'discovery'}
-  canStart={canStartDiscovery}
-  startDisabledReason={discoveryStartDisabledReason}
-  canConfigure={true}
-  isConfigured={discoveryConfigured}
-  lastStartError={startErrors.discovery}
-        onStart={handleStartDiscovery}
-  onResume={handleStartDiscovery}
-          onConfigure={handleConfigure}
-        liveConnected={isConnected}
-  />
-
-      <PhaseCard
-        phase={dnsPhase as any}
-        isActive={campaign.currentPhase === 'validation'}
-        canStart={canStartDNS}
-        canConfigure={canConfigure}
-  isConfigured={dnsConfigured}
-  lastStartError={startErrors.validation}
-        onStart={handleStartDNS}
-  onResume={handleStartDNS}
-        onConfigure={handleConfigure}
-  liveConnected={isConnected}
-  />
-
-      <PhaseCard
-        phase={httpPhase as any}
-        isActive={campaign.currentPhase === 'extraction'}
-        canStart={canStartHTTP}
-  canConfigure={validationCompleted}
-  startDisabledReason={httpStartDisabledReason}
-  configureDisabledReason={httpConfigureDisabledReason}
-  isConfigured={httpConfigured}
-  lastStartError={startErrors.extraction}
-        onStart={handleStartHTTP}
-  onResume={handleStartHTTP}
-          onConfigure={handleConfigure}
-  liveConnected={isConnected}
-  />
-
-      <PhaseCard
-        phase={analysisPhase as any}
-        isActive={campaign.currentPhase === 'analysis'}
-        canStart={canStartAnalysis}
-  canConfigure={httpCompleted}
-  startDisabledReason={analysisStartDisabledReason}
-  configureDisabledReason={analysisConfigureDisabledReason}
-  isConfigured={analysisConfigured}
-  lastStartError={startErrors.analysis}
-        onStart={handleStartAnalysis}
-  onResume={handleStartAnalysis}
-          onConfigure={handleConfigure}
-        liveConnected={isConnected}
-  />
-
-  {/* Quick actions removed & modals replaced by inline forms (handled in PipelineWorkspace) */}
-      </div>
+  {/* Legacy PhaseCards removed in Phase 6 (workspace authoritative). */}
   <TimelineHistory campaignId={campaign.id} />
     </div>
   );

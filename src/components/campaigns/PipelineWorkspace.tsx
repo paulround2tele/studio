@@ -11,6 +11,7 @@ import AnalysisConfigForm from '@/components/campaigns/workspace/forms/AnalysisC
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
+import computeAutoStartPhase from '@/store/selectors/autoAdvanceLogic';
 
 interface PipelineWorkspaceProps { campaignId: string; }
 
@@ -43,6 +44,15 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
     }
     // configure path will be handled in Phase 5 when inline forms introduced
   };
+
+  // Auto-advance effect: when in full sequence mode and a phase just completed, start next configured idle phase.
+  React.useEffect(() => {
+    const nextAuto = computeAutoStartPhase(phases, mode.autoAdvance);
+    if (nextAuto) {
+      // fire and forget; ignore errors (will surface via toast if component chooses later)
+      startPhase({ campaignId, phase: nextAuto as any });
+    }
+  }, [phases.map(p=>p.execState).join(','), phases.map(p=>p.configState).join(','), mode.autoAdvance, campaignId]);
 
   const handlePhaseClick = (phaseKey: string) => {
     dispatch(setSelectedPhase({ campaignId, phase: phaseKey }));
