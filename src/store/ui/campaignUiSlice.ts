@@ -9,6 +9,7 @@ export interface CampaignUIState {
   guidance?: { message: string; phase?: string; severity: 'info' | 'warn' }; // single guidance (legacy)
   guidanceMessages?: { id: string; message: string; phase?: string; severity: 'info' | 'warn' }[]; // new queue
   lastFailedPhase?: string;
+  selectedPhase?: string; // Phase explicitly chosen in workspace (Phase 5 inline forms)
     // Add more UI-only fields as needed
   }>;
 }
@@ -59,6 +60,11 @@ const campaignUiSlice = createSlice({
       state.byId[campaignId] = state.byId[campaignId] || {};
       state.byId[campaignId].lastFailedPhase = phase;
     },
+    setSelectedPhase(state, action: PayloadAction<{ campaignId: string; phase?: string }>) {
+      const { campaignId, phase } = action.payload;
+      state.byId[campaignId] = state.byId[campaignId] || {};
+      state.byId[campaignId].selectedPhase = phase;
+    },
     hydrateCampaignUI(state, action: PayloadAction<{ campaignId: string; data: Partial<CampaignUIState['byId'][string]> }>) {
       const { campaignId, data } = action.payload;
       state.byId[campaignId] = { ...(state.byId[campaignId] || {}), ...data };
@@ -70,5 +76,5 @@ const campaignUiSlice = createSlice({
   },
 });
 
-export const { setFullSequenceMode, setPreflightOpen, setGuidance, clearGuidance, setLastFailedPhase, hydrateCampaignUI, resetCampaignUI, pushGuidanceMessage, dismissGuidanceMessage } = campaignUiSlice.actions;
+export const { setFullSequenceMode, setPreflightOpen, setGuidance, clearGuidance, setLastFailedPhase, hydrateCampaignUI, resetCampaignUI, pushGuidanceMessage, dismissGuidanceMessage, setSelectedPhase } = campaignUiSlice.actions;
 export default campaignUiSlice.reducer;

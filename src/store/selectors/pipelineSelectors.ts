@@ -312,6 +312,8 @@ export const pipelineSelectors = {
   autoAdvanceEnabled: makeSelectAutoAdvanceEnabled,
   modeDescriptor: makeSelectModeDescriptor,
   nextUserAction: makeSelectNextUserAction,
+  // selected phase picked by user (added Phase 5)
+  selectedPhase: (campaignId: string) => createSelector(selectCampaignUIById(campaignId), ui => ui?.selectedPhase),
   guidanceQueue: makeSelectGuidanceQueue,
   latestGuidance: makeSelectLatestGuidance,
   guidanceCount: makeSelectGuidanceCount,

@@ -93,14 +93,34 @@ Risk: Visual clutter during overlap.
 Mitigation: Temporary env or local boolean `SHOW_PIPELINE_WORKSPACE`.
 
 ### Phase 5: Inline Config Forms Migration
-Tasks:
-- Extract form contents from existing per-phase configure modals/components into dedicated subcomponents: `DiscoveryConfigForm`, `DNSValidationConfigForm`, `HTTPValidationConfigForm`, `AnalysisConfigForm`.
-- Each form fires onChange events updating local draft, with debounce/persist on save.
-- Real-time field completeness tracking triggers form checklist state.
-Success Criteria:
-- Active phase shows inline form; saving persists; readiness recalculates instantly.
-Risk: Regression in validation edge cases.
-Mitigation: Reuse existing validation logic / schemas.
+Status: In Progress (scaffolding committed in Phase 5 initial work).
+
+Delta Implemented (this commit scope):
+- Added `selectedPhase` UI state and selector.
+- Enhanced `PipelineWorkspace` with rail click handling, explicit selection highlighting, and adaptive panel logic.
+- Removed all legacy configuration modal invocations from `CampaignControls` (forms now to be embedded inline).
+- Inserted placeholder adaptive panel content for selected or next configure phase.
+
+Remaining Tasks:
+- Extract modal form bodies into `DiscoveryConfigForm`, `DNSValidationConfigForm`, `HTTPValidationConfigForm`, `AnalysisConfigForm` under `workspace/forms/`.
+- Implement shared `PhaseConfigPanel` wrapper (header, status badges, save/cancel, loading overlay).
+- Port data-loading logic (personas, proxies, pools, keyword sets) into reusable hooks: `useDNSValidationConfigData`, `useHTTPValidationConfigData`.
+- Wire form submission to existing `configurePhase` mutation; on success reset dirty state and optionally push guidance message.
+- Add minimal phase summary view (read-only) with Edit button when `configState === 'valid'`.
+- Add Jest test for `nextUserAction` transition after a mock configuration dispatch.
+- Remove obsolete modal component files once forms added (final deletion validated by grep in Phase 7 or earlier if safe).
+
+Success Criteria (Reaffirmed):
+- Selecting an unconfigured phase opens inline form; saving updates readiness instantly.
+- All four phase forms function equivalently to prior modals (no feature loss).
+- No remaining references to modal components in active code.
+
+Risks:
+- Potential missing validation parity during extraction — mitigated by direct reuse of existing form logic.
+- Temporary placeholder visible if form extraction incomplete — minimized by completing extraction before marking Phase 5 done.
+
+Mitigation:
+- Perform one-for-one port then incremental enhancement (no rewrite) to avoid regressions.
 
 ### Phase 6: Execution Flow & Auto-Advance Logic
 Tasks:

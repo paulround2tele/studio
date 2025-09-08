@@ -5,11 +5,7 @@ import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 import type { PhaseExecution } from '@/lib/api-client/models/phase-execution';
 import type { CampaignState } from '@/lib/api-client/models/campaign-state';
 import { PhaseCard } from '@/components/campaigns/PhaseCard';
-import DNSValidationConfigModal from '@/components/campaigns/modals/DNSValidationConfigModal';
 import { useStartPhaseStandaloneMutation, useGetPhaseStatusStandaloneQuery } from '@/store/api/campaignApi';
-import HTTPValidationConfigModal from '@/components/campaigns/modals/HTTPValidationConfigModal';
-import AnalysisConfigModal from '@/components/campaigns/modals/AnalysisConfigModal';
-import DiscoveryConfigModal from '@/components/campaigns/modals/DiscoveryConfigModal';
 import { useCampaignSSE } from '@/hooks/useCampaignSSE';
 import { useAppDispatch } from '@/store/hooks';
 import { setFullSequenceMode, setLastFailedPhase, setGuidance } from '@/store/ui/campaignUiSlice';
@@ -223,7 +219,7 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
   const analysisStartDisabledReason = httpCompleted ? undefined : 'HTTP Validation must be completed before starting Analysis.';
 
   const handleConfigure = useCallback(() => {
-    setDNSModalOpen(true);
+    // Placeholder: inline config handled via PipelineWorkspace (Phase 5). PhaseCards deprecated Phase 6.
   }, []);
 
   const extractErrorMessage = (e: any): string => {
@@ -257,16 +253,12 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
   setStartErrors((s) => ({ ...s, extraction: undefined }));
     } catch (e: any) {
   const msg = extractErrorMessage(e);
-  setStartErrors((s) => ({ ...s, extraction: msg }));
+        // setDNSModalOpen(true); // Removed modal usage
   toast({ title: 'Failed to start HTTP Validation', description: msg, variant: 'destructive' });
     }
   }, [campaign.id, startPhase, toast]);
 
   const handleStartDiscovery = useCallback(async () => {
-    if (!discoveryConfigured) {
-      setDiscoveryModalOpen(true);
-      return;
-    }
     try {
       await startPhase({ campaignId: campaign.id, phase: 'discovery' as any }).unwrap();
       toast({ title: 'Discovery started', description: 'Domain generation has begun. Domains will appear below as they are persisted.' });
@@ -313,7 +305,7 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
   lastStartError={startErrors.discovery}
         onStart={handleStartDiscovery}
   onResume={handleStartDiscovery}
-        onConfigure={() => setDiscoveryModalOpen(true)}
+          onConfigure={handleConfigure}
         liveConnected={isConnected}
   />
 
@@ -341,7 +333,7 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
   lastStartError={startErrors.extraction}
         onStart={handleStartHTTP}
   onResume={handleStartHTTP}
-        onConfigure={() => setHTTPModalOpen(true)}
+          onConfigure={handleConfigure}
   liveConnected={isConnected}
   />
 
@@ -356,43 +348,11 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
   lastStartError={startErrors.analysis}
         onStart={handleStartAnalysis}
   onResume={handleStartAnalysis}
-        onConfigure={() => setAnalysisModalOpen(true)}
+          onConfigure={handleConfigure}
         liveConnected={isConnected}
   />
 
-  {/* Quick actions removed: unified into Phase cards */}
-
-      {/* Discovery Configuration Modal */}
-  <DiscoveryConfigModal
-        isOpen={isDiscoveryModalOpen}
-        onClose={() => setDiscoveryModalOpen(false)}
-        campaignId={campaign.id}
-        onConfigured={() => setDiscoveryModalOpen(false)}
-      />
-
-      {/* DNS Configuration Modal */}
-  <DNSValidationConfigModal
-        isOpen={isDNSModalOpen}
-        onClose={() => setDNSModalOpen(false)}
-        campaignId={campaign.id}
-        onConfigured={() => setDNSModalOpen(false)}
-      />
-
-      {/* HTTP Configuration Modal */}
-  <HTTPValidationConfigModal
-        isOpen={isHTTPModalOpen}
-        onClose={() => setHTTPModalOpen(false)}
-        campaignId={campaign.id}
-        onConfigured={() => setHTTPModalOpen(false)}
-      />
-
-      {/* Analysis Configuration Modal */}
-  <AnalysisConfigModal
-        isOpen={isAnalysisModalOpen}
-        onClose={() => setAnalysisModalOpen(false)}
-        campaignId={campaign.id}
-        onConfigured={() => setAnalysisModalOpen(false)}
-      />
+  {/* Quick actions removed & modals replaced by inline forms (handled in PipelineWorkspace) */}
       </div>
   <TimelineHistory campaignId={campaign.id} />
     </div>
