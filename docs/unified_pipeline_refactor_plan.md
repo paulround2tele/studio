@@ -120,16 +120,26 @@ Risks & Mitigation:
 - Edge: user switches phase mid-submit (submit buttons disabled while saving → minimal risk).
 
 ### Phase 6: Execution Flow & Auto-Advance Logic
-Tasks:
-- Implement Start buttons logic: manual vs full sequence (single start action at phase 1 only in full sequence mode).
-- SSE handling for `phase_started`, `phase_completed`, `phase_failed` updates execState in pipeline store.
-- Auto-advance: when a phase completes and mode=full sequence, mark next phase execState running if backend starts it; rely on SSE for authoritative state.
-- Replace old PhaseCards list with `<PipelineWorkspace />` as sole render path (remove feature flag).
-Success Criteria:
-- Manual mode: user must click Start for each phase (after config) and pipeline advances fluidly.
-- Full sequence mode: after Start Full Sequence, phases run through without further clicks.
-Risk: Race conditions if SSE arrives before local state update.
-Mitigation: Always trust SSE; derive execState from server events.
+Status: In Progress (core workspace authority + auto-advance merged).
+
+Implemented:
+- Removed `PhaseCard` component and all usages; `PipelineWorkspace` is sole surface.
+- Added `computeAutoStartPhase` utility and auto-advance effect (skips first phase; user initiates; subsequent phases auto-start when prior completes if mode enabled).
+- Simplified gating: start CTA still originates from selectors; workspace primary button triggers starts.
+
+Remaining (Phase 6) TODO:
+1. Exec state hydration from SSE directly into a dedicated slice (currently implicit via RTK queries and rail status heuristics). (Planned minimal adapter or defer to Phase 7 if low impact.)
+2. Failure retry action integration (retry eligible detection present; UI action button pending).
+3. Add test validating auto-advance call ordering for consecutive configured phases (simulate sequence of status transitions).
+
+Success Criteria (Adjusted):
+- Manual mode requires user start for each idle configured phase (validated by not auto-starting initial discovery phase).
+- Full sequence mode auto-starts next configured idle phase after prior completion (pending test).
+- No references to `PhaseCard` remain (grep clean).
+
+Risks / Mitigation:
+- Potential duplicate start requests if SSE delay > effect window: mitigate by server idempotency; can add local suppression map if needed.
+- Missing explicit exec slice could complicate future metrics: addressed in Phase 7 cleanup if required.
 
 ### Phase 7: Deletion & Dead Code Purge
 Tasks:
