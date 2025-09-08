@@ -243,13 +243,6 @@ domainflow-studio/
 
 ## 🔌 API Documentation
 
-### OpenAPI Toolchain Pinning
-- Spec Version: 3.1.0 (bundled from modular sources under `backend/openapi/`)
-- Server Generation: oapi-codegen v2.5.0 (pinned via Makefile install line)
-- Client Generation: openapi-generator-cli 7.14.0 (pinned in `openapitools.json`)
-
-All regenerations should be deterministic. If generator versions must change, update both the Makefile and the `openapitools.json` pin, then regenerate and commit the diff with a `[Spec]` prefix.
-
 ## 🔄 Unified Pipeline Orchestration
 The campaign execution pipeline auto-advances through ordered phases when launched in full sequence mode:
 
@@ -287,10 +280,7 @@ When a phase fails:
 - `nextUserAction` indicates the highest-priority user intervention (start, retry, or none).
 - Failure → retry path covered by dedicated unit tests ensuring correctness after each transition.
 
-Refer to `PIPELINE_CHANGELOG.md` for historical evolution and removal of legacy `chain_blocked` semantics. See detailed event payload fields in [`backend/SSE_EVENTS.md`](backend/SSE_EVENTS.md) and retry flow guide in [`docs/pipeline_retry_guide.md`](docs/pipeline_retry_guide.md).
-
-### CI Guard
-A lightweight CI guard script (`npm run api:ci-guard`) bundles & validates the OpenAPI spec, regenerates server (backend) + client artifacts, and fails if uncommitted diffs remain—preventing stale generated code from slipping into main.
+Refer to `PIPELINE_CHANGELOG.md` for historical evolution and removal of legacy `chain_blocked` semantics.
 
 ### RTK Query Architecture
 
