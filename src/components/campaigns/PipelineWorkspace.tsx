@@ -33,6 +33,7 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
   const retryEligible = useAppSelector(React.useMemo(()=>selectRetryEligiblePhases(campaignId),[campaignId]));
   const dispatch = useAppDispatch();
   const [startPhase, { isLoading: startLoading }] = useStartPhaseStandaloneMutation();
+  const pendingAutoStarts = React.useRef<Set<string>>(new Set());
 
   const toggleMode = (val: boolean) => {
     dispatch(setFullSequenceMode({ campaignId, value: val }));
@@ -50,8 +51,12 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
   React.useEffect(() => {
     const nextAuto = computeAutoStartPhase(phases, mode.autoAdvance);
     if (nextAuto) {
-      // fire and forget; ignore errors (will surface via toast if component chooses later)
-      startPhase({ campaignId, phase: nextAuto as any });
+      if (pendingAutoStarts.current.has(nextAuto)) return; // suppression: already dispatched
+      pendingAutoStarts.current.add(nextAuto);
+      startPhase({ campaignId, phase: nextAuto as any }).finally(()=> {
+        // Allow retry only if phase failed later; removal when we detect phase started
+        setTimeout(()=>pendingAutoStarts.current.delete(nextAuto), 3000);
+      });
     }
   }, [phases.map(p=>p.execState).join(','), phases.map(p=>p.configState).join(','), mode.autoAdvance, campaignId]);
 

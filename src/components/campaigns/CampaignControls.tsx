@@ -26,7 +26,7 @@ interface CampaignControlsProps {
 }
 
 const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExecutions, state }) => {
-  const SHOW_PIPELINE_WORKSPACE = true; // Always true; PhaseCards removed Phase 6
+  const SHOW_PIPELINE_WORKSPACE = true; // Workspace is authoritative
   const [startErrors, setStartErrors] = useState<{ [phase in 'discovery' | 'validation' | 'extraction' | 'analysis']?: string }>({});
   const [startPhase] = useStartPhaseStandaloneMutation();
   const { toast } = useToast();
@@ -39,10 +39,8 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
       onModeChanged: (cid, mode) => {
         if (cid === campaign.id) dispatch(setFullSequenceMode({ campaignId: campaign.id, value: mode === 'full_sequence' }));
       },
-      onChainBlocked: (cid, data) => {
-  // chain_blocked deprecated under strict model; ignoring event if received.
-      }
-      ,onPhaseFailed: (cid, ev) => {
+      // chain_blocked deprecated under strict model; event intentionally ignored
+      onPhaseFailed: (cid, ev) => {
         if (cid === campaign.id) {
           dispatch(setLastFailedPhase({ campaignId: campaign.id, phase: ev.phase }));
           dispatch(setGuidance({ campaignId: campaign.id, guidance: { message: `${ev.phase} failed: ${ev.error || ev.message}`, phase: ev.phase, severity: 'warn' } }));
@@ -54,8 +52,6 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
   const { data: dnsStatus } = useGetPhaseStatusStandaloneQuery({ campaignId: campaign.id, phase: 'validation' as any });
   const { data: httpStatus } = useGetPhaseStatusStandaloneQuery({ campaignId: campaign.id, phase: 'extraction' as any });
   const { data: analysisStatus } = useGetPhaseStatusStandaloneQuery({ campaignId: campaign.id, phase: 'analysis' as any });
-
-  // PhaseCards deprecated; status mapping retained only for potential transitional UI (can be removed later)
 
   // Prefer enriched phase executions when available
   const execByPhase = useMemo(() => {
@@ -80,20 +76,7 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
     return 'pending' as const;
   }, [campaign.status, campaign.currentPhase, lastProgress?.current_phase]);
 
-  // Removed legacy PhaseCard data objects (discoveryPhase, dnsPhase, httpPhase, analysisPhase)
-
-
-
-  // Removed legacy PhaseCard compute blocks
-
-  // Simple backend-order guards: assume validation must run before http_keyword_validation completes
-  // Start gating logic now centralized in selectors + workspace; legacy canStart* removed.
-
-  // Legacy disabled reason strings removed; gating handled via selectors.
-
-  const handleConfigure = useCallback(() => {
-    // Placeholder: inline config handled via PipelineWorkspace (Phase 5). PhaseCards deprecated Phase 6.
-  }, []);
+  // Legacy PhaseCard & gating logic fully removed; selectors + workspace drive flow.
 
   const extractErrorMessage = (e: any): string => {
     // Try common shapes: RTK Query error with data.message, axios-style response.data, or plain message
@@ -121,7 +104,7 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
   <PhaseStepper campaignId={campaign.id} />
   <FailureContinuationPanel campaignId={campaign.id} />
   <ConversionCTA campaignId={campaign.id} />
-  {/* Legacy PhaseCards removed in Phase 6 (workspace authoritative). */}
+  {/* Timeline provides passive event history; no legacy PhaseCards remain. */}
   <TimelineHistory campaignId={campaign.id} />
     </div>
   );

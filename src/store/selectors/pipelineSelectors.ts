@@ -255,6 +255,7 @@ export const makeSelectStartCTAState = (campaignId: string) => createSelector(
 export const makeSelectPipelineOverview = (campaignId: string) => createSelector(
   [
     makeSelectPipelinePhases(campaignId),
+  selectExecState(campaignId),
     makeSelectConfigProgress(campaignId),
     makeSelectAllConfigured(campaignId),
     makeSelectMissingPhases(campaignId),
@@ -273,6 +274,7 @@ export const makeSelectPipelineOverview = (campaignId: string) => createSelector
   ],
   (
     phases,
+    runtime,
     configProgress,
     allConfigured,
     missing,
@@ -288,16 +290,25 @@ export const makeSelectPipelineOverview = (campaignId: string) => createSelector
     startReasons,
     canStartFull,
     nextAction
-  ) => ({
-    phases,
-    config: { allConfigured, firstMissing, missing, progress: configProgress },
-    exec: { summary: execSummary, active: activeExec, progress: overallProgress },
-    mode: { autoAdvance },
-    failures: { lastFailed, failedList },
-    guidance: { queue: guidanceQueue, latest: latestGuidance, count: guidanceQueue.length },
-    start: { canStart: canStartFull, reasons: startReasons },
-    nextAction
-  })
+  ) => {
+    const phasesEnriched = phases.map(p => {
+      const r = (runtime as any)[p.key];
+      let durationMs: number | undefined;
+      if (r?.startedAt && r?.completedAt) durationMs = r.completedAt - r.startedAt;
+      return { ...p, startedAt: r?.startedAt, completedAt: r?.completedAt, durationMs };
+    });
+    return {
+      phases,
+      phasesEnriched,
+      config: { allConfigured, firstMissing, missing, progress: configProgress },
+      exec: { summary: execSummary, active: activeExec, progress: overallProgress },
+      mode: { autoAdvance },
+      failures: { lastFailed, failedList },
+      guidance: { queue: guidanceQueue, latest: latestGuidance, count: guidanceQueue.length },
+      start: { canStart: canStartFull, reasons: startReasons },
+      nextAction
+    };
+  }
 );
 
 // ---------------------------------------------

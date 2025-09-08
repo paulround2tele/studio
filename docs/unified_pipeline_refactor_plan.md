@@ -140,14 +140,19 @@ Residual / Deferred (Phase 7 scope):
 - Add suppression guard if backend reveals any duplicate start side-effects (none observed yet).
 
 ### Phase 7: Deletion & Dead Code Purge
-Tasks:
-- Delete: `PhaseCard.tsx`, `SequenceBlockedBanner.tsx`, timeline variants if superseded, guidance code tied only to chain_blocked, unused actions.
-- Remove `usePhaseReadiness` old file (if replaced) & any adapter.
-- Strip docs referencing removed components.
-Success Criteria:
-- Repo search for removed symbol names returns only historical docs / commit messages.
-Risk: Accidental removal of shared utility.
-Mitigation: Conservative diff review before commit.
+Status: In Progress.
+Completed This Iteration:
+* Removed deprecated `usePhaseReadiness` hook & migrated consumers to `usePipelineState`.
+* Deleted legacy `ReduxPhaseTransitionButton` component.
+* Pruned obsolete PhaseCard / chain_blocked comments from `CampaignControls`.
+* Enriched overview selector with exec runtime timestamps & duration.
+* Added duplicate auto-start suppression guard (3s window) in `PipelineWorkspace`.
+
+Remaining:
+* Grep & remove any lingering unused imports referencing deleted symbols.
+* Confirm no orphan API models tied solely to removed UI (chain_blocked) remain required.
+* Optional: remove transitional components (`PhaseStepper`, `NextActionPanel`, `FailureContinuationPanel`) if fully superseded by workspace (defer pending confirmation).
+* Add test for enriched duration field later (Phase 8).
 
 ### Phase 8: QA & Tests
 Tasks:
