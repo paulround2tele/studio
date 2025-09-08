@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Zap, Clock, Info } from 'lucide-react';
 import { useAppDispatch } from '@/store/hooks';
 import { setFullSequenceMode, setPreflightOpen } from '@/store/ui/campaignUiSlice';
-import { usePhaseReadiness } from '@/hooks/usePhaseReadiness';
+import { usePipelineState } from '@/hooks/usePipelineState';
 import { useToast } from '@/hooks/use-toast';
 
 interface CampaignModeToggleProps {
@@ -43,7 +43,7 @@ export function CampaignModeToggle({
   className,
 }: CampaignModeToggleProps) {
   const _dispatch = useAppDispatch();
-  const { allConfigured } = usePhaseReadiness(campaignId);
+  const { allConfigured } = usePipelineState(campaignId);
   const { toast } = useToast();
   const [pending, setPending] = React.useState(false);
 

@@ -56,5 +56,3 @@ export function usePipelineState(campaignId: string): UsePipelineStateResult {
   }, [discovery, validation, extraction, analysis]);
 }
 
-// Temporary backward-compatible export (deprecated) so existing imports don't break immediately.
-export { usePipelineState as usePhaseReadiness };

@@ -1,12 +1,12 @@
 "use client";
 import React, { useMemo } from 'react';
-import { usePhaseReadiness } from '@/hooks/usePhaseReadiness';
+import { usePipelineState } from '@/hooks/usePipelineState';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { Button } from '@/components/ui/button';
 import { setFullSequenceMode } from '@/store/ui/campaignUiSlice';
 
 export const ConversionCTA: React.FC<{ campaignId: string }> = ({ campaignId }) => {
-  const { phases, allConfigured } = usePhaseReadiness(campaignId);
+  const { phases, allConfigured } = usePipelineState(campaignId);
   const dispatch = useAppDispatch();
   const fullSequence = useAppSelector(s => s.campaignUI?.byId?.[campaignId]?.fullSequenceMode);
   const show = useMemo(() => !fullSequence && allConfigured, [fullSequence, allConfigured]);
