@@ -28,10 +28,6 @@ interface CampaignControlsProps {
 
 const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExecutions, state }) => {
   const SHOW_PIPELINE_WORKSPACE = true; // Phase 4 feature flag (remove after Phase 6)
-  const [isDNSModalOpen, setDNSModalOpen] = useState(false);
-  const [isHTTPModalOpen, setHTTPModalOpen] = useState(false);
-  const [isDiscoveryModalOpen, setDiscoveryModalOpen] = useState(false);
-  const [isAnalysisModalOpen, setAnalysisModalOpen] = useState(false);
   const [startErrors, setStartErrors] = useState<{ [phase in 'discovery' | 'validation' | 'extraction' | 'analysis']?: string }>({});
   const [startPhase] = useStartPhaseStandaloneMutation();
   const { toast } = useToast();
@@ -250,7 +246,6 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
     try {
       await startPhase({ campaignId: campaign.id, phase: 'extraction' as any }).unwrap();
       toast({ title: 'HTTP Validation started', description: 'Phase transitioned to running.' });
-  setStartErrors((s) => ({ ...s, extraction: undefined }));
     } catch (e: any) {
   const msg = extractErrorMessage(e);
         // setDNSModalOpen(true); // Removed modal usage
@@ -274,7 +269,6 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
     try {
       await startPhase({ campaignId: campaign.id, phase: 'analysis' as any }).unwrap();
       toast({ title: 'Analysis started', description: 'Phase transitioned to running.' });
-  setStartErrors((s) => ({ ...s, analysis: undefined }));
     } catch (e: any) {
   const msg = extractErrorMessage(e);
   setStartErrors((s) => ({ ...s, analysis: msg }));

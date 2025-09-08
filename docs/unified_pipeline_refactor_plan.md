@@ -93,34 +93,31 @@ Risk: Visual clutter during overlap.
 Mitigation: Temporary env or local boolean `SHOW_PIPELINE_WORKSPACE`.
 
 ### Phase 5: Inline Config Forms Migration
-Status: In Progress (scaffolding committed in Phase 5 initial work).
+Status: In Progress (inline form components integrated; validation & tests pending).
 
-Delta Implemented (this commit scope):
-- Added `selectedPhase` UI state and selector.
-- Enhanced `PipelineWorkspace` with rail click handling, explicit selection highlighting, and adaptive panel logic.
-- Removed all legacy configuration modal invocations from `CampaignControls` (forms now to be embedded inline).
-- Inserted placeholder adaptive panel content for selected or next configure phase.
+Delta Implemented (current):
+- Added `selectedPhase` UI state & selector.
+- Integrated adaptive panel selection + rail click highlighting.
+- Removed all legacy modal usages from `CampaignControls`.
+- Implemented inline forms: `DiscoveryConfigForm`, `DNSValidationConfigForm`, `HTTPValidationConfigForm`, `AnalysisConfigForm` with direct reuse of prior modal logic.
+- Wired forms into `PipelineWorkspace` adaptive panel with dynamic status badge and edit/read-only toggle.
 
-Remaining Tasks:
-- Extract modal form bodies into `DiscoveryConfigForm`, `DNSValidationConfigForm`, `HTTPValidationConfigForm`, `AnalysisConfigForm` under `workspace/forms/`.
-- Implement shared `PhaseConfigPanel` wrapper (header, status badges, save/cancel, loading overlay).
-- Port data-loading logic (personas, proxies, pools, keyword sets) into reusable hooks: `useDNSValidationConfigData`, `useHTTPValidationConfigData`.
-- Wire form submission to existing `configurePhase` mutation; on success reset dirty state and optionally push guidance message.
-- Add minimal phase summary view (read-only) with Edit button when `configState === 'valid'`.
-- Add Jest test for `nextUserAction` transition after a mock configuration dispatch.
-- Remove obsolete modal component files once forms added (final deletion validated by grep in Phase 7 or earlier if safe).
+Remaining Tasks to Complete Phase 5:
+1. Add guidance message push on successful configuration (minor enhancement).
+2. Add lightweight Jest test for `nextUserAction` progression after configuration.
+3. (Optional) Extract shared wrapper (`PhaseConfigPanel`) – deferred; current implementation acceptable for Phase 5 closure if time-constrained.
+4. Verify all phase config submissions update selectors (manual smoke & test).
+5. Commit final Phase 5 changes with tag `[Pipeline P5]` once tests added.
 
-Success Criteria (Reaffirmed):
-- Selecting an unconfigured phase opens inline form; saving updates readiness instantly.
-- All four phase forms function equivalently to prior modals (no feature loss).
-- No remaining references to modal components in active code.
+Success Criteria (Adjusted):
+- Selecting unconfigured phase opens working form; save triggers readiness change visible in rail.
+- All forms submit successfully using existing RTK mutation; parity with modal behavior.
+- No active code references to removed modal components.
+- `nextUserAction` changes from configure->configure or configure->start as phases become valid.
 
-Risks:
-- Potential missing validation parity during extraction — mitigated by direct reuse of existing form logic.
-- Temporary placeholder visible if form extraction incomplete — minimized by completing extraction before marking Phase 5 done.
-
-Mitigation:
-- Perform one-for-one port then incremental enhancement (no rewrite) to avoid regressions.
+Risks & Mitigation:
+- Missing automated regression coverage (Mitigate by adding targeted selector test now, full suite Phase 8).
+- Edge: user switches phase mid-submit (submit buttons disabled while saving → minimal risk).
 
 ### Phase 6: Execution Flow & Auto-Advance Logic
 Tasks:

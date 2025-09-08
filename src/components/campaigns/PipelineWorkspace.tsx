@@ -4,6 +4,10 @@ import { useAppSelector } from '@/store/hooks';
 import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
 import { useAppDispatch } from '@/store/hooks';
 import { setFullSequenceMode, setSelectedPhase } from '@/store/ui/campaignUiSlice';
+import DiscoveryConfigForm from '@/components/campaigns/workspace/forms/DiscoveryConfigForm';
+import DNSValidationConfigForm from '@/components/campaigns/workspace/forms/DNSValidationConfigForm';
+import HTTPValidationConfigForm from '@/components/campaigns/workspace/forms/HTTPValidationConfigForm';
+import AnalysisConfigForm from '@/components/campaigns/workspace/forms/AnalysisConfigForm';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
@@ -46,6 +50,20 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
 
   // Derive which phase panel should show: explicit selection first, else next configure target
   const panelPhase = selectedPhase || (nextAction?.type === 'configure' ? nextAction.phase : undefined);
+
+  const phaseMeta = panelPhase ? phases.find(p=>p.key===panelPhase) : undefined;
+  const isConfigured = phaseMeta?.configState === 'valid';
+
+  const renderPhaseForm = (phase: string) => {
+    const common = { campaignId, onConfigured: () => { /* after config we let selectors recompute; keep panel open */ }, } as const;
+    switch (phase) {
+      case 'discovery': return <DiscoveryConfigForm {...common} readOnly={isConfigured} />;
+      case 'validation': return <DNSValidationConfigForm {...common} readOnly={isConfigured} />;
+      case 'extraction': return <HTTPValidationConfigForm {...common} readOnly={isConfigured} />;
+      case 'analysis': return <AnalysisConfigForm {...common} readOnly={isConfigured} />;
+      default: return <div className="text-xs">Unknown phase: {phase}</div>;
+    }
+  };
   return (
     <div className="border rounded-lg p-4 flex flex-col gap-6" data-pipeline-workspace>
       {/* Header Ribbon */}
@@ -89,13 +107,23 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
           <div className="text-gray-600 mb-2">Adaptive Phase Panel – select a phase or follow the next action guidance. Inline forms will appear here.</div>
         )}
         {panelPhase && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="font-semibold text-sm capitalize">{panelPhase} Configuration</h4>
-              <Button variant="ghost" size="sm" onClick={()=>dispatch(setSelectedPhase({campaignId, phase: undefined}))}>Close</Button>
+              <h4 className="font-semibold text-sm capitalize">{panelPhase} {isConfigured ? 'Configured' : 'Configuration'}</h4>
+              <div className="flex items-center gap-2">
+                {isConfigured && (
+                  <Button size="sm" variant="outline" onClick={()=>dispatch(setSelectedPhase({campaignId, phase: panelPhase}))}>Edit</Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={()=>dispatch(setSelectedPhase({campaignId, phase: undefined}))}>Close</Button>
+              </div>
             </div>
-            <div className="text-xs text-gray-500">Inline form placeholder for <span className="font-medium">{panelPhase}</span>. (To be replaced with real form components in this phase.)</div>
-            <div className="border rounded p-3 text-xs bg-gray-50">Status: {phases.find(p=>p.key===panelPhase)?.configState}</div>
+            <div className="text-xs text-gray-500 flex items-center gap-2">
+              <span>Status:</span>
+              <span className={`px-2 py-0.5 rounded border text-[10px] capitalize ${isConfigured? 'bg-green-50 border-green-300 text-green-700':'bg-amber-50 border-amber-300 text-amber-700'}`}>{phaseMeta?.configState}</span>
+            </div>
+            <div className="border rounded p-3 bg-white/50">
+              {renderPhaseForm(panelPhase)}
+            </div>
           </div>
         )}
         {startCTA.disabled && startCTA.reasons.length > 0 && (
