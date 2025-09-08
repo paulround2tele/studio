@@ -32,7 +32,6 @@ export interface CampaignSSEEvents {
   onAnalysisCompleted?: (campaignId: string, data: unknown) => void;
   onError?: (campaignId: string, error: string) => void;
   onModeChanged?: (campaignId: string, mode: 'full_sequence' | 'step_by_step') => void;
-  onChainBlocked?: (campaignId: string, data: { missing_phase?: string; message?: string } & Record<string, unknown>) => void;
 }
 
 export interface UseCampaignSSEOptions {
@@ -165,9 +164,6 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
         break;
       }
 
-      case 'chain_blocked':
-        events.onChainBlocked?.(campaignIdFromEvent, dataObj as any);
-        break;
 
       case 'error':
         const errorMessage = (dataObj?.error as string | undefined) || (dataObj?.message as string | undefined) || 'Unknown error';

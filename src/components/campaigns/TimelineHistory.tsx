@@ -11,7 +11,6 @@ export const TimelineHistory: React.FC<{ campaignId: string; max?: number }> = (
     onPhaseCompleted: (_cid, ev) => setEntries(e => [{ ts: new Date().toISOString(), type: 'phase_completed', phase: ev.phase, message: ev.message }, ...e].slice(0,max)),
     onPhaseFailed: (_cid, ev) => setEntries(e => [{ ts: new Date().toISOString(), type: 'phase_failed', phase: ev.phase, message: ev.error || ev.message }, ...e].slice(0,max)),
     onModeChanged: (_cid, mode) => setEntries(e => [{ ts: new Date().toISOString(), type: 'mode_changed', message: `Mode -> ${mode}` }, ...e].slice(0,max)),
-    onChainBlocked: (_cid, data) => setEntries(e => [{ ts: new Date().toISOString(), type: 'chain_blocked', phase: (data as any)?.missing_phase, message: (data as any)?.message }, ...e].slice(0,max)),
   }});
   useEffect(()=>{},[]);
   if(!entries.length) return null;

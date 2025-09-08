@@ -36,7 +36,6 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
       onModeChanged: (cid, mode) => {
         if (cid === campaign.id) dispatch(setFullSequenceMode({ campaignId: campaign.id, value: mode === 'full_sequence' }));
       },
-      // chain_blocked deprecated under strict model; event intentionally ignored
       onPhaseFailed: (cid, ev) => {
         if (cid === campaign.id) {
           dispatch(setLastFailedPhase({ campaignId: campaign.id, phase: ev.phase }));
