@@ -147,6 +147,7 @@ Completed This Iteration:
 * Pruned obsolete PhaseCard / chain_blocked comments from `CampaignControls`.
 * Enriched overview selector with exec runtime timestamps & duration.
 * Added duplicate auto-start suppression guard (3s window) in `PipelineWorkspace`.
+* Removed transitional panels (`NextActionPanel`, `PhaseStepper`, `FailureContinuationPanel`) now fully superseded by workspace + retry UI.
 
 Remaining:
 * Grep & remove any lingering unused imports referencing deleted symbols.

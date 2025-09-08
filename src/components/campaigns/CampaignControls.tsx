@@ -9,10 +9,7 @@ import { useCampaignSSE } from '@/hooks/useCampaignSSE';
 import { useAppDispatch } from '@/store/hooks';
 import { setFullSequenceMode, setLastFailedPhase, setGuidance } from '@/store/ui/campaignUiSlice';
 import { FullSequencePreflightWizard } from './FullSequencePreflightWizard';
-import { NextActionPanel } from './NextActionPanel';
-import { PhaseStepper } from './PhaseStepper';
 import { TimelineHistory } from './TimelineHistory';
-import { FailureContinuationPanel } from './FailureContinuationPanel';
 import { ConversionCTA } from './ConversionCTA';
 import { GuidanceBanner } from './GuidanceBanner';
 import { PipelineWorkspace } from './PipelineWorkspace';
@@ -100,9 +97,6 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
         <PipelineWorkspace campaignId={campaign.id} />
       )}
       <FullSequencePreflightWizard campaignId={campaign.id} />
-      <NextActionPanel campaignId={campaign.id} />
-  <PhaseStepper campaignId={campaign.id} />
-  <FailureContinuationPanel campaignId={campaign.id} />
   <ConversionCTA campaignId={campaign.id} />
   {/* Timeline provides passive event history; no legacy PhaseCards remain. */}
   <TimelineHistory campaignId={campaign.id} />
