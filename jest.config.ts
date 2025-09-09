@@ -22,7 +22,10 @@ const config: Config = {
   testPathIgnorePatterns: [
     "/node_modules/",
     "/.next/",
-    "<rootDir>/tests/e2e/" // exclude Playwright e2e from Jest
+    "<rootDir>/tests/e2e/", // exclude Playwright e2e from Jest
+    '/playwright-report/',
+    '/playwright-tests/',
+    '/tests/visual/'
   ],
   globals: {
     'ts-jest': {

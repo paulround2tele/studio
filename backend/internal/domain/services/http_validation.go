@@ -87,6 +87,25 @@ func (s *httpValidationService) Configure(ctx context.Context, campaignID uuid.U
 		return fmt.Errorf("configuration validation failed: %w", err)
 	}
 
+	// Create or update in-memory configured execution (without starting)
+	s.mu.Lock()
+	if exec, exists := s.executions[campaignID]; exists {
+		// Preserve any prior results but reset status to Configured
+		exec.Status = models.PhaseStatusConfigured
+		if exec.StartedAt.IsZero() {
+			// leave StartedAt zero so it is omitted until execution
+		}
+	} else {
+		s.executions[campaignID] = &httpValidationExecution{
+			CampaignID:     campaignID,
+			Status:         models.PhaseStatusConfigured,
+			ItemsProcessed: 0,
+			ItemsTotal:     0, // Will be filled on Execute when domains known
+			Progress:       0,
+		}
+	}
+	s.mu.Unlock()
+
 	// Store configuration in campaign phases
 	if s.store != nil {
 		if raw, mErr := json.Marshal(httpConfig); mErr == nil {
@@ -220,7 +239,19 @@ func (s *httpValidationService) GetStatus(ctx context.Context, campaignID uuid.U
 			ProgressPct:    0.0,
 			ItemsTotal:     0,
 			ItemsProcessed: 0,
+			Configuration:  map[string]interface{}{},
 		}, nil
+	}
+
+	// Build configuration snapshot (HTTP config stored in phase table; here we only echo minimal runtime state)
+	cfgMap := map[string]interface{}{}
+	// Attempt to include counts for richer UI
+	cfgMap["itemsTotal"] = execution.ItemsTotal
+	cfgMap["itemsProcessed"] = execution.ItemsProcessed
+
+	var startedPtr *time.Time
+	if !execution.StartedAt.IsZero() {
+		startedPtr = &execution.StartedAt
 	}
 
 	return &PhaseStatus{
@@ -229,9 +260,10 @@ func (s *httpValidationService) GetStatus(ctx context.Context, campaignID uuid.U
 		ProgressPct:    execution.Progress,
 		ItemsTotal:     int64(execution.ItemsTotal),
 		ItemsProcessed: int64(execution.ItemsProcessed),
-		StartedAt:      &execution.StartedAt,
+		StartedAt:      startedPtr,
 		CompletedAt:    execution.CompletedAt,
 		LastError:      execution.ErrorMessage,
+		Configuration:  cfgMap,
 	}, nil
 }
 

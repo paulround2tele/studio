@@ -466,21 +466,31 @@ func (s *domainGenerationService) GetStatus(ctx context.Context, campaignID uuid
 	execution, exists := s.executions[campaignID]
 	if !exists {
 		return &PhaseStatus{
-			CampaignID: campaignID,
-			Phase:      models.PhaseTypeDomainGeneration,
-			Status:     models.PhaseStatusNotStarted,
+			CampaignID:    campaignID,
+			Phase:         models.PhaseTypeDomainGeneration,
+			Status:        models.PhaseStatusNotStarted,
+			Configuration: map[string]interface{}{},
 		}, nil
 	}
 
+	var startedPtr *time.Time
+	if !execution.startedAt.IsZero() {
+		startedPtr = &execution.startedAt
+	}
+	cfgMap := map[string]interface{}{}
+	if b, err := json.Marshal(execution.config); err == nil {
+		_ = json.Unmarshal(b, &cfgMap)
+	}
 	status := &PhaseStatus{
 		CampaignID:     campaignID,
 		Phase:          models.PhaseTypeDomainGeneration,
 		Status:         execution.status,
-		StartedAt:      &execution.startedAt,
+		StartedAt:      startedPtr,
 		CompletedAt:    execution.completedAt,
 		ItemsTotal:     execution.itemsTotal,
 		ItemsProcessed: execution.itemsProcessed,
 		LastError:      execution.lastError,
+		Configuration:  cfgMap,
 	}
 
 	if execution.itemsTotal > 0 {

@@ -1,5 +1,5 @@
-// Campaign Header Component - Displays campaign title, status, and basic info
-// Part of the modular architecture replacing the monolithic campaign details page
+// Campaign Header Component (LEGACY) - slated for removal in Phase 6 of Pipeline UI Enterprise Upgrade.
+// Superseded by `CampaignOverviewCard` within the unified workspace.
 
 "use client";
 

@@ -94,15 +94,39 @@ export const makeSelectConfigProgress = (campaignId: string) => createSelector(
   }
 );
 
-// Internal helper: reasons pipeline cannot start full sequence.
+// Internal helper: reasons pipeline cannot start. In manual mode we allow starting the first
+// configured phase even if later phases are missing. In auto (full sequence) mode we still
+// require all phases configured before starting.
 const makeSelectStartBlockingReasons = (campaignId: string) => createSelector(
-  [makeSelectMissingPhases(campaignId), makeSelectPipelinePhases(campaignId)],
-  (missing, phases) => {
+  [
+    makeSelectMissingPhases(campaignId),
+    makeSelectPipelinePhases(campaignId),
+    makeSelectAutoAdvanceEnabled(campaignId),
+    makeSelectNextRunnablePhase(campaignId)
+  ],
+  (missing, phases, autoAdvance, nextRunnable) => {
     const reasons: string[] = [];
-    if (missing.length) reasons.push(`Missing configuration: ${missing.join(', ')}`);
-    // Additional gating hooks could be added here later (e.g., license, quota, etc.)
+    if (autoAdvance) {
+      if (missing.length) reasons.push(`Missing configuration: ${missing.join(', ')}`);
+    } else {
+      // manual mode: only block if no runnable phase OR an earlier phase is missing than the next runnable
+      if (!nextRunnable) {
+        reasons.push('No configured phase ready to start');
+      } else if (missing.length) {
+        const firstMissing = missing[0] as PipelinePhaseKey; // safe due to length check
+        const firstMissingIdx = PIPELINE_PHASE_ORDER.indexOf(firstMissing);
+        const runnableIdx = PIPELINE_PHASE_ORDER.indexOf(nextRunnable.key as any);
+        if (firstMissingIdx > -1 && firstMissingIdx < runnableIdx) {
+          reasons.push(`Configure earlier phase: ${firstMissing}`);
+        }
+      }
+    }
     const first = phases[0];
-    if (first && first.execState !== 'idle') reasons.push('First phase already started');
+    if (first && first.execState !== 'idle' && !autoAdvance) {
+      // If first phase already started and we're manual, we might still allow starting next later phase
+      // but only if it is configured and earlier phases completed. Keep informational reason otherwise.
+      if (first.execState === 'running') reasons.push('First phase already running');
+    }
     return reasons;
   }
 );
@@ -142,7 +166,14 @@ export const makeSelectActiveExecutionPhase = (campaignId: string) => createSele
 
 export const makeSelectNextRunnablePhase = (campaignId: string) => createSelector(
   makeSelectPipelinePhases(campaignId),
-  phases => phases.find(p => p.configState === 'valid' && p.execState === 'idle')
+  phases => {
+    // Phase is runnable if it is configured, idle, and all previous phases are either completed or failed (allow retry logic separately)
+    return phases.find((p, idx) => {
+      if (!(p.configState === 'valid' && p.execState === 'idle')) return false;
+      const prev = phases.slice(0, idx);
+      return prev.every(pr => pr.configState === 'valid' && (pr.execState === 'completed' || pr.execState === 'failed'));
+    });
+  }
 );
 
 export const makeSelectRemainingRunnableCount = (campaignId: string) => createSelector(
@@ -205,20 +236,31 @@ export const makeSelectNextUserAction = (campaignId: string) => createSelector(
     makeSelectNextRunnablePhase(campaignId)
   ],
   (phases, missing, auto, activeExec, nextRunnable) => {
-    if (missing.length) return { type: 'configure', phase: missing[0], reason: 'Configuration required' } as const;
-  let fallbackPhase = PIPELINE_PHASE_ORDER[PIPELINE_PHASE_ORDER.length-1] as PipelinePhaseKey;
+    let fallbackPhase = PIPELINE_PHASE_ORDER[PIPELINE_PHASE_ORDER.length-1] as PipelinePhaseKey;
     if (phases.length) {
       const last = phases[phases.length-1];
       if (last) fallbackPhase = last.key;
     }
+    // Manual mode: allow starting earliest runnable even if later phases remain unconfigured, but never skip an earlier missing phase.
     if (!auto) {
-      if (nextRunnable) return { type: 'start', phase: nextRunnable.key } as const;
       if (activeExec) return { type: 'watch', phase: activeExec.key } as const;
+      if (nextRunnable) {
+        if (missing.length) {
+          const firstMissingIdx = PIPELINE_PHASE_ORDER.indexOf(missing[0] as PipelinePhaseKey);
+          const runnableIdx = PIPELINE_PHASE_ORDER.indexOf(nextRunnable.key);
+          if (firstMissingIdx > -1 && firstMissingIdx < runnableIdx) {
+            return { type: 'configure', phase: missing[0], reason: 'Configuration required' } as const;
+          }
+        }
+        return { type: 'start', phase: nextRunnable.key } as const;
+      }
+      if (missing.length) return { type: 'configure', phase: missing[0], reason: 'Configuration required' } as const;
       return { type: 'wait', phase: fallbackPhase } as const;
     }
-    // Auto mode
+    // Auto mode strict requirement.
+    if (missing.length) return { type: 'configure', phase: missing[0], reason: 'Configuration required' } as const;
     if (activeExec) return { type: 'watch', phase: activeExec.key } as const;
-    if (nextRunnable) return { type: 'start', phase: nextRunnable.key } as const; // initial start when all configured
+    if (nextRunnable) return { type: 'start', phase: nextRunnable.key } as const;
     return { type: 'wait', phase: fallbackPhase } as const;
   }
 );

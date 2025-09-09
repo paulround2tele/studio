@@ -22,8 +22,8 @@ const DomainSourceConfig = () => {
       <AlertTriangle className="h-4 w-4 text-amber-600" />
       <AlertDescription className="text-amber-800">
         <strong>Component Decommissioned</strong><br/>
-        This amateur component has been replaced by professional phase-centric architecture.
-  Domain generation is now handled via CampaignControls + DiscoveryConfigModal with proper OpenAPI integration.
+  This amateur component has been replaced by unified PipelineWorkspace phase-centric architecture.
+  Domain generation is now handled inline in the workspace discovery configuration form.
       </AlertDescription>
     </Alert>
   );

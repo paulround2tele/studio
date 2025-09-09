@@ -125,15 +125,74 @@ func (s *dnsValidationService) Configure(ctx context.Context, campaignID uuid.UU
 		s.auditLogger.LogEvent(fmt.Sprintf("DNS validation phase configured for campaign %s", campaignID))
 	}
 
-	// Type assert the configuration
-	dnsConfig, ok := config.(DNSValidationConfig)
-	if !ok {
-		return fmt.Errorf("invalid configuration type for DNS validation")
+	// Accept either typed config or generic map
+	var dnsConfig DNSValidationConfig
+	switch v := config.(type) {
+	case DNSValidationConfig:
+		dnsConfig = v
+	case *DNSValidationConfig:
+		dnsConfig = *v
+	case map[string]interface{}:
+		// Minimal coercion for handler-provided map
+		if raw, ok := v["personaIds"]; ok {
+			switch ids := raw.(type) {
+			case []uuid.UUID:
+				dnsConfig.PersonaIDs = ids
+			case []interface{}:
+				for _, elem := range ids {
+					if s, ok := elem.(string); ok {
+						if id, err := uuid.Parse(s); err == nil {
+							dnsConfig.PersonaIDs = append(dnsConfig.PersonaIDs, id)
+						}
+					}
+				}
+			case []string:
+				for _, s := range ids {
+					if id, err := uuid.Parse(s); err == nil {
+						dnsConfig.PersonaIDs = append(dnsConfig.PersonaIDs, id)
+					}
+				}
+			}
+		}
+		if bs, ok := v["batch_size"].(int); ok {
+			dnsConfig.BatchSize = bs
+		}
+		if bs2, ok := v["batchSize"].(int); ok && dnsConfig.BatchSize == 0 {
+			dnsConfig.BatchSize = bs2
+		}
+		if to, ok := v["timeout"].(int); ok {
+			dnsConfig.Timeout = to
+		}
+		if mr, ok := v["maxRetries"].(int); ok {
+			dnsConfig.MaxRetries = mr
+		}
+		if mr2, ok := v["max_retries"].(int); ok && dnsConfig.MaxRetries == 0 {
+			dnsConfig.MaxRetries = mr2
+		}
+		if vt, ok := v["validation_types"].([]string); ok {
+			dnsConfig.ValidationTypes = vt
+		}
+		if rr, ok := v["required_records"].([]string); ok {
+			dnsConfig.RequiredRecords = rr
+		}
+	default:
+		// Fallback: attempt JSON round-trip into DNSValidationConfig to tolerate
+		// structurally compatible but different concrete types (e.g. generated models).
+		if b, err := json.Marshal(v); err == nil {
+			if uErr := json.Unmarshal(b, &dnsConfig); uErr == nil {
+				// Success; proceed with populated dnsConfig (may still validate below)
+				break
+			} else {
+				return fmt.Errorf("invalid configuration type for DNS validation (unmarshal failed: %v)", uErr)
+			}
+		} else {
+			return fmt.Errorf("invalid configuration type for DNS validation (marshal failed: %v)", err)
+		}
 	}
 
 	// Validate configuration
 	if err := s.Validate(ctx, dnsConfig); err != nil {
-		return fmt.Errorf("invalid DNS validation configuration: %w", err)
+		return fmt.Errorf("invalid DNS validation configuration: %w (personas=%d batch=%d timeout=%d maxRetries=%d)", err, len(dnsConfig.PersonaIDs), dnsConfig.BatchSize, dnsConfig.Timeout, dnsConfig.MaxRetries)
 	}
 
 	// Get domains to validate from previous phase (domain generation)
@@ -202,10 +261,12 @@ func (s *dnsValidationService) Execute(ctx context.Context, campaignID uuid.UUID
 	execution.status = models.PhaseStatusInProgress
 	execution.startedAt = time.Now()
 
-	s.deps.Logger.Info(execution.cancelCtx, "Starting DNS validation execution", map[string]interface{}{
-		"campaign_id":   campaignID,
-		"domains_count": len(execution.domainsToValidate),
-	})
+	if s.deps.Logger != nil {
+		s.deps.Logger.Info(execution.cancelCtx, "Starting DNS validation execution", map[string]interface{}{
+			"campaign_id":   campaignID,
+			"domains_count": len(execution.domainsToValidate),
+		})
+	}
 
 	// Mark phase started
 	if s.store != nil {
@@ -354,12 +415,14 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 
 	s.updateExecutionStatus(campaignID, models.PhaseStatusCompleted, "DNS validation completed successfully")
 
-	s.deps.Logger.Info(ctx, "DNS validation completed", map[string]interface{}{
-		"campaign_id":     campaignID,
-		"domains_total":   len(domains),
-		"domains_valid":   validCount,
-		"domains_invalid": invalidCount,
-	})
+	if s.deps.Logger != nil {
+		s.deps.Logger.Info(ctx, "DNS validation completed", map[string]interface{}{
+			"campaign_id":     campaignID,
+			"domains_total":   len(domains),
+			"domains_valid":   validCount,
+			"domains_invalid": invalidCount,
+		})
+	}
 }
 
 // validateDomainBatch validates a batch of domains using the dnsvalidator engine
@@ -387,21 +450,33 @@ func (s *dnsValidationService) GetStatus(ctx context.Context, campaignID uuid.UU
 	execution, exists := s.executions[campaignID]
 	if !exists {
 		return &PhaseStatus{
-			CampaignID: campaignID,
-			Phase:      models.PhaseTypeDNSValidation,
-			Status:     models.PhaseStatusNotStarted,
+			CampaignID:    campaignID,
+			Phase:         models.PhaseTypeDNSValidation,
+			Status:        models.PhaseStatusNotStarted,
+			Configuration: map[string]interface{}{},
 		}, nil
 	}
 
+	// Only set StartedAt pointer if actual start time recorded (non-zero)
+	var startedPtr *time.Time
+	if !execution.startedAt.IsZero() {
+		startedPtr = &execution.startedAt
+	}
+	// Build configuration snapshot
+	cfgMap := map[string]interface{}{}
+	if b, err := json.Marshal(execution.config); err == nil {
+		_ = json.Unmarshal(b, &cfgMap)
+	}
 	status := &PhaseStatus{
 		CampaignID:     campaignID,
 		Phase:          models.PhaseTypeDNSValidation,
 		Status:         execution.status,
-		StartedAt:      &execution.startedAt,
+		StartedAt:      startedPtr,
 		CompletedAt:    execution.completedAt,
 		ItemsTotal:     execution.itemsTotal,
 		ItemsProcessed: execution.itemsProcessed,
 		LastError:      execution.lastError,
+		Configuration:  cfgMap,
 	}
 
 	if execution.itemsTotal > 0 {
@@ -649,12 +724,14 @@ func (s *dnsValidationService) storeValidationResults(ctx context.Context, campa
 		})
 	}
 
-	s.deps.Logger.Debug(ctx, "Storing DNS validation results", map[string]interface{}{
-		"campaign_id":     campaignID,
-		"total_domains":   len(results),
-		"valid_domains":   validCount,
-		"invalid_domains": invalidCount,
-	})
+	if s.deps.Logger != nil {
+		s.deps.Logger.Debug(ctx, "Storing DNS validation results", map[string]interface{}{
+			"campaign_id":     campaignID,
+			"total_domains":   len(results),
+			"valid_domains":   validCount,
+			"invalid_domains": invalidCount,
+		})
+	}
 
 	var exec store.Querier
 	if q, ok := s.deps.DB.(store.Querier); ok {

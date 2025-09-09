@@ -1,2 +1,0 @@
-# github.com/fntelecomllc/studio/backend/internal/api/gen
-internal/api/gen/server.gen.go:6340:16: undefined: CancelBulkOperation200JSONResponseDataStatus

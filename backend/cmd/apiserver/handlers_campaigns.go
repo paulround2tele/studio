@@ -248,13 +248,34 @@ func (h *strictHandlers) CampaignsCreate(ctx context.Context, r gen.CampaignsCre
 	phase := models.PhaseTypeDomainGeneration
 	status := models.PhaseStatusNotStarted
 
-	// Attach user if available
+	// Attach user if available (record raw for diagnostics)
 	var userIDPtr *uuid.UUID
+	var rawUserID string
 	if v := ctx.Value("user_id"); v != nil {
 		if s, ok := v.(string); ok && s != "" {
+			rawUserID = s
 			if uid, err := uuid.Parse(s); err == nil {
 				userIDPtr = &uid
+				log.Printf("DEBUG CampaignsCreate: context user_id raw=%s parsed=%s", s, uid)
+			} else {
+				log.Printf("DEBUG CampaignsCreate: failed to parse context user_id=%s: %v", s, err)
 			}
+		}
+	}
+
+	// Defensive: verify referenced user exists to avoid FK violation if session is stale
+	if userIDPtr != nil {
+		var exists bool
+		if err := h.deps.DB.GetContext(ctx, &exists, "SELECT EXISTS (SELECT 1 FROM users WHERE id = $1)", *userIDPtr); err == nil {
+			if !exists {
+				log.Printf("WARN CampaignsCreate: user %s (raw=%s) not found, clearing user_id to avoid FK error", userIDPtr.String(), rawUserID)
+				userIDPtr = nil
+			} else {
+				log.Printf("DEBUG CampaignsCreate: verified user %s exists", userIDPtr.String())
+			}
+		} else {
+			log.Printf("WARN CampaignsCreate: user existence check failed (%v) for raw=%s, proceeding without user_id", err, rawUserID)
+			userIDPtr = nil
 		}
 	}
 
@@ -279,7 +300,17 @@ func (h *strictHandlers) CampaignsCreate(ctx context.Context, r gen.CampaignsCre
 	}
 
 	if err := h.deps.Stores.Campaign.CreateCampaign(ctx, h.deps.DB, campaign); err != nil {
-		// Best-effort conflict detection
+		log.Printf("ERROR CampaignsCreate: store insert error=%v user_id=%v raw_user_id=%s", err, campaign.UserID, rawUserID)
+		if strings.Contains(err.Error(), "foreign key constraint \"lead_generation_campaigns_user_id_fkey\"") && campaign.UserID != nil {
+			log.Printf("INFO CampaignsCreate: retrying without user_id after FK violation (user %s)", campaign.UserID.String())
+			campaign.UserID = nil
+			if rerr := h.deps.Stores.Campaign.CreateCampaign(ctx, h.deps.DB, campaign); rerr == nil {
+				resp := mapCampaignToResponse(campaign)
+				return gen.CampaignsCreate201JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+			} else {
+				log.Printf("ERROR CampaignsCreate: retry without user_id failed: %v", rerr)
+			}
+		}
 		return gen.CampaignsCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to create campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
@@ -459,22 +490,90 @@ func (h *strictHandlers) CampaignsPhaseConfigure(ctx context.Context, r gen.Camp
 			} else {
 				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid domain generation configuration: " + err.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 			}
-		case models.PhaseTypeDNSValidation, models.PhaseTypeHTTPKeywordValidation:
-			// Expect personaIds slice
-			if idsRaw, ok := incoming["personaIds"]; ok {
-				if arr, ok2 := idsRaw.([]interface{}); !ok2 || len(arr) == 0 {
-					return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "personaIds must be a non-empty array", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
-				}
-			} else {
+		case models.PhaseTypeDNSValidation:
+			// Build typed DNSValidationConfig
+			idsRaw, ok := incoming["personaIds"]
+			if !ok {
 				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "personaIds required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 			}
-			cfg = incoming
-		case models.PhaseTypeAnalysis:
-			kw, ok := incoming["keyword"].(string)
-			if !ok || strings.TrimSpace(kw) == "" {
-				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "keyword required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			arrIfc, ok := idsRaw.([]interface{})
+			if !ok || len(arrIfc) == 0 {
+				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "personaIds must be a non-empty array", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 			}
-			cfg = incoming
+			personaIDs := make([]uuid.UUID, 0, len(arrIfc))
+			for _, v := range arrIfc {
+				if s, ok := v.(string); ok {
+					if id, err := uuid.Parse(s); err == nil {
+						personaIDs = append(personaIDs, id)
+					}
+				}
+			}
+			if len(personaIDs) == 0 {
+				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "no valid persona UUIDs provided", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+			cfg = &domainservices.DNSValidationConfig{
+				PersonaIDs:      personaIDs,
+				BatchSize:       intFromAny(incoming["batchSize"], 100),
+				Timeout:         intFromAny(incoming["timeout"], 30),
+				MaxRetries:      intFromAny(incoming["maxRetries"], 2),
+				ValidationTypes: sliceString(incoming["validation_types"]),
+				RequiredRecords: sliceString(incoming["required_records"]),
+			}
+		case models.PhaseTypeHTTPKeywordValidation:
+			// HTTP validation expects *models.HTTPPhaseConfigRequest
+			idsRaw, ok := incoming["personaIds"]
+			if !ok {
+				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "personaIds required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+			arrIfc, ok := idsRaw.([]interface{})
+			if !ok || len(arrIfc) == 0 {
+				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "personaIds must be a non-empty array", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+			personaIDs := make([]uuid.UUID, 0, len(arrIfc))
+			for _, v := range arrIfc {
+				if s, ok := v.(string); ok {
+					if id, err := uuid.Parse(s); err == nil {
+						personaIDs = append(personaIDs, id)
+					}
+				}
+			}
+			if len(personaIDs) == 0 {
+				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "no valid persona UUIDs provided", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+			// HTTPPhaseConfigRequest expects []string PersonaIDs; convert UUIDs to strings
+			personaStrs := make([]string, 0, len(personaIDs))
+			for _, id := range personaIDs {
+				personaStrs = append(personaStrs, id.String())
+			}
+			httpCfg := &models.HTTPPhaseConfigRequest{PersonaIDs: personaStrs}
+			// Optional keyword arrays
+			httpCfg.Keywords = sliceString(incoming["keywords"])
+			httpCfg.AdHocKeywords = sliceString(incoming["adHocKeywords"])
+			cfg = httpCfg
+		case models.PhaseTypeAnalysis:
+			// Build typed AnalysisConfig
+			idsRaw, ok := incoming["personaIds"]
+			if !ok {
+				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "personaIds required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+			arrIfc, ok := idsRaw.([]interface{})
+			if !ok || len(arrIfc) == 0 {
+				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "personaIds must be a non-empty array", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+			personaIDs := make([]string, 0, len(arrIfc))
+			for _, v := range arrIfc {
+				if s, ok := v.(string); ok && strings.TrimSpace(s) != "" {
+					personaIDs = append(personaIDs, s)
+				}
+			}
+			if len(personaIDs) == 0 {
+				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "no valid persona IDs provided", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+			analysisCfg := &domainservices.AnalysisConfig{PersonaIDs: personaIDs}
+			if inc, ok := incoming["includeExternal"].(bool); ok {
+				analysisCfg.IncludeExternal = inc
+			}
+			cfg = analysisCfg
 		default:
 			cfg = incoming
 		}
@@ -500,9 +599,47 @@ func (h *strictHandlers) CampaignsPhaseConfigure(ctx context.Context, r gen.Camp
 		}
 		return gen.CampaignsPhaseConfigure500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to configure phase: " + err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
+	// Immediately fetch updated status to ensure configured response reflects new configuration
 	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, uuid.UUID(r.CampaignId), phaseModel)
 	data := buildPhaseStatusResponse(phaseModel, st)
 	return gen.CampaignsPhaseConfigure200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+}
+
+// intFromAny attempts to coerce an interface{} numeric to int with fallback default.
+func intFromAny(v interface{}, def int) int {
+	switch t := v.(type) {
+	case int:
+		return t
+	case int32:
+		return int(t)
+	case int64:
+		return int(t)
+	case float64:
+		return int(t)
+	case float32:
+		return int(t)
+	default:
+		return def
+	}
+}
+
+// sliceString converts an interface (array) into []string if possible.
+func sliceString(v interface{}) []string {
+	if v == nil {
+		return []string{}
+	}
+	out := []string{}
+	switch arr := v.(type) {
+	case []string:
+		return arr
+	case []interface{}:
+		for _, elem := range arr {
+			if s, ok := elem.(string); ok && strings.TrimSpace(s) != "" {
+				out = append(out, s)
+			}
+		}
+	}
+	return out
 }
 
 // CampaignsPhaseStart implements POST /campaigns/{campaignId}/phase/{phase}/start
@@ -707,10 +844,10 @@ func buildPhaseStatusResponse(phase models.PhaseTypeEnum, st *domainservices.Pha
 	resp := gen.PhaseStatusResponse{
 		Phase:       mapModelPhaseToAPI(phase),
 		StartedAt:   nil,
-		CompletedAt: func() *time.Time { return nil }(),
+		CompletedAt: nil,
 		Status:      gen.PhaseStatusResponseStatus("not_started"),
 	}
-	// Default progress
+	// Default progress (all zero pointers so JSON shape stable)
 	var total, processed, success, failed int
 	var pct float32
 	resp.Progress.TotalItems = &total
@@ -723,11 +860,11 @@ func buildPhaseStatusResponse(phase models.PhaseTypeEnum, st *domainservices.Pha
 		return resp
 	}
 
-	// Map timestamps
-	if st.StartedAt != nil {
+	// Map timestamps only if non-nil and not zero to avoid 0001-01-01 sentinel values
+	if st.StartedAt != nil && !st.StartedAt.IsZero() {
 		resp.StartedAt = st.StartedAt
 	}
-	if st.CompletedAt != nil {
+	if st.CompletedAt != nil && !st.CompletedAt.IsZero() {
 		resp.CompletedAt = st.CompletedAt
 	}
 
@@ -738,7 +875,7 @@ func buildPhaseStatusResponse(phase models.PhaseTypeEnum, st *domainservices.Pha
 	// Map progress
 	t := int(st.ItemsTotal)
 	p := int(st.ItemsProcessed)
-	// Approximate success/failed unknown: split processed into success for now
+	// With no granular success/failure counts yet, treat processed as success
 	s := p
 	f := 0
 	pctF := float32(st.ProgressPct)
@@ -748,7 +885,7 @@ func buildPhaseStatusResponse(phase models.PhaseTypeEnum, st *domainservices.Pha
 	resp.Progress.FailedItems = &f
 	resp.Progress.PercentComplete = &pctF
 
-	// Map configuration
+	// Always include configuration snapshot if available
 	if len(st.Configuration) > 0 {
 		cfg := map[string]interface{}(st.Configuration)
 		resp.Configuration = &cfg

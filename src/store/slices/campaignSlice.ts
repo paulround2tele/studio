@@ -18,12 +18,10 @@ export interface CampaignState {
   
   // UI state
   selectedCampaignId: string | null;
-  showPhaseConfiguration: boolean;
   configurationMode: 'panel' | 'dialog';
   
   // Phase management
   selectedPhase: string | null;
-  phaseConfiguration: Record<string, any>;
   phaseStatus: 'idle' | 'configuring' | 'executing' | 'completed' | 'error';
   
   // Campaign status for phase dependencies
@@ -48,10 +46,8 @@ const initialState: CampaignState = {
   configuringPhase: null,
   configurationDirty: false,
   selectedCampaignId: null,
-  showPhaseConfiguration: false,
   configurationMode: 'panel',
   selectedPhase: null,
-  phaseConfiguration: {},
   phaseStatus: 'idle',
   campaignStatus: {
     hasGeneratedDomains: false,
@@ -124,25 +120,16 @@ const campaignSlice = createSlice({
       state.isConfiguring = false;
       state.configuringPhase = null;
       state.configurationDirty = false;
-      state.showPhaseConfiguration = false;
     },
     
     cancelConfiguration: (state) => {
       state.isConfiguring = false;
       state.configuringPhase = null;
       state.configurationDirty = false;
-      state.showPhaseConfiguration = false;
     },
     
     // UI state
-    showConfiguration: (state, action: PayloadAction<{ mode: 'panel' | 'dialog' }>) => {
-      state.showPhaseConfiguration = true;
-      state.configurationMode = action.payload.mode;
-    },
-    
-    hideConfiguration: (state) => {
-      state.showPhaseConfiguration = false;
-    },
+  // (legacy show/hide configuration actions removed with unified pipeline workspace)
     
     // Real-time connection state
     setConnectionStatus: (state, action: PayloadAction<'connected' | 'disconnected' | 'reconnecting'>) => {
@@ -153,11 +140,6 @@ const campaignSlice = createSlice({
     setSelectedPhase: (state, action: PayloadAction<string>) => {
       state.selectedPhase = action.payload;
       state.phaseStatus = 'configuring';
-    },
-    
-    updatePhaseConfiguration: (state, action: PayloadAction<Record<string, any>>) => {
-      state.phaseConfiguration = { ...state.phaseConfiguration, ...action.payload };
-      state.configurationDirty = true;
     },
     
     setPhaseStatus: (state, action: PayloadAction<'idle' | 'configuring' | 'executing' | 'completed' | 'error'>) => {
@@ -173,12 +155,7 @@ const campaignSlice = createSlice({
         state.campaignStatus.completedPhases.push(action.payload);
       }
     },
-    
-    clearPhaseConfiguration: (state) => {
-      state.selectedPhase = null;
-      state.phaseConfiguration = {};
-      state.phaseStatus = 'idle';
-    },
+  // clearPhaseConfiguration removed (legacy)
     
   // Reset all state
   resetCampaignState: (_state) => {
@@ -199,15 +176,11 @@ export const {
   markConfigurationDirty,
   completeConfiguration,
   cancelConfiguration,
-  showConfiguration,
-  hideConfiguration,
   setConnectionStatus,
   setSelectedPhase,
-  updatePhaseConfiguration,
   setPhaseStatus,
   updateCampaignStatus,
   addCompletedPhase,
-  clearPhaseConfiguration,
   resetCampaignState,
 } = campaignSlice.actions;
 

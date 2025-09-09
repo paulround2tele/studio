@@ -1,12 +1,14 @@
 "use client";
 import React, { useMemo } from 'react';
-import { usePipelineState } from '@/hooks/usePipelineState';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { Button } from '@/components/ui/button';
 import { setFullSequenceMode } from '@/store/ui/campaignUiSlice';
+import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
 
 export const ConversionCTA: React.FC<{ campaignId: string }> = ({ campaignId }) => {
-  const { phases, allConfigured } = usePipelineState(campaignId);
+  const overviewSel = React.useMemo(()=>pipelineSelectors.overview(campaignId),[campaignId]);
+  const ov = useAppSelector(overviewSel);
+  const allConfigured = ov?.config?.progress?.configured === ov?.config?.progress?.total;
   const dispatch = useAppDispatch();
   const fullSequence = useAppSelector(s => s.campaignUI?.byId?.[campaignId]?.fullSequenceMode);
   const show = useMemo(() => !fullSequence && allConfigured, [fullSequence, allConfigured]);

@@ -41,10 +41,10 @@ export const campaignApi = createApi({
         try {
           const response = await campaignsApi.campaignsCreate(request);
           const data = extractResponseData<CampaignResponse>(response);
-          if (!data) return { error: { status: 500, data: 'Empty campaign response' } as any };
+          if (!data) return { error: 'Empty campaign response' as any };
           return { data };
         } catch (error: any) {
-          return { error: error.response?.data || error.message };
+          return { error: error?.response?.data || error?.message };
         }
       },
       invalidatesTags: ['Campaign', 'CampaignList'],
@@ -54,10 +54,9 @@ export const campaignApi = createApi({
   getCampaignEnriched: builder.query<EnrichedCampaignResponse, string>({
       queryFn: async (campaignId) => {
         try {
-      // Use generated client method and unwrap SuccessEnvelope -> EnrichedCampaignResponse
-      const response = await campaignsApi.campaignsEnrichedGet(campaignId);
-      const data = extractResponseData<EnrichedCampaignResponse>(response);
-          if (!data) return { error: { status: 500, data: 'Empty enriched campaign response' } as any };
+          const response = await campaignsApi.campaignsEnrichedGet(campaignId);
+          const data = extractResponseData<EnrichedCampaignResponse>(response);
+          if (!data) return { error: 'Empty enriched campaign response' as any };
           return { data };
         } catch (error: any) {
           return { error: error?.response?.data || error?.message };
@@ -77,7 +76,7 @@ export const campaignApi = createApi({
           const data = extractResponseData<CampaignResponse[]>(response) || [];
           return { data };
         } catch (error: any) {
-          return { error: error.response?.data || error.message };
+          return { error: error?.response?.data || error?.message };
         }
       },
       providesTags: ['CampaignList'],
@@ -92,7 +91,7 @@ export const campaignApi = createApi({
         try {
           const response = await campaignsApi.campaignsDomainsList(campaignId, limit, offset);
           const data = extractResponseData<CampaignDomainsListResponse>(response);
-          if (!data) return { error: { status: 500, data: 'Empty domains list response' } as any };
+          if (!data) return { error: 'Empty domains list response' as any };
           return { data };
         } catch (error: any) {
           return { error: error?.response?.data || error?.message };
@@ -107,13 +106,12 @@ export const campaignApi = createApi({
   getCampaignProgressStandalone: builder.query<CampaignProgressResponse, string>({
       queryFn: async (campaignId) => {
         try {
-          // New generated method name
-      const response = await campaignsApi.campaignsProgress(campaignId);
-      const data = extractResponseData<CampaignProgressResponse>(response);
-      if (!data) return { error: { status: 500, data: 'Empty progress response' } as any };
-      return { data };
+          const response = await campaignsApi.campaignsProgress(campaignId);
+          const data = extractResponseData<CampaignProgressResponse>(response);
+          if (!data) return { error: 'Empty progress response' as any };
+          return { data };
         } catch (error: any) {
-          return { error: error.response?.data || error.message };
+          return { error: error?.response?.data || error?.message };
         }
       },
       providesTags: (result, error, campaignId) => [
@@ -128,18 +126,13 @@ export const campaignApi = createApi({
     >({
       queryFn: async ({ campaignId, phase, config }) => {
         try {
-          // Map string phase to generated enum
           const phaseEnum: CampaignsPhaseConfigurePhaseEnum = (phase as CampaignsPhaseConfigurePhaseEnum);
-          const response = await campaignsApi.campaignsPhaseConfigure(
-            campaignId,
-            phaseEnum,
-            config,
-          );
+          const response = await campaignsApi.campaignsPhaseConfigure(campaignId, phaseEnum, config);
           const data = extractResponseData<PhaseStatusResponse>(response);
-          if (!data) return { error: { status: 500, data: 'Empty phase configure response' } as any };
+          if (!data) return { error: 'Empty phase configure response' as any };
           return { data };
         } catch (error: any) {
-          return { error: error.response?.data || error.message };
+          return { error: error?.response?.data || error?.message };
         }
       },
       invalidatesTags: (result, error, { campaignId, phase }) => [
@@ -159,10 +152,10 @@ export const campaignApi = createApi({
           const phaseEnum: CampaignsPhaseStartPhaseEnum = (phase as CampaignsPhaseStartPhaseEnum);
           const response = await campaignsApi.campaignsPhaseStart(campaignId, phaseEnum);
           const data = extractResponseData<PhaseStatusResponse>(response);
-          if (!data) return { error: { status: 500, data: 'Empty phase start response' } as any };
+          if (!data) return { error: 'Empty phase start response' as any };
           return { data };
         } catch (error: any) {
-          return { error: error.response?.data || error.message };
+          return { error: error?.response?.data || error?.message };
         }
       },
       invalidatesTags: (result, error, { campaignId, phase }) => [
@@ -181,13 +174,13 @@ export const campaignApi = createApi({
     >({
       queryFn: async ({ campaignId, phase }) => {
         try {
-      const phaseEnum: CampaignsPhaseStatusPhaseEnum = (phase as CampaignsPhaseStatusPhaseEnum);
-      const response = await campaignsApi.campaignsPhaseStatus(campaignId, phaseEnum);
+          const phaseEnum: CampaignsPhaseStatusPhaseEnum = (phase as CampaignsPhaseStatusPhaseEnum);
+          const response = await campaignsApi.campaignsPhaseStatus(campaignId, phaseEnum);
           const data = extractResponseData<PhaseStatusResponse>(response);
-          if (!data) return { error: { status: 500, data: 'Empty phase status response' } as any };
+          if (!data) return { error: 'Empty phase status response' as any };
           return { data };
         } catch (error: any) {
-          return { error: error.response?.data || error.message };
+          return { error: error?.response?.data || error?.message };
         }
       },
       providesTags: (result, error, { campaignId, phase }) => [
@@ -205,7 +198,7 @@ export const campaignApi = createApi({
         try {
           const response = await campaignsApi.campaignsDomainGenerationPatternOffset(request);
           const data = extractResponseData<PatternOffsetResponse>(response);
-          if (!data) return { error: { status: 500, data: 'Empty pattern offset response' } as any };
+          if (!data) return { error: 'Empty pattern offset response' as any };
           return { data };
         } catch (error: any) {
           return { error: error?.response?.data || error?.message };

@@ -10,8 +10,7 @@ import { useGetCampaignEnrichedQuery } from '@/store/api/campaignApi';
 
 // Professional components using real OpenAPI types
 import PageHeader from '@/components/shared/PageHeader';
-import CampaignProgress from '@/components/campaigns/CampaignProgress';
-import CampaignHeader from '@/components/campaigns/CampaignHeader';
+// Removed legacy CampaignHeader (superseded by OverviewCard within workspace)
 import CampaignControls from '@/components/campaigns/CampaignControls';
 import DomainsList from '@/components/campaigns/DomainsList';
 
@@ -93,11 +92,10 @@ export default function CampaignPage() {
         onBack={handleBack}
       />
 
-      {/* Professional campaign header with real OpenAPI types */}
-  <CampaignHeader campaign={campaign} state={state} phaseExecutions={phaseExecutions} />
+  {/* Overview details now provided through unified workspace (CampaignHeader removed) */}
       
       {/* Professional campaign progress using real enum values */}
-  <CampaignProgress campaign={campaign} state={state} phaseExecutions={phaseExecutions} />
+  {/* Removed CampaignProgress (redundant) now represented in overview + stepper */}
       
       {/* Professional campaign controls (disaster recovery component) */}
   <CampaignControls campaign={campaign} state={state} phaseExecutions={phaseExecutions} />

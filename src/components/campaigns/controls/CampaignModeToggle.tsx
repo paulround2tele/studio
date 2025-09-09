@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Zap, Clock, Info } from 'lucide-react';
-import { useAppDispatch } from '@/store/hooks';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setFullSequenceMode, setPreflightOpen } from '@/store/ui/campaignUiSlice';
-import { usePipelineState } from '@/hooks/usePipelineState';
+import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
 import { useToast } from '@/hooks/use-toast';
 
 interface CampaignModeToggleProps {
@@ -43,7 +43,9 @@ export function CampaignModeToggle({
   className,
 }: CampaignModeToggleProps) {
   const _dispatch = useAppDispatch();
-  const { allConfigured } = usePipelineState(campaignId);
+  const overviewSel = React.useMemo(()=>pipelineSelectors.overview(campaignId),[campaignId]);
+  const ov: any = useAppSelector(overviewSel as any);
+  const allConfigured = !!ov && ov.config && ov.config.progress && (ov.config.progress.configured === ov.config.progress.total);
   const { toast } = useToast();
   const [pending, setPending] = React.useState(false);
 

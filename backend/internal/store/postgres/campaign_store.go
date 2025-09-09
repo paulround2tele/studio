@@ -48,6 +48,24 @@ func (s *campaignStorePostgres) CreateCampaign(ctx context.Context, exec store.Q
 	}
 	log.Printf("DEBUG CreateCampaign: About to INSERT campaign %s with metadata: %s", campaign.ID, metadataStr)
 
+	// ------------------------------------------------------------------
+	// Defensive initialization of core identity & timestamp fields
+	// If the handler didn't populate these, we must do it here so that:
+	//   * We don't attempt to insert a zero UUID (causes duplicate key on retries)
+	//   * We leverage sane CreatedAt/UpdatedAt values instead of 0001-01-01
+	// ------------------------------------------------------------------
+	if campaign.ID == uuid.Nil {
+		campaign.ID = uuid.New()
+		log.Printf("DEBUG CreateCampaign: Generated new campaign ID %s", campaign.ID)
+	}
+	// Normalize timestamps (let DB defaults apply only if we omit columns, but we currently include them)
+	if campaign.CreatedAt.IsZero() {
+		campaign.CreatedAt = time.Now().UTC()
+	}
+	if campaign.UpdatedAt.IsZero() {
+		campaign.UpdatedAt = campaign.CreatedAt
+	}
+
 	// Ensure all required phase-centric fields are set
 	if campaign.CampaignType == "" {
 		campaign.CampaignType = "lead_generation"
@@ -1651,7 +1669,7 @@ func (s *campaignStorePostgres) UpdateDomainsBulkDNSStatus(ctx context.Context, 
 
 	query := `
 		UPDATE generated_domains
-		SET dns_status = updates.validation_status::text,
+		SET dns_status = updates.validation_status::domain_dns_status_enum,
 		    last_validated_at = NOW()
 		FROM (
 			SELECT UNNEST($1::text[]) as domain_name,

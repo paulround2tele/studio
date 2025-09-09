@@ -155,6 +155,20 @@ Remaining:
 * Optional: remove transitional components (`PhaseStepper`, `NextActionPanel`, `FailureContinuationPanel`) if fully superseded by workspace (defer pending confirmation).
 * Add test for enriched duration field later (Phase 8).
 
+### Phase 7 Update (Cleanup Execution Logged 2025-09-08)
+Actions Executed:
+* Removed legacy UI components: `CampaignPhaseManager`, `PhaseDashboard`, `ModernPhaseConfiguration`, and entire `configuration/` directory.
+* Purged obsolete slice state & reducers (`showPhaseConfiguration`, `phaseConfiguration`, related actions) from `campaignSlice`.
+* Inlined minimal discovery configuration fields where prior `DomainGenerationConfig` component was referenced (workspace form + modal).
+* Updated `CampaignFormV2` comment to reference `PipelineWorkspace` instead of deprecated dashboard.
+* Added placeholder Jest tests for previously empty suites to keep test runner green post-purge.
+Validation:
+* TypeScript typecheck passes.
+* Jest suites: 9/9 passing (60 tests) with coverage slightly increased due to removal of dead code.
+Outstanding (Deferred to Phase 8):
+* Optional removal of transitional helper components already not rendered (to be confirmed via grep before deletion).
+* Additional duration metric selector test (non-blocking).
+
 ### Phase 8: QA & Tests
 Tasks:
 - Update or add tests: pipeline state derivation, start gating (strict), auto-advance, failure retry.

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
 	"github.com/google/uuid"
@@ -20,11 +21,24 @@ func boolPtr(b bool) *bool { return &b }
 // ---- Helpers ----
 func notImpl(name string) error { return fmt.Errorf("%s not implemented", name) }
 
-func okMeta() *gen.Metadata { return &gen.Metadata{} }
+// serviceVersion provides a lightweight semantic version for metadata responses.
+const serviceVersion = "v0.1.0"
+
+// okMeta returns enriched metadata including server time and version info.
+func okMeta() *gen.Metadata {
+	now := time.Now().UTC()
+	extra := map[string]interface{}{
+		"serverTime": now.Format(time.RFC3339Nano),
+		"version":    serviceVersion,
+	}
+	return &gen.Metadata{Extra: &extra}
+}
 
 // reqID is used in handlers where http.Request is not available.
 // It returns an empty string to keep response shape stable without leaking transport details.
-func reqID() string { return "" }
+// reqID generates a new request identifier when an http.Request context isn't available.
+// This ensures every API response carries a non-empty requestId for tracing.
+func reqID() string { return uuid.NewString() }
 
 // requestID returns a request ID from header or generates a new one for HTTP error hooks.
 func requestID(r *http.Request) string {

@@ -4,7 +4,7 @@ import React, { useMemo, useState, useCallback } from 'react';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 import type { PhaseExecution } from '@/lib/api-client/models/phase-execution';
 import type { CampaignState } from '@/lib/api-client/models/campaign-state';
-import { useStartPhaseStandaloneMutation, useGetPhaseStatusStandaloneQuery } from '@/store/api/campaignApi';
+import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { useCampaignSSE } from '@/hooks/useCampaignSSE';
 import { useAppDispatch } from '@/store/hooks';
 import { setFullSequenceMode, setLastFailedPhase, setGuidance } from '@/store/ui/campaignUiSlice';
@@ -44,10 +44,6 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
       }
     }
   });
-  const { data: discoveryStatus } = useGetPhaseStatusStandaloneQuery({ campaignId: campaign.id, phase: 'discovery' as any });
-  const { data: dnsStatus } = useGetPhaseStatusStandaloneQuery({ campaignId: campaign.id, phase: 'validation' as any });
-  const { data: httpStatus } = useGetPhaseStatusStandaloneQuery({ campaignId: campaign.id, phase: 'extraction' as any });
-  const { data: analysisStatus } = useGetPhaseStatusStandaloneQuery({ campaignId: campaign.id, phase: 'analysis' as any });
 
   // Prefer enriched phase executions when available
   const execByPhase = useMemo(() => {

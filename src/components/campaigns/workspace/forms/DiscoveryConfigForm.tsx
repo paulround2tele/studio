@@ -3,7 +3,10 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
-import DomainGenerationConfig from '@/components/campaigns/configuration/DomainGenerationConfig';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+// Legacy DomainGenerationConfig component removed with unified pipeline cleanup.
+// Provide minimal inline field set instead.
 import { useConfigurePhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { useAppDispatch } from '@/store/hooks';
 import { pushGuidanceMessage } from '@/store/ui/campaignUiSlice';
@@ -17,25 +20,37 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
   const { toast } = useToast();
   const [configurePhase, { isLoading }] = useConfigurePhaseStandaloneMutation();
   const dispatch = useAppDispatch();
-  const form = useForm<ServicesDomainGenerationPhaseConfig>({
+  const form = useForm<ServicesDomainGenerationPhaseConfig & { prefixLength?: number; suffixLength?: number }>({
     defaultValues: {
       patternType: 'prefix' as any,
       characterSet: 'abcdefghijklmnopqrstuvwxyz0123456789',
       constantString: 'brand',
       variableLength: 6,
+      prefixLength: 6,
+      suffixLength: 6,
       tlds: ['.com', '.net'],
       numDomainsToGenerate: 1000,
       batchSize: 50,
     },
   });
 
-  const onSubmit = async (values: ServicesDomainGenerationPhaseConfig) => {
+  const onSubmit = async (values: ServicesDomainGenerationPhaseConfig & { prefixLength?: number; suffixLength?: number }) => {
     try {
       const firstTld = Array.isArray(values.tlds) && values.tlds.length > 0 ? values.tlds[0] : '';
       const tld = firstTld && !firstTld.startsWith('.') ? `.${firstTld}` : firstTld;
-      const configuration = { ...values, tld } as any;
+      // Normalize variableLength based on pattern selection
+      let variableLength = values.variableLength;
+      if (values.patternType === 'prefix' && values.prefixLength) variableLength = values.prefixLength;
+      if (values.patternType === 'suffix' && values.suffixLength) variableLength = values.suffixLength;
+      if (values.patternType === 'both') {
+        // for backend expecting single variableLength we can sum, while also pass explicit fields for future expansion
+        const total = (values.prefixLength||0) + (values.suffixLength||0);
+        if (total > 0) variableLength = total;
+      }
+      const configuration = { ...values, variableLength, tld } as any;
       const config: PhaseConfigurationRequest = { configuration };
-      await configurePhase({ campaignId, phase: 'discovery', config }).unwrap();
+  const result = await configurePhase({ campaignId, phase: 'discovery', config }).unwrap();
+  // Optimistic: if API returned status, dispatch guidance; otherwise force refetch hook elsewhere.
   toast({ title: 'Discovery configuration saved', description: 'Domain generation settings applied.' });
   dispatch(pushGuidanceMessage({ campaignId, msg: { id: Date.now().toString(), message: 'Discovery configured', phase: 'discovery', severity: 'info' } }));
       onConfigured?.();
@@ -60,8 +75,74 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <DomainGenerationConfig control={form.control as any} disabled={isLoading} />
-        <div className="flex justify-end gap-2">
+        <div className="grid gap-3 md:grid-cols-2 text-xs">
+          <div className="flex flex-col gap-1">
+            <label className="font-medium">Pattern Type</label>
+            <select disabled={isLoading} className="border rounded px-2 py-1 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-2 focus:ring-ring" {...form.register('patternType')}>
+              <option value="prefix">Prefix</option>
+              <option value="suffix">Suffix</option>
+              <option value="both">Both</option>
+            </select>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="font-medium">Constant String</label>
+            <Input disabled={isLoading} {...form.register('constantString')} />
+          </div>
+          {/* Dynamic variable length fields */}
+          {(() => {
+            const pt = form.watch('patternType');
+            if (pt === 'prefix') return (
+              <div className="flex flex-col gap-1">
+                <label className="font-medium">Prefix Variable Length</label>
+                <Input type="number" disabled={isLoading} {...form.register('prefixLength', { valueAsNumber: true })} />
+              </div>
+            );
+            if (pt === 'suffix') return (
+              <div className="flex flex-col gap-1">
+                <label className="font-medium">Suffix Variable Length</label>
+                <Input type="number" disabled={isLoading} {...form.register('suffixLength', { valueAsNumber: true })} />
+              </div>
+            );
+            if (pt === 'both') return (
+              <div className="flex flex-col gap-1 md:col-span-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1">
+                    <label className="font-medium">Prefix Variable Length</label>
+                    <Input type="number" disabled={isLoading} {...form.register('prefixLength', { valueAsNumber: true })} />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <label className="font-medium">Suffix Variable Length</label>
+                    <Input type="number" disabled={isLoading} {...form.register('suffixLength', { valueAsNumber: true })} />
+                  </div>
+                </div>
+              </div>
+            );
+            return null;
+          })()}
+          <div className="flex flex-col gap-1 md:col-span-2">
+            <label className="font-medium">Character Set</label>
+            <Textarea disabled={isLoading} rows={2} className="font-mono" {...form.register('characterSet')} />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="font-medium">Num Domains</label>
+            <Input type="number" disabled={isLoading} {...form.register('numDomainsToGenerate', { valueAsNumber: true })} />
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="font-medium">Batch Size</label>
+            <Input type="number" disabled={isLoading} {...form.register('batchSize', { valueAsNumber: true })} />
+          </div>
+          <div className="flex flex-col gap-1 md:col-span-2">
+            <label className="font-medium">TLDs (comma separated)</label>
+            <Input disabled={isLoading} {...form.register('tlds')} onBlur={() => {
+              const raw = form.getValues('tlds') as any;
+              if (typeof raw === 'string') {
+                const arr = raw.split(',').map(s=>s.trim()).filter(Boolean);
+                (form as any).setValue('tlds', arr as any, { shouldDirty: true });
+              }
+            }} />
+          </div>
+        </div>
+  <div className="flex justify-end gap-2">
           <Button type="submit" size="sm" disabled={isLoading}>{isLoading ? 'Saving...' : 'Save Discovery'}</Button>
         </div>
       </form>

@@ -1,4 +1,0 @@
-# github.com/fntelecomllc/studio/backend/internal/services
-internal/services/campaign_worker_service.go:36:25: undefined: WorkerCoordinationService
-internal/services/campaign_worker_service.go:57:22: undefined: WorkerCoordinationService
-internal/services/campaign_worker_service.go:61:20: undefined: NewWorkerCoordinationService

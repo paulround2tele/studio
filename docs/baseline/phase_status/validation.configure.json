@@ -1,0 +1,1 @@
+{"error":{"code":"BAD_REQUEST","message":"failed to configure phase: failed to configure phase dns_validation: invalid configuration type for DNS validation","timestamp":"2025-09-09T10:07:51.987410518Z"},"requestId":"c6b06965-bf03-481b-8235-40bde4ad7cbc","success":false}

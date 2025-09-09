@@ -95,12 +95,15 @@ func (s *analysisService) Configure(ctx context.Context, campaignID uuid.UUID, c
 		return fmt.Errorf("configuration validation failed: %w", err)
 	}
 
-	// Mark configured state in memory for status API
+	// Mark configured state in memory for status API (include zeroed metrics now)
 	s.mu.Lock()
 	if _, ok := s.executions[campaignID]; !ok {
-		s.executions[campaignID] = &analysisExecution{CampaignID: campaignID, Status: models.PhaseStatusConfigured}
+		s.executions[campaignID] = &analysisExecution{CampaignID: campaignID, Status: models.PhaseStatusConfigured, ItemsProcessed: 0, ItemsTotal: 0, Progress: 0}
 	} else {
-		s.executions[campaignID].Status = models.PhaseStatusConfigured
+		ex := s.executions[campaignID]
+		ex.Status = models.PhaseStatusConfigured
+		if ex.StartedAt.IsZero() { /* keep zero so omitted */
+		}
 	}
 	s.mu.Unlock()
 
@@ -218,8 +221,17 @@ func (s *analysisService) GetStatus(ctx context.Context, campaignID uuid.UUID) (
 			ProgressPct:    0.0,
 			ItemsTotal:     0,
 			ItemsProcessed: 0,
+			Configuration:  map[string]interface{}{},
 		}, nil
 	}
+
+	var startedPtr *time.Time
+	if !execution.StartedAt.IsZero() {
+		startedPtr = &execution.StartedAt
+	}
+	cfgMap := map[string]interface{}{}
+	cfgMap["itemsTotal"] = execution.ItemsTotal
+	cfgMap["itemsProcessed"] = execution.ItemsProcessed
 
 	return &PhaseStatus{
 		Phase:          models.PhaseTypeAnalysis,
@@ -227,9 +239,10 @@ func (s *analysisService) GetStatus(ctx context.Context, campaignID uuid.UUID) (
 		ProgressPct:    execution.Progress,
 		ItemsTotal:     int64(execution.ItemsTotal),
 		ItemsProcessed: int64(execution.ItemsProcessed),
-		StartedAt:      &execution.StartedAt,
+		StartedAt:      startedPtr,
 		CompletedAt:    execution.CompletedAt,
 		LastError:      execution.ErrorMessage,
+		Configuration:  cfgMap,
 	}, nil
 }
 

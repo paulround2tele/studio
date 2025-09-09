@@ -90,7 +90,7 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
         console.log('🆔 Campaign ID:', campaignData.id);
         console.log('🧭 About to redirect to:', `/campaigns/${campaignData.id}`);
 
-  // Redirect to campaign details page (which includes PhaseDashboard)
+  // Redirect to campaign details page (PipelineWorkspace now authoritative)
         try {
           router.push(`/campaigns/${campaignData.id}`);
           console.log('✅ Router.push called successfully');
@@ -101,11 +101,7 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
       }
     } catch (error: any) {
       console.error('Campaign operation error:', error);
-      
-      // RTK Query provides standardized error format
-      let errorMessage = editMode ? "Failed to update campaign. Please try again." : "Failed to create campaign. Please try again.";
-      
-      // Handle RTK Query error format
+      let errorMessage = editMode ? 'Failed to update campaign. Please try again.' : 'Failed to create campaign. Please try again.';
       if (error?.data?.message) {
         errorMessage = error.data.message;
       } else if (error?.message) {
@@ -113,11 +109,10 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
       } else if (error?.data?.error?.message) {
         errorMessage = error.data.error.message;
       }
-      
       toast({
-        title: editMode ? "Update Failed" : "Creation Failed",
+        title: editMode ? 'Update Failed' : 'Creation Failed',
         description: errorMessage,
-        variant: "destructive"
+        variant: 'destructive'
       });
     }
   };
