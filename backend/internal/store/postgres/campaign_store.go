@@ -232,7 +232,6 @@ func (s *campaignStorePostgres) ListCampaigns(ctx context.Context, exec store.Qu
 	                     started_at, completed_at, progress_percentage, total_items, processed_items,
 	                     successful_items, failed_items, metadata, error_message, business_status,
 	                     campaign_type, total_phases, completed_phases, overall_progress,
-	                     is_full_sequence_mode, auto_advance_phases,
 	                     domains_data, dns_results, http_results, analysis_results
 	             FROM lead_generation_campaigns`
 	args := []interface{}{}
@@ -1564,7 +1563,6 @@ func (s *campaignStorePostgres) GetCampaignsByIDs(ctx context.Context, exec stor
 	                 started_at, completed_at, progress_percentage, total_items, processed_items,
 	                 successful_items, failed_items, metadata, error_message, business_status,
 	                 campaign_type, total_phases, completed_phases, overall_progress,
-	                 is_full_sequence_mode, auto_advance_phases,
 	                 domains_data, dns_results, http_results, analysis_results
 	             FROM lead_generation_campaigns WHERE id IN (%s)`, strings.Join(placeholders, ","))
 

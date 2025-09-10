@@ -241,20 +241,14 @@ export const makeSelectNextUserAction = (campaignId: string) => createSelector(
       const last = phases[phases.length-1];
       if (last) fallbackPhase = last.key;
     }
-    // Manual mode: allow starting earliest runnable even if later phases remain unconfigured, but never skip an earlier missing phase.
+    // Manual mode: enforce sequential configuration before any phase is started (enterprise gating).
+    // Rationale: simplifies mental model & matches test expectations for progressive configuration.
     if (!auto) {
       if (activeExec) return { type: 'watch', phase: activeExec.key } as const;
-      if (nextRunnable) {
-        if (missing.length) {
-          const firstMissingIdx = PIPELINE_PHASE_ORDER.indexOf(missing[0] as PipelinePhaseKey);
-          const runnableIdx = PIPELINE_PHASE_ORDER.indexOf(nextRunnable.key);
-          if (firstMissingIdx > -1 && firstMissingIdx < runnableIdx) {
-            return { type: 'configure', phase: missing[0], reason: 'Configuration required' } as const;
-          }
-        }
-        return { type: 'start', phase: nextRunnable.key } as const;
+      if (missing.length) {
+        return { type: 'configure', phase: missing[0], reason: 'Configuration required' } as const;
       }
-      if (missing.length) return { type: 'configure', phase: missing[0], reason: 'Configuration required' } as const;
+      if (nextRunnable) return { type: 'start', phase: nextRunnable.key } as const;
       return { type: 'wait', phase: fallbackPhase } as const;
     }
     // Auto mode strict requirement.

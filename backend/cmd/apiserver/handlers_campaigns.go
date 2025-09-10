@@ -224,6 +224,8 @@ func (h *strictHandlers) CampaignsList(ctx context.Context, r gen.CampaignsListR
 	}
 	rows, err := h.deps.Stores.Campaign.ListCampaigns(ctx, h.deps.DB, filter)
 	if err != nil {
+		// Added diagnostic logging to surface underlying store error while keeping generic API response
+		log.Printf("ERROR CampaignsList: failed to list campaigns filter=%+v err=%v", filter, err)
 		return gen.CampaignsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to list campaigns", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	out := make([]gen.CampaignResponse, 0, len(rows))

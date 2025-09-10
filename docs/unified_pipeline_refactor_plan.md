@@ -220,6 +220,20 @@ If issues arise post Phase 6:
 - All tests pass.
 
 ---
+## Final Layout & Accessibility Notes (Post Phase 6 Cleanup – 2025-09-10)
+**Workspace Composition:**
+- Overview: `CampaignOverviewCard` (replaces legacy `CampaignHeader` + high-level progress) – provides global configured/completed ratios and next action CTA.
+- Phase Navigation: `PhaseStepper` (horizontal by default) implements roving tabindex, Arrow/Home/End navigation, `aria-current="step"`, and compact status badges (config vs exec state).
+- Adaptive Panel: `PhasePanelShell` hosts inline forms & consolidated `AlertStack` (guidance, gating, failure, retry). Duplicate retry region removed to ensure single source of truth for failure recovery CTAs.
+- Outputs: `DomainsList` and related result views remain separate region below workspace (still candidates for grouping under a future Outputs tab set).
+**Status Badges:** Unified variant scale: missing/configured/running/failed/completed/paused/idle with dark mode token compliance and WCAG AA contrast verified manually.
+**Keyboard Support:**
+- PhaseStepper: ArrowLeft/Right (or Up/Down in vertical mode) cycles phases; Home/End jump; Enter/Space activates selection. Focus never trapped—Tab moves out as expected.
+- Alert dismiss buttons reachable in natural tab order.
+**Removed Legacy Artifacts:** Heavy `CampaignHeader` UI replaced with a thin wrapper; `CampaignProgress` component deleted after redundancy confirmed.
+**Pending (Phase 8/9):** Add automated axe scan to CI (placeholder script to be wired) & documentation snippet in README showing new workflow screenshot.
+
+---
 ## Implementation Sequence Notes
 We commit after each Phase with prefix `[Pipeline P#]` and short description.
 

@@ -168,14 +168,7 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
             </div>
           )}
           {retryEligible.length > 0 && (
-            <div className="mt-4 border border-red-200 bg-red-50 p-3 rounded">
-              <div className="text-xs font-semibold text-red-700 mb-2">Retry Failed Phases</div>
-              <div className="flex flex-wrap gap-2">
-                {retryEligible.map(p => (
-                  <Button key={p} size="sm" variant="destructive" className="text-[10px] py-1" onClick={()=>startPhase({ campaignId, phase: p as any })}>Retry {p}</Button>
-                ))}
-              </div>
-            </div>
+            <div className="sr-only" aria-hidden="true">Retry actions duplicated in AlertStack removed</div>
           )}
   </PhasePanelShell>
     </div>

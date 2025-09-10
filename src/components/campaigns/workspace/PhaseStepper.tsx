@@ -35,9 +35,54 @@ export const PhaseStepper: React.FC<PhaseStepperProps> = ({ phases, activePhase,
   const sorted = React.useMemo(() => [...phases].sort((a,b)=>a.order - b.order), [phases]);
   const vertical = orientation === 'vertical';
 
+  // Roving focus index (defaults to activePhase else first)
+  const activeIndex = React.useMemo(()=>sorted.findIndex(p=>p.key===activePhase),[sorted, activePhase]);
+  const [focusIndex, setFocusIndex] = React.useState(()=> activeIndex > -1 ? activeIndex : 0);
+  const prevActiveRef = React.useRef(activePhase);
+  React.useEffect(()=>{
+    if (activePhase !== prevActiveRef.current) {
+      prevActiveRef.current = activePhase;
+      if (activeIndex > -1) setFocusIndex(activeIndex);
+    }
+  }, [activePhase, activeIndex]);
+
+  // Focus element matching focusIndex after updates (roving tab index pattern)
+  React.useEffect(()=> {
+    const key = sorted[focusIndex]?.key;
+    if (!key) return;
+    const el = document.querySelector<HTMLButtonElement>(`[data-phase-step='${key}']`);
+    if (el && document.activeElement !== el) {
+      el.focus();
+    }
+  }, [focusIndex, sorted]);
+
+  const handleKeyDown = (e: React.KeyboardEvent, idx: number) => {
+    let next = idx;
+    if (e.key === 'ArrowRight' || (vertical && e.key === 'ArrowDown')) { next = (idx + 1) % sorted.length; }
+    else if (e.key === 'ArrowLeft' || (vertical && e.key === 'ArrowUp')) { next = (idx - 1 + sorted.length) % sorted.length; }
+    else if (e.key === 'Home') { next = 0; }
+    else if (e.key === 'End') { next = sorted.length -1; }
+    else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      const target = sorted[idx];
+      if (target) onSelect?.(target.key);
+      return;
+    } else { return; }
+    e.preventDefault();
+    setFocusIndex(next);
+    // Defer focusing until after state update flush
+    const key = sorted[next]?.key;
+    if (key) {
+      setTimeout(()=>{
+        const btn = document.querySelector<HTMLButtonElement>(`[data-phase-step='${key}']`);
+        btn?.focus();
+      }, 0);
+    }
+  };
+
   return (
     <nav aria-label="Pipeline phases" className={cn(vertical ? 'flex flex-col gap-4' : 'flex items-stretch gap-6', className)} data-phase-stepper>
-      {sorted.map((p, idx) => {
+  {sorted.map((p, idx) => {
         const active = p.key === activePhase;
         const badgeVariant = deriveVariant(p);
         return (
@@ -52,6 +97,10 @@ export const PhaseStepper: React.FC<PhaseStepperProps> = ({ phases, activePhase,
             )}
             aria-current={active ? 'step' : undefined}
             aria-label={`Phase ${idx+1}: ${p.label}. Status ${p.execState}`}
+    role="button"
+    data-phase-step={p.key}
+    tabIndex={focusIndex === idx ? 0 : -1}
+    onKeyDown={(e)=>handleKeyDown(e, idx)}
           >
             <div className={cn('flex items-center justify-center rounded-full border font-semibold transition-colors',
               condensed ? 'h-7 w-7 text-[11px]' : 'h-8 w-8 text-[12px]',

@@ -646,7 +646,30 @@ func (s *SessionService) logAuditEvent(ctx context.Context, sessionID string, us
 		"session_id":  sessionID,
 		"description": description,
 	}
-	s.auditLogger.LogGenericEvent(ctx, s.db, &userID, action, "session", &userID, details)
+
+	// Ensure we don't violate FK constraints if a session is created for a user
+	// ID that does not yet exist in the users table (e.g. dev bootstrap paths).
+	var userPtr *uuid.UUID
+	if s.userExists(ctx, userID) {
+		userPtr = &userID
+	} else {
+		// Fallback: log without user_id to avoid FK violation while still capturing event.
+		// (Optional) Could add a warning log here, but keep silent to avoid noisy logs.
+	}
+	s.auditLogger.LogGenericEvent(ctx, s.db, userPtr, action, "session", &userID, details)
+}
+
+// userExists returns true if a user row exists for the given UUID.
+func (s *SessionService) userExists(ctx context.Context, id uuid.UUID) bool {
+	if s.db == nil {
+		return false
+	}
+	var exists bool
+	// Use SELECT EXISTS for efficiency; ignore errors (treat as non-existent)
+	if err := s.db.GetContext(ctx, &exists, "SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)", id); err != nil {
+		return false
+	}
+	return exists
 }
 
 // Stop stops the session service cleanup

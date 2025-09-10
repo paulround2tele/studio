@@ -284,6 +284,9 @@ func initAppDependencies() (*AppDeps, error) {
 	stealthAwareDNS.EnableStealthMode()
 	stealthAwareHTTP.EnableStealthMode()
 
+	// Initialize runtime metrics container EARLY so we don't pass a typed-nil into orchestrator
+	deps.Metrics = NewRuntimeMetrics()
+
 	// SSE and Orchestrator
 	if deps.Stores.Campaign != nil {
 		deps.Orchestrator = application.NewCampaignOrchestrator(
@@ -311,9 +314,6 @@ func initAppDependencies() (*AppDeps, error) {
 
 	// In-memory bulk operations tracker
 	deps.BulkOps = NewBulkOpsTracker()
-
-	// Initialize runtime metrics container
-	deps.Metrics = NewRuntimeMetrics()
 
 	return deps, nil
 }

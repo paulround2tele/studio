@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"reflect"
 	"sync"
 	"time"
 
@@ -107,7 +108,8 @@ func NewCampaignOrchestrator(
 	sseService SSEBroadcaster,
 	metrics OrchestratorMetrics,
 ) *CampaignOrchestrator {
-	if metrics == nil {
+	// Guard against typed-nil pointers passed as the interface (common when deps field set after construction)
+	if metrics == nil || (reflect.ValueOf(metrics).Kind() == reflect.Ptr && reflect.ValueOf(metrics).IsNil()) {
 		metrics = &noopMetrics{}
 	}
 	return &CampaignOrchestrator{
@@ -194,8 +196,9 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 	}
 	o.mu.RUnlock()
 
-	// Metrics: count phase starts
-	if o.deps.Logger != nil { /* logger present - no-op */
+	// Metrics: count phase starts (guard nil)
+	if o.metrics != nil {
+		// we increment only after successful Execute below; keep placeholder here for future pre-start metrics if needed
 	}
 
 	// Get campaign to extract user ID for SSE - use DB from deps
@@ -265,7 +268,9 @@ func (o *CampaignOrchestrator) StartPhaseInternal(ctx context.Context, campaignI
 		phaseStartedEvent := services.CreatePhaseStartedEvent(campaignID, *cachedUserID, phase)
 		o.sseService.BroadcastToCampaign(campaignID, phaseStartedEvent)
 	}
-	o.metrics.IncPhaseStarts()
+	if o.metrics != nil {
+		o.metrics.IncPhaseStarts()
+	}
 
 	// Ensure an execution record exists (StartPhaseInternal may be called without prior ConfigurePhase)
 	o.mu.Lock()
