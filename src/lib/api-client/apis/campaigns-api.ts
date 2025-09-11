@@ -435,10 +435,14 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
          * @param {string} campaignId 
          * @param {number} [limit] 
          * @param {number} [offset] 
+         * @param {CampaignsDomainsListDnsStatusEnum} [dnsStatus] Filter domains whose authoritative DNS status matches (pending|ok|error|timeout)
+         * @param {CampaignsDomainsListHttpStatusEnum} [httpStatus] Filter domains whose authoritative HTTP status matches (pending|ok|error|timeout)
+         * @param {string} [dnsReason] Filter domains by DNS reason (exact match). Example values: NXDOMAIN, SERVFAIL, REFUSED, NOANSWER, TIMEOUT, ERROR
+         * @param {string} [httpReason] Filter domains by HTTP reason (exact match). Example values: TIMEOUT, NOT_FOUND, UPSTREAM_5XX, PROXY_ERROR, TLS_ERROR, SSL_EXPIRED, CONNECTION_RESET, ERROR
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsDomainsList: async (campaignId: string, limit?: number, offset?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        campaignsDomainsList: async (campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'campaignId' is not null or undefined
             assertParamExists('campaignsDomainsList', 'campaignId', campaignId)
             const localVarPath = `/campaigns/{campaignId}/domains`
@@ -462,6 +466,22 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
 
             if (offset !== undefined) {
                 localVarQueryParameter['offset'] = offset;
+            }
+
+            if (dnsStatus !== undefined) {
+                localVarQueryParameter['dnsStatus'] = dnsStatus;
+            }
+
+            if (httpStatus !== undefined) {
+                localVarQueryParameter['httpStatus'] = httpStatus;
+            }
+
+            if (dnsReason !== undefined) {
+                localVarQueryParameter['dnsReason'] = dnsReason;
+            }
+
+            if (httpReason !== undefined) {
+                localVarQueryParameter['httpReason'] = httpReason;
             }
 
 
@@ -1417,11 +1437,15 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * @param {string} campaignId 
          * @param {number} [limit] 
          * @param {number} [offset] 
+         * @param {CampaignsDomainsListDnsStatusEnum} [dnsStatus] Filter domains whose authoritative DNS status matches (pending|ok|error|timeout)
+         * @param {CampaignsDomainsListHttpStatusEnum} [httpStatus] Filter domains whose authoritative HTTP status matches (pending|ok|error|timeout)
+         * @param {string} [dnsReason] Filter domains by DNS reason (exact match). Example values: NXDOMAIN, SERVFAIL, REFUSED, NOANSWER, TIMEOUT, ERROR
+         * @param {string} [httpReason] Filter domains by HTTP reason (exact match). Example values: TIMEOUT, NOT_FOUND, UPSTREAM_5XX, PROXY_ERROR, TLS_ERROR, SSL_EXPIRED, CONNECTION_RESET, ERROR
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsDomainsList(campaignId: string, limit?: number, offset?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsDomainsList200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsDomainsList(campaignId, limit, offset, options);
+        async campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsDomainsList200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsDomainsList(campaignId, limit, offset, dnsStatus, httpStatus, dnsReason, httpReason, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsDomainsList']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1815,11 +1839,15 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          * @param {string} campaignId 
          * @param {number} [limit] 
          * @param {number} [offset] 
+         * @param {CampaignsDomainsListDnsStatusEnum} [dnsStatus] Filter domains whose authoritative DNS status matches (pending|ok|error|timeout)
+         * @param {CampaignsDomainsListHttpStatusEnum} [httpStatus] Filter domains whose authoritative HTTP status matches (pending|ok|error|timeout)
+         * @param {string} [dnsReason] Filter domains by DNS reason (exact match). Example values: NXDOMAIN, SERVFAIL, REFUSED, NOANSWER, TIMEOUT, ERROR
+         * @param {string} [httpReason] Filter domains by HTTP reason (exact match). Example values: TIMEOUT, NOT_FOUND, UPSTREAM_5XX, PROXY_ERROR, TLS_ERROR, SSL_EXPIRED, CONNECTION_RESET, ERROR
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsDomainsList(campaignId: string, limit?: number, offset?: number, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsDomainsList200Response> {
-            return localVarFp.campaignsDomainsList(campaignId, limit, offset, options).then((request) => request(axios, basePath));
+        campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsDomainsList200Response> {
+            return localVarFp.campaignsDomainsList(campaignId, limit, offset, dnsStatus, httpStatus, dnsReason, httpReason, options).then((request) => request(axios, basePath));
         },
         /**
          * Returns campaign with state and recent phase executions as a single enriched read model
@@ -2146,11 +2174,15 @@ export interface CampaignsApiInterface {
      * @param {string} campaignId 
      * @param {number} [limit] 
      * @param {number} [offset] 
+     * @param {CampaignsDomainsListDnsStatusEnum} [dnsStatus] Filter domains whose authoritative DNS status matches (pending|ok|error|timeout)
+     * @param {CampaignsDomainsListHttpStatusEnum} [httpStatus] Filter domains whose authoritative HTTP status matches (pending|ok|error|timeout)
+     * @param {string} [dnsReason] Filter domains by DNS reason (exact match). Example values: NXDOMAIN, SERVFAIL, REFUSED, NOANSWER, TIMEOUT, ERROR
+     * @param {string} [httpReason] Filter domains by HTTP reason (exact match). Example values: TIMEOUT, NOT_FOUND, UPSTREAM_5XX, PROXY_ERROR, TLS_ERROR, SSL_EXPIRED, CONNECTION_RESET, ERROR
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsDomainsList(campaignId: string, limit?: number, offset?: number, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsDomainsList200Response>;
+    campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsDomainsList200Response>;
 
     /**
      * Returns campaign with state and recent phase executions as a single enriched read model
@@ -2495,12 +2527,16 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
      * @param {string} campaignId 
      * @param {number} [limit] 
      * @param {number} [offset] 
+     * @param {CampaignsDomainsListDnsStatusEnum} [dnsStatus] Filter domains whose authoritative DNS status matches (pending|ok|error|timeout)
+     * @param {CampaignsDomainsListHttpStatusEnum} [httpStatus] Filter domains whose authoritative HTTP status matches (pending|ok|error|timeout)
+     * @param {string} [dnsReason] Filter domains by DNS reason (exact match). Example values: NXDOMAIN, SERVFAIL, REFUSED, NOANSWER, TIMEOUT, ERROR
+     * @param {string} [httpReason] Filter domains by HTTP reason (exact match). Example values: TIMEOUT, NOT_FOUND, UPSTREAM_5XX, PROXY_ERROR, TLS_ERROR, SSL_EXPIRED, CONNECTION_RESET, ERROR
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public campaignsDomainsList(campaignId: string, limit?: number, offset?: number, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).campaignsDomainsList(campaignId, limit, offset, options).then((request) => request(this.axios, this.basePath));
+    public campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsDomainsList(campaignId, limit, offset, dnsStatus, httpStatus, dnsReason, httpReason, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -2767,6 +2803,26 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
     }
 }
 
+/**
+  * @export
+  * @enum {string}
+  */
+export enum CampaignsDomainsListDnsStatusEnum {
+    pending = 'pending',
+    ok = 'ok',
+    error = 'error',
+    timeout = 'timeout'
+}
+/**
+  * @export
+  * @enum {string}
+  */
+export enum CampaignsDomainsListHttpStatusEnum {
+    pending = 'pending',
+    ok = 'ok',
+    error = 'error',
+    timeout = 'timeout'
+}
 /**
   * @export
   * @enum {string}

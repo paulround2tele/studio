@@ -377,20 +377,6 @@ func (h *strictHandlers) CampaignsUpdate(ctx context.Context, r gen.CampaignsUpd
 		raw := json.RawMessage(b)
 		existing.Metadata = &raw
 	}
-	if up.TargetDomains != nil {
-		// Persist target domains into metadata until dedicated columns exist
-		var m map[string]interface{}
-		if existing.Metadata != nil {
-			_ = json.Unmarshal(*existing.Metadata, &m)
-		}
-		if m == nil {
-			m = map[string]interface{}{}
-		}
-		m["targetDomains"] = *up.TargetDomains
-		b, _ := json.Marshal(m)
-		raw := json.RawMessage(b)
-		existing.Metadata = &raw
-	}
 	existing.UpdatedAt = time.Now().UTC()
 
 	if err := h.deps.Stores.Campaign.UpdateCampaign(ctx, h.deps.DB, existing); err != nil {
@@ -772,7 +758,6 @@ func mapCampaignToResponse(c *models.LeadGenerationCampaign) gen.CampaignRespons
 		UpdatedAt:     c.UpdatedAt,
 		Status:        status,
 		Configuration: map[string]interface{}{},
-		TargetDomains: []string{},
 	}
 	if c.StartedAt != nil {
 		resp.StartedAt = c.StartedAt
@@ -916,7 +901,7 @@ func (h *strictHandlers) CampaignsPhaseStop(ctx context.Context, r gen.Campaigns
 		if err == store.ErrNotFound {
 			return gen.CampaignsPhaseStop404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
-		return gen.CampaignsPhaseStop500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsPhaseStop500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	phaseModel, err := mapAPIPhaseToModel(string(r.Phase))
 	if err != nil {
@@ -955,7 +940,7 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 	if h.deps == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
 		return gen.CampaignsDomainsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	// Ensure campaign exists
+	// Ensure campaign exists (fast fail for 404)
 	_, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
 	if err != nil {
 		if err == store.ErrNotFound {
@@ -964,139 +949,95 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		return gen.CampaignsDomainsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
-	// Read JSONB domains_data
-	raw, getErr := h.deps.Stores.Campaign.GetCampaignDomainsData(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
-	if getErr != nil && getErr != sql.ErrNoRows {
-		return gen.CampaignsDomainsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to read domains data", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
-	}
-	var domainsData map[string]interface{}
-	if raw != nil {
-		if err := json.Unmarshal(*raw, &domainsData); err != nil {
-			log.Printf("CampaignsDomainsList: failed to unmarshal domains_data: %v", err)
-		}
-	}
-	if domainsData == nil {
-		domainsData = map[string]interface{}{}
-	}
-	// Extract array
-	items := make([]map[string]interface{}, 0)
-	if arr, ok := domainsData["domains"].([]interface{}); ok {
-		for _, v := range arr {
-			if m, ok2 := v.(map[string]interface{}); ok2 {
-				items = append(items, m)
-			}
-		}
-	}
-	log.Printf("CampaignsDomainsList: campaign=%s jsonb_items=%d", uuid.UUID(r.CampaignId), len(items))
-	// Fallback: if JSONB is empty (common in older runs), fetch from generated_domains table
-	if len(items) == 0 {
-		// Fetch up to a page worth directly from DB preserving order by offset_index
-		list, err := h.deps.Stores.Campaign.GetGeneratedDomainsByCampaign(ctx, h.deps.DB, uuid.UUID(r.CampaignId), 1000, 0)
-		if err == nil && len(list) > 0 {
-			log.Printf("CampaignsDomainsList: campaign=%s fallback_table_items=%d", uuid.UUID(r.CampaignId), len(list))
-			for _, gd := range list {
-				m := map[string]interface{}{
-					"id":          gd.ID.String(),
-					"domain_name": gd.DomainName,
-					"created_at":  gd.CreatedAt.Format(time.RFC3339),
-				}
-				if gd.OffsetIndex >= 0 {
-					m["offset"] = gd.OffsetIndex
-				}
-				if gd.DNSStatus != nil {
-					m["dns_status"] = string(*gd.DNSStatus)
-				}
-				if gd.HTTPStatus != nil {
-					m["http_status"] = string(*gd.HTTPStatus)
-				}
-				if gd.LeadStatus != nil {
-					m["lead_status"] = string(*gd.LeadStatus)
-				}
-				items = append(items, m)
-			}
-			// Best-effort backfill: if JSONB was empty, persist the fetched items for future fast reads
-			// Avoid blocking the response on failures
-			// Build minimal JSONB payload matching expected shape
-			go func(campaignID uuid.UUID, batch []map[string]interface{}) {
-				defer func() { _ = recover() }()
-				payload := map[string]interface{}{
-					"domains":      batch,
-					"last_updated": time.Now().Format(time.RFC3339),
-				}
-				b, err := json.Marshal(payload)
-				if err != nil {
-					log.Printf("CampaignsDomainsList: failed to marshal backfill payload: %v", err)
-					return
-				}
-				raw := json.RawMessage(b)
-				if err := h.deps.Stores.Campaign.UpdateCampaignDomainsData(context.Background(), h.deps.DB, campaignID, &raw); err != nil {
-					log.Printf("CampaignsDomainsList: backfill UpdateCampaignDomainsData failed for campaign=%s: %v", campaignID, err)
-				} else {
-					log.Printf("CampaignsDomainsList: backfilled domains_data for campaign=%s with %d items", campaignID, len(batch))
-				}
-			}(uuid.UUID(r.CampaignId), items)
-		}
-	}
-	total := len(items)
-	// Apply offset/limit
-	start := 0
-	if r.Params.Offset != nil && *r.Params.Offset > 0 {
-		start = int(*r.Params.Offset)
-		if start > total {
-			start = total
-		}
-	}
-	end := start + 100
+	// Pagination params
+	limit := 100
 	if r.Params.Limit != nil && *r.Params.Limit > 0 {
-		end = start + int(*r.Params.Limit)
-	}
-	if end > total {
-		end = total
-	}
-	page := items[start:end]
-
-	// Map to API DomainListItem
-	out := make([]gen.DomainListItem, 0, len(page))
-	for _, it := range page {
-		var idPtr *openapi_types.UUID
-		if s, ok := it["id"].(string); ok {
-			if uid, err := uuid.Parse(s); err == nil {
-				tmp := openapi_types.UUID(uid)
-				idPtr = &tmp
-			}
+		if *r.Params.Limit > 1000 {
+			limit = 1000
+		} else {
+			limit = int(*r.Params.Limit)
 		}
-		var createdAtPtr *time.Time
-		if s, ok := it["created_at"].(string); ok {
-			if ts, err := time.Parse(time.RFC3339, s); err == nil {
-				createdAtPtr = &ts
-			}
+	}
+	startOffset := int64(0)
+	if r.Params.Offset != nil && *r.Params.Offset > 0 {
+		startOffset = int64(*r.Params.Offset)
+	}
+
+	// Fetch current counters (for total + aggregates). Continue on error.
+	var counters *models.CampaignDomainCounters
+	if c, cerr := h.deps.Stores.Campaign.GetCampaignDomainCounters(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); cerr == nil {
+		counters = c
+	}
+
+	// Build optional filter
+	var domainFilter *store.ListCampaignDomainsFilter
+	if r.Params.DnsStatus != nil || r.Params.HttpStatus != nil || r.Params.DnsReason != nil || r.Params.HttpReason != nil {
+		f := &store.ListCampaignDomainsFilter{}
+		if r.Params.DnsStatus != nil {
+			v := string(*r.Params.DnsStatus)
+			f.DNSStatus = &v
+		}
+		if r.Params.HttpStatus != nil {
+			v := string(*r.Params.HttpStatus)
+			f.HTTPStatus = &v
+		}
+		if r.Params.DnsReason != nil {
+			f.DNSReason = r.Params.DnsReason
+		}
+		if r.Params.HttpReason != nil {
+			f.HTTPReason = r.Params.HttpReason
+		}
+		domainFilter = f
+	}
+	rows, derr := h.deps.Stores.Campaign.GetGeneratedDomainsByCampaign(ctx, h.deps.DB, uuid.UUID(r.CampaignId), limit, startOffset, domainFilter)
+	if derr != nil {
+		return gen.CampaignsDomainsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed domain listing", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+
+	items := make([]gen.DomainListItem, 0, len(rows))
+	for _, gd := range rows {
+		if gd == nil {
+			continue
 		}
 		var offsetPtr *int64
-		if f, ok := it["offset"].(float64); ok {
-			vv := int64(f)
-			offsetPtr = &vv
+		if gd.OffsetIndex >= 0 {
+			tmp := gd.OffsetIndex
+			offsetPtr = &tmp
 		}
-		d := gen.DomainListItem{
-			Id:        idPtr,
-			Domain:    toStringVal(it["domain_name"]),
-			Offset:    offsetPtr,
-			CreatedAt: createdAtPtr,
+		var dnsStatusPtr, httpStatusPtr, leadStatusPtr *string
+		if gd.DNSStatus != nil {
+			v := string(*gd.DNSStatus)
+			dnsStatusPtr = &v
 		}
-		// Optional statuses
-		if v, ok := it["dns_status"].(string); ok {
-			d.DnsStatus = &v
+		if gd.HTTPStatus != nil {
+			v := string(*gd.HTTPStatus)
+			httpStatusPtr = &v
 		}
-		if v, ok := it["http_status"].(string); ok {
-			d.HttpStatus = &v
+		if gd.LeadStatus != nil {
+			v := string(*gd.LeadStatus)
+			leadStatusPtr = &v
 		}
-		if v, ok := it["lead_status"].(string); ok {
-			d.LeadStatus = &v
+		var dnsReasonPtr, httpReasonPtr *string
+		if gd.DNSReason.Valid {
+			dnsReasonPtr = &gd.DNSReason.String
 		}
-		out = append(out, d)
+		if gd.HTTPReason.Valid {
+			httpReasonPtr = &gd.HTTPReason.String
+		}
+		id := openapi_types.UUID(gd.ID)
+		createdAt := gd.CreatedAt
+		domainCopy := gd.DomainName
+		items = append(items, gen.DomainListItem{Id: &id, Domain: &domainCopy, Offset: offsetPtr, CreatedAt: &createdAt, DnsStatus: dnsStatusPtr, HttpStatus: httpStatusPtr, LeadStatus: leadStatusPtr, DnsReason: dnsReasonPtr, HttpReason: httpReasonPtr})
 	}
 
-	data := gen.CampaignDomainsListResponse{CampaignId: openapi_types.UUID(r.CampaignId), Items: out, Total: total}
-	return gen.CampaignsDomainsList200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	resp := gen.CampaignDomainsListResponse{CampaignId: openapi_types.UUID(r.CampaignId), Items: items}
+	if counters != nil { // prefer counters total; fallback to len(items)
+		resp.Total = int(counters.Total)
+		resp.Aggregates = buildDomainAggregates(counters)
+	} else {
+		resp.Total = len(items)
+	}
+	return gen.CampaignsDomainsList200JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
 }
 
 // CampaignsDomainGenerationPatternOffset implements POST /campaigns/domain-generation/pattern-offset
@@ -1525,4 +1466,93 @@ func toStringVal(v interface{}) string {
 		return s
 	}
 	return ""
+}
+
+// aggregateHelper builds the aggregates payload for CampaignDomainsListResponse
+func buildDomainAggregates(counters *models.CampaignDomainCounters) *struct {
+	Dns *struct {
+		Error   *int `json:"error,omitempty"`
+		Ok      *int `json:"ok,omitempty"`
+		Pending *int `json:"pending,omitempty"`
+		Timeout *int `json:"timeout,omitempty"`
+	} `json:"dns,omitempty"`
+	Http *struct {
+		Error   *int `json:"error,omitempty"`
+		Ok      *int `json:"ok,omitempty"`
+		Pending *int `json:"pending,omitempty"`
+		Timeout *int `json:"timeout,omitempty"`
+	} `json:"http,omitempty"`
+	Lead *struct {
+		Error   *int `json:"error,omitempty"`
+		Match   *int `json:"match,omitempty"`
+		NoMatch *int `json:"noMatch,omitempty"`
+		Pending *int `json:"pending,omitempty"`
+		Timeout *int `json:"timeout,omitempty"`
+	} `json:"lead,omitempty"`
+} {
+	if counters == nil {
+		return nil
+	}
+	toPtr := func(v int64) *int { x := int(v); return &x }
+	agg := struct {
+		Dns *struct {
+			Error   *int `json:"error,omitempty"`
+			Ok      *int `json:"ok,omitempty"`
+			Pending *int `json:"pending,omitempty"`
+			Timeout *int `json:"timeout,omitempty"`
+		} `json:"dns,omitempty"`
+		Http *struct {
+			Error   *int `json:"error,omitempty"`
+			Ok      *int `json:"ok,omitempty"`
+			Pending *int `json:"pending,omitempty"`
+			Timeout *int `json:"timeout,omitempty"`
+		} `json:"http,omitempty"`
+		Lead *struct {
+			Error   *int `json:"error,omitempty"`
+			Match   *int `json:"match,omitempty"`
+			NoMatch *int `json:"noMatch,omitempty"`
+			Pending *int `json:"pending,omitempty"`
+			Timeout *int `json:"timeout,omitempty"`
+		} `json:"lead,omitempty"`
+	}{}
+	agg.Dns = &struct {
+		Error   *int `json:"error,omitempty"`
+		Ok      *int `json:"ok,omitempty"`
+		Pending *int `json:"pending,omitempty"`
+		Timeout *int `json:"timeout,omitempty"`
+	}{Error: toPtr(counters.DNSError), Ok: toPtr(counters.DNSOk), Pending: toPtr(counters.DNSPending), Timeout: toPtr(counters.DNSTimeout)}
+	agg.Http = &struct {
+		Error   *int `json:"error,omitempty"`
+		Ok      *int `json:"ok,omitempty"`
+		Pending *int `json:"pending,omitempty"`
+		Timeout *int `json:"timeout,omitempty"`
+	}{Error: toPtr(counters.HTTPError), Ok: toPtr(counters.HTTPOk), Pending: toPtr(counters.HTTPPending), Timeout: toPtr(counters.HTTPTimeout)}
+	agg.Lead = &struct {
+		Error   *int `json:"error,omitempty"`
+		Match   *int `json:"match,omitempty"`
+		NoMatch *int `json:"noMatch,omitempty"`
+		Pending *int `json:"pending,omitempty"`
+		Timeout *int `json:"timeout,omitempty"`
+	}{Error: toPtr(counters.LeadError), Match: toPtr(counters.LeadMatch), NoMatch: toPtr(counters.LeadNoMatch), Pending: toPtr(counters.LeadPending), Timeout: toPtr(counters.LeadTimeout)}
+	return &struct {
+		Dns *struct {
+			Error   *int `json:"error,omitempty"`
+			Ok      *int `json:"ok,omitempty"`
+			Pending *int `json:"pending,omitempty"`
+			Timeout *int `json:"timeout,omitempty"`
+		} `json:"dns,omitempty"`
+		Http *struct {
+			Error   *int `json:"error,omitempty"`
+			Ok      *int `json:"ok,omitempty"`
+			Pending *int `json:"pending,omitempty"`
+			Timeout *int `json:"timeout,omitempty"`
+		} `json:"http,omitempty"`
+		Lead *struct {
+			Error   *int `json:"error,omitempty"`
+			Match   *int `json:"match,omitempty"`
+			NoMatch *int `json:"noMatch,omitempty"`
+			Pending *int `json:"pending,omitempty"`
+			Timeout *int `json:"timeout,omitempty"`
+		} `json:"lead,omitempty"`
+	}{Dns: agg.Dns, Http: agg.Http, Lead: agg.Lead}
 }

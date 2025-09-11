@@ -35,8 +35,7 @@ func (h *strictHandlers) BulkGenerateDomains(ctx context.Context, r gen.BulkGene
 				Processed *int `json:"processed,omitempty"`
 				Total     *int `json:"total,omitempty"`
 			} `json:"progress,omitempty"`
-			Status        *gen.BulkGenerationResponseOperationsStatus `json:"status,omitempty"`
-			TargetDomains *int                                        `json:"targetDomains,omitempty"`
+			Status *gen.BulkGenerationResponseOperationsStatus `json:"status,omitempty"`
 		}{},
 		Status:          gen.BulkGenerationResponseStatusInitiated,
 		TotalOperations: len(r.Body.Operations),
@@ -75,8 +74,7 @@ func (h *strictHandlers) BulkGenerateDomains(ctx context.Context, r gen.BulkGene
 					Processed *int `json:"processed,omitempty"`
 					Total     *int `json:"total,omitempty"`
 				} `json:"progress,omitempty"`
-				Status        *gen.BulkGenerationResponseOperationsStatus `json:"status,omitempty"`
-				TargetDomains *int                                        `json:"targetDomains,omitempty"`
+				Status *gen.BulkGenerationResponseOperationsStatus `json:"status,omitempty"`
 			}{
 				CampaignId: &op.CampaignId,
 				Progress: &struct {
@@ -86,8 +84,7 @@ func (h *strictHandlers) BulkGenerateDomains(ctx context.Context, r gen.BulkGene
 					Processed: &processed,
 					Total:     &target,
 				},
-				Status:        &status,
-				TargetDomains: &target,
+				Status: &status,
 			}
 		}
 	}

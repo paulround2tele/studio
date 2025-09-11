@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
 // httpValidationService orchestrates the HTTP validation engine
@@ -489,40 +491,8 @@ func (s *httpValidationService) getValidatedDomains(ctx context.Context, campaig
 
 // loadStealthForHTTP reads stealth order and jitter from campaign domains data
 func (s *httpValidationService) loadStealthForHTTP(ctx context.Context, campaignID uuid.UUID) (order []string, jitterMin int, jitterMax int, ok bool) {
-	if s.store == nil {
-		return nil, 0, 0, false
-	}
-	var exec store.Querier
-	if q, qok := s.deps.DB.(store.Querier); qok {
-		exec = q
-	}
-	raw, err := s.store.GetCampaignDomainsData(ctx, exec, campaignID)
-	if err != nil || raw == nil {
-		return nil, 0, 0, false
-	}
-	var data map[string]interface{}
-	if err := json.Unmarshal(*raw, &data); err != nil {
-		return nil, 0, 0, false
-	}
-	if arr, ok2 := data["stealth_order_http"].([]interface{}); ok2 {
-		order = make([]string, 0, len(arr))
-		for _, v := range arr {
-			if s, ok3 := v.(string); ok3 {
-				order = append(order, s)
-			}
-		}
-	}
-	if st, ok2 := data["stealth"].(map[string]interface{}); ok2 {
-		if http, ok3 := st["http"].(map[string]interface{}); ok3 {
-			if v, ok4 := http["jitterMinMs"].(float64); ok4 {
-				jitterMin = int(v)
-			}
-			if v, ok4 := http["jitterMaxMs"].(float64); ok4 {
-				jitterMax = int(v)
-			}
-		}
-	}
-	return order, jitterMin, jitterMax, len(order) > 0 || jitterMax > 0
+	// Phase C: domains_data deprecated; stealth config persistence removed. Return no-op.
+	return nil, 0, 0, false
 }
 
 // ensureDNSCompleted checks the campaign phase table and ensures DNS phase is marked completed
@@ -641,8 +611,45 @@ func (s *httpValidationService) storeHTTPResults(ctx context.Context, campaignID
 			continue
 		}
 		status := "error"
-		if r.IsSuccess || r.Status == "Validated" || r.Status == "OK" {
+		reasonPtr := (*string)(nil)
+		// Map underlying validator status -> canonical (ok|error|timeout)
+		switch {
+		case r.IsSuccess || r.Status == "Validated" || r.Status == "OK":
 			status = "ok"
+		case strings.EqualFold(r.Status, "timeout"):
+			status = "timeout"
+			r := "TIMEOUT"
+			reasonPtr = &r
+		}
+		if status == "error" {
+			le := strings.ToLower(r.Error)
+			switch {
+			case strings.Contains(le, "timeout"):
+				status = "timeout"
+				tr := "TIMEOUT"
+				reasonPtr = &tr
+			case r.StatusCode == 404:
+				val := "NOT_FOUND"
+				reasonPtr = &val
+			case r.StatusCode >= 500 && r.StatusCode < 600:
+				val := "UPSTREAM_5XX"
+				reasonPtr = &val
+			case strings.Contains(le, "proxy"):
+				val := "PROXY_ERROR"
+				reasonPtr = &val
+			case strings.Contains(le, "certificate has expired") || strings.Contains(le, "certificate expired"):
+				val := "SSL_EXPIRED"
+				reasonPtr = &val
+			case strings.Contains(le, "tls") || strings.Contains(le, "certificate"):
+				val := "TLS_ERROR"
+				reasonPtr = &val
+			case strings.Contains(le, "connection reset"):
+				val := "CONNECTION_RESET"
+				reasonPtr = &val
+			case r.Error != "":
+				val := "ERROR"
+				reasonPtr = &val
+			}
 		}
 		var codePtr *int32
 		if r.StatusCode != 0 {
@@ -661,14 +668,131 @@ func (s *httpValidationService) storeHTTPResults(ctx context.Context, campaignID
 			HTTPStatusCode:        codePtr,
 			PageTitle:             titlePtr,
 			LastCheckedAt:         func() *time.Time { t := time.Now(); return &t }(),
+			Reason:                reasonPtr,
 		})
 	}
 	var exec store.Querier
 	if q, ok := s.deps.DB.(store.Querier); ok {
 		exec = q
 	}
-	if err := s.store.UpdateDomainsBulkHTTPStatus(ctx, exec, bulk); err != nil {
-		return fmt.Errorf("failed to persist HTTP results: %w", err)
+	// B1: transactional pending-only update with RETURNING to ensure idempotent counter deltas
+	var sqlxDB *sqlx.DB
+	if dbx, ok := s.deps.DB.(*sqlx.DB); ok {
+		sqlxDB = dbx
+	}
+	if sqlxDB == nil {
+		// Fallback to legacy best-effort path (non-idempotent). Rare in tests; keep for safety.
+		if err := s.store.UpdateDomainsBulkHTTPStatus(ctx, exec, bulk); err != nil {
+			return fmt.Errorf("failed to persist HTTP results (fallback): %w", err)
+		}
+		return nil
+	}
+	tx, txErr := sqlxDB.BeginTxx(ctx, nil)
+	if txErr != nil {
+		if err := s.store.UpdateDomainsBulkHTTPStatus(ctx, exec, bulk); err != nil {
+			return fmt.Errorf("failed to persist HTTP results (fallback no-tx): %w", err)
+		}
+		return nil
+	}
+	// Build VALUES list starting after $1 (reserved for campaign id)
+	if len(bulk) == 0 {
+		_ = tx.Rollback()
+		return nil
+	}
+	valueStrings := make([]string, 0, len(bulk))
+	valueArgs := make([]interface{}, 0, len(bulk)*5+1)
+	valueArgs = append(valueArgs, campaignID) // $1
+	for i, r := range bulk {
+		idx := i*5 + 2 // domain starts at $2
+		valueStrings = append(valueStrings, fmt.Sprintf("($%d,$%d,$%d,$%d,$%d)", idx, idx+1, idx+2, idx+3, idx+4))
+		valueArgs = append(valueArgs, r.DomainName, r.ValidationStatus, r.HTTPStatusCode, r.LastCheckedAt, r.Reason)
+	}
+	valuesClause := strings.Join(valueStrings, ",")
+	query := fmt.Sprintf(`WITH updates(domain_name,validation_status,http_status_code,last_checked_at,reason) AS (VALUES %s)
+UPDATE generated_domains gd
+SET http_status = u.validation_status,
+    http_status_code = u.http_status_code,
+    http_checked_at = u.last_checked_at,
+    http_reason = CASE WHEN u.validation_status = 'ok' THEN NULL ELSE COALESCE(u.reason, gd.http_reason) END
+FROM updates u
+WHERE gd.domain_name = u.domain_name
+  AND gd.campaign_id = $1
+  AND gd.http_status = 'pending'
+RETURNING u.validation_status`, valuesClause)
+	rows, qErr := tx.QueryxContext(ctx, query, valueArgs...)
+	if qErr != nil {
+		_ = tx.Rollback()
+		return fmt.Errorf("http bulk pending update failed: %w", qErr)
+	}
+	okN, errN, timeoutN := 0, 0, 0
+	for rows.Next() {
+		var st string
+		if err := rows.Scan(&st); err != nil {
+			_ = rows.Close()
+			_ = tx.Rollback()
+			return fmt.Errorf("scan returned status: %w", err)
+		}
+		switch st {
+		case "ok":
+			okN++
+		case "error":
+			errN++
+		case "timeout":
+			timeoutN++
+		}
+	}
+	_ = rows.Close()
+	total := okN + errN + timeoutN
+	if total > 0 {
+		if _, cerr := tx.ExecContext(ctx, `UPDATE campaign_domain_counters SET http_pending = http_pending - $1, http_ok = http_ok + $2, http_error = http_error + $3, http_timeout = http_timeout + $4, updated_at = NOW() WHERE campaign_id = $5`, total, okN, errN, timeoutN, campaignID); cerr != nil {
+			_ = tx.Rollback()
+			return fmt.Errorf("counter update failed: %w", cerr)
+		}
+	}
+	if cErr := tx.Commit(); cErr != nil {
+		return fmt.Errorf("commit http bulk tx: %w", cErr)
+	}
+	// Broadcast SSE sample if interface available and no EventBus abstraction
+	if s.deps.SSE != nil {
+		top := 50
+		if len(bulk) < top {
+			top = len(bulk)
+		}
+		payload := make([]map[string]interface{}, 0, top)
+		for i := 0; i < top; i++ {
+			b := bulk[i]
+			m := map[string]interface{}{"domain": b.DomainName, "status": b.ValidationStatus}
+			if b.Reason != nil {
+				m["reason"] = *b.Reason
+			}
+			payload = append(payload, m)
+		}
+		if len(payload) > 0 {
+			msg, _ := json.Marshal(map[string]interface{}{"event": "http_batch_validated", "campaignId": campaignID.String(), "sample": payload, "count": len(bulk)})
+			s.deps.SSE.Send(string(msg))
+		}
+	}
+	// Publish structured domain delta via EventBus if available
+	if s.deps.EventBus != nil && len(bulk) > 0 {
+		limit := len(bulk)
+		if limit > 200 {
+			limit = 200
+		}
+		items := make([]map[string]interface{}, 0, limit)
+		for i := 0; i < limit; i++ {
+			b := bulk[i]
+			m := map[string]interface{}{"domain": b.DomainName, "http_status": b.ValidationStatus}
+			if b.Reason != nil {
+				m["http_reason"] = *b.Reason
+			}
+			items = append(items, m)
+		}
+		_ = s.deps.EventBus.PublishSystemEvent(ctx, "domain_status_delta", map[string]interface{}{
+			"campaignId": campaignID.String(),
+			"phase":      "http_validation",
+			"count":      len(bulk),
+			"items":      items,
+		})
 	}
 	return nil
 }

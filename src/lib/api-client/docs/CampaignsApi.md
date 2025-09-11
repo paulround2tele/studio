@@ -540,11 +540,19 @@ const apiInstance = new CampaignsApi(configuration);
 let campaignId: string; // (default to undefined)
 let limit: number; // (optional) (default to 100)
 let offset: number; // (optional) (default to 0)
+let dnsStatus: 'pending' | 'ok' | 'error' | 'timeout'; //Filter domains whose authoritative DNS status matches (pending|ok|error|timeout) (optional) (default to undefined)
+let httpStatus: 'pending' | 'ok' | 'error' | 'timeout'; //Filter domains whose authoritative HTTP status matches (pending|ok|error|timeout) (optional) (default to undefined)
+let dnsReason: string; //Filter domains by DNS reason (exact match). Example values: NXDOMAIN, SERVFAIL, REFUSED, NOANSWER, TIMEOUT, ERROR (optional) (default to undefined)
+let httpReason: string; //Filter domains by HTTP reason (exact match). Example values: TIMEOUT, NOT_FOUND, UPSTREAM_5XX, PROXY_ERROR, TLS_ERROR, SSL_EXPIRED, CONNECTION_RESET, ERROR (optional) (default to undefined)
 
 const { status, data } = await apiInstance.campaignsDomainsList(
     campaignId,
     limit,
-    offset
+    offset,
+    dnsStatus,
+    httpStatus,
+    dnsReason,
+    httpReason
 );
 ```
 
@@ -555,6 +563,10 @@ const { status, data } = await apiInstance.campaignsDomainsList(
 | **campaignId** | [**string**] |  | defaults to undefined|
 | **limit** | [**number**] |  | (optional) defaults to 100|
 | **offset** | [**number**] |  | (optional) defaults to 0|
+| **dnsStatus** | [**&#39;pending&#39; | &#39;ok&#39; | &#39;error&#39; | &#39;timeout&#39;**]**Array<&#39;pending&#39; &#124; &#39;ok&#39; &#124; &#39;error&#39; &#124; &#39;timeout&#39;>** | Filter domains whose authoritative DNS status matches (pending|ok|error|timeout) | (optional) defaults to undefined|
+| **httpStatus** | [**&#39;pending&#39; | &#39;ok&#39; | &#39;error&#39; | &#39;timeout&#39;**]**Array<&#39;pending&#39; &#124; &#39;ok&#39; &#124; &#39;error&#39; &#124; &#39;timeout&#39;>** | Filter domains whose authoritative HTTP status matches (pending|ok|error|timeout) | (optional) defaults to undefined|
+| **dnsReason** | [**string**] | Filter domains by DNS reason (exact match). Example values: NXDOMAIN, SERVFAIL, REFUSED, NOANSWER, TIMEOUT, ERROR | (optional) defaults to undefined|
+| **httpReason** | [**string**] | Filter domains by HTTP reason (exact match). Example values: TIMEOUT, NOT_FOUND, UPSTREAM_5XX, PROXY_ERROR, TLS_ERROR, SSL_EXPIRED, CONNECTION_RESET, ERROR | (optional) defaults to undefined|
 
 
 ### Return type

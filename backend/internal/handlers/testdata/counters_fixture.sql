@@ -1,0 +1,2 @@
+-- Test fixture to populate generated_domains and counters for a campaign
+-- (Optional manual fixture; tests will insert directly)

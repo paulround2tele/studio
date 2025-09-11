@@ -321,6 +321,63 @@ curl http://localhost:8080/api/v2/health/live
 - SSE connection counts
 - Memory and CPU usage tracking
 
+#### Prometheus Endpoint
+The API exposes a Prometheus scrape endpoint at:
+
+```
+GET /api/v2/monitoring/performance/metrics
+```
+
+This returns a JSON structure of recent internal performance metrics (application-level). A standard Prometheus exposition format endpoint (text/plain) can be added in future; current reconciliation counters are exported internally via the metrics recorder and surfaced in trend metrics. Planned: expose a `/metrics` style text endpoint if external scraping is required.
+
+Key reconciliation counters registered:
+- domain_counters_drift_events_total
+- domain_counters_corrections_total
+
+### Domain Status & Reason Filtering (API)
+`GET /api/v2/campaigns/{campaignId}/domains` now supports optional query parameters for server-side filtering:
+
+| Parameter    | Type   | Values / Examples |
+|--------------|--------|-------------------|
+| `dnsStatus`  | enum   | pending, ok, error, timeout |
+| `httpStatus` | enum   | pending, ok, error, timeout |
+| `dnsReason`  | string | NXDOMAIN, SERVFAIL, REFUSED, NOANSWER, TIMEOUT, ERROR |
+| `httpReason` | string | TIMEOUT, NOT_FOUND, UPSTREAM_5XX, PROXY_ERROR, TLS_ERROR, SSL_EXPIRED, CONNECTION_RESET, ERROR |
+
+All filters are exact-match. Multiple filters combine with logical AND. Pagination (`limit`, `offset`) still applies post-filter. (Future optimization: push filters into SQL query instead of in-memory post-processing.)
+
+### Reconciliation Configuration
+Domain counter drift reconciliation (Phase D) is configurable via application config (JSON/YAML/env mapping):
+
+```json
+{
+    "reconciliation": {
+        "enabled": true,
+        "intervalMinutes": 1440,
+        "driftThresholdPct": 0.0001,
+        "autoCorrect": false,
+        "maxCorrectionsPerRun": 5000
+    }
+}
+```
+
+Emitted system events (SSE `system` channel) include:
+- `counters_reconciled` – Fired after auto-correction with details of adjusted counters.
+
+### Domain Validation Reason Taxonomy
+DNS Reasons: `NXDOMAIN`, `SERVFAIL`, `REFUSED`, `NOANSWER`, `TIMEOUT`, `ERROR`
+
+HTTP Reasons: `TIMEOUT`, `NOT_FOUND`, `UPSTREAM_5XX`, `PROXY_ERROR`, `TLS_ERROR`, `SSL_EXPIRED`, `CONNECTION_RESET`, `ERROR`
+
+On recovery to `ok` status, the corresponding reason field is cleared.
+
+### Real-time SSE Events
+Added structured domain-level delta events:
+- `domain_status_delta` – Per-domain status/reason transitions (batched internally).
+- `counters_reconciled` – Aggregate correction emission after reconciliation job.
+
+These enrich observability and support UI filtering/context without extra polling.
+
 ## 🤝 Contributing
 
 ### Code Guidelines

@@ -48,12 +48,6 @@ export interface CampaignResponse {
      */
     'status': CampaignResponseStatusEnum;
     /**
-     * 
-     * @type {Array<string>}
-     * @memberof CampaignResponse
-     */
-    'targetDomains': Array<string>;
-    /**
      * Campaign configuration
      * @type {object}
      * @memberof CampaignResponse

@@ -292,7 +292,6 @@ type LeadGenerationCampaign struct {
 	OverallProgress *float64       `db:"overall_progress" json:"overallProgress,omitempty" validate:"omitempty,gte=0,lte=100"`
 
 	// JSONB columns for efficient phase data storage
-	DomainsData     *json.RawMessage `db:"domains_data" json:"domainsData,omitempty" gorm:"type:jsonb"`
 	DNSResults      *json.RawMessage `db:"dns_results" json:"dnsResults,omitempty" gorm:"type:jsonb"`
 	HTTPResults     *json.RawMessage `db:"http_results" json:"httpResults,omitempty" gorm:"type:jsonb"`
 	AnalysisResults *json.RawMessage `db:"analysis_results" json:"analysisResults,omitempty" gorm:"type:jsonb"`
@@ -513,6 +512,8 @@ type GeneratedDomain struct {
 	LeadStatus      *DomainLeadStatusEnum `db:"lead_status" json:"leadStatus,omitempty" firestore:"leadStatus,omitempty"`
 	LeadScore       sql.NullFloat64       `db:"lead_score" json:"leadScore,omitempty" firestore:"leadScore,omitempty"`
 	LastValidatedAt sql.NullTime          `db:"last_validated_at" json:"lastValidatedAt,omitempty" firestore:"lastValidatedAt,omitempty"`
+	DNSReason       sql.NullString        `db:"dns_reason" json:"dnsReason,omitempty" firestore:"dnsReason,omitempty"`
+	HTTPReason      sql.NullString        `db:"http_reason" json:"httpReason,omitempty" firestore:"httpReason,omitempty"`
 }
 
 // MarshalJSON provides custom JSON marshaling for GeneratedDomain to handle sql.Null* types properly
@@ -531,6 +532,8 @@ func (gd GeneratedDomain) MarshalJSON() ([]byte, error) {
 		HTTPKeywords    *string  `json:"httpKeywords,omitempty"`
 		LeadScore       *float64 `json:"leadScore,omitempty"`
 		LastValidatedAt *string  `json:"lastValidatedAt,omitempty"`
+		DNSReason       *string  `json:"dnsReason,omitempty"`
+		HTTPReason      *string  `json:"httpReason,omitempty"`
 	}{
 		Alias: Alias(gd),
 	}
@@ -564,6 +567,12 @@ func (gd GeneratedDomain) MarshalJSON() ([]byte, error) {
 		timeStr := gd.LastValidatedAt.Time.Format(time.RFC3339)
 		temp.LastValidatedAt = &timeStr
 	}
+	if gd.DNSReason.Valid {
+		temp.DNSReason = &gd.DNSReason.String
+	}
+	if gd.HTTPReason.Valid {
+		temp.HTTPReason = &gd.HTTPReason.String
+	}
 
 	return json.Marshal(temp)
 }
@@ -587,6 +596,7 @@ type DNSValidationResult struct {
 	GeneratedDomainID    uuid.NullUUID    `db:"generated_domain_id" json:"generatedDomainId,omitempty" firestore:"generatedDomainId,omitempty"`
 	DomainName           string           `db:"domain_name" json:"domainName" firestore:"domainName" validate:"required"`
 	ValidationStatus     string           `db:"validation_status" json:"validationStatus" firestore:"validationStatus" validate:"required"`
+	Reason               *string          `db:"reason" json:"reason,omitempty" firestore:"reason,omitempty"`
 	BusinessStatus       *string          `db:"business_status" json:"businessStatus,omitempty" firestore:"businessStatus,omitempty"`
 	DNSRecords           *json.RawMessage `db:"dns_records" json:"dnsRecords,omitempty" firestore:"dnsRecords,omitempty"`
 	ValidatedByPersonaID uuid.NullUUID    `db:"validated_by_persona_id" json:"validatedByPersonaId,omitempty" firestore:"validatedByPersonaId,omitempty"`
@@ -623,6 +633,7 @@ type HTTPKeywordResult struct {
 	DNSResultID             uuid.NullUUID    `db:"dns_result_id" json:"dnsResultId,omitempty" firestore:"dnsResultId,omitempty"`
 	DomainName              string           `db:"domain_name" json:"domainName" firestore:"domainName" validate:"required"`
 	ValidationStatus        string           `db:"validation_status" json:"validationStatus" firestore:"validationStatus" validate:"required"`
+	Reason                  *string          `db:"reason" json:"reason,omitempty" firestore:"reason,omitempty"`
 	HTTPStatusCode          *int32           `db:"http_status_code" json:"httpStatusCode,omitempty" firestore:"httpStatusCode,omitempty"`
 	ResponseHeaders         *json.RawMessage `db:"response_headers" json:"responseHeaders,omitempty" firestore:"responseHeaders,omitempty"`
 	PageTitle               *string          `db:"page_title" json:"pageTitle,omitempty" firestore:"pageTitle,omitempty"`
@@ -915,4 +926,25 @@ type BulkProxyOperationResponse struct {
 type BulkProxyError struct {
 	ProxyID string `json:"proxyId"`
 	Error   string `json:"error"`
+}
+
+// CampaignDomainCounters holds aggregated counts for domains per campaign (Phase A optimization)
+type CampaignDomainCounters struct {
+	CampaignID  uuid.UUID `db:"campaign_id" json:"campaignId"`
+	Total       int64     `db:"total_domains" json:"totalDomains"`
+	DNSPending  int64     `db:"dns_pending" json:"dnsPending"`
+	DNSOk       int64     `db:"dns_ok" json:"dnsOk"`
+	DNSError    int64     `db:"dns_error" json:"dnsError"`
+	DNSTimeout  int64     `db:"dns_timeout" json:"dnsTimeout"`
+	HTTPPending int64     `db:"http_pending" json:"httpPending"`
+	HTTPOk      int64     `db:"http_ok" json:"httpOk"`
+	HTTPError   int64     `db:"http_error" json:"httpError"`
+	HTTPTimeout int64     `db:"http_timeout" json:"httpTimeout"`
+	LeadPending int64     `db:"lead_pending" json:"leadPending"`
+	LeadMatch   int64     `db:"lead_match" json:"leadMatch"`
+	LeadNoMatch int64     `db:"lead_no_match" json:"leadNoMatch"`
+	LeadError   int64     `db:"lead_error" json:"leadError"`
+	LeadTimeout int64     `db:"lead_timeout" json:"leadTimeout"`
+	UpdatedAt   time.Time `db:"updated_at" json:"updatedAt"`
+	CreatedAt   time.Time `db:"created_at" json:"createdAt"`
 }

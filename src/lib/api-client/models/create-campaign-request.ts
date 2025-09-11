@@ -36,12 +36,6 @@ export interface CreateCampaignRequest {
      */
     'description'?: string;
     /**
-     * List of target domains or domain patterns
-     * @type {Array<string>}
-     * @memberof CreateCampaignRequest
-     */
-    'targetDomains': Array<string>;
-    /**
      * 
      * @type {CreateCampaignRequestConfiguration}
      * @memberof CreateCampaignRequest

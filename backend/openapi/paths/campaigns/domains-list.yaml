@@ -15,6 +15,31 @@ get:
       in: query
       required: false
       schema: { type: integer, minimum: 0, default: 0 }
+    - name: dnsStatus
+      in: query
+      required: false
+      description: Filter domains whose authoritative DNS status matches (pending|ok|error|timeout)
+      schema: { type: string, enum: [pending, ok, error, timeout] }
+    - name: httpStatus
+      in: query
+      required: false
+      description: Filter domains whose authoritative HTTP status matches (pending|ok|error|timeout)
+      schema: { type: string, enum: [pending, ok, error, timeout] }
+    - name: dnsReason
+      in: query
+      required: false
+      description: >-
+        Filter domains by DNS reason (exact match). Example values: NXDOMAIN,
+        SERVFAIL, REFUSED, NOANSWER, TIMEOUT, ERROR
+      schema: { type: string }
+    - name: httpReason
+      in: query
+      required: false
+      description: >-
+        Filter domains by HTTP reason (exact match). Example values: TIMEOUT,
+        NOT_FOUND, UPSTREAM_5XX, PROXY_ERROR, TLS_ERROR, SSL_EXPIRED,
+        CONNECTION_RESET, ERROR
+      schema: { type: string }
   responses:
     '200':
       description: OK

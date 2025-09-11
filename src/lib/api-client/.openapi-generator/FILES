@@ -81,6 +81,9 @@ docs/BulkValidateDNS200Response.md
 docs/BulkValidationResponse.md
 docs/BulkValidationResponseOperationsValue.md
 docs/CampaignDomainsListResponse.md
+docs/CampaignDomainsListResponseAggregates.md
+docs/CampaignDomainsListResponseAggregatesDns.md
+docs/CampaignDomainsListResponseAggregatesLead.md
 docs/CampaignModeEnum.md
 docs/CampaignProgressResponse.md
 docs/CampaignProgressResponseOverall.md
@@ -300,6 +303,9 @@ models/bulk-update-proxies-request.ts
 models/bulk-validate-dns200-response.ts
 models/bulk-validation-response-operations-value.ts
 models/bulk-validation-response.ts
+models/campaign-domains-list-response-aggregates-dns.ts
+models/campaign-domains-list-response-aggregates-lead.ts
+models/campaign-domains-list-response-aggregates.ts
 models/campaign-domains-list-response.ts
 models/campaign-mode-enum.ts
 models/campaign-progress-response-overall.ts

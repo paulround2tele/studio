@@ -126,6 +126,13 @@ func DefaultAppConfigJSON() AppConfigJSON {
 			EnableAnalytics:       false,
 			EnableDebugMode:       false,
 		},
+		Reconciliation: DomainReconciliationConfigJSON{
+			Enabled:              true,
+			IntervalMinutes:      1440,
+			DriftThresholdPct:    0.01, // 0.01%
+			AutoCorrect:          false,
+			MaxCorrectionsPerRun: 50,
+		},
 	}
 }
 

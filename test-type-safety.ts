@@ -11,7 +11,6 @@ console.log('=== TESTING TYPE SAFETY ===');
 const campaignRequest: CreateCampaignRequest = {
   name: 'Test Campaign',
   description: 'Testing generated types',
-  targetDomains: [],
   configuration: {
     phases: {
       discovery: { enabled: true, maxDepth: 1 },

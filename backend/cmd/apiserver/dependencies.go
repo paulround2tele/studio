@@ -60,6 +60,7 @@ type AppDeps struct {
 // HandlerLogger defines the minimal logging surface required at the HTTP handler layer.
 // We keep this narrow to allow pluggable implementations later (zap, zerolog, etc.).
 type HandlerLogger interface {
+	Debug(ctx context.Context, msg string, fields map[string]interface{})
 	Info(ctx context.Context, msg string, fields map[string]interface{})
 	Warn(ctx context.Context, msg string, fields map[string]interface{})
 	Error(ctx context.Context, msg string, err error, fields map[string]interface{})
@@ -113,6 +114,15 @@ func (a *eventBusAdapter) PublishStatusChange(ctx context.Context, status domain
 		},
 		Timestamp: time.Now(),
 	}
+	a.sse.BroadcastEvent(evt)
+	return nil
+}
+
+func (a *eventBusAdapter) PublishSystemEvent(ctx context.Context, name string, payload map[string]interface{}) error {
+	if a == nil || a.sse == nil {
+		return nil
+	}
+	evt := services.SSEEvent{Event: services.SSEEventType(name), Data: payload, Timestamp: time.Now()}
 	a.sse.BroadcastEvent(evt)
 	return nil
 }
@@ -314,6 +324,18 @@ func initAppDependencies() (*AppDeps, error) {
 
 	// In-memory bulk operations tracker
 	deps.BulkOps = NewBulkOpsTracker()
+
+	// Start domain counters reconciliation job if enabled
+	if deps.DB != nil && deps.Config.Reconciliation.Enabled {
+		interval := time.Duration(deps.Config.Reconciliation.IntervalMinutes) * time.Minute
+		cfg := domainservices.CounterReconcilerConfig{
+			Interval:          interval,
+			DriftThresholdPct: deps.Config.Reconciliation.DriftThresholdPct,
+			AutoCorrect:       deps.Config.Reconciliation.AutoCorrect,
+			MaxCorrections:    deps.Config.Reconciliation.MaxCorrectionsPerRun,
+		}
+		domainservices.StartDomainCountersReconciler(deps.DB, deps.Logger, domainDeps.MetricsRecorder, domainDeps.EventBus, cfg)
+	}
 
 	return deps, nil
 }

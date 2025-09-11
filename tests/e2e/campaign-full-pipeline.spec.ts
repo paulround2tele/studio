@@ -24,19 +24,27 @@ test.describe('Campaign full pipeline all phases (10-domain batch)', () => {
       return result as { ok: boolean; status: number; json: any };
     };
 
-    // 1. Login
+    // 1. Login (UI first then fallback; ensure cookie set)
     await page.goto('/login', { waitUntil: 'domcontentloaded' });
+    let uiTried = false;
     try {
+      await page.getByLabel('Email').waitFor({ state: 'visible', timeout: 5000 });
       await page.getByLabel('Email').fill(email);
       await page.getByLabel('Password').fill(password);
-      await page.getByRole('button', { name: /sign in/i }).click();
-      await page.waitForLoadState('domcontentloaded');
-    } catch {
-      // Fallback direct API login
+      await page.getByRole('button', { name: /sign in securely|sign in/i }).click();
+      await page.waitForTimeout(1000);
+      uiTried = true;
+    } catch {}
+    if (!uiTried) {
       const login = await api('POST', '/auth/login', { email, password });
-      expect(login.ok, `Login failed (${login.status})`).toBeTruthy();
+      expect(login.ok, `Fallback login failed (${login.status})`).toBeTruthy();
     }
     const me = await api('GET', '/auth/me');
+    if (!me.ok) {
+      const cookies = await page.context().cookies();
+      console.log('[E2E] /auth/me failed status', me.status, 'body:', JSON.stringify(me.json));
+      console.log('[E2E] Cookies:', JSON.stringify(cookies));
+    }
     expect(me.ok, '/auth/me should succeed').toBeTruthy();
 
     // 2. Create required personas (dns + http). If creation conflicts, list & reuse.
@@ -62,7 +70,6 @@ test.describe('Campaign full pipeline all phases (10-domain batch)', () => {
     const createReq = {
       name: campaignName,
       description: 'Full pipeline e2e',
-      targetDomains: [],
       configuration: {
         phases: {
           discovery: {
@@ -119,7 +126,9 @@ test.describe('Campaign full pipeline all phases (10-domain batch)', () => {
           personaIds: [httpPersonaId], includeExternal: false,
         },
       };
-      const cfg = await api('POST', `/campaigns/${campaignId}/phases/${phase}/configure`, { configuration: configMap[phase] });
+  // Backend expects { configuration: { phases: { [phase]: <config> } } } shape
+  const cfgBody = { configuration: { phases: { [phase]: configMap[phase] } } } as any;
+  const cfg = await api('POST', `/campaigns/${campaignId}/phases/${phase}/configure`, cfgBody);
       expect(cfg.ok, `Configure ${phase} failed ${cfg.status}`).toBeTruthy();
       const start = await api('POST', `/campaigns/${campaignId}/phases/${phase}/start`, {});
       expect(start.ok, `Start ${phase} failed ${start.status}`).toBeTruthy();

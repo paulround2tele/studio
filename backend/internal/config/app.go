@@ -12,19 +12,20 @@ import (
 // AppConfig is the main application configuration structure.
 // It aggregates all other configuration parts.
 type AppConfig struct {
-	Server         ServerConfig        `json:"server"`
-	Worker         WorkerConfig        `json:"worker"` // Added WorkerConfig
-	DNSValidator   DNSValidatorConfig  `json:"dnsValidator"`
-	HTTPValidator  HTTPValidatorConfig `json:"httpValidator"`
-	Logging        LoggingConfig       `json:"logging"`
-	RateLimiter    RateLimiterConfig   `json:"rateLimiter"`
-	ProxyManager   ProxyManagerConfig  `json:"proxyManager"`
-	Features       FeatureFlags        `json:"features"`
-	Optimization   OptimizationConfig  `json:"optimization"` // N+1 Optimization configuration
-	DNSPersonas    []DNSPersona        `json:"dnsPersonas"`
-	HTTPPersonas   []HTTPPersona       `json:"httpPersonas"`
-	Proxies        []ProxyConfigEntry  `json:"proxies"`
-	KeywordSets    []KeywordSet        `json:"keywordSets"`
+	Server         ServerConfig               `json:"server"`
+	Worker         WorkerConfig               `json:"worker"` // Added WorkerConfig
+	DNSValidator   DNSValidatorConfig         `json:"dnsValidator"`
+	HTTPValidator  HTTPValidatorConfig        `json:"httpValidator"`
+	Logging        LoggingConfig              `json:"logging"`
+	RateLimiter    RateLimiterConfig          `json:"rateLimiter"`
+	ProxyManager   ProxyManagerConfig         `json:"proxyManager"`
+	Features       FeatureFlags               `json:"features"`
+	Optimization   OptimizationConfig         `json:"optimization"` // N+1 Optimization configuration
+	Reconciliation DomainReconciliationConfig `json:"reconciliation"`
+	DNSPersonas    []DNSPersona               `json:"dnsPersonas"`
+	HTTPPersonas   []HTTPPersona              `json:"httpPersonas"`
+	Proxies        []ProxyConfigEntry         `json:"proxies"`
+	KeywordSets    []KeywordSet               `json:"keywordSets"`
 	loadedFromPath string
 }
 
@@ -149,14 +150,15 @@ func SaveAppConfig(cfg *AppConfig) error {
 // ConvertJSONToAppConfig converts the JSON structure (AppConfigJSON) to the internal AppConfig model.
 func ConvertJSONToAppConfig(jsonCfg AppConfigJSON) *AppConfig {
 	appCfg := &AppConfig{
-		Server:        jsonCfg.Server,
-		Worker:        ConvertJSONToWorkerConfig(jsonCfg.Worker), // Convert WorkerConfig
-		DNSValidator:  ConvertJSONToDNSConfig(jsonCfg.DNSValidator),
-		HTTPValidator: ConvertJSONToHTTPConfig(jsonCfg.HTTPValidator),
-		Logging:       jsonCfg.Logging,
-		RateLimiter:   ConvertJSONToRateLimiterConfig(jsonCfg.RateLimiter),
-		ProxyManager:  ConvertJSONToProxyManagerConfig(jsonCfg.ProxyManager),
-		Features:      jsonCfg.Features,
+		Server:         jsonCfg.Server,
+		Worker:         ConvertJSONToWorkerConfig(jsonCfg.Worker), // Convert WorkerConfig
+		DNSValidator:   ConvertJSONToDNSConfig(jsonCfg.DNSValidator),
+		HTTPValidator:  ConvertJSONToHTTPConfig(jsonCfg.HTTPValidator),
+		Logging:        jsonCfg.Logging,
+		RateLimiter:    ConvertJSONToRateLimiterConfig(jsonCfg.RateLimiter),
+		ProxyManager:   ConvertJSONToProxyManagerConfig(jsonCfg.ProxyManager),
+		Features:       jsonCfg.Features,
+		Reconciliation: ConvertJSONToDomainReconciliationConfig(jsonCfg.Reconciliation),
 	}
 
 	if appCfg.Server.GinMode == "" {
@@ -178,14 +180,15 @@ func ConvertJSONToAppConfig(jsonCfg AppConfigJSON) *AppConfig {
 // ConvertAppConfigToJSON converts the internal AppConfig model to the AppConfigJSON structure for saving.
 func ConvertAppConfigToJSON(appCfg *AppConfig) AppConfigJSON {
 	return AppConfigJSON{
-		Server:        appCfg.Server,
-		Worker:        ConvertWorkerConfigToJSON(appCfg.Worker), // Convert WorkerConfig
-		DNSValidator:  ConvertDNSConfigToJSON(appCfg.DNSValidator),
-		HTTPValidator: ConvertHTTPConfigToJSON(appCfg.HTTPValidator),
-		Logging:       appCfg.Logging,
-		RateLimiter:   ConvertRateLimiterConfigToJSON(appCfg.RateLimiter),
-		ProxyManager:  ConvertProxyManagerConfigToJSON(appCfg.ProxyManager),
-		Features:      appCfg.Features,
+		Server:         appCfg.Server,
+		Worker:         ConvertWorkerConfigToJSON(appCfg.Worker), // Convert WorkerConfig
+		DNSValidator:   ConvertDNSConfigToJSON(appCfg.DNSValidator),
+		HTTPValidator:  ConvertHTTPConfigToJSON(appCfg.HTTPValidator),
+		Logging:        appCfg.Logging,
+		RateLimiter:    ConvertRateLimiterConfigToJSON(appCfg.RateLimiter),
+		ProxyManager:   ConvertProxyManagerConfigToJSON(appCfg.ProxyManager),
+		Features:       appCfg.Features,
+		Reconciliation: ConvertDomainReconciliationConfigToJSON(appCfg.Reconciliation),
 	}
 }
 

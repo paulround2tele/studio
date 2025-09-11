@@ -663,16 +663,12 @@ func (s *analysisService) storeAnalysisResults(ctx context.Context, campaignID u
 		}
 		payload[domain] = domainAnalysis{ContentSnippet: snippet, Keywords: kws, ContentSize: size}
 	}
-	raw, err := json.Marshal(payload)
-	if err != nil {
-		return fmt.Errorf("failed to marshal analysis results: %w", err)
-	}
-	rawMsg := json.RawMessage(raw)
+	// Replace legacy RawMessage update with high-level structured update
 	var exec store.Querier
 	if q, ok := s.deps.DB.(store.Querier); ok {
 		exec = q
 	}
-	if err := s.store.UpdateCampaignAnalysisResults(ctx, exec, campaignID, &rawMsg); err != nil {
+	if err := s.store.UpdateAnalysisResults(ctx, exec, campaignID, payload); err != nil {
 		return fmt.Errorf("failed to persist analysis results: %w", err)
 	}
 	return nil

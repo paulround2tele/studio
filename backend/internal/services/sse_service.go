@@ -18,16 +18,18 @@ import (
 type SSEEventType string
 
 const (
-	SSEEventCampaignProgress  SSEEventType = "campaign_progress"
-	SSEEventCampaignCompleted SSEEventType = "campaign_completed"
-	SSEEventPhaseStarted      SSEEventType = "phase_started"
-	SSEEventPhaseCompleted    SSEEventType = "phase_completed"
-	SSEEventPhaseFailed       SSEEventType = "phase_failed"
-	SSEEventPhaseAutoStarted  SSEEventType = "phase_auto_started"
-	SSEEventDomainGenerated   SSEEventType = "domain_generated"
-	SSEEventDomainValidated   SSEEventType = "domain_validated"
-	SSEEventAnalysisCompleted SSEEventType = "analysis_completed"
-	SSEEventModeChanged       SSEEventType = "mode_changed"
+	SSEEventCampaignProgress   SSEEventType = "campaign_progress"
+	SSEEventCampaignCompleted  SSEEventType = "campaign_completed"
+	SSEEventPhaseStarted       SSEEventType = "phase_started"
+	SSEEventPhaseCompleted     SSEEventType = "phase_completed"
+	SSEEventPhaseFailed        SSEEventType = "phase_failed"
+	SSEEventPhaseAutoStarted   SSEEventType = "phase_auto_started"
+	SSEEventDomainGenerated    SSEEventType = "domain_generated"
+	SSEEventDomainValidated    SSEEventType = "domain_validated"
+	SSEEventDomainStatusDelta  SSEEventType = "domain_status_delta"
+	SSEEventCountersReconciled SSEEventType = "counters_reconciled"
+	SSEEventAnalysisCompleted  SSEEventType = "analysis_completed"
+	SSEEventModeChanged        SSEEventType = "mode_changed"
 	// Keyword set lifecycle events
 	SSEEventKeywordSetCreated SSEEventType = "keyword_set_created"
 	SSEEventKeywordSetUpdated SSEEventType = "keyword_set_updated"

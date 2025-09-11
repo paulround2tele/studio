@@ -291,6 +291,22 @@ const (
 	XRequestedWithXMLHttpRequest XRequestedWith = "XMLHttpRequest"
 )
 
+// Defines values for CampaignsDomainsListParamsDnsStatus.
+const (
+	CampaignsDomainsListParamsDnsStatusError   CampaignsDomainsListParamsDnsStatus = "error"
+	CampaignsDomainsListParamsDnsStatusOk      CampaignsDomainsListParamsDnsStatus = "ok"
+	CampaignsDomainsListParamsDnsStatusPending CampaignsDomainsListParamsDnsStatus = "pending"
+	CampaignsDomainsListParamsDnsStatusTimeout CampaignsDomainsListParamsDnsStatus = "timeout"
+)
+
+// Defines values for CampaignsDomainsListParamsHttpStatus.
+const (
+	CampaignsDomainsListParamsHttpStatusError   CampaignsDomainsListParamsHttpStatus = "error"
+	CampaignsDomainsListParamsHttpStatusOk      CampaignsDomainsListParamsHttpStatus = "ok"
+	CampaignsDomainsListParamsHttpStatusPending CampaignsDomainsListParamsHttpStatus = "pending"
+	CampaignsDomainsListParamsHttpStatusTimeout CampaignsDomainsListParamsHttpStatus = "timeout"
+)
+
 // Defines values for CampaignsPhaseExecutionDeleteParamsPhaseType.
 const (
 	CampaignsPhaseExecutionDeleteParamsPhaseTypeAnalysis   CampaignsPhaseExecutionDeleteParamsPhaseType = "analysis"
@@ -569,8 +585,7 @@ type BulkGenerationResponse struct {
 			Processed *int `json:"processed,omitempty"`
 			Total     *int `json:"total,omitempty"`
 		} `json:"progress,omitempty"`
-		Status        *BulkGenerationResponseOperationsStatus `json:"status,omitempty"`
-		TargetDomains *int                                    `json:"targetDomains,omitempty"`
+		Status *BulkGenerationResponseOperationsStatus `json:"status,omitempty"`
 	} `json:"operations"`
 	Status          BulkGenerationResponseStatus `json:"status"`
 	TotalOperations int                          `json:"totalOperations"`
@@ -738,6 +753,28 @@ type BulkValidationResponseStatus string
 
 // CampaignDomainsListResponse defines model for CampaignDomainsListResponse.
 type CampaignDomainsListResponse struct {
+	// Aggregates Domain status aggregates sourced from counters table (Phase A optimization)
+	Aggregates *struct {
+		Dns *struct {
+			Error   *int `json:"error,omitempty"`
+			Ok      *int `json:"ok,omitempty"`
+			Pending *int `json:"pending,omitempty"`
+			Timeout *int `json:"timeout,omitempty"`
+		} `json:"dns,omitempty"`
+		Http *struct {
+			Error   *int `json:"error,omitempty"`
+			Ok      *int `json:"ok,omitempty"`
+			Pending *int `json:"pending,omitempty"`
+			Timeout *int `json:"timeout,omitempty"`
+		} `json:"http,omitempty"`
+		Lead *struct {
+			Error   *int `json:"error,omitempty"`
+			Match   *int `json:"match,omitempty"`
+			NoMatch *int `json:"noMatch,omitempty"`
+			Pending *int `json:"pending,omitempty"`
+			Timeout *int `json:"timeout,omitempty"`
+		} `json:"lead,omitempty"`
+	} `json:"aggregates,omitempty"`
 	CampaignId openapi_types.UUID `json:"campaignId"`
 	Items      []DomainListItem   `json:"items"`
 	Total      int                `json:"total"`
@@ -792,10 +829,9 @@ type CampaignResponse struct {
 		SuccessfulDomains *int     `json:"successfulDomains,omitempty"`
 		TotalDomains      *int     `json:"totalDomains,omitempty"`
 	} `json:"progress"`
-	StartedAt     *time.Time             `json:"startedAt"`
-	Status        CampaignResponseStatus `json:"status"`
-	TargetDomains []string               `json:"targetDomains"`
-	UpdatedAt     time.Time              `json:"updatedAt"`
+	StartedAt *time.Time             `json:"startedAt"`
+	Status    CampaignResponseStatus `json:"status"`
+	UpdatedAt time.Time              `json:"updatedAt"`
 }
 
 // CampaignResponseCurrentPhase defines model for CampaignResponse.CurrentPhase.
@@ -866,9 +902,6 @@ type CreateCampaignRequest struct {
 
 	// Name Campaign name
 	Name string `json:"name"`
-
-	// TargetDomains List of target domains or domain patterns
-	TargetDomains []string `json:"targetDomains"`
 }
 
 // CreateKeywordSetRequest defines model for CreateKeywordSetRequest.
@@ -931,11 +964,17 @@ type DatabaseValue struct {
 type DomainListItem struct {
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 
-	// DnsStatus DNS validation status if available
-	DnsStatus *string `json:"dnsStatus,omitempty"`
-	Domain    string  `json:"domain"`
+	// DnsReason Human-readable reason string for current DNS status (e.g., NXDOMAIN, SERVFAIL, TIMEOUT, BAD_RESPONSE)
+	DnsReason *string `json:"dnsReason"`
 
-	// HttpStatus HTTP validation status if available
+	// DnsStatus DNS validation status (authoritative)
+	DnsStatus *string `json:"dnsStatus,omitempty"`
+	Domain    *string `json:"domain,omitempty"`
+
+	// HttpReason Human-readable reason string for current HTTP status (e.g., CONNECT_ERROR, TLS_ERROR, TIMEOUT, NON_200, BODY_MISMATCH)
+	HttpReason *string `json:"httpReason"`
+
+	// HttpStatus HTTP validation status (authoritative)
 	HttpStatus *string             `json:"httpStatus,omitempty"`
 	Id         *openapi_types.UUID `json:"id,omitempty"`
 
@@ -1354,7 +1393,6 @@ type UpdateCampaignRequest struct {
 	Configuration *map[string]interface{} `json:"configuration,omitempty"`
 	Description   *string                 `json:"description,omitempty"`
 	Name          *string                 `json:"name,omitempty"`
-	TargetDomains *[]string               `json:"targetDomains,omitempty"`
 }
 
 // UpdateKeywordSetRequest defines model for UpdateKeywordSetRequest.
@@ -1455,7 +1493,25 @@ type AuthChangePasswordJSONBody struct {
 type CampaignsDomainsListParams struct {
 	Limit  *int `form:"limit,omitempty" json:"limit,omitempty"`
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// DnsStatus Filter domains whose authoritative DNS status matches (pending|ok|error|timeout)
+	DnsStatus *CampaignsDomainsListParamsDnsStatus `form:"dnsStatus,omitempty" json:"dnsStatus,omitempty"`
+
+	// HttpStatus Filter domains whose authoritative HTTP status matches (pending|ok|error|timeout)
+	HttpStatus *CampaignsDomainsListParamsHttpStatus `form:"httpStatus,omitempty" json:"httpStatus,omitempty"`
+
+	// DnsReason Filter domains by DNS reason (exact match). Example values: NXDOMAIN, SERVFAIL, REFUSED, NOANSWER, TIMEOUT, ERROR
+	DnsReason *string `form:"dnsReason,omitempty" json:"dnsReason,omitempty"`
+
+	// HttpReason Filter domains by HTTP reason (exact match). Example values: TIMEOUT, NOT_FOUND, UPSTREAM_5XX, PROXY_ERROR, TLS_ERROR, SSL_EXPIRED, CONNECTION_RESET, ERROR
+	HttpReason *string `form:"httpReason,omitempty" json:"httpReason,omitempty"`
 }
+
+// CampaignsDomainsListParamsDnsStatus defines parameters for CampaignsDomainsList.
+type CampaignsDomainsListParamsDnsStatus string
+
+// CampaignsDomainsListParamsHttpStatus defines parameters for CampaignsDomainsList.
+type CampaignsDomainsListParamsHttpStatus string
 
 // CampaignsModeUpdateJSONBody defines parameters for CampaignsModeUpdate.
 type CampaignsModeUpdateJSONBody struct {
@@ -3336,6 +3392,38 @@ func (siw *ServerInterfaceWrapper) CampaignsDomainsList(w http.ResponseWriter, r
 	err = runtime.BindQueryParameter("form", true, false, "offset", r.URL.Query(), &params.Offset)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "offset", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "dnsStatus" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "dnsStatus", r.URL.Query(), &params.DnsStatus)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "dnsStatus", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "httpStatus" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "httpStatus", r.URL.Query(), &params.HttpStatus)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "httpStatus", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "dnsReason" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "dnsReason", r.URL.Query(), &params.DnsReason)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "dnsReason", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "httpReason" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "httpReason", r.URL.Query(), &params.HttpReason)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "httpReason", Err: err})
 		return
 	}
 

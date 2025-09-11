@@ -94,6 +94,7 @@ type AnalysisService interface {
 type EventBus interface {
 	PublishProgress(ctx context.Context, progress PhaseProgress) error
 	PublishStatusChange(ctx context.Context, status PhaseStatus) error
+	PublishSystemEvent(ctx context.Context, name string, payload map[string]interface{}) error
 }
 
 // Dependencies contains all dependencies needed by domain services

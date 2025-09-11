@@ -232,10 +232,12 @@ DomainListItem:
     domain: { type: string }
     offset: { type: integer, format: int64 }
     createdAt: { type: string, format: date-time }
-    dnsStatus: { type: string, description: "DNS validation status if available" }
-    httpStatus: { type: string, description: "HTTP validation status if available" }
+    dnsStatus: { type: string, description: "DNS validation status (authoritative)" }
+    httpStatus: { type: string, description: "HTTP validation status (authoritative)" }
     leadStatus: { type: string, description: "Lead extraction status if available" }
-  required: [domain]
+    dnsReason: { type: string, nullable: true, description: "Human-readable reason string for current DNS status (e.g., NXDOMAIN, SERVFAIL, TIMEOUT, BAD_RESPONSE)" }
+    httpReason: { type: string, nullable: true, description: "Human-readable reason string for current HTTP status (e.g., CONNECT_ERROR, TLS_ERROR, TIMEOUT, NON_200, BODY_MISMATCH)" }
+  # required list declared above with properties; stray duplicated fields removed
 CampaignDomainsListResponse:
   type: object
   properties:
@@ -244,6 +246,32 @@ CampaignDomainsListResponse:
       type: array
       items: { $ref: '#/DomainListItem' }
     total: { type: integer }
+    aggregates:
+      type: object
+      description: Domain status aggregates sourced from counters table (Phase A optimization)
+      properties:
+        dns:
+          type: object
+          properties:
+            pending: { type: integer }
+            ok: { type: integer }
+            error: { type: integer }
+            timeout: { type: integer }
+        http:
+          type: object
+          properties:
+            pending: { type: integer }
+            ok: { type: integer }
+            error: { type: integer }
+            timeout: { type: integer }
+        lead:
+          type: object
+          properties:
+            pending: { type: integer }
+            match: { type: integer }
+            noMatch: { type: integer }
+            error: { type: integer }
+            timeout: { type: integer }
   required: [campaignId, items, total]
 PatternOffsetRequest:
   type: object
@@ -845,11 +873,6 @@ CreateCampaignRequest:
     description:
       type: string
       description: Campaign description
-    targetDomains:
-      type: array
-      items:
-        type: string
-      description: List of target domains or domain patterns
     configuration:
       type: object
       description: Campaign configuration settings
@@ -885,7 +908,7 @@ CreateCampaignRequest:
               properties:
                 enabled: { type: boolean }
                 generateReports: { type: boolean }
-  required: [name, targetDomains]
+  required: [name]
 UpdateCampaignRequest:
   type: object
   properties:
@@ -895,10 +918,6 @@ UpdateCampaignRequest:
       maxLength: 255
     description:
       type: string
-    targetDomains:
-      type: array
-      items:
-        type: string
     configuration:
       type: object
       description: Campaign configuration settings (same structure as CreateCampaignRequest)
@@ -915,10 +934,6 @@ CampaignResponse:
     status:
       type: string
       enum: [draft, running, paused, completed, failed, cancelled]
-    targetDomains:
-      type: array
-      items:
-        type: string
     configuration:
       type: object
       description: Campaign configuration
@@ -948,7 +963,7 @@ CampaignResponse:
       type: string
       format: date-time
       nullable: true
-  required: [id, name, status, targetDomains, configuration, progress, createdAt, updatedAt]
+  required: [id, name, status, configuration, progress, createdAt, updatedAt]
 PhaseConfigurationRequest:
   type: object
   properties:
@@ -1272,7 +1287,6 @@ BulkGenerationResponse:
           campaignId: { type: string, format: uuid }
           status: { type: string, enum: [pending, running, completed, failed] }
           domainsGenerated: { type: integer }
-          targetDomains: { type: integer }
           progress: { type: object, properties: { processed: { type: integer }, total: { type: integer } } }
     totalOperations:
       type: integer

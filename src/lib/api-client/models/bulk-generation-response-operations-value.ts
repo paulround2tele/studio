@@ -43,12 +43,6 @@ export interface BulkGenerationResponseOperationsValue {
     'domainsGenerated'?: number;
     /**
      * 
-     * @type {number}
-     * @memberof BulkGenerationResponseOperationsValue
-     */
-    'targetDomains'?: number;
-    /**
-     * 
      * @type {BulkGenerationResponseOperationsValueProgress}
      * @memberof BulkGenerationResponseOperationsValue
      */

@@ -622,11 +622,12 @@ func (s *domainGenerationService) updateExecutionStatus(campaignID uuid.UUID, st
 }
 
 func (s *domainGenerationService) storeGeneratedDomains(ctx context.Context, campaignID uuid.UUID, domains []string, baseOffset int64) error {
-	// Persist generated domains to the database and update domains_data JSONB so the REST endpoint returns them
+	// Persist generated domains to the database (legacy domains_data JSONB mirroring removed Phase C)
 	s.deps.Logger.Debug(ctx, "Storing generated domains", map[string]interface{}{
-		"campaign_id":    campaignID,
-		"domain_count":   len(domains),
-		"sample_domains": domains[:min(len(domains), 5)],
+		"campaign_id":     campaignID,
+		"domain_count":    len(domains),
+		"sample_domains":  domains[:min(len(domains), 5)],
+		"phase_c_cleanup": true,
 	})
 
 	if len(domains) == 0 {
@@ -660,41 +661,6 @@ func (s *domainGenerationService) storeGeneratedDomains(ctx context.Context, cam
 
 	if err := s.store.CreateGeneratedDomains(ctx, exec, genModels); err != nil {
 		return fmt.Errorf("failed to persist generated domains: %w", err)
-	}
-
-	// Also mirror into domains_data JSONB used by GET /campaigns/{id}/domains
-	// Prepare payload in the expected shape and append to existing array (not overwrite)
-	items := make([]map[string]interface{}, len(genModels))
-	for i, gd := range genModels {
-		entry := map[string]interface{}{
-			"id":          gd.ID.String(),
-			"domain_name": gd.DomainName,
-			"offset":      gd.OffsetIndex,
-			"created_at":  now.Format(time.RFC3339),
-		}
-		if gd.DNSStatus != nil {
-			entry["dns_status"] = string(*gd.DNSStatus)
-		}
-		if gd.HTTPStatus != nil {
-			entry["http_status"] = string(*gd.HTTPStatus)
-		}
-		if gd.LeadStatus != nil {
-			entry["lead_status"] = string(*gd.LeadStatus)
-		}
-		items[i] = entry
-	}
-	payload := map[string]interface{}{
-		"domains":      items,
-		"batch_size":   len(items),
-		"last_updated": now.Format(time.RFC3339),
-	}
-	// Append to existing JSONB to accumulate domains across batches
-	if err := s.store.AppendDomainsData(ctx, exec, campaignID, payload); err != nil {
-		// Not fatal for persistence, but important for frontend visibility
-		s.deps.Logger.Warn(ctx, "Failed to update JSONB domains_data", map[string]interface{}{
-			"campaign_id": campaignID,
-			"error":       err.Error(),
-		})
 	}
 
 	return nil
@@ -781,9 +747,10 @@ func (s *domainGenerationService) persistBatchWithGlobalOffset(ctx context.Conte
 // storeGeneratedDomainsWithExec persists domains using the provided Querier (e.g., within a transaction)
 func (s *domainGenerationService) storeGeneratedDomainsWithExec(ctx context.Context, exec store.Querier, campaignID uuid.UUID, domains []string, baseOffset int64) error {
 	s.deps.Logger.Debug(ctx, "Storing generated domains (exec)", map[string]interface{}{
-		"campaign_id":    campaignID,
-		"domain_count":   len(domains),
-		"sample_domains": domains[:min(len(domains), 5)],
+		"campaign_id":     campaignID,
+		"domain_count":    len(domains),
+		"sample_domains":  domains[:min(len(domains), 5)],
+		"phase_c_cleanup": true,
 	})
 	if len(domains) == 0 {
 		return nil
@@ -803,36 +770,6 @@ func (s *domainGenerationService) storeGeneratedDomainsWithExec(ctx context.Cont
 	}
 	if err := s.store.CreateGeneratedDomains(ctx, exec, genModels); err != nil {
 		return fmt.Errorf("failed to persist generated domains: %w", err)
-	}
-	items := make([]map[string]interface{}, len(genModels))
-	for i, gd := range genModels {
-		entry := map[string]interface{}{
-			"id":          gd.ID.String(),
-			"domain_name": gd.DomainName,
-			"offset":      gd.OffsetIndex,
-			"created_at":  now.Format(time.RFC3339),
-		}
-		if gd.DNSStatus != nil {
-			entry["dns_status"] = string(*gd.DNSStatus)
-		}
-		if gd.HTTPStatus != nil {
-			entry["http_status"] = string(*gd.HTTPStatus)
-		}
-		if gd.LeadStatus != nil {
-			entry["lead_status"] = string(*gd.LeadStatus)
-		}
-		items[i] = entry
-	}
-	payload := map[string]interface{}{
-		"domains":      items,
-		"batch_size":   len(items),
-		"last_updated": now.Format(time.RFC3339),
-	}
-	if err := s.store.AppendDomainsData(ctx, exec, campaignID, payload); err != nil {
-		s.deps.Logger.Warn(ctx, "Failed to update JSONB domains_data", map[string]interface{}{
-			"campaign_id": campaignID,
-			"error":       err.Error(),
-		})
 	}
 	return nil
 }

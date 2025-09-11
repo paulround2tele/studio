@@ -3,9 +3,7 @@ package infra
 import (
 	"context"
 	"crypto/rand"
-	"encoding/json"
 	"fmt"
-	"log"
 	"math/big"
 	"strings"
 
@@ -40,7 +38,7 @@ func (r *realStealthIntegration) RandomizeDomainsForValidation(ctx context.Conte
 	}
 	var exec store.Querier // allow store to use default connection
 
-	// Load default runtime config
+	// Load default runtime config for in-memory shuffle logic (no persistence Phase C)
 	cfg := r.defaultConfig(validationType)
 
 	// Gather candidates
@@ -111,42 +109,10 @@ func (r *realStealthIntegration) ProcessValidationWithStealth(ctx context.Contex
 		return nil
 	}
 
-	// Load default runtime config
-	cfg := r.defaultConfig(validationType)
+	// Config used only for potential future logic (placeholder)
+	_ = r.defaultConfig(validationType)
 
-	// Persist stealth order + runtime config into campaign domains data JSONB
-	raw, err := r.store.GetCampaignDomainsData(ctx, nil, campaignID)
-	data := map[string]interface{}{}
-	if err == nil && raw != nil {
-		_ = json.Unmarshal(*raw, &data)
-	}
-	if data["stealth"] == nil {
-		data["stealth"] = map[string]interface{}{}
-	}
-	stealth := data["stealth"].(map[string]interface{})
-	phaseKey := "dns"
-	orderKey := "stealth_order_dns"
-	if validationType == "http_keyword_validation" {
-		phaseKey = "http"
-		orderKey = "stealth_order_http"
-	}
-	stealth[phaseKey] = map[string]interface{}{
-		"enabled":       true,
-		"jitterMinMs":   cfg.JitterMinMs,
-		"jitterMaxMs":   cfg.JitterMaxMs,
-		"strategy":      cfg.Strategy,
-		"subsetPct":     cfg.SubsetPct,
-		"priorityHints": cfg.PriorityHints,
-	}
-	// Also store direct order for fast consumption
-	data[orderKey] = domains
-
-	enc, _ := json.Marshal(data)
-	rawMsg := json.RawMessage(enc)
-	if err := r.store.UpdateCampaignDomainsData(ctx, nil, campaignID, &rawMsg); err != nil {
-		log.Printf("Stealth: failed to store domains data: %v", err)
-		return err
-	}
+	// Phase C: stealth persistence to domains_data removed; treat as no-op.
 	return nil
 }
 

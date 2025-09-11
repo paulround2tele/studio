@@ -63,7 +63,7 @@ CREATE_BODY=$(cat <<JSON
 {
   "name": "$CAMPAIGN_NAME",
   "description": "Full pipeline test",
-  "targetDomains": [],
+  
   "configuration": {
     "phases": {
       "discovery": {

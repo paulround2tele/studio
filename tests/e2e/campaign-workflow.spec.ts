@@ -96,7 +96,6 @@ test.describe('Campaign full workflow with SSE', () => {
     const createReq = {
       name: campaignName,
       description: 'Created by Playwright E2E',
-      targetDomains: [],
       configuration: {
         phases: {
           discovery: {

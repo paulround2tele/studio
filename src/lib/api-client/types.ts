@@ -2101,7 +2101,6 @@ export interface components {
             description?: string;
             /** @enum {string} */
             status: "draft" | "running" | "paused" | "completed" | "failed" | "cancelled";
-            targetDomains: string[];
             /** @description Campaign configuration */
             configuration: Record<string, never>;
             /** @enum {string|null} */
@@ -2128,8 +2127,6 @@ export interface components {
             name: string;
             /** @description Campaign description */
             description?: string;
-            /** @description List of target domains or domain patterns */
-            targetDomains: string[];
             /** @description Campaign configuration settings */
             configuration?: {
                 /** @description Maximum number of domains to process */
@@ -2158,7 +2155,6 @@ export interface components {
         UpdateCampaignRequest: {
             name?: string;
             description?: string;
-            targetDomains?: string[];
             /** @description Campaign configuration settings (same structure as CreateCampaignRequest) */
             configuration?: Record<string, never>;
         };
@@ -2209,23 +2205,49 @@ export interface components {
         DomainListItem: {
             /** Format: uuid */
             id?: string;
-            domain: string;
+            domain?: string;
             /** Format: int64 */
             offset?: number;
             /** Format: date-time */
             createdAt?: string;
-            /** @description DNS validation status if available */
+            /** @description DNS validation status (authoritative) */
             dnsStatus?: string;
-            /** @description HTTP validation status if available */
+            /** @description HTTP validation status (authoritative) */
             httpStatus?: string;
             /** @description Lead extraction status if available */
             leadStatus?: string;
+            /** @description Human-readable reason string for current DNS status (e.g., NXDOMAIN, SERVFAIL, TIMEOUT, BAD_RESPONSE) */
+            dnsReason?: string | null;
+            /** @description Human-readable reason string for current HTTP status (e.g., CONNECT_ERROR, TLS_ERROR, TIMEOUT, NON_200, BODY_MISMATCH) */
+            httpReason?: string | null;
         };
         CampaignDomainsListResponse: {
             /** Format: uuid */
             campaignId: string;
             items: components["schemas"]["DomainListItem"][];
             total: number;
+            /** @description Domain status aggregates sourced from counters table (Phase A optimization) */
+            aggregates?: {
+                dns?: {
+                    pending?: number;
+                    ok?: number;
+                    error?: number;
+                    timeout?: number;
+                };
+                http?: {
+                    pending?: number;
+                    ok?: number;
+                    error?: number;
+                    timeout?: number;
+                };
+                lead?: {
+                    pending?: number;
+                    match?: number;
+                    noMatch?: number;
+                    error?: number;
+                    timeout?: number;
+                };
+            };
         };
         /** @enum {string} */
         CampaignStateEnum: "draft" | "running" | "paused" | "completed" | "failed" | "cancelled" | "archived";
@@ -2414,7 +2436,6 @@ export interface components {
                     /** @enum {string} */
                     status?: "pending" | "running" | "completed" | "failed";
                     domainsGenerated?: number;
-                    targetDomains?: number;
                     progress?: {
                         processed?: number;
                         total?: number;
@@ -5433,6 +5454,14 @@ export interface operations {
             query?: {
                 limit?: number;
                 offset?: number;
+                /** @description Filter domains whose authoritative DNS status matches (pending|ok|error|timeout) */
+                dnsStatus?: "pending" | "ok" | "error" | "timeout";
+                /** @description Filter domains whose authoritative HTTP status matches (pending|ok|error|timeout) */
+                httpStatus?: "pending" | "ok" | "error" | "timeout";
+                /** @description Filter domains by DNS reason (exact match). Example values: NXDOMAIN, SERVFAIL, REFUSED, NOANSWER, TIMEOUT, ERROR */
+                dnsReason?: string;
+                /** @description Filter domains by HTTP reason (exact match). Example values: TIMEOUT, NOT_FOUND, UPSTREAM_5XX, PROXY_ERROR, TLS_ERROR, SSL_EXPIRED, CONNECTION_RESET, ERROR */
+                httpReason?: string;
             };
             header?: never;
             path: {

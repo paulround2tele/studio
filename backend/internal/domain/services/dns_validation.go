@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
+	"strings"
 	"sync"
 	"time"
 
@@ -265,6 +266,13 @@ func (s *dnsValidationService) Execute(ctx context.Context, campaignID uuid.UUID
 		s.deps.Logger.Info(execution.cancelCtx, "Starting DNS validation execution", map[string]interface{}{
 			"campaign_id":   campaignID,
 			"domains_count": len(execution.domainsToValidate),
+			"sample_domains": func() []string {
+				if len(execution.domainsToValidate) > 5 {
+					return execution.domainsToValidate[:5]
+				}
+				return execution.domainsToValidate
+			}(),
+			"configured_batch_size": execution.config.BatchSize,
 		})
 	}
 
@@ -333,9 +341,9 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 		}
 
 		// Process results
-		for domain, isValid := range results {
+		for domain, outcome := range results {
 			s.mu.Lock()
-			if isValid {
+			if outcome.ok {
 				execution.validDomains = append(execution.validDomains, domain)
 			} else {
 				execution.invalidDomains = append(execution.invalidDomains, domain)
@@ -346,7 +354,7 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 
 			// Record metrics for validation results
 			if s.metrics != nil {
-				if isValid {
+				if outcome.ok {
 					s.metrics.RecordMetric("dns_validation_valid_domains", 1.0)
 				} else {
 					s.metrics.RecordMetric("dns_validation_invalid_domains", 1.0)
@@ -426,19 +434,53 @@ func (s *dnsValidationService) executeValidation(execution *dnsExecution) {
 }
 
 // validateDomainBatch validates a batch of domains using the dnsvalidator engine
-func (s *dnsValidationService) validateDomainBatch(ctx context.Context, domains []string, config DNSValidationConfig) (map[string]bool, error) {
-	results := make(map[string]bool)
+// dnsResultOutcome captures normalized status + reason
+type dnsResultOutcome struct {
+	ok     bool
+	status string // ok|error|timeout
+	reason *string
+}
+
+func (s *dnsValidationService) validateDomainBatch(ctx context.Context, domains []string, config DNSValidationConfig) (map[string]dnsResultOutcome, error) {
+	results := make(map[string]dnsResultOutcome)
 
 	// Use existing dnsvalidator engine for bulk validation
 	validationResults := s.dnsValidator.ValidateDomainsBulk(domains, ctx, config.BatchSize)
 
-	// Convert ValidationResult to our simple bool map
-	for _, result := range validationResults {
-		// Check if the domain has valid DNS records
-		isValid := result.Status == "Resolved" && len(result.IPs) > 0
-		results[result.Domain] = isValid
+	for _, vr := range validationResults {
+		var status = "error"
+		var reason *string
+		lowerErr := strings.ToLower(vr.Error)
+		switch {
+		case (vr.Status == "Resolved" || vr.Status == "resolved") && len(vr.IPs) > 0:
+			status = "ok"
+		case strings.EqualFold(vr.Status, "Timeout"):
+			status = "timeout"
+			r := "TIMEOUT"
+			reason = &r
+		case strings.Contains(lowerErr, "timeout"):
+			status = "timeout"
+			r := "TIMEOUT"
+			reason = &r
+		case vr.Status == "Not Found" || vr.Status == "unresolved" || strings.Contains(lowerErr, "no such host"):
+			status = "error"
+			r := "NXDOMAIN"
+			reason = &r
+		default:
+			if vr.Error != "" {
+				// Generic error code bucket
+				if strings.Contains(lowerErr, "refused") {
+					r := "REFUSED"
+					reason = &r
+				}
+				if reason == nil {
+					r := "ERROR"
+					reason = &r
+				}
+			}
+		}
+		results[vr.Domain] = dnsResultOutcome{ok: status == "ok", status: status, reason: reason}
 	}
-
 	return results, nil
 }
 
@@ -642,42 +684,8 @@ func (s *dnsValidationService) getDomainsToValidate(ctx context.Context, campaig
 
 // loadStealthForDNS reads stealth order and jitter from campaign domains data
 func (s *dnsValidationService) loadStealthForDNS(ctx context.Context, campaignID uuid.UUID) (order []string, jitterMin int, jitterMax int, ok bool) {
-	if s.store == nil {
-		return nil, 0, 0, false
-	}
-	var exec store.Querier
-	if q, qok := s.deps.DB.(store.Querier); qok {
-		exec = q
-	}
-	raw, err := s.store.GetCampaignDomainsData(ctx, exec, campaignID)
-	if err != nil || raw == nil {
-		return nil, 0, 0, false
-	}
-	var data map[string]interface{}
-	if err := json.Unmarshal(*raw, &data); err != nil {
-		return nil, 0, 0, false
-	}
-	// order
-	if arr, ok2 := data["stealth_order_dns"].([]interface{}); ok2 {
-		order = make([]string, 0, len(arr))
-		for _, v := range arr {
-			if s, ok3 := v.(string); ok3 {
-				order = append(order, s)
-			}
-		}
-	}
-	// jitter
-	if st, ok2 := data["stealth"].(map[string]interface{}); ok2 {
-		if dns, ok3 := st["dns"].(map[string]interface{}); ok3 {
-			if v, ok4 := dns["jitterMinMs"].(float64); ok4 {
-				jitterMin = int(v)
-			}
-			if v, ok4 := dns["jitterMaxMs"].(float64); ok4 {
-				jitterMax = int(v)
-			}
-		}
-	}
-	return order, jitterMin, jitterMax, len(order) > 0 || jitterMax > 0
+	// Phase C: domains_data deprecated; stealth config persistence removed. Return no-op.
+	return nil, 0, 0, false
 }
 
 // calcJitterMillis returns a random millisecond value in [min,max]
@@ -699,7 +707,7 @@ func calcJitterMillis(min, max int) int {
 	return min + int(n.Int64())
 }
 
-func (s *dnsValidationService) storeValidationResults(ctx context.Context, campaignID uuid.UUID, results map[string]bool) error {
+func (s *dnsValidationService) storeValidationResults(ctx context.Context, campaignID uuid.UUID, results map[string]dnsResultOutcome) error {
 	if s.store == nil {
 		return fmt.Errorf("campaign store not available")
 	}
@@ -707,29 +715,61 @@ func (s *dnsValidationService) storeValidationResults(ctx context.Context, campa
 	bulk := make([]models.DNSValidationResult, 0, len(results))
 	validCount := 0
 	invalidCount := 0
-	for domain, ok := range results {
-		status := "pending"
-		if ok {
-			status = "ok"
+	for domain, outcome := range results {
+		status := outcome.status
+		if status == "ok" {
 			validCount++
-		} else {
-			status = "error"
+		} else if status == "error" {
 			invalidCount++
+		}
+		// Normalize / enrich DNS reason taxonomy
+		if outcome.reason != nil {
+			lr := strings.ToUpper(strings.TrimSpace(*outcome.reason))
+			switch {
+			case strings.Contains(lr, "SERVFAIL"):
+				val := "SERVFAIL"
+				outcome.reason = &val
+			case strings.Contains(lr, "REFUSED"):
+				val := "REFUSED"
+				outcome.reason = &val
+			case strings.Contains(lr, "NOANSWER") || strings.Contains(lr, "NO_ANSWER"):
+				val := "NOANSWER"
+				outcome.reason = &val
+			case strings.Contains(lr, "NXDOMAIN"):
+				val := "NXDOMAIN"
+				outcome.reason = &val
+			case strings.Contains(lr, "TIMEOUT"):
+				val := "TIMEOUT"
+				outcome.reason = &val
+			}
 		}
 		bulk = append(bulk, models.DNSValidationResult{
 			DNSCampaignID:    campaignID,
 			DomainName:       domain,
 			ValidationStatus: status,
 			LastCheckedAt:    func() *time.Time { t := time.Now(); return &t }(),
+			Reason:           outcome.reason,
 		})
 	}
 
 	if s.deps.Logger != nil {
+		// Provide a deterministic mini-sample of first few domains for traceability
+		sample := make([]string, 0, 5)
+		for _, r := range bulk {
+			if len(sample) < 5 {
+				reas := ""
+				if r.Reason != nil {
+					reas = *r.Reason
+				}
+				sample = append(sample, fmt.Sprintf("%s:%s:%s", r.DomainName, r.ValidationStatus, reas))
+			}
+		}
 		s.deps.Logger.Debug(ctx, "Storing DNS validation results", map[string]interface{}{
 			"campaign_id":     campaignID,
 			"total_domains":   len(results),
 			"valid_domains":   validCount,
 			"invalid_domains": invalidCount,
+			"sample":          sample,
 		})
 	}
 
@@ -739,6 +779,52 @@ func (s *dnsValidationService) storeValidationResults(ctx context.Context, campa
 	}
 	if err := s.store.UpdateDomainsBulkDNSStatus(ctx, exec, bulk); err != nil {
 		return fmt.Errorf("failed to persist DNS results: %w", err)
+	}
+	// Broadcast SSE domain_validated batch event if available
+	if s.deps.EventBus == nil && s.deps.SSE != nil { // direct SSE if no event bus adapter
+		// Build lightweight payload slice
+		top := 50
+		if len(bulk) < top {
+			top = len(bulk)
+		}
+		payload := make([]map[string]interface{}, 0, top)
+		for i := 0; i < top; i++ {
+			b := bulk[i]
+			m := map[string]interface{}{"domain": b.DomainName, "status": b.ValidationStatus}
+			if b.Reason != nil {
+				m["reason"] = *b.Reason
+			}
+			payload = append(payload, m)
+		}
+		// NOTE: s.deps.SSE interface only exposes Send(event string); can't send structured JSON → minimal JSON marshal string
+		// Provide count metrics encoded as JSON text
+		// Future: extend SSE interface to accept structured events.
+		if len(payload) > 0 {
+			b, _ := json.Marshal(map[string]interface{}{"event": "dns_batch_validated", "campaignId": campaignID.String(), "sample": payload, "count": len(bulk)})
+			s.deps.SSE.Send(string(b))
+		}
+	}
+	// Publish structured domain delta event via EventBus if available
+	if s.deps.EventBus != nil && len(bulk) > 0 {
+		limit := len(bulk)
+		if limit > 200 {
+			limit = 200
+		}
+		items := make([]map[string]interface{}, 0, limit)
+		for i := 0; i < limit; i++ {
+			b := bulk[i]
+			m := map[string]interface{}{"domain": b.DomainName, "dns_status": b.ValidationStatus}
+			if b.Reason != nil {
+				m["dns_reason"] = *b.Reason
+			}
+			items = append(items, m)
+		}
+		_ = s.deps.EventBus.PublishSystemEvent(ctx, "domain_status_delta", map[string]interface{}{
+			"campaignId": campaignID.String(),
+			"phase":      "dns_validation",
+			"count":      len(bulk),
+			"items":      items,
+		})
 	}
 	return nil
 }

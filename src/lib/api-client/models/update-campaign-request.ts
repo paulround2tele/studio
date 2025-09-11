@@ -33,12 +33,6 @@ export interface UpdateCampaignRequest {
      */
     'description'?: string;
     /**
-     * 
-     * @type {Array<string>}
-     * @memberof UpdateCampaignRequest
-     */
-    'targetDomains'?: Array<string>;
-    /**
      * Campaign configuration settings (same structure as CreateCampaignRequest)
      * @type {object}
      * @memberof UpdateCampaignRequest

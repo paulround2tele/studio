@@ -27,8 +27,7 @@ export function formToApiRequest(formValues: SimpleCampaignFormValues): CreateLe
   const payload: CreateLeadGenerationCampaignRequest = {
     name: formValues.name,
     description: formValues.description,
-  // Target domains required by schema; we default to empty until user adds in later phases
-  targetDomains: [],
+  // targetDomains removed from backend schema (historical placeholder)
   // No initial phase configuration; phases configured on dashboard
   };
   return payload;

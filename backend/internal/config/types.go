@@ -167,12 +167,61 @@ type ProxyManagerConfigJSON struct {
 // AppConfigJSON defines the structure of the main config.json file.
 // This struct is used to unmarshal the config.json file.
 type AppConfigJSON struct {
-	Server        ServerConfig            `json:"server"`
-	Worker        WorkerConfig            `json:"worker,omitempty"` // WorkerConfig now includes the new fields
-	DNSValidator  DNSValidatorConfigJSON  `json:"dnsValidator"`
-	HTTPValidator HTTPValidatorConfigJSON `json:"httpValidator"`
-	Logging       LoggingConfig           `json:"logging"`
-	RateLimiter   RateLimiterConfig       `json:"rateLimiter,omitempty"`
-	ProxyManager  ProxyManagerConfigJSON  `json:"proxyManager"`
-	Features      FeatureFlags            `json:"features"`
+	Server         ServerConfig                   `json:"server"`
+	Worker         WorkerConfig                   `json:"worker,omitempty"` // WorkerConfig now includes the new fields
+	DNSValidator   DNSValidatorConfigJSON         `json:"dnsValidator"`
+	HTTPValidator  HTTPValidatorConfigJSON        `json:"httpValidator"`
+	Logging        LoggingConfig                  `json:"logging"`
+	RateLimiter    RateLimiterConfig              `json:"rateLimiter,omitempty"`
+	ProxyManager   ProxyManagerConfigJSON         `json:"proxyManager"`
+	Features       FeatureFlags                   `json:"features"`
+	Reconciliation DomainReconciliationConfigJSON `json:"reconciliation"`
+}
+
+// DomainReconciliationConfig controls the nightly domain counters reconciliation job.
+type DomainReconciliationConfig struct {
+	Enabled              bool
+	IntervalMinutes      int
+	DriftThresholdPct    float64
+	AutoCorrect          bool
+	MaxCorrectionsPerRun int
+}
+
+// DomainReconciliationConfigJSON is JSON representation.
+type DomainReconciliationConfigJSON struct {
+	Enabled              bool    `json:"enabled"`
+	IntervalMinutes      int     `json:"intervalMinutes"`
+	DriftThresholdPct    float64 `json:"driftThresholdPct"`
+	AutoCorrect          bool    `json:"autoCorrect"`
+	MaxCorrectionsPerRun int     `json:"maxCorrectionsPerRun"`
+}
+
+func ConvertJSONToDomainReconciliationConfig(j DomainReconciliationConfigJSON) DomainReconciliationConfig {
+	cfg := DomainReconciliationConfig{
+		Enabled:              j.Enabled,
+		IntervalMinutes:      j.IntervalMinutes,
+		DriftThresholdPct:    j.DriftThresholdPct,
+		AutoCorrect:          j.AutoCorrect,
+		MaxCorrectionsPerRun: j.MaxCorrectionsPerRun,
+	}
+	if cfg.IntervalMinutes <= 0 {
+		cfg.IntervalMinutes = 1440
+	} // default daily
+	if cfg.DriftThresholdPct <= 0 {
+		cfg.DriftThresholdPct = 0.01
+	} // default 0.01%
+	if cfg.MaxCorrectionsPerRun <= 0 {
+		cfg.MaxCorrectionsPerRun = 50
+	}
+	return cfg
+}
+
+func ConvertDomainReconciliationConfigToJSON(c DomainReconciliationConfig) DomainReconciliationConfigJSON {
+	return DomainReconciliationConfigJSON{
+		Enabled:              c.Enabled,
+		IntervalMinutes:      c.IntervalMinutes,
+		DriftThresholdPct:    c.DriftThresholdPct,
+		AutoCorrect:          c.AutoCorrect,
+		MaxCorrectionsPerRun: c.MaxCorrectionsPerRun,
+	}
 }

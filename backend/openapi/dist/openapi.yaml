@@ -3053,6 +3053,40 @@ paths:
             type: integer
             minimum: 0
             default: 0
+        - name: dnsStatus
+          in: query
+          required: false
+          description: Filter domains whose authoritative DNS status matches (pending|ok|error|timeout)
+          schema:
+            type: string
+            enum:
+              - pending
+              - ok
+              - error
+              - timeout
+        - name: httpStatus
+          in: query
+          required: false
+          description: Filter domains whose authoritative HTTP status matches (pending|ok|error|timeout)
+          schema:
+            type: string
+            enum:
+              - pending
+              - ok
+              - error
+              - timeout
+        - name: dnsReason
+          in: query
+          required: false
+          description: 'Filter domains by DNS reason (exact match). Example values: NXDOMAIN, SERVFAIL, REFUSED, NOANSWER, TIMEOUT, ERROR'
+          schema:
+            type: string
+        - name: httpReason
+          in: query
+          required: false
+          description: 'Filter domains by HTTP reason (exact match). Example values: TIMEOUT, NOT_FOUND, UPSTREAM_5XX, PROXY_ERROR, TLS_ERROR, SSL_EXPIRED, CONNECTION_RESET, ERROR'
+          schema:
+            type: string
       responses:
         '200':
           description: OK
@@ -5107,10 +5141,6 @@ components:
             - completed
             - failed
             - cancelled
-        targetDomains:
-          type: array
-          items:
-            type: string
         configuration:
           type: object
           description: Campaign configuration
@@ -5154,7 +5184,6 @@ components:
         - id
         - name
         - status
-        - targetDomains
         - configuration
         - progress
         - createdAt
@@ -5170,11 +5199,6 @@ components:
         description:
           type: string
           description: Campaign description
-        targetDomains:
-          type: array
-          items:
-            type: string
-          description: List of target domains or domain patterns
         configuration:
           type: object
           description: Campaign configuration settings
@@ -5224,7 +5248,6 @@ components:
                       type: boolean
       required:
         - name
-        - targetDomains
     UpdateCampaignRequest:
       type: object
       properties:
@@ -5234,10 +5257,6 @@ components:
           maxLength: 255
         description:
           type: string
-        targetDomains:
-          type: array
-          items:
-            type: string
         configuration:
           type: object
           description: Campaign configuration settings (same structure as CreateCampaignRequest)
@@ -5356,15 +5375,21 @@ components:
           format: date-time
         dnsStatus:
           type: string
-          description: DNS validation status if available
+          description: DNS validation status (authoritative)
         httpStatus:
           type: string
-          description: HTTP validation status if available
+          description: HTTP validation status (authoritative)
         leadStatus:
           type: string
           description: Lead extraction status if available
-      required:
-        - domain
+        dnsReason:
+          type: string
+          nullable: true
+          description: Human-readable reason string for current DNS status (e.g., NXDOMAIN, SERVFAIL, TIMEOUT, BAD_RESPONSE)
+        httpReason:
+          type: string
+          nullable: true
+          description: Human-readable reason string for current HTTP status (e.g., CONNECT_ERROR, TLS_ERROR, TIMEOUT, NON_200, BODY_MISMATCH)
     CampaignDomainsListResponse:
       type: object
       properties:
@@ -5377,6 +5402,45 @@ components:
             $ref: '#/components/schemas/DomainListItem'
         total:
           type: integer
+        aggregates:
+          type: object
+          description: Domain status aggregates sourced from counters table (Phase A optimization)
+          properties:
+            dns:
+              type: object
+              properties:
+                pending:
+                  type: integer
+                ok:
+                  type: integer
+                error:
+                  type: integer
+                timeout:
+                  type: integer
+            http:
+              type: object
+              properties:
+                pending:
+                  type: integer
+                ok:
+                  type: integer
+                error:
+                  type: integer
+                timeout:
+                  type: integer
+            lead:
+              type: object
+              properties:
+                pending:
+                  type: integer
+                match:
+                  type: integer
+                noMatch:
+                  type: integer
+                error:
+                  type: integer
+                timeout:
+                  type: integer
       required:
         - campaignId
         - items
@@ -5781,8 +5845,6 @@ components:
                   - completed
                   - failed
               domainsGenerated:
-                type: integer
-              targetDomains:
                 type: integer
               progress:
                 type: object

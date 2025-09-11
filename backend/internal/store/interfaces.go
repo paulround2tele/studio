@@ -63,22 +63,17 @@ type CampaignStore interface {
 	FailPhase(ctx context.Context, exec Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum, errorMessage string) error
 
 	CreateGeneratedDomains(ctx context.Context, exec Querier, domains []*models.GeneratedDomain) error
-	GetGeneratedDomainsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID, limit int, lastOffsetIndex int64) ([]*models.GeneratedDomain, error)
+	GetGeneratedDomainsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID, limit int, lastOffsetIndex int64, filter *ListCampaignDomainsFilter) ([]*models.GeneratedDomain, error)
 	CountGeneratedDomainsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID) (int64, error)
+
+	// Domain counters (Phase A optimization)
+	GetCampaignDomainCounters(ctx context.Context, exec Querier, campaignID uuid.UUID) (*models.CampaignDomainCounters, error)
 
 	CreateDNSValidationResults(ctx context.Context, exec Querier, results []*models.DNSValidationResult) error
 	GetDNSValidationResultsByCampaign(ctx context.Context, exec Querier, campaignID uuid.UUID, filter ListValidationResultsFilter) ([]*models.DNSValidationResult, error)
 	CountDNSValidationResults(ctx context.Context, exec Querier, campaignID uuid.UUID, onlyValid bool) (int64, error)
 	DeleteDNSValidationResults(ctx context.Context, exec Querier, campaignID uuid.UUID) (int64, error)
-	// Phase-centric JSONB data access methods
-	GetCampaignDomainsData(ctx context.Context, exec Querier, campaignID uuid.UUID) (*json.RawMessage, error)
-	UpdateCampaignDomainsData(ctx context.Context, exec Querier, campaignID uuid.UUID, data *json.RawMessage) error
-	GetCampaignDNSResults(ctx context.Context, exec Querier, campaignID uuid.UUID) (*json.RawMessage, error)
-	UpdateCampaignDNSResults(ctx context.Context, exec Querier, campaignID uuid.UUID, results *json.RawMessage) error
-	GetCampaignHTTPResults(ctx context.Context, exec Querier, campaignID uuid.UUID) (*json.RawMessage, error)
-	UpdateCampaignHTTPResults(ctx context.Context, exec Querier, campaignID uuid.UUID, results *json.RawMessage) error
-	GetCampaignAnalysisResults(ctx context.Context, exec Querier, campaignID uuid.UUID) (*json.RawMessage, error)
-	UpdateCampaignAnalysisResults(ctx context.Context, exec Querier, campaignID uuid.UUID, results *json.RawMessage) error
+	// (Phase C) Removed legacy campaign domains_data JSONB access methods
 
 	CreateHTTPKeywordParams(ctx context.Context, exec Querier, params *models.HTTPKeywordCampaignParams) error
 	GetHTTPKeywordParams(ctx context.Context, exec Querier, campaignID uuid.UUID) (*models.HTTPKeywordCampaignParams, error)
@@ -94,10 +89,7 @@ type CampaignStore interface {
 	RecordQueryPerformance(ctx context.Context, exec Querier, metric *models.QueryPerformanceMetric) error
 	RecordConnectionPoolMetrics(ctx context.Context, exec Querier, metrics *models.ConnectionPoolMetrics) error
 
-	// JSONB operations for standalone services architecture
-	UpdateDomainsData(ctx context.Context, exec Querier, campaignID uuid.UUID, domainsData interface{}) error
-	GetDomainsData(ctx context.Context, exec Querier, campaignID uuid.UUID) (interface{}, error)
-	AppendDomainsData(ctx context.Context, exec Querier, campaignID uuid.UUID, newDomains interface{}) error
+	// (Phase C) Removed legacy domains_data JSONB operations
 
 	// Phase 2: New state management methods
 	// Campaign state operations
@@ -140,6 +132,14 @@ type CampaignStore interface {
 	UpdateCampaignMode(ctx context.Context, exec Querier, campaignID uuid.UUID, mode string) error
 	// GetCampaignMode returns the execution mode (step_by_step or full_sequence) for a campaign.
 	GetCampaignMode(ctx context.Context, exec Querier, campaignID uuid.UUID) (string, error)
+}
+
+// ListCampaignDomainsFilter holds optional filters for generated domains listing.
+type ListCampaignDomainsFilter struct {
+	DNSStatus  *string
+	HTTPStatus *string
+	DNSReason  *string
+	HTTPReason *string
 }
 
 // ListCampaignsFilter and ListValidationResultsFilter remain the same

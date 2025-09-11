@@ -31,7 +31,7 @@ export interface DomainListItem {
      * @type {string}
      * @memberof DomainListItem
      */
-    'domain': string;
+    'domain'?: string;
     /**
      * 
      * @type {number}
@@ -45,13 +45,13 @@ export interface DomainListItem {
      */
     'createdAt'?: string;
     /**
-     * DNS validation status if available
+     * DNS validation status (authoritative)
      * @type {string}
      * @memberof DomainListItem
      */
     'dnsStatus'?: string;
     /**
-     * HTTP validation status if available
+     * HTTP validation status (authoritative)
      * @type {string}
      * @memberof DomainListItem
      */
@@ -62,5 +62,17 @@ export interface DomainListItem {
      * @memberof DomainListItem
      */
     'leadStatus'?: string;
+    /**
+     * Human-readable reason string for current DNS status (e.g., NXDOMAIN, SERVFAIL, TIMEOUT, BAD_RESPONSE)
+     * @type {string}
+     * @memberof DomainListItem
+     */
+    'dnsReason'?: string;
+    /**
+     * Human-readable reason string for current HTTP status (e.g., CONNECT_ERROR, TLS_ERROR, TIMEOUT, NON_200, BODY_MISMATCH)
+     * @type {string}
+     * @memberof DomainListItem
+     */
+    'httpReason'?: string;
 }
 

@@ -22,7 +22,7 @@ echo "[3/10] Me..." >&2
 curl -fsS -b "$COOKIE_JAR" "$BASE_URL/auth/me" | jq '.'
 
 echo "[4/10] Create campaign..." >&2
-CREATE_PAYLOAD=$(jq -nc '{name:"SmokeTest", targetDomains:["example.com","iana.org"]}')
+CREATE_PAYLOAD=$(jq -nc '{name:"SmokeTest"}')
 CAMPAIGN_ID=$(curl -fsS -b "$COOKIE_JAR" -H 'Content-Type: application/json' \
   -d "$CREATE_PAYLOAD" "$BASE_URL/campaigns" | jq -r '.data.id')
 echo "Created campaign: $CAMPAIGN_ID" >&2
