@@ -41,15 +41,21 @@ create_persona() {
   local ptype="$1"
   local name="E2E-${ptype}-$(date +%s)-$RANDOM"
   local body="{\"name\":\"$name\",\"description\":\"e2e persona\",\"personaType\":\"$ptype\"}"
-  local res=$(curl_json POST "$BASE_URL/personas" "$body")
-  local id=$(jq -r '.data.id // .id // empty' <<<"$res")
+  local res
+  res=$(curl_json POST "$BASE_URL/personas" "$body")
+  local id
+  id=$(jq -r '.data.id // .id // empty' <<<"$res")
   if [[ -z "$id" ]]; then
-    log "Create $ptype persona failed, attempting reuse: $res"
-    local list=$(curl_json GET "$BASE_URL/personas")
+    # Send diagnostic to stderr so stdout stays clean (only the ID is echoed)
+    >&2 log "Create $ptype persona failed, attempting reuse: $res"
+    local list
+    list=$(curl_json GET "$BASE_URL/personas")
     id=$(jq -r --arg t "$ptype" '.data[]? | select(.personaType==$t) | .id' <<<"$list" | head -n1 || true)
   fi
-  [[ -n "$id" ]] || { log "No persona available for type $ptype"; exit 1; }
-  echo "$id"
+  if [[ -z "$id" ]]; then
+    >&2 log "No persona available for type $ptype"; exit 1
+  fi
+  printf "%s" "$id"
 }
 
 DNS_PERSONA_ID=$(create_persona dns)
@@ -137,8 +143,8 @@ run_phase() {
   log "Phase $phase completed"
 }
 
-# Discovery (variableLength=5 widens pool; keep numDomainsToGenerate small for speed)
-run_phase discovery '{"patternType":"prefix","constantString":"acme","characterSet":"abcdefghijklmnopqrstuvwxyz0123456789","variableLength":5,"tlds":[".com"],"numDomainsToGenerate":10,"batchSize":100,"offsetStart":0}'
+# Discovery (variableLength=5 widens pool; keep numDomainsToGenerate small for speed) - do NOT set offsetStart manually
+run_phase discovery '{"patternType":"prefix","constantString":"acme","characterSet":"abcdefghijklmnopqrstuvwxyz0123456789","variableLength":5,"tlds":[".com"],"numDomainsToGenerate":10,"batchSize":100}'
 
 log "Fetching generated domains (limit 10)"
 DOMAINS=$(curl_json GET "$BASE_URL/campaigns/$CAMPAIGN_ID/domains?limit=10")
