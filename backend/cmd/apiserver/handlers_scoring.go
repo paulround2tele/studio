@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"time"
 
+	services "github.com/fntelecomllc/studio/backend/internal/domain/services"
+
 	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
@@ -87,7 +89,16 @@ func (h *strictHandlers) ScoringProfilesCreate(ctx context.Context, r gen.Scorin
 	if body == nil || body.Name == "" || body.Weights == nil {
 		return gen.ScoringProfilesCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "name and weights required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	raw, _ := json.Marshal(body.Weights)
+	// Convert weights to float64 map for validation
+	wmIn := map[string]float64{}
+	for k, v := range body.Weights {
+		wmIn[k] = float64(v)
+	}
+	validated, vErr := services.ValidateScoringWeights(wmIn)
+	if vErr != nil {
+		return gen.ScoringProfilesCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: vErr.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	raw, _ := json.Marshal(validated)
 	sp := &models.ScoringProfile{Name: body.Name, Weights: raw, Version: 1}
 	if body.Version != nil && *body.Version > 0 {
 		sp.Version = *body.Version
@@ -183,7 +194,15 @@ func (h *strictHandlers) ScoringProfilesUpdate(ctx context.Context, r gen.Scorin
 		sp.Description.Scan(*body.Description)
 	}
 	if body.Weights != nil {
-		raw, _ := json.Marshal(body.Weights)
+		wmIn := map[string]float64{}
+		for k, v := range *body.Weights {
+			wmIn[k] = float64(v)
+		}
+		validated, vErr := services.ValidateScoringWeights(wmIn)
+		if vErr != nil {
+			return gen.ScoringProfilesUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: vErr.Error(), Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+		raw, _ := json.Marshal(validated)
 		sp.Weights = raw
 	}
 	if body.Version != nil && *body.Version > 0 {

@@ -107,6 +107,12 @@ func (s *stubPhaseService) setFailOnce(campaignID uuid.UUID)                    
 func (s *stubPhaseService) clearFail(campaignID uuid.UUID)                         { delete(s.fail, campaignID) }
 func (s *stubPhaseService) executions(campaignID uuid.UUID) int                    { return s.executes[campaignID] }
 
+// AnalysisService methods (no-op for non-analysis phases)
+func (s *stubPhaseService) ScoreDomains(ctx context.Context, campaignID uuid.UUID) error { return nil }
+func (s *stubPhaseService) RescoreCampaign(ctx context.Context, campaignID uuid.UUID) error {
+	return nil
+}
+
 // testMetrics captures orchestrator metric increments for assertions.
 type testMetrics struct {
 	phaseStarts         int

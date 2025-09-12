@@ -816,28 +816,10 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 	if dbx == nil {
 		return fmt.Errorf("scoring requires *sql.DB or *sqlx.DB dependency")
 	}
-	// Attempt to select weights JSON
-	type profileRow struct {
-		Weights json.RawMessage `db:"weights"`
-	}
-	var weightsMap map[string]float64
-	weightsMap = map[string]float64{
-		"keyword_density_weight":         0.35,
-		"unique_keyword_coverage_weight": 0.25,
-		"non_parked_weight":              0.10,
-		"content_length_quality_weight":  0.10,
-		"title_keyword_weight":           0.10,
-		"freshness_weight":               0.10,
-	}
-	// Load weights profile if linked
-	row := profileRow{}
-	if err := dbx.QueryRowContext(ctx, `SELECT sp.weights FROM campaign_scoring_profile csp JOIN scoring_profiles sp ON sp.id = csp.scoring_profile_id WHERE csp.campaign_id = $1`, campaignID).Scan(&row.Weights); err == nil && len(row.Weights) > 0 {
-		tmp := map[string]float64{}
-		if err := json.Unmarshal(row.Weights, &tmp); err == nil && len(tmp) > 0 {
-			for k, v := range tmp {
-				weightsMap[k] = v
-			}
-		}
+	// Load validated, normalized weights (defaults if no profile)
+	weightsMap, wErr := loadCampaignScoringWeights(ctx, dbx, campaignID)
+	if wErr != nil {
+		return fmt.Errorf("load weights: %w", wErr)
 	}
 	// Fetch candidate domains with feature vectors
 	rows, err := dbx.QueryContext(ctx, `SELECT domain_name, feature_vector, last_http_fetched_at, is_parked, parked_confidence FROM generated_domains WHERE campaign_id = $1 AND feature_vector IS NOT NULL`, campaignID)
@@ -901,13 +883,12 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 			titleScore = 1.0
 		}
 		// Weighted sum
-		rel :=
-			densityScore*weightsMap["keyword_density_weight"] +
-				kwCoverageScore*weightsMap["unique_keyword_coverage_weight"] +
-				nonParkedScore*weightsMap["non_parked_weight"] +
-				contentLenScore*weightsMap["content_length_quality_weight"] +
-				titleScore*weightsMap["title_keyword_weight"] +
-				freshness*weightsMap["freshness_weight"]
+		rel := densityScore*weightsMap["keyword_density_weight"] +
+			kwCoverageScore*weightsMap["unique_keyword_coverage_weight"] +
+			nonParkedScore*weightsMap["non_parked_weight"] +
+			contentLenScore*weightsMap["content_length_quality_weight"] +
+			titleScore*weightsMap["title_keyword_weight"] +
+			freshness*weightsMap["freshness_weight"]
 		// Parked penalty if low confidence parked (parked_confidence < .9 but flagged?) - simple
 		if isParkedB && parkedConf.Valid && parkedConf.Float64 < 0.9 {
 			rel *= 0.5
@@ -961,7 +942,19 @@ func (s *analysisService) ScoreDomains(ctx context.Context, campaignID uuid.UUID
 
 // RescoreCampaign recomputes scores (alias of ScoreDomains for now; placeholder for profile diff logic)
 func (s *analysisService) RescoreCampaign(ctx context.Context, campaignID uuid.UUID) error {
-	return s.scoreDomains(ctx, campaignID)
+	if err := s.scoreDomains(ctx, campaignID); err != nil {
+		return err
+	}
+	// Emit rescore_completed SSE event (lightweight summary)
+	if s.deps.SSE != nil {
+		payload, _ := json.Marshal(map[string]interface{}{
+			"event":      "rescore_completed",
+			"campaignId": campaignID.String(),
+			"timestamp":  time.Now().UTC(),
+		})
+		s.deps.SSE.Send(string(payload))
+	}
+	return nil
 }
 
 // helper conversions

@@ -790,6 +790,11 @@ func (s *httpValidationService) ensureDNSCompleted(ctx context.Context, campaign
 		return fmt.Errorf("DNS phase not found")
 	}
 	if phase.Status != models.PhaseStatusCompleted {
+		// Temporary debug instrumentation for Blocker B3 verification
+		s.deps.Logger.Warn(ctx, "DNS phase not completed when starting HTTP validation", map[string]interface{}{
+			"campaign_id": campaignID,
+			"dns_status":  phase.Status,
+		})
 		return fmt.Errorf("DNS phase status is '%s' (must be 'completed')", phase.Status)
 	}
 	return nil

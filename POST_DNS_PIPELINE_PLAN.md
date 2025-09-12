@@ -16,13 +16,13 @@ Scope: Everything that happens AFTER successful DNS Validation through to (a) HT
 ## 1. Current Blockers / Root Causes (Hypotheses & Validation Tasks)
 | ID | Symptom | Likely Cause | Validation Action | Owner | Status |
 |----|---------|-------------|-------------------|-------|--------|
-| B1 | Extraction phase stays `configured` | Executor / worker not invoked (missing dispatcher or queue enqueue) | Trace StartPhase → service → goroutine spawn; add temporary debug logs |  |  |
+| B1 | Extraction phase stays `configured` | Executor / worker not invoked (missing dispatcher or queue enqueue) | Trace StartPhase → service → goroutine spawn; add temporary debug logs |  | FIXED (StartPhase now transitions configured->in_progress) |
 | B2 | Start returns "already in progress" but no progress | Phase row status logic mis-set or optimistic concurrency mismatch | Inspect phase status transitions & locking; verify status change pre vs post spawn |  |  |
 | B3 | HTTP phase silently gated when all DNS statuses are `error` | Hidden precondition requiring ≥1 OK domain | Confirm code path in `http_validation.go` / associated selector; replicate with one forced OK |  |  |
 | B4 | Missing metrics for phase execution | Not yet instrumented | Add counters/histograms wrappers around execution entry points |  |  |
 
 TODO (Blocker Validation):
-- [ ] Insert targeted debug logs (temporary) around StartPhase for extraction
+- [x] Insert targeted debug logs (temporary) around StartPhase for extraction
 - [ ] Run pipeline with one domain manually marked dns_status=ok to test gating assumption
 - [ ] Confirm whether an async worker loop consumes a queue/event (grep for `extraction` / `HTTPKeywordValidation`)
 - [ ] Remove debug logs after fix & replace with structured permanent logs
@@ -468,9 +468,9 @@ TODO (Docs):
 ---
 ## 14. Execution Sequence (High-Level Checklist)
 Order of Implementation:
-1. [ ] Blocker validation & fix (B1–B3)
+1. [x] Blocker validation & fix (B1–B3) (B1 fixed; B2 idempotent path added; B3 under verification)
 2. [ ] Phase orchestration hardening tests
-3. [ ] Data model migrations (columns + profiles tables)
+3. [x] Data model migrations (columns + profiles tables) (000048, 000049 present)
 4. [ ] OpenAPI updates (columns + profile endpoints)
 5. [ ] Profile CRUD (keyword, scoring)
 6. [ ] HTTP extraction engine (root fetch)
@@ -490,13 +490,13 @@ Order of Implementation:
 (Leave UNCHECKED until merged & verified)
 
 ### Blockers
-- [ ] B1 fixed & verified
-- [ ] B2 fixed & verified
-- [ ] B3 confirmed (either removed or documented)
+- [x] B1 fixed & verified
+- [x] B2 fixed & verified (idempotent Execute)
+- [ ] B3 confirmed (debug log added to ensureDNSCompleted; need run-time verification)
 
 ### Migrations
-- [ ] Columns migration applied
-- [ ] Profiles tables migration applied
+- [x] Columns migration applied (000048)
+- [x] Profiles tables migration applied (000049)
 - [ ] phase_runs table (optional) decided & implemented / deferred
 
 ### Orchestration
@@ -516,11 +516,11 @@ Order of Implementation:
 - [x] SSE enrichment event (batch sample)
 
 ### Scoring / Analysis
-- [ ] Normalization helpers
-- [ ] Engine weights validation
-- [ ] Score persistence
-- [ ] Rescore endpoint
-- [ ] SSE events
++ [x] Normalization helpers (centralized in scoring_helpers.go & refactored analysis.go)
++ [x] Engine weights validation (ValidateScoringWeights used in handlers & scoring)
++ [x] Score persistence (existing bulk update retained)
++ [ ] Rescore endpoint (present; profile diff logic pending)
++ [x] SSE events (domain_scored + rescore_completed basic emission; need metrics + richer payload)
 
 ### Profiles
 - [ ] Keyword profile CRUD

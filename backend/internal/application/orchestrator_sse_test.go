@@ -81,6 +81,14 @@ func (s *sseStubPhaseService) Execute(ctx context.Context, campaignID uuid.UUID)
 	return ch, nil
 }
 
+// Added to satisfy expanded analysis service interface in production code.
+func (s *sseStubPhaseService) ScoreDomains(ctx context.Context, campaignID uuid.UUID) error {
+	return nil
+}
+func (s *sseStubPhaseService) RescoreCampaign(ctx context.Context, campaignID uuid.UUID) error {
+	return nil
+}
+
 // helper to create campaign with user id for SSE emission
 func createCampaignWithUser(t *testing.T, db *sqlx.DB, cs store.CampaignStore) uuid.UUID {
 	t.Helper()
@@ -89,7 +97,9 @@ func createCampaignWithUser(t *testing.T, db *sqlx.DB, cs store.CampaignStore) u
 	now := time.Now()
 	// Insert user row to satisfy FK constraint
 	_, err := db.Exec(`INSERT INTO users (id, email, password_hash, first_name, last_name) VALUES ($1,$2,$3,$4,$5)`, user, user.String()+"@test.local", "hash", "Test", "User")
-	if err != nil { t.Fatalf("insert user: %v", err) }
+	if err != nil {
+		t.Fatalf("insert user: %v", err)
+	}
 	c := &models.LeadGenerationCampaign{ID: id, UserID: &user, Name: "sse-camp-" + id.String()[:8], CreatedAt: now, UpdatedAt: now, CampaignType: "lead_generation", TotalPhases: 4}
 	if err := cs.CreateCampaign(context.Background(), nil, c); err != nil {
 		t.Fatalf("create campaign: %v", err)
