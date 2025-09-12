@@ -107,6 +107,18 @@ for i in {1..120}; do
   esac
 done
 
+# Ensure persistence of DNS phase completion before HTTP phase
+log "Confirm DNS phase persisted as completed"
+for i in {1..10}; do
+  PHASE_ROW=$(req GET "$BASE_URL/campaigns/$CAMP_ID/phases/validation/status")
+  PSTATUS=$(jq -r '.data.status // .status // empty' <<<"$PHASE_ROW")
+  if [[ $PSTATUS == "completed" ]]; then
+    break
+  fi
+  sleep 1
+  [[ $i -eq 10 ]] && log "DNS phase not persisted as completed in time" || true
+done
+
 # Recount domain DNS statuses
 log "Count domains by dnsStatus"
 DNS_OK=$(req GET "$BASE_URL/campaigns/$CAMP_ID/domains?dnsStatus=ok&limit=200")
@@ -117,7 +129,84 @@ DNS_PENDING=$(req GET "$BASE_URL/campaigns/$CAMP_ID/domains?dnsStatus=pending&li
 COUNT_PENDING=$(jq -r '.data.items | length' <<<"$DNS_PENDING" 2>/dev/null || echo 0)
 log "DNS Status counts: ok=$COUNT_OK error=$COUNT_ERR pending=$COUNT_PENDING"
 
-SUMMARY=$(jq -n --arg campaign "$CAMP_ID" --arg total "$TOTAL" --arg dnsOk "$COUNT_OK" --arg dnsErr "$COUNT_ERR" --arg dnsPending "$COUNT_PENDING" --arg dnsPersona "$DNS_ID" --arg httpPersona "$HTTP_ID" '{campaignId:$campaign,totalDomains:($total|tonumber),dnsOk:($dnsOk|tonumber),dnsError:($dnsErr|tonumber),dnsPending:($dnsPending|tonumber),dnsPersona:$dnsPersona,httpPersona:$httpPersona}')
+# --- Extraction (HTTP Keyword Validation) Phase ---
+log "Configure extraction (http keyword validation) phase"
+EXTRACT_CFG=$(jq -n --arg pid "$HTTP_ID" '{configuration:{personaIds:[$pid],keywords:["login","account","support"],adHocKeywords:["contact"]}}')
+E_CFG_RES=$(req POST "$BASE_URL/campaigns/$CAMP_ID/phases/extraction/configure" "$EXTRACT_CFG" || true)
+if [[ $(jq -r '.success // empty' <<<"$E_CFG_RES") != true ]]; then
+  log "Extraction configure failed (continuing to analysis): $E_CFG_RES"
+else
+  log "Start extraction phase"
+  E_START=$(req POST "$BASE_URL/campaigns/$CAMP_ID/phases/extraction/start" '{}' || true)
+  START_SUCCESS=$(jq -r '.success // empty' <<<"$E_START")
+  if [[ $START_SUCCESS == true ]]; then
+    log "Poll extraction completion"
+    for i in {1..150}; do
+      sleep 1
+      ST_EXT=$(req GET "$BASE_URL/campaigns/$CAMP_ID/phases/extraction/status")
+      STATUS_EXT=$(jq -r '.data.status // .status // empty' <<<"$ST_EXT")
+      [[ -z $STATUS_EXT ]] && continue
+      log "extraction status=$STATUS_EXT"
+      case $STATUS_EXT in
+        completed) EXTRACTION_DONE=true; break;;
+        failed|error) log "Extraction failed: $ST_EXT"; EXTRACTION_DONE=false; break;;
+      esac
+    done
+  else
+    # If already in progress, poll until completion
+    if grep -q 'already in progress' <<<"$E_START"; then
+      log "Extraction already in progress, polling status"
+      for i in {1..150}; do
+        sleep 1
+        ST_EXT=$(req GET "$BASE_URL/campaigns/$CAMP_ID/phases/extraction/status")
+        STATUS_EXT=$(jq -r '.data.status // .status // empty' <<<"$ST_EXT")
+        [[ -z $STATUS_EXT ]] && continue
+        log "extraction status=$STATUS_EXT"
+        case $STATUS_EXT in
+          completed) EXTRACTION_DONE=true; break;;
+          failed|error) log "Extraction failed: $ST_EXT"; EXTRACTION_DONE=false; break;;
+        esac
+      done
+    else
+      log "Extraction start failed: $E_START"
+    fi
+  fi
+fi
+
+# --- Analysis Phase ---
+log "Configure analysis phase"
+# Wait for extraction completion if variable set
+if [[ ${EXTRACTION_DONE:-false} != true ]]; then
+  log "Waiting a short grace period before configuring analysis (extraction pending)"
+  sleep 2
+fi
+ANALYSIS_CFG=$(jq -n --arg pid "$HTTP_ID" '{configuration:{personaIds:[$pid],includeExternal:false}}')
+A_CFG_RES=$(req POST "$BASE_URL/campaigns/$CAMP_ID/phases/analysis/configure" "$ANALYSIS_CFG" || true)
+if [[ $(jq -r '.success // empty' <<<"$A_CFG_RES") != true ]]; then
+  log "Analysis configure failed: $A_CFG_RES"
+else
+  log "Start analysis phase"
+  A_START=$(req POST "$BASE_URL/campaigns/$CAMP_ID/phases/analysis/start" '{}' || true)
+  if [[ $(jq -r '.success // empty' <<<"$A_START") == true ]]; then
+    log "Poll analysis completion"
+    for i in {1..120}; do
+      sleep 1
+      ST_AN=$(req GET "$BASE_URL/campaigns/$CAMP_ID/phases/analysis/status")
+      STATUS_AN=$(jq -r '.data.status // .status // empty' <<<"$ST_AN")
+      [[ -z $STATUS_AN ]] && continue
+      log "analysis status=$STATUS_AN"
+      case $STATUS_AN in
+        completed) break;;
+        failed|error) log "Analysis failed: $ST_AN"; break;;
+      esac
+    done
+  else
+    log "Analysis start failed: $A_START"
+  fi
+fi
+
+# Summaries (basic) after all phases
+SUMMARY=$(jq -n --arg campaign "$CAMP_ID" --arg total "$TOTAL" --arg dnsOk "$COUNT_OK" --arg dnsErr "$COUNT_ERR" --arg dnsPending "$COUNT_PENDING" --arg dnsPersona "$DNS_ID" --arg httpPersona "$HTTP_ID" '{campaignId:$campaign,totalDomains:($total|tonumber),dnsOk:($dnsOk|tonumber),dnsError:($dnsErr|tonumber),dnsPending:($dnsPending|tonumber),dnsPersona:$dnsPersona,httpPersona:$httpPersona,phases:{dnsValidation:"done",extraction:"attempted",analysis:"attempted"}}')
 echo "$SUMMARY"
 
 # If discovery failed due to offset exhaustion, retry once with different suffix

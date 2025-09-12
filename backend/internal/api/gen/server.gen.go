@@ -391,6 +391,11 @@ type ApiError struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
+// AssociateScoringProfileRequest defines model for AssociateScoringProfileRequest.
+type AssociateScoringProfileRequest struct {
+	ProfileId openapi_types.UUID `json:"profileId"`
+}
+
 // AuthConfig Authentication configuration
 type AuthConfig map[string]interface{}
 
@@ -935,6 +940,16 @@ type CreateProxyRequestAPI struct {
 	Username    *string        `json:"username,omitempty"`
 }
 
+// CreateScoringProfileRequest defines model for CreateScoringProfileRequest.
+type CreateScoringProfileRequest struct {
+	Description *string `json:"description,omitempty"`
+	Name        string  `json:"name"`
+
+	// Version Optional explicit version; defaults to 1 if omitted
+	Version *int               `json:"version,omitempty"`
+	Weights map[string]float32 `json:"weights"`
+}
+
 // DNSValidatorConfigJSON DNS validator configuration
 type DNSValidatorConfigJSON map[string]interface{}
 
@@ -1354,12 +1369,26 @@ type RateLimitInfo struct {
 // RateLimiterConfig Rate limiter configuration
 type RateLimiterConfig map[string]interface{}
 
+// RescoreCampaignRequest Optional body for future rescore parameters (currently unused)
+type RescoreCampaignRequest = map[string]interface{}
+
 // SchemaStats Statistics for a specific database schema
 type SchemaStats struct {
 	Name       *string `json:"name,omitempty"`
 	TableCount *int    `json:"tableCount,omitempty"`
 	TotalRows  *int    `json:"totalRows,omitempty"`
 	TotalSize  *string `json:"totalSize,omitempty"`
+}
+
+// ScoringProfile defines model for ScoringProfile.
+type ScoringProfile struct {
+	CreatedAt   time.Time          `json:"createdAt"`
+	Description *string            `json:"description"`
+	Id          openapi_types.UUID `json:"id"`
+	Name        string             `json:"name"`
+	UpdatedAt   time.Time          `json:"updatedAt"`
+	Version     int                `json:"version"`
+	Weights     map[string]float32 `json:"weights"`
 }
 
 // SessionResponse defines model for SessionResponse.
@@ -1422,6 +1451,14 @@ type UpdateProxyRequestAPI struct {
 	Password    *string        `json:"password,omitempty"`
 	Protocol    *ProxyProtocol `json:"protocol,omitempty"`
 	Username    *string        `json:"username,omitempty"`
+}
+
+// UpdateScoringProfileRequest defines model for UpdateScoringProfileRequest.
+type UpdateScoringProfileRequest struct {
+	Description *string             `json:"description,omitempty"`
+	Name        *string             `json:"name,omitempty"`
+	Version     *int                `json:"version,omitempty"`
+	Weights     *map[string]float32 `json:"weights,omitempty"`
 }
 
 // UserPublicResponse defines model for UserPublicResponse.
@@ -1657,6 +1694,15 @@ type ProxyPoolsAddProxyJSONBody struct {
 	Weight  *int               `json:"weight,omitempty"`
 }
 
+// ScoringProfilesListParams defines parameters for ScoringProfilesList.
+type ScoringProfilesListParams struct {
+	// Limit Page size (items per page)
+	Limit *Limit `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset Zero-based offset
+	Offset *Offset `form:"offset,omitempty" json:"offset,omitempty"`
+}
+
 // AuthChangePasswordJSONRequestBody defines body for AuthChangePassword for application/json ContentType.
 type AuthChangePasswordJSONRequestBody AuthChangePasswordJSONBody
 
@@ -1695,6 +1741,12 @@ type CampaignsPhaseExecutionPutJSONRequestBody = PhaseExecutionUpdate
 
 // CampaignsPhaseConfigureJSONRequestBody defines body for CampaignsPhaseConfigure for application/json ContentType.
 type CampaignsPhaseConfigureJSONRequestBody = PhaseConfigurationRequest
+
+// CampaignsRescoreJSONRequestBody defines body for CampaignsRescore for application/json ContentType.
+type CampaignsRescoreJSONRequestBody = RescoreCampaignRequest
+
+// CampaignsScoringProfileAssociateJSONRequestBody defines body for CampaignsScoringProfileAssociate for application/json ContentType.
+type CampaignsScoringProfileAssociateJSONRequestBody = AssociateScoringProfileRequest
 
 // CampaignsStatePutJSONRequestBody defines body for CampaignsStatePut for application/json ContentType.
 type CampaignsStatePutJSONRequestBody = CampaignStateUpdate
@@ -1779,6 +1831,12 @@ type ProxyPoolsUpdateJSONRequestBody = ProxyPoolRequest
 
 // ProxyPoolsAddProxyJSONRequestBody defines body for ProxyPoolsAddProxy for application/json ContentType.
 type ProxyPoolsAddProxyJSONRequestBody ProxyPoolsAddProxyJSONBody
+
+// ScoringProfilesCreateJSONRequestBody defines body for ScoringProfilesCreate for application/json ContentType.
+type ScoringProfilesCreateJSONRequestBody = CreateScoringProfileRequest
+
+// ScoringProfilesUpdateJSONRequestBody defines body for ScoringProfilesUpdate for application/json ContentType.
+type ScoringProfilesUpdateJSONRequestBody = UpdateScoringProfileRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -1881,6 +1939,12 @@ type ServerInterface interface {
 	// Get campaign progress
 	// (GET /campaigns/{campaignId}/progress)
 	CampaignsProgress(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
+	// Trigger campaign rescore
+	// (POST /campaigns/{campaignId}/rescore)
+	CampaignsRescore(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
+	// Associate scoring profile with campaign
+	// (POST /campaigns/{campaignId}/scoring-profile)
+	CampaignsScoringProfileAssociate(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
 	// Delete campaign state
 	// (DELETE /campaigns/{campaignId}/state)
 	CampaignsStateDelete(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
@@ -2127,6 +2191,21 @@ type ServerInterface interface {
 	// Remove proxy from pool
 	// (DELETE /proxy-pools/{poolId}/proxies/{proxyId})
 	ProxyPoolsRemoveProxy(w http.ResponseWriter, r *http.Request, poolId openapi_types.UUID, proxyId openapi_types.UUID)
+	// List scoring profiles
+	// (GET /scoring-profiles)
+	ScoringProfilesList(w http.ResponseWriter, r *http.Request, params ScoringProfilesListParams)
+	// Create scoring profile
+	// (POST /scoring-profiles)
+	ScoringProfilesCreate(w http.ResponseWriter, r *http.Request)
+	// Delete scoring profile
+	// (DELETE /scoring-profiles/{profileId})
+	ScoringProfilesDelete(w http.ResponseWriter, r *http.Request, profileId openapi_types.UUID)
+	// Get scoring profile
+	// (GET /scoring-profiles/{profileId})
+	ScoringProfilesGet(w http.ResponseWriter, r *http.Request, profileId openapi_types.UUID)
+	// Update scoring profile
+	// (PUT /scoring-profiles/{profileId})
+	ScoringProfilesUpdate(w http.ResponseWriter, r *http.Request, profileId openapi_types.UUID)
 	// Stream campaign events (specific campaign)
 	// (GET /sse/campaigns/{campaignId}/events)
 	SseEventsCampaign(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
@@ -2337,6 +2416,18 @@ func (_ Unimplemented) CampaignsPhaseStop(w http.ResponseWriter, r *http.Request
 // Get campaign progress
 // (GET /campaigns/{campaignId}/progress)
 func (_ Unimplemented) CampaignsProgress(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Trigger campaign rescore
+// (POST /campaigns/{campaignId}/rescore)
+func (_ Unimplemented) CampaignsRescore(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Associate scoring profile with campaign
+// (POST /campaigns/{campaignId}/scoring-profile)
+func (_ Unimplemented) CampaignsScoringProfileAssociate(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2829,6 +2920,36 @@ func (_ Unimplemented) ProxyPoolsAddProxy(w http.ResponseWriter, r *http.Request
 // Remove proxy from pool
 // (DELETE /proxy-pools/{poolId}/proxies/{proxyId})
 func (_ Unimplemented) ProxyPoolsRemoveProxy(w http.ResponseWriter, r *http.Request, poolId openapi_types.UUID, proxyId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// List scoring profiles
+// (GET /scoring-profiles)
+func (_ Unimplemented) ScoringProfilesList(w http.ResponseWriter, r *http.Request, params ScoringProfilesListParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Create scoring profile
+// (POST /scoring-profiles)
+func (_ Unimplemented) ScoringProfilesCreate(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Delete scoring profile
+// (DELETE /scoring-profiles/{profileId})
+func (_ Unimplemented) ScoringProfilesDelete(w http.ResponseWriter, r *http.Request, profileId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get scoring profile
+// (GET /scoring-profiles/{profileId})
+func (_ Unimplemented) ScoringProfilesGet(w http.ResponseWriter, r *http.Request, profileId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Update scoring profile
+// (PUT /scoring-profiles/{profileId})
+func (_ Unimplemented) ScoringProfilesUpdate(w http.ResponseWriter, r *http.Request, profileId openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3833,6 +3954,68 @@ func (siw *ServerInterfaceWrapper) CampaignsProgress(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CampaignsProgress(w, r, campaignId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CampaignsRescore operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsRescore(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsRescore(w, r, campaignId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CampaignsScoringProfileAssociate operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsScoringProfileAssociate(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsScoringProfileAssociate(w, r, campaignId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6079,6 +6262,160 @@ func (siw *ServerInterfaceWrapper) ProxyPoolsRemoveProxy(w http.ResponseWriter, 
 	handler.ServeHTTP(w, r)
 }
 
+// ScoringProfilesList operation middleware
+func (siw *ServerInterfaceWrapper) ScoringProfilesList(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ScoringProfilesListParams
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "limit", r.URL.Query(), &params.Limit)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "offset" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "offset", r.URL.Query(), &params.Offset)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "offset", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ScoringProfilesList(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ScoringProfilesCreate operation middleware
+func (siw *ServerInterfaceWrapper) ScoringProfilesCreate(w http.ResponseWriter, r *http.Request) {
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ScoringProfilesCreate(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ScoringProfilesDelete operation middleware
+func (siw *ServerInterfaceWrapper) ScoringProfilesDelete(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "profileId" -------------
+	var profileId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "profileId", chi.URLParam(r, "profileId"), &profileId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "profileId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ScoringProfilesDelete(w, r, profileId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ScoringProfilesGet operation middleware
+func (siw *ServerInterfaceWrapper) ScoringProfilesGet(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "profileId" -------------
+	var profileId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "profileId", chi.URLParam(r, "profileId"), &profileId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "profileId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ScoringProfilesGet(w, r, profileId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ScoringProfilesUpdate operation middleware
+func (siw *ServerInterfaceWrapper) ScoringProfilesUpdate(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "profileId" -------------
+	var profileId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "profileId", chi.URLParam(r, "profileId"), &profileId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "profileId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ScoringProfilesUpdate(w, r, profileId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // SseEventsCampaign operation middleware
 func (siw *ServerInterfaceWrapper) SseEventsCampaign(w http.ResponseWriter, r *http.Request) {
 
@@ -6363,6 +6700,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/campaigns/{campaignId}/progress", wrapper.CampaignsProgress)
 	})
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/campaigns/{campaignId}/rescore", wrapper.CampaignsRescore)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/campaigns/{campaignId}/scoring-profile", wrapper.CampaignsScoringProfileAssociate)
+	})
+	r.Group(func(r chi.Router) {
 		r.Delete(options.BaseURL+"/campaigns/{campaignId}/state", wrapper.CampaignsStateDelete)
 	})
 	r.Group(func(r chi.Router) {
@@ -6607,6 +6950,21 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Delete(options.BaseURL+"/proxy-pools/{poolId}/proxies/{proxyId}", wrapper.ProxyPoolsRemoveProxy)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/scoring-profiles", wrapper.ScoringProfilesList)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/scoring-profiles", wrapper.ScoringProfilesCreate)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/scoring-profiles/{profileId}", wrapper.ScoringProfilesDelete)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/scoring-profiles/{profileId}", wrapper.ScoringProfilesGet)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/scoring-profiles/{profileId}", wrapper.ScoringProfilesUpdate)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/sse/campaigns/{campaignId}/events", wrapper.SseEventsCampaign)
@@ -8567,6 +8925,145 @@ type CampaignsProgress500JSONResponse struct {
 }
 
 func (response CampaignsProgress500JSONResponse) VisitCampaignsProgressResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsRescoreRequestObject struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+	Body       *CampaignsRescoreJSONRequestBody
+}
+
+type CampaignsRescoreResponseObject interface {
+	VisitCampaignsRescoreResponse(w http.ResponseWriter) error
+}
+
+type CampaignsRescore200JSONResponse SuccessEnvelope
+
+func (response CampaignsRescore200JSONResponse) VisitCampaignsRescoreResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsRescore401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CampaignsRescore401JSONResponse) VisitCampaignsRescoreResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsRescore403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response CampaignsRescore403JSONResponse) VisitCampaignsRescoreResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsRescore404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsRescore404JSONResponse) VisitCampaignsRescoreResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsRescore409JSONResponse struct{ ConflictJSONResponse }
+
+func (response CampaignsRescore409JSONResponse) VisitCampaignsRescoreResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsRescore500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsRescore500JSONResponse) VisitCampaignsRescoreResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsScoringProfileAssociateRequestObject struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+	Body       *CampaignsScoringProfileAssociateJSONRequestBody
+}
+
+type CampaignsScoringProfileAssociateResponseObject interface {
+	VisitCampaignsScoringProfileAssociateResponse(w http.ResponseWriter) error
+}
+
+type CampaignsScoringProfileAssociate200JSONResponse SuccessEnvelope
+
+func (response CampaignsScoringProfileAssociate200JSONResponse) VisitCampaignsScoringProfileAssociateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsScoringProfileAssociate400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CampaignsScoringProfileAssociate400JSONResponse) VisitCampaignsScoringProfileAssociateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsScoringProfileAssociate401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CampaignsScoringProfileAssociate401JSONResponse) VisitCampaignsScoringProfileAssociateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsScoringProfileAssociate403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response CampaignsScoringProfileAssociate403JSONResponse) VisitCampaignsScoringProfileAssociateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsScoringProfileAssociate404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsScoringProfileAssociate404JSONResponse) VisitCampaignsScoringProfileAssociateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsScoringProfileAssociate409JSONResponse struct{ ConflictJSONResponse }
+
+func (response CampaignsScoringProfileAssociate409JSONResponse) VisitCampaignsScoringProfileAssociateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsScoringProfileAssociate500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsScoringProfileAssociate500JSONResponse) VisitCampaignsScoringProfileAssociateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -13653,6 +14150,346 @@ func (response ProxyPoolsRemoveProxy500JSONResponse) VisitProxyPoolsRemoveProxyR
 	return json.NewEncoder(w).Encode(response)
 }
 
+type ScoringProfilesListRequestObject struct {
+	Params ScoringProfilesListParams
+}
+
+type ScoringProfilesListResponseObject interface {
+	VisitScoringProfilesListResponse(w http.ResponseWriter) error
+}
+
+type ScoringProfilesList200JSONResponse struct {
+	Data      *[]ScoringProfile `json:"data,omitempty"`
+	Metadata  *Metadata         `json:"metadata,omitempty"`
+	RequestId string            `json:"requestId"`
+
+	// Success Always true for success envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response ScoringProfilesList200JSONResponse) VisitScoringProfilesListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesList401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ScoringProfilesList401JSONResponse) VisitScoringProfilesListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesList403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response ScoringProfilesList403JSONResponse) VisitScoringProfilesListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesList500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response ScoringProfilesList500JSONResponse) VisitScoringProfilesListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesCreateRequestObject struct {
+	Body *ScoringProfilesCreateJSONRequestBody
+}
+
+type ScoringProfilesCreateResponseObject interface {
+	VisitScoringProfilesCreateResponse(w http.ResponseWriter) error
+}
+
+type ScoringProfilesCreate201JSONResponse struct {
+	Data      *ScoringProfile `json:"data,omitempty"`
+	Metadata  *Metadata       `json:"metadata,omitempty"`
+	RequestId string          `json:"requestId"`
+
+	// Success Always true for success envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response ScoringProfilesCreate201JSONResponse) VisitScoringProfilesCreateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesCreate400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response ScoringProfilesCreate400JSONResponse) VisitScoringProfilesCreateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesCreate401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ScoringProfilesCreate401JSONResponse) VisitScoringProfilesCreateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesCreate403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response ScoringProfilesCreate403JSONResponse) VisitScoringProfilesCreateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesCreate409JSONResponse struct{ ConflictJSONResponse }
+
+func (response ScoringProfilesCreate409JSONResponse) VisitScoringProfilesCreateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesCreate422JSONResponse struct{ ValidationErrorJSONResponse }
+
+func (response ScoringProfilesCreate422JSONResponse) VisitScoringProfilesCreateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesCreate500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response ScoringProfilesCreate500JSONResponse) VisitScoringProfilesCreateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesDeleteRequestObject struct {
+	ProfileId openapi_types.UUID `json:"profileId"`
+}
+
+type ScoringProfilesDeleteResponseObject interface {
+	VisitScoringProfilesDeleteResponse(w http.ResponseWriter) error
+}
+
+type ScoringProfilesDelete200JSONResponse SuccessEnvelope
+
+func (response ScoringProfilesDelete200JSONResponse) VisitScoringProfilesDeleteResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesDelete401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ScoringProfilesDelete401JSONResponse) VisitScoringProfilesDeleteResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesDelete403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response ScoringProfilesDelete403JSONResponse) VisitScoringProfilesDeleteResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesDelete404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ScoringProfilesDelete404JSONResponse) VisitScoringProfilesDeleteResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesDelete500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response ScoringProfilesDelete500JSONResponse) VisitScoringProfilesDeleteResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesGetRequestObject struct {
+	ProfileId openapi_types.UUID `json:"profileId"`
+}
+
+type ScoringProfilesGetResponseObject interface {
+	VisitScoringProfilesGetResponse(w http.ResponseWriter) error
+}
+
+type ScoringProfilesGet200JSONResponse struct {
+	Data      *ScoringProfile `json:"data,omitempty"`
+	Metadata  *Metadata       `json:"metadata,omitempty"`
+	RequestId string          `json:"requestId"`
+
+	// Success Always true for success envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response ScoringProfilesGet200JSONResponse) VisitScoringProfilesGetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesGet401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ScoringProfilesGet401JSONResponse) VisitScoringProfilesGetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesGet403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response ScoringProfilesGet403JSONResponse) VisitScoringProfilesGetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesGet404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ScoringProfilesGet404JSONResponse) VisitScoringProfilesGetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesGet500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response ScoringProfilesGet500JSONResponse) VisitScoringProfilesGetResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesUpdateRequestObject struct {
+	ProfileId openapi_types.UUID `json:"profileId"`
+	Body      *ScoringProfilesUpdateJSONRequestBody
+}
+
+type ScoringProfilesUpdateResponseObject interface {
+	VisitScoringProfilesUpdateResponse(w http.ResponseWriter) error
+}
+
+type ScoringProfilesUpdate200JSONResponse struct {
+	Data      *ScoringProfile `json:"data,omitempty"`
+	Metadata  *Metadata       `json:"metadata,omitempty"`
+	RequestId string          `json:"requestId"`
+
+	// Success Always true for success envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response ScoringProfilesUpdate200JSONResponse) VisitScoringProfilesUpdateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesUpdate400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response ScoringProfilesUpdate400JSONResponse) VisitScoringProfilesUpdateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesUpdate401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response ScoringProfilesUpdate401JSONResponse) VisitScoringProfilesUpdateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesUpdate403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response ScoringProfilesUpdate403JSONResponse) VisitScoringProfilesUpdateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesUpdate404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response ScoringProfilesUpdate404JSONResponse) VisitScoringProfilesUpdateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesUpdate409JSONResponse struct{ ConflictJSONResponse }
+
+func (response ScoringProfilesUpdate409JSONResponse) VisitScoringProfilesUpdateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesUpdate422JSONResponse struct{ ValidationErrorJSONResponse }
+
+func (response ScoringProfilesUpdate422JSONResponse) VisitScoringProfilesUpdateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ScoringProfilesUpdate500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response ScoringProfilesUpdate500JSONResponse) VisitScoringProfilesUpdateResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type SseEventsCampaignRequestObject struct {
 	CampaignId openapi_types.UUID `json:"campaignId"`
 }
@@ -13956,6 +14793,12 @@ type StrictServerInterface interface {
 	// Get campaign progress
 	// (GET /campaigns/{campaignId}/progress)
 	CampaignsProgress(ctx context.Context, request CampaignsProgressRequestObject) (CampaignsProgressResponseObject, error)
+	// Trigger campaign rescore
+	// (POST /campaigns/{campaignId}/rescore)
+	CampaignsRescore(ctx context.Context, request CampaignsRescoreRequestObject) (CampaignsRescoreResponseObject, error)
+	// Associate scoring profile with campaign
+	// (POST /campaigns/{campaignId}/scoring-profile)
+	CampaignsScoringProfileAssociate(ctx context.Context, request CampaignsScoringProfileAssociateRequestObject) (CampaignsScoringProfileAssociateResponseObject, error)
 	// Delete campaign state
 	// (DELETE /campaigns/{campaignId}/state)
 	CampaignsStateDelete(ctx context.Context, request CampaignsStateDeleteRequestObject) (CampaignsStateDeleteResponseObject, error)
@@ -14202,6 +15045,21 @@ type StrictServerInterface interface {
 	// Remove proxy from pool
 	// (DELETE /proxy-pools/{poolId}/proxies/{proxyId})
 	ProxyPoolsRemoveProxy(ctx context.Context, request ProxyPoolsRemoveProxyRequestObject) (ProxyPoolsRemoveProxyResponseObject, error)
+	// List scoring profiles
+	// (GET /scoring-profiles)
+	ScoringProfilesList(ctx context.Context, request ScoringProfilesListRequestObject) (ScoringProfilesListResponseObject, error)
+	// Create scoring profile
+	// (POST /scoring-profiles)
+	ScoringProfilesCreate(ctx context.Context, request ScoringProfilesCreateRequestObject) (ScoringProfilesCreateResponseObject, error)
+	// Delete scoring profile
+	// (DELETE /scoring-profiles/{profileId})
+	ScoringProfilesDelete(ctx context.Context, request ScoringProfilesDeleteRequestObject) (ScoringProfilesDeleteResponseObject, error)
+	// Get scoring profile
+	// (GET /scoring-profiles/{profileId})
+	ScoringProfilesGet(ctx context.Context, request ScoringProfilesGetRequestObject) (ScoringProfilesGetResponseObject, error)
+	// Update scoring profile
+	// (PUT /scoring-profiles/{profileId})
+	ScoringProfilesUpdate(ctx context.Context, request ScoringProfilesUpdateRequestObject) (ScoringProfilesUpdateResponseObject, error)
 	// Stream campaign events (specific campaign)
 	// (GET /sse/campaigns/{campaignId}/events)
 	SseEventsCampaign(ctx context.Context, request SseEventsCampaignRequestObject) (SseEventsCampaignResponseObject, error)
@@ -15164,6 +16022,72 @@ func (sh *strictHandler) CampaignsProgress(w http.ResponseWriter, r *http.Reques
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CampaignsProgressResponseObject); ok {
 		if err := validResponse.VisitCampaignsProgressResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CampaignsRescore operation middleware
+func (sh *strictHandler) CampaignsRescore(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	var request CampaignsRescoreRequestObject
+
+	request.CampaignId = campaignId
+
+	var body CampaignsRescoreJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsRescore(ctx, request.(CampaignsRescoreRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsRescore")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsRescoreResponseObject); ok {
+		if err := validResponse.VisitCampaignsRescoreResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CampaignsScoringProfileAssociate operation middleware
+func (sh *strictHandler) CampaignsScoringProfileAssociate(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	var request CampaignsScoringProfileAssociateRequestObject
+
+	request.CampaignId = campaignId
+
+	var body CampaignsScoringProfileAssociateJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsScoringProfileAssociate(ctx, request.(CampaignsScoringProfileAssociateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsScoringProfileAssociate")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsScoringProfileAssociateResponseObject); ok {
+		if err := validResponse.VisitCampaignsScoringProfileAssociateResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -17397,6 +18321,148 @@ func (sh *strictHandler) ProxyPoolsRemoveProxy(w http.ResponseWriter, r *http.Re
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(ProxyPoolsRemoveProxyResponseObject); ok {
 		if err := validResponse.VisitProxyPoolsRemoveProxyResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ScoringProfilesList operation middleware
+func (sh *strictHandler) ScoringProfilesList(w http.ResponseWriter, r *http.Request, params ScoringProfilesListParams) {
+	var request ScoringProfilesListRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ScoringProfilesList(ctx, request.(ScoringProfilesListRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ScoringProfilesList")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ScoringProfilesListResponseObject); ok {
+		if err := validResponse.VisitScoringProfilesListResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ScoringProfilesCreate operation middleware
+func (sh *strictHandler) ScoringProfilesCreate(w http.ResponseWriter, r *http.Request) {
+	var request ScoringProfilesCreateRequestObject
+
+	var body ScoringProfilesCreateJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ScoringProfilesCreate(ctx, request.(ScoringProfilesCreateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ScoringProfilesCreate")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ScoringProfilesCreateResponseObject); ok {
+		if err := validResponse.VisitScoringProfilesCreateResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ScoringProfilesDelete operation middleware
+func (sh *strictHandler) ScoringProfilesDelete(w http.ResponseWriter, r *http.Request, profileId openapi_types.UUID) {
+	var request ScoringProfilesDeleteRequestObject
+
+	request.ProfileId = profileId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ScoringProfilesDelete(ctx, request.(ScoringProfilesDeleteRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ScoringProfilesDelete")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ScoringProfilesDeleteResponseObject); ok {
+		if err := validResponse.VisitScoringProfilesDeleteResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ScoringProfilesGet operation middleware
+func (sh *strictHandler) ScoringProfilesGet(w http.ResponseWriter, r *http.Request, profileId openapi_types.UUID) {
+	var request ScoringProfilesGetRequestObject
+
+	request.ProfileId = profileId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ScoringProfilesGet(ctx, request.(ScoringProfilesGetRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ScoringProfilesGet")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ScoringProfilesGetResponseObject); ok {
+		if err := validResponse.VisitScoringProfilesGetResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ScoringProfilesUpdate operation middleware
+func (sh *strictHandler) ScoringProfilesUpdate(w http.ResponseWriter, r *http.Request, profileId openapi_types.UUID) {
+	var request ScoringProfilesUpdateRequestObject
+
+	request.ProfileId = profileId
+
+	var body ScoringProfilesUpdateJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ScoringProfilesUpdate(ctx, request.(ScoringProfilesUpdateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ScoringProfilesUpdate")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ScoringProfilesUpdateResponseObject); ok {
+		if err := validResponse.VisitScoringProfilesUpdateResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

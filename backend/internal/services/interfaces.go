@@ -253,6 +253,10 @@ type LeadGenerationProgress struct {
 type AnalysisService interface {
 	// ProcessAnalysisCampaignBatch performs content analysis on HTTP results and stores analysis results
 	ProcessAnalysisCampaignBatch(ctx context.Context, campaignID uuid.UUID, batchSize int) (done bool, processedCount int64, err error)
+	// ScoreDomains recomputes scores (idempotent) for a campaign
+	ScoreDomains(ctx context.Context, campaignID uuid.UUID) error
+	// RescoreCampaign recalculates scores after profile change
+	RescoreCampaign(ctx context.Context, campaignID uuid.UUID) error
 }
 
 // CampaignWorkerService manages the pool of background workers that process campaign jobs.

@@ -195,3 +195,12 @@
 
 "/campaigns/domain-generation/pattern-offset":
   $ref: "./campaigns/domain-generation-pattern-offset.yaml"
+
+"/scoring-profiles":
+  $ref: "./scoring/scoring-profiles.yaml"
+"/scoring-profiles/{profileId}":
+  $ref: "./scoring/scoring-profile-by-id.yaml"
+"/campaigns/{campaignId}/scoring-profile":
+  $ref: "./scoring/campaign-scoring-profile.yaml"
+"/campaigns/{campaignId}/rescore":
+  $ref: "./scoring/campaign-rescore.yaml"

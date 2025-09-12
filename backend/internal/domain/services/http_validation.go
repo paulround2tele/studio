@@ -5,10 +5,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"time"
+
+	"bytes"
+	"net/http"
+	"net/url"
+
+	"github.com/fntelecomllc/studio/backend/internal/keywordscanner"
+	"golang.org/x/net/html"
 
 	"github.com/fntelecomllc/studio/backend/internal/httpvalidator"
 	"github.com/fntelecomllc/studio/backend/internal/models"
@@ -25,6 +34,9 @@ type httpValidationService struct {
 	proxyStore    store.ProxyStore
 	deps          Dependencies
 	httpValidator *httpvalidator.HTTPValidator
+	// keyword scanner (lazy init)
+	kwScannerInit sync.Once
+	kwScanner     *keywordscanner.Service
 
 	// Execution tracking per campaign
 	mu         sync.RWMutex
@@ -48,7 +60,7 @@ type httpValidationExecution struct {
 }
 
 // NewHTTPValidationService creates a new HTTP validation service
-func NewHTTPValidationService(store store.CampaignStore, deps Dependencies, httpValidator *httpvalidator.HTTPValidator, personaStore store.PersonaStore, proxyStore store.ProxyStore) HTTPValidationService {
+func NewHTTPValidationService(store store.CampaignStore, deps Dependencies, httpValidator *httpvalidator.HTTPValidator, personaStore store.PersonaStore, proxyStore store.ProxyStore, keywordStore store.KeywordStore) HTTPValidationService {
 	return &httpValidationService{
 		store:         store,
 		personaStore:  personaStore,
@@ -57,6 +69,12 @@ func NewHTTPValidationService(store store.CampaignStore, deps Dependencies, http
 		httpValidator: httpValidator,
 		executions:    make(map[uuid.UUID]*httpValidationExecution),
 		status:        models.PhaseStatusNotStarted,
+		kwScanner: func() *keywordscanner.Service {
+			if keywordStore != nil {
+				return keywordscanner.NewService(keywordStore)
+			}
+			return nil
+		}(),
 	}
 }
 
@@ -95,9 +113,6 @@ func (s *httpValidationService) Configure(ctx context.Context, campaignID uuid.U
 	if exec, exists := s.executions[campaignID]; exists {
 		// Preserve any prior results but reset status to Configured
 		exec.Status = models.PhaseStatusConfigured
-		if exec.StartedAt.IsZero() {
-			// leave StartedAt zero so it is omitted until execution
-		}
 	} else {
 		s.executions[campaignID] = &httpValidationExecution{
 			CampaignID:     campaignID,
@@ -174,9 +189,11 @@ func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUI
 	if existing, exists := s.executions[campaignID]; exists {
 		switch existing.Status {
 		case models.PhaseStatusInProgress:
-			// Another execution genuinely running
+			// Idempotent: attach to existing execution instead of treating as error (Blocker B2)
+			ch := existing.ProgressChan
 			s.mu.Unlock()
-			return nil, fmt.Errorf("HTTP validation already in progress for campaign %s", campaignID)
+			s.deps.Logger.Debug(ctx, "HTTP validation Execute idempotent attach to existing in-progress execution", map[string]interface{}{"campaign_id": campaignID})
+			return ch, nil
 		case models.PhaseStatusConfigured:
 			// Transition configured stub to active execution
 			existing.Status = models.PhaseStatusInProgress
@@ -363,16 +380,79 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 	processed := 0
 	allResults := make([]*httpvalidator.ValidationResult, 0, total)
 
-	// After mapping results but before persistence, perform optional enrichment
-	// FEATURE FLAG placeholder (simple env check)
+	// Feature flags & config parsing
 	enrichmentEnabled := false
+	microcrawlEnabled := false
+	microMaxPages := 3
+	microByteBudget := 150000
 	if v, ok := os.LookupEnv("ENABLE_HTTP_ENRICHMENT"); ok && (v == "1" || strings.EqualFold(v, "true")) {
 		enrichmentEnabled = true
 	}
-	// enrichmentVectors map reused across batches (domain -> feature vector)
+	if v, ok := os.LookupEnv("ENABLE_HTTP_MICROCRAWL"); ok && (v == "1" || strings.EqualFold(v, "true")) {
+		microcrawlEnabled = true
+	}
+	// Phase config overrides
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		if phase, perr := s.store.GetCampaignPhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation); perr == nil && phase != nil && phase.Configuration != nil {
+			var cfg models.HTTPPhaseConfigRequest
+			if uErr := json.Unmarshal(*phase.Configuration, &cfg); uErr == nil {
+				if cfg.EnrichmentEnabled != nil {
+					enrichmentEnabled = *cfg.EnrichmentEnabled
+				}
+				if cfg.MicroCrawlEnabled != nil {
+					microcrawlEnabled = *cfg.MicroCrawlEnabled
+				}
+				if cfg.MicroCrawlMaxPages != nil && *cfg.MicroCrawlMaxPages > 0 {
+					microMaxPages = *cfg.MicroCrawlMaxPages
+				}
+				if cfg.MicroCrawlByteBudget != nil && *cfg.MicroCrawlByteBudget > 0 {
+					microByteBudget = *cfg.MicroCrawlByteBudget
+				}
+			}
+		}
+	}
+
+	// Keyword scanner already eagerly injected; no-op lazy init retained for future dynamic wiring
+	if enrichmentEnabled && s.kwScanner == nil {
+		// nothing: we failed to inject keyword store; continue gracefully
+	}
+
+	// Batch-level reusable structures
 	var enrichmentVectors map[string]map[string]interface{}
 	if enrichmentEnabled {
-		enrichmentVectors = make(map[string]map[string]interface{}, 1024)
+		enrichmentVectors = make(map[string]map[string]interface{}, 2048)
+	}
+
+	// helper parked heuristic (MVP)
+	parkedHeuristic := func(title string, snippet string) (bool, float64) {
+		if title == "" && snippet == "" {
+			return false, 0
+		}
+		lt := strings.ToLower(title)
+		ls := strings.ToLower(snippet)
+		signals := 0
+		total := 0
+		scoreIf := func(cond bool, weight int) {
+			if cond {
+				signals += weight
+			}
+			total += weight
+		}
+		scoreIf(strings.Contains(lt, "parked"), 3)
+		scoreIf(strings.Contains(lt, "buy this domain"), 4)
+		scoreIf(strings.Contains(ls, "sedo"), 2)
+		scoreIf(strings.Contains(ls, "namecheap"), 1)
+		scoreIf(strings.Contains(ls, "godaddy"), 1)
+		scoreIf(strings.Contains(ls, "coming soon"), 2)
+		if total == 0 {
+			return false, 0
+		}
+		conf := float64(signals) / float64(total)
+		return conf >= 0.75, conf
 	}
 
 	for i := 0; i < total; i += batchSize {
@@ -397,13 +477,41 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 		allResults = append(allResults, results...)
 		processed += len(results)
 
-		// Build enrichment feature vectors per successful domain (placeholder extraction)
-		if enrichmentEnabled {
+		// Enrichment: feature vector construction (keywords + parked heuristic)
+		if enrichmentEnabled && s.kwScanner != nil {
+			// Acquire HTTP phase config to get keyword/ad-hoc lists once per batch
+			var keywordSetIDs []string
+			var adHocKeywords []string
+			if s.store != nil {
+				var exec store.Querier
+				if q, ok := s.deps.DB.(store.Querier); ok {
+					exec = q
+				}
+				if phase, perr := s.store.GetCampaignPhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation); perr == nil && phase != nil && phase.Configuration != nil {
+					var cfg models.HTTPPhaseConfigRequest
+					_ = json.Unmarshal(*phase.Configuration, &cfg)
+					keywordSetIDs = append(keywordSetIDs, cfg.Keywords...)
+					adHocKeywords = append(adHocKeywords, cfg.AdHocKeywords...)
+				}
+			}
+			// de-duplicate ad-hoc keywords
+			if len(adHocKeywords) > 1 {
+				seen := make(map[string]struct{}, len(adHocKeywords))
+				uniq := adHocKeywords[:0]
+				for _, k := range adHocKeywords {
+					kl := strings.ToLower(k)
+					if _, ok := seen[kl]; ok {
+						continue
+					}
+					seen[kl] = struct{}{}
+					uniq = append(uniq, k)
+				}
+				adHocKeywords = uniq
+			}
 			for _, r := range results {
 				if r == nil || r.Domain == "" {
 					continue
 				}
-				// Determine mapped status (mirror logic in storeHTTPResults for consistency)
 				mapped := "error"
 				le := strings.ToLower(r.Error)
 				switch {
@@ -416,11 +524,79 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 					continue
 				}
 				fv := map[string]interface{}{
-					"status_code": r.StatusCode,
-					"fetched_at":  time.Now().UTC().Format(time.RFC3339),
+					"status_code":   r.StatusCode,
+					"fetched_at":    time.Now().UTC().Format(time.RFC3339),
+					"content_bytes": r.ContentLength,
 				}
-				if r.ExtractedTitle != "" {
-					fv["title_has_keyword"] = false
+				// Keyword scans (root only for now)
+				if len(r.RawBody) > 0 && (len(keywordSetIDs) > 0 || len(adHocKeywords) > 0) {
+					var exec store.Querier
+					if q, ok := s.deps.DB.(store.Querier); ok {
+						exec = q
+					}
+					kwSetHits := 0
+					uniqueSetPatterns := make(map[string]struct{}, 32)
+					if len(keywordSetIDs) > 0 {
+						if hitsBySet, err := s.kwScanner.ScanBySetIDs(ctx, exec, r.RawBody, keywordSetIDs); err == nil && len(hitsBySet) > 0 {
+							perSet := make(map[string]int, len(hitsBySet))
+							for setID, patterns := range hitsBySet {
+								perSet[setID] = len(patterns)
+								kwSetHits += len(patterns)
+								for _, p := range patterns {
+									uniqueSetPatterns[p] = struct{}{}
+								}
+							}
+							fv["keyword_set_hits"] = perSet
+						}
+					}
+					// ad-hoc
+					if len(adHocKeywords) > 0 {
+						if adhHits, err := s.kwScanner.ScanAdHocKeywords(ctx, r.RawBody, adHocKeywords); err == nil && len(adhHits) > 0 {
+							fv["ad_hoc_hits"] = adhHits
+							for _, p := range adhHits {
+								uniqueSetPatterns[p] = struct{}{}
+							}
+						}
+					}
+					if r.ExtractedTitle != "" {
+						tl := strings.ToLower(r.ExtractedTitle)
+						hasTitleKeyword := false
+						for k := range uniqueSetPatterns {
+							if strings.Contains(tl, strings.ToLower(k)) {
+								hasTitleKeyword = true
+								break
+							}
+						}
+						fv["title_has_keyword"] = hasTitleKeyword
+					}
+					fv["kw_hits_total"] = len(uniqueSetPatterns)
+					fv["kw_unique"] = len(uniqueSetPatterns)
+				}
+				// Parked heuristic
+				isParked, conf := parkedHeuristic(r.ExtractedTitle, r.ExtractedContentSnippet)
+				fv["parked_confidence"] = conf
+				if isParked {
+					fv["is_parked"] = true
+				}
+				// Micro-crawl execution (depth-1) if criteria met
+				if microcrawlEnabled && !isParked {
+					kwu, _ := fv["kw_unique"].(int)
+					if kwu < 2 && r.ContentLength < 60000 && conf < 0.5 {
+						pagesExamined, exhausted, newKw, newPatterns := s.microCrawlEnhance(ctx, campaignID, r, keywordSetIDs, adHocKeywords, microMaxPages, microByteBudget)
+						if pagesExamined > 0 {
+							fv["microcrawl_used"] = true
+							fv["microcrawl_pages"] = pagesExamined
+							fv["microcrawl_exhausted"] = exhausted
+							fv["secondary_pages_examined"] = pagesExamined
+							// merge keywords
+							if len(newPatterns) > 0 {
+								fv["kw_hits_total"] = newKw
+								fv["kw_unique"] = newKw
+							}
+						} else {
+							fv["microcrawl_planned"] = false
+						}
+					}
 				}
 				enrichmentVectors[r.Domain] = fv
 			}
@@ -435,6 +611,34 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 		if enrichmentEnabled && len(enrichmentVectors) > 0 {
 			if err := s.persistFeatureVectors(ctx, campaignID, enrichmentVectors); err != nil {
 				s.deps.Logger.Warn(ctx, "Failed to persist feature vectors", map[string]interface{}{"campaign_id": campaignID, "error": err.Error()})
+			} else {
+				// Emit SSE enrichment sample
+				if s.deps.SSE != nil {
+					limit := 25
+					count := 0
+					sample := make([]map[string]interface{}, 0, limit)
+					for d, fv := range enrichmentVectors {
+						if count >= limit {
+							break
+						}
+						sample = append(sample, map[string]interface{}{"domain": d, "kw_unique": fv["kw_unique"], "parked_confidence": fv["parked_confidence"], "is_parked": fv["is_parked"], "microcrawl_planned": fv["microcrawl_planned"]})
+						count++
+					}
+					msg, _ := json.Marshal(map[string]interface{}{
+						"event":           "http_enrichment",
+						"campaignId":      campaignID.String(),
+						"count":           len(enrichmentVectors),
+						"sample":          sample,
+						"microcrawl":      microcrawlEnabled,
+						"microMaxPages":   microMaxPages,
+						"microByteBudget": microByteBudget,
+					})
+					s.deps.SSE.Send(string(msg))
+				}
+				// reset map
+				for k := range enrichmentVectors {
+					delete(enrichmentVectors, k)
+				}
 			}
 		}
 
@@ -698,31 +902,90 @@ func (s *httpValidationService) storeHTTPResults(ctx context.Context, campaignID
 			reasonPtr = &r
 		}
 		if status == "error" {
+			// Consolidated HTTP error taxonomy inspired by DNS taxonomy normalization.
 			le := strings.ToLower(r.Error)
+			ls := strings.ToLower(r.Status)
+			// Direct status string mappings first (validator domain specific)
 			switch {
-			case strings.Contains(le, "timeout"):
+			case strings.Contains(ls, "statuscodemismatch"):
+				val := "STATUS_CODE_MISMATCH"
+				reasonPtr = &val
+			case strings.Contains(ls, "contentmismatch"):
+				val := "CONTENT_MISMATCH"
+				reasonPtr = &val
+			case strings.Contains(ls, "fetcherror"):
+				// Often network layer issues
+				val := "FETCH_ERROR"
+				reasonPtr = &val
+			case strings.Contains(ls, "headlessfailed"):
+				val := "HEADLESS_FAILED"
+				reasonPtr = &val
+			case strings.Contains(ls, "headlesstimeout"):
 				status = "timeout"
-				tr := "TIMEOUT"
-				reasonPtr = &tr
-			case r.StatusCode == 404:
-				val := "NOT_FOUND"
+				val := "TIMEOUT"
 				reasonPtr = &val
-			case r.StatusCode >= 500 && r.StatusCode < 600:
-				val := "UPSTREAM_5XX"
-				reasonPtr = &val
-			case strings.Contains(le, "proxy"):
-				val := "PROXY_ERROR"
-				reasonPtr = &val
-			case strings.Contains(le, "certificate has expired") || strings.Contains(le, "certificate expired"):
-				val := "SSL_EXPIRED"
-				reasonPtr = &val
-			case strings.Contains(le, "tls") || strings.Contains(le, "certificate"):
-				val := "TLS_ERROR"
-				reasonPtr = &val
-			case strings.Contains(le, "connection reset"):
-				val := "CONNECTION_RESET"
-				reasonPtr = &val
-			case r.Error != "":
+			}
+			// If still generic, inspect error text & status code
+			if reasonPtr == nil {
+				switch {
+				case strings.Contains(le, "timeout"):
+					status = "timeout"
+					tr := "TIMEOUT"
+					reasonPtr = &tr
+				case strings.Contains(le, "context canceled") || strings.Contains(le, "canceled"):
+					val := "CANCELED"
+					reasonPtr = &val
+				case strings.Contains(le, "connection refused"):
+					val := "CONNECTION_REFUSED"
+					reasonPtr = &val
+				case strings.Contains(le, "no such host") || strings.Contains(le, "lookup "):
+					val := "DNS_RESOLVE_ERROR"
+					reasonPtr = &val
+				case strings.Contains(le, "connection reset"):
+					val := "CONNECTION_RESET"
+					reasonPtr = &val
+				case strings.Contains(le, "tls") && strings.Contains(le, "handshake"):
+					val := "TLS_HANDSHAKE"
+					reasonPtr = &val
+				case strings.Contains(le, "certificate has expired") || strings.Contains(le, "certificate expired"):
+					val := "SSL_EXPIRED"
+					reasonPtr = &val
+				case strings.Contains(le, "certificate"):
+					val := "TLS_ERROR"
+					reasonPtr = &val
+				case strings.Contains(le, "proxy"):
+					val := "PROXY_ERROR"
+					reasonPtr = &val
+				}
+			}
+			// HTTP status code derived reasons
+			if reasonPtr == nil {
+				switch {
+				case r.StatusCode == 404:
+					val := "NOT_FOUND"
+					reasonPtr = &val
+				case r.StatusCode == 403:
+					val := "FORBIDDEN"
+					reasonPtr = &val
+				case r.StatusCode == 401:
+					val := "UNAUTHORIZED"
+					reasonPtr = &val
+				case r.StatusCode == 410:
+					val := "GONE"
+					reasonPtr = &val
+				case r.StatusCode == 429:
+					val := "RATE_LIMIT"
+					reasonPtr = &val
+				case r.StatusCode == 451:
+					val := "UNAVAILABLE_LEGAL"
+					reasonPtr = &val
+				case r.StatusCode >= 500 && r.StatusCode < 600:
+					val := "UPSTREAM_5XX"
+					reasonPtr = &val
+				}
+			}
+			// Final fallback if we still don't have a reason but we are error
+			if reasonPtr == nil && r.Error != "" {
 				val := "ERROR"
 				reasonPtr = &val
 			}
@@ -879,24 +1142,184 @@ func (s *httpValidationService) persistFeatureVectors(ctx context.Context, campa
 	if s.store == nil || len(vectors) == 0 {
 		return nil
 	}
-	// Attempt per-domain update (could be optimized with COPY / temp table in future)
 	var exec store.Querier
 	if q, ok := s.deps.DB.(store.Querier); ok {
 		exec = q
 	}
-	for domain, fv := range vectors {
-		raw, _ := json.Marshal(fv)
-		// Use store helper if exists; else execute direct SQL via exec (Querier)
-		if exec != nil {
-			_, err := exec.ExecContext(ctx, `UPDATE generated_domains SET feature_vector = $1, last_http_fetched_at = NOW(), secondary_pages_examined = COALESCE(secondary_pages_examined,0) WHERE campaign_id = $2 AND domain_name = $3`, raw, campaignID, domain)
-			if err != nil {
-				if s.deps.Logger != nil {
+	// If we have a *sqlx.DB we can perform a single bulk UPDATE using VALUES
+	sqlxDB, _ := s.deps.DB.(*sqlx.DB)
+	if sqlxDB == nil || len(vectors) == 1 {
+		// fallback per-domain
+		for domain, fv := range vectors {
+			raw, _ := json.Marshal(fv)
+			if exec != nil {
+				_, err := exec.ExecContext(ctx, `UPDATE generated_domains SET feature_vector = $1, last_http_fetched_at = NOW(), parked_confidence = COALESCE($2, parked_confidence), is_parked = CASE WHEN $3::boolean IS TRUE THEN TRUE ELSE is_parked END WHERE campaign_id = $4 AND domain_name = $5`, raw, fv["parked_confidence"], fv["is_parked"], campaignID, domain)
+				if err != nil && s.deps.Logger != nil {
 					s.deps.Logger.Debug(ctx, "Feature vector update failed", map[string]interface{}{"domain": domain, "error": err.Error()})
 				}
 			}
 		}
+		return nil
+	}
+	// Bulk path
+	domains := make([]string, 0, len(vectors))
+	for d := range vectors {
+		domains = append(domains, d)
+	}
+	sort.Strings(domains)
+	valueStrings := make([]string, 0, len(domains))
+	args := make([]interface{}, 0, len(domains)*4+1)
+	args = append(args, campaignID) // $1
+	idx := 2
+	for _, d := range domains {
+		fv := vectors[d]
+		raw, _ := json.Marshal(fv)
+		valueStrings = append(valueStrings, fmt.Sprintf("($%d,$%d,$%d,$%d)", idx, idx+1, idx+2, idx+3))
+		args = append(args, d, raw, fv["parked_confidence"], fv["is_parked"]) // domain, feature_vector, parked_confidence, is_parked
+		idx += 4
+	}
+	query := fmt.Sprintf(`WITH incoming(domain_name,feature_vector,parked_confidence,is_parked) AS (VALUES %s)
+UPDATE generated_domains gd
+SET feature_vector = incoming.feature_vector,
+	last_http_fetched_at = NOW(),
+	parked_confidence = COALESCE(incoming.parked_confidence, gd.parked_confidence),
+	is_parked = CASE WHEN incoming.is_parked IS TRUE THEN TRUE ELSE gd.is_parked END
+FROM incoming
+WHERE gd.campaign_id = $1 AND gd.domain_name = incoming.domain_name`, strings.Join(valueStrings, ","))
+	if _, err := sqlxDB.ExecContext(ctx, query, args...); err != nil {
+		return fmt.Errorf("bulk feature vector update failed: %w", err)
 	}
 	return nil
+}
+
+// microCrawlEnhance performs a bounded depth-1 crawl of internal links for a single domain result.
+// Returns: pagesExamined, exhausted(bool), newUniqueKeywordCount, mergedKeywordPatterns
+func (s *httpValidationService) microCrawlEnhance(ctx context.Context, campaignID uuid.UUID, root *httpvalidator.ValidationResult, keywordSetIDs []string, adHocKeywords []string, maxPages int, byteBudget int) (int, bool, int, []string) {
+	// Preconditions
+	if root == nil || len(root.RawBody) == 0 || maxPages <= 0 || byteBudget <= 0 || s.kwScanner == nil {
+		return 0, false, 0, nil
+	}
+	// Parse root HTML to extract candidate internal links
+	doc, err := html.Parse(bytes.NewReader(root.RawBody))
+	if err != nil {
+		return 0, false, 0, nil
+	}
+	// Extract host from final URL
+	u, perr := url.Parse(root.FinalURL)
+	if perr != nil || u.Host == "" {
+		return 0, false, 0, nil
+	}
+	host := u.Host
+	// Collect links
+	links := make([]string, 0, 32)
+	var f func(*html.Node)
+	f = func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "a" {
+			for _, attr := range n.Attr {
+				if attr.Key == "href" && attr.Val != "" {
+					href := strings.TrimSpace(attr.Val)
+					if strings.HasPrefix(href, "#") {
+						continue
+					}
+					// Normalize relative
+					var abs string
+					if strings.HasPrefix(href, "http://") || strings.HasPrefix(href, "https://") {
+						abs = href
+					} else if strings.HasPrefix(href, "//") {
+						abs = u.Scheme + ":" + href
+					} else if strings.HasPrefix(href, "/") {
+						abs = u.Scheme + "://" + host + href
+					} else {
+						continue
+					}
+					// Filter same host only
+					if pu, e2 := url.Parse(abs); e2 == nil && pu.Host == host {
+						if !strings.Contains(pu.Path, ".") { // skip assets crudely
+							links = append(links, abs)
+						}
+					}
+				}
+			}
+		}
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			f(c)
+		}
+	}
+	f(doc)
+	if len(links) == 0 {
+		return 0, false, 0, nil
+	}
+	// Deduplicate
+	uniq := make(map[string]struct{}, len(links))
+	dedup := make([]string, 0, len(links))
+	for _, l := range links {
+		if _, ok := uniq[l]; ok {
+			continue
+		}
+		uniq[l] = struct{}{}
+		dedup = append(dedup, l)
+	}
+	// Bound pages
+	if len(dedup) > maxPages {
+		dedup = dedup[:maxPages]
+	}
+	client := &http.Client{Timeout: 6 * time.Second}
+	bytesUsed := 0
+	keywordPatterns := make(map[string]struct{}, 32)
+	// Root patterns baseline
+	// Merge existing root keywords if already scanned via enrichment; we don't have them here explicitly, so only new pages contribute additional
+	pagesExamined := 0
+	exhausted := false
+	var exec store.Querier
+	if q, ok := s.deps.DB.(store.Querier); ok {
+		exec = q
+	}
+	for _, link := range dedup {
+		if bytesUsed >= byteBudget {
+			exhausted = true
+			break
+		}
+		req, _ := http.NewRequestWithContext(ctx, "GET", link, nil)
+		resp, err := client.Do(req)
+		if err != nil {
+			continue
+		}
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, int64(byteBudget-bytesUsed)))
+		_ = resp.Body.Close()
+		pagesExamined++
+		bytesUsed += len(body)
+		if len(body) == 0 {
+			continue
+		}
+		if len(keywordSetIDs) > 0 {
+			if hitsBySet, err := s.kwScanner.ScanBySetIDs(ctx, exec, body, keywordSetIDs); err == nil {
+				for _, patterns := range hitsBySet {
+					for _, p := range patterns {
+						keywordPatterns[p] = struct{}{}
+					}
+				}
+			}
+		}
+		if len(adHocKeywords) > 0 {
+			if adh, err := s.kwScanner.ScanAdHocKeywords(ctx, body, adHocKeywords); err == nil {
+				for _, p := range adh {
+					keywordPatterns[p] = struct{}{}
+				}
+			}
+		}
+		if pagesExamined >= maxPages {
+			break
+		}
+	}
+	totalUnique := len(keywordPatterns)
+	if totalUnique == 0 {
+		return pagesExamined, exhausted, 0, nil
+	}
+	merged := make([]string, 0, totalUnique)
+	for k := range keywordPatterns {
+		merged = append(merged, k)
+	}
+	return pagesExamined, exhausted, totalUnique, merged
 }
 
 // updateExecutionStatus updates the execution status for a campaign

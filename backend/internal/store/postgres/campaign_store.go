@@ -29,6 +29,75 @@ func NewCampaignStorePostgres(db *sqlx.DB) store.CampaignStore {
 	return &campaignStorePostgres{db: db}
 }
 
+// --- Scoring Profile CRUD (lightweight) --- //
+
+// CreateScoringProfile inserts a new scoring profile row.
+func (s *campaignStorePostgres) CreateScoringProfile(ctx context.Context, exec store.Querier, sp *models.ScoringProfile) error {
+	if sp.ID == uuid.Nil {
+		sp.ID = uuid.New()
+	}
+	if sp.CreatedAt.IsZero() {
+		sp.CreatedAt = time.Now().UTC()
+	}
+	if sp.UpdatedAt.IsZero() {
+		sp.UpdatedAt = sp.CreatedAt
+	}
+	if sp.Version == 0 {
+		sp.Version = 1
+	}
+	_, err := s.db.ExecContext(ctx, `INSERT INTO scoring_profiles (id,name,description,weights,version,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7)`, sp.ID, sp.Name, sp.Description, sp.Weights, sp.Version, sp.CreatedAt, sp.UpdatedAt)
+	return err
+}
+
+// GetScoringProfile retrieves a scoring profile by id.
+func (s *campaignStorePostgres) GetScoringProfile(ctx context.Context, exec store.Querier, id uuid.UUID) (*models.ScoringProfile, error) {
+	var row models.ScoringProfile
+	if err := s.db.QueryRowContext(ctx, `SELECT id,name,description,weights,version,created_at,updated_at FROM scoring_profiles WHERE id=$1`, id).Scan(&row.ID, &row.Name, &row.Description, &row.Weights, &row.Version, &row.CreatedAt, &row.UpdatedAt); err != nil {
+		return nil, err
+	}
+	return &row, nil
+}
+
+// ListScoringProfiles returns all profiles (bounded simple list).
+func (s *campaignStorePostgres) ListScoringProfiles(ctx context.Context, exec store.Querier, limit int) ([]*models.ScoringProfile, error) {
+	if limit <= 0 || limit > 500 {
+		limit = 100
+	}
+	rows, err := s.db.QueryContext(ctx, `SELECT id,name,description,weights,version,created_at,updated_at FROM scoring_profiles ORDER BY created_at DESC LIMIT $1`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := make([]*models.ScoringProfile, 0, limit)
+	for rows.Next() {
+		var sp models.ScoringProfile
+		if err := rows.Scan(&sp.ID, &sp.Name, &sp.Description, &sp.Weights, &sp.Version, &sp.CreatedAt, &sp.UpdatedAt); err != nil {
+			return nil, err
+		}
+		out = append(out, &sp)
+	}
+	return out, nil
+}
+
+// UpdateScoringProfile updates mutable fields.
+func (s *campaignStorePostgres) UpdateScoringProfile(ctx context.Context, exec store.Querier, sp *models.ScoringProfile) error {
+	sp.UpdatedAt = time.Now().UTC()
+	_, err := s.db.ExecContext(ctx, `UPDATE scoring_profiles SET name=$2, description=$3, weights=$4, version=$5, updated_at=$6 WHERE id=$1`, sp.ID, sp.Name, sp.Description, sp.Weights, sp.Version, sp.UpdatedAt)
+	return err
+}
+
+// DeleteScoringProfile deletes a profile (will cascade association rows due to FK ON DELETE CASCADE in migration if set).
+func (s *campaignStorePostgres) DeleteScoringProfile(ctx context.Context, exec store.Querier, id uuid.UUID) error {
+	_, err := s.db.ExecContext(ctx, `DELETE FROM scoring_profiles WHERE id=$1`, id)
+	return err
+}
+
+// AssociateCampaignScoringProfile links a campaign to a scoring profile (upsert semantics).
+func (s *campaignStorePostgres) AssociateCampaignScoringProfile(ctx context.Context, exec store.Querier, campaignID, profileID uuid.UUID) error {
+	_, err := s.db.ExecContext(ctx, `INSERT INTO campaign_scoring_profile (campaign_id, scoring_profile_id) VALUES ($1,$2) ON CONFLICT (campaign_id) DO UPDATE SET scoring_profile_id=EXCLUDED.scoring_profile_id`, campaignID, profileID)
+	return err
+}
+
 // BeginTxx starts a new transaction.
 func (s *campaignStorePostgres) BeginTxx(ctx context.Context, opts *sql.TxOptions) (*sqlx.Tx, error) {
 	return s.db.BeginTxx(ctx, opts)
@@ -1568,7 +1637,18 @@ func (s *campaignStorePostgres) CompletePhase(ctx context.Context, exec store.Qu
 
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
-		log.Printf("No phase %s found to complete for campaign %s (may already be completed)", phaseType, campaignID)
+		// Attempt to INSERT a missing phase row then mark complete (idempotent behavior)
+		if err := s.ensurePhaseRow(ctx, exec, campaignID, phaseType); err == nil {
+			// retry update after insertion
+			if _, err2 := exec.ExecContext(ctx, query, now, campaignID, phaseType); err2 != nil {
+				log.Printf("Failed to mark newly inserted phase %s as completed for campaign %s: %v", phaseType, campaignID, err2)
+			} else {
+				log.Printf("Inserted & completed missing phase %s for campaign %s", phaseType, campaignID)
+				return nil
+			}
+		} else {
+			log.Printf("No phase %s found to complete for campaign %s (may already be completed) and insertion failed: %v", phaseType, campaignID, err)
+		}
 	} else {
 		log.Printf("Completed phase %s for campaign %s", phaseType, campaignID)
 	}
@@ -1577,13 +1657,15 @@ func (s *campaignStorePostgres) CompletePhase(ctx context.Context, exec store.Qu
 }
 
 func (s *campaignStorePostgres) StartPhase(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error {
+	// FIX (Blocker B1): allow transition from 'configured' -> 'in_progress'. Previous implementation only
+	// transitioned from 'not_started', leaving phases stuck in 'configured' after Configure() step.
 	now := time.Now()
 	query := `
 		UPDATE campaign_phases 
 		SET status = 'in_progress',
-		    started_at = $1,
+		    started_at = COALESCE(started_at, $1),
 		    updated_at = $1
-		WHERE campaign_id = $2 AND phase_type = $3 AND status = 'not_started'`
+		WHERE campaign_id = $2 AND phase_type = $3 AND status IN ('not_started','configured')`
 
 	result, err := exec.ExecContext(ctx, query, now, campaignID, phaseType)
 	if err != nil {
@@ -1592,11 +1674,60 @@ func (s *campaignStorePostgres) StartPhase(ctx context.Context, exec store.Queri
 
 	rowsAffected, _ := result.RowsAffected()
 	if rowsAffected == 0 {
-		log.Printf("No phase %s found to start for campaign %s (may already be started)", phaseType, campaignID)
+		// Attempt to ensure row exists (idempotent) then retry
+		if err := s.ensurePhaseRow(ctx, exec, campaignID, phaseType); err == nil {
+			// Retry update after insertion (will only match not_started newly inserted row)
+			if _, err2 := exec.ExecContext(ctx, query, now, campaignID, phaseType); err2 != nil {
+				log.Printf("Failed to start newly inserted phase %s for campaign %s: %v", phaseType, campaignID, err2)
+			} else {
+				log.Printf("Inserted & started missing phase %s for campaign %s", phaseType, campaignID)
+				return nil
+			}
+		} else {
+			// Diagnostic: fetch current status for visibility into why transition failed
+			if s.db != nil { // best-effort diagnostic
+				statusQuery := `SELECT status FROM campaign_phases WHERE campaign_id=$1 AND phase_type=$2`
+				if row := s.db.QueryRowContext(ctx, statusQuery, campaignID, phaseType); row != nil {
+					var curStatus string
+					if scanErr := row.Scan(&curStatus); scanErr == nil {
+						log.Printf("StartPhase no-op: phase %s for campaign %s currently in status '%s' (expected one of not_started, configured)", phaseType, campaignID, curStatus)
+					}
+				}
+			}
+			log.Printf("No phase %s found to start for campaign %s (may already be in progress or completed) and insertion failed: %v", phaseType, campaignID, err)
+		}
 	} else {
 		log.Printf("Started phase %s for campaign %s", phaseType, campaignID)
 	}
 
+	return nil
+}
+
+// ensurePhaseRow inserts a campaign_phases row if it does not already exist (best-effort, silent on unique conflict)
+func (s *campaignStorePostgres) ensurePhaseRow(ctx context.Context, exec store.Querier, campaignID uuid.UUID, phaseType models.PhaseTypeEnum) error {
+	if exec == nil {
+		exec = s.db
+	}
+	// Determine phase order (default mapping). Keep in sync with setup_campaign_phases function.
+	order := 0
+	switch phaseType {
+	case models.PhaseTypeDomainGeneration:
+		order = 1
+	case models.PhaseTypeDNSValidation:
+		order = 2
+	case models.PhaseTypeHTTPKeywordValidation:
+		order = 3
+	case models.PhaseTypeAnalysis:
+		order = 4
+	default:
+		order = 4
+	}
+	q := `INSERT INTO campaign_phases (campaign_id, phase_type, phase_order, status, progress_percentage, created_at, updated_at)
+          VALUES ($1,$2,$3,'not_started',0,NOW(),NOW())
+          ON CONFLICT DO NOTHING`
+	if _, err := exec.ExecContext(ctx, q, campaignID, phaseType, order); err != nil {
+		return fmt.Errorf("ensurePhaseRow insert failed: %w", err)
+	}
 	return nil
 }
 

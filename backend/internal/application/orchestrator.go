@@ -127,6 +127,15 @@ func NewCampaignOrchestrator(
 	}
 }
 
+// RescoreCampaign triggers a synchronous domain rescore via the analysis service.
+// It is lightweight and returns once scores have been recomputed (may be optimized async later).
+func (o *CampaignOrchestrator) RescoreCampaign(ctx context.Context, campaignID uuid.UUID) error {
+	if o == nil || o.analysisSvc == nil {
+		return fmt.Errorf("analysis service unavailable")
+	}
+	return o.analysisSvc.RescoreCampaign(ctx, campaignID)
+}
+
 // PostCompletionHook defines a hook executed after campaign completion
 type PostCompletionHook interface {
 	Run(ctx context.Context, campaignID uuid.UUID) error

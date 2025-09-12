@@ -1,7 +1,7 @@
 -- 000050_phase_runs_ledger.up.sql
 CREATE TABLE IF NOT EXISTS phase_runs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    campaign_id UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+    campaign_id UUID NOT NULL REFERENCES lead_generation_campaigns(id) ON DELETE CASCADE,
     phase_type TEXT NOT NULL,
     started_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     completed_at TIMESTAMPTZ,

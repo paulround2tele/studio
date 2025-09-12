@@ -1,0 +1,28 @@
+post:
+  tags: [scoring]
+  security:
+    - cookieAuth: []
+  summary: Associate scoring profile with campaign
+  operationId: campaigns_scoring_profile_associate
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema: { $ref: '../../components/schemas/all.yaml#/AssociateScoringProfileRequest' }
+  responses:
+    '200':
+      description: Associated
+      content:
+        application/json:
+          schema: { $ref: '../../components/schemas/all.yaml#/SuccessEnvelope' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '409': { $ref: '../../components/responses.yaml#/Conflict' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

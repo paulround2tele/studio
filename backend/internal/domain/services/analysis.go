@@ -3,8 +3,11 @@ package services
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"math"
+	"strings"
 	"sync"
 	"time"
 
@@ -13,6 +16,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
 )
 
 // analysisService orchestrates content analysis engines
@@ -351,6 +355,14 @@ func (s *analysisService) executeAnalysis(ctx context.Context, campaignID uuid.U
 	}
 
 	s.sendProgress(campaignID, 95.0, "Keyword extraction completed")
+
+	// Phase 3: Scoring using feature_vector (non-fatal)
+	s.sendProgress(campaignID, 96.0, "Starting scoring computation")
+	if err := s.scoreDomains(ctx, campaignID); err != nil {
+		s.deps.Logger.Warn(ctx, "Scoring failed", map[string]interface{}{"campaign_id": campaignID, "error": err.Error()})
+	} else {
+		s.sendProgress(campaignID, 98.5, "Scoring completed")
+	}
 
 	// Store combined results
 	s.mu.Lock()
@@ -785,4 +797,198 @@ func (s *analysisService) updateExecutionStatus(campaignID uuid.UUID, status mod
 			_ = s.store.PausePhase(ctx, exec, campaignID, models.PhaseTypeAnalysis)
 		}
 	}
+}
+
+// scoreDomains computes relevance_score & domain_score from feature_vector JSON for a campaign.
+// Basic weights: keyword_density, unique_keyword_coverage, non_parked, content_length_quality, title_keyword, freshness.
+func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID) error {
+	if s.store == nil {
+		return fmt.Errorf("campaign store not available")
+	}
+	// Acquire raw *sql.DB from supported dependency types (*sqlx.DB or *sql.DB)
+	var dbx *sql.DB
+	switch db := s.deps.DB.(type) {
+	case *sqlx.DB:
+		dbx = db.DB
+	case *sql.DB:
+		dbx = db
+	}
+	if dbx == nil {
+		return fmt.Errorf("scoring requires *sql.DB or *sqlx.DB dependency")
+	}
+	// Attempt to select weights JSON
+	type profileRow struct {
+		Weights json.RawMessage `db:"weights"`
+	}
+	var weightsMap map[string]float64
+	weightsMap = map[string]float64{
+		"keyword_density_weight":         0.35,
+		"unique_keyword_coverage_weight": 0.25,
+		"non_parked_weight":              0.10,
+		"content_length_quality_weight":  0.10,
+		"title_keyword_weight":           0.10,
+		"freshness_weight":               0.10,
+	}
+	// Load weights profile if linked
+	row := profileRow{}
+	if err := dbx.QueryRowContext(ctx, `SELECT sp.weights FROM campaign_scoring_profile csp JOIN scoring_profiles sp ON sp.id = csp.scoring_profile_id WHERE csp.campaign_id = $1`, campaignID).Scan(&row.Weights); err == nil && len(row.Weights) > 0 {
+		tmp := map[string]float64{}
+		if err := json.Unmarshal(row.Weights, &tmp); err == nil && len(tmp) > 0 {
+			for k, v := range tmp {
+				weightsMap[k] = v
+			}
+		}
+	}
+	// Fetch candidate domains with feature vectors
+	rows, err := dbx.QueryContext(ctx, `SELECT domain_name, feature_vector, last_http_fetched_at, is_parked, parked_confidence FROM generated_domains WHERE campaign_id = $1 AND feature_vector IS NOT NULL`, campaignID)
+	if err != nil {
+		return fmt.Errorf("query feature vectors: %w", err)
+	}
+	defer rows.Close()
+	type scoreRow struct {
+		Domain string
+		Score  float64
+		Rel    float64
+	}
+	scores := make([]scoreRow, 0, 1024)
+	now := time.Now()
+	for rows.Next() {
+		var domain string
+		var raw json.RawMessage
+		var fetchedAt *time.Time
+		var isParked sql.NullBool
+		var parkedConf sql.NullFloat64
+		if err := rows.Scan(&domain, &raw, &fetchedAt, &isParked, &parkedConf); err != nil {
+			continue
+		}
+		fv := map[string]interface{}{}
+		_ = json.Unmarshal(raw, &fv)
+		// Extract features
+		kwUnique := asFloat(fv["kw_unique"])         // count of unique keyword patterns
+		kwHitsTotal := asFloat(fv["kw_hits_total"])  // total hits across sets (may equal unique if only presence stored)
+		contentBytes := asFloat(fv["content_bytes"]) // size (content length baseline)
+		titleHas := boolVal(fv["title_has_keyword"])
+		isParkedB := isParked.Valid && isParked.Bool
+		freshness := 0.0
+		if fetchedAt != nil {
+			age := now.Sub(*fetchedAt).Hours() / 24.0
+			if age <= 1 {
+				freshness = 1
+			} else if age < 7 {
+				freshness = 0.7
+			} else if age < 30 {
+				freshness = 0.4
+			}
+		}
+		// Normalizations
+		kwCoverageScore := clamp(kwUnique/5.0, 0, 1) // assume 5+ unique = max coverage for early heuristic
+		// Density: if we have contentBytes > 0 compute hits per KB normalized; else fallback to coverage
+		var densityScore float64
+		if contentBytes > 0 && kwHitsTotal > 0 {
+			perKB := (kwHitsTotal / (contentBytes / 1024.0)) // hits per KB
+			// Normalize: >= 3 hits/KB saturates, <= 0 => 0
+			densityScore = clamp(perKB/3.0, 0, 1)
+		} else {
+			densityScore = kwCoverageScore
+		}
+		nonParkedScore := 1.0
+		if isParkedB {
+			nonParkedScore = 0
+		}
+		contentLenScore := clamp(contentBytes/50000.0, 0, 1)
+		titleScore := 0.0
+		if titleHas {
+			titleScore = 1.0
+		}
+		// Weighted sum
+		rel :=
+			densityScore*weightsMap["keyword_density_weight"] +
+				kwCoverageScore*weightsMap["unique_keyword_coverage_weight"] +
+				nonParkedScore*weightsMap["non_parked_weight"] +
+				contentLenScore*weightsMap["content_length_quality_weight"] +
+				titleScore*weightsMap["title_keyword_weight"] +
+				freshness*weightsMap["freshness_weight"]
+		// Parked penalty if low confidence parked (parked_confidence < .9 but flagged?) - simple
+		if isParkedB && parkedConf.Valid && parkedConf.Float64 < 0.9 {
+			rel *= 0.5
+		}
+		rel = math.Round(rel*1000) / 1000
+		scores = append(scores, scoreRow{Domain: domain, Score: rel, Rel: rel})
+	}
+	if len(scores) == 0 {
+		return nil
+	}
+	// Bulk update
+	// VALUES (domain, relevance, domain_score)
+	valueStrings := make([]string, 0, len(scores))
+	args := make([]interface{}, 0, len(scores)*3+1)
+	args = append(args, campaignID)
+	idx := 2
+	for _, sr := range scores {
+		valueStrings = append(valueStrings, fmt.Sprintf("($%d,$%d,$%d)", idx, idx+1, idx+2))
+		args = append(args, sr.Domain, sr.Rel, sr.Score)
+		idx += 3
+	}
+	query := fmt.Sprintf(`WITH incoming(domain_name,relevance_score,domain_score) AS (VALUES %s)
+UPDATE generated_domains gd
+SET relevance_score = incoming.relevance_score,
+	domain_score = incoming.domain_score
+FROM incoming
+WHERE gd.campaign_id = $1 AND gd.domain_name = incoming.domain_name`, strings.Join(valueStrings, ","))
+	if _, err := dbx.ExecContext(ctx, query, args...); err != nil {
+		return fmt.Errorf("bulk score update failed: %w", err)
+	}
+	// SSE sample
+	if s.deps.SSE != nil {
+		lim := 25
+		if len(scores) < lim {
+			lim = len(scores)
+		}
+		sample := make([]map[string]interface{}, 0, lim)
+		for i := 0; i < lim; i++ {
+			sample = append(sample, map[string]interface{}{"domain": scores[i].Domain, "score": scores[i].Score})
+		}
+		msg, _ := json.Marshal(map[string]interface{}{"event": "domain_scored", "campaignId": campaignID.String(), "count": len(scores), "sample": sample})
+		s.deps.SSE.Send(string(msg))
+	}
+	return nil
+}
+
+// ScoreDomains exposes scoring for external callers (API / rescore triggers)
+func (s *analysisService) ScoreDomains(ctx context.Context, campaignID uuid.UUID) error {
+	return s.scoreDomains(ctx, campaignID)
+}
+
+// RescoreCampaign recomputes scores (alias of ScoreDomains for now; placeholder for profile diff logic)
+func (s *analysisService) RescoreCampaign(ctx context.Context, campaignID uuid.UUID) error {
+	return s.scoreDomains(ctx, campaignID)
+}
+
+// helper conversions
+func asFloat(v interface{}) float64 {
+	switch t := v.(type) {
+	case float64:
+		return t
+	case int:
+		return float64(t)
+	case int32:
+		return float64(t)
+	case int64:
+		return float64(t)
+	case json.Number:
+		f, _ := t.Float64()
+		return f
+	default:
+		return 0
+	}
+}
+func boolVal(v interface{}) bool { b, _ := v.(bool); return b }
+func clamp(v, lo, hi float64) float64 {
+	if v < lo {
+		return lo
+	}
+	if v > hi {
+		return hi
+	}
+	return v
 }

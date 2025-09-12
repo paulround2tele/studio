@@ -507,11 +507,13 @@ Order of Implementation:
 ### Extraction
 - [ ] Fetcher core
 - [ ] Content parser
-- [ ] Keyword hit extractor
-- [ ] Parked heuristic
-- [ ] Micro-crawl
-- [ ] Persistence batch
+- [x] Keyword hit extractor (root page only; micro-crawl pending)
+- [x] Parked heuristic (MVP signals: title/snippet marketplace phrases)
+- [x] Micro-crawl (MVP depth-1; optimization & weighting TBD)
+- [x] Persistence batch (bulk feature_vector update with fallback)
 - [ ] Error taxonomy
+- [x] Config parsing (enrichment + micro-crawl flags; micro-crawl execution pending)
+- [x] SSE enrichment event (batch sample)
 
 ### Scoring / Analysis
 - [ ] Normalization helpers

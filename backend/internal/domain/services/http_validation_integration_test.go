@@ -37,7 +37,7 @@ func TestHTTPValidationService_StoreResultsIntegration(t *testing.T) {
 	}
 	store := postgres.NewCampaignStorePostgres(db)
 	deps := Dependencies{Logger: &testLogger{}, DB: db}
-	svc := NewHTTPValidationService(store, deps, nil, nil, nil).(*httpValidationService)
+	svc := NewHTTPValidationService(store, deps, nil, nil, nil, nil).(*httpValidationService)
 
 	campaignID := uuid.New()
 	if _, err := db.Exec(`INSERT INTO lead_generation_campaigns (id, user_id, name, campaign_type, total_phases, completed_phases, created_at, updated_at) VALUES ($1,'user','http-int','lead_generation',4,0,NOW(),NOW())`, campaignID); err != nil {

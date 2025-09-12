@@ -29,6 +29,8 @@ tags:
     description: Database utilities and bulk queries
   - name: sse
     description: Server-sent event streams for realtime updates
+  - name: scoring
+    description: Manage scoring profiles and trigger campaign rescoring
 
 paths:
   $ref: './paths/index.yaml'

@@ -122,6 +122,50 @@ BulkOperationInfo:
     totalRowsReturned: { type: integer, format: int64 }
     type: { type: string }
 
+# --- Scoring Profiles ---
+ScoringProfile:
+  type: object
+  properties:
+    id: { type: string, format: uuid }
+    name: { type: string }
+    description: { type: string, nullable: true }
+    weights:
+      type: object
+      additionalProperties: { type: number, format: float }
+    version: { type: integer }
+    createdAt: { type: string, format: date-time }
+    updatedAt: { type: string, format: date-time }
+  required: [id, name, weights, version, createdAt, updatedAt]
+CreateScoringProfileRequest:
+  type: object
+  properties:
+    name: { type: string }
+    description: { type: string }
+    weights:
+      type: object
+      additionalProperties: { type: number, format: float }
+    version:
+      type: integer
+      description: Optional explicit version; defaults to 1 if omitted
+  required: [name, weights]
+UpdateScoringProfileRequest:
+  type: object
+  properties:
+    name: { type: string }
+    description: { type: string }
+    weights:
+      type: object
+      additionalProperties: { type: number, format: float }
+    version: { type: integer }
+AssociateScoringProfileRequest:
+  type: object
+  properties:
+    profileId: { type: string, format: uuid }
+  required: [profileId]
+RescoreCampaignRequest:
+  type: object
+  description: Optional body for future rescore parameters (currently unused)
+
  # --- Campaign centralized state & phase execution ---
 CampaignStateEnum:
   type: string

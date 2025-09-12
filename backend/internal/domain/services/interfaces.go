@@ -87,7 +87,10 @@ type HTTPValidationService interface {
 // Orchestrates contentfetcher.ContentFetcher and keywordextractor engines
 type AnalysisService interface {
 	PhaseService
-	// Analysis-specific methods can be added here if needed
+	// ScoreDomains recomputes domain scores for a campaign (idempotent)
+	ScoreDomains(ctx context.Context, campaignID uuid.UUID) error
+	// RescoreCampaign recomputes scores (alias; allows differential logic later)
+	RescoreCampaign(ctx context.Context, campaignID uuid.UUID) error
 }
 
 // EventBus interface for publishing phase events

@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS scoring_profiles (
 );
 
 CREATE TABLE IF NOT EXISTS campaign_scoring_profile (
-    campaign_id UUID NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+    campaign_id UUID NOT NULL REFERENCES lead_generation_campaigns(id) ON DELETE CASCADE,
     scoring_profile_id UUID NOT NULL REFERENCES scoring_profiles(id) ON DELETE CASCADE,
     PRIMARY KEY (campaign_id),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()

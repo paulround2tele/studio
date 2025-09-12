@@ -21,6 +21,11 @@ type HTTPPhaseConfigRequest struct {
 	Keywords      []string `json:"keywords,omitempty" example:"[\"keyword1\", \"keyword2\"]" description:"Predefined keywords to search for"`
 	AdHocKeywords []string `json:"adHocKeywords,omitempty" example:"[\"custom1\", \"custom2\"]" description:"Custom keywords to search for"`
 	Name          *string  `json:"name,omitempty" example:"My HTTP Campaign" description:"Optional name for the campaign"`
+	// Post-DNS enrichment feature flags (additive; default false for backward compatibility)
+	EnrichmentEnabled    *bool `json:"enrichmentEnabled,omitempty" description:"Enable HTTP enrichment (feature vector population)"`
+	MicroCrawlEnabled    *bool `json:"microCrawlEnabled,omitempty" description:"Enable adaptive depth-1 micro-crawl"`
+	MicroCrawlMaxPages   *int  `json:"microCrawlMaxPages,omitempty" description:"Maximum number of micro-crawl secondary pages"`
+	MicroCrawlByteBudget *int  `json:"microCrawlByteBudget,omitempty" description:"Total byte budget for micro-crawl secondary pages"`
 }
 
 // PersonaTypeEnum defines the type of persona
@@ -525,6 +530,17 @@ type GeneratedDomain struct {
 	MicrocrawlExhausted    bool            `db:"microcrawl_exhausted" json:"microcrawlExhausted"`
 	ContentLang            sql.NullString  `db:"content_lang" json:"contentLang,omitempty"`
 	LastHTTPFetchedAt      sql.NullTime    `db:"last_http_fetched_at" json:"lastHttpFetchedAt,omitempty"`
+}
+
+// ScoringProfile represents a set of weights for scoring domains.
+type ScoringProfile struct {
+	ID          uuid.UUID       `db:"id" json:"id"`
+	Name        string          `db:"name" json:"name"`
+	Description sql.NullString  `db:"description" json:"description,omitempty"`
+	Weights     json.RawMessage `db:"weights" json:"weights"` // JSON object {metric_weight: value}
+	Version     int             `db:"version" json:"version"`
+	CreatedAt   time.Time       `db:"created_at" json:"createdAt"`
+	UpdatedAt   time.Time       `db:"updated_at" json:"updatedAt"`
 }
 
 // MarshalJSON provides custom JSON marshaling for GeneratedDomain to handle sql.Null* types properly

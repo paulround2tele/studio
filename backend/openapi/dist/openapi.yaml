@@ -29,6 +29,8 @@ tags:
     description: Database utilities and bulk queries
   - name: sse
     description: Server-sent event streams for realtime updates
+  - name: scoring
+    description: Manage scoring profiles and trigger campaign rescoring
 paths:
   /health:
     get:
@@ -4006,6 +4008,262 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /scoring-profiles:
+    get:
+      tags:
+        - scoring
+      security:
+        - cookieAuth: []
+      summary: List scoring profiles
+      operationId: scoring_profiles_list
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ScoringProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - scoring
+      security:
+        - cookieAuth: []
+      summary: Create scoring profile
+      operationId: scoring_profiles_create
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateScoringProfileRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ScoringProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /scoring-profiles/{profileId}:
+    get:
+      tags:
+        - scoring
+      security:
+        - cookieAuth: []
+      summary: Get scoring profile
+      operationId: scoring_profiles_get
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ScoringProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      tags:
+        - scoring
+      security:
+        - cookieAuth: []
+      summary: Update scoring profile
+      operationId: scoring_profiles_update
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateScoringProfileRequest'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/ScoringProfile'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - scoring
+      security:
+        - cookieAuth: []
+      summary: Delete scoring profile
+      operationId: scoring_profiles_delete
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/scoring-profile:
+    post:
+      tags:
+        - scoring
+      security:
+        - cookieAuth: []
+      summary: Associate scoring profile with campaign
+      operationId: campaigns_scoring_profile_associate
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssociateScoringProfileRequest'
+      responses:
+        '200':
+          description: Associated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/rescore:
+    post:
+      tags:
+        - scoring
+      security:
+        - cookieAuth: []
+      summary: Trigger campaign rescore
+      operationId: campaigns_rescore
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RescoreCampaignRequest'
+      responses:
+        '200':
+          description: Rescore initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 components:
   responses:
     Unauthorized:
@@ -6328,6 +6586,80 @@ components:
         currentOffset:
           type: integer
           format: int64
+    ScoringProfile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        weights:
+          type: object
+          additionalProperties:
+            type: number
+            format: float
+        version:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - weights
+        - version
+        - createdAt
+        - updatedAt
+    CreateScoringProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        weights:
+          type: object
+          additionalProperties:
+            type: number
+            format: float
+        version:
+          type: integer
+          description: Optional explicit version; defaults to 1 if omitted
+      required:
+        - name
+        - weights
+    UpdateScoringProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        weights:
+          type: object
+          additionalProperties:
+            type: number
+            format: float
+        version:
+          type: integer
+    AssociateScoringProfileRequest:
+      type: object
+      properties:
+        profileId:
+          type: string
+          format: uuid
+      required:
+        - profileId
+    RescoreCampaignRequest:
+      type: object
+      description: Optional body for future rescore parameters (currently unused)
     KeywordSetWithRulesResponse:
       type: object
       properties:
