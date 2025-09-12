@@ -98,6 +98,61 @@ func (s *campaignStorePostgres) AssociateCampaignScoringProfile(ctx context.Cont
 	return err
 }
 
+// --- Keyword Profile CRUD --- //
+
+// CreateKeywordProfile inserts a new keyword profile row.
+func (s *campaignStorePostgres) CreateKeywordProfile(ctx context.Context, exec store.Querier, kp *models.KeywordProfile) error {
+	if kp.ID == uuid.Nil { kp.ID = uuid.New() }
+	if kp.CreatedAt.IsZero() { kp.CreatedAt = time.Now().UTC() }
+	if kp.UpdatedAt.IsZero() { kp.UpdatedAt = kp.CreatedAt }
+	if kp.Version == 0 { kp.Version = 1 }
+	_, err := s.db.ExecContext(ctx, `INSERT INTO keyword_profiles (id,name,description,keywords,version,created_at,updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7)`, kp.ID, kp.Name, kp.Description, kp.Keywords, kp.Version, kp.CreatedAt, kp.UpdatedAt)
+	return err
+}
+
+// GetKeywordProfile retrieves a keyword profile by id.
+func (s *campaignStorePostgres) GetKeywordProfile(ctx context.Context, exec store.Querier, id uuid.UUID) (*models.KeywordProfile, error) {
+	var row models.KeywordProfile
+	if err := s.db.QueryRowContext(ctx, `SELECT id,name,description,keywords,version,created_at,updated_at FROM keyword_profiles WHERE id=$1`, id).Scan(&row.ID, &row.Name, &row.Description, &row.Keywords, &row.Version, &row.CreatedAt, &row.UpdatedAt); err != nil {
+		return nil, err
+	}
+	return &row, nil
+}
+
+// ListKeywordProfiles returns keyword profiles (bounded list).
+func (s *campaignStorePostgres) ListKeywordProfiles(ctx context.Context, exec store.Querier, limit int) ([]*models.KeywordProfile, error) {
+	if limit <= 0 || limit > 500 { limit = 100 }
+	rows, err := s.db.QueryContext(ctx, `SELECT id,name,description,keywords,version,created_at,updated_at FROM keyword_profiles ORDER BY created_at DESC LIMIT $1`, limit)
+	if err != nil { return nil, err }
+	defer rows.Close()
+	out := make([]*models.KeywordProfile, 0, limit)
+	for rows.Next() {
+		var kp models.KeywordProfile
+		if err := rows.Scan(&kp.ID, &kp.Name, &kp.Description, &kp.Keywords, &kp.Version, &kp.CreatedAt, &kp.UpdatedAt); err != nil { return nil, err }
+		out = append(out, &kp)
+	}
+	return out, nil
+}
+
+// UpdateKeywordProfile updates mutable fields.
+func (s *campaignStorePostgres) UpdateKeywordProfile(ctx context.Context, exec store.Querier, kp *models.KeywordProfile) error {
+	kp.UpdatedAt = time.Now().UTC()
+	_, err := s.db.ExecContext(ctx, `UPDATE keyword_profiles SET name=$2, description=$3, keywords=$4, version=$5, updated_at=$6 WHERE id=$1`, kp.ID, kp.Name, kp.Description, kp.Keywords, kp.Version, kp.UpdatedAt)
+	return err
+}
+
+// AssociateCampaignKeywordProfile links a campaign to a keyword profile (upsert semantics).
+func (s *campaignStorePostgres) AssociateCampaignKeywordProfile(ctx context.Context, exec store.Querier, campaignID, profileID uuid.UUID) error {
+	_, err := s.db.ExecContext(ctx, `INSERT INTO campaign_keyword_profile (campaign_id, keyword_profile_id) VALUES ($1,$2) ON CONFLICT (campaign_id) DO UPDATE SET keyword_profile_id=EXCLUDED.keyword_profile_id`, campaignID, profileID)
+	return err
+}
+
+// DeleteKeywordProfile deletes a keyword profile (cascade association rows).
+func (s *campaignStorePostgres) DeleteKeywordProfile(ctx context.Context, exec store.Querier, id uuid.UUID) error {
+	_, err := s.db.ExecContext(ctx, `DELETE FROM keyword_profiles WHERE id=$1`, id)
+	return err
+}
+
 // BeginTxx starts a new transaction.
 func (s *campaignStorePostgres) BeginTxx(ctx context.Context, opts *sql.TxOptions) (*sqlx.Tx, error) {
 	return s.db.BeginTxx(ctx, opts)
