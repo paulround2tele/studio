@@ -167,23 +167,51 @@ func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUI
 		return nil, fmt.Errorf("cannot start HTTP validation before DNS validation completes: %w", err)
 	}
 
-	// Check if already executing
+	// Handle existing execution state (Configured -> InProgress transition, idempotent restarts)
+	reuseExisting := false
 	s.mu.Lock()
-	if _, exists := s.executions[campaignID]; exists {
-		s.mu.Unlock()
-		return nil, fmt.Errorf("HTTP validation already in progress for campaign %s", campaignID)
+	if existing, exists := s.executions[campaignID]; exists {
+		switch existing.Status {
+		case models.PhaseStatusInProgress:
+			// Another execution genuinely running
+			s.mu.Unlock()
+			return nil, fmt.Errorf("HTTP validation already in progress for campaign %s", campaignID)
+		case models.PhaseStatusConfigured:
+			// Transition configured stub to active execution
+			existing.Status = models.PhaseStatusInProgress
+			existing.StartedAt = time.Now()
+			existing.Progress = 0
+			existing.ItemsProcessed = 0
+			if existing.CancelChan == nil {
+				existing.CancelChan = make(chan struct{})
+			}
+			if existing.ProgressChan == nil {
+				existing.ProgressChan = make(chan PhaseProgress, 100)
+			}
+			reuseExisting = true
+		case models.PhaseStatusCompleted, models.PhaseStatusFailed, models.PhaseStatusPaused:
+			if existing.ProgressChan != nil {
+				close(existing.ProgressChan)
+			}
+			// Will create new execution below
+		}
 	}
-
-	// Create execution tracking
-	execution := &httpValidationExecution{
-		CampaignID:   campaignID,
-		Status:       models.PhaseStatusInProgress,
-		StartedAt:    time.Now(),
-		Progress:     0.0,
-		CancelChan:   make(chan struct{}),
-		ProgressChan: make(chan PhaseProgress, 100),
+	var execution *httpValidationExecution
+	if reuseExisting {
+		execution = s.executions[campaignID]
+		s.deps.Logger.Debug(ctx, "HTTP validation resumed from configured state", map[string]interface{}{"campaign_id": campaignID})
+	} else {
+		// Create new execution tracking (first start or restart after terminal state)
+		execution = &httpValidationExecution{
+			CampaignID:   campaignID,
+			Status:       models.PhaseStatusInProgress,
+			StartedAt:    time.Now(),
+			Progress:     0.0,
+			CancelChan:   make(chan struct{}),
+			ProgressChan: make(chan PhaseProgress, 100),
+		}
+		s.executions[campaignID] = execution
 	}
-	s.executions[campaignID] = execution
 	s.mu.Unlock()
 
 	// Mark phase started in store

@@ -102,8 +102,7 @@ func (s *analysisService) Configure(ctx context.Context, campaignID uuid.UUID, c
 	} else {
 		ex := s.executions[campaignID]
 		ex.Status = models.PhaseStatusConfigured
-		if ex.StartedAt.IsZero() { /* keep zero so omitted */
-		}
+		// leave StartedAt unchanged; if zero it will be omitted from status responses
 	}
 	s.mu.Unlock()
 
@@ -152,25 +151,51 @@ func (s *analysisService) Execute(ctx context.Context, campaignID uuid.UUID) (<-
 		"campaign_id": campaignID,
 	})
 
-	// Check if already executing
+	// Handle existing execution state similar to HTTP validation: allow transition from Configured, restart after terminal
+	reuseExisting := false
 	s.mu.Lock()
-	if _, exists := s.executions[campaignID]; exists {
-		s.mu.Unlock()
-		return nil, fmt.Errorf("analysis already in progress for campaign %s", campaignID)
+	if existing, exists := s.executions[campaignID]; exists {
+		switch existing.Status {
+		case models.PhaseStatusInProgress:
+			s.mu.Unlock()
+			return nil, fmt.Errorf("analysis already in progress for campaign %s", campaignID)
+		case models.PhaseStatusConfigured:
+			existing.Status = models.PhaseStatusInProgress
+			existing.StartedAt = time.Now()
+			existing.Progress = 0
+			existing.ItemsProcessed = 0
+			if existing.CancelChan == nil {
+				existing.CancelChan = make(chan struct{})
+			}
+			if existing.ProgressChan == nil {
+				existing.ProgressChan = make(chan PhaseProgress, 100)
+			}
+			existing.ContentResults = make(map[string][]byte)
+			existing.KeywordResults = make(map[string][]keywordextractor.KeywordExtractionResult)
+			reuseExisting = true
+		case models.PhaseStatusCompleted, models.PhaseStatusFailed, models.PhaseStatusPaused:
+			if existing.ProgressChan != nil {
+				close(existing.ProgressChan)
+			}
+		}
 	}
-
-	// Create execution tracking
-	execution := &analysisExecution{
-		CampaignID:     campaignID,
-		Status:         models.PhaseStatusInProgress,
-		StartedAt:      time.Now(),
-		Progress:       0.0,
-		CancelChan:     make(chan struct{}),
-		ProgressChan:   make(chan PhaseProgress, 100),
-		ContentResults: make(map[string][]byte),
-		KeywordResults: make(map[string][]keywordextractor.KeywordExtractionResult),
+	var execution *analysisExecution
+	if reuseExisting {
+		execution = s.executions[campaignID]
+		s.deps.Logger.Debug(ctx, "Analysis resumed from configured state", map[string]interface{}{"campaign_id": campaignID})
+	} else {
+		execution = &analysisExecution{
+			CampaignID:     campaignID,
+			Status:         models.PhaseStatusInProgress,
+			StartedAt:      time.Now(),
+			Progress:       0.0,
+			CancelChan:     make(chan struct{}),
+			ProgressChan:   make(chan PhaseProgress, 100),
+			ContentResults: make(map[string][]byte),
+			KeywordResults: make(map[string][]keywordextractor.KeywordExtractionResult),
+		}
+		s.executions[campaignID] = execution
 	}
-	s.executions[campaignID] = execution
 	s.mu.Unlock()
 
 	// Mark phase started in store
