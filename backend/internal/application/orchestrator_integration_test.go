@@ -424,3 +424,43 @@ func TestPhaseStartFailureMetrics(t *testing.T) {
 		t.Fatalf("expected no durations recorded, got %d", len(metrics.durations))
 	}
 }
+
+// TestIdempotentPhaseStartNoDuplicateExecution ensures calling StartPhaseInternal repeatedly while a phase is in progress
+// does not spawn duplicate executions (Blocker B2 regression guard).
+func TestIdempotentPhaseStartNoDuplicateExecution(t *testing.T) {
+	db, _, _, _, _, _, _, _ := testutil.SetupTestStores(t)
+	cs := pg_store.NewCampaignStorePostgres(db)
+	logger := &testLogger{t: t}
+	deps := domainservices.Dependencies{Logger: logger, DB: db}
+	domainSvc := newStubPhaseService(models.PhaseTypeDomainGeneration, logger)
+	dnsSvc := newStubPhaseService(models.PhaseTypeDNSValidation, logger)
+	httpSvc := newStubPhaseService(models.PhaseTypeHTTPKeywordValidation, logger)
+	analysisSvc := newStubPhaseService(models.PhaseTypeAnalysis, logger)
+	metrics := &testMetrics{}
+	orch := NewCampaignOrchestrator(cs, deps, domainSvc, dnsSvc, httpSvc, analysisSvc, nil, metrics)
+
+	campaignID := createTestCampaign(t, cs)
+	// Provide downstream configs (full_sequence gating disabled by staying in default step_by_step mode so optional)
+	if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDomainGeneration); err != nil {
+		t.Fatalf("initial start: %v", err)
+	}
+	// Immediately invoke duplicate start attempts while phase is still in progress.
+	for i := 0; i < 5; i++ {
+		if err := orch.StartPhaseInternal(context.Background(), campaignID, models.PhaseTypeDomainGeneration); err != nil {
+			t.Fatalf("duplicate start %d returned error: %v", i, err)
+		}
+	}
+	// Wait for completion
+	waitUntil(t, 2*time.Second, func() bool {
+		st, _ := domainSvc.GetStatus(context.Background(), campaignID)
+		return st.Status == models.PhaseStatusCompleted
+	})
+	// Assert only one underlying Execute invocation happened
+	if cnt := domainSvc.executions(campaignID); cnt != 1 {
+		t.Fatalf("expected single execution, got %d", cnt)
+	}
+	// Metrics: phaseStarts should count only the successful first start.
+	if metrics.phaseStarts != 1 {
+		t.Fatalf("expected metrics.phaseStarts=1 got %d", metrics.phaseStarts)
+	}
+}

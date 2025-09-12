@@ -500,8 +500,8 @@ Order of Implementation:
 - [ ] phase_runs table (optional) decided & implemented / deferred
 
 ### Orchestration
-- [ ] Status transition tests
-- [ ] Idempotent StartPhase logic
+- [x] Status transition tests
+- [x] Idempotent StartPhase logic
 - [ ] Failure path & SSE
 
 ### Extraction
