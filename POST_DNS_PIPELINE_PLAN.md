@@ -469,9 +469,9 @@ TODO (Docs):
 ## 14. Execution Sequence (High-Level Checklist)
 Order of Implementation:
 1. [x] Blocker validation & fix (B1–B3) (B1 fixed; B2 idempotent path added; B3 under verification)
-2. [ ] Phase orchestration hardening tests
+2. [x] Phase orchestration hardening tests
 3. [x] Data model migrations (columns + profiles tables) (000048, 000049 present)
-4. [ ] OpenAPI updates (columns + profile endpoints)
+4. [x] OpenAPI updates (columns + profile endpoints)
 5. [ ] Profile CRUD (keyword, scoring)
 6. [ ] HTTP extraction engine (root fetch)
 7. [ ] Parked heuristic + feature_vector population
@@ -523,9 +523,9 @@ Order of Implementation:
 + [x] SSE events (domain_scored + rescore_completed basic emission; need metrics + richer payload)
 
 ### Profiles
-- [ ] Keyword profile CRUD
-- [ ] Scoring profile CRUD
-- [ ] Campaign association endpoints
+- [ ] Keyword profile CRUD (spec added; impl pending)
+- [ ] Scoring profile CRUD (spec existed; impl pending)
+- [ ] Campaign association endpoints (keyword + scoring)
 
 ### Filtering / API
 - [ ] New query params implemented
