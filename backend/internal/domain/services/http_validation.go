@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -362,6 +363,18 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 	processed := 0
 	allResults := make([]*httpvalidator.ValidationResult, 0, total)
 
+	// After mapping results but before persistence, perform optional enrichment
+	// FEATURE FLAG placeholder (simple env check)
+	enrichmentEnabled := false
+	if v, ok := os.LookupEnv("ENABLE_HTTP_ENRICHMENT"); ok && (v == "1" || strings.EqualFold(v, "true")) {
+		enrichmentEnabled = true
+	}
+	// enrichmentVectors map reused across batches (domain -> feature vector)
+	var enrichmentVectors map[string]map[string]interface{}
+	if enrichmentEnabled {
+		enrichmentVectors = make(map[string]map[string]interface{}, 1024)
+	}
+
 	for i := 0; i < total; i += batchSize {
 		select {
 		case <-ctx.Done():
@@ -384,10 +397,45 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 		allResults = append(allResults, results...)
 		processed += len(results)
 
+		// Build enrichment feature vectors per successful domain (placeholder extraction)
+		if enrichmentEnabled {
+			for _, r := range results {
+				if r == nil || r.Domain == "" {
+					continue
+				}
+				// Determine mapped status (mirror logic in storeHTTPResults for consistency)
+				mapped := "error"
+				le := strings.ToLower(r.Error)
+				switch {
+				case r.IsSuccess || r.Status == "Validated" || r.Status == "OK":
+					mapped = "ok"
+				case strings.EqualFold(r.Status, "timeout") || strings.Contains(le, "timeout"):
+					mapped = "timeout"
+				}
+				if mapped != "ok" {
+					continue
+				}
+				fv := map[string]interface{}{
+					"status_code": r.StatusCode,
+					"fetched_at":  time.Now().UTC().Format(time.RFC3339),
+				}
+				if r.ExtractedTitle != "" {
+					fv["title_has_keyword"] = false
+				}
+				enrichmentVectors[r.Domain] = fv
+			}
+		}
+
 		// Persist batch results
 		if err := s.storeHTTPResults(ctx, campaignID, results); err != nil {
 			s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, fmt.Sprintf("failed to store HTTP results: %v", err))
 			return
+		}
+		// Persist enrichment feature vectors (batched incremental merge)
+		if enrichmentEnabled && len(enrichmentVectors) > 0 {
+			if err := s.persistFeatureVectors(ctx, campaignID, enrichmentVectors); err != nil {
+				s.deps.Logger.Warn(ctx, "Failed to persist feature vectors", map[string]interface{}{"campaign_id": campaignID, "error": err.Error()})
+			}
 		}
 
 		// Update in-memory execution and emit progress
@@ -821,6 +869,32 @@ RETURNING u.validation_status`, valuesClause)
 			"count":      len(bulk),
 			"items":      items,
 		})
+	}
+	return nil
+}
+
+// persistFeatureVectors performs a best-effort bulk update of feature_vector and last_http_fetched_at
+// Placeholder: refine with batched UPDATE (e.g., using jsonb_set) or dedicated store method later.
+func (s *httpValidationService) persistFeatureVectors(ctx context.Context, campaignID uuid.UUID, vectors map[string]map[string]interface{}) error {
+	if s.store == nil || len(vectors) == 0 {
+		return nil
+	}
+	// Attempt per-domain update (could be optimized with COPY / temp table in future)
+	var exec store.Querier
+	if q, ok := s.deps.DB.(store.Querier); ok {
+		exec = q
+	}
+	for domain, fv := range vectors {
+		raw, _ := json.Marshal(fv)
+		// Use store helper if exists; else execute direct SQL via exec (Querier)
+		if exec != nil {
+			_, err := exec.ExecContext(ctx, `UPDATE generated_domains SET feature_vector = $1, last_http_fetched_at = NOW(), secondary_pages_examined = COALESCE(secondary_pages_examined,0) WHERE campaign_id = $2 AND domain_name = $3`, raw, campaignID, domain)
+			if err != nil {
+				if s.deps.Logger != nil {
+					s.deps.Logger.Debug(ctx, "Feature vector update failed", map[string]interface{}{"domain": domain, "error": err.Error()})
+				}
+			}
+		}
 	}
 	return nil
 }
