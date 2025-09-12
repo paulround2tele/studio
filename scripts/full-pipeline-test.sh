@@ -66,7 +66,6 @@ CREATE_BODY=$(cat <<JSON
   
   "configuration": {
     "phases": {
-      # Discovery phase config: variableLength=5 widens generation space to reduce collision risk
       "discovery": {
         "patternType": "prefix",
         "constantString": "acme",
@@ -74,8 +73,7 @@ CREATE_BODY=$(cat <<JSON
         "variableLength": 5,
         "tlds": [".com"],
         "numDomainsToGenerate": 10,
-        "batchSize": 100
-        # NOTE: Do NOT set offsetStart manually; backend enforces global monotonic offset per config hash
+  "batchSize": 100
       }
     }
   }
