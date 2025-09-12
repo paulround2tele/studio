@@ -71,7 +71,7 @@ CREATE_BODY=$(cat <<JSON
         "constantString": "acme",
         "characterSet": "abcdefghijklmnopqrstuvwxyz0123456789",
         "variableLength": 1,
-        "tlds": ["com"],
+    "tlds": [".com"],
         "numDomainsToGenerate": 10,
         "batchSize": 100,
         "offsetStart": 0
@@ -139,7 +139,7 @@ run_phase() {
 }
 
 # Discovery
-run_phase discovery '{"patternType":"prefix","constantString":"acme","characterSet":"abcdefghijklmnopqrstuvwxyz0123456789","variableLength":1,"tlds":["com"],"numDomainsToGenerate":10,"batchSize":100,"offsetStart":0}'
+run_phase discovery '{"patternType":"prefix","constantString":"acme","characterSet":"abcdefghijklmnopqrstuvwxyz0123456789","variableLength":1,"tlds":[".com"],"numDomainsToGenerate":10,"batchSize":100,"offsetStart":0}'
 
 log "Fetching generated domains (limit 10)"
 DOMAINS=$(curl_json GET "$BASE_URL/campaigns/$CAMPAIGN_ID/domains?limit=10")
