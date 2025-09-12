@@ -66,15 +66,16 @@ CREATE_BODY=$(cat <<JSON
   
   "configuration": {
     "phases": {
+      # Discovery phase config: variableLength=5 widens generation space to reduce collision risk
       "discovery": {
         "patternType": "prefix",
         "constantString": "acme",
         "characterSet": "abcdefghijklmnopqrstuvwxyz0123456789",
-  "variableLength": 5,  # widened for larger generation space to reduce cross-campaign collision risk
-    "tlds": [".com"],
+        "variableLength": 5,
+        "tlds": [".com"],
         "numDomainsToGenerate": 10,
-        "batchSize": 100,
-        "offsetStart": 0
+        "batchSize": 100
+        # NOTE: Do NOT set offsetStart manually; backend enforces global monotonic offset per config hash
       }
     }
   }
@@ -138,7 +139,7 @@ run_phase() {
   log "Phase $phase completed"
 }
 
-# Discovery (use wider variableLength=5 to enlarge pool; keep numDomainsToGenerate small for test speed)
+# Discovery (variableLength=5 widens pool; keep numDomainsToGenerate small for speed)
 run_phase discovery '{"patternType":"prefix","constantString":"acme","characterSet":"abcdefghijklmnopqrstuvwxyz0123456789","variableLength":5,"tlds":[".com"],"numDomainsToGenerate":10,"batchSize":100,"offsetStart":0}'
 
 log "Fetching generated domains (limit 10)"
