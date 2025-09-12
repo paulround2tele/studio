@@ -1,0 +1,17 @@
+tags: [keywords]
+summary: Associate campaign keyword profile
+parameters:
+  - in: path
+    name: id
+    required: true
+    schema: { type: string, format: uuid }
+post:
+  operationId: associateCampaignKeywordProfile
+  summary: Associate keyword profile to campaign
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema: { $ref: '../../components/schemas/all.yaml#/AssociateKeywordProfileRequest' }
+  responses:
+    '204': { description: Associated }

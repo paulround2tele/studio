@@ -1,0 +1,33 @@
+tags: [keywords]
+summary: List and create keyword profiles
+get:
+  operationId: listKeywordProfiles
+  summary: List keyword profiles
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items: { $ref: '../../components/schemas/all.yaml#/KeywordProfile' }
+post:
+  operationId: createKeywordProfile
+  summary: Create keyword profile
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema: { $ref: '../../components/schemas/all.yaml#/CreateKeywordProfileRequest' }
+  responses:
+    '201':
+      description: Created
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data: { $ref: '../../components/schemas/all.yaml#/KeywordProfile' }

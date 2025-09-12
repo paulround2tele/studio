@@ -1,0 +1,36 @@
+tags: [keywords]
+summary: Get or update keyword profile by id
+parameters:
+  - in: path
+    name: id
+    required: true
+    schema: { type: string, format: uuid }
+get:
+  operationId: getKeywordProfile
+  summary: Get keyword profile
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data: { $ref: '../../components/schemas/all.yaml#/KeywordProfile' }
+patch:
+  operationId: updateKeywordProfile
+  summary: Update keyword profile
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema: { $ref: '../../components/schemas/all.yaml#/UpdateKeywordProfileRequest' }
+  responses:
+    '200':
+      description: Updated
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data: { $ref: '../../components/schemas/all.yaml#/KeywordProfile' }

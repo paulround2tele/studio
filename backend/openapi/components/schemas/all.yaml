@@ -547,6 +547,46 @@ ProxyPoolRequest:
     maxRetries: { type: integer }
     timeoutSeconds: { type: integer }
   required: [name]
+
+# Keyword Profile (new)
+KeywordProfile:
+  type: object
+  properties:
+    id: { type: string, format: uuid }
+    name: { type: string }
+    description: { type: string }
+    keywords:
+      type: array
+      items: { type: string }
+    created_at: { type: string, format: date-time }
+    updated_at: { type: string, format: date-time }
+    version: { type: integer }
+  required: [name, keywords]
+
+CreateKeywordProfileRequest:
+  type: object
+  properties:
+    name: { type: string }
+    description: { type: string }
+    keywords:
+      type: array
+      items: { type: string }
+  required: [name, keywords]
+
+UpdateKeywordProfileRequest:
+  type: object
+  properties:
+    name: { type: string }
+    description: { type: string }
+    keywords:
+      type: array
+      items: { type: string }
+
+AssociateKeywordProfileRequest:
+  type: object
+  properties:
+    keyword_profile_id: { type: string, format: uuid }
+  required: [keyword_profile_id]
 ProxyPoolMembership:
   type: object
   properties:
