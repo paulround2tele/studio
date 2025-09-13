@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -949,7 +950,7 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		return gen.CampaignsDomainsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
-	// Pagination params
+	// Pagination params (legacy offset path defaults)
 	limit := 100
 	if r.Params.Limit != nil && *r.Params.Limit > 0 {
 		if *r.Params.Limit > 1000 {
@@ -961,6 +962,57 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 	startOffset := int64(0)
 	if r.Params.Offset != nil && *r.Params.Offset > 0 {
 		startOffset = int64(*r.Params.Offset)
+	}
+
+	// Phase 2: Advanced filtering & cursor mode (typed params via OpenAPI)
+	var (
+		advancedRequested bool
+		minScorePtr       *float64
+		notParkedPtr      *bool
+		hasContactPtr     *bool
+		keywordPtr        *string
+		firstParam        *int
+		afterParam        *string
+		sortBy            string
+		sortOrder         string
+	)
+	featureFlag := strings.EqualFold(os.Getenv("ENABLE_ADVANCED_FILTERS"), "true") || os.Getenv("ENABLE_ADVANCED_FILTERS") == "1"
+	if featureFlag {
+		if r.Params.MinScore != nil {
+			f := float64(*r.Params.MinScore)
+			minScorePtr = &f
+		}
+		if r.Params.NotParked != nil {
+			notParkedPtr = r.Params.NotParked
+		}
+		if r.Params.HasContact != nil {
+			hasContactPtr = r.Params.HasContact
+		}
+		if r.Params.Keyword != nil && *r.Params.Keyword != "" {
+			keywordPtr = r.Params.Keyword
+		}
+		if r.Params.First != nil && *r.Params.First > 0 {
+			firstParam = r.Params.First
+		}
+		if r.Params.After != nil && *r.Params.After != "" {
+			afterParam = r.Params.After
+		}
+		if r.Params.Sort != nil {
+			switch *r.Params.Sort {
+			case gen.ScoreDesc:
+				sortBy = "domain_score"
+				sortOrder = "DESC"
+			case gen.ScoreAsc:
+				sortBy = "domain_score"
+				sortOrder = "ASC"
+			case gen.LastHttpFetchedAtDesc:
+				sortBy = "last_http_fetched_at"
+				sortOrder = "DESC"
+			}
+		}
+		if minScorePtr != nil || notParkedPtr != nil || hasContactPtr != nil || keywordPtr != nil || firstParam != nil || afterParam != nil || sortBy != "" {
+			advancedRequested = true
+		}
 	}
 
 	// Fetch current counters (for total + aggregates). Continue on error.
@@ -989,6 +1041,76 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		}
 		domainFilter = f
 	}
+	// Advanced path (cursor-based)
+	if advancedRequested {
+		lf := store.ListGeneratedDomainsFilter{CampaignID: uuid.UUID(r.CampaignId)}
+		if firstParam != nil {
+			lf.First = *firstParam
+		} else {
+			lf.First = limit
+		}
+		if afterParam != nil {
+			lf.After = *afterParam
+		}
+		if sortBy != "" {
+			lf.SortBy = sortBy
+		}
+		if sortOrder != "" {
+			lf.SortOrder = sortOrder
+		}
+		lf.MinScore = minScorePtr
+		lf.NotParked = notParkedPtr
+		lf.HasContact = hasContactPtr
+		lf.Keyword = keywordPtr
+		page, derr := h.deps.Stores.Campaign.GetGeneratedDomainsWithCursor(ctx, h.deps.DB, lf)
+		if derr != nil {
+			return gen.CampaignsDomainsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed advanced domain listing", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+		items := make([]gen.DomainListItem, 0, len(page.Data))
+		for _, gd := range page.Data {
+			if gd == nil {
+				continue
+			}
+			var offsetPtr *int64
+			if gd.OffsetIndex >= 0 {
+				tmp := gd.OffsetIndex
+				offsetPtr = &tmp
+			}
+			var dnsStatusPtr, httpStatusPtr, leadStatusPtr *string
+			if gd.DNSStatus != nil {
+				v := string(*gd.DNSStatus)
+				dnsStatusPtr = &v
+			}
+			if gd.HTTPStatus != nil {
+				v := string(*gd.HTTPStatus)
+				httpStatusPtr = &v
+			}
+			if gd.LeadStatus != nil {
+				v := string(*gd.LeadStatus)
+				leadStatusPtr = &v
+			}
+			var dnsReasonPtr, httpReasonPtr *string
+			if gd.DNSReason.Valid {
+				dnsReasonPtr = &gd.DNSReason.String
+			}
+			if gd.HTTPReason.Valid {
+				httpReasonPtr = &gd.HTTPReason.String
+			}
+			id := openapi_types.UUID(gd.ID)
+			createdAt := gd.CreatedAt
+			domainCopy := gd.DomainName
+			items = append(items, gen.DomainListItem{Id: &id, Domain: &domainCopy, Offset: offsetPtr, CreatedAt: &createdAt, DnsStatus: dnsStatusPtr, HttpStatus: httpStatusPtr, LeadStatus: leadStatusPtr, DnsReason: dnsReasonPtr, HttpReason: httpReasonPtr})
+		}
+		resp := gen.CampaignDomainsListResponse{CampaignId: openapi_types.UUID(r.CampaignId), Items: items}
+		if counters != nil {
+			resp.Total = int(counters.Total)
+			resp.Aggregates = buildDomainAggregates(counters)
+		} else {
+			resp.Total = len(items)
+		}
+		return gen.CampaignsDomainsList200JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	}
+
 	rows, derr := h.deps.Stores.Campaign.GetGeneratedDomainsByCampaign(ctx, h.deps.DB, uuid.UUID(r.CampaignId), limit, startOffset, domainFilter)
 	if derr != nil {
 		return gen.CampaignsDomainsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed domain listing", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil

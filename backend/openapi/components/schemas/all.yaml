@@ -316,7 +316,20 @@ CampaignDomainsListResponse:
             noMatch: { type: integer }
             error: { type: integer }
             timeout: { type: integer }
+    pageInfo:
+      $ref: '#/PageInfo'
   required: [campaignId, items, total]
+PageInfo:
+  type: object
+  description: Cursor-based pagination metadata
+  properties:
+    startCursor: { type: string, nullable: true }
+    endCursor: { type: string, nullable: true }
+    hasNextPage: { type: boolean }
+    sortBy: { type: string, description: Field used for ordering }
+    sortOrder: { type: string, enum: [ASC, DESC] }
+    first: { type: integer, description: Requested page size }
+  required: [hasNextPage]
 PatternOffsetRequest:
   type: object
   properties:
@@ -548,45 +561,6 @@ ProxyPoolRequest:
     timeoutSeconds: { type: integer }
   required: [name]
 
-# Keyword Profile (new)
-KeywordProfile:
-  type: object
-  properties:
-    id: { type: string, format: uuid }
-    name: { type: string }
-    description: { type: string }
-    keywords:
-      type: array
-      items: { type: string }
-    created_at: { type: string, format: date-time }
-    updated_at: { type: string, format: date-time }
-    version: { type: integer }
-  required: [name, keywords]
-
-CreateKeywordProfileRequest:
-  type: object
-  properties:
-    name: { type: string }
-    description: { type: string }
-    keywords:
-      type: array
-      items: { type: string }
-  required: [name, keywords]
-
-UpdateKeywordProfileRequest:
-  type: object
-  properties:
-    name: { type: string }
-    description: { type: string }
-    keywords:
-      type: array
-      items: { type: string }
-
-AssociateKeywordProfileRequest:
-  type: object
-  properties:
-    keyword_profile_id: { type: string, format: uuid }
-  required: [keyword_profile_id]
 ProxyPoolMembership:
   type: object
   properties:

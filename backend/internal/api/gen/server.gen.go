@@ -229,6 +229,12 @@ const (
 	String KeywordRuleType = "string"
 )
 
+// Defines values for PageInfoSortOrder.
+const (
+	ASC  PageInfoSortOrder = "ASC"
+	DESC PageInfoSortOrder = "DESC"
+)
+
 // Defines values for PatternOffsetRequestPatternType.
 const (
 	PatternOffsetRequestPatternTypeBoth   PatternOffsetRequestPatternType = "both"
@@ -305,6 +311,13 @@ const (
 	CampaignsDomainsListParamsHttpStatusOk      CampaignsDomainsListParamsHttpStatus = "ok"
 	CampaignsDomainsListParamsHttpStatusPending CampaignsDomainsListParamsHttpStatus = "pending"
 	CampaignsDomainsListParamsHttpStatusTimeout CampaignsDomainsListParamsHttpStatus = "timeout"
+)
+
+// Defines values for CampaignsDomainsListParamsSort.
+const (
+	LastHttpFetchedAtDesc CampaignsDomainsListParamsSort = "last_http_fetched_at_desc"
+	ScoreAsc              CampaignsDomainsListParamsSort = "score_asc"
+	ScoreDesc             CampaignsDomainsListParamsSort = "score_desc"
 )
 
 // Defines values for CampaignsPhaseExecutionDeleteParamsPhaseType.
@@ -782,7 +795,10 @@ type CampaignDomainsListResponse struct {
 	} `json:"aggregates,omitempty"`
 	CampaignId openapi_types.UUID `json:"campaignId"`
 	Items      []DomainListItem   `json:"items"`
-	Total      int                `json:"total"`
+
+	// PageInfo Cursor-based pagination metadata
+	PageInfo *PageInfo `json:"pageInfo,omitempty"`
+	Total    int       `json:"total"`
 }
 
 // CampaignModeEnum defines model for CampaignModeEnum.
@@ -1094,6 +1110,23 @@ type MonitoringCampaignLimitsRequest struct {
 	MaxMemoryMB        *int64 `json:"maxMemoryMB,omitempty"`
 	RateLimitPerMinute *int   `json:"rateLimitPerMinute,omitempty"`
 }
+
+// PageInfo Cursor-based pagination metadata
+type PageInfo struct {
+	EndCursor *string `json:"endCursor"`
+
+	// First Requested page size
+	First       *int `json:"first,omitempty"`
+	HasNextPage bool `json:"hasNextPage"`
+
+	// SortBy Field used for ordering
+	SortBy      *string            `json:"sortBy,omitempty"`
+	SortOrder   *PageInfoSortOrder `json:"sortOrder,omitempty"`
+	StartCursor *string            `json:"startCursor"`
+}
+
+// PageInfoSortOrder defines model for PageInfo.SortOrder.
+type PageInfoSortOrder string
 
 // Pagination defines model for Pagination.
 type Pagination struct {
@@ -1542,6 +1575,27 @@ type CampaignsDomainsListParams struct {
 
 	// HttpReason Filter domains by HTTP reason (exact match). Example values: TIMEOUT, NOT_FOUND, UPSTREAM_5XX, PROXY_ERROR, TLS_ERROR, SSL_EXPIRED, CONNECTION_RESET, ERROR
 	HttpReason *string `form:"httpReason,omitempty" json:"httpReason,omitempty"`
+
+	// MinScore Minimum inclusive domain score to include
+	MinScore *float32 `form:"minScore,omitempty" json:"minScore,omitempty"`
+
+	// NotParked Exclude domains detected as parked
+	NotParked *bool `form:"notParked,omitempty" json:"notParked,omitempty"`
+
+	// HasContact Only include domains with detected contact signals
+	HasContact *bool `form:"hasContact,omitempty" json:"hasContact,omitempty"`
+
+	// Keyword Require at least one keyword match (any)
+	Keyword *string `form:"keyword,omitempty" json:"keyword,omitempty"`
+
+	// Sort Sort ordering strategy
+	Sort *CampaignsDomainsListParamsSort `form:"sort,omitempty" json:"sort,omitempty"`
+
+	// First Page size for cursor pagination (overrides limit when present)
+	First *int `form:"first,omitempty" json:"first,omitempty"`
+
+	// After Cursor token to continue listing after
+	After *string `form:"after,omitempty" json:"after,omitempty"`
 }
 
 // CampaignsDomainsListParamsDnsStatus defines parameters for CampaignsDomainsList.
@@ -1549,6 +1603,9 @@ type CampaignsDomainsListParamsDnsStatus string
 
 // CampaignsDomainsListParamsHttpStatus defines parameters for CampaignsDomainsList.
 type CampaignsDomainsListParamsHttpStatus string
+
+// CampaignsDomainsListParamsSort defines parameters for CampaignsDomainsList.
+type CampaignsDomainsListParamsSort string
 
 // CampaignsModeUpdateJSONBody defines parameters for CampaignsModeUpdate.
 type CampaignsModeUpdateJSONBody struct {
@@ -3545,6 +3602,62 @@ func (siw *ServerInterfaceWrapper) CampaignsDomainsList(w http.ResponseWriter, r
 	err = runtime.BindQueryParameter("form", true, false, "httpReason", r.URL.Query(), &params.HttpReason)
 	if err != nil {
 		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "httpReason", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "minScore" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "minScore", r.URL.Query(), &params.MinScore)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "minScore", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "notParked" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "notParked", r.URL.Query(), &params.NotParked)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "notParked", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "hasContact" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "hasContact", r.URL.Query(), &params.HasContact)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "hasContact", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "keyword" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "keyword", r.URL.Query(), &params.Keyword)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "keyword", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "sort" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "sort", r.URL.Query(), &params.Sort)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sort", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "first" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "first", r.URL.Query(), &params.First)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "first", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "after" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "after", r.URL.Query(), &params.After)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "after", Err: err})
 		return
 	}
 
