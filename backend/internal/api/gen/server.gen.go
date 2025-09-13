@@ -1014,6 +1014,34 @@ type DomainListItem struct {
 	Offset     *int64  `json:"offset,omitempty"`
 }
 
+// DomainScoreBreakdownResponse Component scores contributing to the final relevance score for a domain.
+type DomainScoreBreakdownResponse struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+
+	// Components Raw component scores normalized to 0-1 prior to weighting.
+	Components struct {
+		ContentLength float32 `json:"content_length"`
+		Coverage      float32 `json:"coverage"`
+		Density       float32 `json:"density"`
+		Freshness     float32 `json:"freshness"`
+		NonParked     float32 `json:"non_parked"`
+
+		// TfLite Experimental TF-lite component (0 if disabled)
+		TfLite       float32 `json:"tf_lite"`
+		TitleKeyword float32 `json:"title_keyword"`
+	} `json:"components"`
+	Domain string `json:"domain"`
+
+	// Final Weighted final relevance score after penalties
+	Final float32 `json:"final"`
+
+	// ParkedPenaltyFactor Penalty factor applied when domain considered parked with low confidence (<0.9)
+	ParkedPenaltyFactor *float32 `json:"parkedPenaltyFactor,omitempty"`
+
+	// Weights Active scoring profile weights used for combination.
+	Weights *map[string]float32 `json:"weights,omitempty"`
+}
+
 // EnrichedCampaignResponse Read-optimized composite model for campaign detail pages
 type EnrichedCampaignResponse struct {
 	Campaign        CampaignResponse  `json:"campaign"`
@@ -1963,6 +1991,9 @@ type ServerInterface interface {
 	// List generated domains for a campaign
 	// (GET /campaigns/{campaignId}/domains)
 	CampaignsDomainsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsDomainsListParams)
+	// Get component score breakdown for a single domain
+	// (GET /campaigns/{campaignId}/domains/{domain}/score-breakdown)
+	CampaignsDomainScoreBreakdown(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, domain string)
 	// Get enriched campaign details
 	// (GET /campaigns/{campaignId}/enriched)
 	CampaignsEnrichedGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
@@ -2407,6 +2438,12 @@ func (_ Unimplemented) CampaignsPhaseConfigsList(w http.ResponseWriter, r *http.
 // List generated domains for a campaign
 // (GET /campaigns/{campaignId}/domains)
 func (_ Unimplemented) CampaignsDomainsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsDomainsListParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Get component score breakdown for a single domain
+// (GET /campaigns/{campaignId}/domains/{domain}/score-breakdown)
+func (_ Unimplemented) CampaignsDomainScoreBreakdown(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, domain string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3663,6 +3700,46 @@ func (siw *ServerInterfaceWrapper) CampaignsDomainsList(w http.ResponseWriter, r
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CampaignsDomainsList(w, r, campaignId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CampaignsDomainScoreBreakdown operation middleware
+func (siw *ServerInterfaceWrapper) CampaignsDomainScoreBreakdown(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "domain" -------------
+	var domain string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "domain", chi.URLParam(r, "domain"), &domain, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "domain", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CampaignsDomainScoreBreakdown(w, r, campaignId, domain)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -6780,6 +6857,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/campaigns/{campaignId}/domains", wrapper.CampaignsDomainsList)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/campaigns/{campaignId}/domains/{domain}/score-breakdown", wrapper.CampaignsDomainScoreBreakdown)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/campaigns/{campaignId}/enriched", wrapper.CampaignsEnrichedGet)
 	})
 	r.Group(func(r chi.Router) {
@@ -8432,6 +8512,70 @@ type CampaignsDomainsList500JSONResponse struct {
 }
 
 func (response CampaignsDomainsList500JSONResponse) VisitCampaignsDomainsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsDomainScoreBreakdownRequestObject struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+	Domain     string             `json:"domain"`
+}
+
+type CampaignsDomainScoreBreakdownResponseObject interface {
+	VisitCampaignsDomainScoreBreakdownResponse(w http.ResponseWriter) error
+}
+
+type CampaignsDomainScoreBreakdown200JSONResponse struct {
+	// Data Component scores contributing to the final relevance score for a domain.
+	Data      *DomainScoreBreakdownResponse `json:"data,omitempty"`
+	Metadata  *Metadata                     `json:"metadata,omitempty"`
+	RequestId string                        `json:"requestId"`
+
+	// Success Always true for success envelopes.
+	Success *bool `json:"success,omitempty"`
+}
+
+func (response CampaignsDomainScoreBreakdown200JSONResponse) VisitCampaignsDomainScoreBreakdownResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsDomainScoreBreakdown400JSONResponse struct{ BadRequestJSONResponse }
+
+func (response CampaignsDomainScoreBreakdown400JSONResponse) VisitCampaignsDomainScoreBreakdownResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(400)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsDomainScoreBreakdown401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response CampaignsDomainScoreBreakdown401JSONResponse) VisitCampaignsDomainScoreBreakdownResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsDomainScoreBreakdown404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response CampaignsDomainScoreBreakdown404JSONResponse) VisitCampaignsDomainScoreBreakdownResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type CampaignsDomainScoreBreakdown500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response CampaignsDomainScoreBreakdown500JSONResponse) VisitCampaignsDomainScoreBreakdownResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -14873,6 +15017,9 @@ type StrictServerInterface interface {
 	// List generated domains for a campaign
 	// (GET /campaigns/{campaignId}/domains)
 	CampaignsDomainsList(ctx context.Context, request CampaignsDomainsListRequestObject) (CampaignsDomainsListResponseObject, error)
+	// Get component score breakdown for a single domain
+	// (GET /campaigns/{campaignId}/domains/{domain}/score-breakdown)
+	CampaignsDomainScoreBreakdown(ctx context.Context, request CampaignsDomainScoreBreakdownRequestObject) (CampaignsDomainScoreBreakdownResponseObject, error)
 	// Get enriched campaign details
 	// (GET /campaigns/{campaignId}/enriched)
 	CampaignsEnrichedGet(ctx context.Context, request CampaignsEnrichedGetRequestObject) (CampaignsEnrichedGetResponseObject, error)
@@ -15821,6 +15968,33 @@ func (sh *strictHandler) CampaignsDomainsList(w http.ResponseWriter, r *http.Req
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CampaignsDomainsListResponseObject); ok {
 		if err := validResponse.VisitCampaignsDomainsListResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CampaignsDomainScoreBreakdown operation middleware
+func (sh *strictHandler) CampaignsDomainScoreBreakdown(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, domain string) {
+	var request CampaignsDomainScoreBreakdownRequestObject
+
+	request.CampaignId = campaignId
+	request.Domain = domain
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CampaignsDomainScoreBreakdown(ctx, request.(CampaignsDomainScoreBreakdownRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CampaignsDomainScoreBreakdown")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CampaignsDomainScoreBreakdownResponseObject); ok {
+		if err := validResponse.VisitCampaignsDomainScoreBreakdownResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

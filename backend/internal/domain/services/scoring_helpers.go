@@ -17,6 +17,7 @@ var DefaultScoringWeights = map[string]float64{
 	"content_length_quality_weight":  0.10,
 	"title_keyword_weight":           0.10,
 	"freshness_weight":               0.10,
+	"tf_lite_weight":                 0.00, // experimental; default 0 (off)
 }
 
 // ValidateScoringWeights ensures keys are a subset of allowed and each value is in [0,1].
@@ -57,32 +58,43 @@ func ValidateScoringWeights(input map[string]float64) (map[string]float64, error
 }
 
 // loadCampaignScoringWeights fetches campaign-linked scoring profile weights or returns normalized defaults.
-func loadCampaignScoringWeights(ctx context.Context, db *sql.DB, campaignID interface{}) (map[string]float64, error) {
+func loadCampaignScoringWeights(ctx context.Context, db *sql.DB, campaignID interface{}) (map[string]float64, *float64, error) {
 	if db == nil {
 		// Fallback to normalized defaults
-		return normalizeDefaults(), nil
+		return normalizeDefaults(), nil, nil
 	}
 	// Query campaign_scoring_profile
 	var raw json.RawMessage
-	q := `SELECT sp.weights FROM campaign_scoring_profile csp JOIN scoring_profiles sp ON sp.id = csp.scoring_profile_id WHERE csp.campaign_id = $1`
-	if err := db.QueryRowContext(ctx, q, campaignID).Scan(&raw); err != nil {
+	var penalty sql.NullFloat64
+	q := `SELECT sp.weights, sp.parked_penalty_factor FROM campaign_scoring_profile csp JOIN scoring_profiles sp ON sp.id = csp.scoring_profile_id WHERE csp.campaign_id = $1`
+	if err := db.QueryRowContext(ctx, q, campaignID).Scan(&raw, &penalty); err != nil {
 		if err == sql.ErrNoRows {
-			return normalizeDefaults(), nil
+			return normalizeDefaults(), nil, nil
 		}
-		return nil, fmt.Errorf("load scoring profile: %w", err)
+		return nil, nil, fmt.Errorf("load scoring profile: %w", err)
 	}
 	if len(raw) == 0 {
-		return normalizeDefaults(), nil
+		return normalizeDefaults(), nil, nil
 	}
 	tmp := map[string]float64{}
 	if err := json.Unmarshal(raw, &tmp); err != nil {
-		return nil, fmt.Errorf("unmarshal scoring weights: %w", err)
+		return nil, nil, fmt.Errorf("unmarshal scoring weights: %w", err)
 	}
 	validated, err := ValidateScoringWeights(tmp)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return validated, nil
+	var pPtr *float64
+	if penalty.Valid {
+		v := penalty.Float64
+		if v < 0 {
+			v = 0
+		} else if v > 1 {
+			v = 1
+		}
+		pPtr = &v
+	}
+	return validated, pPtr, nil
 }
 
 func normalizeDefaults() map[string]float64 {

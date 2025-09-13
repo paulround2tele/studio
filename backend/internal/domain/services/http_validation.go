@@ -15,6 +15,7 @@ import (
 	"bytes"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
 
@@ -28,6 +29,22 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// computeDiminishingReturns determines if keyword growth is below threshold given baseline and added counts.
+// Rules:
+//   - if pagesExamined < 2 => false (need at least 2 pages to judge trend)
+//   - if baseline == 0: true only if added < 2 (crawl yielded almost nothing)
+//   - else: growth ratio = (baseline+added)/baseline; diminishing if ratio < 1.15
+func computeDiminishingReturns(baseline, added, pagesExamined int) bool {
+	if pagesExamined < 2 {
+		return false
+	}
+	if baseline <= 0 {
+		return added < 2
+	}
+	ratio := float64(baseline+added) / float64(baseline)
+	return ratio < 1.15
+}
+
 // httpValidationService orchestrates the HTTP validation engine
 // It wraps httpvalidator.HTTPValidator without replacing its core functionality
 type httpValidationService struct {
@@ -37,16 +54,21 @@ type httpValidationService struct {
 	deps          Dependencies
 	httpValidator *httpvalidator.HTTPValidator
 	// keyword scanner (lazy init)
-	kwScannerInit sync.Once
-	kwScanner     *keywordscanner.Service
+	kwScanner *keywordscanner.Service
 
 	// metrics (registered once globally)
 	metricsOnce sync.Once
 	mtx         struct {
-		fetchOutcome           *prometheus.CounterVec
-		fetchAlias             *prometheus.CounterVec
-		microCrawl             prometheus.Counter
-		microCrawlReasons      *prometheus.CounterVec
+		fetchOutcome      *prometheus.CounterVec
+		fetchAlias        *prometheus.CounterVec
+		microCrawl        prometheus.Counter
+		microCrawlReasons *prometheus.CounterVec
+		// ROI-oriented micro-crawl metrics (new)
+		microCrawlSuccesses    prometheus.Counter   // micro-crawl triggers that yielded >0 new unique keywords
+		microCrawlAddedKw      prometheus.Counter   // total new unique keywords contributed by micro-crawl
+		microCrawlNewPatterns  prometheus.Counter   // same as AddedKw but kept distinct for future divergence (pattern vs keyword normalization)
+		microCrawlGrowthRatio  prometheus.Histogram // distribution of kw growth ratios (post / baseline) when baseline >0
+		microCrawlZeroSuccess  prometheus.Counter   // micro-crawl triggers that produced zero new keywords (for success rate denominator)
 		parkedDetection        *prometheus.CounterVec
 		enrichmentBatches      prometheus.Counter
 		enrichmentBatchSeconds prometheus.ObserverVec
@@ -62,6 +84,57 @@ type httpValidationService struct {
 	mu         sync.RWMutex
 	executions map[uuid.UUID]*httpValidationExecution
 	status     models.PhaseStatusEnum
+}
+
+// ensureMetricsRegistered wraps metricsOnce.Do for testability (allows unit tests to trigger registration
+// without executing a full validation run). Safe to call multiple times.
+func (s *httpValidationService) ensureMetricsRegistered() {
+	s.metricsOnce.Do(func() {
+		s.mtx.fetchOutcome = prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "http_validation_fetch_outcomes_total",
+			Help: "HTTP validation fetch outcomes (status label: ok|error|timeout)",
+		}, []string{"status"})
+		s.mtx.fetchAlias = prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "http_fetch_result_total",
+			Help: "Alias of http_validation_fetch_outcomes_total (status label: ok|error|timeout)",
+		}, []string{"status"})
+		s.mtx.microCrawl = prometheus.NewCounter(prometheus.CounterOpts{Name: "http_validation_microcrawl_triggers_total", Help: "Number of micro-crawl trigger executions (legacy, will deprecate)"})
+		s.mtx.microCrawlReasons = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "microcrawl_trigger_total", Help: "Micro-crawl triggers by reason"}, []string{"reason"})
+		s.mtx.microCrawlSuccesses = prometheus.NewCounter(prometheus.CounterOpts{Name: "http_microcrawl_successes_total", Help: "Micro-crawl executions that produced at least one new unique keyword"})
+		s.mtx.microCrawlAddedKw = prometheus.NewCounter(prometheus.CounterOpts{Name: "http_microcrawl_added_keywords_total", Help: "Total count of new unique keywords contributed by micro-crawl across domains"})
+		s.mtx.microCrawlNewPatterns = prometheus.NewCounter(prometheus.CounterOpts{Name: "http_microcrawl_new_patterns_total", Help: "Total count of new unique keyword patterns discovered via micro-crawl (alias of added keywords for now)"})
+		s.mtx.microCrawlGrowthRatio = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "http_microcrawl_kw_growth_ratio", Help: "Observed keyword growth ratio (post/baseline) for micro-crawl successes where baseline >0", Buckets: []float64{0.5, 0.8, 1.0, 1.1, 1.2, 1.5, 2, 3, 5}})
+		s.mtx.microCrawlZeroSuccess = prometheus.NewCounter(prometheus.CounterOpts{Name: "http_microcrawl_zero_success_total", Help: "Micro-crawl executions that examined pages but yielded zero new keywords"})
+		s.mtx.parkedDetection = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "parked_detection_total", Help: "Parked detection outcomes"}, []string{"result"})
+		s.mtx.enrichmentBatches = prometheus.NewCounter(prometheus.CounterOpts{Name: "http_enrichment_batches_total", Help: "Number of enrichment feature vector persistence batches"})
+		s.mtx.enrichmentBatchSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{Name: "http_enrichment_batch_seconds", Help: "Duration of enrichment batch persistence"}, []string{"status"})
+		s.mtx.phaseDuration = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "http_validation_phase_seconds", Help: "Elapsed time of full HTTP validation phase"})
+		s.mtx.phaseDurationVec = prometheus.NewHistogramVec(prometheus.HistogramOpts{Name: "campaign_phase_duration_seconds", Help: "Generic campaign phase durations"}, []string{"phase"})
+		s.mtx.enrichmentDropped = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "http_enrichment_dropped_total", Help: "Enrichment skipped cause=no_body|parse_error"}, []string{"cause"})
+		s.mtx.validationBatchSeconds = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "http_validation_batch_seconds", Help: "Duration of ValidateDomainsBulk per batch"})
+		s.mtx.microCrawlPages = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "http_microcrawl_pages_total", Help: "Total micro-crawl secondary pages grouped by exhaustion result"}, []string{"result"})
+		s.mtx.microCrawlPagesHist = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "http_microcrawl_pages_per_domain", Help: "Pages examined per micro-crawl trigger", Buckets: []float64{1, 2, 3, 4, 5, 8, 13}})
+		prometheus.MustRegister(
+			s.mtx.fetchOutcome,
+			s.mtx.fetchAlias,
+			s.mtx.microCrawl,
+			s.mtx.microCrawlReasons,
+			s.mtx.microCrawlSuccesses,
+			s.mtx.microCrawlAddedKw,
+			s.mtx.microCrawlNewPatterns,
+			s.mtx.microCrawlGrowthRatio,
+			s.mtx.microCrawlZeroSuccess,
+			s.mtx.parkedDetection,
+			s.mtx.enrichmentBatches,
+			s.mtx.enrichmentBatchSeconds,
+			s.mtx.phaseDuration,
+			s.mtx.phaseDurationVec,
+			s.mtx.enrichmentDropped,
+			s.mtx.microCrawlPages,
+			s.mtx.microCrawlPagesHist,
+			s.mtx.validationBatchSeconds,
+		)
+	})
 }
 
 // ---- Enrichment & Scoring Integration (ANCHOR STUBS - AUDITED) ----
@@ -96,12 +169,152 @@ func applyParkedHeuristic(text string) (bool, float64) { // DEPRECATED STUB (rea
 	return false, 0.10
 }
 
+// realParkedHeuristic implements the production parked detection scoring used in enrichment.
+// Extracted for unit testing. Returns (isParked, confidence [0..1]).
+func realParkedHeuristic(title string, snippet string) (bool, float64) {
+	if title == "" && snippet == "" {
+		return false, 0
+	}
+	lt := strings.ToLower(title)
+	ls := strings.ToLower(snippet)
+	signals := 0
+	total := 0
+	scoreIf := func(cond bool, weight int) {
+		if cond {
+			signals += weight
+		}
+		total += weight
+	}
+	scoreIf(strings.Contains(lt, "parked"), 3)
+	scoreIf(strings.Contains(lt, "buy this domain"), 4)
+	scoreIf(strings.Contains(ls, "sedo"), 2)
+	scoreIf(strings.Contains(ls, "namecheap"), 1)
+	scoreIf(strings.Contains(ls, "godaddy"), 1)
+	// "coming soon" may appear in either title or snippet; treat either as a parking signal.
+	scoreIf(strings.Contains(lt, "coming soon") || strings.Contains(ls, "coming soon"), 2)
+	if total == 0 {
+		return false, 0
+	}
+	conf := float64(signals) / float64(total)
+	// Threshold rationale: with current static denominator (sum of all weights = 13),
+	// we want at least a moderately strong composite or a single strongest phrase
+	// ("buy this domain") to qualify. That phrase alone scores 4/13 ≈ 0.3077.
+	// Setting threshold at 0.30 classifies that explicit parking intent phrase
+	// while excluding weaker single keywords (e.g. just "parked" = 3/13 ≈ 0.23).
+	return conf >= 0.30, conf
+}
+
 // maybeAdaptiveMicroCrawl optionally fetches a small set of internal pages to enrich signals.
 // It MUST honor byte/page limits and return quickly on errors. All network operations
 // should reuse existing persona/proxy selection from the main validator path.
 // TODO(ENRICHMENT-P2): implement link scoring + budgeted fetch. For now returns no extra data.
-func (s *httpValidationService) maybeAdaptiveMicroCrawl(ctx context.Context, campaignID uuid.UUID, rootURL *url.URL, rootSignals map[string]any) (map[string]any, error) { // UNUSED STUB
-	return nil, nil
+func (s *httpValidationService) maybeAdaptiveMicroCrawl(ctx context.Context, campaignID uuid.UUID, rootURL *url.URL, rootSignals map[string]any) (map[string]any, error) { // IMPLEMENTED
+	if ctx.Err() != nil {
+		return nil, ctx.Err()
+	}
+	if rootURL == nil || s.kwScanner == nil {
+		return nil, nil
+	}
+	// Feature flag gate
+	if v, ok := os.LookupEnv("ENABLE_HTTP_MICROCRAWL"); !ok || !(v == "1" || strings.EqualFold(v, "true")) {
+		return nil, nil
+	}
+	// Limits (can be tuned via env later)
+	maxPages := 3
+	byteBudget := 60000 // 60KB total across secondary pages
+	if v := os.Getenv("MICROCRAWL_MAX_PAGES"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 10 {
+			maxPages = n
+		}
+	}
+	if v := os.Getenv("MICROCRAWL_BYTE_BUDGET"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 1024 && n <= 500000 {
+			byteBudget = n
+		}
+	}
+	// Extract links from rootSignals if already parsed; else bail (we avoid reparsing root HTML here for simplicity)
+	// Future: rootSignals could include an "internal_links" slice. For now we perform a focused fetch on a small set of guessed paths.
+	candidates := []string{
+		rootURL.Scheme + "://" + rootURL.Host + "/about",
+		rootURL.Scheme + "://" + rootURL.Host + "/contact",
+		rootURL.Scheme + "://" + rootURL.Host + "/products",
+	}
+	seen := make(map[string]struct{}, len(candidates))
+	filtered := make([]string, 0, len(candidates))
+	for _, c := range candidates {
+		if _, ok := seen[c]; ok {
+			continue
+		}
+		seen[c] = struct{}{}
+		filtered = append(filtered, c)
+		if len(filtered) >= maxPages {
+			break
+		}
+	}
+	if len(filtered) == 0 {
+		return nil, nil
+	}
+	client := &http.Client{Timeout: 5 * time.Second}
+	bytesUsed := 0
+	keywordPatterns := make(map[string]struct{}, 32)
+	pagesExamined := 0
+	var exec store.Querier
+	if q, ok := s.deps.DB.(store.Querier); ok {
+		exec = q
+	}
+	for _, link := range filtered {
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
+		if bytesUsed >= byteBudget {
+			break
+		}
+		req, _ := http.NewRequestWithContext(ctx, "GET", link, nil)
+		resp, err := client.Do(req)
+		if err != nil {
+			continue
+		}
+		body, _ := io.ReadAll(io.LimitReader(resp.Body, int64(byteBudget-bytesUsed)))
+		_ = resp.Body.Close()
+		pagesExamined++
+		bytesUsed += len(body)
+		if len(body) == 0 {
+			continue
+		}
+		// Keyword scanning (reuse existing root keyword sets if rootSignals contains a hint)
+		// We look for presence of dynamic slice rootSignals["ad_hoc_keywords"] if any
+		if ks, ok := rootSignals["ad_hoc_keywords"].([]string); ok && len(ks) > 0 {
+			if adh, err := s.kwScanner.ScanAdHocKeywords(ctx, body, ks); err == nil {
+				for _, p := range adh {
+					keywordPatterns[p] = struct{}{}
+				}
+			}
+		}
+		if ids, ok := rootSignals["keyword_set_ids"].([]string); ok && len(ids) > 0 {
+			if hitsBySet, err := s.kwScanner.ScanBySetIDs(ctx, exec, body, ids); err == nil {
+				for _, patterns := range hitsBySet {
+					for _, p := range patterns {
+						keywordPatterns[p] = struct{}{}
+					}
+				}
+			}
+		}
+		if pagesExamined >= maxPages {
+			break
+		}
+	}
+	if pagesExamined == 0 || len(keywordPatterns) == 0 {
+		return map[string]any{"microcrawl_pages": pagesExamined, "microcrawl_keywords": 0}, nil
+	}
+	merged := make([]string, 0, len(keywordPatterns))
+	for p := range keywordPatterns {
+		merged = append(merged, p)
+	}
+	return map[string]any{
+		"microcrawl_pages":    pagesExamined,
+		"microcrawl_keywords": len(merged),
+		"microcrawl_patterns": merged,
+	}, nil
 }
 
 // mergeFeatureVectors shallow-merges secondary into primary without overwriting existing keys.
@@ -393,9 +606,11 @@ func (s *httpValidationService) GetStatus(ctx context.Context, campaignID uuid.U
 
 // Cancel stops HTTP validation for a campaign
 func (s *httpValidationService) Cancel(ctx context.Context, campaignID uuid.UUID) error {
-	s.deps.Logger.Info(ctx, "Cancelling HTTP validation", map[string]interface{}{
-		"campaign_id": campaignID,
-	})
+	if s.deps.Logger != nil {
+		s.deps.Logger.Info(ctx, "Cancelling HTTP validation", map[string]interface{}{
+			"campaign_id": campaignID,
+		})
+	}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -419,9 +634,11 @@ func (s *httpValidationService) Cancel(ctx context.Context, campaignID uuid.UUID
 	// Close progress channel
 	close(execution.ProgressChan)
 
-	s.deps.Logger.Info(ctx, "HTTP validation cancelled", map[string]interface{}{
-		"campaign_id": campaignID,
-	})
+	if s.deps.Logger != nil {
+		s.deps.Logger.Info(ctx, "HTTP validation cancelled", map[string]interface{}{
+			"campaign_id": campaignID,
+		})
+	}
 
 	return nil
 }
@@ -504,77 +721,12 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 	}
 
 	// helper parked heuristic (MVP)
-	parkedHeuristic := func(title string, snippet string) (bool, float64) {
-		if title == "" && snippet == "" {
-			return false, 0
-		}
-		lt := strings.ToLower(title)
-		ls := strings.ToLower(snippet)
-		signals := 0
-		total := 0
-		scoreIf := func(cond bool, weight int) {
-			if cond {
-				signals += weight
-			}
-			total += weight
-		}
-		scoreIf(strings.Contains(lt, "parked"), 3)
-		scoreIf(strings.Contains(lt, "buy this domain"), 4)
-		scoreIf(strings.Contains(ls, "sedo"), 2)
-		scoreIf(strings.Contains(ls, "namecheap"), 1)
-		scoreIf(strings.Contains(ls, "godaddy"), 1)
-		scoreIf(strings.Contains(ls, "coming soon"), 2)
-		if total == 0 {
-			return false, 0
-		}
-		conf := float64(signals) / float64(total)
-		return conf >= 0.75, conf
-	}
+	// Use shared helper for parked heuristic
+	parkedHeuristic := realParkedHeuristic
 
 	for i := 0; i < total; i += batchSize {
 		// metrics registration (idempotent)
-		s.metricsOnce.Do(func() {
-			// Guard: rely on default registry; if dependency injection supplies custom registry it will still work.
-			s.mtx.fetchOutcome = prometheus.NewCounterVec(prometheus.CounterOpts{
-				Name: "http_validation_fetch_outcomes_total",
-				Help: "HTTP validation fetch outcomes (status label: ok|error|timeout)",
-			}, []string{"status"})
-			// Alias (planned): provides future-proof naming while keeping legacy metric.
-			s.mtx.fetchAlias = prometheus.NewCounterVec(prometheus.CounterOpts{
-				Name: "http_fetch_result_total",
-				Help: "Alias of http_validation_fetch_outcomes_total (status label: ok|error|timeout)",
-			}, []string{"status"})
-			// Legacy simple counter retained; new labeled reasons vector added.
-			s.mtx.microCrawl = prometheus.NewCounter(prometheus.CounterOpts{Name: "http_validation_microcrawl_triggers_total", Help: "Number of micro-crawl trigger executions (legacy, will deprecate)"})
-			s.mtx.microCrawlReasons = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "microcrawl_trigger_total", Help: "Micro-crawl triggers by reason"}, []string{"reason"})
-			// Parked detection results
-			s.mtx.parkedDetection = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "parked_detection_total", Help: "Parked detection outcomes"}, []string{"result"})
-			// Enrichment batch metrics
-			s.mtx.enrichmentBatches = prometheus.NewCounter(prometheus.CounterOpts{Name: "http_enrichment_batches_total", Help: "Number of enrichment feature vector persistence batches"})
-			s.mtx.enrichmentBatchSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{Name: "http_enrichment_batch_seconds", Help: "Duration of enrichment batch persistence"}, []string{"status"})
-			s.mtx.phaseDuration = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "http_validation_phase_seconds", Help: "Elapsed time of full HTTP validation phase"})
-			s.mtx.phaseDurationVec = prometheus.NewHistogramVec(prometheus.HistogramOpts{Name: "campaign_phase_duration_seconds", Help: "Generic campaign phase durations"}, []string{"phase"})
-			s.mtx.enrichmentDropped = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "http_enrichment_dropped_total", Help: "Enrichment skipped cause=no_body|parse_error"}, []string{"cause"})
-			// Batch fetch timing
-			s.mtx.validationBatchSeconds = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "http_validation_batch_seconds", Help: "Duration of ValidateDomainsBulk per batch"})
-			s.mtx.microCrawlPages = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "http_microcrawl_pages_total", Help: "Total micro-crawl secondary pages grouped by exhaustion result"}, []string{"result"})
-			s.mtx.microCrawlPagesHist = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "http_microcrawl_pages_per_domain", Help: "Pages examined per micro-crawl trigger", Buckets: []float64{1, 2, 3, 4, 5, 8, 13}})
-			prometheus.MustRegister(
-				s.mtx.fetchOutcome,
-				s.mtx.fetchAlias,
-				s.mtx.microCrawl,
-				s.mtx.microCrawlReasons,
-				s.mtx.parkedDetection,
-				s.mtx.enrichmentBatches,
-				s.mtx.enrichmentBatchSeconds,
-				s.mtx.phaseDuration,
-				s.mtx.phaseDurationVec,
-				s.mtx.enrichmentDropped,
-				s.mtx.microCrawlPages,
-				s.mtx.microCrawlPagesHist,
-				s.mtx.validationBatchSeconds,
-			)
-		})
+		s.ensureMetricsRegistered()
 		select {
 		case <-ctx.Done():
 			s.updateExecutionStatus(campaignID, models.PhaseStatusPaused, "Execution cancelled by caller context")
@@ -662,6 +814,17 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 					"fetched_at":    time.Now().UTC().Format(time.RFC3339),
 					"content_bytes": r.ContentLength,
 				}
+				// Structural parsing (HTML) & naive language heuristic
+				if len(r.RawBody) > 0 {
+					ss := parseStructuralSignals(r.RawBody, r.FinalURL)
+					fv["h1_count"] = ss.H1Count
+					fv["link_internal_count"] = ss.LinkInternalCount
+					fv["link_external_count"] = ss.LinkExternalCount
+					fv["link_internal_ratio"] = ss.LinkInternalRatio
+					fv["primary_lang"] = ss.PrimaryLang
+					fv["lang_confidence"] = ss.LangConfidence
+					fv["has_structural_signals"] = true
+				}
 				// Keyword scans (root only for now)
 				if len(r.RawBody) > 0 && (len(keywordSetIDs) > 0 || len(adHocKeywords) > 0) {
 					var exec store.Querier
@@ -721,9 +884,9 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 				}
 				// Micro-crawl execution (depth-1) if criteria met
 				if microcrawlEnabled && !isParked {
-					kwu, _ := fv["kw_unique"].(int)
-					if kwu < 2 && r.ContentLength < 60000 && conf < 0.5 {
-						pagesExamined, exhausted, newKw, newPatterns := s.microCrawlEnhance(ctx, campaignID, r, keywordSetIDs, adHocKeywords, microMaxPages, microByteBudget)
+					kwuBaseline, _ := fv["kw_unique"].(int)
+					if kwuBaseline < 2 && r.ContentLength < 60000 && conf < 0.5 {
+						pagesExamined, exhausted, addedKw, newPatterns := s.microCrawlEnhance(ctx, campaignID, r, keywordSetIDs, adHocKeywords, microMaxPages, microByteBudget)
 						if pagesExamined > 0 {
 							if s.mtx.microCrawl != nil {
 								s.mtx.microCrawl.Inc()
@@ -746,14 +909,67 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 							fv["microcrawl_pages"] = pagesExamined
 							fv["microcrawl_exhausted"] = exhausted
 							fv["secondary_pages_examined"] = pagesExamined
-							// merge keywords
-							if len(newPatterns) > 0 {
-								fv["kw_hits_total"] = newKw
-								fv["kw_unique"] = newKw
+							// Merge: total unique = baseline + added (if new patterns found)
+							if len(newPatterns) > 0 && addedKw > 0 {
+								// ROI counters
+								if s.mtx.microCrawlSuccesses != nil {
+									s.mtx.microCrawlSuccesses.Inc()
+								}
+								if s.mtx.microCrawlAddedKw != nil {
+									s.mtx.microCrawlAddedKw.Add(float64(addedKw))
+								}
+								if s.mtx.microCrawlNewPatterns != nil {
+									s.mtx.microCrawlNewPatterns.Add(float64(len(newPatterns)))
+								}
+								fv["kw_unique_root"] = kwuBaseline
+								fv["kw_unique_added"] = addedKw
+								totalUnique := kwuBaseline + addedKw
+								fv["kw_unique"] = totalUnique
+								fv["kw_hits_total"] = totalUnique
+								// growth ratio; avoid div by zero
+								if kwuBaseline > 0 {
+									fv["kw_growth_ratio"] = float64(totalUnique) / float64(kwuBaseline)
+									if s.mtx.microCrawlGrowthRatio != nil {
+										if gr, ok := fv["kw_growth_ratio"].(float64); ok {
+											s.mtx.microCrawlGrowthRatio.Observe(gr)
+										}
+									}
+								} else {
+									fv["kw_growth_ratio"] = float64(totalUnique)
+								}
+								// Diminishing returns: pages >=2 AND growth < 1.15 (if baseline >0) OR addedKw <2 for zero baseline
+								if pagesExamined >= 2 {
+									if kwuBaseline > 0 {
+										if gr, _ := fv["kw_growth_ratio"].(float64); gr < 1.15 {
+											fv["diminishing_returns"] = true
+										}
+									} else if addedKw < 2 { // nothing much learned from crawl
+										fv["diminishing_returns"] = true
+									}
+								}
+							} else {
+								// zero success path
+								if s.mtx.microCrawlZeroSuccess != nil {
+									s.mtx.microCrawlZeroSuccess.Inc()
+								}
+							}
+							if exhausted {
+								fv["partial_coverage"] = true
 							}
 						} else {
 							fv["microcrawl_planned"] = false
 						}
+					}
+				}
+				// If microcrawl not used still mark defaults for new fields
+				if _, ok := fv["diminishing_returns"]; !ok {
+					fv["diminishing_returns"] = false
+				}
+				if _, ok := fv["partial_coverage"]; !ok {
+					if exhausted, _ := fv["microcrawl_exhausted"].(bool); exhausted { // carry over if earlier logic set
+						fv["partial_coverage"] = true
+					} else {
+						fv["partial_coverage"] = false
 					}
 				}
 				enrichmentVectors[r.Domain] = fv

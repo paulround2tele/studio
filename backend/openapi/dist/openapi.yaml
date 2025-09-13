@@ -3156,6 +3156,45 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/domains/{domain}/score-breakdown:
+    get:
+      tags:
+        - campaigns
+      summary: Get component score breakdown for a single domain
+      description: Recomputes the scoring component values for the specified domain using the stored feature vector and current (or default) scoring profile weights. Does not persist anything; purely diagnostic / transparency surface. If experimental tf-lite scoring is disabled the `tf_lite` key will still be present with value 0.
+      operationId: campaigns_domain_score_breakdown
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: domain
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/DomainScoreBreakdownResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /campaigns/{campaignId}/state:
     get:
       tags:
@@ -5779,6 +5818,68 @@ components:
         - campaignId
         - items
         - total
+    DomainScoreBreakdownResponse:
+      type: object
+      description: Component scores contributing to the final relevance score for a domain.
+      properties:
+        campaignId:
+          type: string
+          format: uuid
+        domain:
+          type: string
+        components:
+          type: object
+          description: Raw component scores normalized to 0-1 prior to weighting.
+          properties:
+            density:
+              type: number
+              format: float
+            coverage:
+              type: number
+              format: float
+            non_parked:
+              type: number
+              format: float
+            content_length:
+              type: number
+              format: float
+            title_keyword:
+              type: number
+              format: float
+            freshness:
+              type: number
+              format: float
+            tf_lite:
+              type: number
+              format: float
+              description: Experimental TF-lite component (0 if disabled)
+          required:
+            - density
+            - coverage
+            - non_parked
+            - content_length
+            - title_keyword
+            - freshness
+            - tf_lite
+        final:
+          type: number
+          format: float
+          description: Weighted final relevance score after penalties
+        weights:
+          type: object
+          description: Active scoring profile weights used for combination.
+          additionalProperties:
+            type: number
+            format: float
+        parkedPenaltyFactor:
+          type: number
+          format: float
+          description: Penalty factor applied when domain considered parked with low confidence (<0.9)
+      required:
+        - campaignId
+        - domain
+        - components
+        - final
     CampaignStateEnum:
       type: string
       enum:

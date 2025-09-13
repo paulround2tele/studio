@@ -434,7 +434,7 @@ type LeadItem struct {
 type DomainGenerationCampaignParams struct {
 	CampaignID                uuid.UUID `db:"campaign_id" json:"-"`
 	PatternType               string    `db:"pattern_type" json:"patternType" validate:"required,oneof=prefix_variable suffix_variable both_variable"`
-	VariableLength            int       `db:"variable_length" json:"variableLength" validate:"gt=0"`
+	VariableLength            int       `db:"variable_length" json:"variableLength" validate:"gte=0"`
 	CharacterSet              string    `db:"character_set" json:"characterSet" validate:"required"`
 	ConstantString            *string   `db:"constant_string" json:"constantString,omitempty" validate:"omitempty"`
 	TLD                       string    `db:"tld" json:"tld" validate:"required"`
@@ -534,13 +534,14 @@ type GeneratedDomain struct {
 
 // ScoringProfile represents a set of weights for scoring domains.
 type ScoringProfile struct {
-	ID          uuid.UUID       `db:"id" json:"id"`
-	Name        string          `db:"name" json:"name"`
-	Description sql.NullString  `db:"description" json:"description,omitempty"`
-	Weights     json.RawMessage `db:"weights" json:"weights"` // JSON object {metric_weight: value}
-	Version     int             `db:"version" json:"version"`
-	CreatedAt   time.Time       `db:"created_at" json:"createdAt"`
-	UpdatedAt   time.Time       `db:"updated_at" json:"updatedAt"`
+	ID                  uuid.UUID       `db:"id" json:"id"`
+	Name                string          `db:"name" json:"name"`
+	Description         sql.NullString  `db:"description" json:"description,omitempty"`
+	Weights             json.RawMessage `db:"weights" json:"weights"` // JSON object {metric_weight: value}
+	Version             int             `db:"version" json:"version"`
+	ParkedPenaltyFactor sql.NullFloat64 `db:"parked_penalty_factor" json:"parkedPenaltyFactor,omitempty"`
+	CreatedAt           time.Time       `db:"created_at" json:"createdAt"`
+	UpdatedAt           time.Time       `db:"updated_at" json:"updatedAt"`
 }
 
 // MarshalJSON provides custom JSON marshaling for GeneratedDomain to handle sql.Null* types properly

@@ -191,9 +191,9 @@ func mapToDomainGenerationConfig(in map[string]interface{}) (domainservices.Doma
 		cfg.OffsetStart = getInt64("offset_start", 0)
 	}
 
-	// Basic required checks mirroring service.Validate
-	if cfg.VariableLength <= 0 {
-		return cfg, fmt.Errorf("variableLength must be positive")
+	// Basic required checks mirroring service.Validate (allow 0 to enable constant-only domain e.g. example.com)
+	if cfg.VariableLength < 0 {
+		return cfg, fmt.Errorf("variableLength must be >= 0")
 	}
 	if cfg.CharacterSet == "" {
 		return cfg, fmt.Errorf("characterSet cannot be empty")

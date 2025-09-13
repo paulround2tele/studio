@@ -275,6 +275,34 @@ When a phase fails:
 ### Metrics Collected
 - `phaseStarts`, `phaseAutoStarts`, `phaseFailures`, `phaseCompletions`, `campaignCompletions`, and per-phase duration metrics.
 
+#### HTTP Validation & Micro-Crawl ROI Metrics
+The HTTP keyword validation phase exposes Prometheus metrics to evaluate performance and ROI of the adaptive micro-crawl subsystem.
+
+Core fetch & phase metrics:
+- `http_validation_fetch_outcomes_total{status=ok|error|timeout}` – Root page fetch outcomes
+- `http_fetch_result_total{status=...}` – Alias of above for legacy dashboards
+- `http_validation_batch_seconds` – Duration per bulk validator batch
+- `http_validation_phase_seconds` / `campaign_phase_duration_seconds{phase="http_validation"}` – Phase durations
+
+Micro-crawl operational metrics:
+- `http_validation_microcrawl_triggers_total` – (legacy) raw trigger count
+- `microcrawl_trigger_total{reason=...}` – Triggers partitioned by reason (e.g. `low_kw_and_not_parked`)
+- `http_microcrawl_pages_total{result=partial|exhausted}` – Secondary pages fetched aggregated by exhaustion state
+- `http_microcrawl_pages_per_domain` – Histogram of pages examined per trigger
+
+Micro-crawl ROI / effectiveness metrics:
+- `http_microcrawl_successes_total` – Triggers that yielded one or more new unique keywords
+- `http_microcrawl_zero_success_total` – Triggers that fetched pages but produced zero new keywords (denominator for success rate)
+- `http_microcrawl_added_keywords_total` – Total new unique keywords contributed (sum)
+- `http_microcrawl_new_patterns_total` – Alias of added keywords (reserved for future pattern normalization divergence)
+- `http_microcrawl_kw_growth_ratio` – Histogram of post/baseline keyword unique growth (baseline > 0)
+
+Derived suggestion examples (not exported as metrics):
+- Success Rate = successes_total / (successes_total + zero_success_total)
+- Avg Added Keywords per Success = added_keywords_total / successes_total
+
+Micro-crawl diminishing returns heuristic flags `feature_vector.diminishing_returns` when pages >=2 and growth ratio <1.15 (or baseline=0 and added <2). This can be combined with `kw_growth_ratio` histogram to tune future early-stop strategies.
+
 ### Frontend Selector Guarantees
 - Derived overview always supplies ordered phases with status & (when available) `durationMs`.
 - `nextUserAction` indicates the highest-priority user intervention (start, retry, or none).

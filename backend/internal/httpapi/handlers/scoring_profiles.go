@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"math"
 	"net/http"
 	"time"
 
@@ -18,6 +19,45 @@ type ScoringProfileHandler struct {
 	Analysis services.AnalysisService
 }
 
+// HandleScoreBreakdown returns component score breakdown for a domain (fallback manual wiring until generated server fully adopted)
+func (h *ScoringProfileHandler) HandleScoreBreakdown(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	if h.Analysis == nil {
+		http.Error(w, "analysis unavailable", http.StatusServiceUnavailable)
+		return
+	}
+	campaignIDStr := r.URL.Query().Get("campaignId")
+	domain := r.URL.Query().Get("domain")
+	if campaignIDStr == "" || domain == "" {
+		http.Error(w, "campaignId and domain required", 400)
+		return
+	}
+	cID, err := uuid.Parse(campaignIDStr)
+	if err != nil {
+		http.Error(w, "bad campaignId", 400)
+		return
+	}
+	// call underlying method via optional interface assertion (not part of minimal AnalysisService core interface maybe)
+	ext, ok := h.Analysis.(interface {
+		ScoreBreakdown(context.Context, uuid.UUID, string) (map[string]float64, error)
+	})
+	if !ok {
+		http.Error(w, "score breakdown unsupported", 501)
+		return
+	}
+	bd, err := ext.ScoreBreakdown(r.Context(), cID, domain)
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	resp := map[string]interface{}{"success": true, "data": map[string]interface{}{"campaignId": cID.String(), "domain": domain, "components": map[string]float64{"density": bd["density"], "coverage": bd["coverage"], "non_parked": bd["non_parked"], "content_length": bd["content_length"], "title_keyword": bd["title_keyword"], "freshness": bd["freshness"], "tf_lite": bd["tf_lite"]}, "final": bd["final"]}}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(resp)
+}
+
 func (h *ScoringProfileHandler) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/api/scoring-profiles", h.handleProfiles)
 	mux.HandleFunc("/api/scoring-profiles/associate", h.handleAssociate)
@@ -25,11 +65,12 @@ func (h *ScoringProfileHandler) Register(mux *http.ServeMux) {
 }
 
 type profilePayload struct {
-	ID          *uuid.UUID         `json:"id,omitempty"`
-	Name        string             `json:"name"`
-	Description *string            `json:"description,omitempty"`
-	Weights     map[string]float64 `json:"weights"`
-	Version     int                `json:"version,omitempty"`
+	ID                  *uuid.UUID         `json:"id,omitempty"`
+	Name                string             `json:"name"`
+	Description         *string            `json:"description,omitempty"`
+	Weights             map[string]float64 `json:"weights"`
+	Version             int                `json:"version,omitempty"`
+	ParkedPenaltyFactor *float64           `json:"parkedPenaltyFactor,omitempty"`
 }
 
 func (h *ScoringProfileHandler) handleProfiles(w http.ResponseWriter, r *http.Request) {
@@ -59,6 +100,15 @@ func (h *ScoringProfileHandler) handleProfiles(w http.ResponseWriter, r *http.Re
 		}
 		raw, _ := json.Marshal(p.Weights)
 		sp := &models.ScoringProfile{Name: p.Name, Weights: raw, Version: p.Version}
+		if p.ParkedPenaltyFactor != nil {
+			v := *p.ParkedPenaltyFactor
+			if math.IsNaN(v) || v < 0 || v > 1 {
+				http.Error(w, "parkedPenaltyFactor out of range (0..1)", 400)
+				return
+			}
+			sp.ParkedPenaltyFactor.Float64 = v
+			sp.ParkedPenaltyFactor.Valid = true
+		}
 		if p.Description != nil {
 			sp.Description.Scan(*p.Description)
 		}
@@ -110,6 +160,15 @@ func (h *ScoringProfileHandler) handleProfiles(w http.ResponseWriter, r *http.Re
 		}
 		if len(p.Weights) > 0 {
 			existing.Weights, _ = json.Marshal(p.Weights)
+		}
+		if p.ParkedPenaltyFactor != nil {
+			v := *p.ParkedPenaltyFactor
+			if math.IsNaN(v) || v < 0 || v > 1 {
+				http.Error(w, "parkedPenaltyFactor out of range (0..1)", 400)
+				return
+			}
+			existing.ParkedPenaltyFactor.Float64 = v
+			existing.ParkedPenaltyFactor.Valid = true
 		}
 		if p.Version > 0 {
 			existing.Version = p.Version

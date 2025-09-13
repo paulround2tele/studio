@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -29,11 +31,10 @@ type analysisService struct {
 	proxyStore     store.ProxyStore
 	deps           Dependencies
 	contentFetcher *contentfetcher.ContentFetcher
-
-	metricsOnce sync.Once
-	mtx         struct {
+	mtx            struct {
 		scoreHistogram prometheus.Histogram
 		rescoreRuns    *prometheus.CounterVec
+		rescoreRunsV2  *prometheus.CounterVec
 		phaseDuration  prometheus.Histogram
 	}
 
@@ -370,7 +371,7 @@ func (s *analysisService) executeAnalysis(ctx context.Context, campaignID uuid.U
 	// ANCHOR (SCORING-ENGINE): All future scoring feature additions (penalties, new components,
 	// rescore batching improvements) MUST extend scoreDomains / helpers in this file. Do NOT
 	// create a parallel scoring service. Keep weight validation in scoring_helpers.go.
-	if err := s.scoreDomains(ctx, campaignID); err != nil {
+	if _, err := s.scoreDomains(ctx, campaignID); err != nil {
 		s.deps.Logger.Warn(ctx, "Scoring failed", map[string]interface{}{"campaign_id": campaignID, "error": err.Error()})
 	} else {
 		s.sendProgress(campaignID, 98.5, "Scoring completed")
@@ -813,17 +814,20 @@ func (s *analysisService) updateExecutionStatus(campaignID uuid.UUID, status mod
 
 // scoreDomains computes relevance_score & domain_score from feature_vector JSON for a campaign.
 // Basic weights: keyword_density, unique_keyword_coverage, non_parked, content_length_quality, title_keyword, freshness.
-func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID) error {
-	s.metricsOnce.Do(func() {
+
+// Global once to avoid duplicate metric registration when multiple service instances are created (tests)
+var globalScoringMetricsOnce sync.Once
+
+func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID) (string, error) {
+	globalScoringMetricsOnce.Do(func() {
 		s.mtx.scoreHistogram = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "domain_relevance_score", Help: "Distribution of computed relevance scores", Buckets: []float64{0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0}})
 		s.mtx.rescoreRuns = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "rescore_runs_total", Help: "Number of rescore runs"}, []string{"profile"})
+		s.mtx.rescoreRunsV2 = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "rescore_runs_v2_total", Help: "Rescore runs by profile state & result"}, []string{"profile", "result"})
 		s.mtx.phaseDuration = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "analysis_phase_seconds", Help: "Duration of analysis scoring phase"})
-		prometheus.MustRegister(s.mtx.scoreHistogram, s.mtx.rescoreRuns, s.mtx.phaseDuration)
+		prometheus.MustRegister(s.mtx.scoreHistogram, s.mtx.rescoreRuns, s.mtx.rescoreRunsV2, s.mtx.phaseDuration)
 	})
 	phaseStart := time.Now()
-	if s.store == nil {
-		return fmt.Errorf("campaign store not available")
-	}
+	// Campaign store is optional for pure scoring recompute; skip if absent.
 	// Acquire raw *sql.DB from supported dependency types (*sqlx.DB or *sql.DB)
 	var dbx *sql.DB
 	switch db := s.deps.DB.(type) {
@@ -833,25 +837,57 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 		dbx = db
 	}
 	if dbx == nil {
-		return fmt.Errorf("scoring requires *sql.DB or *sqlx.DB dependency")
+		return "", fmt.Errorf("scoring requires *sql.DB or *sqlx.DB dependency")
 	}
-	// Load validated, normalized weights (defaults if no profile)
-	weightsMap, wErr := loadCampaignScoringWeights(ctx, dbx, campaignID)
+	// Load validated, normalized weights (defaults if no profile) + optional penalty factor
+	weightsMap, penaltyPtr, wErr := loadCampaignScoringWeights(ctx, dbx, campaignID)
 	if wErr != nil {
-		return fmt.Errorf("load weights: %w", wErr)
+		return "", fmt.Errorf("load weights: %w", wErr)
+	}
+	parkedPenaltyFactor := 0.5
+	if penaltyPtr != nil {
+		parkedPenaltyFactor = *penaltyPtr
+		if parkedPenaltyFactor < 0 {
+			parkedPenaltyFactor = 0
+		} else if parkedPenaltyFactor > 1 {
+			parkedPenaltyFactor = 1
+		}
 	}
 	// Fetch candidate domains with feature vectors
+	// Pre-count total for progress events
+	var totalCount int64
+	if err := dbx.QueryRowContext(ctx, `SELECT COUNT(*) FROM generated_domains WHERE campaign_id = $1 AND feature_vector IS NOT NULL`, campaignID).Scan(&totalCount); err != nil {
+		// Non-fatal: fallback to zero (no progress events)
+		totalCount = 0
+	}
 	rows, err := dbx.QueryContext(ctx, `SELECT domain_name, feature_vector, last_http_fetched_at, is_parked, parked_confidence FROM generated_domains WHERE campaign_id = $1 AND feature_vector IS NOT NULL`, campaignID)
 	if err != nil {
-		return fmt.Errorf("query feature vectors: %w", err)
+		return "", fmt.Errorf("query feature vectors: %w", err)
 	}
 	defer rows.Close()
 	type scoreRow struct {
-		Domain string
-		Score  float64
-		Rel    float64
+		Domain            string
+		Score             float64
+		Rel               float64
+		H1Count           interface{}
+		LinkInternalRatio interface{}
+		PrimaryLang       interface{}
+		DensityScore      float64
+		CoverageScore     float64
+		NonParkedScore    float64
+		ContentLenScore   float64
+		TitleScore        float64
+		FreshnessScore    float64
 	}
 	scores := make([]scoreRow, 0, 1024)
+	processed := int64(0)
+	interval := 500
+	if v := os.Getenv("RESCORE_PROGRESS_INTERVAL"); v != "" {
+		if parsed, perr := strconv.Atoi(v); perr == nil && parsed > 0 {
+			interval = parsed
+		}
+	}
+	correlationId := uuid.New().String()
 	now := time.Now()
 	for rows.Next() {
 		var domain string
@@ -862,6 +898,7 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 		if err := rows.Scan(&domain, &raw, &fetchedAt, &isParked, &parkedConf); err != nil {
 			continue
 		}
+		processed++
 		fv := map[string]interface{}{}
 		_ = json.Unmarshal(raw, &fv)
 		// Extract features
@@ -901,26 +938,67 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 		if titleHas {
 			titleScore = 1.0
 		}
-		// Weighted sum
+		// Optional TF-lite experimental component: hits per KB * log(1 + unique keywords)
+		var tfLite float64
+		if v, ok := os.LookupEnv("ENABLE_TF_LITE"); ok && (v == "1" || strings.EqualFold(v, "true")) {
+			if contentBytes > 0 && kwHitsTotal > 0 {
+				perKB := kwHitsTotal / (contentBytes / 1024.0)
+				if perKB < 0 {
+					perKB = 0
+				}
+				idfApprox := math.Log(1 + kwUnique)
+				if idfApprox < 0 {
+					idfApprox = 0
+				}
+				// Normalize roughly: cap perKB at 5 (>=5 saturates), idfApprox at log(1+10)=~2.398
+				perKBn := clamp(perKB/5.0, 0, 1)
+				idfN := clamp(idfApprox/2.4, 0, 1)
+				tfLite = perKBn * idfN
+			}
+		}
+		// Weighted sum (include tf_lite_weight if present)
 		rel := densityScore*weightsMap["keyword_density_weight"] +
 			kwCoverageScore*weightsMap["unique_keyword_coverage_weight"] +
 			nonParkedScore*weightsMap["non_parked_weight"] +
 			contentLenScore*weightsMap["content_length_quality_weight"] +
 			titleScore*weightsMap["title_keyword_weight"] +
 			freshness*weightsMap["freshness_weight"]
-		// Parked penalty if low confidence parked (parked_confidence < .9 but flagged?) - simple
+		if w, ok := weightsMap["tf_lite_weight"]; ok && w > 0 && tfLite > 0 {
+			rel += tfLite * w
+		}
+		// Parked penalty if low confidence parked (parked_confidence < .9 but flagged?) using configurable factor
 		if isParkedB && parkedConf.Valid && parkedConf.Float64 < 0.9 {
-			rel *= 0.5
+			rel *= parkedPenaltyFactor
 		}
 		rel = math.Round(rel*1000) / 1000
 		if s.mtx.scoreHistogram != nil {
 			// histogram expects non-negative; scores already in 0-1.
 			s.mtx.scoreHistogram.Observe(rel)
 		}
-		scores = append(scores, scoreRow{Domain: domain, Score: rel, Rel: rel})
+		scores = append(scores, scoreRow{Domain: domain, Score: rel, Rel: rel, H1Count: fv["h1_count"], LinkInternalRatio: fv["link_internal_ratio"], PrimaryLang: fv["primary_lang"], DensityScore: densityScore, CoverageScore: kwCoverageScore, NonParkedScore: nonParkedScore, ContentLenScore: contentLenScore, TitleScore: titleScore, FreshnessScore: freshness})
+
+		// Progress SSE emission (only during rescore / scoring runs). Guard on totalCount>0 and interval>0.
+		if s.deps.SSE != nil && totalCount > 0 && interval > 0 && (processed%int64(interval) == 0) {
+			pct := 0.0
+			if totalCount > 0 {
+				pct = (float64(processed) / float64(totalCount)) * 100.0
+			}
+			payload := map[string]interface{}{
+				"event":         "rescore_progress",
+				"campaignId":    campaignID.String(),
+				"processed":     processed,
+				"total":         totalCount,
+				"percentage":    math.Round(pct*100) / 100,
+				"correlationId": correlationId,
+				"timestamp":     time.Now().UTC(),
+			}
+			if b, mErr := json.Marshal(payload); mErr == nil {
+				s.deps.SSE.Send(string(b))
+			}
+		}
 	}
 	if len(scores) == 0 {
-		return nil
+		return correlationId, nil
 	}
 	// Bulk update
 	// VALUES (domain, relevance, domain_score)
@@ -940,62 +1018,262 @@ SET relevance_score = incoming.relevance_score,
 FROM incoming
 WHERE gd.campaign_id = $1 AND gd.domain_name = incoming.domain_name`, strings.Join(valueStrings, ","))
 	if _, err := dbx.ExecContext(ctx, query, args...); err != nil {
-		return fmt.Errorf("bulk score update failed: %w", err)
+		return "", fmt.Errorf("bulk score update failed: %w", err)
 	}
-	// SSE sample
+	// SSE sample (enriched components map for transparency while preserving legacy shape)
 	if s.deps.SSE != nil {
+		// Feature flags to emit actual structural numeric values and optionally full component breakdown.
+		emitStructuralDetails := false
+		if v, ok := os.LookupEnv("ENABLE_SSE_STRUCTURAL_DETAILS"); ok && (v == "1" || strings.EqualFold(v, "true")) {
+			emitStructuralDetails = true
+		}
+		emitFullComponents := false
+		if v, ok := os.LookupEnv("ENABLE_SSE_FULL_COMPONENTS"); ok && (v == "1" || strings.EqualFold(v, "true")) {
+			emitFullComponents = true
+		}
 		lim := 25
 		if len(scores) < lim {
 			lim = len(scores)
 		}
 		sample := make([]map[string]interface{}, 0, lim)
 		for i := 0; i < lim; i++ {
-			sample = append(sample, map[string]interface{}{"domain": scores[i].Domain, "score": scores[i].Score})
+			components := map[string]interface{}{}
+			if emitFullComponents {
+				components["density"] = scores[i].DensityScore
+				components["coverage"] = scores[i].CoverageScore
+				components["non_parked"] = scores[i].NonParkedScore
+				components["content_length"] = scores[i].ContentLenScore
+				components["title_keyword"] = scores[i].TitleScore
+				components["freshness"] = scores[i].FreshnessScore
+			} else {
+				components["density"] = "omitted"
+				components["coverage"] = "omitted"
+				components["non_parked"] = "omitted"
+				components["content_length"] = "omitted"
+				components["title_keyword"] = "omitted"
+				components["freshness"] = "omitted"
+			}
+			if emitStructuralDetails {
+				components["h1_count"] = scores[i].H1Count
+				components["link_internal_ratio"] = scores[i].LinkInternalRatio
+				components["primary_lang"] = scores[i].PrimaryLang
+			} else {
+				components["h1_count"] = "structural"
+				components["link_internal_ratio"] = "structural"
+				components["primary_lang"] = "structural"
+			}
+			sample = append(sample, map[string]interface{}{
+				"domain":     scores[i].Domain,
+				"score":      scores[i].Score,
+				"components": components,
+			})
 		}
-		msg, _ := json.Marshal(map[string]interface{}{"event": "domain_scored", "campaignId": campaignID.String(), "count": len(scores), "sample": sample, "correlationId": uuid.New().String()})
+		payload := map[string]interface{}{
+			"event":         "domain_scored",
+			"campaignId":    campaignID.String(),
+			"count":         len(scores),
+			"sample":        sample,
+			"correlationId": correlationId,
+			"componentsMeta": func() string {
+				if emitFullComponents && emitStructuralDetails {
+					return "full component and structural details included"
+				}
+				if emitFullComponents {
+					return "full component details (scores) included"
+				}
+				if emitStructuralDetails {
+					return "structural details included for h1_count, link_internal_ratio, primary_lang"
+				}
+				return "components values omitted; enable flags for details"
+			}(),
+		}
+		msg, _ := json.Marshal(payload)
 		s.deps.SSE.Send(string(msg))
+	}
+	// Final progress event if we didn't land exactly on an interval boundary
+	if s.deps.SSE != nil && totalCount > 0 && processed > 0 && processed%int64(interval) != 0 {
+		pct := (float64(processed) / float64(totalCount)) * 100.0
+		payload := map[string]interface{}{
+			"event":         "rescore_progress",
+			"campaignId":    campaignID.String(),
+			"processed":     processed,
+			"total":         totalCount,
+			"percentage":    math.Round(pct*100) / 100,
+			"correlationId": correlationId,
+			"timestamp":     time.Now().UTC(),
+		}
+		if b, mErr := json.Marshal(payload); mErr == nil {
+			s.deps.SSE.Send(string(b))
+		}
 	}
 	if s.mtx.phaseDuration != nil {
 		s.mtx.phaseDuration.Observe(time.Since(phaseStart).Seconds())
 	}
-	return nil
+	return correlationId, nil
 }
 
 // ScoreDomains exposes scoring for external callers (API / rescore triggers)
 func (s *analysisService) ScoreDomains(ctx context.Context, campaignID uuid.UUID) error {
-	return s.scoreDomains(ctx, campaignID)
+	_, err := s.scoreDomains(ctx, campaignID)
+	return err
+}
+
+// ScoreBreakdown recomputes the component scores for a single domain using stored feature_vector.
+// It does not persist anything; intended for API transparency endpoint.
+func (s *analysisService) ScoreBreakdown(ctx context.Context, campaignID uuid.UUID, domain string) (map[string]float64, error) {
+	var dbx *sql.DB
+	switch db := s.deps.DB.(type) {
+	case *sqlx.DB:
+		dbx = db.DB
+	case *sql.DB:
+		dbx = db
+	}
+	if dbx == nil {
+		return nil, fmt.Errorf("db unavailable")
+	}
+	weightsMap, penaltyPtr, err := loadCampaignScoringWeights(ctx, dbx, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	parkedPenaltyFactor := 0.5
+	if penaltyPtr != nil {
+		parkedPenaltyFactor = *penaltyPtr
+	}
+	row := dbx.QueryRowContext(ctx, `SELECT feature_vector, last_http_fetched_at, is_parked, parked_confidence FROM generated_domains WHERE campaign_id=$1 AND domain_name=$2`, campaignID, domain)
+	var raw json.RawMessage
+	var fetchedAt *time.Time
+	var isParked sql.NullBool
+	var parkedConf sql.NullFloat64
+	if err := row.Scan(&raw, &fetchedAt, &isParked, &parkedConf); err != nil {
+		return nil, err
+	}
+	fv := map[string]interface{}{}
+	_ = json.Unmarshal(raw, &fv)
+	kwUnique := asFloat(fv["kw_unique"])
+	kwHitsTotal := asFloat(fv["kw_hits_total"])
+	contentBytes := asFloat(fv["content_bytes"])
+	titleHas := boolVal(fv["title_has_keyword"])
+	isParkedB := isParked.Valid && isParked.Bool
+	now := time.Now()
+	freshness := 0.0
+	if fetchedAt != nil {
+		age := now.Sub(*fetchedAt).Hours() / 24.0
+		if age <= 1 {
+			freshness = 1
+		} else if age < 7 {
+			freshness = .7
+		} else if age < 30 {
+			freshness = .4
+		}
+	}
+	kwCoverage := clamp(kwUnique/5.0, 0, 1)
+	var density float64
+	if contentBytes > 0 && kwHitsTotal > 0 {
+		perKB := (kwHitsTotal / (contentBytes / 1024.0))
+		density = clamp(perKB/3.0, 0, 1)
+	} else {
+		density = kwCoverage
+	}
+	nonParked := 1.0
+	if isParkedB {
+		nonParked = 0
+	}
+	contentLen := clamp(contentBytes/50000.0, 0, 1)
+	titleScore := 0.0
+	if titleHas {
+		titleScore = 1
+	}
+	var tfLite float64
+	if v, ok := os.LookupEnv("ENABLE_TF_LITE"); ok && (v == "1" || strings.EqualFold(v, "true")) && contentBytes > 0 && kwHitsTotal > 0 {
+		perKB := kwHitsTotal / (contentBytes / 1024.0)
+		if perKB < 0 {
+			perKB = 0
+		}
+		idfApprox := math.Log(1 + kwUnique)
+		if idfApprox < 0 {
+			idfApprox = 0
+		}
+		perKBn := clamp(perKB/5.0, 0, 1)
+		idfN := clamp(idfApprox/2.4, 0, 1)
+		tfLite = perKBn * idfN
+	}
+	rel := density*weightsMap["keyword_density_weight"] +
+		kwCoverage*weightsMap["unique_keyword_coverage_weight"] +
+		nonParked*weightsMap["non_parked_weight"] +
+		contentLen*weightsMap["content_length_quality_weight"] +
+		titleScore*weightsMap["title_keyword_weight"] +
+		freshness*weightsMap["freshness_weight"]
+	if w, ok := weightsMap["tf_lite_weight"]; ok && w > 0 && tfLite > 0 {
+		rel += tfLite * w
+	}
+	if isParkedB && parkedConf.Valid && parkedConf.Float64 < 0.9 {
+		rel *= parkedPenaltyFactor
+	}
+	breakdown := map[string]float64{
+		"density":        density,
+		"coverage":       kwCoverage,
+		"non_parked":     nonParked,
+		"content_length": contentLen,
+		"title_keyword":  titleScore,
+		"freshness":      freshness,
+		"tf_lite":        tfLite,
+		"final":          rel,
+	}
+	return breakdown, nil
 }
 
 // RescoreCampaign recomputes scores (alias of ScoreDomains for now; placeholder for profile diff logic)
 func (s *analysisService) RescoreCampaign(ctx context.Context, campaignID uuid.UUID) error {
-	if err := s.scoreDomains(ctx, campaignID); err != nil {
+	// Determine profile state prior to run
+	profileState := "none"
+	var dbx *sql.DB
+	switch db := s.deps.DB.(type) {
+	case *sqlx.DB:
+		dbx = db.DB
+	case *sql.DB:
+		dbx = db
+	}
+	if dbx != nil {
+		if _, _, err := loadCampaignScoringWeights(ctx, dbx, campaignID); err == nil {
+			profileState = "active"
+		}
+	}
+	if s.mtx.rescoreRunsV2 != nil {
+		s.mtx.rescoreRunsV2.WithLabelValues(profileState, "started").Inc()
+	}
+	correlationId, err := s.scoreDomains(ctx, campaignID)
+	if err != nil {
+		if s.mtx.rescoreRunsV2 != nil {
+			s.mtx.rescoreRunsV2.WithLabelValues(profileState, "failed").Inc()
+		}
+		// Emit failure completion event
+		if s.deps.SSE != nil {
+			payload, _ := json.Marshal(map[string]interface{}{
+				"event":         "rescore_completed",
+				"campaignId":    campaignID.String(),
+				"timestamp":     time.Now().UTC(),
+				"correlationId": correlationId,
+				"result":        "failed",
+				"error":         err.Error(),
+			})
+			s.deps.SSE.Send(string(payload))
+		}
 		return err
 	}
 	if s.mtx.rescoreRuns != nil {
-		profileState := "none"
-		if s.store != nil {
-			var dbx *sql.DB
-			switch db := s.deps.DB.(type) {
-			case *sqlx.DB:
-				dbx = db.DB
-			case *sql.DB:
-				dbx = db
-			}
-			if dbx != nil {
-				if _, err := loadCampaignScoringWeights(ctx, dbx, campaignID); err == nil {
-					profileState = "active"
-				}
-			}
-		}
 		s.mtx.rescoreRuns.WithLabelValues(profileState).Inc()
 	}
-	// Emit rescore_completed SSE event (lightweight summary)
+	if s.mtx.rescoreRunsV2 != nil {
+		s.mtx.rescoreRunsV2.WithLabelValues(profileState, "success").Inc()
+	}
+	// Emit rescore_completed SSE event (success summary)
 	if s.deps.SSE != nil {
 		payload, _ := json.Marshal(map[string]interface{}{
 			"event":         "rescore_completed",
 			"campaignId":    campaignID.String(),
 			"timestamp":     time.Now().UTC(),
-			"correlationId": uuid.New().String(),
+			"correlationId": correlationId,
+			"result":        "success",
 		})
 		s.deps.SSE.Send(string(payload))
 	}

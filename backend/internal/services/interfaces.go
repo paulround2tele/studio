@@ -50,7 +50,7 @@ type CreateCampaignRequest struct {
 
 type DomainGenerationParams struct {
 	PatternType          string `json:"patternType" validate:"required,oneof=prefix suffix both"`
-	VariableLength       int    `json:"variableLength" validate:"required,gt=0"`
+	VariableLength       int    `json:"variableLength" validate:"required,gte=0"`
 	CharacterSet         string `json:"characterSet" validate:"required"`
 	ConstantString       string `json:"constantString" validate:"required"`
 	TLD                  string `json:"tld" validate:"required"`
@@ -296,7 +296,7 @@ type PhaseConfig struct {
 // DomainGenerationPhaseConfig contains domain generation phase parameters
 type DomainGenerationPhaseConfig struct {
 	PatternType          string   `json:"patternType" validate:"required,oneof=prefix suffix both" example:"prefix" description:"Pattern type for domain generation"`
-	VariableLength       int      `json:"variableLength" validate:"required,gt=0" example:"5" description:"Length of variable part"`
+	VariableLength       int      `json:"variableLength" validate:"required,gte=0" example:"5" description:"Length of variable part (0 for constant-only)"`
 	CharacterSet         string   `json:"characterSet" validate:"required" example:"abcdefghijklmnopqrstuvwxyz" description:"Character set for generation"`
 	ConstantString       string   `json:"constantString" validate:"required" example:"test" description:"Constant string part"`
 	TLDs                 []string `json:"tlds" validate:"required,min=1" example:"[\".com\"]" description:"Array of top-level domains"`

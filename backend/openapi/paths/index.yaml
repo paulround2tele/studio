@@ -154,6 +154,8 @@
   $ref: "./campaigns/progress.yaml"
 "/campaigns/{campaignId}/domains":
   $ref: "./campaigns/domains-list.yaml"
+"/campaigns/{campaignId}/domains/{domain}/score-breakdown":
+  $ref: "./campaigns/domain-score-breakdown.yaml"
 "/campaigns/{campaignId}/state":
   $ref: "./campaigns/state.yaml"
 "/campaigns/{campaignId}/phase-executions":

@@ -330,6 +330,34 @@ PageInfo:
     sortOrder: { type: string, enum: [ASC, DESC] }
     first: { type: integer, description: Requested page size }
   required: [hasNextPage]
+DomainScoreBreakdownResponse:
+  type: object
+  description: Component scores contributing to the final relevance score for a domain.
+  properties:
+    campaignId: { type: string, format: uuid }
+    domain: { type: string }
+    components:
+      type: object
+      description: Raw component scores normalized to 0-1 prior to weighting.
+      properties:
+        density: { type: number, format: float }
+        coverage: { type: number, format: float }
+        non_parked: { type: number, format: float }
+        content_length: { type: number, format: float }
+        title_keyword: { type: number, format: float }
+        freshness: { type: number, format: float }
+        tf_lite: { type: number, format: float, description: Experimental TF-lite component (0 if disabled) }
+      required: [density, coverage, non_parked, content_length, title_keyword, freshness, tf_lite]
+    final: { type: number, format: float, description: Weighted final relevance score after penalties }
+    weights:
+      type: object
+      description: Active scoring profile weights used for combination.
+      additionalProperties: { type: number, format: float }
+    parkedPenaltyFactor:
+      type: number
+      format: float
+      description: Penalty factor applied when domain considered parked with low confidence (<0.9)
+  required: [campaignId, domain, components, final]
 PatternOffsetRequest:
   type: object
   properties:

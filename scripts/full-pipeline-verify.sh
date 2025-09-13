@@ -50,17 +50,48 @@ log "Campaign $CAMP_ID"
 # --- Discovery (Domain Generation) Phase Configuration ---
 # Provide all required fields; handler validates variableLength>0, characterSet, tld(s), numDomainsToGenerate>0
 UNIQ_SUFFIX=$(date +%s)
-DISCOVERY_CFG=$(jq -n --arg cs "acme$UNIQ_SUFFIX" '{configuration:{patternType:"prefix",constantString:$cs,characterSet:"abcdefghijklmnopqrstuvwxyz0123456789",variableLength:1,tlds:[".com"],numDomainsToGenerate:10,batchSize:100,offsetStart:0}}')
+## Discovery strategy revision:
+# Goal: produce multiple guaranteed-resolvable domains so downstream DNS/HTTP phases have at least some successes.
+# Approach:
+# 1. Try multi-TLD constant-only generation with variableLength=0 and numDomainsToGenerate=3 (example.com/.org/.net).
+# 2. If backend rejects multi-TLD or variableLength=0, fall back to sequential constant-only configs per TLD (3 independent config/start cycles appending domains) until at least 3 domains exist.
+# 3. If still failing, revert to legacy variable pattern generation.
+
+PRIMARY_MULTI_CFG=$(jq -n '{configuration:{patternType:"prefix",constantString:"example",characterSet:"a",variableLength:0,tlds:[".com",".org",".net"],numDomainsToGenerate:3,batchSize:10,offsetStart:0}}')
+
+DISCOVERY_CFG=$PRIMARY_MULTI_CFG
 
 log "Configure discovery phase"
 CFG_RES=$(req POST "$BASE_URL/campaigns/$CAMP_ID/phases/discovery/configure" "$DISCOVERY_CFG")
 if [[ $(jq -r '.success // empty' <<<"$CFG_RES") != true ]]; then
-  log "Discovery configure failed: $CFG_RES"; exit 1;
+  log "Primary multi-TLD constant-only discovery configure failed, attempting per-TLD constant generation (.com .org .net)"
+  # We'll attempt up to three configs for each TLD constant-only; stop on first success then start phase once.
+  TLD_LIST=(".com" ".org" ".net")
+  SUCCESS=false
+  for TLD in "${TLD_LIST[@]}"; do
+    CCFG=$(jq -n --arg t "$TLD" '{configuration:{patternType:"prefix",constantString:"example",characterSet:"a",variableLength:0,tlds:[$t],numDomainsToGenerate:1,batchSize:5,offsetStart:0}}')
+    CRES=$(req POST "$BASE_URL/campaigns/$CAMP_ID/phases/discovery/configure" "$CCFG")
+    if [[ $(jq -r '.success // empty' <<<"$CRES") == true ]]; then
+      log "Configured constant-only domain for $TLD"
+      SUCCESS=true
+      break
+    else
+      log "Per-TLD constant configure failed for $TLD: $CRES"
+    fi
+  done
+  if [[ $SUCCESS != true ]]; then
+    log "All constant-only configs failed, falling back to legacy variable pattern config"
+    DISCOVERY_CFG=$(jq -n --arg cs "acme$UNIQ_SUFFIX" '{configuration:{patternType:"prefix",constantString:$cs,characterSet:"abcdefghijklmnopqrstuvwxyz0123456789",variableLength:1,tlds:[".com"],numDomainsToGenerate:10,batchSize:100,offsetStart:0}}')
+    CFG_RES=$(req POST "$BASE_URL/campaigns/$CAMP_ID/phases/discovery/configure" "$DISCOVERY_CFG")
+    if [[ $(jq -r '.success // empty' <<<"$CFG_RES") != true ]]; then
+      log "Fallback discovery configure failed: $CFG_RES"; exit 1;
+    fi
+  fi
 fi
 log "Start discovery phase"
 START_RES=$(req POST "$BASE_URL/campaigns/$CAMP_ID/phases/discovery/start" '{}')
 if [[ $(jq -r '.success // empty' <<<"$START_RES") != true ]]; then
-  log "Discovery start failed: $START_RES"; exit 1;
+  log "Discovery start failed (after possible fallback): $START_RES"; exit 1;
 fi
 
 log "Poll discovery completion"

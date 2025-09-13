@@ -36,8 +36,8 @@ func NewDomainGenerator(patternType CampaignPatternType, variableLength int, cha
 	log.Printf("DEBUG [NewDomainGenerator]: Input - PatternType=%s, VariableLength=%d, CharSet='%s' (len=%d), ConstantStr='%s', TLD='%s'",
 		patternType, variableLength, charSet, len(charSet), constantStr, tld)
 
-	if variableLength <= 0 {
-		return nil, fmt.Errorf("variable length must be a positive integer")
+	if variableLength < 0 { // allow 0 for constant-only domains
+		return nil, fmt.Errorf("variable length must be >= 0")
 	}
 	if charSet == "" {
 		return nil, fmt.Errorf("character set cannot be empty")
@@ -78,15 +78,29 @@ func NewDomainGenerator(patternType CampaignPatternType, variableLength int, cha
 
 	switch patternType {
 	case PatternPrefix, PatternSuffix:
-		dg.totalCombinations = power(int64(dg.charsetSize), int64(variableLength))
-		dg.maxVariableStringLen = variableLength
-		log.Printf("DEBUG [NewDomainGenerator]: Prefix/Suffix - CharsetSize=%d, VariableLength=%d, TotalCombinations=%d",
-			dg.charsetSize, variableLength, dg.totalCombinations)
+		if variableLength == 0 {
+			// Constant-only domain, exactly one combination
+			dg.totalCombinations = 1
+			dg.maxVariableStringLen = 0
+			log.Printf("DEBUG [NewDomainGenerator]: Prefix/Suffix constant-only - TotalCombinations=1")
+		} else {
+			dg.totalCombinations = power(int64(dg.charsetSize), int64(variableLength))
+			dg.maxVariableStringLen = variableLength
+			log.Printf("DEBUG [NewDomainGenerator]: Prefix/Suffix - CharsetSize=%d, VariableLength=%d, TotalCombinations=%d",
+				dg.charsetSize, variableLength, dg.totalCombinations)
+		}
 	case PatternBoth:
-		dg.totalCombinations = power(int64(dg.charsetSize), int64(variableLength*2))
-		dg.maxVariableStringLen = variableLength * 2
-		log.Printf("DEBUG [NewDomainGenerator]: Both - CharsetSize=%d, VariableLength*2=%d, TotalCombinations=%d",
-			dg.charsetSize, variableLength*2, dg.totalCombinations)
+		if variableLength == 0 {
+			// Treat both with 0 as just constant as well
+			dg.totalCombinations = 1
+			dg.maxVariableStringLen = 0
+			log.Printf("DEBUG [NewDomainGenerator]: Both constant-only - TotalCombinations=1")
+		} else {
+			dg.totalCombinations = power(int64(dg.charsetSize), int64(variableLength*2))
+			dg.maxVariableStringLen = variableLength * 2
+			log.Printf("DEBUG [NewDomainGenerator]: Both - CharsetSize=%d, VariableLength*2=%d, TotalCombinations=%d",
+				dg.charsetSize, variableLength*2, dg.totalCombinations)
+		}
 	default:
 		return nil, fmt.Errorf("invalid pattern type: %s", patternType)
 	}
@@ -163,24 +177,27 @@ func (dg *DomainGenerator) GenerateDomainAtOffset(offset int64) (string, error) 
 
 	switch dg.PatternType {
 	case PatternPrefix:
-		// Generate [VARIABLE][CONSTANT][TLD]
+		// Generate [VARIABLE][CONSTANT][TLD] (or constant-only if VariableLength=0)
+		if dg.VariableLength == 0 { // constant-only
+			return dg.ConstantString + dg.TLD, nil
+		}
 		generateVariableString(tempOffset, dg.VariableLength, dg.CharacterSet, dg.charsetSize, &varPart1)
 		return varPart1.String() + dg.ConstantString + dg.TLD, nil
 	case PatternSuffix:
-		// Generate [CONSTANT][VARIABLE][TLD]
+		// Generate [CONSTANT][VARIABLE][TLD] (or constant-only)
+		if dg.VariableLength == 0 {
+			return dg.ConstantString + dg.TLD, nil
+		}
 		generateVariableString(tempOffset, dg.VariableLength, dg.CharacterSet, dg.charsetSize, &varPart1)
 		return dg.ConstantString + varPart1.String() + dg.TLD, nil
 	case PatternBoth:
-		// Generate [VARIABLE1][CONSTANT][VARIABLE2][TLD]
-		// Split the offset for two variable parts.
-		// combinationsPerPart1 := power(int64(dg.charsetSize), int64(dg.VariableLength))
-		// This is effectively like treating the two variable parts as a single number in a mixed radix system,
-		// or more simply, a number of length (VariableLength*2) in base charsetSize.
-
+		// Generate [VARIABLE1][CONSTANT][VARIABLE2][TLD] or constant-only
+		if dg.VariableLength == 0 {
+			return dg.ConstantString + dg.TLD, nil
+		}
 		var varFull strings.Builder
 		generateVariableString(tempOffset, dg.VariableLength*2, dg.CharacterSet, dg.charsetSize, &varFull)
 		fullVarStr := varFull.String()
-
 		var1Str := fullVarStr[:dg.VariableLength]
 		var2Str := fullVarStr[dg.VariableLength:]
 		return var1Str + dg.ConstantString + var2Str + dg.TLD, nil
