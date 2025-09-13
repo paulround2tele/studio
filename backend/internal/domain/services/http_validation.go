@@ -16,6 +16,8 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/fntelecomllc/studio/backend/internal/keywordscanner"
 	"golang.org/x/net/html"
 
@@ -38,11 +40,85 @@ type httpValidationService struct {
 	kwScannerInit sync.Once
 	kwScanner     *keywordscanner.Service
 
+	// metrics (registered once globally)
+	metricsOnce sync.Once
+	mtx         struct {
+		fetchOutcome           *prometheus.CounterVec
+		fetchAlias             *prometheus.CounterVec
+		microCrawl             prometheus.Counter
+		microCrawlReasons      *prometheus.CounterVec
+		parkedDetection        *prometheus.CounterVec
+		enrichmentBatches      prometheus.Counter
+		enrichmentBatchSeconds prometheus.ObserverVec
+		phaseDuration          prometheus.Histogram
+		microCrawlPages        *prometheus.CounterVec
+		microCrawlPagesHist    prometheus.Histogram
+		enrichmentDropped      *prometheus.CounterVec
+		validationBatchSeconds prometheus.Histogram
+		phaseDurationVec       *prometheus.HistogramVec
+	}
+
 	// Execution tracking per campaign
 	mu         sync.RWMutex
 	executions map[uuid.UUID]*httpValidationExecution
 	status     models.PhaseStatusEnum
 }
+
+// ---- Enrichment & Scoring Integration (ANCHOR STUBS - AUDITED) ----
+// NOTE: The actual enrichment + micro-crawl logic now exists further below in this
+// file (feature vector assembly, parkedHeuristic closure, microCrawlEnhance, bulk
+// persist). These legacy stub placeholders remain only as architectural guardrails.
+// TODO(ENRICHMENT-CLEANUP): After confirming no external callers rely on these names,
+// remove buildFeatureVectorFromPage / applyParkedHeuristic / maybeAdaptiveMicroCrawl
+// to eliminate confusion, or repoint them to thin wrappers around the implemented
+// logic for backwards compatibility.
+
+// buildFeatureVectorFromPage constructs a partial feature vector for a single root page.
+// TODO(ENRICHMENT-P1): implement real extraction of structural & keyword metrics.
+func buildFeatureVectorFromPage(rawHTML []byte) map[string]any { // DEPRECATED STUB
+	// Existing production path builds feature vectors inline in Execute loop (see ~560+).
+	if len(rawHTML) == 0 {
+		return map[string]any{"empty": true}
+	}
+	return map[string]any{"bytes": len(rawHTML)}
+}
+
+// applyParkedHeuristic returns (isParked, confidence). Confidence in [0,1].
+// TODO(ENRICHMENT-P1): real heuristic using title phrases, repetition, parking lexicon.
+func applyParkedHeuristic(text string) (bool, float64) { // DEPRECATED STUB (real heuristic closure inline later)
+	lowered := strings.ToLower(text)
+	tokens := []string{"buy this domain", "domain for sale", "parking"}
+	for _, t := range tokens {
+		if strings.Contains(lowered, t) {
+			return true, 0.85
+		}
+	}
+	return false, 0.10
+}
+
+// maybeAdaptiveMicroCrawl optionally fetches a small set of internal pages to enrich signals.
+// It MUST honor byte/page limits and return quickly on errors. All network operations
+// should reuse existing persona/proxy selection from the main validator path.
+// TODO(ENRICHMENT-P2): implement link scoring + budgeted fetch. For now returns no extra data.
+func (s *httpValidationService) maybeAdaptiveMicroCrawl(ctx context.Context, campaignID uuid.UUID, rootURL *url.URL, rootSignals map[string]any) (map[string]any, error) { // UNUSED STUB
+	return nil, nil
+}
+
+// mergeFeatureVectors shallow-merges secondary into primary without overwriting existing keys.
+// (In later iterations we may weight contributions.)
+func mergeFeatureVectors(primary, secondary map[string]any) map[string]any {
+	if primary == nil {
+		return secondary
+	}
+	for k, v := range secondary {
+		if _, exists := primary[k]; !exists {
+			primary[k] = v
+		}
+	}
+	return primary
+}
+
+// ---- End Enrichment & Scoring Integration (ANCHOR STUBS) ----
 
 // httpValidationExecution tracks HTTP validation execution state
 type httpValidationExecution struct {
@@ -456,6 +532,49 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 	}
 
 	for i := 0; i < total; i += batchSize {
+		// metrics registration (idempotent)
+		s.metricsOnce.Do(func() {
+			// Guard: rely on default registry; if dependency injection supplies custom registry it will still work.
+			s.mtx.fetchOutcome = prometheus.NewCounterVec(prometheus.CounterOpts{
+				Name: "http_validation_fetch_outcomes_total",
+				Help: "HTTP validation fetch outcomes (status label: ok|error|timeout)",
+			}, []string{"status"})
+			// Alias (planned): provides future-proof naming while keeping legacy metric.
+			s.mtx.fetchAlias = prometheus.NewCounterVec(prometheus.CounterOpts{
+				Name: "http_fetch_result_total",
+				Help: "Alias of http_validation_fetch_outcomes_total (status label: ok|error|timeout)",
+			}, []string{"status"})
+			// Legacy simple counter retained; new labeled reasons vector added.
+			s.mtx.microCrawl = prometheus.NewCounter(prometheus.CounterOpts{Name: "http_validation_microcrawl_triggers_total", Help: "Number of micro-crawl trigger executions (legacy, will deprecate)"})
+			s.mtx.microCrawlReasons = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "microcrawl_trigger_total", Help: "Micro-crawl triggers by reason"}, []string{"reason"})
+			// Parked detection results
+			s.mtx.parkedDetection = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "parked_detection_total", Help: "Parked detection outcomes"}, []string{"result"})
+			// Enrichment batch metrics
+			s.mtx.enrichmentBatches = prometheus.NewCounter(prometheus.CounterOpts{Name: "http_enrichment_batches_total", Help: "Number of enrichment feature vector persistence batches"})
+			s.mtx.enrichmentBatchSeconds = prometheus.NewHistogramVec(prometheus.HistogramOpts{Name: "http_enrichment_batch_seconds", Help: "Duration of enrichment batch persistence"}, []string{"status"})
+			s.mtx.phaseDuration = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "http_validation_phase_seconds", Help: "Elapsed time of full HTTP validation phase"})
+			s.mtx.phaseDurationVec = prometheus.NewHistogramVec(prometheus.HistogramOpts{Name: "campaign_phase_duration_seconds", Help: "Generic campaign phase durations"}, []string{"phase"})
+			s.mtx.enrichmentDropped = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "http_enrichment_dropped_total", Help: "Enrichment skipped cause=no_body|parse_error"}, []string{"cause"})
+			// Batch fetch timing
+			s.mtx.validationBatchSeconds = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "http_validation_batch_seconds", Help: "Duration of ValidateDomainsBulk per batch"})
+			s.mtx.microCrawlPages = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "http_microcrawl_pages_total", Help: "Total micro-crawl secondary pages grouped by exhaustion result"}, []string{"result"})
+			s.mtx.microCrawlPagesHist = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "http_microcrawl_pages_per_domain", Help: "Pages examined per micro-crawl trigger", Buckets: []float64{1, 2, 3, 4, 5, 8, 13}})
+			prometheus.MustRegister(
+				s.mtx.fetchOutcome,
+				s.mtx.fetchAlias,
+				s.mtx.microCrawl,
+				s.mtx.microCrawlReasons,
+				s.mtx.parkedDetection,
+				s.mtx.enrichmentBatches,
+				s.mtx.enrichmentBatchSeconds,
+				s.mtx.phaseDuration,
+				s.mtx.phaseDurationVec,
+				s.mtx.enrichmentDropped,
+				s.mtx.microCrawlPages,
+				s.mtx.microCrawlPagesHist,
+				s.mtx.validationBatchSeconds,
+			)
+		})
 		select {
 		case <-ctx.Done():
 			s.updateExecutionStatus(campaignID, models.PhaseStatusPaused, "Execution cancelled by caller context")
@@ -471,7 +590,11 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 
 		// Prepare batch for engine
 		genBatch := s.prepareGeneratedDomains(batch)
+		batchStart := time.Now()
 		results := s.httpValidator.ValidateDomainsBulk(ctx, genBatch, 25, persona, proxy)
+		if s.mtx.validationBatchSeconds != nil {
+			s.mtx.validationBatchSeconds.Observe(time.Since(batchStart).Seconds())
+		}
 
 		// Accumulate
 		allResults = append(allResults, results...)
@@ -512,6 +635,11 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 				if r == nil || r.Domain == "" {
 					continue
 				}
+				if len(r.RawBody) == 0 { // no body scenario
+					if s.mtx.enrichmentDropped != nil {
+						s.mtx.enrichmentDropped.WithLabelValues("no_body").Inc()
+					}
+				}
 				mapped := "error"
 				le := strings.ToLower(r.Error)
 				switch {
@@ -519,6 +647,12 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 					mapped = "ok"
 				case strings.EqualFold(r.Status, "timeout") || strings.Contains(le, "timeout"):
 					mapped = "timeout"
+				}
+				if s.mtx.fetchOutcome != nil {
+					s.mtx.fetchOutcome.WithLabelValues(mapped).Inc()
+					if s.mtx.fetchAlias != nil { // mirror to alias
+						s.mtx.fetchAlias.WithLabelValues(mapped).Inc()
+					}
 				}
 				if mapped != "ok" {
 					continue
@@ -574,6 +708,13 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 				}
 				// Parked heuristic
 				isParked, conf := parkedHeuristic(r.ExtractedTitle, r.ExtractedContentSnippet)
+				if s.mtx.parkedDetection != nil {
+					res := "not_parked"
+					if isParked {
+						res = "parked"
+					}
+					s.mtx.parkedDetection.WithLabelValues(res).Inc()
+				}
 				fv["parked_confidence"] = conf
 				if isParked {
 					fv["is_parked"] = true
@@ -584,6 +725,23 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 					if kwu < 2 && r.ContentLength < 60000 && conf < 0.5 {
 						pagesExamined, exhausted, newKw, newPatterns := s.microCrawlEnhance(ctx, campaignID, r, keywordSetIDs, adHocKeywords, microMaxPages, microByteBudget)
 						if pagesExamined > 0 {
+							if s.mtx.microCrawl != nil {
+								s.mtx.microCrawl.Inc()
+							}
+							if s.mtx.microCrawlReasons != nil {
+								// TODO: encode explicit reasons once reason extraction logic formalized
+								s.mtx.microCrawlReasons.WithLabelValues("low_kw_and_not_parked").Inc()
+							}
+							if s.mtx.microCrawlPages != nil {
+								state := "partial"
+								if exhausted {
+									state = "exhausted"
+								}
+								s.mtx.microCrawlPages.WithLabelValues(state).Add(float64(pagesExamined))
+							}
+							if s.mtx.microCrawlPagesHist != nil {
+								s.mtx.microCrawlPagesHist.Observe(float64(pagesExamined))
+							}
 							fv["microcrawl_used"] = true
 							fv["microcrawl_pages"] = pagesExamined
 							fv["microcrawl_exhausted"] = exhausted
@@ -609,7 +767,10 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 		}
 		// Persist enrichment feature vectors (batched incremental merge)
 		if enrichmentEnabled && len(enrichmentVectors) > 0 {
+			startPersist := time.Now()
+			errStatus := "ok"
 			if err := s.persistFeatureVectors(ctx, campaignID, enrichmentVectors); err != nil {
+				errStatus = "error"
 				s.deps.Logger.Warn(ctx, "Failed to persist feature vectors", map[string]interface{}{"campaign_id": campaignID, "error": err.Error()})
 			} else {
 				// Emit SSE enrichment sample
@@ -632,6 +793,7 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 						"microcrawl":      microcrawlEnabled,
 						"microMaxPages":   microMaxPages,
 						"microByteBudget": microByteBudget,
+						"correlationId":   uuid.New().String(),
 					})
 					s.deps.SSE.Send(string(msg))
 				}
@@ -639,6 +801,13 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 				for k := range enrichmentVectors {
 					delete(enrichmentVectors, k)
 				}
+			}
+			// metrics for batch persistence
+			if s.mtx.enrichmentBatches != nil {
+				s.mtx.enrichmentBatches.Inc()
+			}
+			if s.mtx.enrichmentBatchSeconds != nil {
+				s.mtx.enrichmentBatchSeconds.WithLabelValues(errStatus).Observe(time.Since(startPersist).Seconds())
 			}
 		}
 
@@ -696,6 +865,12 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 		execution.ItemsProcessed = processed
 		now := time.Now()
 		execution.CompletedAt = &now
+		if s.mtx.phaseDuration != nil && !execution.StartedAt.IsZero() {
+			s.mtx.phaseDuration.Observe(now.Sub(execution.StartedAt).Seconds())
+		}
+		if s.mtx.phaseDurationVec != nil && !execution.StartedAt.IsZero() {
+			s.mtx.phaseDurationVec.WithLabelValues("http_validation").Observe(now.Sub(execution.StartedAt).Seconds())
+		}
 		if execution.ProgressChan != nil {
 			select {
 			case execution.ProgressChan <- PhaseProgress{
@@ -712,6 +887,12 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 	}
 	s.mu.Unlock()
 
+	// record phase duration metric (approximate: from first batch start to completion)
+	if s.mtx.phaseDuration != nil {
+		// Can't easily capture exact start without refactor; using ItemsProcessed time diff not stored.
+		// TODO: capture explicit start time in execution struct for more accurate metric.
+		// For now, omit observation if we lack start timestamp.
+	}
 	s.deps.Logger.Info(ctx, "HTTP validation completed successfully", map[string]interface{}{
 		"campaign_id":    campaignID,
 		"results_count":  len(allResults),

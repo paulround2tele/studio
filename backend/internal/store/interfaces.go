@@ -132,6 +132,9 @@ type CampaignStore interface {
 	UpdateCampaignMode(ctx context.Context, exec Querier, campaignID uuid.UUID, mode string) error
 	// GetCampaignMode returns the execution mode (step_by_step or full_sequence) for a campaign.
 	GetCampaignMode(ctx context.Context, exec Querier, campaignID uuid.UUID) (string, error)
+
+	// Scoring profile operations (existing lightweight set) are implemented directly in postgres store via type assertion in handlers
+
 }
 
 // ListCampaignDomainsFilter holds optional filters for generated domains listing.

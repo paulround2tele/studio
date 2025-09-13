@@ -12,6 +12,7 @@ import (
 
 	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
 	"github.com/fntelecomllc/studio/backend/internal/config"
+	"github.com/go-chi/chi/v5"
 )
 
 // startChiServer starts the Chi server on the configured port and blocks.
@@ -160,4 +161,13 @@ func sameSiteFromString(s string) http.SameSite {
 	default:
 		return http.SameSiteLaxMode
 	}
+}
+func NewStrictTestRouter(deps *AppDeps) chi.Router {
+	r := chi.NewRouter()
+	strict := &strictHandlers{deps: deps}
+	h := gen.NewStrictHandler(strict, nil)
+	r.Route("/api/v2", func(r chi.Router) {
+		gen.HandlerFromMuxWithBaseURL(h, r, "/api/v2")
+	})
+	return r
 }

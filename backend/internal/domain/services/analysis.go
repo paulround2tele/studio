@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+
 	"github.com/fntelecomllc/studio/backend/internal/contentfetcher"
 	"github.com/fntelecomllc/studio/backend/internal/keywordextractor"
 	"github.com/fntelecomllc/studio/backend/internal/models"
@@ -27,6 +29,13 @@ type analysisService struct {
 	proxyStore     store.ProxyStore
 	deps           Dependencies
 	contentFetcher *contentfetcher.ContentFetcher
+
+	metricsOnce sync.Once
+	mtx         struct {
+		scoreHistogram prometheus.Histogram
+		rescoreRuns    *prometheus.CounterVec
+		phaseDuration  prometheus.Histogram
+	}
 
 	// Execution tracking per campaign
 	mu         sync.RWMutex
@@ -358,6 +367,9 @@ func (s *analysisService) executeAnalysis(ctx context.Context, campaignID uuid.U
 
 	// Phase 3: Scoring using feature_vector (non-fatal)
 	s.sendProgress(campaignID, 96.0, "Starting scoring computation")
+	// ANCHOR (SCORING-ENGINE): All future scoring feature additions (penalties, new components,
+	// rescore batching improvements) MUST extend scoreDomains / helpers in this file. Do NOT
+	// create a parallel scoring service. Keep weight validation in scoring_helpers.go.
 	if err := s.scoreDomains(ctx, campaignID); err != nil {
 		s.deps.Logger.Warn(ctx, "Scoring failed", map[string]interface{}{"campaign_id": campaignID, "error": err.Error()})
 	} else {
@@ -802,6 +814,13 @@ func (s *analysisService) updateExecutionStatus(campaignID uuid.UUID, status mod
 // scoreDomains computes relevance_score & domain_score from feature_vector JSON for a campaign.
 // Basic weights: keyword_density, unique_keyword_coverage, non_parked, content_length_quality, title_keyword, freshness.
 func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID) error {
+	s.metricsOnce.Do(func() {
+		s.mtx.scoreHistogram = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "domain_relevance_score", Help: "Distribution of computed relevance scores", Buckets: []float64{0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0}})
+		s.mtx.rescoreRuns = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "rescore_runs_total", Help: "Number of rescore runs"}, []string{"profile"})
+		s.mtx.phaseDuration = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "analysis_phase_seconds", Help: "Duration of analysis scoring phase"})
+		prometheus.MustRegister(s.mtx.scoreHistogram, s.mtx.rescoreRuns, s.mtx.phaseDuration)
+	})
+	phaseStart := time.Now()
 	if s.store == nil {
 		return fmt.Errorf("campaign store not available")
 	}
@@ -894,6 +913,10 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 			rel *= 0.5
 		}
 		rel = math.Round(rel*1000) / 1000
+		if s.mtx.scoreHistogram != nil {
+			// histogram expects non-negative; scores already in 0-1.
+			s.mtx.scoreHistogram.Observe(rel)
+		}
 		scores = append(scores, scoreRow{Domain: domain, Score: rel, Rel: rel})
 	}
 	if len(scores) == 0 {
@@ -929,8 +952,11 @@ WHERE gd.campaign_id = $1 AND gd.domain_name = incoming.domain_name`, strings.Jo
 		for i := 0; i < lim; i++ {
 			sample = append(sample, map[string]interface{}{"domain": scores[i].Domain, "score": scores[i].Score})
 		}
-		msg, _ := json.Marshal(map[string]interface{}{"event": "domain_scored", "campaignId": campaignID.String(), "count": len(scores), "sample": sample})
+		msg, _ := json.Marshal(map[string]interface{}{"event": "domain_scored", "campaignId": campaignID.String(), "count": len(scores), "sample": sample, "correlationId": uuid.New().String()})
 		s.deps.SSE.Send(string(msg))
+	}
+	if s.mtx.phaseDuration != nil {
+		s.mtx.phaseDuration.Observe(time.Since(phaseStart).Seconds())
 	}
 	return nil
 }
@@ -945,12 +971,31 @@ func (s *analysisService) RescoreCampaign(ctx context.Context, campaignID uuid.U
 	if err := s.scoreDomains(ctx, campaignID); err != nil {
 		return err
 	}
+	if s.mtx.rescoreRuns != nil {
+		profileState := "none"
+		if s.store != nil {
+			var dbx *sql.DB
+			switch db := s.deps.DB.(type) {
+			case *sqlx.DB:
+				dbx = db.DB
+			case *sql.DB:
+				dbx = db
+			}
+			if dbx != nil {
+				if _, err := loadCampaignScoringWeights(ctx, dbx, campaignID); err == nil {
+					profileState = "active"
+				}
+			}
+		}
+		s.mtx.rescoreRuns.WithLabelValues(profileState).Inc()
+	}
 	// Emit rescore_completed SSE event (lightweight summary)
 	if s.deps.SSE != nil {
 		payload, _ := json.Marshal(map[string]interface{}{
-			"event":      "rescore_completed",
-			"campaignId": campaignID.String(),
-			"timestamp":  time.Now().UTC(),
+			"event":         "rescore_completed",
+			"campaignId":    campaignID.String(),
+			"timestamp":     time.Now().UTC(),
+			"correlationId": uuid.New().String(),
 		})
 		s.deps.SSE.Send(string(payload))
 	}

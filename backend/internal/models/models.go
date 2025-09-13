@@ -543,18 +543,6 @@ type ScoringProfile struct {
 	UpdatedAt   time.Time       `db:"updated_at" json:"updatedAt"`
 }
 
-// KeywordProfile represents a set of keywords to guide domain generation / relevance.
-// Mirrors ScoringProfile style for timestamps & versioning for consistency.
-type KeywordProfile struct {
-	ID          uuid.UUID      `db:"id" json:"id"`
-	Name        string         `db:"name" json:"name"`
-	Description sql.NullString `db:"description" json:"description,omitempty"`
-	Keywords    json.RawMessage `db:"keywords" json:"keywords"` // JSON array of strings
-	Version     int            `db:"version" json:"version"`
-	CreatedAt   time.Time      `db:"created_at" json:"createdAt"`
-	UpdatedAt   time.Time      `db:"updated_at" json:"updatedAt"`
-}
-
 // MarshalJSON provides custom JSON marshaling for GeneratedDomain to handle sql.Null* types properly
 func (gd GeneratedDomain) MarshalJSON() ([]byte, error) {
 	type Alias GeneratedDomain

@@ -3089,6 +3089,55 @@ paths:
           description: 'Filter domains by HTTP reason (exact match). Example values: TIMEOUT, NOT_FOUND, UPSTREAM_5XX, PROXY_ERROR, TLS_ERROR, SSL_EXPIRED, CONNECTION_RESET, ERROR'
           schema:
             type: string
+        - name: minScore
+          in: query
+          required: false
+          description: Minimum inclusive domain score to include
+          schema:
+            type: number
+            format: float
+        - name: notParked
+          in: query
+          required: false
+          description: Exclude domains detected as parked
+          schema:
+            type: boolean
+        - name: hasContact
+          in: query
+          required: false
+          description: Only include domains with detected contact signals
+          schema:
+            type: boolean
+        - name: keyword
+          in: query
+          required: false
+          description: Require at least one keyword match (any)
+          schema:
+            type: string
+        - name: sort
+          in: query
+          required: false
+          description: Sort ordering strategy
+          schema:
+            type: string
+            enum:
+              - score_desc
+              - score_asc
+              - last_http_fetched_at_desc
+        - name: first
+          in: query
+          required: false
+          description: Page size for cursor pagination (overrides limit when present)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+        - name: after
+          in: query
+          required: false
+          description: Cursor token to continue listing after
+          schema:
+            type: string
       responses:
         '200':
           description: OK
@@ -5648,6 +5697,31 @@ components:
           type: string
           nullable: true
           description: Human-readable reason string for current HTTP status (e.g., CONNECT_ERROR, TLS_ERROR, TIMEOUT, NON_200, BODY_MISMATCH)
+    PageInfo:
+      type: object
+      description: Cursor-based pagination metadata
+      properties:
+        startCursor:
+          type: string
+          nullable: true
+        endCursor:
+          type: string
+          nullable: true
+        hasNextPage:
+          type: boolean
+        sortBy:
+          type: string
+          description: Field used for ordering
+        sortOrder:
+          type: string
+          enum:
+            - ASC
+            - DESC
+        first:
+          type: integer
+          description: Requested page size
+      required:
+        - hasNextPage
     CampaignDomainsListResponse:
       type: object
       properties:
@@ -5699,6 +5773,8 @@ components:
                   type: integer
                 timeout:
                   type: integer
+        pageInfo:
+          $ref: '#/components/schemas/PageInfo'
       required:
         - campaignId
         - items

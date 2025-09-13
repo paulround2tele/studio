@@ -44,14 +44,11 @@ Migration Set (ordered):
      - `microcrawl_exhausted BOOLEAN DEFAULT FALSE NOT NULL`
      - `content_lang TEXT NULL`
      - `last_http_fetched_at TIMESTAMPTZ NULL`
-2. `keyword_profiles` table:
-   - id (uuid), name (unique), description, keywords TEXT[] (lowercased), created_at, updated_at, version INT
-3. `scoring_profiles` table:
+2. `scoring_profiles` table:
    - id (uuid), name (unique), description, weights JSONB (validated), created_at, updated_at, version INT
-4. Link tables / campaign references:
+3. Link tables / campaign references:
    - `campaign_scoring_profile (campaign_id fk, scoring_profile_id fk)` (1:1 logical, enforce unique)
-   - `campaign_keyword_profile (campaign_id fk, keyword_profile_id fk)` (1:many optional; initial 1:1)
-5. Phase metrics ledger (optional now / later): `phase_runs` capturing phase_id, campaign_id, started_at, completed_at, duration_ms, success BOOLEAN, error TEXT NULL.
+4. Phase metrics ledger (optional now / later): `phase_runs` capturing phase_id, campaign_id, started_at, completed_at, duration_ms, success BOOLEAN, error TEXT NULL.
 
 Constraints & Indices:
 - GIN index on `feature_vector` (jsonb_path_ops) if future faceting required (defer until needed).
@@ -523,9 +520,8 @@ Order of Implementation:
 + [x] SSE events (domain_scored + rescore_completed basic emission; need metrics + richer payload)
 
 ### Profiles
-- [ ] Keyword profile CRUD (spec added; impl pending)
 - [ ] Scoring profile CRUD (spec existed; impl pending)
-- [ ] Campaign association endpoints (keyword + scoring)
+- [ ] Campaign association endpoints (scoring)
 
 ### Filtering / API
 - [ ] New query params implemented

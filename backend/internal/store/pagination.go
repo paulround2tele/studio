@@ -147,6 +147,36 @@ type ListGeneratedDomainsFilter struct {
 	CursorPaginationFilter
 	CampaignID       uuid.UUID `json:"campaignId"`
 	ValidationStatus string    `json:"validationStatus,omitempty"`
+
+	// Phase 2 filtering extensions
+	// MinScore filters domains with domain_score >= MinScore (inclusive)
+	MinScore *float64 `json:"minScore,omitempty"`
+	// Keyword filters domains whose feature_vector indicates keyword presence. Implementation detail: relies on kw_unique > 0 extracted during HTTP enrichment/scoring.
+	Keyword *string `json:"keyword,omitempty"`
+	// HasContact when true returns only domains whose feature_vector contains contact signal (kw_contact > 0 or similar). If false (nil) ignored.
+	HasContact *bool `json:"hasContact,omitempty"`
+	// NotParked excludes domains classified as parked (is_parked IS TRUE) when set true.
+	NotParked *bool `json:"notParked,omitempty"`
+	// ScoreNotNull enforces domain_score IS NOT NULL when true (used implicitly when MinScore provided)
+	ScoreNotNull *bool `json:"scoreNotNull,omitempty"`
+}
+
+// WantsNotParked returns true if caller explicitly requests filtering out parked domains.
+func (f *ListGeneratedDomainsFilter) WantsNotParked() bool {
+	return f.NotParked != nil && *f.NotParked
+}
+
+// WantsHasContact returns true if filter requires contact presence.
+func (f *ListGeneratedDomainsFilter) WantsHasContact() bool {
+	return f.HasContact != nil && *f.HasContact
+}
+
+// WantsScoreNotNull returns true if score must be non-null (automatically satisfied if MinScore != nil)
+func (f *ListGeneratedDomainsFilter) WantsScoreNotNull() bool {
+	if f.MinScore != nil {
+		return true
+	}
+	return f.ScoreNotNull != nil && *f.ScoreNotNull
 }
 
 // PageInfo represents pagination metadata for cursor-based pagination

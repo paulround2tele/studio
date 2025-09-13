@@ -204,3 +204,4 @@
   $ref: "./scoring/campaign-scoring-profile.yaml"
 "/campaigns/{campaignId}/rescore":
   $ref: "./scoring/campaign-rescore.yaml"
+

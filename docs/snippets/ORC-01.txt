@@ -1,0 +1,22 @@
+# ORC-01 DNS Gate Verification Evidence
+
+Goal: Demonstrate that HTTP validation refuses to start before DNS phase completion.
+
+Instructions:
+1. Create a new campaign (ID: <campaign_id>).
+2. Ensure DNS phase status != completed (leave pending or simulate failure).
+3. Attempt to Execute HTTP validation.
+4. Capture log line containing: "DNS phase not completed" and the campaign_id.
+5. Complete DNS phase (manually mark or run DNS validator until completed).
+6. Re-attempt HTTP validation Execute -> succeeds (no warning log). Capture success log: "HTTP validation completed successfully".
+7. Paste both log snippets below.
+
+--- LOG SNIPPETS ---
+# Failure (expected gate):
+
+# Success after DNS completion:
+
+Timestamp: <add when captured>
+Recorder: <engine / service>
+
+Acceptance: Both snippets present and campaign IDs match.

@@ -17,7 +17,9 @@ func (s *campaignStorePostgres) GetGeneratedDomainsWithCursor(ctx context.Contex
 	startTime := time.Now()
 
 	domains := []*models.GeneratedDomain{}
-	baseQuery := `SELECT id, campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at
+	// Extended projection includes scoring + HTTP enrichment fields used for Phase 2 filtering & sorting.
+	baseQuery := `SELECT id, campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at,
+		relevance_score, domain_score, is_parked, last_http_fetched_at, feature_vector
 		FROM generated_domains
 		WHERE campaign_id = $1`
 
@@ -102,6 +104,32 @@ func (s *campaignStorePostgres) GetGeneratedDomainsWithCursor(ctx context.Contex
 		argIndex++
 	}
 
+	// MinScore filter: domain_score >= minScore AND domain_score IS NOT NULL
+	if filter.MinScore != nil {
+		conditions = append(conditions, fmt.Sprintf("domain_score IS NOT NULL AND domain_score >= $%d", argIndex))
+		args = append(args, *filter.MinScore)
+		argIndex++
+	} else if filter.WantsScoreNotNull() { // explicit non-null score requirement
+		conditions = append(conditions, "domain_score IS NOT NULL")
+	}
+
+	// NotParked filter
+	if filter.WantsNotParked() {
+		conditions = append(conditions, "(is_parked IS DISTINCT FROM TRUE)")
+	}
+
+	// Keyword filter (placeholder): we assume kw_unique stored in feature_vector JSON; filter if > 0 when any keyword specified.
+	// If specific keyword semantics required later, we'll extend with separate table or JSON search.
+	if filter.Keyword != nil && *filter.Keyword != "" {
+		// Using JSONB extraction: feature_vector->>'kw_unique' cast to int > 0
+		conditions = append(conditions, "(feature_vector->>'kw_unique')::int > 0")
+	}
+
+	// HasContact filter (placeholder heuristic): treat presence of contact-related unique keyword count kw_contact > 0.
+	if filter.WantsHasContact() {
+		conditions = append(conditions, "(feature_vector->>'kw_contact')::int > 0")
+	}
+
 	// Build final query
 	finalQuery := baseQuery
 	if len(conditions) > 0 {
@@ -114,6 +142,11 @@ func (s *campaignStorePostgres) GetGeneratedDomainsWithCursor(ctx context.Contex
 		finalQuery += fmt.Sprintf(" ORDER BY created_at %s, id %s", filter.GetSortOrder(), filter.GetSortOrder())
 	case "offset_index":
 		finalQuery += fmt.Sprintf(" ORDER BY offset_index %s, id %s", filter.GetSortOrder(), filter.GetSortOrder())
+	case "domain_score":
+		// NULLS LAST to ensure scored domains appear first when DESC (primary use-case)
+		finalQuery += fmt.Sprintf(" ORDER BY domain_score %s NULLS LAST, id %s", filter.GetSortOrder(), filter.GetSortOrder())
+	case "last_http_fetched_at":
+		finalQuery += fmt.Sprintf(" ORDER BY last_http_fetched_at %s NULLS LAST, id %s", filter.GetSortOrder(), filter.GetSortOrder())
 	default:
 		finalQuery += fmt.Sprintf(" ORDER BY domain_name %s, id %s", filter.GetSortOrder(), filter.GetSortOrder())
 	}
