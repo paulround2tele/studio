@@ -43,7 +43,7 @@ type GenerationConstraints struct {
 // DomainGenerationPhaseConfig represents standard pattern-based domain generation
 type DomainGenerationPhaseConfig struct {
 	PatternType          string   `json:"patternType" validate:"required,oneof=prefix suffix both" example:"prefix" description:"Pattern type for domain generation"`
-	VariableLength       int      `json:"variableLength" validate:"required,gt=0" example:"5" description:"Length of variable part"`
+	VariableLength       int      `json:"variableLength" validate:"required,gte=0" example:"5" description:"Length of variable part (0 for constant-only)"`
 	CharacterSet         string   `json:"characterSet" validate:"required" example:"abcdefghijklmnopqrstuvwxyz" description:"Character set for generation"`
 	ConstantString       string   `json:"constantString" validate:"required" example:"test" description:"Constant string part"`
 	TLDs                 []string `json:"tlds" validate:"required,min=1" example:"[\".com\"]" description:"Array of top-level domains"`

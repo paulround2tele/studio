@@ -4,6 +4,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -16,8 +17,19 @@ import (
 func (s *campaignStorePostgres) GetGeneratedDomainsWithCursor(ctx context.Context, exec store.Querier, filter store.ListGeneratedDomainsFilter) (*store.PaginatedResult[*models.GeneratedDomain], error) {
 	startTime := time.Now()
 
+	// Defensive: allow callers to pass nil exec (treat as s.db). This pattern is used by legacy and new code paths.
+	if exec == nil {
+		if s.db == nil {
+			return nil, fmt.Errorf("campaign store db not initialized (nil exec and nil s.db)")
+		}
+		exec = s.db
+	}
+	// Deep instrumentation: log pointer identities to confirm which path is executing at runtime.
+	log.Printf("GetGeneratedDomainsWithCursor enter campaign=%s exec_is_nil=%t store_db_nil=%t filter_after=%s limit=%d sortBy=%s sortOrder=%s", filter.CampaignID, exec == nil, s.db == nil, filter.After, filter.GetLimit(), filter.GetSortBy(), filter.GetSortOrder())
+
 	domains := []*models.GeneratedDomain{}
 	// Extended projection includes scoring + HTTP enrichment fields used for Phase 2 filtering & sorting.
+	// COALESCE(feature_vector,'null') left as raw to distinguish absent vs empty; using NULL will map to nil pointer for *json.RawMessage
 	baseQuery := `SELECT id, campaign_id, domain_name, source_keyword, source_pattern, tld, offset_index, generated_at, created_at,
 		relevance_score, domain_score, is_parked, last_http_fetched_at, feature_vector
 		FROM generated_domains
@@ -157,10 +169,15 @@ func (s *campaignStorePostgres) GetGeneratedDomainsWithCursor(ctx context.Contex
 	args = append(args, limit)
 
 	// Execute query with performance tracking
+	// Instrument pre-query pointer for exec for diagnosing nil deref; reflect not imported so keep simple.
+	if exec == nil {
+		log.Printf("GetGeneratedDomainsWithCursor FATAL about to query with nil exec campaign=%s", filter.CampaignID)
+	}
 	err := exec.SelectContext(ctx, &domains, finalQuery, args...)
 	if err != nil {
 		// Record performance metrics for failed query
 		s.recordQueryPerformance(ctx, exec, "domain_pagination", time.Since(startTime), 0, len(domains), false)
+		log.Printf("GetGeneratedDomainsWithCursor error: campaign=%s err=%v query=%s", filter.CampaignID, err, truncateQuery(finalQuery))
 		return nil, fmt.Errorf("failed to fetch generated domains with cursor: %w", err)
 	}
 
@@ -292,4 +309,13 @@ func (s *campaignStorePostgres) recordQueryPerformance(ctx context.Context, exec
 			// In production, you might want to use a proper logger here
 		}
 	}()
+}
+
+// truncateQuery trims long query strings for logging safety.
+func truncateQuery(q string) string {
+	const max = 300
+	if len(q) <= max {
+		return q
+	}
+	return q[:max] + "..."
 }

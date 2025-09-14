@@ -61,6 +61,8 @@ type FeatureFlags struct {
 	EnableAnalytics       bool `json:"enableAnalytics"`
 	EnableDebugMode       bool `json:"enableDebugMode"`
 	EnableStealth         bool `json:"enableStealth"`
+	// EnableStealthForceCursor forces stealth to use cursor pagination only (no legacy fallback)
+	EnableStealthForceCursor bool `json:"enableStealthForceCursor"`
 }
 
 // ServerConfig defines server-specific settings.

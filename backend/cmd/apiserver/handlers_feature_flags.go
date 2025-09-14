@@ -15,11 +15,12 @@ func (h *strictHandlers) FeatureFlagsGet(ctx context.Context, r gen.FeatureFlags
 	}
 	cf := h.deps.Config.Features
 	ff := gen.FeatureFlags{
-		"enableRealTimeUpdates": cf.EnableRealTimeUpdates,
-		"enableOfflineMode":     cf.EnableOfflineMode,
-		"enableAnalytics":       cf.EnableAnalytics,
-		"enableDebugMode":       cf.EnableDebugMode,
-		"enableStealth":         cf.EnableStealth,
+		"enableRealTimeUpdates":    cf.EnableRealTimeUpdates,
+		"enableOfflineMode":        cf.EnableOfflineMode,
+		"enableAnalytics":          cf.EnableAnalytics,
+		"enableDebugMode":          cf.EnableDebugMode,
+		"enableStealth":            cf.EnableStealth,
+		"enableStealthForceCursor": cf.EnableStealthForceCursor,
 	}
 	return gen.FeatureFlagsGet200JSONResponse{Success: boolPtr(true), RequestId: reqID(), Metadata: okMeta(), Data: &ff}, nil
 }
@@ -47,15 +48,19 @@ func (h *strictHandlers) FeatureFlagsUpdate(ctx context.Context, r gen.FeatureFl
 	if v, ok := body["enableStealth"]; ok {
 		h.deps.Config.Features.EnableStealth = v
 	}
+	if v, ok := body["enableStealthForceCursor"]; ok {
+		h.deps.Config.Features.EnableStealthForceCursor = v
+	}
 	if err := config.SaveAppConfig(h.deps.Config); err != nil {
 		return gen.FeatureFlagsUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to save feature flags", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	ff := gen.FeatureFlags{
-		"enableRealTimeUpdates": h.deps.Config.Features.EnableRealTimeUpdates,
-		"enableOfflineMode":     h.deps.Config.Features.EnableOfflineMode,
-		"enableAnalytics":       h.deps.Config.Features.EnableAnalytics,
-		"enableDebugMode":       h.deps.Config.Features.EnableDebugMode,
-		"enableStealth":         h.deps.Config.Features.EnableStealth,
+		"enableRealTimeUpdates":    h.deps.Config.Features.EnableRealTimeUpdates,
+		"enableOfflineMode":        h.deps.Config.Features.EnableOfflineMode,
+		"enableAnalytics":          h.deps.Config.Features.EnableAnalytics,
+		"enableDebugMode":          h.deps.Config.Features.EnableDebugMode,
+		"enableStealth":            h.deps.Config.Features.EnableStealth,
+		"enableStealthForceCursor": h.deps.Config.Features.EnableStealthForceCursor,
 	}
 	return gen.FeatureFlagsUpdate200JSONResponse{Success: boolPtr(true), RequestId: reqID(), Metadata: okMeta(), Data: &ff}, nil
 }

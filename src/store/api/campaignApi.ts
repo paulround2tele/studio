@@ -19,10 +19,11 @@ import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-co
 import type { CampaignResponse } from '@/lib/api-client/models/campaign-response';
 import type { CampaignProgressResponse } from '@/lib/api-client/models/campaign-progress-response';
 import type { PhaseStatusResponse } from '@/lib/api-client/models/phase-status-response';
-import type { CampaignDomainsListResponse } from '@/lib/api-client/models/campaign-domains-list-response';
 import type { PatternOffsetRequest } from '@/lib/api-client/models/pattern-offset-request';
 import type { PatternOffsetResponse } from '@/lib/api-client/models/pattern-offset-response';
 import type { EnrichedCampaignResponse } from '@/lib/api-client/models/enriched-campaign-response';
+import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
+import type { CampaignDomainsListResponse } from '@/lib/api-client/models/campaign-domains-list-response';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 // Centralized API configuration targeting /api/v2
@@ -205,6 +206,61 @@ export const campaignApi = createApi({
         }
       },
     }),
+
+    // Bulk export all domains for a campaign by traversing paginated results client-side.
+    exportCampaignDomains: builder.mutation<string, string>({
+      queryFn: async (campaignId) => {
+        try {
+          let all: DomainListItem[] = [];
+          let offset = 0;
+          const limit = 1000; // Large page size for efficiency
+          let total = Infinity;
+          // Safeguard to prevent infinite loops
+          const MAX_PAGES = 500;
+          let pages = 0;
+          while (all.length < total && pages < MAX_PAGES) {
+            const resp = await campaignsApi.campaignsDomainsList(campaignId, limit, offset);
+            const payload = extractResponseData<CampaignDomainsListResponse>(resp);
+            if (!payload) break;
+            const items = payload.items || [];
+            total = payload.total || items.length;
+            if (!items.length) break;
+            all = all.concat(items);
+            offset += items.length;
+            pages += 1;
+          }
+          const text = all.map(d => d.domain).filter(Boolean).join('\n');
+          return { data: text };
+        } catch (error: any) {
+          return { error: error?.response?.data || error?.message };
+        }
+      },
+    }),
+
+    // Update campaign execution mode (full_sequence vs step_by_step)
+    updateCampaignMode: builder.mutation<
+      { mode: string },
+      { campaignId: string; mode: 'full_sequence' | 'step_by_step' }
+    >({
+      queryFn: async ({ campaignId, mode }) => {
+        try {
+          // Generated client method name inferred from path: campaignsModeUpdate
+          // The request envelope expects { mode: CampaignModeEnum }
+          // Response envelope currently omits data in SuccessEnvelope; backend may include data.mode in future.
+          const resp: any = await (campaignsApi as any).campaignsModeUpdate(campaignId, { mode });
+          // Attempt to extract data.mode if present, fallback to requested mode
+          const dataPayload: any = resp?.data?.data || { mode };
+          return { data: { mode: dataPayload.mode || mode } };
+        } catch (error: any) {
+          return { error: error?.response?.data || error?.message };
+        }
+      },
+      // Invalidate campaign + progress so UI refetches enriched details if needed
+      invalidatesTags: (result, error, { campaignId }) => [
+        { type: 'Campaign', id: campaignId },
+        { type: 'CampaignProgress', id: campaignId },
+      ],
+    }),
   }),
 });
 
@@ -219,6 +275,8 @@ export const {
   useGetPhaseStatusStandaloneQuery,
   useGetPatternOffsetQuery,
   useGetCampaignEnrichedQuery,
+  useExportCampaignDomainsMutation,
+  useUpdateCampaignModeMutation,
 } = campaignApi;
 
 // Export the reducer for the store configuration

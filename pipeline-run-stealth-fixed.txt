@@ -1,0 +1,13 @@
+[17:25:59] Login test@example.com
+[17:25:59] Ensure personas
+[17:25:59] Using DNS persona e3b7a88b-abed-4030-b49a-510e2f81892a and HTTP persona 9575394e-d5b7-4eca-98ad-66aa37bad5ec
+[17:25:59] Create campaign
+[17:25:59] Campaign 1dc92f8c-40cc-463b-968a-47227e675568
+[17:25:59] Configure discovery phase (constant=tel, variableLength=3, count=500)
+[17:25:59] Start discovery phase
+[17:25:59] Poll discovery completion
+[17:26:00] discovery status=completed
+[17:26:00] List domains post-discovery
+[17:26:00] Domains generated=500
+[17:26:00] Configure validation phase
+[17:26:00] Start validation phase

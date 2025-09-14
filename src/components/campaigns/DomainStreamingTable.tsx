@@ -9,7 +9,8 @@ import { ScrollArea } from '../ui/scroll-area';
 import { StatusBadge, type DomainActivityStatus } from '@/components/shared/StatusBadge';
 import { LeadScoreDisplay } from '@/components/shared/LeadScoreDisplay';
 import { Button } from '@/components/ui/button';
-import { useDomainData } from '@/hooks/useDomainData';
+// Deprecated hook replaced with direct RTK Query usage
+import { useGetCampaignDomainsQuery } from '@/store/api/campaignApi';
 import { DEFAULT_DOMAIN_PAGE_SIZE } from '@/lib/constants';
 
 interface DomainStreamingTableProps {
@@ -180,20 +181,44 @@ export default function DomainStreamingTable({
   campaign
 }: DomainStreamingTableProps) {
   // REFACTORED: Use REST API hook; realtime handled via SSE elsewhere
+  const campaignId = campaign.id || '';
+  const [offset, setOffset] = React.useState(0);
+  const limit = DEFAULT_DOMAIN_PAGE_SIZE;
   const {
-    domains: apiDomains,
-    statusSummary,
-    total,
-    loading,
-    error,
-    hasMore,
-    loadMore,
-    refresh
-  } = useDomainData(campaign.id || '', {
-  limit: DEFAULT_DOMAIN_PAGE_SIZE,
-    enablePolling: true,
-    pollingInterval: 10000 // Poll every 10 seconds for updates
-  });
+    data: page,
+    isFetching: loading,
+    error: rtkError,
+    refetch,
+  } = useGetCampaignDomainsQuery({ campaignId, limit, offset }, { skip: !campaignId, pollingInterval: 10000 });
+
+  const apiDomains = page?.items || [];
+  const total = page?.total || 0;
+  const hasMore = (offset + apiDomains.length) < total; // simplistic; single page accumulation
+  const error = rtkError ? (typeof rtkError === 'object' && (rtkError as any).error) || 'Failed to load domains' : null;
+  const loadMore = React.useCallback(() => {
+    if (!hasMore || loading) return;
+    setOffset(o => o + limit);
+  }, [hasMore, loading, limit]);
+  const refresh = React.useCallback(() => {
+    setOffset(0);
+    refetch();
+  }, [refetch]);
+  // Minimal synthetic status summary (retain structure expected by UI) - future: replace with backend summary endpoint
+  const statusSummary = useMemo(() => {
+    return {
+      campaignId,
+      summary: {
+        total,
+        generated: total,
+        dnsValidated: apiDomains.filter((d:any)=>['ok','valid','resolved','validated','succeeded'].includes(String(d.dnsStatus||'').toLowerCase())).length,
+        httpValidated: apiDomains.filter((d:any)=>['ok','valid','resolved','validated','succeeded'].includes(String(d.httpStatus||'').toLowerCase())).length,
+        leadsGenerated: apiDomains.filter((d:any)=>['match','matched'].includes(String(d.leadStatus||'').toLowerCase())).length,
+        failed: apiDomains.filter((d:any)=>['error','invalid','unresolved','failed','timeout'].includes(String(d.dnsStatus||'').toLowerCase()) || ['error','invalid','unresolved','failed','timeout'].includes(String(d.httpStatus||'').toLowerCase()) ).length,
+      },
+      currentPhase: 'unknown',
+      phaseStatus: 'unknown'
+    };
+  }, [apiDomains, campaignId, total]);
 
   // Transform API domain data to enriched format
   const enrichedDomains: EnrichedDomain[] = useMemo(() => {

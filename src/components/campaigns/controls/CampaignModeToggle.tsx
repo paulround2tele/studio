@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Zap, Clock, Info } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setFullSequenceMode, setPreflightOpen } from '@/store/ui/campaignUiSlice';
+import { useUpdateCampaignModeMutation } from '@/store/api/campaignApi';
 import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
 import { useToast } from '@/hooks/use-toast';
 
@@ -47,7 +48,7 @@ export function CampaignModeToggle({
   const ov: any = useAppSelector(overviewSel as any);
   const allConfigured = !!ov && ov.config && ov.config.progress && (ov.config.progress.configured === ov.config.progress.total);
   const { toast } = useToast();
-  const [pending, setPending] = React.useState(false);
+  const [updateMode, { isLoading: pending }] = useUpdateCampaignModeMutation();
 
   // Use the properly defined modeConfig with all required properties
   const currentConfig = modeConfig[currentMode ? 'full_sequence' : 'step_by_step'];
@@ -61,26 +62,13 @@ export function CampaignModeToggle({
     if (pending) return;
     const newModeBool = !currentMode;
     const newMode = newModeBool ? 'full_sequence' : 'step_by_step';
+    // Optimistic update
+    _dispatch(setFullSequenceMode({ campaignId, value: newModeBool }));
     try {
-      setPending(true);
-      // Optimistic update
-      _dispatch(setFullSequenceMode({ campaignId, value: newModeBool }));
-
-      const resp = await fetch(`/api/v2/campaigns/${campaignId}/mode`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: newMode }),
-        credentials: 'include',
-      });
-
-      if (!resp.ok) {
-        throw new Error(`Server responded ${resp.status}`);
-      }
-      const json = await resp.json().catch(() => null);
-      const authoritativeMode = json?.data?.mode as string | undefined;
-      if (authoritativeMode && (authoritativeMode === 'full_sequence' || authoritativeMode === 'step_by_step')) {
-        const authoritativeBool = authoritativeMode === 'full_sequence';
-        _dispatch(setFullSequenceMode({ campaignId, value: authoritativeBool }));
+      const result = await updateMode({ campaignId, mode: newMode }).unwrap();
+      const authoritativeMode = result?.mode;
+      if (authoritativeMode === 'full_sequence' || authoritativeMode === 'step_by_step') {
+        _dispatch(setFullSequenceMode({ campaignId, value: authoritativeMode === 'full_sequence' }));
       }
       toast({
         title: 'Campaign Mode Updated',
@@ -90,7 +78,7 @@ export function CampaignModeToggle({
         _dispatch(setPreflightOpen({ campaignId, open: true }));
       }
     } catch (error) {
-      // Revert optimistic change
+      // Revert optimistic change on failure
       _dispatch(setFullSequenceMode({ campaignId, value: currentMode }));
       const errorMessage = error instanceof Error ? error.message : 'Failed to update campaign mode';
       toast({
@@ -98,8 +86,6 @@ export function CampaignModeToggle({
         description: errorMessage,
         variant: 'destructive',
       });
-    } finally {
-      setPending(false);
     }
   };
 

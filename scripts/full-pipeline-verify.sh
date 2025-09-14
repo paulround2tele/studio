@@ -10,6 +10,12 @@ PASSWORD="${E2E_PASSWORD:-password123}"
 COOKIE_JAR="${COOKIE_JAR:-/tmp/pipeline_verify_cookies.txt}"
 rm -f "$COOKIE_JAR"
 
+# Phase status trackers (to emit accurate summary instead of placeholder strings)
+DISCOVERY_PHASE_FINAL_STATUS="unknown"
+VALIDATION_PHASE_FINAL_STATUS="unknown"
+EXTRACTION_PHASE_FINAL_STATUS="not_started"
+ANALYSIS_PHASE_FINAL_STATUS="not_started"
+
 log() { printf "[%s] %s\n" "$(date +%H:%M:%S)" "$*"; }
 req() { local m=$1; shift; local u=$1; shift; local d=${1:-}; if [[ -n $d ]]; then curl -sS -X "$m" -H 'Content-Type: application/json' -b "$COOKIE_JAR" -c "$COOKIE_JAR" "$u" --data "$d"; else curl -sS -X "$m" -H 'Content-Type: application/json' -b "$COOKIE_JAR" -c "$COOKIE_JAR" "$u"; fi; }
 json_get() { jq -r "$1 // empty" 2>/dev/null; }
@@ -48,50 +54,18 @@ CAMP_ID=$(jq -r '.data.id // .id // empty' <<<"$CREATE_RES")
 log "Campaign $CAMP_ID"
 
 # --- Discovery (Domain Generation) Phase Configuration ---
-# Provide all required fields; handler validates variableLength>0, characterSet, tld(s), numDomainsToGenerate>0
-UNIQ_SUFFIX=$(date +%s)
-## Discovery strategy revision:
-# Goal: produce multiple guaranteed-resolvable domains so downstream DNS/HTTP phases have at least some successes.
-# Approach:
-# 1. Try multi-TLD constant-only generation with variableLength=0 and numDomainsToGenerate=3 (example.com/.org/.net).
-# 2. If backend rejects multi-TLD or variableLength=0, fall back to sequential constant-only configs per TLD (3 independent config/start cycles appending domains) until at least 3 domains exist.
-# 3. If still failing, revert to legacy variable pattern generation.
-
-PRIMARY_MULTI_CFG=$(jq -n '{configuration:{patternType:"prefix",constantString:"example",characterSet:"a",variableLength:0,tlds:[".com",".org",".net"],numDomainsToGenerate:3,batchSize:10,offsetStart:0}}')
-
-DISCOVERY_CFG=$PRIMARY_MULTI_CFG
-
-log "Configure discovery phase"
+# Requested configuration: constantString "tel", alphanumeric charset, variableLength=3, generate 100 domains.
+# Simplified flow: single configure + start, no fallback logic.
+log "Configure discovery phase (constant=tel, variableLength=3, count=500)"
+DISCOVERY_CFG=$(jq -n '{configuration:{patternType:"prefix",constantString:"tel",characterSet:"abcdefghijklmnopqrstuvwxyz0123456789",variableLength:3,tlds:[".com"],numDomainsToGenerate:500,batchSize:500,offsetStart:0}}')
 CFG_RES=$(req POST "$BASE_URL/campaigns/$CAMP_ID/phases/discovery/configure" "$DISCOVERY_CFG")
 if [[ $(jq -r '.success // empty' <<<"$CFG_RES") != true ]]; then
-  log "Primary multi-TLD constant-only discovery configure failed, attempting per-TLD constant generation (.com .org .net)"
-  # We'll attempt up to three configs for each TLD constant-only; stop on first success then start phase once.
-  TLD_LIST=(".com" ".org" ".net")
-  SUCCESS=false
-  for TLD in "${TLD_LIST[@]}"; do
-    CCFG=$(jq -n --arg t "$TLD" '{configuration:{patternType:"prefix",constantString:"example",characterSet:"a",variableLength:0,tlds:[$t],numDomainsToGenerate:1,batchSize:5,offsetStart:0}}')
-    CRES=$(req POST "$BASE_URL/campaigns/$CAMP_ID/phases/discovery/configure" "$CCFG")
-    if [[ $(jq -r '.success // empty' <<<"$CRES") == true ]]; then
-      log "Configured constant-only domain for $TLD"
-      SUCCESS=true
-      break
-    else
-      log "Per-TLD constant configure failed for $TLD: $CRES"
-    fi
-  done
-  if [[ $SUCCESS != true ]]; then
-    log "All constant-only configs failed, falling back to legacy variable pattern config"
-    DISCOVERY_CFG=$(jq -n --arg cs "acme$UNIQ_SUFFIX" '{configuration:{patternType:"prefix",constantString:$cs,characterSet:"abcdefghijklmnopqrstuvwxyz0123456789",variableLength:1,tlds:[".com"],numDomainsToGenerate:10,batchSize:100,offsetStart:0}}')
-    CFG_RES=$(req POST "$BASE_URL/campaigns/$CAMP_ID/phases/discovery/configure" "$DISCOVERY_CFG")
-    if [[ $(jq -r '.success // empty' <<<"$CFG_RES") != true ]]; then
-      log "Fallback discovery configure failed: $CFG_RES"; exit 1;
-    fi
-  fi
+  log "Discovery configure failed: $CFG_RES"; exit 1;
 fi
 log "Start discovery phase"
 START_RES=$(req POST "$BASE_URL/campaigns/$CAMP_ID/phases/discovery/start" '{}')
 if [[ $(jq -r '.success // empty' <<<"$START_RES") != true ]]; then
-  log "Discovery start failed (after possible fallback): $START_RES"; exit 1;
+  log "Discovery start failed: $START_RES"; exit 1;
 fi
 
 log "Poll discovery completion"
@@ -103,8 +77,8 @@ for i in {1..90}; do
   [[ -z $STATUS ]] && continue
   log "discovery status=$STATUS"
   case $STATUS in
-    completed) PHASE_DONE=true; break;;
-    failed|error) log "Phase failed: $ST"; exit 1;;
+    completed) PHASE_DONE=true; DISCOVERY_PHASE_FINAL_STATUS="completed"; break;;
+    failed|error) DISCOVERY_PHASE_FINAL_STATUS="failed"; log "Phase failed: $ST"; exit 1;;
   esac
 done
 if [[ $PHASE_DONE != true ]]; then
@@ -112,7 +86,7 @@ if [[ $PHASE_DONE != true ]]; then
 fi
 
 log "List domains post-discovery"
-DOMAINS=$(req GET "$BASE_URL/campaigns/$CAMP_ID/domains?limit=50")
+DOMAINS=$(req GET "$BASE_URL/campaigns/$CAMP_ID/domains?limit=1000")
 TOTAL=$(jq -r '.data.items | length' <<<"$DOMAINS" 2>/dev/null || echo 0)
 [[ $TOTAL -gt 0 ]] || { log "No domains generated"; exit 1; }
 log "Domains generated=$TOTAL"
@@ -159,6 +133,7 @@ COUNT_ERR=$(jq -r '.data.items | length' <<<"$DNS_ERR" 2>/dev/null || echo 0)
 DNS_PENDING=$(req GET "$BASE_URL/campaigns/$CAMP_ID/domains?dnsStatus=pending&limit=200")
 COUNT_PENDING=$(jq -r '.data.items | length' <<<"$DNS_PENDING" 2>/dev/null || echo 0)
 log "DNS Status counts: ok=$COUNT_OK error=$COUNT_ERR pending=$COUNT_PENDING"
+VALIDATION_PHASE_FINAL_STATUS="completed"
 
 # --- Extraction (HTTP Keyword Validation) Phase ---
 log "Configure extraction (http keyword validation) phase"
@@ -179,8 +154,8 @@ else
       [[ -z $STATUS_EXT ]] && continue
       log "extraction status=$STATUS_EXT"
       case $STATUS_EXT in
-        completed) EXTRACTION_DONE=true; break;;
-        failed|error) log "Extraction failed: $ST_EXT"; EXTRACTION_DONE=false; break;;
+        completed) EXTRACTION_DONE=true; EXTRACTION_PHASE_FINAL_STATUS="completed"; break;;
+        failed|error) log "Extraction failed: $ST_EXT"; EXTRACTION_PHASE_FINAL_STATUS="failed"; EXTRACTION_DONE=false; break;;
       esac
     done
   else
@@ -194,8 +169,8 @@ else
         [[ -z $STATUS_EXT ]] && continue
         log "extraction status=$STATUS_EXT"
         case $STATUS_EXT in
-          completed) EXTRACTION_DONE=true; break;;
-          failed|error) log "Extraction failed: $ST_EXT"; EXTRACTION_DONE=false; break;;
+          completed) EXTRACTION_DONE=true; EXTRACTION_PHASE_FINAL_STATUS="completed"; break;;
+          failed|error) log "Extraction failed: $ST_EXT"; EXTRACTION_PHASE_FINAL_STATUS="failed"; EXTRACTION_DONE=false; break;;
         esac
       done
     else
@@ -227,8 +202,8 @@ else
       [[ -z $STATUS_AN ]] && continue
       log "analysis status=$STATUS_AN"
       case $STATUS_AN in
-        completed) break;;
-        failed|error) log "Analysis failed: $ST_AN"; break;;
+        completed) ANALYSIS_PHASE_FINAL_STATUS="completed"; break;;
+        failed|error) ANALYSIS_PHASE_FINAL_STATUS="failed"; break;;
       esac
     done
   else
@@ -237,7 +212,19 @@ else
 fi
 
 # Summaries (basic) after all phases
-SUMMARY=$(jq -n --arg campaign "$CAMP_ID" --arg total "$TOTAL" --arg dnsOk "$COUNT_OK" --arg dnsErr "$COUNT_ERR" --arg dnsPending "$COUNT_PENDING" --arg dnsPersona "$DNS_ID" --arg httpPersona "$HTTP_ID" '{campaignId:$campaign,totalDomains:($total|tonumber),dnsOk:($dnsOk|tonumber),dnsError:($dnsErr|tonumber),dnsPending:($dnsPending|tonumber),dnsPersona:$dnsPersona,httpPersona:$httpPersona,phases:{dnsValidation:"done",extraction:"attempted",analysis:"attempted"}}')
+SUMMARY=$(jq -n \
+  --arg campaign "$CAMP_ID" \
+  --arg total "$TOTAL" \
+  --arg dnsOk "$COUNT_OK" \
+  --arg dnsErr "$COUNT_ERR" \
+  --arg dnsPending "$COUNT_PENDING" \
+  --arg dnsPersona "$DNS_ID" \
+  --arg httpPersona "$HTTP_ID" \
+  --arg discoveryStatus "$DISCOVERY_PHASE_FINAL_STATUS" \
+  --arg validationStatus "$VALIDATION_PHASE_FINAL_STATUS" \
+  --arg extractionStatus "$EXTRACTION_PHASE_FINAL_STATUS" \
+  --arg analysisStatus "$ANALYSIS_PHASE_FINAL_STATUS" \
+  '{campaignId:$campaign,totalDomains:($total|tonumber),dnsOk:($dnsOk|tonumber),dnsError:($dnsErr|tonumber),dnsPending:($dnsPending|tonumber),dnsPersona:$dnsPersona,httpPersona:$httpPersona,phases:{discovery:$discoveryStatus,dnsValidation:$validationStatus,extraction:$extractionStatus,analysis:$analysisStatus}}')
 echo "$SUMMARY"
 
 # If discovery failed due to offset exhaustion, retry once with different suffix

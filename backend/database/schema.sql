@@ -2,8 +2,10 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 17.5 (Ubuntu 17.5-1.pgdg25.04+1)
--- Dumped by pg_dump version 17.5 (Ubuntu 17.5-1.pgdg25.04+1)
+\restrict hq5oVOcc0wAF5Jmse5D30h2vooK0r2gnXww2aQ4KsAei7UR1d6zYX6ZGkQariub
+
+-- Dumped from database version 17.6 (Ubuntu 17.6-1.pgdg25.04+1)
+-- Dumped by pg_dump version 17.6 (Ubuntu 17.6-1.pgdg25.04+1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -22,6 +24,20 @@ SET row_security = off;
 --
 
 CREATE SCHEMA auth;
+
+
+--
+-- Name: public; Type: SCHEMA; Schema: -; Owner: -
+--
+
+-- *not* creating schema, since initdb creates it
+
+
+--
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON SCHEMA public IS '';
 
 
 --
@@ -178,6 +194,31 @@ CREATE TYPE public.campaign_job_status_enum AS ENUM (
 
 
 --
+-- Name: campaign_mode_enum; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.campaign_mode_enum AS ENUM (
+    'full_sequence',
+    'step_by_step'
+);
+
+
+--
+-- Name: campaign_state_enum; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.campaign_state_enum AS ENUM (
+    'draft',
+    'running',
+    'paused',
+    'completed',
+    'failed',
+    'cancelled',
+    'archived'
+);
+
+
+--
 -- Name: communication_protocol_enum; Type: TYPE; Schema: public; Owner: -
 --
 
@@ -327,6 +368,21 @@ CREATE TYPE public.event_type_enum AS ENUM (
     'performance_alert',
     'capacity_alert',
     'system_alert'
+);
+
+
+--
+-- Name: execution_status_enum; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.execution_status_enum AS ENUM (
+    'not_started',
+    'ready',
+    'configured',
+    'in_progress',
+    'paused',
+    'completed',
+    'failed'
 );
 
 
@@ -544,6 +600,139 @@ CREATE TYPE public.validation_status_enum AS ENUM (
     'error',
     'skipped'
 );
+
+
+--
+-- Name: advance_campaign_phase(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.advance_campaign_phase(p_campaign_id uuid, p_user_id uuid) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+    campaign_record lead_generation_campaigns%ROWTYPE;
+    current_phase_record campaign_phases%ROWTYPE;
+    next_phase_record campaign_phases%ROWTYPE;
+    phase_advancement_data JSONB;
+BEGIN
+    -- Get campaign details
+    SELECT * INTO campaign_record 
+    FROM lead_generation_campaigns 
+    WHERE id = p_campaign_id;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Campaign % not found', p_campaign_id;
+    END IF;
+    
+    -- Get current phase
+    SELECT * INTO current_phase_record
+    FROM campaign_phases 
+    WHERE campaign_id = p_campaign_id 
+    AND status = 'running'
+    ORDER BY phase_order ASC
+    LIMIT 1;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'No running phase found for campaign %', p_campaign_id;
+    END IF;
+    
+    -- Complete current phase
+    UPDATE campaign_phases 
+    SET 
+        status = 'completed',
+        completed_at = NOW(),
+        updated_at = NOW()
+    WHERE id = current_phase_record.id;
+    
+    -- Get next phase
+    SELECT * INTO next_phase_record
+    FROM campaign_phases 
+    WHERE campaign_id = p_campaign_id 
+    AND phase_order > current_phase_record.phase_order
+    AND status = 'pending'
+    ORDER BY phase_order ASC
+    LIMIT 1;
+    
+    IF FOUND THEN
+        -- Start next phase
+        UPDATE campaign_phases 
+        SET 
+            status = 'running',
+            started_at = NOW(),
+            updated_at = NOW()
+        WHERE id = next_phase_record.id;
+        
+        -- Update campaign current phase
+        UPDATE lead_generation_campaigns 
+        SET 
+            current_phase = next_phase_record.phase_type,
+            updated_at = NOW()
+        WHERE id = p_campaign_id;
+        
+        phase_advancement_data := jsonb_build_object(
+            'previous_phase', current_phase_record.phase_type,
+            'current_phase', next_phase_record.phase_type,
+            'phase_order', next_phase_record.phase_order,
+            'advanced_at', NOW(),
+            'advanced_by', p_user_id
+        );
+    ELSE
+        -- No more phases, complete campaign
+        UPDATE lead_generation_campaigns 
+        SET 
+            business_status = 'completed',
+            current_phase = NULL,
+            updated_at = NOW()
+        WHERE id = p_campaign_id;
+        
+        phase_advancement_data := jsonb_build_object(
+            'previous_phase', current_phase_record.phase_type,
+            'current_phase', NULL,
+            'campaign_completed', true,
+            'completed_at', NOW(),
+            'advanced_by', p_user_id
+        );
+    END IF;
+
+    -- ✅ FIXED: Log phase advancement with correct column names
+    INSERT INTO campaign_state_events (
+        campaign_id,
+        event_type,
+        source_state,
+        target_state,
+        reason,
+        triggered_by,                    -- ✅ Fixed: use triggered_by instead of user_id
+        event_data,
+        operation_context,               -- ✅ Fixed: include required operation_context
+        user_id                          -- ✅ Keep user_id for backward compatibility
+    ) VALUES (
+        p_campaign_id,
+        'phase_advanced',
+        current_phase_record.phase_type,
+        COALESCE(next_phase_record.phase_type, 'completed'),
+        'Phase advanced by user',
+        p_user_id::text,                 -- ✅ Fixed: ensure NOT NULL and convert to text
+        phase_advancement_data,
+        jsonb_build_object(               -- ✅ Fixed: provide operation_context
+            'operation_type', 'advance_phase',
+            'user_id', p_user_id,
+            'current_phase_id', current_phase_record.id,
+            'next_phase_id', next_phase_record.id,
+            'timestamp', NOW()
+        ),
+        p_user_id                        -- ✅ Keep user_id populated
+    );
+
+    RETURN phase_advancement_data;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION advance_campaign_phase(p_campaign_id uuid, p_user_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.advance_campaign_phase(p_campaign_id uuid, p_user_id uuid) IS 'Fixed to use triggered_by and operation_context columns instead of user_id only';
 
 
 --
@@ -787,6 +976,88 @@ $$;
 
 
 --
+-- Name: campaign_domain_counters_upsert(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.campaign_domain_counters_upsert() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    v_exists BOOLEAN;
+    d_total_delta INT := 0;
+BEGIN
+    IF (TG_OP = 'INSERT') THEN
+        -- Ensure row exists
+        INSERT INTO campaign_domain_counters (campaign_id, total_domains)
+            VALUES (NEW.campaign_id, 0)
+            ON CONFLICT (campaign_id) DO NOTHING;
+        -- Total always increments on insert
+        UPDATE campaign_domain_counters
+           SET total_domains = total_domains + 1,
+               dns_pending = dns_pending + CASE WHEN NEW.dns_status = 'pending' THEN 1 ELSE 0 END,
+               dns_ok = dns_ok + CASE WHEN NEW.dns_status = 'ok' THEN 1 ELSE 0 END,
+               dns_error = dns_error + CASE WHEN NEW.dns_status = 'error' THEN 1 ELSE 0 END,
+               dns_timeout = dns_timeout + CASE WHEN NEW.dns_status = 'timeout' THEN 1 ELSE 0 END,
+               http_pending = http_pending + CASE WHEN NEW.http_status = 'pending' THEN 1 ELSE 0 END,
+               http_ok = http_ok + CASE WHEN NEW.http_status = 'ok' THEN 1 ELSE 0 END,
+               http_error = http_error + CASE WHEN NEW.http_status = 'error' THEN 1 ELSE 0 END,
+               http_timeout = http_timeout + CASE WHEN NEW.http_status = 'timeout' THEN 1 ELSE 0 END,
+               lead_pending = lead_pending + CASE WHEN NEW.lead_status = 'pending' THEN 1 ELSE 0 END,
+               lead_match = lead_match + CASE WHEN NEW.lead_status = 'match' THEN 1 ELSE 0 END,
+               lead_no_match = lead_no_match + CASE WHEN NEW.lead_status = 'no_match' THEN 1 ELSE 0 END,
+               lead_error = lead_error + CASE WHEN NEW.lead_status = 'error' THEN 1 ELSE 0 END,
+               lead_timeout = lead_timeout + CASE WHEN NEW.lead_status = 'timeout' THEN 1 ELSE 0 END,
+               updated_at = NOW()
+         WHERE campaign_id = NEW.campaign_id;
+        RETURN NEW;
+    ELSIF (TG_OP = 'UPDATE') THEN
+        -- Only adjust when status fields change
+        IF (NEW.dns_status IS DISTINCT FROM OLD.dns_status) OR (NEW.http_status IS DISTINCT FROM OLD.http_status) OR (NEW.lead_status IS DISTINCT FROM OLD.lead_status) THEN
+            UPDATE campaign_domain_counters SET
+                dns_pending = dns_pending + CASE WHEN NEW.dns_status = 'pending' THEN 1 ELSE 0 END - CASE WHEN OLD.dns_status = 'pending' THEN 1 ELSE 0 END,
+                dns_ok = dns_ok + CASE WHEN NEW.dns_status = 'ok' THEN 1 ELSE 0 END - CASE WHEN OLD.dns_status = 'ok' THEN 1 ELSE 0 END,
+                dns_error = dns_error + CASE WHEN NEW.dns_status = 'error' THEN 1 ELSE 0 END - CASE WHEN OLD.dns_status = 'error' THEN 1 ELSE 0 END,
+                dns_timeout = dns_timeout + CASE WHEN NEW.dns_status = 'timeout' THEN 1 ELSE 0 END - CASE WHEN OLD.dns_status = 'timeout' THEN 1 ELSE 0 END,
+                http_pending = http_pending + CASE WHEN NEW.http_status = 'pending' THEN 1 ELSE 0 END - CASE WHEN OLD.http_status = 'pending' THEN 1 ELSE 0 END,
+                http_ok = http_ok + CASE WHEN NEW.http_status = 'ok' THEN 1 ELSE 0 END - CASE WHEN OLD.http_status = 'ok' THEN 1 ELSE 0 END,
+                http_error = http_error + CASE WHEN NEW.http_status = 'error' THEN 1 ELSE 0 END - CASE WHEN OLD.http_status = 'error' THEN 1 ELSE 0 END,
+                http_timeout = http_timeout + CASE WHEN NEW.http_status = 'timeout' THEN 1 ELSE 0 END - CASE WHEN OLD.http_status = 'timeout' THEN 1 ELSE 0 END,
+                lead_pending = lead_pending + CASE WHEN NEW.lead_status = 'pending' THEN 1 ELSE 0 END - CASE WHEN OLD.lead_status = 'pending' THEN 1 ELSE 0 END,
+                lead_match = lead_match + CASE WHEN NEW.lead_status = 'match' THEN 1 ELSE 0 END - CASE WHEN OLD.lead_status = 'match' THEN 1 ELSE 0 END,
+                lead_no_match = lead_no_match + CASE WHEN NEW.lead_status = 'no_match' THEN 1 ELSE 0 END - CASE WHEN OLD.lead_status = 'no_match' THEN 1 ELSE 0 END,
+                lead_error = lead_error + CASE WHEN NEW.lead_status = 'error' THEN 1 ELSE 0 END - CASE WHEN OLD.lead_status = 'error' THEN 1 ELSE 0 END,
+                lead_timeout = lead_timeout + CASE WHEN NEW.lead_status = 'timeout' THEN 1 ELSE 0 END - CASE WHEN OLD.lead_status = 'timeout' THEN 1 ELSE 0 END,
+                updated_at = NOW()
+            WHERE campaign_id = NEW.campaign_id;
+        END IF;
+        RETURN NEW;
+    ELSIF (TG_OP = 'DELETE') THEN
+        -- Adjust counts downward (rare path; if deletions introduced later)
+        UPDATE campaign_domain_counters SET
+            total_domains = total_domains - 1,
+            dns_pending = dns_pending - CASE WHEN OLD.dns_status = 'pending' THEN 1 ELSE 0 END,
+            dns_ok = dns_ok - CASE WHEN OLD.dns_status = 'ok' THEN 1 ELSE 0 END,
+            dns_error = dns_error - CASE WHEN OLD.dns_status = 'error' THEN 1 ELSE 0 END,
+            dns_timeout = dns_timeout - CASE WHEN OLD.dns_status = 'timeout' THEN 1 ELSE 0 END,
+            http_pending = http_pending - CASE WHEN OLD.http_status = 'pending' THEN 1 ELSE 0 END,
+            http_ok = http_ok - CASE WHEN OLD.http_status = 'ok' THEN 1 ELSE 0 END,
+            http_error = http_error - CASE WHEN OLD.http_status = 'error' THEN 1 ELSE 0 END,
+            http_timeout = http_timeout - CASE WHEN OLD.http_status = 'timeout' THEN 1 ELSE 0 END,
+            lead_pending = lead_pending - CASE WHEN OLD.lead_status = 'pending' THEN 1 ELSE 0 END,
+            lead_match = lead_match - CASE WHEN OLD.lead_status = 'match' THEN 1 ELSE 0 END,
+            lead_no_match = lead_no_match - CASE WHEN OLD.lead_status = 'no_match' THEN 1 ELSE 0 END,
+            lead_error = lead_error - CASE WHEN OLD.lead_status = 'error' THEN 1 ELSE 0 END,
+            lead_timeout = lead_timeout - CASE WHEN OLD.lead_status = 'timeout' THEN 1 ELSE 0 END,
+            updated_at = NOW()
+        WHERE campaign_id = OLD.campaign_id;
+        RETURN OLD;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: check_phase_completion(uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -913,6 +1184,29 @@ BEGIN
         'retention_days', p_retention_days,
         'cleanup_completed_at', NOW()
     );
+END;
+$$;
+
+
+--
+-- Name: complete_campaign_phase(uuid, public.phase_type_enum); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.complete_campaign_phase(campaign_uuid uuid, phase_name public.phase_type_enum) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Update the specific phase to 'completed' status
+    UPDATE campaign_phases 
+    SET 
+        status = 'completed',
+        completed_at = NOW(),
+        updated_at = NOW()
+    WHERE campaign_id = campaign_uuid 
+    AND phase_type = phase_name;
+    
+    -- The trigger will automatically sync the campaign
+    RAISE NOTICE 'Phase % completed for campaign %', phase_name, campaign_uuid;
 END;
 $$;
 
@@ -1109,6 +1403,30 @@ $$;
 
 
 --
+-- Name: fail_campaign_phase(uuid, public.phase_type_enum, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.fail_campaign_phase(campaign_uuid uuid, phase_name public.phase_type_enum, error_msg text) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Update the specific phase to 'failed' status
+    UPDATE campaign_phases 
+    SET 
+        status = 'failed',
+        failed_at = NOW(),
+        error_message = error_msg,
+        updated_at = NOW()
+    WHERE campaign_id = campaign_uuid 
+    AND phase_type = phase_name;
+    
+    -- The trigger will automatically sync the campaign
+    RAISE NOTICE 'Phase % failed for campaign %: %', phase_name, campaign_uuid, error_msg;
+END;
+$$;
+
+
+--
 -- Name: generate_campaign_analytics(uuid, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1253,6 +1571,95 @@ $$;
 
 
 --
+-- Name: generate_campaign_analytics(uuid, boolean, text); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.generate_campaign_analytics(p_job_id uuid, p_success boolean, p_error_message text DEFAULT NULL::text) RETURNS jsonb
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+    job_record campaign_jobs%ROWTYPE;
+    campaign_id UUID;
+    completion_data JSONB;
+    execution_duration_ms BIGINT;
+BEGIN
+    -- Get job details
+    SELECT * INTO job_record FROM campaign_jobs WHERE id = p_job_id;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Job % not found', p_job_id;
+    END IF;
+    
+    campaign_id := job_record.campaign_id;
+    
+    -- Calculate execution duration
+    execution_duration_ms := EXTRACT(EPOCH FROM (NOW() - job_record.created_at)) * 1000;
+    
+    -- Update job status
+    UPDATE campaign_jobs 
+    SET 
+        status = CASE WHEN p_success THEN 'completed'::job_status_enum ELSE 'failed'::job_status_enum END,
+        last_error = CASE WHEN p_success THEN NULL ELSE p_error_message END,
+        updated_at = NOW()
+    WHERE id = p_job_id;
+    
+    -- Prepare completion data
+    completion_data := jsonb_build_object(
+        'job_id', p_job_id,
+        'job_type', job_record.job_type,
+        'campaign_id', campaign_id,
+        'success', p_success,
+        'execution_duration_ms', execution_duration_ms
+    );
+
+    -- ✅ FIXED: Log job completion with correct column names
+    INSERT INTO campaign_state_events (
+        campaign_id,
+        event_type,
+        source_state,
+        target_state,
+        reason,
+        triggered_by,                    -- ✅ Fixed: use triggered_by instead of user_id
+        event_data,
+        operation_context,               -- ✅ Fixed: include required operation_context
+        user_id                          -- ✅ Keep user_id for backward compatibility
+    ) VALUES (
+        campaign_id,
+        'job_completed',
+        job_record.status::text,
+        CASE WHEN p_success THEN 'completed' ELSE 'failed' END,
+        'Job completion processed',
+        'system',                        -- ✅ Fixed: provide system as triggered_by (NOT NULL)
+        completion_data,
+        jsonb_build_object(               -- ✅ Fixed: provide operation_context
+            'operation_type', 'job_completion',
+            'job_id', p_job_id,
+            'job_type', job_record.job_type,
+            'execution_duration_ms', execution_duration_ms,
+            'timestamp', NOW()
+        ),
+        NULL                             -- ✅ No user_id available in job_record
+    );
+
+    -- Check if phase can be advanced
+    IF p_success AND job_record.job_type IN ('domain_generation', 'dns_validation', 'http_keyword_validation') THEN
+        -- Could call advance_campaign_phase here if needed
+        NULL;
+    END IF;
+    
+    RETURN completion_data;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION generate_campaign_analytics(p_job_id uuid, p_success boolean, p_error_message text); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.generate_campaign_analytics(p_job_id uuid, p_success boolean, p_error_message text) IS 'Fixed to use triggered_by and operation_context columns instead of user_id only';
+
+
+--
 -- Name: manage_triggers(character varying, character varying); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1346,6 +1753,35 @@ $$;
 
 
 --
+-- Name: reset_phase_for_retry(uuid, public.phase_type_enum); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.reset_phase_for_retry(campaign_uuid uuid, phase_name public.phase_type_enum) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Reset the specific phase to 'ready' status for retry
+    UPDATE campaign_phases 
+    SET 
+        status = 'ready',
+        started_at = NULL,
+        completed_at = NULL,
+        failed_at = NULL,
+        error_message = NULL,
+        progress_percentage = NULL,
+        processed_items = NULL,
+        successful_items = NULL,
+        failed_items = NULL
+    WHERE campaign_id = campaign_uuid 
+    AND phase_type = phase_name;
+    
+    -- The trigger will automatically sync the campaign
+    RAISE NOTICE 'Phase % reset for retry in campaign %', phase_name, campaign_uuid;
+END;
+$$;
+
+
+--
 -- Name: setup_campaign_phases(uuid, uuid); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1396,123 +1832,286 @@ $$;
 -- Name: start_campaign(uuid, uuid, boolean); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.start_campaign(p_campaign_id uuid, p_user_id uuid, p_force_start boolean DEFAULT false) RETURNS jsonb
+CREATE FUNCTION public.start_campaign(p_campaign_id uuid, p_user_id uuid, p_async boolean DEFAULT false) RETURNS jsonb
     LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-    campaign_record RECORD;
-    validation_results JSONB := '{}';
+    campaign_record lead_generation_campaigns%ROWTYPE;
+    validation_results JSONB;
     phase_setup_result JSONB;
-    result JSONB;
 BEGIN
     -- Get campaign details
     SELECT * INTO campaign_record 
     FROM lead_generation_campaigns 
     WHERE id = p_campaign_id;
-
+    
     IF NOT FOUND THEN
-        RETURN jsonb_build_object(
-            'success', false,
-            'error', 'Campaign not found'
-        );
+        RAISE EXCEPTION 'Campaign % not found', p_campaign_id;
     END IF;
-
+    
     -- Validate campaign can be started
-    IF campaign_record.status NOT IN ('draft', 'paused') AND NOT p_force_start THEN
-        RETURN jsonb_build_object(
-            'success', false,
-            'error', 'Campaign cannot be started from status: ' || campaign_record.status
-        );
+    IF campaign_record.business_status != 'draft' THEN
+        RAISE EXCEPTION 'Campaign % cannot be started. Current status: %', p_campaign_id, campaign_record.business_status;
     END IF;
-
-    -- Validate required configurations
-    validation_results := jsonb_build_object(
-        'domain_generation_config', EXISTS(
-            SELECT 1 FROM domain_generation_campaign_params 
-            WHERE campaign_id = p_campaign_id
-        ),
-        'keyword_sets', EXISTS(
-            SELECT 1 FROM keyword_sets 
-            WHERE campaign_id = p_campaign_id AND is_active = TRUE
-        ),
-        'proxy_pools', EXISTS(
-            SELECT 1 FROM campaign_phases
-            WHERE campaign_id = p_campaign_id
-            AND phase_type = 'http_keyword_validation'
-            AND configuration::jsonb ? 'proxyPoolId'
-        )
-    );
-
-    -- Check if all validations pass
-    IF NOT (validation_results->>'domain_generation_config')::BOOLEAN OR
-       NOT (validation_results->>'keyword_sets')::BOOLEAN THEN
-        RETURN jsonb_build_object(
-            'success', false,
-            'error', 'Campaign configuration incomplete',
-            'validation_results', validation_results
-        );
-    END IF;
-
-    -- Set application context for triggers
-    PERFORM set_config('app.current_user_id', p_user_id::TEXT, true);
-    PERFORM set_config('app.state_change_reason', 'Campaign started via procedure', true);
-
+    
+    -- Set up phases
+    phase_setup_result := setup_campaign_phases(p_campaign_id, p_user_id);
+    
     -- Update campaign status to running
     UPDATE lead_generation_campaigns 
     SET 
-        status = 'running',
-        current_phase = 'domain_generation',
-        started_at = NOW(),
-        updated_at = NOW()
+        business_status = 'running',
+        updated_at = NOW(),
+        user_id = p_user_id
     WHERE id = p_campaign_id;
-
-    -- Initialize campaign phases
-    phase_setup_result := setup_campaign_phases(p_campaign_id, p_user_id);
-
-    -- Create initial domain generation jobs
-    INSERT INTO campaign_jobs (
-        campaign_id,
-        job_type,
-        status,
-        job_payload
-    ) VALUES (
-        p_campaign_id,
-        'domain_generation',
-        'pending',
-        jsonb_build_object(
+    
+    -- Validation success response
+    validation_results := jsonb_build_object(
+        'campaign_ready', true,
+        'phase_count', jsonb_array_length(phase_setup_result->'phases'),
+        'configuration', jsonb_build_object(
             'batch_size', 100,
             'initial_generation', true,
             'created_by', p_user_id
         )
     );
 
-    -- Log campaign start event
+    -- ✅ FIXED: Log campaign start event with correct column names
     INSERT INTO campaign_state_events (
         campaign_id,
         event_type,
+        source_state,
+        target_state,
+        reason,
+        triggered_by,                    -- ✅ Fixed: use triggered_by instead of user_id
         event_data,
-        user_id
+        operation_context,               -- ✅ Fixed: include required operation_context
+        user_id                          -- ✅ Keep user_id for backward compatibility
     ) VALUES (
         p_campaign_id,
         'campaign_started',
+        'draft',
+        'running',
+        'Campaign started by user',
+        p_user_id::text,                 -- ✅ Fixed: ensure NOT NULL and convert to text
         jsonb_build_object(
             'validation_results', validation_results,
             'phase_setup', phase_setup_result,
             'started_by', p_user_id
         ),
-        p_user_id
+        jsonb_build_object(               -- ✅ Fixed: provide operation_context
+            'operation_type', 'start_campaign',
+            'user_id', p_user_id,
+            'async_mode', p_async,
+            'timestamp', NOW()
+        ),
+        p_user_id                        -- ✅ Keep user_id populated
     );
-
-    result := jsonb_build_object(
+    
+    RETURN jsonb_build_object(
         'success', true,
         'campaign_id', p_campaign_id,
         'status', 'running',
-        'current_phase', 'domain_generation',
         'validation_results', validation_results,
         'phase_setup', phase_setup_result
     );
+END;
+$$;
 
-    RETURN result;
+
+--
+-- Name: FUNCTION start_campaign(p_campaign_id uuid, p_user_id uuid, p_async boolean); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.start_campaign(p_campaign_id uuid, p_user_id uuid, p_async boolean) IS 'Fixed to use triggered_by and operation_context columns instead of user_id only';
+
+
+--
+-- Name: start_campaign_phase(uuid, public.phase_type_enum); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.start_campaign_phase(campaign_uuid uuid, phase_name public.phase_type_enum) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Update the specific phase to 'in_progress' status
+    UPDATE campaign_phases 
+    SET 
+        status = 'in_progress',
+        started_at = NOW(),
+        updated_at = NOW()
+    WHERE campaign_id = campaign_uuid 
+    AND phase_type = phase_name;
+    
+    -- The trigger will automatically sync the campaign
+    RAISE NOTICE 'Phase % started for campaign %', phase_name, campaign_uuid;
+END;
+$$;
+
+
+--
+-- Name: sync_campaign_from_phases(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.sync_campaign_from_phases(campaign_uuid uuid) RETURNS void
+    LANGUAGE plpgsql
+    AS $$
+DECLARE
+    computed_current_phase phase_type_enum;
+    computed_phase_status phase_status_enum;
+    completed_count INTEGER;
+    current_campaign_phase phase_type_enum;
+    current_campaign_status phase_status_enum;
+BEGIN
+    -- Get current campaign values to check if sync is actually needed
+    SELECT current_phase, phase_status INTO current_campaign_phase, current_campaign_status
+    FROM lead_generation_campaigns 
+    WHERE id = campaign_uuid;
+    
+    -- BUSINESS LOGIC: Derive current phase and status from campaign_phases table
+    -- Priority 1: Find any in_progress or failed phase (that's the active one)
+    SELECT phase_type, status INTO computed_current_phase, computed_phase_status
+    FROM campaign_phases 
+    WHERE campaign_id = campaign_uuid 
+    AND status IN ('in_progress', 'failed')
+    ORDER BY phase_order
+    LIMIT 1;
+    
+    -- Priority 2: If no active phase, find first non-completed phase (ready to start)
+    IF computed_current_phase IS NULL THEN
+        SELECT phase_type, status INTO computed_current_phase, computed_phase_status
+        FROM campaign_phases 
+        WHERE campaign_id = campaign_uuid 
+        AND status != 'completed'
+        ORDER BY phase_order
+        LIMIT 1;
+    END IF;
+    
+    -- Priority 3: If all phases completed, use the last phase
+    IF computed_current_phase IS NULL THEN
+        SELECT phase_type, status INTO computed_current_phase, computed_phase_status
+        FROM campaign_phases 
+        WHERE campaign_id = campaign_uuid 
+        ORDER BY phase_order DESC
+        LIMIT 1;
+    END IF;
+    
+    -- Count completed phases for progress tracking
+    SELECT COUNT(*) INTO completed_count
+    FROM campaign_phases 
+    WHERE campaign_id = campaign_uuid 
+    AND status = 'completed';
+    
+    -- Only update if values have actually changed (prevent unnecessary updates)
+    IF computed_current_phase IS DISTINCT FROM current_campaign_phase OR 
+       computed_phase_status IS DISTINCT FROM current_campaign_status THEN
+        
+        -- Update campaign with computed values (derived from phases)
+        UPDATE lead_generation_campaigns 
+        SET 
+            current_phase = computed_current_phase,
+            phase_status = computed_phase_status,
+            completed_phases = completed_count,
+            updated_at = NOW()
+        WHERE id = campaign_uuid;
+        
+        -- Log the sync operation
+        RAISE NOTICE 'Campaign % synced: % -> %, % -> %, completed_phases=%', 
+            campaign_uuid, 
+            current_campaign_phase, computed_current_phase,
+            current_campaign_status, computed_phase_status, 
+            completed_count;
+    END IF;
+END;
+$$;
+
+
+--
+-- Name: trigger_audit_log(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.trigger_audit_log() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+    audit_data JSONB;
+    old_data JSONB;
+    new_data JSONB;
+    audit_action VARCHAR(10);
+    resource_id UUID;
+    user_id_val UUID;
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        audit_action := 'DELETE';
+        audit_data := to_jsonb(OLD);
+        old_data := to_jsonb(OLD);
+        new_data := NULL;
+        IF OLD ? 'id' THEN
+            resource_id := (OLD.id)::UUID;
+        END IF;
+        IF OLD ? 'user_id' THEN
+            user_id_val := (OLD.user_id)::UUID;
+        ELSIF OLD ? 'created_by' THEN
+            user_id_val := (OLD.created_by)::UUID;
+        END IF;
+    ELSIF TG_OP = 'UPDATE' THEN
+        audit_action := 'UPDATE';
+        audit_data := jsonb_build_object(
+            'old', to_jsonb(OLD),
+            'new', to_jsonb(NEW),
+            'changed_fields', (
+                SELECT jsonb_object_agg(OLD_json.key, jsonb_build_object('old', OLD_json.value, 'new', NEW_json.value))
+                FROM jsonb_each(to_jsonb(OLD)) AS OLD_json(key, value)
+                JOIN jsonb_each(to_jsonb(NEW)) AS NEW_json(key, value) ON OLD_json.key = NEW_json.key
+                WHERE OLD_json.value IS DISTINCT FROM NEW_json.value
+            )
+        );
+        old_data := to_jsonb(OLD);
+        new_data := to_jsonb(NEW);
+        resource_id := (NEW.id)::UUID;
+        IF to_jsonb(NEW) ? 'user_id' THEN
+            user_id_val := (NEW.user_id)::UUID;
+        ELSIF to_jsonb(NEW) ? 'created_by' THEN
+            user_id_val := (NEW.created_by)::UUID;
+        ELSIF to_jsonb(NEW) ? 'updated_by' THEN
+            user_id_val := (NEW.updated_by)::UUID;
+        END IF;
+    ELSIF TG_OP = 'INSERT' THEN
+        audit_action := 'INSERT';
+        audit_data := to_jsonb(NEW);
+        old_data := NULL;
+        new_data := to_jsonb(NEW);
+        resource_id := (NEW.id)::UUID;
+        IF to_jsonb(NEW) ? 'user_id' THEN
+            user_id_val := (NEW.user_id)::UUID;
+        ELSIF to_jsonb(NEW) ? 'created_by' THEN
+            user_id_val := (NEW.created_by)::UUID;
+        END IF;
+    END IF;
+
+    INSERT INTO audit_logs (
+        user_id,
+        action,
+        entity_type,
+        entity_id,
+        details,
+        client_ip,
+        user_agent
+    ) VALUES (
+        user_id_val,
+        audit_action,
+        TG_TABLE_NAME,
+        resource_id,
+        audit_data,
+        COALESCE(current_setting('app.current_ip', true), '127.0.0.1')::INET,
+        current_setting('app.current_user_agent', true)
+    );
+
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    ELSE
+        RETURN NEW;
+    END IF;
 END;
 $$;
 
@@ -1580,146 +2179,142 @@ $$;
 
 
 --
--- Name: trigger_campaign_state_transition(); Type: FUNCTION; Schema: public; Owner: -
+-- Name: trigger_domain_validation_update(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-CREATE FUNCTION public.trigger_campaign_state_transition() RETURNS trigger
-    LANGUAGE plpgsql
+CREATE FUNCTION public.trigger_domain_validation_update() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
     AS $$
 DECLARE
-    valid_transition BOOLEAN := FALSE;
-    state_change_data JSONB;
-    current_user_id UUID;
+    v_campaign_id UUID := NEW.campaign_id;
+    -- DNS stats
+    dns_total INT; dns_completed INT; dns_ok INT; dns_error INT; dns_timeout INT;
+    -- HTTP stats
+    http_total INT; http_completed INT; http_ok INT; http_error INT; http_timeout INT;
+    v_current_phase phase_type_enum;
+    advance_to phase_type_enum;
+    v_progress NUMERIC(5,2);
+    v_total INT; v_processed INT; v_success INT; v_failed INT;
 BEGIN
-    -- Get current user from session context
-    current_user_id := COALESCE(
-        current_setting('app.current_user_id', true)::UUID,
-        NEW.user_id  -- Fixed: changed from created_by to user_id
-    );
+    -- Only act when relevant status columns changed
+    IF (OLD.dns_status IS DISTINCT FROM NEW.dns_status) OR (OLD.http_status IS DISTINCT FROM NEW.http_status) THEN
+        -- Aggregate DNS
+        SELECT COUNT(*),
+               COUNT(*) FILTER (WHERE dns_status <> 'pending'),
+               COUNT(*) FILTER (WHERE dns_status = 'ok'),
+               COUNT(*) FILTER (WHERE dns_status = 'error'),
+               COUNT(*) FILTER (WHERE dns_status = 'timeout')
+          INTO dns_total, dns_completed, dns_ok, dns_error, dns_timeout
+          FROM generated_domains WHERE campaign_id = v_campaign_id;
 
-    -- Only process if business_status actually changed
-    IF OLD.business_status IS DISTINCT FROM NEW.business_status THEN
+        -- Aggregate HTTP
+        SELECT COUNT(*),
+               COUNT(*) FILTER (WHERE http_status <> 'pending'),
+               COUNT(*) FILTER (WHERE http_status = 'ok'),
+               COUNT(*) FILTER (WHERE http_status = 'error'),
+               COUNT(*) FILTER (WHERE http_status = 'timeout')
+          INTO http_total, http_completed, http_ok, http_error, http_timeout
+          FROM generated_domains WHERE campaign_id = v_campaign_id;
 
-        -- Validate state transitions
-        valid_transition := CASE
-            WHEN OLD.business_status = 'draft' AND NEW.business_status IN ('running', 'deleted') THEN TRUE
-            WHEN OLD.business_status = 'running' AND NEW.business_status IN ('paused', 'completed', 'failed', 'cancelled') THEN TRUE
-            WHEN OLD.business_status = 'paused' AND NEW.business_status IN ('running', 'cancelled', 'completed') THEN TRUE
-            WHEN OLD.business_status = 'failed' AND NEW.business_status IN ('running', 'cancelled') THEN TRUE
-            WHEN OLD.business_status = 'completed' AND NEW.business_status = 'archived' THEN TRUE
-            WHEN OLD.business_status = 'cancelled' AND NEW.business_status = 'archived' THEN TRUE
-            ELSE FALSE
-        END;
+        -- Lock + read current phase
+        SELECT current_phase INTO v_current_phase FROM lead_generation_campaigns WHERE id = v_campaign_id FOR UPDATE;
 
-        -- Reject invalid transitions
-        IF NOT valid_transition THEN
-            RAISE EXCEPTION 'Invalid campaign state transition from % to %', OLD.business_status, NEW.business_status;
+        advance_to := NULL;
+
+        -- Compute metrics based on current phase
+        IF v_current_phase = 'dns_validation' THEN
+            v_total := dns_total;
+            v_processed := dns_completed;
+            v_success := dns_ok;
+            v_failed := dns_error + dns_timeout;
+            IF dns_total > 0 THEN
+                v_progress := (dns_completed::NUMERIC / dns_total) * 100;
+            ELSE
+                v_progress := 0;
+            END IF;
+            IF dns_total > 0 AND dns_completed = dns_total THEN
+                advance_to := 'http_keyword_validation';
+            END IF;
+        ELSIF v_current_phase = 'http_keyword_validation' THEN
+            v_total := http_total;
+            v_processed := http_completed;
+            v_success := http_ok;
+            v_failed := http_error + http_timeout;
+            IF http_total > 0 THEN
+                v_progress := (http_completed::NUMERIC / http_total) * 100;
+            ELSE
+                v_progress := 0;
+            END IF;
+            IF http_total > 0 AND http_completed = http_total THEN
+                advance_to := 'analysis';
+            END IF;
+        ELSE
+            -- For other phases (domain_generation, analysis) we don't update metrics here
+            v_total := NULL; v_processed := NULL; v_success := NULL; v_failed := NULL; v_progress := NULL;
         END IF;
 
-        -- Prepare state change data
-        state_change_data := jsonb_build_object(
-            'campaign_id', NEW.id,
-            'old_status', OLD.business_status,
-            'new_status', NEW.business_status,
-            'current_phase', NEW.current_phase,
-            'transition_timestamp', NOW(),
-            'triggered_by', current_user_id
-        );
-
-        -- Log state transition
-        INSERT INTO campaign_state_transitions (
-            campaign_id,
-            from_status,
-            to_status,
-            triggered_by,
-            trigger_reason,
-            metadata
-        ) VALUES (
-            NEW.id,
-            OLD.business_status,
-            NEW.business_status,
-            current_user_id,
-            COALESCE(current_setting('app.state_change_reason', true), 'Manual update'),
-            state_change_data
-        );
-
-        -- Create campaign snapshot
-        INSERT INTO campaign_snapshots (
-            campaign_id,
-            snapshot_data,
-            snapshot_reason
-        ) VALUES (
-            NEW.id,
-            to_jsonb(NEW),
-            'State transition to ' || NEW.business_status
-        );
+        UPDATE lead_generation_campaigns lgc
+           SET current_phase = COALESCE(advance_to, lgc.current_phase),
+               total_items = COALESCE(v_total, lgc.total_items),
+               processed_items = COALESCE(v_processed, lgc.processed_items),
+               successful_items = COALESCE(v_success, lgc.successful_items),
+               failed_items = COALESCE(v_failed, lgc.failed_items),
+               progress_percentage = COALESCE(v_progress, lgc.progress_percentage),
+               updated_at = NOW()
+         WHERE lgc.id = v_campaign_id;
     END IF;
-
-    -- Handle phase transitions
-    IF OLD.current_phase IS DISTINCT FROM NEW.current_phase THEN
-        -- Log phase transition to campaign_state_events with correct column names
-        INSERT INTO campaign_state_events (
-            campaign_id,
-            event_type,
-            source_state,
-            target_state,
-            reason,
-            triggered_by,                    -- ✅ Fixed: use triggered_by instead of user_id
-            event_data,
-            operation_context,               -- ✅ Fixed: include required operation_context
-            user_id                          -- ✅ Keep user_id for backward compatibility
-        ) VALUES (
-            NEW.id,
-            'phase_transition',
-            OLD.current_phase,
-            NEW.current_phase,
-            'Phase transition triggered by campaign update',
-            COALESCE(current_user_id::text, 'system'),  -- ✅ Fixed: ensure NOT NULL and convert to text
-            jsonb_build_object(
-                'old_phase', OLD.current_phase,
-                'new_phase', NEW.current_phase,
-                'timestamp', NOW()
-            ),
-            jsonb_build_object(                -- ✅ Fixed: provide operation_context
-                'trigger_type', 'automatic',
-                'source', 'campaign_update',
-                'user_id', current_user_id,
-                'session_id', current_setting('app.session_id', true)
-            ),
-            current_user_id                    -- ✅ Keep user_id populated
-        );
-
-        -- Update phase completion status
-        IF OLD.current_phase IS NOT NULL THEN
-            UPDATE campaign_phases
-            SET
-                status = 'completed',
-                completed_at = NOW(),
-                updated_at = NOW()
-            WHERE campaign_id = NEW.id AND phase_type = OLD.current_phase;
-        END IF;
-
-        -- ✅ FIXED: Start new phase with correct enum value
-        IF NEW.current_phase IS NOT NULL THEN
-            UPDATE campaign_phases
-            SET
-                status = 'in_progress',              -- ✅ Fixed: use 'in_progress' instead of 'running'
-                started_at = COALESCE(started_at, NOW()),
-                updated_at = NOW()
-            WHERE campaign_id = NEW.id AND phase_type = NEW.current_phase;
-        END IF;
-    END IF;
-
     RETURN NEW;
 END;
 $$;
 
 
 --
--- Name: FUNCTION trigger_campaign_state_transition(); Type: COMMENT; Schema: public; Owner: -
+-- Name: trigger_event_store_sequence(); Type: FUNCTION; Schema: public; Owner: -
 --
 
-COMMENT ON FUNCTION public.trigger_campaign_state_transition() IS 'Fixed to use in_progress instead of running for phase_status_enum compatibility';
+CREATE FUNCTION public.trigger_event_store_sequence() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+DECLARE
+    next_sequence BIGINT;
+BEGIN
+    -- Auto-generate sequence number if not provided
+    IF NEW.sequence_number IS NULL THEN
+        SELECT COALESCE(MAX(sequence_number), 0) + 1 
+        INTO next_sequence
+        FROM event_store 
+        WHERE aggregate_id = NEW.aggregate_id;
+        
+        NEW.sequence_number = next_sequence;
+    END IF;
+
+    -- Auto-generate aggregate version if not provided
+    IF NEW.aggregate_version IS NULL THEN
+        NEW.aggregate_version = NEW.sequence_number;
+    END IF;
+
+    -- Log event creation
+    INSERT INTO audit_logs (
+        action_type,
+        resource_type,
+        resource_id,
+        new_data,
+        additional_data
+    ) VALUES (
+        'event_created',
+        'event_store',
+        NEW.event_id,
+        to_jsonb(NEW),
+        jsonb_build_object(
+            'event_type', NEW.event_type,
+            'aggregate_type', NEW.aggregate_type,
+            'sequence_number', NEW.sequence_number
+        )
+    );
+
+    RETURN NEW;
+END;
+$$;
 
 
 --
@@ -1819,6 +2414,21 @@ $$;
 
 
 --
+-- Name: trigger_sync_campaign_from_phases(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.trigger_sync_campaign_from_phases() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    -- Sync the campaign whenever a phase status changes
+    PERFORM sync_campaign_from_phases(NEW.campaign_id);
+    RETURN NEW;
+END;
+$$;
+
+
+--
 -- Name: trigger_update_timestamp(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1828,6 +2438,75 @@ CREATE FUNCTION public.trigger_update_timestamp() RETURNS trigger
 BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: trigger_user_session_management(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.trigger_user_session_management() RETURNS trigger
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+    -- Handle session creation
+    IF TG_OP = 'INSERT' THEN
+        -- Log session creation
+        INSERT INTO auth_audit_logs (
+            user_id,
+            action_type,
+            ip_address,
+            user_agent,
+            additional_data
+        ) VALUES (
+            NEW.user_id,
+            'session_created',
+            NEW.ip_address,
+            NEW.user_agent,
+            jsonb_build_object(
+                'session_id', NEW.id,
+                'expires_at', NEW.expires_at
+            )
+        );
+
+        -- Update user last login
+        UPDATE users 
+        SET 
+            last_login_at = NOW(),
+            last_login_ip = NEW.ip_address,
+            updated_at = NOW()
+        WHERE id = NEW.user_id;
+
+        RETURN NEW;
+    END IF;
+
+    -- Handle session updates
+    IF TG_OP = 'UPDATE' THEN
+        -- Log session deactivation
+        IF OLD.is_active = TRUE AND NEW.is_active = FALSE THEN
+            INSERT INTO auth_audit_logs (
+                user_id,
+                action_type,
+                ip_address,
+                user_agent,
+                additional_data
+            ) VALUES (
+                NEW.user_id,
+                'session_deactivated',
+                COALESCE(NEW.ip_address, OLD.ip_address),
+                COALESCE(NEW.user_agent, OLD.user_agent),
+                jsonb_build_object(
+                    'session_id', NEW.id,
+                    'deactivation_reason', COALESCE(current_setting('app.session_deactivation_reason', true), 'Manual')
+                )
+            );
+        END IF;
+
+        RETURN NEW;
+    END IF;
+
+    RETURN NULL;
 END;
 $$;
 
@@ -2375,6 +3054,65 @@ CREATE TABLE public.campaign_access_grants (
 
 
 --
+-- Name: campaign_domain_counters; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.campaign_domain_counters (
+    campaign_id uuid NOT NULL,
+    total_domains bigint DEFAULT 0 NOT NULL,
+    dns_pending bigint DEFAULT 0 NOT NULL,
+    dns_ok bigint DEFAULT 0 NOT NULL,
+    dns_error bigint DEFAULT 0 NOT NULL,
+    dns_timeout bigint DEFAULT 0 NOT NULL,
+    http_pending bigint DEFAULT 0 NOT NULL,
+    http_ok bigint DEFAULT 0 NOT NULL,
+    http_error bigint DEFAULT 0 NOT NULL,
+    http_timeout bigint DEFAULT 0 NOT NULL,
+    lead_pending bigint DEFAULT 0 NOT NULL,
+    lead_match bigint DEFAULT 0 NOT NULL,
+    lead_no_match bigint DEFAULT 0 NOT NULL,
+    lead_error bigint DEFAULT 0 NOT NULL,
+    lead_timeout bigint DEFAULT 0 NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: campaign_events; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.campaign_events (
+    event_id uuid DEFAULT gen_random_uuid() NOT NULL,
+    campaign_id uuid NOT NULL,
+    event_type text NOT NULL,
+    event_data jsonb DEFAULT '{}'::jsonb NOT NULL,
+    sequence_number bigint NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    metadata jsonb DEFAULT '{}'::jsonb NOT NULL
+);
+
+
+--
+-- Name: campaign_events_sequence_number_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.campaign_events_sequence_number_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: campaign_events_sequence_number_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.campaign_events_sequence_number_seq OWNED BY public.campaign_events.sequence_number;
+
+
+--
 -- Name: campaign_jobs; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2440,6 +3178,24 @@ CREATE TABLE public.campaign_phases (
 
 
 --
+-- Name: campaign_scoring_profile; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.campaign_scoring_profile (
+    campaign_id uuid NOT NULL,
+    scoring_profile_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE campaign_scoring_profile; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.campaign_scoring_profile IS 'Association of a campaign to a single scoring profile';
+
+
+--
 -- Name: campaign_state_events; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -2458,16 +3214,8 @@ CREATE TABLE public.campaign_state_events (
     persisted_at timestamp with time zone DEFAULT now() NOT NULL,
     processing_status character varying(50) DEFAULT 'pending'::character varying NOT NULL,
     processing_error text,
-    correlation_id uuid,
-    user_id uuid
+    correlation_id uuid
 );
-
-
---
--- Name: COLUMN campaign_state_events.user_id; Type: COMMENT; Schema: public; Owner: -
---
-
-COMMENT ON COLUMN public.campaign_state_events.user_id IS 'User who triggered the campaign state change (optional, NULL for system-generated events)';
 
 
 --
@@ -2523,6 +3271,22 @@ CREATE TABLE public.campaign_state_transitions (
     initiated_at timestamp with time zone DEFAULT now() NOT NULL,
     completed_at timestamp with time zone,
     duration_ms integer
+);
+
+
+--
+-- Name: campaign_states; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.campaign_states (
+    campaign_id uuid NOT NULL,
+    current_state public.campaign_state_enum DEFAULT 'draft'::public.campaign_state_enum NOT NULL,
+    mode public.campaign_mode_enum NOT NULL,
+    configuration jsonb DEFAULT '{}'::jsonb NOT NULL,
+    version integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT check_campaign_states_version_positive CHECK ((version > 0))
 );
 
 
@@ -2930,10 +3694,106 @@ CREATE TABLE public.generated_domains (
     lead_status public.domain_lead_status_enum DEFAULT 'pending'::public.domain_lead_status_enum,
     lead_score numeric(5,2) DEFAULT 0.0,
     last_validated_at timestamp with time zone,
+    dns_reason text,
+    http_reason text,
+    relevance_score numeric(6,3),
+    domain_score numeric(6,3),
+    feature_vector jsonb,
+    is_parked boolean,
+    parked_confidence numeric(5,3),
+    contacts jsonb,
+    secondary_pages_examined smallint DEFAULT 0 NOT NULL,
+    microcrawl_exhausted boolean DEFAULT false NOT NULL,
+    content_lang text,
+    last_http_fetched_at timestamp with time zone,
     CONSTRAINT generated_domains_http_status_code_check CHECK (((http_status_code >= 100) AND (http_status_code <= 599))),
     CONSTRAINT generated_domains_lead_score_check CHECK (((lead_score >= (0)::numeric) AND (lead_score <= (100)::numeric))),
     CONSTRAINT generated_domains_offset_index_check CHECK ((offset_index >= 0))
 );
+
+
+--
+-- Name: COLUMN generated_domains.dns_reason; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.generated_domains.dns_reason IS 'Human-readable reason for latest DNS validation status (e.g., NXDOMAIN, SERVFAIL, TIMEOUT, BAD_RESPONSE)';
+
+
+--
+-- Name: COLUMN generated_domains.http_reason; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.generated_domains.http_reason IS 'Human-readable reason for latest HTTP validation status (e.g., CONNECT_ERROR, TLS_ERROR, TIMEOUT, NON_200, BODY_MISMATCH)';
+
+
+--
+-- Name: COLUMN generated_domains.relevance_score; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.generated_domains.relevance_score IS 'Intermediate relevance score (0-100 scaled)';
+
+
+--
+-- Name: COLUMN generated_domains.domain_score; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.generated_domains.domain_score IS 'Final composite score (0-100)';
+
+
+--
+-- Name: COLUMN generated_domains.feature_vector; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.generated_domains.feature_vector IS 'Normalized enrichment signals for scoring/rescore';
+
+
+--
+-- Name: COLUMN generated_domains.is_parked; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.generated_domains.is_parked IS 'Parked domain classification (NULL unknown)';
+
+
+--
+-- Name: COLUMN generated_domains.parked_confidence; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.generated_domains.parked_confidence IS 'Confidence 0..1 for parked classification';
+
+
+--
+-- Name: COLUMN generated_domains.contacts; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.generated_domains.contacts IS 'Contact data array (email/phone/etc)';
+
+
+--
+-- Name: COLUMN generated_domains.secondary_pages_examined; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.generated_domains.secondary_pages_examined IS 'Count of micro-crawl secondary pages fetched';
+
+
+--
+-- Name: COLUMN generated_domains.microcrawl_exhausted; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.generated_domains.microcrawl_exhausted IS 'TRUE if crawl aborted due to limits/budget';
+
+
+--
+-- Name: COLUMN generated_domains.content_lang; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.generated_domains.content_lang IS 'Primary language code';
+
+
+--
+-- Name: COLUMN generated_domains.last_http_fetched_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.generated_domains.last_http_fetched_at IS 'Timestamp of last successful HTTP fetch/enrichment';
 
 
 --
@@ -3016,7 +3876,6 @@ CREATE TABLE public.lead_generation_campaigns (
     overall_progress numeric(5,2),
     is_full_sequence_mode boolean DEFAULT false NOT NULL,
     auto_advance_phases boolean DEFAULT true NOT NULL,
-    domains_data jsonb,
     dns_results jsonb,
     http_results jsonb,
     analysis_results jsonb,
@@ -3034,6 +3893,8 @@ CREATE TABLE public.lead_generation_campaigns (
     phase_status public.phase_status_enum,
     dns_config jsonb,
     http_config jsonb,
+    state_version integer DEFAULT 1 NOT NULL,
+    state_data jsonb DEFAULT '{}'::jsonb NOT NULL,
     CONSTRAINT lead_generation_campaigns_completed_phases_check CHECK (((completed_phases >= 0) AND (completed_phases <= 4))),
     CONSTRAINT lead_generation_campaigns_failed_items_check CHECK ((failed_items >= 0)),
     CONSTRAINT lead_generation_campaigns_overall_progress_check CHECK (((overall_progress >= (0)::numeric) AND (overall_progress <= (100)::numeric))),
@@ -3044,6 +3905,27 @@ CREATE TABLE public.lead_generation_campaigns (
     CONSTRAINT valid_progress_items CHECK (((processed_items IS NULL) OR (total_items IS NULL) OR (processed_items <= total_items))),
     CONSTRAINT valid_success_failure_items CHECK (((successful_items IS NULL) OR (failed_items IS NULL) OR (processed_items IS NULL) OR ((successful_items + failed_items) <= processed_items)))
 );
+
+
+--
+-- Name: TABLE lead_generation_campaigns; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.lead_generation_campaigns IS 'State transitions now managed by application layer with state.CampaignStateMachine';
+
+
+--
+-- Name: COLUMN lead_generation_campaigns.current_phase; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.lead_generation_campaigns.current_phase IS 'COMPUTED: Derived from campaign_phases table. Updated automatically via sync_campaign_from_phases().';
+
+
+--
+-- Name: COLUMN lead_generation_campaigns.phase_status; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.lead_generation_campaigns.phase_status IS 'COMPUTED: Derived from campaign_phases table. Updated automatically via sync_campaign_from_phases().';
 
 
 --
@@ -3098,6 +3980,22 @@ ALTER SEQUENCE public.pagination_performance_metrics_id_seq OWNED BY public.pagi
 
 
 --
+-- Name: password_reset_tokens; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.password_reset_tokens (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    user_id uuid NOT NULL,
+    token_hash character varying(255) NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    used_at timestamp with time zone,
+    ip_address inet,
+    user_agent text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: personas; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3114,6 +4012,64 @@ CREATE TABLE public.personas (
     last_tested timestamp with time zone,
     last_error text,
     tags text[]
+);
+
+
+--
+-- Name: phase_configurations; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.phase_configurations (
+    campaign_id uuid NOT NULL,
+    phase text NOT NULL,
+    config jsonb DEFAULT '{}'::jsonb NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: phase_executions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.phase_executions (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    campaign_id uuid NOT NULL,
+    phase_type public.phase_type_enum NOT NULL,
+    status public.execution_status_enum DEFAULT 'not_started'::public.execution_status_enum NOT NULL,
+    started_at timestamp with time zone,
+    completed_at timestamp with time zone,
+    paused_at timestamp with time zone,
+    failed_at timestamp with time zone,
+    progress_percentage numeric(5,2) DEFAULT 0.0,
+    total_items bigint DEFAULT 0,
+    processed_items bigint DEFAULT 0,
+    successful_items bigint DEFAULT 0,
+    failed_items bigint DEFAULT 0,
+    configuration jsonb,
+    error_details jsonb,
+    metrics jsonb,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT check_phase_executions_items_consistency CHECK ((processed_items <= total_items)),
+    CONSTRAINT check_phase_executions_items_non_negative CHECK (((total_items >= 0) AND (processed_items >= 0) AND (successful_items >= 0) AND (failed_items >= 0))),
+    CONSTRAINT check_phase_executions_progress_range CHECK (((progress_percentage >= 0.0) AND (progress_percentage <= 100.0)))
+);
+
+
+--
+-- Name: phase_runs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.phase_runs (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    campaign_id uuid NOT NULL,
+    phase_type text NOT NULL,
+    started_at timestamp with time zone DEFAULT now() NOT NULL,
+    completed_at timestamp with time zone,
+    success boolean,
+    error text,
+    duration_ms bigint,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -3237,6 +4193,39 @@ CREATE TABLE public.query_performance_metrics (
 
 
 --
+-- Name: rate_limits; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.rate_limits (
+    id bigint NOT NULL,
+    identifier character varying(255) NOT NULL,
+    action character varying(100) NOT NULL,
+    attempts integer DEFAULT 1 NOT NULL,
+    window_start timestamp with time zone NOT NULL,
+    blocked_until timestamp with time zone
+);
+
+
+--
+-- Name: rate_limits_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.rate_limits_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: rate_limits_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.rate_limits_id_seq OWNED BY public.rate_limits.id;
+
+
+--
 -- Name: resource_utilization_metrics; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3271,6 +4260,36 @@ CREATE TABLE public.schema_migrations (
     version bigint NOT NULL,
     dirty boolean NOT NULL
 );
+
+
+--
+-- Name: scoring_profiles; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.scoring_profiles (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    name text NOT NULL,
+    description text,
+    weights jsonb NOT NULL,
+    version integer DEFAULT 1 NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    parked_penalty_factor double precision DEFAULT 0.5
+);
+
+
+--
+-- Name: TABLE scoring_profiles; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.scoring_profiles IS 'Scoring weight profiles (JSON weights object validated in application)';
+
+
+--
+-- Name: COLUMN scoring_profiles.parked_penalty_factor; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.scoring_profiles.parked_penalty_factor IS 'Multiplicative factor applied to relevance score when parked penalty conditions met (range 0..1, default 0.5)';
 
 
 --
@@ -3444,40 +4463,6 @@ CREATE TABLE public.service_capacity_metrics (
 
 
 --
--- Name: service_contracts; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.service_contracts (
-    id integer NOT NULL,
-    service_name character varying(255) NOT NULL,
-    version character varying(50) NOT NULL,
-    contract jsonb NOT NULL,
-    created_at timestamp with time zone DEFAULT now(),
-    updated_at timestamp with time zone DEFAULT now()
-);
-
-
---
--- Name: service_contracts_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.service_contracts_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: service_contracts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.service_contracts_id_seq OWNED BY public.service_contracts.id;
-
-
---
 -- Name: service_dependencies; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3522,6 +4507,26 @@ CREATE TABLE public.service_dependencies (
 
 
 --
+-- Name: sessions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.sessions (
+    id character varying(255) NOT NULL,
+    user_id uuid NOT NULL,
+    ip_address inet,
+    user_agent text,
+    user_agent_hash character varying(64),
+    session_fingerprint character varying(64),
+    browser_fingerprint character varying(64),
+    screen_resolution character varying(20),
+    is_active boolean DEFAULT true NOT NULL,
+    expires_at timestamp with time zone NOT NULL,
+    last_activity_at timestamp with time zone DEFAULT now() NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
 -- Name: trigger_monitoring; Type: VIEW; Schema: public; Owner: -
 --
 
@@ -3547,42 +4552,37 @@ COMMENT ON VIEW public.trigger_monitoring IS 'Monitor trigger status and configu
 
 
 --
--- Name: worker_coordination; Type: TABLE; Schema: public; Owner: -
+-- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.worker_coordination (
-    id integer NOT NULL,
-    worker_id character varying(255) NOT NULL,
-    campaign_id character varying(255),
-    worker_type character varying(100) NOT NULL,
-    status character varying(50) DEFAULT 'inactive'::character varying NOT NULL,
-    metadata jsonb,
-    last_operation character varying(255),
-    registered_at timestamp with time zone DEFAULT now() NOT NULL,
-    last_heartbeat timestamp with time zone DEFAULT now() NOT NULL,
-    updated_at timestamp with time zone DEFAULT now(),
-    created_at timestamp with time zone DEFAULT now()
+CREATE TABLE public.users (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    email character varying(255) NOT NULL,
+    email_verified boolean DEFAULT false NOT NULL,
+    email_verification_token character varying(255),
+    email_verification_expires_at timestamp with time zone,
+    password_hash text NOT NULL,
+    password_pepper_version integer DEFAULT 1 NOT NULL,
+    first_name character varying(100) NOT NULL,
+    last_name character varying(100) NOT NULL,
+    avatar_url text,
+    is_active boolean DEFAULT true NOT NULL,
+    is_locked boolean DEFAULT false NOT NULL,
+    failed_login_attempts integer DEFAULT 0 NOT NULL,
+    locked_until timestamp with time zone,
+    last_login_at timestamp with time zone,
+    last_login_ip inet,
+    password_changed_at timestamp with time zone DEFAULT now() NOT NULL,
+    must_change_password boolean DEFAULT false NOT NULL,
+    mfa_enabled boolean DEFAULT false NOT NULL,
+    mfa_secret_encrypted bytea,
+    mfa_backup_codes_encrypted bytea,
+    mfa_last_used_at timestamp with time zone,
+    encrypted_fields jsonb,
+    security_questions_encrypted bytea,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
-
-
---
--- Name: worker_coordination_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.worker_coordination_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: worker_coordination_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.worker_coordination_id_seq OWNED BY public.worker_coordination.id;
 
 
 --
@@ -3604,6 +4604,13 @@ ALTER TABLE ONLY public.auth_audit_logs ALTER COLUMN id SET DEFAULT nextval('pub
 --
 
 ALTER TABLE ONLY public.cache_metrics ALTER COLUMN id SET DEFAULT nextval('public.cache_metrics_id_seq'::regclass);
+
+
+--
+-- Name: campaign_events sequence_number; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.campaign_events ALTER COLUMN sequence_number SET DEFAULT nextval('public.campaign_events_sequence_number_seq'::regclass);
 
 
 --
@@ -3635,17 +4642,10 @@ ALTER TABLE ONLY public.pagination_performance_metrics ALTER COLUMN id SET DEFAU
 
 
 --
--- Name: service_contracts id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: rate_limits id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.service_contracts ALTER COLUMN id SET DEFAULT nextval('public.service_contracts_id_seq'::regclass);
-
-
---
--- Name: worker_coordination id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.worker_coordination ALTER COLUMN id SET DEFAULT nextval('public.worker_coordination_id_seq'::regclass);
+ALTER TABLE ONLY public.rate_limits ALTER COLUMN id SET DEFAULT nextval('public.rate_limits_id_seq'::regclass);
 
 
 --
@@ -3816,6 +4816,22 @@ ALTER TABLE ONLY public.campaign_access_grants
 
 
 --
+-- Name: campaign_domain_counters campaign_domain_counters_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.campaign_domain_counters
+    ADD CONSTRAINT campaign_domain_counters_pkey PRIMARY KEY (campaign_id);
+
+
+--
+-- Name: campaign_events campaign_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.campaign_events
+    ADD CONSTRAINT campaign_events_pkey PRIMARY KEY (event_id);
+
+
+--
 -- Name: campaign_jobs campaign_jobs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3848,6 +4864,14 @@ ALTER TABLE ONLY public.campaign_phases
 
 
 --
+-- Name: campaign_scoring_profile campaign_scoring_profile_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.campaign_scoring_profile
+    ADD CONSTRAINT campaign_scoring_profile_pkey PRIMARY KEY (campaign_id);
+
+
+--
 -- Name: campaign_state_events campaign_state_events_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -3869,6 +4893,14 @@ ALTER TABLE ONLY public.campaign_state_snapshots
 
 ALTER TABLE ONLY public.campaign_state_transitions
     ADD CONSTRAINT campaign_state_transitions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: campaign_states campaign_states_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.campaign_states
+    ADD CONSTRAINT campaign_states_pkey PRIMARY KEY (campaign_id);
 
 
 --
@@ -4055,6 +5087,22 @@ ALTER TABLE ONLY public.pagination_performance_metrics
 
 
 --
+-- Name: password_reset_tokens password_reset_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.password_reset_tokens
+    ADD CONSTRAINT password_reset_tokens_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: password_reset_tokens password_reset_tokens_token_hash_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.password_reset_tokens
+    ADD CONSTRAINT password_reset_tokens_token_hash_key UNIQUE (token_hash);
+
+
+--
 -- Name: personas personas_name_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4068,6 +5116,30 @@ ALTER TABLE ONLY public.personas
 
 ALTER TABLE ONLY public.personas
     ADD CONSTRAINT personas_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: phase_configurations phase_configurations_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.phase_configurations
+    ADD CONSTRAINT phase_configurations_pkey PRIMARY KEY (campaign_id, phase);
+
+
+--
+-- Name: phase_executions phase_executions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.phase_executions
+    ADD CONSTRAINT phase_executions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: phase_runs phase_runs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.phase_runs
+    ADD CONSTRAINT phase_runs_pkey PRIMARY KEY (id);
 
 
 --
@@ -4119,6 +5191,22 @@ ALTER TABLE ONLY public.query_performance_metrics
 
 
 --
+-- Name: rate_limits rate_limits_identifier_action_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.rate_limits
+    ADD CONSTRAINT rate_limits_identifier_action_key UNIQUE (identifier, action);
+
+
+--
+-- Name: rate_limits rate_limits_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.rate_limits
+    ADD CONSTRAINT rate_limits_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: resource_utilization_metrics resource_utilization_metrics_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4132,6 +5220,22 @@ ALTER TABLE ONLY public.resource_utilization_metrics
 
 ALTER TABLE ONLY public.schema_migrations
     ADD CONSTRAINT schema_migrations_pkey PRIMARY KEY (version);
+
+
+--
+-- Name: scoring_profiles scoring_profiles_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.scoring_profiles
+    ADD CONSTRAINT scoring_profiles_name_key UNIQUE (name);
+
+
+--
+-- Name: scoring_profiles scoring_profiles_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.scoring_profiles
+    ADD CONSTRAINT scoring_profiles_pkey PRIMARY KEY (id);
 
 
 --
@@ -4159,22 +5263,6 @@ ALTER TABLE ONLY public.service_capacity_metrics
 
 
 --
--- Name: service_contracts service_contracts_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.service_contracts
-    ADD CONSTRAINT service_contracts_pkey PRIMARY KEY (id);
-
-
---
--- Name: service_contracts service_contracts_service_name_version_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.service_contracts
-    ADD CONSTRAINT service_contracts_service_name_version_key UNIQUE (service_name, version);
-
-
---
 -- Name: service_dependencies service_dependencies_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4191,19 +5279,42 @@ ALTER TABLE ONLY public.service_dependencies
 
 
 --
--- Name: worker_coordination worker_coordination_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.worker_coordination
-    ADD CONSTRAINT worker_coordination_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.sessions
+    ADD CONSTRAINT sessions_pkey PRIMARY KEY (id);
 
 
 --
--- Name: worker_coordination worker_coordination_worker_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: phase_executions unique_campaign_phase; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.worker_coordination
-    ADD CONSTRAINT worker_coordination_worker_id_key UNIQUE (worker_id);
+ALTER TABLE ONLY public.phase_executions
+    ADD CONSTRAINT unique_campaign_phase UNIQUE (campaign_id, phase_type);
+
+
+--
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_email_key UNIQUE (email);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: CONSTRAINT users_pkey ON users; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT users_pkey ON public.users IS 'Primary key for users table - referenced by most other tables for user tracking';
 
 
 --
@@ -4680,6 +5791,41 @@ CREATE INDEX idx_audit_logs_user_timeline ON public.audit_logs USING btree (user
 --
 
 CREATE INDEX idx_audit_logs_user_timestamp ON public.audit_logs USING btree (user_id, "timestamp" DESC) WHERE (user_id IS NOT NULL);
+
+
+--
+-- Name: idx_auth_audit_logs_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_auth_audit_logs_created_at ON public.auth_audit_logs USING btree (created_at);
+
+
+--
+-- Name: idx_auth_audit_logs_event_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_auth_audit_logs_event_type ON public.auth_audit_logs USING btree (event_type);
+
+
+--
+-- Name: idx_auth_audit_logs_risk_score; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_auth_audit_logs_risk_score ON public.auth_audit_logs USING btree (risk_score) WHERE (risk_score > 50);
+
+
+--
+-- Name: idx_auth_audit_logs_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_auth_audit_logs_user_id ON public.auth_audit_logs USING btree (user_id);
+
+
+--
+-- Name: idx_auth_audit_security; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_auth_audit_security ON public.auth_audit_logs USING btree (user_id, event_type, created_at DESC, ip_address) WHERE ((event_type)::text = ANY ((ARRAY['login_failed'::character varying, 'suspicious_activity'::character varying])::text[]));
 
 
 --
@@ -5348,6 +6494,20 @@ CREATE INDEX idx_campaign_domains_join ON public.generated_domains USING btree (
 
 
 --
+-- Name: idx_campaign_events_campaign_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_campaign_events_campaign_id ON public.campaign_events USING btree (campaign_id);
+
+
+--
+-- Name: idx_campaign_events_sequence; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_campaign_events_sequence ON public.campaign_events USING btree (sequence_number);
+
+
+--
 -- Name: idx_campaign_jobs_business_status; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -5663,13 +6823,6 @@ CREATE INDEX idx_campaign_state_events_source_target ON public.campaign_state_ev
 
 
 --
--- Name: idx_campaign_state_events_user_id; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_campaign_state_events_user_id ON public.campaign_state_events USING btree (user_id) WHERE (user_id IS NOT NULL);
-
-
---
 -- Name: idx_campaign_state_snapshots_campaign_id; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -5782,6 +6935,34 @@ CREATE INDEX idx_campaign_state_transitions_validation_errors_gin ON public.camp
 
 
 --
+-- Name: idx_campaign_states_configuration_gin; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_campaign_states_configuration_gin ON public.campaign_states USING gin (configuration);
+
+
+--
+-- Name: idx_campaign_states_current_state; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_campaign_states_current_state ON public.campaign_states USING btree (current_state);
+
+
+--
+-- Name: idx_campaign_states_mode; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_campaign_states_mode ON public.campaign_states USING btree (mode);
+
+
+--
+-- Name: idx_campaign_states_updated_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_campaign_states_updated_at ON public.campaign_states USING btree (updated_at);
+
+
+--
 -- Name: idx_campaigns_business_status; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -5793,6 +6974,13 @@ CREATE INDEX idx_campaigns_business_status ON public.lead_generation_campaigns U
 --
 
 CREATE INDEX idx_campaigns_completion_analytics ON public.lead_generation_campaigns USING btree (phase_status, completed_at, created_at) WHERE (completed_at IS NOT NULL);
+
+
+--
+-- Name: idx_campaigns_current_phase; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_campaigns_current_phase ON public.lead_generation_campaigns USING btree (current_phase);
 
 
 --
@@ -5835,6 +7023,20 @@ CREATE INDEX idx_campaigns_progress_percentage ON public.lead_generation_campaig
 --
 
 CREATE INDEX idx_campaigns_progress_tracking ON public.lead_generation_campaigns USING btree (id, current_phase, phase_status, total_items, processed_items);
+
+
+--
+-- Name: idx_campaigns_state_data; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_campaigns_state_data ON public.lead_generation_campaigns USING gin (state_data);
+
+
+--
+-- Name: idx_campaigns_state_version; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_campaigns_state_version ON public.lead_generation_campaigns USING btree (state_version);
 
 
 --
@@ -6790,6 +7992,13 @@ CREATE INDEX idx_expired_cache_cleanup ON public.cache_entries USING btree (expi
 
 
 --
+-- Name: idx_expired_sessions_cleanup; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_expired_sessions_cleanup ON public.sessions USING btree (expires_at) WHERE (is_active = true);
+
+
+--
 -- Name: idx_generated_domains_batch_validation; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6804,6 +8013,27 @@ CREATE INDEX idx_generated_domains_campaign_dns_status ON public.generated_domai
 
 
 --
+-- Name: idx_generated_domains_campaign_domain_score_desc; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_generated_domains_campaign_domain_score_desc ON public.generated_domains USING btree (campaign_id, domain_score DESC);
+
+
+--
+-- Name: idx_generated_domains_campaign_domain_unique; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE UNIQUE INDEX idx_generated_domains_campaign_domain_unique ON public.generated_domains USING btree (campaign_id, domain_name);
+
+
+--
+-- Name: idx_generated_domains_campaign_feature_vector_present; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_generated_domains_campaign_feature_vector_present ON public.generated_domains USING btree (campaign_id) WHERE (feature_vector IS NOT NULL);
+
+
+--
 -- Name: idx_generated_domains_campaign_http_status; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6815,6 +8045,13 @@ CREATE INDEX idx_generated_domains_campaign_http_status ON public.generated_doma
 --
 
 CREATE INDEX idx_generated_domains_campaign_id ON public.generated_domains USING btree (campaign_id);
+
+
+--
+-- Name: idx_generated_domains_campaign_last_http_fetched_at_desc; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_generated_domains_campaign_last_http_fetched_at_desc ON public.generated_domains USING btree (campaign_id, last_http_fetched_at DESC);
 
 
 --
@@ -6850,13 +8087,6 @@ CREATE INDEX idx_generated_domains_dns_status ON public.generated_domains USING 
 --
 
 CREATE INDEX idx_generated_domains_domain_name ON public.generated_domains USING btree (domain_name);
-
-
---
--- Name: idx_generated_domains_domain_name_unique; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE UNIQUE INDEX idx_generated_domains_domain_name_unique ON public.generated_domains USING btree (domain_name);
 
 
 --
@@ -7238,13 +8468,6 @@ CREATE INDEX idx_lead_generation_campaigns_dns_results_gin ON public.lead_genera
 
 
 --
--- Name: idx_lead_generation_campaigns_domains_data_gin; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_lead_generation_campaigns_domains_data_gin ON public.lead_generation_campaigns USING gin (domains_data) WHERE (domains_data IS NOT NULL);
-
-
---
 -- Name: idx_lead_generation_campaigns_http_results_gin; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -7385,6 +8608,27 @@ CREATE INDEX idx_pagination_performance_metrics_user_id ON public.pagination_per
 
 
 --
+-- Name: idx_password_reset_tokens_expires_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_password_reset_tokens_expires_at ON public.password_reset_tokens USING btree (expires_at);
+
+
+--
+-- Name: idx_password_reset_tokens_token_hash; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_password_reset_tokens_token_hash ON public.password_reset_tokens USING btree (token_hash);
+
+
+--
+-- Name: idx_password_reset_tokens_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_password_reset_tokens_user_id ON public.password_reset_tokens USING btree (user_id);
+
+
+--
 -- Name: idx_personas_availability; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -7459,6 +8703,76 @@ CREATE INDEX idx_personas_tags_gin ON public.personas USING gin (tags) WHERE (ta
 --
 
 CREATE INDEX idx_personas_updated_at ON public.personas USING btree (updated_at);
+
+
+--
+-- Name: idx_phase_configurations_campaign_phase; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_phase_configurations_campaign_phase ON public.phase_configurations USING btree (campaign_id, phase);
+
+
+--
+-- Name: idx_phase_executions_campaign_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_phase_executions_campaign_id ON public.phase_executions USING btree (campaign_id);
+
+
+--
+-- Name: idx_phase_executions_completed_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_phase_executions_completed_at ON public.phase_executions USING btree (completed_at) WHERE (completed_at IS NOT NULL);
+
+
+--
+-- Name: idx_phase_executions_configuration_gin; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_phase_executions_configuration_gin ON public.phase_executions USING gin (configuration) WHERE (configuration IS NOT NULL);
+
+
+--
+-- Name: idx_phase_executions_error_details_gin; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_phase_executions_error_details_gin ON public.phase_executions USING gin (error_details) WHERE (error_details IS NOT NULL);
+
+
+--
+-- Name: idx_phase_executions_metrics_gin; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_phase_executions_metrics_gin ON public.phase_executions USING gin (metrics) WHERE (metrics IS NOT NULL);
+
+
+--
+-- Name: idx_phase_executions_phase_type; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_phase_executions_phase_type ON public.phase_executions USING btree (phase_type);
+
+
+--
+-- Name: idx_phase_executions_started_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_phase_executions_started_at ON public.phase_executions USING btree (started_at) WHERE (started_at IS NOT NULL);
+
+
+--
+-- Name: idx_phase_executions_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_phase_executions_status ON public.phase_executions USING btree (status);
+
+
+--
+-- Name: idx_phase_runs_campaign_phase; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_phase_runs_campaign_phase ON public.phase_runs USING btree (campaign_id, phase_type);
 
 
 --
@@ -7823,6 +9137,34 @@ CREATE INDEX idx_query_performance_slow_queries ON public.query_performance_metr
 --
 
 CREATE INDEX idx_query_performance_trending ON public.query_performance_metrics USING btree (service_name, executed_at DESC, execution_time_ms);
+
+
+--
+-- Name: idx_rate_limits_blocked_until; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_rate_limits_blocked_until ON public.rate_limits USING btree (blocked_until) WHERE (blocked_until IS NOT NULL);
+
+
+--
+-- Name: idx_rate_limits_enforcement; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_rate_limits_enforcement ON public.rate_limits USING btree (identifier, action, blocked_until) WHERE (blocked_until IS NOT NULL);
+
+
+--
+-- Name: idx_rate_limits_identifier_action; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_rate_limits_identifier_action ON public.rate_limits USING btree (identifier, action);
+
+
+--
+-- Name: idx_rate_limits_window_start; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_rate_limits_window_start ON public.rate_limits USING btree (window_start);
 
 
 --
@@ -8197,13 +9539,6 @@ CREATE INDEX idx_service_capacity_metrics_service_type ON public.service_capacit
 
 
 --
--- Name: idx_service_contracts_name_version; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_service_contracts_name_version ON public.service_contracts USING btree (service_name, version);
-
-
---
 -- Name: idx_service_dependencies_active; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -8274,6 +9609,55 @@ CREATE INDEX idx_service_dependencies_target_service ON public.service_dependenc
 
 
 --
+-- Name: idx_sessions_cleanup_expired; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_sessions_cleanup_expired ON public.sessions USING btree (expires_at, is_active) WHERE (is_active = true);
+
+
+--
+-- Name: idx_sessions_expires_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_sessions_expires_at ON public.sessions USING btree (expires_at);
+
+
+--
+-- Name: idx_sessions_is_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_sessions_is_active ON public.sessions USING btree (is_active) WHERE (is_active = true);
+
+
+--
+-- Name: idx_sessions_last_activity; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_sessions_last_activity ON public.sessions USING btree (last_activity_at);
+
+
+--
+-- Name: idx_sessions_token_lookup; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_sessions_token_lookup ON public.sessions USING btree (id) INCLUDE (user_id, expires_at, is_active);
+
+
+--
+-- Name: idx_sessions_user_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_sessions_user_active ON public.sessions USING btree (user_id, is_active, created_at DESC) WHERE (is_active = true);
+
+
+--
+-- Name: idx_sessions_user_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_sessions_user_id ON public.sessions USING btree (user_id);
+
+
+--
 -- Name: idx_system_health_monitoring; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -8295,24 +9679,38 @@ CREATE INDEX idx_user_campaigns_join ON public.lead_generation_campaigns USING b
 
 
 --
--- Name: idx_worker_coordination_campaign_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_users_email; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_worker_coordination_campaign_id ON public.worker_coordination USING btree (campaign_id);
-
-
---
--- Name: idx_worker_coordination_status; Type: INDEX; Schema: public; Owner: -
---
-
-CREATE INDEX idx_worker_coordination_status ON public.worker_coordination USING btree (status);
+CREATE INDEX idx_users_email ON public.users USING btree (email);
 
 
 --
--- Name: idx_worker_coordination_worker_id; Type: INDEX; Schema: public; Owner: -
+-- Name: idx_users_email_verified; Type: INDEX; Schema: public; Owner: -
 --
 
-CREATE INDEX idx_worker_coordination_worker_id ON public.worker_coordination USING btree (worker_id);
+CREATE INDEX idx_users_email_verified ON public.users USING btree (email_verified) WHERE (email_verified = true);
+
+
+--
+-- Name: idx_users_is_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_users_is_active ON public.users USING btree (is_active) WHERE (is_active = true);
+
+
+--
+-- Name: idx_users_locked_until; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_users_locked_until ON public.users USING btree (locked_until) WHERE (locked_until IS NOT NULL);
+
+
+--
+-- Name: idx_users_offset_pagination; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_users_offset_pagination ON public.users USING btree (created_at DESC, id) WHERE (is_active = true);
 
 
 --
@@ -8330,6 +9728,69 @@ COMMENT ON TRIGGER sync_keyword_rules_to_jsonb ON public.keyword_rules IS 'Maint
 
 
 --
+-- Name: generated_domains trg_campaign_domain_counters_delete; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_campaign_domain_counters_delete AFTER DELETE ON public.generated_domains FOR EACH ROW EXECUTE FUNCTION public.campaign_domain_counters_upsert();
+
+
+--
+-- Name: generated_domains trg_campaign_domain_counters_insert; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_campaign_domain_counters_insert AFTER INSERT ON public.generated_domains FOR EACH ROW EXECUTE FUNCTION public.campaign_domain_counters_upsert();
+
+
+--
+-- Name: generated_domains trg_campaign_domain_counters_update; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trg_campaign_domain_counters_update AFTER UPDATE ON public.generated_domains FOR EACH ROW EXECUTE FUNCTION public.campaign_domain_counters_upsert();
+
+
+--
+-- Name: lead_generation_campaigns trigger_audit_campaigns; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trigger_audit_campaigns AFTER INSERT OR DELETE OR UPDATE ON public.lead_generation_campaigns FOR EACH ROW EXECUTE FUNCTION public.trigger_audit_log();
+
+
+--
+-- Name: generated_domains trigger_audit_domains; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trigger_audit_domains AFTER INSERT OR DELETE OR UPDATE ON public.generated_domains FOR EACH ROW EXECUTE FUNCTION public.trigger_audit_log();
+
+
+--
+-- Name: campaign_jobs trigger_audit_jobs; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trigger_audit_jobs AFTER INSERT OR DELETE OR UPDATE ON public.campaign_jobs FOR EACH ROW EXECUTE FUNCTION public.trigger_audit_log();
+
+
+--
+-- Name: personas trigger_audit_personas; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trigger_audit_personas AFTER INSERT OR DELETE OR UPDATE ON public.personas FOR EACH ROW EXECUTE FUNCTION public.trigger_audit_log();
+
+
+--
+-- Name: proxies trigger_audit_proxies; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trigger_audit_proxies AFTER INSERT OR DELETE OR UPDATE ON public.proxies FOR EACH ROW EXECUTE FUNCTION public.trigger_audit_log();
+
+
+--
+-- Name: users trigger_audit_users; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trigger_audit_users AFTER INSERT OR DELETE OR UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.trigger_audit_log();
+
+
+--
 -- Name: cache_entries trigger_cache_lifecycle; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -8337,10 +9798,24 @@ CREATE TRIGGER trigger_cache_lifecycle BEFORE INSERT OR UPDATE ON public.cache_e
 
 
 --
--- Name: lead_generation_campaigns trigger_campaign_transitions; Type: TRIGGER; Schema: public; Owner: -
+-- Name: campaign_phases trigger_campaign_phase_sync; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER trigger_campaign_transitions BEFORE UPDATE ON public.lead_generation_campaigns FOR EACH ROW EXECUTE FUNCTION public.trigger_campaign_state_transition();
+CREATE TRIGGER trigger_campaign_phase_sync AFTER INSERT OR UPDATE ON public.campaign_phases FOR EACH ROW EXECUTE FUNCTION public.trigger_sync_campaign_from_phases();
+
+
+--
+-- Name: generated_domains trigger_domain_validation; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trigger_domain_validation AFTER UPDATE ON public.generated_domains FOR EACH ROW EXECUTE FUNCTION public.trigger_domain_validation_update();
+
+
+--
+-- Name: event_store trigger_event_sequence; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trigger_event_sequence BEFORE INSERT ON public.event_store FOR EACH ROW EXECUTE FUNCTION public.trigger_event_store_sequence();
 
 
 --
@@ -8358,6 +9833,13 @@ CREATE TRIGGER trigger_proxy_membership_consistency BEFORE INSERT OR UPDATE ON p
 
 
 --
+-- Name: sessions trigger_session_management; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trigger_session_management AFTER INSERT OR UPDATE ON public.sessions FOR EACH ROW EXECUTE FUNCTION public.trigger_user_session_management();
+
+
+--
 -- Name: lead_generation_campaigns trigger_timestamp_campaigns; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -8369,6 +9851,13 @@ CREATE TRIGGER trigger_timestamp_campaigns BEFORE UPDATE ON public.lead_generati
 --
 
 CREATE TRIGGER trigger_timestamp_jobs BEFORE UPDATE ON public.campaign_jobs FOR EACH ROW EXECUTE FUNCTION public.trigger_update_timestamp();
+
+
+--
+-- Name: users trigger_timestamp_users; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trigger_timestamp_users BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.trigger_update_timestamp();
 
 
 --
@@ -8392,7 +9881,7 @@ ALTER TABLE ONLY auth.sessions
 --
 
 ALTER TABLE ONLY public.architecture_refactor_log
-    ADD CONSTRAINT architecture_refactor_log_approved_by_fkey FOREIGN KEY (approved_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT architecture_refactor_log_approved_by_fkey FOREIGN KEY (approved_by) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -8408,7 +9897,7 @@ ALTER TABLE ONLY public.architecture_refactor_log
 --
 
 ALTER TABLE ONLY public.architecture_refactor_log
-    ADD CONSTRAINT architecture_refactor_log_initiated_by_fkey FOREIGN KEY (initiated_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT architecture_refactor_log_initiated_by_fkey FOREIGN KEY (initiated_by) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -8424,7 +9913,7 @@ ALTER TABLE ONLY public.audit_logs
 --
 
 ALTER TABLE ONLY public.audit_logs
-    ADD CONSTRAINT audit_logs_session_id_fkey FOREIGN KEY (session_id) REFERENCES auth.sessions(id) ON DELETE SET NULL;
+    ADD CONSTRAINT audit_logs_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id) ON DELETE SET NULL;
 
 
 --
@@ -8432,7 +9921,7 @@ ALTER TABLE ONLY public.audit_logs
 --
 
 ALTER TABLE ONLY public.audit_logs
-    ADD CONSTRAINT audit_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT audit_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -8440,7 +9929,7 @@ ALTER TABLE ONLY public.audit_logs
 --
 
 ALTER TABLE ONLY public.auth_audit_logs
-    ADD CONSTRAINT auth_audit_logs_session_id_fkey FOREIGN KEY (session_id) REFERENCES auth.sessions(id) ON DELETE SET NULL;
+    ADD CONSTRAINT auth_audit_logs_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id) ON DELETE SET NULL;
 
 
 --
@@ -8448,7 +9937,7 @@ ALTER TABLE ONLY public.auth_audit_logs
 --
 
 ALTER TABLE ONLY public.auth_audit_logs
-    ADD CONSTRAINT auth_audit_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT auth_audit_logs_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -8464,7 +9953,7 @@ ALTER TABLE ONLY public.authorization_decisions
 --
 
 ALTER TABLE ONLY public.authorization_decisions
-    ADD CONSTRAINT authorization_decisions_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT authorization_decisions_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -8472,7 +9961,7 @@ ALTER TABLE ONLY public.authorization_decisions
 --
 
 ALTER TABLE ONLY public.authorization_decisions
-    ADD CONSTRAINT authorization_decisions_session_id_fkey FOREIGN KEY (session_id) REFERENCES auth.sessions(id) ON DELETE SET NULL;
+    ADD CONSTRAINT authorization_decisions_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id) ON DELETE SET NULL;
 
 
 --
@@ -8480,7 +9969,7 @@ ALTER TABLE ONLY public.authorization_decisions
 --
 
 ALTER TABLE ONLY public.authorization_decisions
-    ADD CONSTRAINT authorization_decisions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT authorization_decisions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -8488,7 +9977,7 @@ ALTER TABLE ONLY public.authorization_decisions
 --
 
 ALTER TABLE ONLY public.cache_configurations
-    ADD CONSTRAINT cache_configurations_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT cache_configurations_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -8512,7 +10001,7 @@ ALTER TABLE ONLY public.cache_entries
 --
 
 ALTER TABLE ONLY public.cache_entries
-    ADD CONSTRAINT cache_entries_locked_by_fkey FOREIGN KEY (locked_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT cache_entries_locked_by_fkey FOREIGN KEY (locked_by) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -8520,7 +10009,7 @@ ALTER TABLE ONLY public.cache_entries
 --
 
 ALTER TABLE ONLY public.cache_entries
-    ADD CONSTRAINT cache_entries_session_id_fkey FOREIGN KEY (session_id) REFERENCES auth.sessions(id) ON DELETE SET NULL;
+    ADD CONSTRAINT cache_entries_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id) ON DELETE SET NULL;
 
 
 --
@@ -8528,7 +10017,7 @@ ALTER TABLE ONLY public.cache_entries
 --
 
 ALTER TABLE ONLY public.cache_entries
-    ADD CONSTRAINT cache_entries_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT cache_entries_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -8552,7 +10041,7 @@ ALTER TABLE ONLY public.cache_invalidation_log
 --
 
 ALTER TABLE ONLY public.cache_invalidation_log
-    ADD CONSTRAINT cache_invalidation_log_triggered_by_fkey FOREIGN KEY (triggered_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT cache_invalidation_log_triggered_by_fkey FOREIGN KEY (triggered_by) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -8584,7 +10073,7 @@ ALTER TABLE ONLY public.cache_invalidations
 --
 
 ALTER TABLE ONLY public.cache_invalidations
-    ADD CONSTRAINT cache_invalidations_requested_by_fkey FOREIGN KEY (requested_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT cache_invalidations_requested_by_fkey FOREIGN KEY (requested_by) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -8608,7 +10097,7 @@ ALTER TABLE ONLY public.campaign_access_grants
 --
 
 ALTER TABLE ONLY public.campaign_access_grants
-    ADD CONSTRAINT campaign_access_grants_granted_by_fkey FOREIGN KEY (granted_by) REFERENCES auth.users(id) ON DELETE RESTRICT;
+    ADD CONSTRAINT campaign_access_grants_granted_by_fkey FOREIGN KEY (granted_by) REFERENCES public.users(id) ON DELETE RESTRICT;
 
 
 --
@@ -8624,7 +10113,7 @@ ALTER TABLE ONLY public.campaign_access_grants
 --
 
 ALTER TABLE ONLY public.campaign_access_grants
-    ADD CONSTRAINT campaign_access_grants_revoked_by_fkey FOREIGN KEY (revoked_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT campaign_access_grants_revoked_by_fkey FOREIGN KEY (revoked_by) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -8632,7 +10121,15 @@ ALTER TABLE ONLY public.campaign_access_grants
 --
 
 ALTER TABLE ONLY public.campaign_access_grants
-    ADD CONSTRAINT campaign_access_grants_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+    ADD CONSTRAINT campaign_access_grants_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: campaign_domain_counters campaign_domain_counters_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.campaign_domain_counters
+    ADD CONSTRAINT campaign_domain_counters_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.lead_generation_campaigns(id) ON DELETE CASCADE;
 
 
 --
@@ -8649,6 +10146,22 @@ ALTER TABLE ONLY public.campaign_jobs
 
 ALTER TABLE ONLY public.campaign_phases
     ADD CONSTRAINT campaign_phases_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.lead_generation_campaigns(id) ON DELETE CASCADE;
+
+
+--
+-- Name: campaign_scoring_profile campaign_scoring_profile_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.campaign_scoring_profile
+    ADD CONSTRAINT campaign_scoring_profile_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.lead_generation_campaigns(id) ON DELETE CASCADE;
+
+
+--
+-- Name: campaign_scoring_profile campaign_scoring_profile_scoring_profile_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.campaign_scoring_profile
+    ADD CONSTRAINT campaign_scoring_profile_scoring_profile_id_fkey FOREIGN KEY (scoring_profile_id) REFERENCES public.scoring_profiles(id) ON DELETE CASCADE;
 
 
 --
@@ -8704,7 +10217,7 @@ ALTER TABLE ONLY public.config_locks
 --
 
 ALTER TABLE ONLY public.config_locks
-    ADD CONSTRAINT config_locks_locked_by_fkey FOREIGN KEY (locked_by) REFERENCES auth.users(id) ON DELETE CASCADE;
+    ADD CONSTRAINT config_locks_locked_by_fkey FOREIGN KEY (locked_by) REFERENCES public.users(id) ON DELETE CASCADE;
 
 
 --
@@ -8720,7 +10233,7 @@ ALTER TABLE ONLY public.config_locks
 --
 
 ALTER TABLE ONLY public.config_locks
-    ADD CONSTRAINT config_locks_session_id_fkey FOREIGN KEY (session_id) REFERENCES auth.sessions(id) ON DELETE CASCADE;
+    ADD CONSTRAINT config_locks_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id) ON DELETE CASCADE;
 
 
 --
@@ -8728,7 +10241,7 @@ ALTER TABLE ONLY public.config_locks
 --
 
 ALTER TABLE ONLY public.config_versions
-    ADD CONSTRAINT config_versions_approved_by_fkey FOREIGN KEY (approved_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT config_versions_approved_by_fkey FOREIGN KEY (approved_by) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -8744,7 +10257,7 @@ ALTER TABLE ONLY public.config_versions
 --
 
 ALTER TABLE ONLY public.config_versions
-    ADD CONSTRAINT config_versions_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE RESTRICT;
+    ADD CONSTRAINT config_versions_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id) ON DELETE RESTRICT;
 
 
 --
@@ -8752,7 +10265,7 @@ ALTER TABLE ONLY public.config_versions
 --
 
 ALTER TABLE ONLY public.config_versions
-    ADD CONSTRAINT config_versions_deployed_by_fkey FOREIGN KEY (deployed_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT config_versions_deployed_by_fkey FOREIGN KEY (deployed_by) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -8792,7 +10305,7 @@ ALTER TABLE ONLY public.event_projections
 --
 
 ALTER TABLE ONLY public.event_projections
-    ADD CONSTRAINT event_projections_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT event_projections_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -8824,7 +10337,7 @@ ALTER TABLE ONLY public.event_store
 --
 
 ALTER TABLE ONLY public.event_store
-    ADD CONSTRAINT event_store_session_id_fkey FOREIGN KEY (session_id) REFERENCES auth.sessions(id) ON DELETE SET NULL;
+    ADD CONSTRAINT event_store_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id) ON DELETE SET NULL;
 
 
 --
@@ -8832,7 +10345,15 @@ ALTER TABLE ONLY public.event_store
 --
 
 ALTER TABLE ONLY public.event_store
-    ADD CONSTRAINT event_store_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT event_store_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: campaign_states fk_campaign_states_campaign_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.campaign_states
+    ADD CONSTRAINT fk_campaign_states_campaign_id FOREIGN KEY (campaign_id) REFERENCES public.lead_generation_campaigns(id) ON DELETE CASCADE;
 
 
 --
@@ -8873,6 +10394,14 @@ ALTER TABLE ONLY public.http_keyword_results
 
 ALTER TABLE ONLY public.lead_generation_campaigns
     ADD CONSTRAINT fk_lead_generation_campaigns_current_phase_id FOREIGN KEY (current_phase_id) REFERENCES public.campaign_phases(id) ON DELETE SET NULL;
+
+
+--
+-- Name: phase_executions fk_phase_executions_campaign_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.phase_executions
+    ADD CONSTRAINT fk_phase_executions_campaign_id FOREIGN KEY (campaign_id) REFERENCES public.lead_generation_campaigns(id) ON DELETE CASCADE;
 
 
 --
@@ -8919,7 +10448,7 @@ ALTER TABLE ONLY public.keyword_rules
 --
 
 ALTER TABLE ONLY public.lead_generation_campaigns
-    ADD CONSTRAINT lead_generation_campaigns_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT lead_generation_campaigns_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -8935,7 +10464,31 @@ ALTER TABLE ONLY public.pagination_performance_metrics
 --
 
 ALTER TABLE ONLY public.pagination_performance_metrics
-    ADD CONSTRAINT pagination_performance_metrics_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT pagination_performance_metrics_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: password_reset_tokens password_reset_tokens_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.password_reset_tokens
+    ADD CONSTRAINT password_reset_tokens_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: phase_configurations phase_configurations_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.phase_configurations
+    ADD CONSTRAINT phase_configurations_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.lead_generation_campaigns(id) ON DELETE CASCADE;
+
+
+--
+-- Name: phase_runs phase_runs_campaign_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.phase_runs
+    ADD CONSTRAINT phase_runs_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.lead_generation_campaigns(id) ON DELETE CASCADE;
 
 
 --
@@ -8967,7 +10520,7 @@ ALTER TABLE ONLY public.query_performance_metrics
 --
 
 ALTER TABLE ONLY public.query_performance_metrics
-    ADD CONSTRAINT query_performance_metrics_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT query_performance_metrics_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -8991,7 +10544,7 @@ ALTER TABLE ONLY public.security_events
 --
 
 ALTER TABLE ONLY public.security_events
-    ADD CONSTRAINT security_events_resolved_by_fkey FOREIGN KEY (resolved_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT security_events_resolved_by_fkey FOREIGN KEY (resolved_by) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -8999,7 +10552,7 @@ ALTER TABLE ONLY public.security_events
 --
 
 ALTER TABLE ONLY public.security_events
-    ADD CONSTRAINT security_events_session_id_fkey FOREIGN KEY (session_id) REFERENCES auth.sessions(id) ON DELETE SET NULL;
+    ADD CONSTRAINT security_events_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id) ON DELETE SET NULL;
 
 
 --
@@ -9007,7 +10560,7 @@ ALTER TABLE ONLY public.security_events
 --
 
 ALTER TABLE ONLY public.security_events
-    ADD CONSTRAINT security_events_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
+    ADD CONSTRAINT security_events_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -9035,6 +10588,16 @@ ALTER TABLE ONLY public.service_dependencies
 
 
 --
+-- Name: sessions sessions_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.sessions
+    ADD CONSTRAINT sessions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
 -- PostgreSQL database dump complete
 --
+
+\unrestrict hq5oVOcc0wAF5Jmse5D30h2vooK0r2gnXww2aQ4KsAei7UR1d6zYX6ZGkQariub
 

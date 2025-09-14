@@ -13,6 +13,7 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**campaignsCreate**](#campaignscreate) | **POST** /campaigns | Create campaign|
 |[**campaignsDelete**](#campaignsdelete) | **DELETE** /campaigns/{campaignId} | Delete campaign|
 |[**campaignsDomainGenerationPatternOffset**](#campaignsdomaingenerationpatternoffset) | **POST** /campaigns/domain-generation/pattern-offset | Get current global pattern offset for domain generation config|
+|[**campaignsDomainScoreBreakdown**](#campaignsdomainscorebreakdown) | **GET** /campaigns/{campaignId}/domains/{domain}/score-breakdown | Get component score breakdown for a single domain|
 |[**campaignsDomainsList**](#campaignsdomainslist) | **GET** /campaigns/{campaignId}/domains | List generated domains for a campaign|
 |[**campaignsEnrichedGet**](#campaignsenrichedget) | **GET** /campaigns/{campaignId}/enriched | Get enriched campaign details|
 |[**campaignsGet**](#campaignsget) | **GET** /campaigns/{campaignId} | Get campaign|
@@ -522,6 +523,64 @@ const { status, data } = await apiInstance.campaignsDomainGenerationPatternOffse
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **campaignsDomainScoreBreakdown**
+> CampaignsDomainScoreBreakdown200Response campaignsDomainScoreBreakdown()
+
+Recomputes the scoring component values for the specified domain using the stored feature vector and current (or default) scoring profile weights. Does not persist anything; purely diagnostic / transparency surface. If experimental tf-lite scoring is disabled the `tf_lite` key will still be present with value 0.
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+let domain: string; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsDomainScoreBreakdown(
+    campaignId,
+    domain
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+| **domain** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**CampaignsDomainScoreBreakdown200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **campaignsDomainsList**
 > CampaignsDomainsList200Response campaignsDomainsList()
 
@@ -544,6 +603,13 @@ let dnsStatus: 'pending' | 'ok' | 'error' | 'timeout'; //Filter domains whose au
 let httpStatus: 'pending' | 'ok' | 'error' | 'timeout'; //Filter domains whose authoritative HTTP status matches (pending|ok|error|timeout) (optional) (default to undefined)
 let dnsReason: string; //Filter domains by DNS reason (exact match). Example values: NXDOMAIN, SERVFAIL, REFUSED, NOANSWER, TIMEOUT, ERROR (optional) (default to undefined)
 let httpReason: string; //Filter domains by HTTP reason (exact match). Example values: TIMEOUT, NOT_FOUND, UPSTREAM_5XX, PROXY_ERROR, TLS_ERROR, SSL_EXPIRED, CONNECTION_RESET, ERROR (optional) (default to undefined)
+let minScore: number; //Minimum inclusive domain score to include (optional) (default to undefined)
+let notParked: boolean; //Exclude domains detected as parked (optional) (default to undefined)
+let hasContact: boolean; //Only include domains with detected contact signals (optional) (default to undefined)
+let keyword: string; //Require at least one keyword match (any) (optional) (default to undefined)
+let sort: 'score_desc' | 'score_asc' | 'last_http_fetched_at_desc'; //Sort ordering strategy (optional) (default to undefined)
+let first: number; //Page size for cursor pagination (overrides limit when present) (optional) (default to undefined)
+let after: string; //Cursor token to continue listing after (optional) (default to undefined)
 
 const { status, data } = await apiInstance.campaignsDomainsList(
     campaignId,
@@ -552,7 +618,14 @@ const { status, data } = await apiInstance.campaignsDomainsList(
     dnsStatus,
     httpStatus,
     dnsReason,
-    httpReason
+    httpReason,
+    minScore,
+    notParked,
+    hasContact,
+    keyword,
+    sort,
+    first,
+    after
 );
 ```
 
@@ -567,6 +640,13 @@ const { status, data } = await apiInstance.campaignsDomainsList(
 | **httpStatus** | [**&#39;pending&#39; | &#39;ok&#39; | &#39;error&#39; | &#39;timeout&#39;**]**Array<&#39;pending&#39; &#124; &#39;ok&#39; &#124; &#39;error&#39; &#124; &#39;timeout&#39;>** | Filter domains whose authoritative HTTP status matches (pending|ok|error|timeout) | (optional) defaults to undefined|
 | **dnsReason** | [**string**] | Filter domains by DNS reason (exact match). Example values: NXDOMAIN, SERVFAIL, REFUSED, NOANSWER, TIMEOUT, ERROR | (optional) defaults to undefined|
 | **httpReason** | [**string**] | Filter domains by HTTP reason (exact match). Example values: TIMEOUT, NOT_FOUND, UPSTREAM_5XX, PROXY_ERROR, TLS_ERROR, SSL_EXPIRED, CONNECTION_RESET, ERROR | (optional) defaults to undefined|
+| **minScore** | [**number**] | Minimum inclusive domain score to include | (optional) defaults to undefined|
+| **notParked** | [**boolean**] | Exclude domains detected as parked | (optional) defaults to undefined|
+| **hasContact** | [**boolean**] | Only include domains with detected contact signals | (optional) defaults to undefined|
+| **keyword** | [**string**] | Require at least one keyword match (any) | (optional) defaults to undefined|
+| **sort** | [**&#39;score_desc&#39; | &#39;score_asc&#39; | &#39;last_http_fetched_at_desc&#39;**]**Array<&#39;score_desc&#39; &#124; &#39;score_asc&#39; &#124; &#39;last_http_fetched_at_desc&#39;>** | Sort ordering strategy | (optional) defaults to undefined|
+| **first** | [**number**] | Page size for cursor pagination (overrides limit when present) | (optional) defaults to undefined|
+| **after** | [**string**] | Cursor token to continue listing after | (optional) defaults to undefined|
 
 
 ### Return type

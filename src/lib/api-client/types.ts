@@ -1244,6 +1244,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/campaigns/{campaignId}/domains/{domain}/score-breakdown": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get component score breakdown for a single domain
+         * @description Recomputes the scoring component values for the specified domain using the stored feature vector and current (or default) scoring profile weights. Does not persist anything; purely diagnostic / transparency surface. If experimental tf-lite scoring is disabled the `tf_lite` key will still be present with value 0.
+         */
+        get: operations["campaigns_domain_score_breakdown"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/campaigns/{campaignId}/state": {
         parameters: {
             query?: never;
@@ -1585,6 +1605,77 @@ export interface paths {
         put?: never;
         /** Get current global pattern offset for domain generation config */
         post: operations["campaigns_domain_generation_pattern_offset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/scoring-profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List scoring profiles */
+        get: operations["scoring_profiles_list"];
+        put?: never;
+        /** Create scoring profile */
+        post: operations["scoring_profiles_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/scoring-profiles/{profileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get scoring profile */
+        get: operations["scoring_profiles_get"];
+        /** Update scoring profile */
+        put: operations["scoring_profiles_update"];
+        post?: never;
+        /** Delete scoring profile */
+        delete: operations["scoring_profiles_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/{campaignId}/scoring-profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Associate scoring profile with campaign */
+        post: operations["campaigns_scoring_profile_associate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/{campaignId}/rescore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Trigger campaign rescore */
+        post: operations["campaigns_rescore"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2221,6 +2312,18 @@ export interface components {
             /** @description Human-readable reason string for current HTTP status (e.g., CONNECT_ERROR, TLS_ERROR, TIMEOUT, NON_200, BODY_MISMATCH) */
             httpReason?: string | null;
         };
+        /** @description Cursor-based pagination metadata */
+        PageInfo: {
+            startCursor?: string | null;
+            endCursor?: string | null;
+            hasNextPage: boolean;
+            /** @description Field used for ordering */
+            sortBy?: string;
+            /** @enum {string} */
+            sortOrder?: "ASC" | "DESC";
+            /** @description Requested page size */
+            first?: number;
+        };
         CampaignDomainsListResponse: {
             /** Format: uuid */
             campaignId: string;
@@ -2248,6 +2351,47 @@ export interface components {
                     timeout?: number;
                 };
             };
+            pageInfo?: components["schemas"]["PageInfo"];
+        };
+        /** @description Component scores contributing to the final relevance score for a domain. */
+        DomainScoreBreakdownResponse: {
+            /** Format: uuid */
+            campaignId: string;
+            domain: string;
+            /** @description Raw component scores normalized to 0-1 prior to weighting. */
+            components: {
+                /** Format: float */
+                density: number;
+                /** Format: float */
+                coverage: number;
+                /** Format: float */
+                non_parked: number;
+                /** Format: float */
+                content_length: number;
+                /** Format: float */
+                title_keyword: number;
+                /** Format: float */
+                freshness: number;
+                /**
+                 * Format: float
+                 * @description Experimental TF-lite component (0 if disabled)
+                 */
+                tf_lite: number;
+            };
+            /**
+             * Format: float
+             * @description Weighted final relevance score after penalties
+             */
+            final: number;
+            /** @description Active scoring profile weights used for combination. */
+            weights?: {
+                [key: string]: number;
+            };
+            /**
+             * Format: float
+             * @description Penalty factor applied when domain considered parked with low confidence (<0.9)
+             */
+            parkedPenaltyFactor?: number;
         };
         /** @enum {string} */
         CampaignStateEnum: "draft" | "running" | "paused" | "completed" | "failed" | "cancelled" | "archived";
@@ -2649,6 +2793,43 @@ export interface components {
             /** Format: int64 */
             currentOffset?: number;
         };
+        ScoringProfile: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            description?: string | null;
+            weights: {
+                [key: string]: number;
+            };
+            version: number;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CreateScoringProfileRequest: {
+            name: string;
+            description?: string;
+            weights: {
+                [key: string]: number;
+            };
+            /** @description Optional explicit version; defaults to 1 if omitted */
+            version?: number;
+        };
+        UpdateScoringProfileRequest: {
+            name?: string;
+            description?: string;
+            weights?: {
+                [key: string]: number;
+            };
+            version?: number;
+        };
+        AssociateScoringProfileRequest: {
+            /** Format: uuid */
+            profileId: string;
+        };
+        /** @description Optional body for future rescore parameters (currently unused) */
+        RescoreCampaignRequest: Record<string, never>;
         KeywordSetWithRulesResponse: {
             /** Format: uuid */
             id: string;
@@ -5462,6 +5643,20 @@ export interface operations {
                 dnsReason?: string;
                 /** @description Filter domains by HTTP reason (exact match). Example values: TIMEOUT, NOT_FOUND, UPSTREAM_5XX, PROXY_ERROR, TLS_ERROR, SSL_EXPIRED, CONNECTION_RESET, ERROR */
                 httpReason?: string;
+                /** @description Minimum inclusive domain score to include */
+                minScore?: number;
+                /** @description Exclude domains detected as parked */
+                notParked?: boolean;
+                /** @description Only include domains with detected contact signals */
+                hasContact?: boolean;
+                /** @description Require at least one keyword match (any) */
+                keyword?: string;
+                /** @description Sort ordering strategy */
+                sort?: "score_desc" | "score_asc" | "last_http_fetched_at_desc";
+                /** @description Page size for cursor pagination (overrides limit when present) */
+                first?: number;
+                /** @description Cursor token to continue listing after */
+                after?: string;
             };
             header?: never;
             path: {
@@ -5482,6 +5677,35 @@ export interface operations {
                     };
                 };
             };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_domain_score_breakdown: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+                domain: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["DomainScoreBreakdownResponse"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
             500: components["responses"]["InternalServerError"];
@@ -6217,6 +6441,220 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    scoring_profiles_list: {
+        parameters: {
+            query?: {
+                /** @description Page size (items per page) */
+                limit?: components["parameters"]["Limit"];
+                /** @description Zero-based offset */
+                offset?: components["parameters"]["Offset"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["ScoringProfile"][];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    scoring_profiles_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateScoringProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["ScoringProfile"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    scoring_profiles_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["ScoringProfile"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    scoring_profiles_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateScoringProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["ScoringProfile"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    scoring_profiles_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profileId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_scoring_profile_associate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssociateScoringProfileRequest"];
+            };
+        };
+        responses: {
+            /** @description Associated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"];
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_rescore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RescoreCampaignRequest"];
+            };
+        };
+        responses: {
+            /** @description Rescore initiated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             500: components["responses"]["InternalServerError"];
         };
     };

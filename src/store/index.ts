@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { campaignApi } from './api/campaignApi';
+import { authApi } from './api/authApi';
 import { bulkOperationsApi } from './api/bulkOperationsApi';
 import campaignSlice from './slices/campaignSlice';
 import bulkOperationsSlice from './slices/bulkOperationsSlice';
@@ -14,7 +15,8 @@ export const store = configureStore({
   campaignUI: campaignUiSlice,
   pipelineExec: pipelineExecReducer,
     // Add the generated reducers as specific top-level slices
-    [campaignApi.reducerPath]: campaignApi.reducer,
+  [campaignApi.reducerPath]: campaignApi.reducer,
+  [authApi.reducerPath]: authApi.reducer,
     [bulkOperationsApi.reducerPath]: bulkOperationsApi.reducer,
   },
   // Adding the api middleware enables caching, invalidation, polling,
@@ -26,6 +28,7 @@ export const store = configureStore({
       },
     })
   .concat(campaignApi.middleware)
+  .concat(authApi.middleware)
   .concat(bulkOperationsApi.middleware)
   .concat(campaignStateSyncMiddleware),
 });

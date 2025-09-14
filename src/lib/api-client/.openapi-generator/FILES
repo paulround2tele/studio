@@ -13,6 +13,7 @@ apis/monitoring-api.ts
 apis/personas-api.ts
 apis/proxies-api.ts
 apis/proxy-pools-api.ts
+apis/scoring-api.ts
 apis/server-settings-api.ts
 apis/sse-api.ts
 base.ts
@@ -21,6 +22,7 @@ configuration.ts
 docs/AllocateBulkResources200Response.md
 docs/ApiError.md
 docs/ApiErrorDetailsInner.md
+docs/AssociateScoringProfileRequest.md
 docs/AuthApi.md
 docs/AuthChangePasswordRequest.md
 docs/AuthConfig.md
@@ -100,6 +102,7 @@ docs/CampaignsBulkOperationsList200Response.md
 docs/CampaignsBulkOperationsList200ResponseAllOfDataInner.md
 docs/CampaignsCreate201Response.md
 docs/CampaignsDomainGenerationPatternOffset200Response.md
+docs/CampaignsDomainScoreBreakdown200Response.md
 docs/CampaignsDomainsList200Response.md
 docs/CampaignsEnrichedGet200Response.md
 docs/CampaignsList200Response.md
@@ -133,6 +136,7 @@ docs/CreateCampaignRequestConfigurationPhasesValidation.md
 docs/CreateKeywordSetRequest.md
 docs/CreatePersonaRequest.md
 docs/CreateProxyRequestAPI.md
+docs/CreateScoringProfileRequest.md
 docs/DNSValidatorConfigJSON.md
 docs/DatabaseApi.md
 docs/DatabaseStats.md
@@ -140,6 +144,8 @@ docs/DatabaseValue.md
 docs/DbBulkQuery200Response.md
 docs/DbBulkStats200Response.md
 docs/DomainListItem.md
+docs/DomainScoreBreakdownResponse.md
+docs/DomainScoreBreakdownResponseComponents.md
 docs/EnrichedCampaignResponse.md
 docs/ErrorCode.md
 docs/ErrorEnvelope.md
@@ -171,6 +177,7 @@ docs/Metadata.md
 docs/MonitoringApi.md
 docs/MonitoringCampaignLimitsRequest.md
 docs/MonitoringPerformanceSummary200Response.md
+docs/PageInfo.md
 docs/Pagination.md
 docs/PatternOffsetRequest.md
 docs/PatternOffsetResponse.md
@@ -224,6 +231,10 @@ docs/ProxyTestResponse.md
 docs/RateLimitInfo.md
 docs/RateLimiterConfig.md
 docs/SchemaStats.md
+docs/ScoringApi.md
+docs/ScoringProfile.md
+docs/ScoringProfilesCreate201Response.md
+docs/ScoringProfilesList200Response.md
 docs/ServerConfigResponse.md
 docs/ServerConfigUpdateRequest.md
 docs/ServerSettingsApi.md
@@ -237,6 +248,7 @@ docs/UpdateCampaignRequest.md
 docs/UpdateKeywordSetRequest.md
 docs/UpdatePersonaRequest.md
 docs/UpdateProxyRequestAPI.md
+docs/UpdateScoringProfileRequest.md
 docs/UserPublicResponse.md
 docs/WorkerConfig.md
 docs/WorkerConfigUpdate.md
@@ -245,6 +257,7 @@ index.ts
 models/allocate-bulk-resources200-response.ts
 models/api-error-details-inner.ts
 models/api-error.ts
+models/associate-scoring-profile-request.ts
 models/auth-change-password-request.ts
 models/auth-config.ts
 models/auth-login200-response.ts
@@ -322,6 +335,7 @@ models/campaigns-bulk-operations-list200-response-all-of-data-inner.ts
 models/campaigns-bulk-operations-list200-response.ts
 models/campaigns-create201-response.ts
 models/campaigns-domain-generation-pattern-offset200-response.ts
+models/campaigns-domain-score-breakdown200-response.ts
 models/campaigns-domains-list200-response.ts
 models/campaigns-enriched-get200-response.ts
 models/campaigns-list200-response.ts
@@ -355,12 +369,15 @@ models/create-campaign-request.ts
 models/create-keyword-set-request.ts
 models/create-persona-request.ts
 models/create-proxy-request-api.ts
+models/create-scoring-profile-request.ts
 models/database-stats.ts
 models/database-value.ts
 models/db-bulk-query200-response.ts
 models/db-bulk-stats200-response.ts
 models/dnsvalidator-config-json.ts
 models/domain-list-item.ts
+models/domain-score-breakdown-response-components.ts
+models/domain-score-breakdown-response.ts
 models/enriched-campaign-response.ts
 models/error-code.ts
 models/error-envelope.ts
@@ -387,6 +404,7 @@ models/login-request.ts
 models/metadata.ts
 models/monitoring-campaign-limits-request.ts
 models/monitoring-performance-summary200-response.ts
+models/page-info.ts
 models/pagination.ts
 models/pattern-offset-request.ts
 models/pattern-offset-response.ts
@@ -437,6 +455,9 @@ models/proxy-test-response.ts
 models/rate-limit-info.ts
 models/rate-limiter-config.ts
 models/schema-stats.ts
+models/scoring-profile.ts
+models/scoring-profiles-create201-response.ts
+models/scoring-profiles-list200-response.ts
 models/server-config-response.ts
 models/server-config-update-request.ts
 models/session-response.ts
@@ -448,6 +469,7 @@ models/update-campaign-request.ts
 models/update-keyword-set-request.ts
 models/update-persona-request.ts
 models/update-proxy-request-api.ts
+models/update-scoring-profile-request.ts
 models/user-public-response.ts
 models/worker-config-update.ts
 models/worker-config.ts

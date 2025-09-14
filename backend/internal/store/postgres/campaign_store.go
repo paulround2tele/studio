@@ -26,8 +26,14 @@ type campaignStorePostgres struct {
 
 // NewCampaignStorePostgres creates a new CampaignStore for PostgreSQL
 func NewCampaignStorePostgres(db *sqlx.DB) store.CampaignStore {
-	return &campaignStorePostgres{db: db}
+	s := &campaignStorePostgres{db: db}
+	// Build / wiring marker to positively confirm runtime binary path
+	log.Printf("INIT campaignStorePostgres constructed db_nil=%t", db == nil)
+	return s
 }
+
+// UnderlyingDB returns the internal *sqlx.DB (escape hatch for explicit exec requirements)
+func (s *campaignStorePostgres) UnderlyingDB() *sqlx.DB { return s.db }
 
 // --- Scoring Profile CRUD (lightweight) --- //
 // CANONICAL PATH (SCORING-PROFILES): All scoring profile persistence & association
@@ -1495,7 +1501,7 @@ func (s *campaignStorePostgres) UpdateDomainsBulkDNSStatus(ctx context.Context, 
 
 // UpdateDomainsBulkHTTPStatus performs bulk updates of HTTP status & keywords
 func (s *campaignStorePostgres) UpdateDomainsBulkHTTPStatus(ctx context.Context, exec store.Querier, results []models.HTTPKeywordResult) error {
-	// TODO(B1): Wrap in transaction with counter delta updates similar to DNS phase; currently relies on triggers per-row.
+	// Align with current schema: columns are http_status (enum domain_http_status_enum), http_status_code, last_validated_at, http_reason.
 	if len(results) == 0 {
 		return nil
 	}
@@ -1503,14 +1509,21 @@ func (s *campaignStorePostgres) UpdateDomainsBulkHTTPStatus(ctx context.Context,
 		exec = s.db
 	}
 	valueStrings := make([]string, 0, len(results))
-	valueArgs := make([]interface{}, 0, len(results)*6)
+	valueArgs := make([]interface{}, 0, len(results)*5)
 	for i, r := range results {
 		idx := i * 5
 		valueStrings = append(valueStrings, fmt.Sprintf("($%d,$%d,$%d,$%d,$%d)", idx+1, idx+2, idx+3, idx+4, idx+5))
 		valueArgs = append(valueArgs, r.DomainName, r.ValidationStatus, r.HTTPStatusCode, r.LastCheckedAt, r.Reason)
 	}
 	tmp := strings.Join(valueStrings, ",")
-	q := fmt.Sprintf(`UPDATE generated_domains gd SET http_status = v.validation_status, http_status_code = v.http_status_code, http_checked_at = v.last_checked_at, http_reason = CASE WHEN v.validation_status = 'ok' THEN NULL ELSE COALESCE(v.reason, gd.http_reason) END FROM (VALUES %s) AS v(domain_name,validation_status,http_status_code,last_checked_at,reason) WHERE gd.domain_name = v.domain_name`, tmp)
+	// Cast validation_status to enum and timestamp; only set http_reason when status not 'ok'
+	q := fmt.Sprintf(`UPDATE generated_domains gd
+		SET http_status = v.validation_status::domain_http_status_enum,
+			http_status_code = v.http_status_code::integer,
+			last_validated_at = v.last_checked_at::timestamptz,
+			http_reason = CASE WHEN v.validation_status = 'ok' THEN NULL ELSE COALESCE(v.reason, gd.http_reason) END
+		FROM (VALUES %s) AS v(domain_name,validation_status,http_status_code,last_checked_at,reason)
+		WHERE gd.domain_name = v.domain_name`, tmp)
 	if _, err := exec.ExecContext(ctx, q, valueArgs...); err != nil {
 		return fmt.Errorf("bulk HTTP status update failed: %w", err)
 	}

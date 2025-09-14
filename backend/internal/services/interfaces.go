@@ -165,7 +165,7 @@ type CreateDomainGenerationCampaignRequest struct {
 	HTTPValidationConfig *HTTPValidationPhaseConfig `json:"httpValidationConfig,omitempty"`
 
 	// Domain generation fields
-	VariableLength       int                  `json:"variableLength" validate:"required,min=1,max=50"`
+	VariableLength       int                  `json:"variableLength" validate:"required,gte=0,max=50"`
 	CharacterSet         string               `json:"characterSet" validate:"required,min=1"`
 	ConstantString       string               `json:"constantString,omitempty"`
 	TLD                  string               `json:"tld" validate:"required,min=3,max=10"`

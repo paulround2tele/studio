@@ -54,7 +54,7 @@ func (h *strictHandlers) CampaignsEnrichedGet(ctx context.Context, r gen.Campaig
 	execs := []gen.PhaseExecution{}
 	if list, peErr := h.deps.Stores.Campaign.GetPhaseExecutionsByCampaign(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); peErr == nil {
 		for _, pe := range list {
-			if pe != nil {
+			if pe !=	 nil {
 				execs = append(execs, mapPhaseExecutionToAPI(*pe))
 			}
 		}

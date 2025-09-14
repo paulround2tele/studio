@@ -4,8 +4,10 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"log"
 	"math/big"
 	"strings"
+	"time"
 
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
@@ -26,50 +28,93 @@ type StealthRuntimeConfig struct {
 // realStealthIntegration implements StealthIntegration using CampaignStore
 type realStealthIntegration struct {
 	store store.CampaignStore
+	// instrumentation counters (not concurrency-safe; acceptable for coarse logging)
+	cursorSuccessCount int
+	cursorErrorCount   int
+	forceCursor        bool // when true, disable legacy fallback and hard-fail on cursor error
 }
 
 func NewRealStealthIntegration(store store.CampaignStore) *realStealthIntegration {
 	return &realStealthIntegration{store: store}
 }
 
+// test hook variables (not exported) for unit tests to simulate panic/error paths
+var (
+	testForceCursorPanic bool
+)
+
 func (r *realStealthIntegration) RandomizeDomainsForValidation(ctx context.Context, campaignID uuid.UUID, validationType string) ([]string, error) {
 	if r.store == nil {
 		return nil, fmt.Errorf("campaign store not available")
 	}
-	var exec store.Querier // allow store to use default connection
+
+	log.Printf("StealthReal: RandomizeDomainsForValidation start campaign=%s phase=%s", campaignID, validationType)
+	start := time.Now()
 
 	// Load default runtime config for in-memory shuffle logic (no persistence Phase C)
 	cfg := r.defaultConfig(validationType)
 
-	// Gather candidates
-	domains := make([]string, 0, 2048)
-	var after string
-	for {
-		filter := store.ListGeneratedDomainsFilter{
-			CursorPaginationFilter: store.CursorPaginationFilter{First: 1000, After: after, SortBy: "offset_index", SortOrder: "ASC"},
-			CampaignID:             campaignID,
-		}
-		if validationType == "http_keyword_validation" {
-			filter.ValidationStatus = string(models.DomainDNSStatusOK)
-		}
-		page, err := r.store.GetGeneratedDomainsWithCursor(ctx, exec, filter)
-		if err != nil {
-			return nil, fmt.Errorf("fetch domains: %w", err)
-		}
-		for _, gd := range page.Data {
-			if gd != nil && gd.DomainName != "" {
-				domains = append(domains, gd.DomainName)
+	// Attempt cursor-driven collection with panic recovery
+	cursorDomains, cursorMeta, cursorErr := r.collectDomainsWithCursor(ctx, campaignID, validationType)
+	if cursorErr != nil {
+		log.Printf("StealthReal: cursor collection error campaign=%s phase=%s err=%v", campaignID, validationType, cursorErr)
+	}
+
+	var domains []string
+	if cursorErr == nil {
+		domains = cursorDomains
+		r.cursorSuccessCount++
+		log.Printf("StealthReal: cursor success campaign=%s phase=%s pages=%d collected=%d total_success=%d", campaignID, validationType, cursorMeta.pages, cursorMeta.domains, r.cursorSuccessCount)
+		// Record performance metric using placeholder query type semantics
+		if r.store != nil {
+			cid := campaignID
+			idx := []byte(`"unknown"`)
+			plan := []byte(fmt.Sprintf("\"pages=%d\"", cursorMeta.pages))
+			metric := &models.QueryPerformanceMetric{ // minimal population
+				QueryType:           "stealth_cursor_collection",
+				ExecutionTimeMs:     float64(time.Since(start).Milliseconds()),
+				RowsReturned:        int64(cursorMeta.domains),
+				RowsExamined:        int64(cursorMeta.domains),
+				IndexUsage:          idx,
+				QueryPlan:           plan,
+				ExecutedAt:          time.Now().UTC(),
+				CampaignID:          &cid,
+				PerformanceCategory: "stealth",
+				NeedsOptimization:   false,
 			}
+			_ = r.store.RecordQueryPerformance(context.Background(), r.store.UnderlyingDB(), metric)
 		}
-		if !page.PageInfo.HasNextPage || page.PageInfo.EndCursor == "" {
-			break
+	} else {
+		// Always hard fail now; legacy fallback removed
+		r.cursorErrorCount++
+		log.Printf("StealthReal: cursor ERROR (no legacy path) campaign=%s phase=%s errors=%d err=%v", campaignID, validationType, r.cursorErrorCount, cursorErr)
+		if r.store != nil {
+			cid := campaignID
+			idx := []byte(`"unknown"`)
+			plan := []byte("\"error_no_fallback\"")
+			metric := &models.QueryPerformanceMetric{
+				QueryType:           "stealth_cursor_error",
+				ExecutionTimeMs:     float64(time.Since(start).Milliseconds()),
+				RowsReturned:        0,
+				RowsExamined:        0,
+				IndexUsage:          idx,
+				QueryPlan:           plan,
+				ExecutedAt:          time.Now().UTC(),
+				CampaignID:          &cid,
+				PerformanceCategory: "stealth",
+				NeedsOptimization:   false,
+			}
+			_ = r.store.RecordQueryPerformance(context.Background(), r.store.UnderlyingDB(), metric)
 		}
-		after = page.PageInfo.EndCursor
+		return nil, fmt.Errorf("cursor error: %w", cursorErr)
 	}
 
 	if len(domains) == 0 {
+		log.Printf("StealthReal: no candidate domains campaign=%s phase=%s", campaignID, validationType)
 		return nil, nil
 	}
+
+	originalCount := len(domains)
 
 	// Apply subset first
 	if cfg.SubsetPct > 0 && cfg.SubsetPct < 1.0 {
@@ -98,8 +143,66 @@ func (r *realStealthIntegration) RandomizeDomainsForValidation(ctx context.Conte
 		r.cryptoShuffle(domains)
 	}
 
+	// Emit diagnostic log (sample first up to 5 domains)
+	sampleSize := 5
+	if len(domains) < sampleSize {
+		sampleSize = len(domains)
+	}
+	sample := strings.Join(domains[:sampleSize], ",")
+	log.Printf("StealthShuffle: campaign=%s phase=%s strategy=%s original=%d final=%d subsetPct=%.2f sample_first=%s", campaignID, validationType, cfg.Strategy, originalCount, len(domains), cfg.SubsetPct, sample)
+
 	return domains, nil
 }
+
+// collectDomainsWithCursor gathers domains using the cursor-based pagination API with panic recovery.
+type cursorCollectionMeta struct {
+	pages   int
+	domains int
+}
+
+func (r *realStealthIntegration) collectDomainsWithCursor(ctx context.Context, campaignID uuid.UUID, validationType string) (_ []string, meta cursorCollectionMeta, err error) {
+	defer func() {
+		if rec := recover(); rec != nil {
+			err = fmt.Errorf("panic in cursor pagination: %v", rec)
+		}
+	}()
+	// Use explicit non-nil exec to avoid ambiguity
+	exec := r.store.UnderlyingDB()
+	// Allow exec to be nil in test scenarios where a fake store is used that ignores exec.
+	domains := make([]string, 0, 2048)
+	var after string
+	for {
+		if testForceCursorPanic {
+			panic("test induced panic in cursor collection")
+		}
+		filter := store.ListGeneratedDomainsFilter{
+			CursorPaginationFilter: store.CursorPaginationFilter{First: 1000, After: after, SortBy: "offset_index", SortOrder: "ASC"},
+			CampaignID:             campaignID,
+		}
+		if validationType == "http_keyword_validation" {
+			filter.ValidationStatus = string(models.DomainDNSStatusOK)
+		}
+		page, qErr := r.store.GetGeneratedDomainsWithCursor(ctx, exec, filter)
+		if qErr != nil {
+			return nil, meta, qErr
+		}
+		for _, gd := range page.Data {
+			if gd != nil && gd.DomainName != "" {
+				domains = append(domains, gd.DomainName)
+			}
+		}
+		meta.pages++
+		if !page.PageInfo.HasNextPage || page.PageInfo.EndCursor == "" {
+			break
+		}
+		after = page.PageInfo.EndCursor
+	}
+	meta.domains = len(domains)
+	return domains, meta, nil
+}
+
+// collectDomainsLegacy provides fallback using the legacy offset-based pagination.
+// Legacy pagination removed: collectDomainsLegacy eliminated.
 
 func (r *realStealthIntegration) ProcessValidationWithStealth(ctx context.Context, campaignID uuid.UUID, domains []string, validationType string) error {
 	if r.store == nil {
@@ -113,6 +216,7 @@ func (r *realStealthIntegration) ProcessValidationWithStealth(ctx context.Contex
 	_ = r.defaultConfig(validationType)
 
 	// Phase C: stealth persistence to domains_data removed; treat as no-op.
+	log.Printf("StealthReal: ProcessValidationWithStealth no-op campaign=%s phase=%s domains=%d", campaignID, validationType, len(domains))
 	return nil
 }
 
@@ -203,6 +307,9 @@ func (r *realStealthIntegration) interleavedShuffle(domains []string) {
 	}
 	copy(domains, out)
 }
+
+// SetForceCursor enables or disables forced cursor mode (no legacy fallback). Called by toggle wrapper.
+func (r *realStealthIntegration) SetForceCursor(v bool) { r.forceCursor = v }
 
 func (r *realStealthIntegration) priorityFor(domain string, hints []string) int {
 	// Default medium

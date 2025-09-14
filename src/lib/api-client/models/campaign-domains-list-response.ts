@@ -19,6 +19,9 @@ import type { CampaignDomainsListResponseAggregates } from './campaign-domains-l
 // May contain unused imports in some cases
 // @ts-ignore
 import type { DomainListItem } from './domain-list-item';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { PageInfo } from './page-info';
 
 /**
  * 
@@ -50,5 +53,11 @@ export interface CampaignDomainsListResponse {
      * @memberof CampaignDomainsListResponse
      */
     'aggregates'?: CampaignDomainsListResponseAggregates;
+    /**
+     * 
+     * @type {PageInfo}
+     * @memberof CampaignDomainsListResponse
+     */
+    'pageInfo'?: PageInfo;
 }
 

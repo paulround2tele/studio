@@ -1,0 +1,17 @@
+
+> domainflow-frontend@1.0.0 backend:dev
+> cd backend && go run ./cmd/apiserver
+
+2025/09/13 17:55:46 Loaded environment variables from ../.env
+2025/09/13 17:55:46 Config: Attempting to load main config from: config.json
+2025/09/13 17:55:46 Optimization configuration initialized for environment: 
+2025/09/13 17:55:46 INIT campaignStorePostgres constructed db_nil=false
+2025/09/13 17:55:46 ProxyManager: Initializing with 0 proxy entries.
+2025/09/13 17:55:46 ProxyManager: Performing initial health checks for 0 supported proxies (timeout per proxy: 7s)...
+2025/09/13 17:55:46 ProxyManager: Initialization and initial health checks complete. Total managed: 0, Initially active: 0
+2025/09/13 17:55:46 StealthAwareDNS: Stealth mode enabled
+2025/09/13 17:55:46 StealthAwareHTTP: Stealth mode enabled
+2025/09/13 17:55:46 Starting monitoring service...
+2025/09/13 17:55:46 Monitoring service started
+2025/09/13 17:55:46 ✓ Resource cleanup service started
+2025/09/13 17:55:46 Chi server starting on :8080 (OpenAPI-generated)

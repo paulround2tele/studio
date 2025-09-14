@@ -32,6 +32,12 @@ type Transactor interface {
 type CampaignStore interface {
 	Transactor // Only Postgres store will meaningfully implement this
 
+	// UnderlyingDB returns the concrete *sqlx.DB for cases where a caller must explicitly
+	// pass a non-nil exec (e.g., to avoid ambiguous nil interfaces during instrumentation
+	// or when defensive store fallbacks are insufficient). This should be used sparingly
+	// to keep higher layers abstracted from the persistence layer.
+	UnderlyingDB() *sqlx.DB
+
 	CreateCampaign(ctx context.Context, exec Querier, campaign *models.LeadGenerationCampaign) error
 	GetCampaignByID(ctx context.Context, exec Querier, id uuid.UUID) (*models.LeadGenerationCampaign, error)
 	UpdateCampaign(ctx context.Context, exec Querier, campaign *models.LeadGenerationCampaign) error

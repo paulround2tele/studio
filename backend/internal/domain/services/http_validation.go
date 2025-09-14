@@ -29,11 +29,14 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// Threshold for diminishing returns ratio; can be tuned as needed.
+const diminishingReturnsThreshold = 1.15
+
 // computeDiminishingReturns determines if keyword growth is below threshold given baseline and added counts.
 // Rules:
 //   - if pagesExamined < 2 => false (need at least 2 pages to judge trend)
 //   - if baseline == 0: true only if added < 2 (crawl yielded almost nothing)
-//   - else: growth ratio = (baseline+added)/baseline; diminishing if ratio < 1.15
+//   - else: growth ratio = (baseline+added)/baseline; diminishing if ratio < threshold
 func computeDiminishingReturns(baseline, added, pagesExamined int) bool {
 	if pagesExamined < 2 {
 		return false
@@ -42,7 +45,7 @@ func computeDiminishingReturns(baseline, added, pagesExamined int) bool {
 		return added < 2
 	}
 	ratio := float64(baseline+added) / float64(baseline)
-	return ratio < 1.15
+	return ratio < diminishingReturnsThreshold
 }
 
 // httpValidationService orchestrates the HTTP validation engine
@@ -216,7 +219,7 @@ func (s *httpValidationService) maybeAdaptiveMicroCrawl(ctx context.Context, cam
 		return nil, nil
 	}
 	// Feature flag gate
-	if v, ok := os.LookupEnv("ENABLE_HTTP_MICROCRAWL"); !ok || !(v == "1" || strings.EqualFold(v, "true")) {
+	if !isFeatureEnabled("ENABLE_HTTP_MICROCRAWL") {
 		return nil, nil
 	}
 	// Limits (can be tuned via env later)
@@ -543,14 +546,44 @@ func (s *httpValidationService) Execute(ctx context.Context, campaignID uuid.UUI
 		return execution.ProgressChan, nil
 	}
 
-	// Apply stealth order and jitter if present
-	if order, _, _, ok := s.loadStealthForHTTP(ctx, campaignID); ok {
-		if len(order) > 0 {
-			domains = order
-		}
-	}
+	// NOTE: Legacy stealth loader removed. Stealth ordering now exclusively handled by stealth-aware wrapper service.
 
 	execution.ItemsTotal = len(domains)
+
+	// Log keyword configuration snapshot (counts only) for transparency
+	var keywordSetCount, adHocCount int
+	var enrichmentFlag, microcrawlFlag bool
+	if s.store != nil {
+		var exec store.Querier
+		if q, ok := s.deps.DB.(store.Querier); ok {
+			exec = q
+		}
+		if phase, perr := s.store.GetCampaignPhase(ctx, exec, campaignID, models.PhaseTypeHTTPKeywordValidation); perr == nil && phase != nil && phase.Configuration != nil {
+			var cfg models.HTTPPhaseConfigRequest
+			if json.Unmarshal(*phase.Configuration, &cfg) == nil {
+				keywordSetCount = len(cfg.Keywords)
+				adHocCount = len(cfg.AdHocKeywords)
+				if cfg.EnrichmentEnabled != nil {
+					enrichmentFlag = *cfg.EnrichmentEnabled
+				} else {
+					enrichmentFlag = isFeatureEnabled("ENABLE_HTTP_ENRICHMENT")
+				}
+				if cfg.MicroCrawlEnabled != nil {
+					microcrawlFlag = *cfg.MicroCrawlEnabled
+				} else {
+					microcrawlFlag = isFeatureEnabled("ENABLE_HTTP_MICROCRAWL")
+				}
+			}
+		}
+	}
+	s.deps.Logger.Info(ctx, "HTTP validation domain set ready", map[string]interface{}{
+		"campaign_id":        campaignID,
+		"domains_total":      len(domains),
+		"keyword_sets":       keywordSetCount,
+		"ad_hoc_keywords":    adHocCount,
+		"enrichment_enabled": enrichmentFlag,
+		"microcrawl_enabled": microcrawlFlag,
+	})
 
 	// Start HTTP validation in goroutine
 	go s.executeHTTPValidation(ctx, campaignID, domains)
@@ -674,16 +707,10 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 	allResults := make([]*httpvalidator.ValidationResult, 0, total)
 
 	// Feature flags & config parsing
-	enrichmentEnabled := false
-	microcrawlEnabled := false
+	enrichmentEnabled := isFeatureEnabled("ENABLE_HTTP_ENRICHMENT")
+	microcrawlEnabled := isFeatureEnabled("ENABLE_HTTP_MICROCRAWL")
 	microMaxPages := 3
 	microByteBudget := 150000
-	if v, ok := os.LookupEnv("ENABLE_HTTP_ENRICHMENT"); ok && (v == "1" || strings.EqualFold(v, "true")) {
-		enrichmentEnabled = true
-	}
-	if v, ok := os.LookupEnv("ENABLE_HTTP_MICROCRAWL"); ok && (v == "1" || strings.EqualFold(v, "true")) {
-		microcrawlEnabled = true
-	}
 	// Phase config overrides
 	if s.store != nil {
 		var exec store.Querier
@@ -1110,9 +1137,11 @@ func (s *httpValidationService) executeHTTPValidation(ctx context.Context, campa
 		// For now, omit observation if we lack start timestamp.
 	}
 	s.deps.Logger.Info(ctx, "HTTP validation completed successfully", map[string]interface{}{
-		"campaign_id":    campaignID,
-		"results_count":  len(allResults),
-		"domains_tested": len(domains),
+		"campaign_id":        campaignID,
+		"results_count":      len(allResults),
+		"domains_tested":     len(domains),
+		"enrichment_enabled": enrichmentEnabled,
+		"microcrawl_enabled": microcrawlEnabled,
 	})
 
 	// Mark completed in store
@@ -1134,10 +1163,7 @@ func (s *httpValidationService) getValidatedDomains(ctx context.Context, campaig
 	if s.store == nil {
 		return nil, fmt.Errorf("campaign store not available")
 	}
-	// If a stealth order exists, use it
-	if order, _, _, ok := s.loadStealthForHTTP(ctx, campaignID); ok && len(order) > 0 {
-		return order, nil
-	}
+	// Legacy stealth order path removed; wrapper applies stealth before calling base service.
 	var exec store.Querier
 	if q, ok := s.deps.DB.(store.Querier); ok {
 		exec = q
@@ -1166,11 +1192,7 @@ func (s *httpValidationService) getValidatedDomains(ctx context.Context, campaig
 	return all, nil
 }
 
-// loadStealthForHTTP reads stealth order and jitter from campaign domains data
-func (s *httpValidationService) loadStealthForHTTP(ctx context.Context, campaignID uuid.UUID) (order []string, jitterMin int, jitterMax int, ok bool) {
-	// Phase C: domains_data deprecated; stealth config persistence removed. Return no-op.
-	return nil, 0, 0, false
-}
+// loadStealthForHTTP removed: stealth ordering now occurs exclusively in stealth-aware wrapper.
 
 // ensureDNSCompleted checks the campaign phase table and ensures DNS phase is marked completed
 func (s *httpValidationService) ensureDNSCompleted(ctx context.Context, campaignID uuid.UUID) error {
@@ -1445,21 +1467,30 @@ func (s *httpValidationService) storeHTTPResults(ctx context.Context, campaignID
 	valueArgs = append(valueArgs, campaignID) // $1
 	for i, r := range bulk {
 		idx := i*5 + 2 // domain starts at $2
-		valueStrings = append(valueStrings, fmt.Sprintf("($%d,$%d,$%d,$%d,$%d)", idx, idx+1, idx+2, idx+3, idx+4))
-		valueArgs = append(valueArgs, r.DomainName, r.ValidationStatus, r.HTTPStatusCode, r.LastCheckedAt, r.Reason)
+		// Cast http_status_code placeholder to integer explicitly to prevent Postgres inferring text type when NULLs present
+		valueStrings = append(valueStrings, fmt.Sprintf("($%d,$%d,$%d::integer,$%d::timestamptz,$%d)", idx, idx+1, idx+2, idx+3, idx+4))
+		// Ensure HTTPStatusCode stored as primitive int or NULL to satisfy integer column type
+		var httpCode interface{}
+		if r.HTTPStatusCode != nil {
+			httpCode = *r.HTTPStatusCode
+		} else {
+			httpCode = nil
+		}
+		valueArgs = append(valueArgs, r.DomainName, r.ValidationStatus, httpCode, r.LastCheckedAt, r.Reason)
 	}
 	valuesClause := strings.Join(valueStrings, ",")
+	// NOTE: Schema columns: http_status (enum), http_status_code, last_validated_at. Some legacy code referenced http_checked_at/http_reason which do not exist.
+	// We cast validation_status (text) to domain_http_status_enum explicitly to satisfy Postgres type requirements.
 	query := fmt.Sprintf(`WITH updates(domain_name,validation_status,http_status_code,last_checked_at,reason) AS (VALUES %s)
-UPDATE generated_domains gd
-SET http_status = u.validation_status,
-    http_status_code = u.http_status_code,
-    http_checked_at = u.last_checked_at,
-    http_reason = CASE WHEN u.validation_status = 'ok' THEN NULL ELSE COALESCE(u.reason, gd.http_reason) END
-FROM updates u
-WHERE gd.domain_name = u.domain_name
-  AND gd.campaign_id = $1
-  AND gd.http_status = 'pending'
-RETURNING u.validation_status`, valuesClause)
+	UPDATE generated_domains gd
+	SET http_status = u.validation_status::domain_http_status_enum,
+			http_status_code = u.http_status_code,
+			last_validated_at = u.last_checked_at
+	FROM updates u
+	WHERE gd.domain_name = u.domain_name
+		AND gd.campaign_id = $1
+		AND gd.http_status = 'pending'
+	RETURNING u.validation_status`, valuesClause)
 	rows, qErr := tx.QueryxContext(ctx, query, valueArgs...)
 	if qErr != nil {
 		_ = tx.Rollback()
@@ -1722,6 +1753,12 @@ func (s *httpValidationService) microCrawlEnhance(ctx context.Context, campaignI
 		merged = append(merged, k)
 	}
 	return pagesExamined, exhausted, totalUnique, merged
+}
+
+// isFeatureEnabled checks if a feature flag environment variable is enabled (1 or true, case-insensitive).
+func isFeatureEnabled(envVar string) bool {
+	v, ok := os.LookupEnv(envVar)
+	return ok && (v == "1" || strings.EqualFold(v, "true"))
 }
 
 // updateExecutionStatus updates the execution status for a campaign

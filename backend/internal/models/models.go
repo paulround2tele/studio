@@ -9,6 +9,53 @@ import (
 	"github.com/google/uuid"
 )
 
+// NullJSONRaw wraps json.RawMessage to allow scanning NULL into a pointer-compatible type when using sqlx
+type NullJSONRaw struct {
+	Raw   json.RawMessage
+	Valid bool // Valid is true if Raw is not NULL
+}
+
+// Scan implements the sql.Scanner interface.
+func (n *NullJSONRaw) Scan(value interface{}) error {
+	// Normalize NULL input
+	if value == nil {
+		n.Raw = nil
+		n.Valid = false
+		return nil
+	}
+
+	switch v := value.(type) {
+	case []byte:
+		if len(v) == 0 { // treat empty byte slice as JSON null
+			n.Raw = json.RawMessage([]byte("null"))
+			n.Valid = true
+			return nil
+		}
+		cp := make([]byte, len(v))
+		copy(cp, v)
+		n.Raw = json.RawMessage(cp)
+		n.Valid = true
+		return nil
+	case string:
+		if v == "" { // empty string => NULL semantic
+			n.Raw = nil
+			n.Valid = false
+			return nil
+		}
+		cp := []byte(v)
+		n.Raw = json.RawMessage(cp)
+		n.Valid = true
+		return nil
+	default:
+		// Unsupported type: mark invalid but don't error to remain lenient
+		n.Raw = nil
+		n.Valid = false
+		return nil
+	}
+}
+
+// Value implements driver.Valuer (optional). Not required for this fix so omitted.
+
 // DNSPhaseConfigRequest represents DNS validation phase configuration
 type DNSPhaseConfigRequest struct {
 	PersonaIDs []string `json:"personaIds" validate:"required,min=1" binding:"required" example:"[\"persona-uuid-1\", \"persona-uuid-2\"]" description:"Array of persona IDs to use for DNS validation"`
@@ -520,9 +567,10 @@ type GeneratedDomain struct {
 	HTTPReason      sql.NullString        `db:"http_reason" json:"httpReason,omitempty" firestore:"httpReason,omitempty"`
 
 	// New enrichment & scoring fields
-	RelevanceScore         sql.NullFloat64 `db:"relevance_score" json:"relevanceScore,omitempty"`
-	DomainScore            sql.NullFloat64 `db:"domain_score" json:"domainScore,omitempty"`
-	FeatureVector          json.RawMessage `db:"feature_vector" json:"featureVector,omitempty"`
+	RelevanceScore sql.NullFloat64 `db:"relevance_score" json:"relevanceScore,omitempty"`
+	DomainScore    sql.NullFloat64 `db:"domain_score" json:"domainScore,omitempty"`
+	// FeatureVector may be NULL until HTTP enrichment runs; using pointer allows sqlx/pgx to Scan NULL without error
+	FeatureVector          NullJSONRaw     `db:"feature_vector" json:"featureVector,omitempty"`
 	IsParked               sql.NullBool    `db:"is_parked" json:"isParked,omitempty"`
 	ParkedConfidence       sql.NullFloat64 `db:"parked_confidence" json:"parkedConfidence,omitempty"`
 	Contacts               json.RawMessage `db:"contacts" json:"contacts,omitempty"`
@@ -546,8 +594,8 @@ type ScoringProfile struct {
 
 // MarshalJSON provides custom JSON marshaling for GeneratedDomain to handle sql.Null* types properly
 func (gd GeneratedDomain) MarshalJSON() ([]byte, error) {
+	// Define an alias to avoid infinite recursion when embedding
 	type Alias GeneratedDomain
-
 	// Create a temporary struct with proper JSON-serializable types
 	temp := struct {
 		Alias
@@ -564,6 +612,11 @@ func (gd GeneratedDomain) MarshalJSON() ([]byte, error) {
 		HTTPReason      *string  `json:"httpReason,omitempty"`
 	}{
 		Alias: Alias(gd),
+	}
+
+	// If FeatureVector invalid (NULL), zero it out for omitempty behavior by converting to nil pointer view
+	if !gd.FeatureVector.Valid || len(gd.FeatureVector.Raw) == 0 {
+		temp.FeatureVector = NullJSONRaw{}
 	}
 
 	// Convert sql.NullString fields to proper JSON representation

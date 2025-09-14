@@ -1307,7 +1307,7 @@ BulkDomainGenerationRequest:
             type: object
             properties:
               patternType: { type: string, enum: [prefix, suffix, both] }
-              variableLength: { type: integer, minimum: 1, maximum: 20 }
+              variableLength: { type: integer, minimum: 0, maximum: 20 }
               characterSet: { type: string }
               constantString: { type: string }
               tlds: { type: array, items: { type: string } }

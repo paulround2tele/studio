@@ -84,7 +84,7 @@ func loadCampaignScoringWeights(ctx context.Context, db *sql.DB, campaignID inte
 	if err != nil {
 		return nil, nil, err
 	}
-	var pPtr *float64
+	var penaltyPtr *float64
 	if penalty.Valid {
 		v := penalty.Float64
 		if v < 0 {
@@ -92,9 +92,9 @@ func loadCampaignScoringWeights(ctx context.Context, db *sql.DB, campaignID inte
 		} else if v > 1 {
 			v = 1
 		}
-		pPtr = &v
+		penaltyPtr = &v
 	}
-	return validated, pPtr, nil
+	return validated, penaltyPtr, nil
 }
 
 func normalizeDefaults() map[string]float64 {

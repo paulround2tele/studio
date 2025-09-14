@@ -25,6 +25,7 @@ type StructuralSignals struct {
 // It is intentionally lightweight: a single pass DOM walk, no allocations beyond counters & small buffers.
 // Language heuristic (phase 4 baseline): classify as 'en' if >=40 letters and >=85% ASCII letters; else 'und'.
 // Trigram tables: minimal weighted sets for language hinting.
+// This map is intended to be immutable and should not be modified at runtime.
 var languageTrigrams = map[string]map[string]int{
 	"en": {" the": 6, "the": 5, "and": 4, "ing": 4, "ion": 3, "ent": 3, "her": 2, "ati": 2, "ver": 1, "est": 1},
 	"es": {" que": 7, "que": 6, "ción": 5, " una": 4, " por": 4, " los": 4, " las": 4, "ado": 3, "ente": 3},

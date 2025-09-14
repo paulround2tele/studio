@@ -26,6 +26,7 @@ export * from './apis/monitoring-api';
 export * from './apis/personas-api';
 export * from './apis/proxies-api';
 export * from './apis/proxy-pools-api';
+export * from './apis/scoring-api';
 export * from './apis/server-settings-api';
 export * from './apis/sse-api';
 

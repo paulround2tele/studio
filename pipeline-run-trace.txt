@@ -1,0 +1,131 @@
+[17:15:33] Login test@example.com
+[17:15:33] Ensure personas
+[17:15:33] Using DNS persona e3b7a88b-abed-4030-b49a-510e2f81892a and HTTP persona 9575394e-d5b7-4eca-98ad-66aa37bad5ec
+[17:15:33] Create campaign
+[17:15:33] Campaign 3847344b-7605-4066-afe2-2979ca1cea81
+[17:15:33] Configure discovery phase (constant=tel, variableLength=3, count=500)
+[17:15:33] Start discovery phase
+[17:15:33] Poll discovery completion
+[17:15:34] discovery status=completed
+[17:15:34] List domains post-discovery
+[17:15:34] Domains generated=500
+[17:15:34] Configure validation phase
+[17:15:34] Start validation phase
+[17:15:34] Poll validation completion
+[17:15:35] validation status=running
+[17:15:36] validation status=running
+[17:15:37] validation status=running
+[17:15:38] validation status=running
+[17:15:40] validation status=running
+[17:15:41] validation status=running
+[17:15:42] validation status=running
+[17:15:43] validation status=running
+[17:15:44] validation status=running
+[17:15:45] validation status=running
+[17:15:46] validation status=running
+[17:15:47] validation status=completed
+[17:15:47] Confirm DNS phase persisted as completed
+[17:15:47] Count domains by dnsStatus
+[17:15:47] DNS Status counts: ok=53 error=200 pending=0
+[17:15:47] Configure extraction (http keyword validation) phase
+[17:15:47] Start extraction phase
+[17:15:47] Poll extraction completion
+[17:15:49] extraction status=running
+[17:15:50] extraction status=running
+[17:15:51] extraction status=running
+[17:15:52] extraction status=running
+[17:15:53] extraction status=running
+[17:15:54] extraction status=running
+[17:15:55] extraction status=running
+[17:15:56] extraction status=running
+[17:15:57] extraction status=running
+[17:15:58] extraction status=running
+[17:15:59] extraction status=running
+[17:16:00] extraction status=running
+[17:16:01] extraction status=running
+[17:16:02] extraction status=running
+[17:16:03] extraction status=running
+[17:16:04] extraction status=running
+[17:16:05] extraction status=running
+[17:16:06] extraction status=running
+[17:16:07] extraction status=running
+[17:16:08] extraction status=running
+[17:16:09] extraction status=running
+[17:16:10] extraction status=running
+[17:16:11] extraction status=running
+[17:16:12] extraction status=running
+[17:16:13] extraction status=running
+[17:16:14] extraction status=running
+[17:16:15] extraction status=running
+[17:16:16] extraction status=running
+[17:16:18] extraction status=running
+[17:16:19] extraction status=running
+[17:16:20] extraction status=running
+[17:16:21] extraction status=running
+[17:16:22] extraction status=running
+[17:16:23] extraction status=running
+[17:16:24] extraction status=running
+[17:16:25] extraction status=running
+[17:16:26] extraction status=running
+[17:16:27] extraction status=running
+[17:16:28] extraction status=running
+[17:16:29] extraction status=running
+[17:16:30] extraction status=running
+[17:16:31] extraction status=running
+[17:16:32] extraction status=running
+[17:16:33] extraction status=running
+[17:16:34] extraction status=completed
+[17:16:34] Configure analysis phase
+[17:16:34] Start analysis phase
+[17:16:34] Poll analysis completion
+[17:16:35] analysis status=running
+[17:16:36] analysis status=running
+[17:16:37] analysis status=running
+[17:16:38] analysis status=running
+[17:16:40] analysis status=running
+[17:16:41] analysis status=running
+[17:16:42] analysis status=running
+[17:16:43] analysis status=running
+[17:16:44] analysis status=running
+[17:16:45] analysis status=running
+[17:16:46] analysis status=running
+[17:16:47] analysis status=running
+[17:16:48] analysis status=running
+[17:16:49] analysis status=running
+[17:16:50] analysis status=running
+[17:16:51] analysis status=running
+[17:16:52] analysis status=running
+[17:16:53] analysis status=running
+[17:16:54] analysis status=running
+[17:16:55] analysis status=running
+[17:16:56] analysis status=running
+[17:16:57] analysis status=running
+[17:16:58] analysis status=running
+[17:17:00] analysis status=running
+[17:17:01] analysis status=running
+[17:17:02] analysis status=running
+[17:17:03] analysis status=running
+[17:17:04] analysis status=running
+[17:17:05] analysis status=running
+[17:17:06] analysis status=running
+[17:17:07] analysis status=running
+[17:17:08] analysis status=running
+[17:17:09] analysis status=running
+[17:17:10] analysis status=running
+[17:17:11] analysis status=running
+[17:17:12] analysis status=completed
+{
+  "campaignId": "3847344b-7605-4066-afe2-2979ca1cea81",
+  "totalDomains": 500,
+  "dnsOk": 53,
+  "dnsError": 200,
+  "dnsPending": 0,
+  "dnsPersona": "e3b7a88b-abed-4030-b49a-510e2f81892a",
+  "httpPersona": "9575394e-d5b7-4eca-98ad-66aa37bad5ec",
+  "phases": {
+    "discovery": "completed",
+    "dnsValidation": "completed",
+    "extraction": "completed",
+    "analysis": "completed"
+  }
+}
