@@ -37,6 +37,7 @@ Thumbs.db
 # Test results
 /coverage
 /reports
+/test-results
 
 # Logs
 logs
@@ -46,6 +47,14 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+
+# Pipeline and runtime logs (ephemeral artifacts)
+pipeline_run_log.txt
+pipeline-run-trace.txt
+backend-log.txt
+backend_runtime_log.txt
+backend-log-run.txt
+nextserver-logs
 
 # Firebase
 .firebase/
@@ -62,8 +71,9 @@ firebase-debug.log
 *.jar
 *.test
 *.exe
+*.out
 
-# Backend build artifacts
+# Go build artifacts
 backend/bin/
 backend/build/
 backend/apiserver
@@ -73,6 +83,28 @@ backend/debug_auth_service
 backend/debug-auth-service
 backend/domainflow-apiserver
 backend/*.test
+
+# OpenAPI dist output and extracted contracts
+backend/openapi/dist/
+extracted-contracts.json
+route-parity.json
+backend/routes.dump.txt
+
+# Generated client artifacts and documentation
+src/lib/api-client/docs/
+docs/api/index.html
+openapi-3.yaml
+*.tsbuildinfo
+accessibility-audit-report.json
+
+# Test logs and screenshots
+test-logs/
+debug-logs/
+scripts/test-logs/
+
+# Downloaded JAR files and binaries
+*.jar
+openapi-generator-cli*.jar
 
 # Google Cloud SDK
 google-cloud-sdk/
@@ -89,34 +121,50 @@ mcp/mcp-server.exe
 go1.22.3.linux-amd64.tar.gz
 .db_connection.test
 
-# Generated documentation and build artifacts
-src/lib/api-client/docs/
-docs/api/index.html
-openapi-3.yaml
-*.tsbuildinfo
-accessibility-audit-report.json
-
-# Test logs and screenshots
-test-logs/
-debug-logs/
-scripts/test-logs/
-
-# Downloaded JAR files and binaries
-*.jar
-openapi-generator-cli*.jar
-
 # Generated backend artifacts
 backend/generate-openapi
 backend/*.log
 
-# Security hygiene: never commit cookies or proxy dumps
+# Security hygiene: never commit cookies, proxy dumps, or secrets
 cookies.txt
 scripts/cookies.txt
 backend/cookies.txt
 proxyscrape_*.*
 backend/proxyscrape_*.*
+.pepper_key
+.session_cookies
+.db_connection
+
+# Cache directories
+.turbo
+.eslintcache
+.parcel-cache
+.nyc_output
+
+# Environment files
+.env*
+!.env.example
+!.env
+
+# Database dumps
+*.sql
+*.dump
+*.backup
+
+# PID files
+*.pid
+
+# Temporary files and editor configs
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
 
 # Purge swagger fossils
 backend/docs/
 backend/.swagrc
 backend/cmd/printspec/
+
+# Script output files
+scripts/last-issues-created.txt

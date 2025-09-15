@@ -8,5 +8,18 @@ if git diff --cached --name-only | grep -E "^src/lib/api-client/(models|apis|api
 	git add src/lib/api-client
 fi
 
+# Contract sync validation (optional - skips gracefully if tools not available)
+# This prevents duplicate work since the contract script also inspects staged changes
+if [ -f "scripts/contract-sync/pre-commit-hook.sh" ] && [ -f "scripts/contract-sync/validate-alignment.ts" ]; then
+	if command -v npx >/dev/null 2>&1 && npx -c 'exit 0' 2>/dev/null; then
+		echo "🔍 Running contract alignment validation..."
+		bash scripts/contract-sync/pre-commit-hook.sh || exit 1
+	else
+		echo "⚠️  Contract validation skipped: ts-node/npx not available"
+	fi
+else
+	echo "⚠️  Contract validation skipped: validation scripts not found"
+fi
+
 # Typecheck fast
 npm run typecheck -s || exit 1
