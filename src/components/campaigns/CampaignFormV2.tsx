@@ -128,11 +128,12 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
           ? "Edit basic campaign information. Domain generation and phase configurations are managed separately."
           : "Create a new lead generation campaign. Configure phases after creation using the Phase Dashboard."
         }
+        data-testid={editMode ? 'campaign-edit-header' : 'campaign-create-header'}
       />
 
-      <Card className="max-w-4xl mx-auto">
+      <Card className="max-w-4xl mx-auto" data-testid={editMode ? 'campaign-edit-card' : 'campaign-create-card'}>
         <CardHeader>
-      <CardTitle>{editMode ? "Edit Campaign" : "Campaign"}</CardTitle>
+      <CardTitle data-testid="campaign-form-title">{editMode ? "Edit Campaign" : "Campaign"}</CardTitle>
           <CardDescription>
             {editMode
               ? "Update basic campaign information. Domain generation configuration cannot be changed after creation."
@@ -142,7 +143,7 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6" data-testid="campaign-form">
               {/* Basic Information */}
               <div className="space-y-4">
                 <FormField
@@ -152,7 +153,7 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
                     <FormItem>
                       <FormLabel>Campaign Name *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter campaign name" {...field} />
+                        <Input placeholder="Enter campaign name" {...field} data-testid="campaign-name-input" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -166,7 +167,7 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
                     <FormItem>
                       <FormLabel>Description (Optional)</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="Enter campaign description" {...field} />
+                        <Textarea placeholder="Enter campaign description" {...field} data-testid="campaign-description-input" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -177,7 +178,7 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
               </div>
 
               {/* Phase Information Alert */}
-              <Alert>
+              <Alert data-testid="campaign-phase-architecture-info">
                 <Info className="h-4 w-4" />
                 <AlertDescription>
                   <strong>Phase-Centric Architecture:</strong> After creating your campaign, configure phases from the dashboard. 
@@ -194,12 +195,14 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
                   variant="outline"
                   onClick={() => router.push('/campaigns')}
                   disabled={isCreatingCampaign}
+                  data-testid="campaign-cancel"
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit" 
                   disabled={isCreatingCampaign}
+                  data-testid="campaign-submit"
                 >
                   {isCreatingCampaign ? 'Creating...' : 'Create Campaign'}
                 </Button>

@@ -3,6 +3,18 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useSSE, type SSEEvent } from './useSSE';
 import { useAppDispatch } from '@/store/hooks';
 import { phaseStarted, phaseCompleted, phaseFailed } from '@/store/slices/pipelineExecSlice';
+import { campaignApi } from '@/store/api/campaignApi';
+
+// Map backend phase identifiers to internal pipeline phase keys used in selectors/ordering.
+// Backend examples: domain_generation (discovery), dns_validation (validation), http_validation (extraction), analytics/analysis.
+const BACKEND_TO_INTERNAL_PHASE: Record<string, string> = {
+  domain_generation: 'discovery',
+  dns_validation: 'validation',
+  http_validation: 'extraction',
+  analysis: 'analysis',
+  analytics: 'analysis'
+};
+const mapPhase = (raw: any): any => BACKEND_TO_INTERNAL_PHASE[raw as string] || raw;
 
 export interface CampaignProgress {
   current_phase: string;
@@ -30,8 +42,13 @@ export interface CampaignSSEEvents {
   onDomainGenerated?: (campaignId: string, data: unknown) => void;
   onDomainValidated?: (campaignId: string, data: unknown) => void;
   onAnalysisCompleted?: (campaignId: string, data: unknown) => void;
+  onCountersReconciled?: (campaignId: string, data: unknown) => void;
   onError?: (campaignId: string, error: string) => void;
   onModeChanged?: (campaignId: string, mode: 'full_sequence' | 'step_by_step') => void;
+  /** Emitted when analysis preflight succeeds and feature vectors are being reused */
+  onAnalysisReuseEnrichment?: (campaignId: string, data: { featureVectorCount?: number; raw: unknown }) => void;
+  /** Emitted when analysis preflight fails before scoring (structured error code expected) */
+  onAnalysisFailed?: (campaignId: string, data: { error?: string; errorCode?: string; raw: unknown }) => void;
 }
 
 export interface UseCampaignSSEOptions {
@@ -100,6 +117,8 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
   const dispatch = useAppDispatch();
   
   const [lastProgress, setLastProgress] = useState<CampaignProgress | null>(null);
+  // Track phases we've already marked completed to avoid double updates when both progress & phase_completed arrive.
+  const completedRef = React.useRef<Set<string>>(new Set());
   
   // Construct the SSE URL based on whether we're watching a specific campaign
   const sseUrl = autoConnect 
@@ -119,28 +138,53 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
     }
 
     switch (event.event) {
-      case 'campaign_progress':
+      case 'campaign_progress': {
         const progressData = (dataObj?.progress as CampaignProgress | undefined) || (dataObj as unknown as CampaignProgress | undefined);
         if (progressData) {
           setLastProgress(progressData);
           events.onProgress?.(campaignIdFromEvent, progressData);
+          // If backend provides current_phase & 100% progress but no explicit phase_completed yet, synthesize completion.
+          const rawPhase = (progressData.current_phase || (dataObj as any)?.current_phase) as string | undefined;
+          const pct = progressData.progress_pct;
+          if (rawPhase && typeof pct === 'number' && pct >= 100) {
+            const phase = mapPhase(rawPhase);
+            if (!completedRef.current.has(`${campaignIdFromEvent}:${phase}`)) {
+              completedRef.current.add(`${campaignIdFromEvent}:${phase}`);
+              dispatch(phaseCompleted({ campaignId: campaignIdFromEvent, phase }));
+              dispatch(campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId: campaignIdFromEvent, phase }, (draft: any) => ({ ...(draft||{}), status: 'completed' })));
+            }
+          }
         }
-        break;
+        break; }
 
-      case 'phase_started':
-        dispatch(phaseStarted({ campaignId: campaignIdFromEvent, phase: (dataObj?.phase as any) }));
-        events.onPhaseStarted?.(campaignIdFromEvent, dataObj as unknown as PhaseEvent);
-        break;
+      case 'phase_started': {
+        const backendPhase = (dataObj?.phase as any);
+        const phase = mapPhase(backendPhase);
+        dispatch(phaseStarted({ campaignId: campaignIdFromEvent, phase }));
+        // Update RTK Query cache: mark status running under internal key
+        dispatch(campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId: campaignIdFromEvent, phase }, (draft: any) => ({ ...(draft||{}), status: 'running' })));
+        events.onPhaseStarted?.(campaignIdFromEvent, { ...(dataObj as any), phase } as unknown as PhaseEvent);
+        break; }
 
-      case 'phase_completed':
-        dispatch(phaseCompleted({ campaignId: campaignIdFromEvent, phase: (dataObj?.phase as any) }));
-        events.onPhaseCompleted?.(campaignIdFromEvent, dataObj as unknown as PhaseEvent);
-        break;
+      case 'phase_completed': {
+        const backendPhase = (dataObj?.phase as any);
+        const phase = mapPhase(backendPhase);
+        if (!completedRef.current.has(`${campaignIdFromEvent}:${phase}`)) {
+          completedRef.current.add(`${campaignIdFromEvent}:${phase}`);
+          dispatch(phaseCompleted({ campaignId: campaignIdFromEvent, phase }));
+          dispatch(campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId: campaignIdFromEvent, phase }, (draft: any) => ({ ...(draft||{}), status: 'completed' })));
+        }
+        events.onPhaseCompleted?.(campaignIdFromEvent, { ...(dataObj as any), phase } as unknown as PhaseEvent);
+        break; }
 
-      case 'phase_failed':
-        dispatch(phaseFailed({ campaignId: campaignIdFromEvent, phase: (dataObj?.phase as any), error: (dataObj?.error as string|undefined) }));
-        events.onPhaseFailed?.(campaignIdFromEvent, dataObj as unknown as PhaseEvent);
-        break;
+      case 'phase_failed': {
+        const backendPhase = (dataObj?.phase as any);
+        const phase = mapPhase(backendPhase);
+        const error = (dataObj?.error as string|undefined);
+        dispatch(phaseFailed({ campaignId: campaignIdFromEvent, phase, error }));
+        dispatch(campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId: campaignIdFromEvent, phase }, (draft: any) => ({ ...(draft||{}), status: 'failed', error })));
+        events.onPhaseFailed?.(campaignIdFromEvent, { ...(dataObj as any), phase } as unknown as PhaseEvent);
+        break; }
 
       case 'domain_generated':
         events.onDomainGenerated?.(campaignIdFromEvent, event.data);
@@ -152,6 +196,24 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
 
       case 'analysis_completed':
         events.onAnalysisCompleted?.(campaignIdFromEvent, event.data);
+        break;
+      case 'analysis_reuse_enrichment': {
+        // Provide normalized shape
+        const featureVectorCount = (dataObj?.featureVectorCount as number | undefined) || (dataObj?.feature_vector_count as number | undefined);
+        events.onAnalysisReuseEnrichment?.(campaignIdFromEvent, { featureVectorCount, raw: event.data });
+        break;
+      }
+      case 'analysis_failed': {
+        const error = (dataObj?.error as string | undefined) || (dataObj?.message as string | undefined);
+        const errorCode = dataObj?.errorCode as string | undefined;
+        // Dispatch phaseFailed for analysis to integrate with existing runtime slice (phase field may be absent on backend custom event)
+        dispatch(phaseFailed({ campaignId: campaignIdFromEvent, phase: 'analysis' as any, error }));
+        events.onAnalysisFailed?.(campaignIdFromEvent, { error, errorCode, raw: event.data });
+        break;
+      }
+      case 'counters_reconciled':
+        // Provide callback, plus optionally consumer could choose to invalidate queries externally.
+        events.onCountersReconciled?.(campaignIdFromEvent, event.data);
         break;
 
       case 'mode_changed': {

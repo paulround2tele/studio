@@ -25,6 +25,7 @@ import type { EnrichedCampaignResponse } from '@/lib/api-client/models/enriched-
 import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
 import type { CampaignDomainsListResponse } from '@/lib/api-client/models/campaign-domains-list-response';
 import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
+import { toRtkError } from '@/lib/utils/toRtkError';
 
 // Centralized API configuration targeting /api/v2
 const campaignsApi = new CampaignsApi(apiConfiguration);
@@ -45,7 +46,7 @@ export const campaignApi = createApi({
           if (!data) return { error: 'Empty campaign response' as any };
           return { data };
         } catch (error: any) {
-          return { error: error?.response?.data || error?.message };
+          return { error: toRtkError(error) as any };
         }
       },
       invalidatesTags: ['Campaign', 'CampaignList'],
@@ -60,7 +61,7 @@ export const campaignApi = createApi({
           if (!data) return { error: 'Empty enriched campaign response' as any };
           return { data };
         } catch (error: any) {
-          return { error: error?.response?.data || error?.message };
+          return { error: toRtkError(error) as any };
         }
       },
       providesTags: (result, error, campaignId) => [
@@ -74,10 +75,25 @@ export const campaignApi = createApi({
       queryFn: async () => {
         try {
           const response = await campaignsApi.campaignsList();
-          const data = extractResponseData<CampaignResponse[]>(response) || [];
+          // TEMP DEBUG instrumentation to inspect actual shape coming back from generated client
+          // (Will be removed once confirmed.)
+          // eslint-disable-next-line no-console
+          console.log('[DEBUG] campaignsList raw response', response);
+          let data: CampaignResponse[] = [];
+          try {
+            data = extractResponseData<CampaignResponse[]>(response) || [];
+          } catch (e) {
+            // Fallback strategies: common shapes: response.data?.data (array), response.data (array)
+            const anyResp: any = response as any;
+            if (Array.isArray(anyResp?.data?.data)) data = anyResp.data.data;
+            else if (Array.isArray(anyResp?.data)) data = anyResp.data;
+            else if (Array.isArray(anyResp)) data = anyResp;
+          }
+          // eslint-disable-next-line no-console
+          console.log('[DEBUG] campaignsList normalized data length', data.length);
           return { data };
         } catch (error: any) {
-          return { error: error?.response?.data || error?.message };
+          return { error: toRtkError(error) as any };
         }
       },
       providesTags: ['CampaignList'],
@@ -95,7 +111,7 @@ export const campaignApi = createApi({
           if (!data) return { error: 'Empty domains list response' as any };
           return { data };
         } catch (error: any) {
-          return { error: error?.response?.data || error?.message };
+          return { error: toRtkError(error) as any };
         }
       },
       providesTags: (result, error, { campaignId }) => [
@@ -112,7 +128,7 @@ export const campaignApi = createApi({
           if (!data) return { error: 'Empty progress response' as any };
           return { data };
         } catch (error: any) {
-          return { error: error?.response?.data || error?.message };
+          return { error: toRtkError(error) as any };
         }
       },
       providesTags: (result, error, campaignId) => [
@@ -133,7 +149,7 @@ export const campaignApi = createApi({
           if (!data) return { error: 'Empty phase configure response' as any };
           return { data };
         } catch (error: any) {
-          return { error: error?.response?.data || error?.message };
+          return { error: toRtkError(error) as any };
         }
       },
       invalidatesTags: (result, error, { campaignId, phase }) => [
@@ -156,7 +172,7 @@ export const campaignApi = createApi({
           if (!data) return { error: 'Empty phase start response' as any };
           return { data };
         } catch (error: any) {
-          return { error: error?.response?.data || error?.message };
+          return { error: toRtkError(error) as any };
         }
       },
       invalidatesTags: (result, error, { campaignId, phase }) => [
@@ -181,7 +197,7 @@ export const campaignApi = createApi({
           if (!data) return { error: 'Empty phase status response' as any };
           return { data };
         } catch (error: any) {
-          return { error: error?.response?.data || error?.message };
+          return { error: toRtkError(error) as any };
         }
       },
       providesTags: (result, error, { campaignId, phase }) => [
@@ -202,7 +218,7 @@ export const campaignApi = createApi({
           if (!data) return { error: 'Empty pattern offset response' as any };
           return { data };
         } catch (error: any) {
-          return { error: error?.response?.data || error?.message };
+          return { error: toRtkError(error) as any };
         }
       },
     }),
@@ -232,33 +248,52 @@ export const campaignApi = createApi({
           const text = all.map(d => d.domain).filter(Boolean).join('\n');
           return { data: text };
         } catch (error: any) {
-          return { error: error?.response?.data || error?.message };
+          return { error: toRtkError(error) as any };
         }
       },
     }),
 
-    // Update campaign execution mode (full_sequence vs step_by_step)
+    // Update campaign execution mode (full_sequence vs step_by_step) - now using typed extraction
     updateCampaignMode: builder.mutation<
       { mode: string },
       { campaignId: string; mode: 'full_sequence' | 'step_by_step' }
     >({
       queryFn: async ({ campaignId, mode }) => {
         try {
-          // Generated client method name inferred from path: campaignsModeUpdate
-          // The request envelope expects { mode: CampaignModeEnum }
-          // Response envelope currently omits data in SuccessEnvelope; backend may include data.mode in future.
-          const resp: any = await (campaignsApi as any).campaignsModeUpdate(campaignId, { mode });
-          // Attempt to extract data.mode if present, fallback to requested mode
-          const dataPayload: any = resp?.data?.data || { mode };
-          return { data: { mode: dataPayload.mode || mode } };
+          const response = await (campaignsApi as any).campaignsModeUpdate(campaignId, { mode });
+          const extracted = extractResponseData<{ mode?: string }>(response) || { mode };
+            return { data: { mode: extracted.mode || mode } };
         } catch (error: any) {
-          return { error: error?.response?.data || error?.message };
+          return { error: toRtkError(error) as any };
         }
       },
-      // Invalidate campaign + progress so UI refetches enriched details if needed
       invalidatesTags: (result, error, { campaignId }) => [
         { type: 'Campaign', id: campaignId },
         { type: 'CampaignProgress', id: campaignId },
+      ],
+    }),
+
+    // Domain score breakdown (analysis insight) - lazy usage
+    getCampaignDomainScoreBreakdown: builder.query<
+      any,
+      { campaignId: string; domain: string }
+    >({
+      queryFn: async ({ campaignId, domain }) => {
+        try {
+          // Generated method name inferred from path /campaigns/{id}/domains/score-breakdown?domain=
+          // If spec uses different naming, this will need alignment.
+          const fn: any = (campaignsApi as any).campaignsDomainScoreBreakdown;
+          if (!fn) return { error: 'Domain score breakdown endpoint missing in client' as any };
+          const response = await fn(campaignId, domain);
+          const data = extractResponseData<any>(response);
+          if (!data) return { error: 'Empty score breakdown' as any };
+          return { data };
+        } catch (error: any) {
+          return { error: toRtkError(error) as any };
+        }
+      },
+      providesTags: (result, error, { campaignId }) => [
+        { type: 'Campaign', id: campaignId },
       ],
     }),
   }),
@@ -277,6 +312,7 @@ export const {
   useGetCampaignEnrichedQuery,
   useExportCampaignDomainsMutation,
   useUpdateCampaignModeMutation,
+  useGetCampaignDomainScoreBreakdownQuery,
 } = campaignApi;
 
 // Export the reducer for the store configuration

@@ -7,7 +7,8 @@ import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
 import { setFullSequenceMode } from '@/store/ui/campaignUiSlice';
 import { Switch } from '@/components/ui/switch';
-import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
+import { useStartPhaseStandaloneMutation, useGetCampaignEnrichedQuery } from '@/store/api/campaignApi';
+import { useListScoringProfilesQuery } from '@/store/api/scoringApi';
 
 interface CampaignOverviewCardProps {
   campaignId: string;
@@ -20,6 +21,14 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
   const { config, exec, phases, mode, nextAction } = ov;
   const dispatch = useAppDispatch();
   const [startPhase, { isLoading }] = useStartPhaseStandaloneMutation();
+  // Enriched campaign & scoring profile data
+  const { data: enriched } = useGetCampaignEnrichedQuery(campaignId, { skip: !campaignId });
+  const { data: scoringProfiles } = useListScoringProfilesQuery(undefined, { skip: !campaignId });
+  const scoringProfileId = (enriched as any)?.scoringProfileId || (enriched as any)?.scoring?.profileId || (enriched as any)?.scoringProfile;
+  const profileObj = scoringProfiles?.items?.find?.((p: any) => p.id === scoringProfileId);
+  const profileName = profileObj?.name || scoringProfileId || '—';
+  const avgScore = (enriched as any)?.scoring?.averageScore;
+  const lastRescoreAt = (enriched as any)?.scoring?.lastRescoreAt;
 
   const handlePrimaryCTA = async () => {
     if (!nextAction) return;
@@ -39,20 +48,20 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
   })();
 
   return (
-    <Card className={className} data-overview-card>
+    <Card className={className} data-overview-card data-testid="campaign-overview-card">
       <CardHeader className="pb-3 flex flex-col gap-2">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <CardTitle className="text-base font-semibold">Campaign Overview</CardTitle>
-            <StatusBadge variant={globalExecState as any} compact>{globalExecState}</StatusBadge>
+            <CardTitle className="text-base font-semibold" data-testid="campaign-overview-title">Campaign Overview</CardTitle>
+            <StatusBadge variant={globalExecState as any} compact data-testid="campaign-overview-status">{globalExecState}</StatusBadge>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-xs px-2 py-0.5 rounded bg-muted border">
               <span>Auto</span>
-              <Switch checked={mode.autoAdvance} onCheckedChange={v=>dispatch(setFullSequenceMode({campaignId, value: v}))} />
-              <span className="font-medium">{mode.autoAdvance ? 'Full Sequence' : 'Step by Step'}</span>
+              <Switch checked={mode.autoAdvance} onCheckedChange={v=>dispatch(setFullSequenceMode({campaignId, value: v}))} data-testid="campaign-mode-toggle" />
+              <span className="font-medium" data-testid="campaign-mode-label">{mode.autoAdvance ? 'Full Sequence' : 'Step by Step'}</span>
             </div>
-            <Button size="sm" disabled={!nextAction || nextAction.type!=='start'} isLoading={isLoading} onClick={handlePrimaryCTA}>
+            <Button size="sm" disabled={!nextAction || nextAction.type!=='start'} isLoading={isLoading} onClick={handlePrimaryCTA} data-testid="campaign-start-phase">
               {nextAction?.type === 'start' ? `Start ${nextAction.phase}` : 'Start'}
             </Button>
           </div>
@@ -61,13 +70,16 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
           <span className="flex items-center gap-1"><span className="text-muted-foreground">Configured</span><strong>{configuredRatio}</strong></span>
           <span className="flex items-center gap-1"><span className="text-muted-foreground">Completed</span><strong>{completedRatio}</strong></span>
           {nextAction && (
-            <span className="flex items-center gap-1 text-muted-foreground">Next: <span className="capitalize font-medium">{nextAction.type} {nextAction.phase}</span></span>
+            <span className="flex items-center gap-1 text-muted-foreground" data-testid="campaign-next-action">Next: <span className="capitalize font-medium">{nextAction.type} {nextAction.phase}</span></span>
           )}
+          <span className="flex items-center gap-1"><span className="text-muted-foreground">Scoring Profile</span><strong>{profileName}</strong></span>
+          {avgScore !== undefined && <span className="flex items-center gap-1"><span className="text-muted-foreground">Avg Score</span><strong>{typeof avgScore === 'number' ? avgScore.toFixed(1) : avgScore}</strong></span>}
+          {lastRescoreAt && <span className="flex items-center gap-1"><span className="text-muted-foreground">Last Rescore</span><strong>{new Date(lastRescoreAt).toLocaleDateString()}</strong></span>}
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="h-2 w-full bg-muted/60 rounded overflow-hidden mb-2">
-          <div className="h-2 bg-primary transition-all" style={{ width: `${(exec.progress.completed/Math.max(1, exec.progress.total))*100}%` }} />
+          <div className="h-2 bg-primary transition-all" style={{ width: `${(exec.progress.completed/Math.max(1, exec.progress.total))*100}%` }} data-testid="campaign-progress-bar" />
         </div>
         <div className="flex justify-between text-[10px] text-muted-foreground">
           <span>{config.progress.configured} configured</span>

@@ -142,15 +142,15 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
+      <form data-testid="proxy-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
         <FormField
           control={form.control}
           name="name"
           render={({ field }) => (
-            <FormItem>
+            <FormItem data-testid="proxy-field-name">
               <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input placeholder="Proxy name" {...field} />
+                <Input data-testid="proxy-input-name" placeholder="Proxy name" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -160,10 +160,10 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
           control={form.control}
           name="description"
           render={({ field }) => (
-            <FormItem>
+            <FormItem data-testid="proxy-field-description">
               <FormLabel>Description (Optional)</FormLabel>
               <FormControl>
-                <Textarea placeholder="Proxy description" {...field} />
+                <Textarea data-testid="proxy-input-description" placeholder="Proxy description" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -173,10 +173,10 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
           control={form.control}
           name="address"
           render={({ field }) => (
-            <FormItem>
+            <FormItem data-testid="proxy-field-address">
               <FormLabel>Proxy Address</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., 127.0.0.1:8080 or socks5://user:pass@host:port" {...field} />
+                <Input data-testid="proxy-input-address" placeholder="e.g., 127.0.0.1:8080 or socks5://user:pass@host:port" {...field} />
               </FormControl>
               <FormDescription>
                 Include IP/hostname and port. For authenticated proxies, use format: protocol://user:password@host:port
@@ -189,11 +189,11 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
           control={form.control}
           name="protocol"
           render={({ field }) => (
-            <FormItem>
+            <FormItem data-testid="proxy-field-protocol">
               <FormLabel>Protocol</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
-                  <SelectTrigger>
+                  <SelectTrigger data-testid="proxy-input-protocol">
                     <SelectValue placeholder="Select a protocol" />
                   </SelectTrigger>
                 </FormControl>
@@ -211,10 +211,10 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
           control={form.control}
           name="username"
           render={({ field }) => (
-            <FormItem>
+            <FormItem data-testid="proxy-field-username">
               <FormLabel>Username (Optional)</FormLabel>
               <FormControl>
-                <Input placeholder="Auth username" {...field} />
+                <Input data-testid="proxy-input-username" placeholder="Auth username" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -224,10 +224,10 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
           control={form.control}
           name="password"
           render={({ field }) => (
-            <FormItem>
+            <FormItem data-testid="proxy-field-password">
               <FormLabel>Password (Optional)</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="Auth password" {...field} />
+                <Input data-testid="proxy-input-password" type="password" placeholder="Auth password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -237,10 +237,10 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
           control={form.control}
           name="countryCode"
           render={({ field }) => (
-            <FormItem>
+            <FormItem data-testid="proxy-field-country-code">
               <FormLabel>Country Code (Optional)</FormLabel>
               <FormControl>
-                <Input placeholder="US" {...field} />
+                <Input data-testid="proxy-input-country-code" placeholder="US" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -250,10 +250,10 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
           control={form.control}
           name="notes"
           render={({ field }) => (
-            <FormItem>
+            <FormItem data-testid="proxy-field-notes">
               <FormLabel>Notes (Optional)</FormLabel>
               <FormControl>
-                <Textarea placeholder="Any notes about this proxy (e.g., provider, location)" {...field} />
+                <Textarea data-testid="proxy-input-notes" placeholder="Any notes about this proxy (e.g., provider, location)" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -263,12 +263,12 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
           control={form.control}
           name="userEnabled"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="proxy-field-user-enabled">
               <div className="space-y-0.5">
                 <FormLabel>User Enabled</FormLabel>
               </div>
               <FormControl>
-                <Switch checked={field.value} onCheckedChange={field.onChange} />
+                <Switch data-testid="proxy-input-user-enabled" checked={field.value} onCheckedChange={field.onChange} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -279,11 +279,11 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
             control={form.control}
             name="initialStatus"
             render={({ field }) => (
-                <FormItem>
+                <FormItem data-testid="proxy-field-initial-status">
                 <FormLabel>Initial Status</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                    <SelectTrigger>
+                    <SelectTrigger data-testid="proxy-input-initial-status">
                         <SelectValue placeholder="Select initial status" />
                     </SelectTrigger>
                     </FormControl>
@@ -300,11 +300,11 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
             />
         )}
 
-        <div className="flex justify-end gap-2 pt-4">
-          <Button type="button" variant="outline" onClick={onCancel} disabled={form.formState.isSubmitting}>
+        <div className="flex justify-end gap-2 pt-4" data-testid="proxy-actions">
+          <Button data-testid="proxy-cancel" type="button" variant="outline" onClick={onCancel} disabled={form.formState.isSubmitting}>
             Cancel
           </Button>
-          <Button type="submit" disabled={form.formState.isSubmitting}>
+          <Button data-testid="proxy-submit" type="submit" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isEditing ? 'Save Changes' : 'Add Proxy'}
           </Button>

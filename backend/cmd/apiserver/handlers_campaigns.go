@@ -54,7 +54,7 @@ func (h *strictHandlers) CampaignsEnrichedGet(ctx context.Context, r gen.Campaig
 	execs := []gen.PhaseExecution{}
 	if list, peErr := h.deps.Stores.Campaign.GetPhaseExecutionsByCampaign(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); peErr == nil {
 		for _, pe := range list {
-			if pe !=	 nil {
+			if pe != nil {
 				execs = append(execs, mapPhaseExecutionToAPI(*pe))
 			}
 		}
@@ -540,7 +540,13 @@ func (h *strictHandlers) CampaignsPhaseConfigure(ctx context.Context, r gen.Camp
 			httpCfg.AdHocKeywords = sliceString(incoming["adHocKeywords"])
 			cfg = httpCfg
 		case models.PhaseTypeAnalysis:
-			// Build typed AnalysisConfig
+			// Build typed AnalysisConfig with extended symmetry (personaIds, includeExternal, keywordRules, name)
+			// Backward compatibility: some clients may nest under `analysis` key
+			if _, present := incoming["personaIds"]; !present {
+				if nested, okn := incoming["analysis"].(map[string]interface{}); okn {
+					incoming = nested
+				}
+			}
 			idsRaw, ok := incoming["personaIds"]
 			if !ok {
 				return gen.CampaignsPhaseConfigure400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "personaIds required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
@@ -561,6 +567,55 @@ func (h *strictHandlers) CampaignsPhaseConfigure(ctx context.Context, r gen.Camp
 			analysisCfg := &domainservices.AnalysisConfig{PersonaIDs: personaIDs}
 			if inc, ok := incoming["includeExternal"].(bool); ok {
 				analysisCfg.IncludeExternal = inc
+			}
+			if nm, ok := incoming["name"].(string); ok {
+				trim := strings.TrimSpace(nm)
+				if trim != "" {
+					analysisCfg.Name = &trim
+				}
+			}
+			// Parse keywordRules if provided (array of objects with at least pattern, ruleType)
+			if krRaw, ok := incoming["keywordRules"]; ok && krRaw != nil {
+				if arr, ok := krRaw.([]interface{}); ok {
+					parsed := make([]models.KeywordRule, 0, len(arr))
+					for _, item := range arr {
+						obj, ok := item.(map[string]interface{})
+						if !ok {
+							continue // skip non-object entries quietly
+						}
+						pattern, _ := obj["pattern"].(string)
+						ruleType, _ := obj["ruleType"].(string)
+						if strings.TrimSpace(pattern) == "" || strings.TrimSpace(ruleType) == "" {
+							continue
+						}
+						isCase := false
+						if b, ok := obj["isCaseSensitive"].(bool); ok {
+							isCase = b
+						}
+						// Generate ephemeral ID so downstream validation expecting UUID is satisfied
+						kr := models.KeywordRule{ID: uuid.New(), Pattern: pattern, RuleType: models.KeywordRuleTypeEnum(ruleType), IsCaseSensitive: isCase, CreatedAt: time.Now(), UpdatedAt: time.Now()}
+						parsed = append(parsed, kr)
+					}
+					if len(parsed) > 0 {
+						analysisCfg.KeywordRules = parsed
+					}
+				}
+			}
+			// Legacy customRules (array of strings) -> map to keywordRules if keywordRules absent
+			if len(analysisCfg.KeywordRules) == 0 {
+				if crRaw, ok := incoming["customRules"]; ok && crRaw != nil {
+					if arr, ok := crRaw.([]interface{}); ok {
+						legacy := make([]models.KeywordRule, 0, len(arr))
+						for _, v := range arr {
+							if s, ok := v.(string); ok && strings.TrimSpace(s) != "" {
+								legacy = append(legacy, models.KeywordRule{ID: uuid.New(), Pattern: s, RuleType: models.KeywordRuleTypeEnum("string"), IsCaseSensitive: false, CreatedAt: time.Now(), UpdatedAt: time.Now()})
+							}
+						}
+						if len(legacy) > 0 {
+							analysisCfg.KeywordRules = legacy
+						}
+					}
+				}
 			}
 			cfg = analysisCfg
 		default:

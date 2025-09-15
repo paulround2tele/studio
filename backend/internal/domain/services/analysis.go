@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -23,6 +24,13 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+// Error code constants (centralization TODO: move to dedicated phase error codes module when standardized)
+const (
+	// ErrCodeAnalysisMissingFeatures indicates that analysis cannot proceed because no feature vectors
+	// were found for the campaign (HTTP enrichment/validation phase likely absent or failed earlier).
+	ErrCodeAnalysisMissingFeatures = "E_ANALYSIS_MISSING_FEATURES"
+)
+
 // analysisService orchestrates content analysis engines
 // It coordinates contentfetcher and keywordextractor without replacing their functionality
 type analysisService struct {
@@ -36,6 +44,8 @@ type analysisService struct {
 		rescoreRuns    *prometheus.CounterVec
 		rescoreRunsV2  *prometheus.CounterVec
 		phaseDuration  prometheus.Histogram
+		reuseCounter   prometheus.Counter
+		preflightFail  prometheus.Counter
 	}
 
 	// Execution tracking per campaign
@@ -149,6 +159,41 @@ func (s *analysisService) Validate(ctx context.Context, config interface{}) erro
 	// Validate personas exist
 	if len(analysisConfig.PersonaIDs) == 0 {
 		return fmt.Errorf("at least one persona ID must be provided")
+	}
+
+	// Optional: validate name length if provided
+	if analysisConfig.Name != nil {
+		trim := strings.TrimSpace(*analysisConfig.Name)
+		if trim == "" {
+			return fmt.Errorf("name cannot be empty when provided")
+		}
+		if len([]rune(trim)) > 120 {
+			return fmt.Errorf("name exceeds maximum length of 120 characters")
+		}
+		*analysisConfig.Name = trim
+	}
+
+	// Validate keyword rules (if provided). We allow zero rules; presence means each must have pattern & rule type
+	for i, r := range analysisConfig.KeywordRules {
+		if strings.TrimSpace(r.Pattern) == "" {
+			return fmt.Errorf("keywordRules[%d].pattern required", i)
+		}
+		if strings.TrimSpace(string(r.RuleType)) == "" {
+			return fmt.Errorf("keywordRules[%d].ruleType required", i)
+		}
+		// Restrict rule type to expected enum values (align with models.KeywordRuleTypeEnum)
+		if rt := strings.ToLower(string(r.RuleType)); rt != "string" && rt != "regex" {
+			return fmt.Errorf("keywordRules[%d].ruleType must be one of 'string' or 'regex'", i)
+		}
+		if r.ContextChars < 0 {
+			return fmt.Errorf("keywordRules[%d].contextChars must be >= 0", i)
+		}
+		// Additional regex compilation check if regex type
+		if strings.ToLower(string(r.RuleType)) == "regex" {
+			if _, err := regexp.Compile(r.Pattern); err != nil {
+				return fmt.Errorf("keywordRules[%d].pattern invalid regex: %v", i, err)
+			}
+		}
 	}
 
 	s.deps.Logger.Debug(ctx, "Analysis configuration validated", map[string]interface{}{
@@ -337,51 +382,77 @@ func (s *analysisService) executeAnalysis(ctx context.Context, campaignID uuid.U
 		"domain_count": len(domains),
 	})
 
-	// Get analysis configuration
-	config, err := s.getAnalysisConfig(ctx, campaignID)
-	if err != nil {
+	// Get analysis configuration (still needed for personas/future weighting, though extraction removed)
+	// Retrieve configuration (may be used later for persona-based weighting or future scoring extensions)
+	if _, err := s.getAnalysisConfig(ctx, campaignID); err != nil {
 		s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, fmt.Sprintf("failed to get analysis config: %v", err))
 		return
 	}
 
-	// Phase 1: Content Fetching (80% of progress)
-	s.sendProgress(campaignID, 10.0, "Starting content fetching")
-
-	contentResults, err := s.fetchContent(ctx, campaignID, domains, config)
-	if err != nil {
-		s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, fmt.Sprintf("content fetching failed: %v", err))
+	// Preflight: verify feature vectors exist (HTTP enrichment should have produced them)
+	var dbx *sql.DB
+	switch db := s.deps.DB.(type) {
+	case *sqlx.DB:
+		dbx = db.DB
+	case *sql.DB:
+		dbx = db
+	}
+	var fvCount int64
+	if dbx != nil {
+		_ = dbx.QueryRowContext(ctx, `SELECT COUNT(*) FROM generated_domains WHERE campaign_id=$1 AND feature_vector IS NOT NULL`, campaignID).Scan(&fvCount)
+	}
+	if fvCount == 0 {
+		// Structured failure – no feature vectors present
+		errMsg := fmt.Sprintf("%s: no feature vectors present (HTTP phase missing or enrichment disabled)", ErrCodeAnalysisMissingFeatures)
+		if s.mtx.preflightFail != nil {
+			s.mtx.preflightFail.Inc()
+		}
+		s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, errMsg)
+		// Emit failure SSE explicitly including errorCode
+		if s.deps.SSE != nil {
+			payload, _ := json.Marshal(map[string]interface{}{
+				"event":      "analysis_failed",
+				"campaignId": campaignID.String(),
+				"error":      errMsg,
+				"errorCode":  ErrCodeAnalysisMissingFeatures,
+				"timestamp":  time.Now().UTC(),
+			})
+			s.deps.SSE.Send(string(payload))
+		}
 		return
 	}
 
-	s.sendProgress(campaignID, 80.0, "Content fetching completed")
-
-	// Phase 2: Keyword Extraction (20% of progress)
-	s.sendProgress(campaignID, 85.0, "Starting keyword extraction")
-
-	keywordResults, err := s.extractKeywords(ctx, campaignID, contentResults, config)
-	if err != nil {
-		s.updateExecutionStatus(campaignID, models.PhaseStatusFailed, fmt.Sprintf("keyword extraction failed: %v", err))
-		return
+	// Emit reuse enrichment SSE event for transparency
+	if s.deps.SSE != nil {
+		if s.mtx.reuseCounter != nil {
+			s.mtx.reuseCounter.Inc()
+		}
+		payload, _ := json.Marshal(map[string]interface{}{
+			"event":              "analysis_reuse_enrichment",
+			"campaignId":         campaignID.String(),
+			"featureVectorCount": fvCount,
+			"timestamp":          time.Now().UTC(),
+		})
+		s.deps.SSE.Send(string(payload))
 	}
+	// TODO(metrics): consider histogram for featureVectorCount distribution and gauge for active analysis executions.
 
-	s.sendProgress(campaignID, 95.0, "Keyword extraction completed")
-
-	// Phase 3: Scoring using feature_vector (non-fatal)
-	s.sendProgress(campaignID, 96.0, "Starting scoring computation")
+	// Directly proceed to scoring; repurpose majority of remaining progress window.
+	s.sendProgress(campaignID, 85.0, "Starting scoring computation (reused HTTP enrichment)")
 	// ANCHOR (SCORING-ENGINE): All future scoring feature additions (penalties, new components,
 	// rescore batching improvements) MUST extend scoreDomains / helpers in this file. Do NOT
 	// create a parallel scoring service. Keep weight validation in scoring_helpers.go.
 	if _, err := s.scoreDomains(ctx, campaignID); err != nil {
 		s.deps.Logger.Warn(ctx, "Scoring failed", map[string]interface{}{"campaign_id": campaignID, "error": err.Error()})
 	} else {
-		s.sendProgress(campaignID, 98.5, "Scoring completed")
+		s.sendProgress(campaignID, 99.0, "Scoring completed")
 	}
 
 	// Store combined results
 	s.mu.Lock()
 	if execution, exists := s.executions[campaignID]; exists {
-		execution.ContentResults = contentResults
-		execution.KeywordResults = keywordResults
+		// Legacy fields left nil after removal of inline fetching & extraction.
+		// TODO(doc): Update pipeline docs to reflect analysis now only performs scoring using prior HTTP enrichment artifacts.
 		execution.ItemsProcessed = len(domains)
 		execution.Progress = 100.0
 		execution.Status = models.PhaseStatusCompleted
@@ -405,17 +476,13 @@ func (s *analysisService) executeAnalysis(ctx context.Context, campaignID uuid.U
 	s.mu.Unlock()
 
 	// Store results in campaign store
-	if err := s.storeAnalysisResults(ctx, campaignID, contentResults, keywordResults); err != nil {
-		s.deps.Logger.Error(ctx, "Failed to store analysis results", err, map[string]interface{}{
-			"campaign_id": campaignID,
-		})
-	}
+	// No inline content/keyword results to persist now; scoring writes directly to generated_domains.
+	// Future: store analysis summary (score distribution snapshot) if needed.
 
 	s.deps.Logger.Info(ctx, "Analysis completed successfully", map[string]interface{}{
 		"campaign_id":      campaignID,
-		"content_results":  len(contentResults),
-		"keyword_results":  len(keywordResults),
 		"domains_analyzed": len(domains),
+		"mode":             "scoring-only",
 	})
 
 	// Mark completed in store
@@ -828,7 +895,10 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 		s.mtx.rescoreRuns = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "rescore_runs_total", Help: "Number of rescore runs"}, []string{"profile"})
 		s.mtx.rescoreRunsV2 = prometheus.NewCounterVec(prometheus.CounterOpts{Name: "rescore_runs_v2_total", Help: "Rescore runs by profile state & result"}, []string{"profile", "result"})
 		s.mtx.phaseDuration = prometheus.NewHistogram(prometheus.HistogramOpts{Name: "analysis_phase_seconds", Help: "Duration of analysis scoring phase"})
-		prometheus.MustRegister(s.mtx.scoreHistogram, s.mtx.rescoreRuns, s.mtx.rescoreRunsV2, s.mtx.phaseDuration)
+		// New counters for preflight reuse/failure transparency
+		s.mtx.reuseCounter = prometheus.NewCounter(prometheus.CounterOpts{Name: "analysis_reuse_enrichment_total", Help: "Times analysis reused existing HTTP feature vectors"})
+		s.mtx.preflightFail = prometheus.NewCounter(prometheus.CounterOpts{Name: "analysis_preflight_failure_total", Help: "Times analysis preflight failed due to missing feature vectors"})
+		prometheus.MustRegister(s.mtx.scoreHistogram, s.mtx.rescoreRuns, s.mtx.rescoreRunsV2, s.mtx.phaseDuration, s.mtx.reuseCounter, s.mtx.preflightFail)
 	})
 	phaseStart := time.Now()
 	// Campaign store is optional for pure scoring recompute; skip if absent.

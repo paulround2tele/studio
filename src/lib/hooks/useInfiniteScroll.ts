@@ -24,7 +24,8 @@ export interface UseInfiniteScrollOptions {
 }
 
 export function useInfiniteScrollActivity(
-  fetchFn: (page: number) => Promise<{ data: any[]; pageInfo?: PageInfo }>,
+  // fetchFn returns cursor-based pageInfo (OpenAPI) or legacy numeric pagination fields
+  fetchFn: (page: number) => Promise<{ data: any[]; pageInfo?: PageInfo & { current?: number; total?: number }; totalCount?: number }>,
   options: UseInfiniteScrollOptions = {}
 ) {
   const [data, setData] = useState<any[]>([]);
@@ -48,15 +49,28 @@ export function useInfiniteScrollActivity(
       setData(prev => [...prev, ...result.data]);
       setCurrentPage(prev => prev + 1);
       
-      // Check if we have more data based on backend PageInfo
-      const hasMore = result.pageInfo ? 
-        (result.pageInfo.current || 1) < (result.pageInfo.total || 1) :
-        result.data.length > 0;
+      // Determine continuation:
+      // 1. If cursor PageInfo exists, rely on hasNextPage.
+      // 2. If numeric fallback fields (current/total) present, use them.
+      // 3. Else if totalCount provided, compare accumulated length.
+      // 4. Fallback: assume more if we received any data for this page.
+      let hasMore = true;
+      if (result.pageInfo) {
+        if (typeof (result.pageInfo as any).hasNextPage === 'boolean') {
+          hasMore = (result.pageInfo as any).hasNextPage;
+        } else if ((result.pageInfo as any).current !== undefined && (result.pageInfo as any).total !== undefined) {
+          hasMore = ((result.pageInfo as any).current) < ((result.pageInfo as any).total);
+        }
+      } else if (typeof result.totalCount === 'number') {
+        hasMore = (data.length + result.data.length) < result.totalCount;
+      } else {
+        hasMore = result.data.length > 0;
+      }
         
-      setState(prev => ({ 
-        ...prev, 
-        isLoading: false, 
-        hasMore 
+      setState(prev => ({
+        ...prev,
+        isLoading: false,
+        hasMore
       }));
     } catch (error) {
       setState(prev => ({ 

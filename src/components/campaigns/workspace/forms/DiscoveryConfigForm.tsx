@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 // Legacy DomainGenerationConfig component removed with unified pipeline cleanup.
 // Provide minimal inline field set instead.
-import { useConfigurePhaseStandaloneMutation } from '@/store/api/campaignApi';
+import { useConfigurePhaseStandaloneMutation, campaignApi } from '@/store/api/campaignApi';
 import { useAppDispatch } from '@/store/hooks';
 import { pushGuidanceMessage } from '@/store/ui/campaignUiSlice';
 import type { ServicesDomainGenerationPhaseConfig } from '@/lib/api-client/models/services-domain-generation-phase-config';
@@ -49,10 +49,20 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
       }
       const configuration = { ...values, variableLength, tld } as any;
       const config: PhaseConfigurationRequest = { configuration };
-  const result = await configurePhase({ campaignId, phase: 'discovery', config }).unwrap();
-  // Optimistic: if API returned status, dispatch guidance; otherwise force refetch hook elsewhere.
-  toast({ title: 'Discovery configuration saved', description: 'Domain generation settings applied.' });
-  dispatch(pushGuidanceMessage({ campaignId, msg: { id: Date.now().toString(), message: 'Discovery configured', phase: 'discovery', severity: 'info' } }));
+      const result = await configurePhase({ campaignId, phase: 'discovery', config }).unwrap();
+      // Optimistically ensure cache has status configured if backend responded
+      if (result?.status === 'configured') {
+        dispatch(
+          campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId, phase: 'discovery' }, (draft: any) => {
+            return { ...(draft||{}), status: 'configured' };
+          })
+        );
+      }
+      // Force immediate refetch for authoritative status
+      dispatch(campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: 'discovery' } as any));
+      // Optimistic: if API returned status, dispatch guidance; otherwise force refetch hook elsewhere.
+      toast({ title: 'Discovery configuration saved', description: 'Domain generation settings applied.' });
+      dispatch(pushGuidanceMessage({ campaignId, msg: { id: Date.now().toString(), message: 'Discovery configured', phase: 'discovery', severity: 'info' } }));
       onConfigured?.();
     } catch (err) {
       console.error(err);
@@ -63,77 +73,77 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
   if (readOnly) {
     const values = form.getValues();
     return (
-      <div className="space-y-2 text-xs">
-        <div><strong>Pattern:</strong> {values.patternType}</div>
-        <div><strong>TLDs:</strong> {(values.tlds||[]).join(', ')}</div>
-        <div><strong>Variable Length:</strong> {values.variableLength}</div>
-        <div><strong>Count:</strong> {values.numDomainsToGenerate}</div>
+      <div className="space-y-2 text-xs" data-testid="phase-discovery-readonly">
+        <div data-testid="phase-discovery-readonly-pattern"><strong>Pattern:</strong> {values.patternType}</div>
+        <div data-testid="phase-discovery-readonly-tlds"><strong>TLDs:</strong> {(values.tlds||[]).join(', ')}</div>
+        <div data-testid="phase-discovery-readonly-variable-length"><strong>Variable Length:</strong> {values.variableLength}</div>
+        <div data-testid="phase-discovery-readonly-count"><strong>Count:</strong> {values.numDomainsToGenerate}</div>
       </div>
     );
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid gap-3 md:grid-cols-2 text-xs">
-          <div className="flex flex-col gap-1">
+      <form data-testid="phase-discovery-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="grid gap-3 md:grid-cols-2 text-xs" data-testid="phase-discovery-fields">
+          <div className="flex flex-col gap-1" data-testid="phase-discovery-field-pattern-type">
             <label className="font-medium">Pattern Type</label>
-            <select disabled={isLoading} className="border rounded px-2 py-1 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-2 focus:ring-ring" {...form.register('patternType')}>
+            <select data-testid="phase-discovery-input-pattern-type" disabled={isLoading} className="border rounded px-2 py-1 bg-[hsl(var(--input))] text-[hsl(var(--foreground))] focus:outline-none focus:ring-2 focus:ring-ring" {...form.register('patternType')}>
               <option value="prefix">Prefix</option>
               <option value="suffix">Suffix</option>
               <option value="both">Both</option>
             </select>
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1" data-testid="phase-discovery-field-constant-string">
             <label className="font-medium">Constant String</label>
-            <Input disabled={isLoading} {...form.register('constantString')} />
+            <Input data-testid="phase-discovery-input-constant-string" disabled={isLoading} {...form.register('constantString')} />
           </div>
           {/* Dynamic variable length fields */}
           {(() => {
             const pt = form.watch('patternType');
             if (pt === 'prefix') return (
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1" data-testid="phase-discovery-field-prefix-length">
                 <label className="font-medium">Prefix Variable Length</label>
-                <Input type="number" disabled={isLoading} {...form.register('prefixLength', { valueAsNumber: true })} />
+                <Input data-testid="phase-discovery-input-prefix-length" type="number" disabled={isLoading} {...form.register('prefixLength', { valueAsNumber: true })} />
               </div>
             );
             if (pt === 'suffix') return (
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1" data-testid="phase-discovery-field-suffix-length">
                 <label className="font-medium">Suffix Variable Length</label>
-                <Input type="number" disabled={isLoading} {...form.register('suffixLength', { valueAsNumber: true })} />
+                <Input data-testid="phase-discovery-input-suffix-length" type="number" disabled={isLoading} {...form.register('suffixLength', { valueAsNumber: true })} />
               </div>
             );
             if (pt === 'both') return (
-              <div className="flex flex-col gap-1 md:col-span-2">
+              <div className="flex flex-col gap-1 md:col-span-2" data-testid="phase-discovery-field-both-lengths">
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1" data-testid="phase-discovery-field-prefix-length">
                     <label className="font-medium">Prefix Variable Length</label>
-                    <Input type="number" disabled={isLoading} {...form.register('prefixLength', { valueAsNumber: true })} />
+                    <Input data-testid="phase-discovery-input-prefix-length" type="number" disabled={isLoading} {...form.register('prefixLength', { valueAsNumber: true })} />
                   </div>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1" data-testid="phase-discovery-field-suffix-length">
                     <label className="font-medium">Suffix Variable Length</label>
-                    <Input type="number" disabled={isLoading} {...form.register('suffixLength', { valueAsNumber: true })} />
+                    <Input data-testid="phase-discovery-input-suffix-length" type="number" disabled={isLoading} {...form.register('suffixLength', { valueAsNumber: true })} />
                   </div>
                 </div>
               </div>
             );
             return null;
           })()}
-          <div className="flex flex-col gap-1 md:col-span-2">
+          <div className="flex flex-col gap-1 md:col-span-2" data-testid="phase-discovery-field-character-set">
             <label className="font-medium">Character Set</label>
-            <Textarea disabled={isLoading} rows={2} className="font-mono" {...form.register('characterSet')} />
+            <Textarea data-testid="phase-discovery-input-character-set" disabled={isLoading} rows={2} className="font-mono" {...form.register('characterSet')} />
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1" data-testid="phase-discovery-field-num-domains">
             <label className="font-medium">Num Domains</label>
-            <Input type="number" disabled={isLoading} {...form.register('numDomainsToGenerate', { valueAsNumber: true })} />
+            <Input data-testid="phase-discovery-input-num-domains" type="number" disabled={isLoading} {...form.register('numDomainsToGenerate', { valueAsNumber: true })} />
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1" data-testid="phase-discovery-field-batch-size">
             <label className="font-medium">Batch Size</label>
-            <Input type="number" disabled={isLoading} {...form.register('batchSize', { valueAsNumber: true })} />
+            <Input data-testid="phase-discovery-input-batch-size" type="number" disabled={isLoading} {...form.register('batchSize', { valueAsNumber: true })} />
           </div>
-          <div className="flex flex-col gap-1 md:col-span-2">
+          <div className="flex flex-col gap-1 md:col-span-2" data-testid="phase-discovery-field-tlds">
             <label className="font-medium">TLDs (comma separated)</label>
-            <Input disabled={isLoading} {...form.register('tlds')} onBlur={() => {
+            <Input data-testid="phase-discovery-input-tlds" disabled={isLoading} {...form.register('tlds')} onBlur={() => {
               const raw = form.getValues('tlds') as any;
               if (typeof raw === 'string') {
                 const arr = raw.split(',').map(s=>s.trim()).filter(Boolean);
@@ -142,8 +152,8 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
             }} />
           </div>
         </div>
-  <div className="flex justify-end gap-2">
-          <Button type="submit" size="sm" disabled={isLoading}>{isLoading ? 'Saving...' : 'Save Discovery'}</Button>
+        <div className="flex justify-end gap-2" data-testid="phase-discovery-actions">
+          <Button data-testid="phase-discovery-submit" type="submit" size="sm" disabled={isLoading}>{isLoading ? 'Saving...' : 'Save Discovery'}</Button>
         </div>
       </form>
     </Form>

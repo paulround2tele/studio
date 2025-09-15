@@ -104,14 +104,14 @@ export function LoginForm({
   // LoginForm will be unmounted by ConditionalLayout when user is authenticated
 
   return (
-    <div className="flex items-center justify-center min-h-screen p-4">
-      <Card className="w-full max-w-md">
+    <div className="flex items-center justify-center min-h-screen p-4" data-testid="auth-login-page">
+      <Card className="w-full max-w-md" data-testid="auth-login-card">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
+          <CardTitle className="text-2xl" data-testid="auth-login-title">{title}</CardTitle>
+          <CardDescription data-testid="auth-login-description">{description}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" data-testid="auth-login-form">
             {/* Email Field */}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -122,6 +122,7 @@ export function LoginForm({
                 value={formData.email}
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                 disabled={isSubmitting || isLoginLoading}
+                data-testid="auth-login-email"
               />
             </div>
 
@@ -137,6 +138,7 @@ export function LoginForm({
                   onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                   disabled={isSubmitting || isLoginLoading}
                   className="pr-10"
+                  data-testid="auth-login-password"
                 />
                 <Button
                   type="button"
@@ -145,6 +147,7 @@ export function LoginForm({
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                   disabled={isSubmitting || isLoginLoading}
+                  data-testid="auth-login-toggle-password"
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -158,7 +161,7 @@ export function LoginForm({
 
             {/* Error Display */}
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" data-testid="auth-login-error">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
@@ -168,6 +171,7 @@ export function LoginForm({
               type="submit"
               className="w-full"
               disabled={isSubmitting || isLoginLoading}
+              data-testid="auth-login-submit"
             >
               {(isSubmitting || isLoginLoading) ? (
                 <>
@@ -186,7 +190,7 @@ export function LoginForm({
           {/* Additional Links */}
           <div className="mt-6 space-y-4">
             {showSignUpLink && (
-              <div className="text-center">
+              <div className="text-center" data-testid="auth-login-signup-link">
                 <span className="text-sm text-muted-foreground">
                   Don&apos;t have an account?{' '}
                   <Link 

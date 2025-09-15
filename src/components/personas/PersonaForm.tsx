@@ -118,7 +118,6 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
   const user = null; // Backend provides user data when needed
 
   const stringifyJsonForForm = (obj: Record<string, unknown> | null | undefined) => obj ? JSON.stringify(obj, null, 2) : "{}";
-
   const form = useForm<HttpPersonaFormValues>({
     resolver: zodResolver(httpPersonaFormSchema),
     defaultValues: persona
@@ -228,9 +227,9 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
           ...commonPayloadData,
           configDetails: httpConfigDetails
         };
-  response = await personasApi.personasUpdate(persona.id, updatePayload as any);
+        response = await personasApi.personasUpdate(persona.id, updatePayload as any);
       } else {
-  response = await personasApi.personasCreate(payload as any);
+        response = await personasApi.personasCreate(payload as any);
       }
 
       if (response.status >= 200 && response.status < 300) {
@@ -252,41 +251,108 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
   }
 
   return (
-    <Card className="max-w-3xl mx-auto shadow-xl">
-      <CardHeader>
-        <CardTitle>{isEditing ? "Edit" : "Create New"} HTTP Persona</CardTitle>
-        <CardDescription>
+    <Card className="max-w-3xl mx-auto shadow-xl" data-testid="persona-http-card">
+      <CardHeader data-testid="persona-http-header">
+        <CardTitle data-testid="persona-http-title">{isEditing ? "Edit" : "Create New"} HTTP Persona</CardTitle>
+        <CardDescription data-testid="persona-http-description">
           {isEditing ? "Update details for this HTTP persona." : "Define a new HTTP persona for network operations."}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <FormField control={form.control} name="name" render={({ field }) => (<FormItem><FormLabel>Persona Name</FormLabel><FormControl><Input placeholder="e.g., Stealth Chrome US" {...field} /></FormControl><FormDescription>A unique and descriptive name for this persona.</FormDescription><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="description" render={({ field }) => (<FormItem><FormLabel>Description (Optional)</FormLabel><FormControl><Textarea placeholder="Describe the purpose or key characteristics of this persona." {...field} /></FormControl><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="userAgent" render={({ field }) => (<FormItem><FormLabel>User-Agent String</FormLabel><FormControl><Input placeholder="Mozilla/5.0 (Windows NT 10.0; Win64; x64)..." {...field} /></FormControl><FormDescription>The User-Agent string this persona will use.</FormDescription><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="headersJson" render={({ field }) => (<FormItem><FormLabel>HTTP Headers (JSON)</FormLabel><FormControl><Textarea placeholder='{ &quot;Accept-Language&quot;: &quot;en-US,en;q=0.9&quot;, &quot;X-Custom-Header&quot;: &quot;Value&quot; }' className="font-mono min-h-[120px]" {...field} /></FormControl><FormDescription>Enter custom HTTP headers as a JSON object string.</FormDescription><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="headerOrderInput" render={({ field }) => (<FormItem><FormLabel>Header Order (comma-separated, Optional)</FormLabel><FormControl><Input placeholder="user-agent,accept-language,accept-encoding" {...field} /></FormControl><FormDescription>Specify the order of headers if needed by the target.</FormDescription><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="tlsClientHelloJson" render={({ field }) => (<FormItem><FormLabel>TLS ClientHello Config (JSON, Optional)</FormLabel><FormControl><Textarea placeholder='{ &quot;minVersion&quot;: &quot;TLS12&quot;, &quot;cipherSuites&quot;: [...] }' className="font-mono min-h-[100px]" {...field} /></FormControl><FormDescription>Define TLS handshake parameters (e.g., JA3/JA4 related).</FormDescription><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="http2SettingsJson" render={({ field }) => (<FormItem><FormLabel>HTTP/2 Settings (JSON, Optional)</FormLabel><FormControl><Textarea placeholder='{ &quot;headerTableSize&quot;: 4096, &quot;enablePush&quot;: false }' className="font-mono min-h-[80px]" {...field} /></FormControl><FormDescription>Configure HTTP/2 protocol parameters.</FormDescription><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="cookieHandlingJson" render={({ field }) => (<FormItem><FormLabel>Cookie Handling Config (JSON, Optional)</FormLabel><FormControl><Textarea placeholder='{ &quot;mode&quot;: &quot;session&quot; }' className="font-mono min-h-[60px]" {...field} /></FormControl><FormDescription>Define how cookies are handled (e.g., &quot;none&quot;, &quot;session&quot;, &quot;file&quot;).</FormDescription><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="requestTimeoutSec" render={({ field }) => (<FormItem><FormLabel>Request Timeout (seconds)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="maxRedirects" render={({ field }) => (<FormItem><FormLabel>Max Redirects</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
+          <form data-testid="persona-http-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <FormField control={form.control} name="name" render={({ field }) => (
+              <FormItem data-testid="persona-http-field-name">
+                <FormLabel>Persona Name</FormLabel>
+                <FormControl><Input data-testid="persona-http-input-name" placeholder="e.g., Stealth Chrome US" {...field} /></FormControl>
+                <FormDescription>A unique and descriptive name for this persona.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="description" render={({ field }) => (
+              <FormItem data-testid="persona-http-field-description">
+                <FormLabel>Description (Optional)</FormLabel>
+                <FormControl><Textarea data-testid="persona-http-input-description" placeholder="Describe the purpose or key characteristics of this persona." {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="userAgent" render={({ field }) => (
+              <FormItem data-testid="persona-http-field-user-agent">
+                <FormLabel>User-Agent String</FormLabel>
+                <FormControl><Input data-testid="persona-http-input-user-agent" placeholder="Mozilla/5.0 (Windows NT 10.0; Win64; x64)..." {...field} /></FormControl>
+                <FormDescription>The User-Agent string this persona will use.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="headersJson" render={({ field }) => (
+              <FormItem data-testid="persona-http-field-headers-json">
+                <FormLabel>HTTP Headers (JSON)</FormLabel>
+                <FormControl><Textarea data-testid="persona-http-input-headers-json" placeholder='{ "Accept-Language": "en-US,en;q=0.9", "X-Custom-Header": "Value" }' className="font-mono min-h-[120px]" {...field} /></FormControl>
+                <FormDescription>Enter custom HTTP headers as a JSON object string.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="headerOrderInput" render={({ field }) => (
+              <FormItem data-testid="persona-http-field-header-order">
+                <FormLabel>Header Order (comma-separated, Optional)</FormLabel>
+                <FormControl><Input data-testid="persona-http-input-header-order" placeholder="user-agent,accept-language,accept-encoding" {...field} /></FormControl>
+                <FormDescription>Specify the order of headers if needed by the target.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="tlsClientHelloJson" render={({ field }) => (
+              <FormItem data-testid="persona-http-field-tls-client-hello">
+                <FormLabel>TLS ClientHello Config (JSON, Optional)</FormLabel>
+                <FormControl><Textarea data-testid="persona-http-input-tls-client-hello" placeholder='{ "minVersion": "TLS12", "cipherSuites": [...] }' className="font-mono min-h-[100px]" {...field} /></FormControl>
+                <FormDescription>Define TLS handshake parameters (e.g., JA3/JA4 related).</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="http2SettingsJson" render={({ field }) => (
+              <FormItem data-testid="persona-http-field-http2-settings">
+                <FormLabel>HTTP/2 Settings (JSON, Optional)</FormLabel>
+                <FormControl><Textarea data-testid="persona-http-input-http2-settings" placeholder='{ "headerTableSize": 4096, "enablePush": false }' className="font-mono min-h-[80px]" {...field} /></FormControl>
+                <FormDescription>Configure HTTP/2 protocol parameters.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="cookieHandlingJson" render={({ field }) => (
+              <FormItem data-testid="persona-http-field-cookie-handling">
+                <FormLabel>Cookie Handling Config (JSON, Optional)</FormLabel>
+                <FormControl><Textarea data-testid="persona-http-input-cookie-handling" placeholder='{ "mode": "session" }' className="font-mono min-h-[60px]" {...field} /></FormControl>
+                <FormDescription>Define how cookies are handled (e.g., "none", "session", "file").</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="requestTimeoutSec" render={({ field }) => (
+              <FormItem data-testid="persona-http-field-request-timeout">
+                <FormLabel>Request Timeout (seconds)</FormLabel>
+                <FormControl><Input data-testid="persona-http-input-request-timeout" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="maxRedirects" render={({ field }) => (
+              <FormItem data-testid="persona-http-field-max-redirects">
+                <FormLabel>Max Redirects</FormLabel>
+                <FormControl><Input data-testid="persona-http-input-max-redirects" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
             <FormField control={form.control} name="useHeadless" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-http-field-use-headless">
                 <div className="space-y-0.5">
                   <FormLabel>Use Headless Browser</FormLabel>
                 </div>
-                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                <FormControl><Switch data-testid="persona-http-input-use-headless" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
             <FormField control={form.control} name="fallbackPolicy" render={({ field }) => (
-              <FormItem>
+              <FormItem data-testid="persona-http-field-fallback-policy">
                 <FormLabel>Fallback Policy</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger><SelectValue placeholder="Select policy" /></SelectTrigger>
+                    <SelectTrigger data-testid="persona-http-input-fallback-policy"><SelectValue placeholder="Select policy" /></SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="never">never</SelectItem>
@@ -297,95 +363,116 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
                 <FormMessage />
               </FormItem>
             )} />
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4" data-testid="persona-http-dimensions">
               <FormField control={form.control} name="viewportWidth" render={({ field }) => (
-                <FormItem>
+                <FormItem data-testid="persona-http-field-viewport-width">
                   <FormLabel>Viewport Width</FormLabel>
-                  <FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
+                  <FormControl><Input data-testid="persona-http-input-viewport-width" type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
               <FormField control={form.control} name="viewportHeight" render={({ field }) => (
-                <FormItem>
+                <FormItem data-testid="persona-http-field-viewport-height">
                   <FormLabel>Viewport Height</FormLabel>
-                  <FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
+                  <FormControl><Input data-testid="persona-http-input-viewport-height" type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
             </div>
             <FormField control={form.control} name="headlessUserAgent" render={({ field }) => (
-              <FormItem>
+              <FormItem data-testid="persona-http-field-headless-user-agent">
                 <FormLabel>Headless User-Agent</FormLabel>
-                <FormControl><Input {...field} /></FormControl>
+                <FormControl><Input data-testid="persona-http-input-headless-user-agent" {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
             <FormField control={form.control} name="scriptExecution" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-http-field-script-execution">
                 <div className="space-y-0.5">
                   <FormLabel>Enable Script Execution</FormLabel>
                 </div>
-                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                <FormControl><Switch data-testid="persona-http-input-script-execution" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
             <FormField control={form.control} name="loadImages" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-http-field-load-images">
                 <div className="space-y-0.5">
                   <FormLabel>Load Images</FormLabel>
                 </div>
-                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                <FormControl><Switch data-testid="persona-http-input-load-images" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
             <FormField control={form.control} name="screenshot" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-http-field-screenshot">
                 <div className="space-y-0.5">
                   <FormLabel>Capture Screenshot</FormLabel>
                 </div>
-                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                <FormControl><Switch data-testid="persona-http-input-screenshot" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
             <FormField control={form.control} name="domSnapshot" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-http-field-dom-snapshot">
                 <div className="space-y-0.5">
                   <FormLabel>Capture DOM Snapshot</FormLabel>
                 </div>
-                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                <FormControl><Switch data-testid="persona-http-input-dom-snapshot" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
             <FormField control={form.control} name="headlessTimeoutSec" render={({ field }) => (
-              <FormItem>
+              <FormItem data-testid="persona-http-field-headless-timeout">
                 <FormLabel>Headless Timeout (seconds)</FormLabel>
-                <FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
+                <FormControl><Input data-testid="persona-http-input-headless-timeout" type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
             <FormField control={form.control} name="waitDelaySec" render={({ field }) => (
-              <FormItem>
+              <FormItem data-testid="persona-http-field-wait-delay">
                 <FormLabel>Wait Delay (seconds)</FormLabel>
-                <FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
+                <FormControl><Input data-testid="persona-http-input-wait-delay" type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
             <FormField control={form.control} name="fetchBodyForKeywords" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-http-field-fetch-body-for-keywords">
                 <div className="space-y-0.5">
                   <FormLabel>Fetch Body For Keywords</FormLabel>
                 </div>
-                <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                <FormControl><Switch data-testid="persona-http-input-fetch-body-for-keywords" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
-            <FormField control={form.control} name="allowInsecureTls" render={({ field }) => (<FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm"><div className="space-y-0.5"><FormLabel>Allow Insecure TLS</FormLabel><FormDescription>Allow connections to servers with invalid/self-signed TLS certificates.</FormDescription></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="notes" render={({ field }) => (<FormItem><FormLabel>Notes (Optional)</FormLabel><FormControl><Textarea placeholder="Internal notes about this HTTP persona." {...field} /></FormControl><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="tagsInput" render={({ field }) => (<FormItem><FormLabel>Tags (comma-separated - Optional)</FormLabel><FormControl><Input placeholder="e.g., stealth, primary-dns, us-region-proxy" {...field} /></FormControl><FormDescription>Help organize and filter personas. Use for grouping or classification.</FormDescription><FormMessage /></FormItem>)} />
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => router.push("/personas")} disabled={form.formState.isSubmitting}>Cancel</Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
+            <FormField control={form.control} name="allowInsecureTls" render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-http-field-allow-insecure-tls">
+                <div className="space-y-0.5">
+                  <FormLabel>Allow Insecure TLS</FormLabel>
+                  <FormDescription>Allow connections to servers with invalid/self-signed TLS certificates.</FormDescription>
+                </div>
+                <FormControl><Switch data-testid="persona-http-input-allow-insecure-tls" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="notes" render={({ field }) => (
+              <FormItem data-testid="persona-http-field-notes">
+                <FormLabel>Notes (Optional)</FormLabel>
+                <FormControl><Textarea data-testid="persona-http-input-notes" placeholder="Internal notes about this HTTP persona." {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="tagsInput" render={({ field }) => (
+              <FormItem data-testid="persona-http-field-tags">
+                <FormLabel>Tags (comma-separated - Optional)</FormLabel>
+                <FormControl><Input data-testid="persona-http-input-tags" placeholder="e.g., stealth, primary-dns, us-region-proxy" {...field} /></FormControl>
+                <FormDescription>Help organize and filter personas. Use for grouping or classification.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <div className="flex justify-end gap-2 pt-4" data-testid="persona-http-actions">
+              <Button data-testid="persona-http-cancel" type="button" variant="outline" onClick={() => router.push("/personas")} disabled={form.formState.isSubmitting}>Cancel</Button>
+              <Button data-testid="persona-http-submit" type="submit" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {form.formState.isSubmitting ? (isEditing ? "Saving..." : "Creating...") : (isEditing ? "Save Changes" : "Create Persona")}
               </Button>
@@ -405,7 +492,6 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
   const user = null; // Backend provides user data when needed
 
   const stringifyJsonObjectForForm = (obj: Record<string, number> | null | undefined) => obj ? JSON.stringify(obj, null, 2) : "{}";
-
   const form = useForm<DnsPersonaFormValues>({
     resolver: zodResolver(dnsPersonaFormSchema),
     defaultValues: persona
@@ -485,9 +571,9 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
           ...commonPayloadData,
           configDetails: dnsConfigDetails
         };
-  response = await personasApi.personasUpdate(persona.id, updatePayload as any);
+        response = await personasApi.personasUpdate(persona.id, updatePayload as any);
       } else {
-  response = await personasApi.personasCreate(payload as any);
+        response = await personasApi.personasCreate(payload as any);
       }
 
       if (response.status >= 200 && response.status < 300) {
@@ -505,36 +591,154 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
   }
 
   return (
-    <Card className="max-w-3xl mx-auto shadow-xl">
-      <CardHeader>
-        <CardTitle>{isEditing ? "Edit" : "Create New"} DNS Persona</CardTitle>
-        <CardDescription>
+    <Card className="max-w-3xl mx-auto shadow-xl" data-testid="persona-dns-card">
+      <CardHeader data-testid="persona-dns-header">
+        <CardTitle data-testid="persona-dns-title">{isEditing ? "Edit" : "Create New"} DNS Persona</CardTitle>
+        <CardDescription data-testid="persona-dns-description">
           {isEditing ? "Update details for this DNS persona." : "Define a new DNS persona for network operations."}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <FormField control={form.control} name="name" render={({ field }) => (<FormItem><FormLabel>Persona Name</FormLabel><FormControl><Input placeholder="e.g., Quad9 Secure DNS" {...field} /></FormControl><FormDescription>A unique and descriptive name for this persona.</FormDescription><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="description" render={({ field }) => (<FormItem><FormLabel>Description (Optional)</FormLabel><FormControl><Textarea placeholder="Describe the purpose or key characteristics of this persona." {...field} /></FormControl><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="config_resolverStrategy" render={({ field }) => ( <FormItem><FormLabel>Resolver Strategy</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select a strategy" /></SelectTrigger></FormControl><SelectContent>{DNS_RESOLVER_STRATEGIES.map(s => (<SelectItem key={s} value={s}>{s.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}</SelectItem>))}</SelectContent></Select><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="config_resolversInput" render={({ field }) => (<FormItem><FormLabel>Resolvers (comma-separated)</FormLabel><FormControl><Textarea placeholder="8.8.8.8, 1.1.1.1, https://dns.google/dns-query" {...field} /></FormControl><FormDescription>List of DNS resolver IP addresses or DoH/DoT URLs.</FormDescription><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="config_useSystemResolvers" render={({ field }) => (<FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm"><div className="space-y-0.5"><FormLabel>Use System Resolvers</FormLabel><FormDescription>Fallback to system&apos;s DNS if custom resolvers fail or are not set.</FormDescription></div><FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="config_queryTimeoutSeconds" render={({ field }) => (<FormItem><FormLabel>Query Timeout (seconds)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="config_maxDomainsPerRequest" render={({ field }) => (<FormItem><FormLabel>Max Domains Per Request (Optional)</FormLabel><FormControl><Input type="number" placeholder="e.g., 10 (for DoH batching)" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl><FormDescription>Relevant for protocols like DoH that support batch queries.</FormDescription><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="config_resolversWeightedJson" render={({ field }) => (<FormItem><FormLabel>Weighted Resolvers (JSON Object - Optional)</FormLabel><FormControl><Textarea placeholder='{&quot;8.8.8.8&quot;: 10, &quot;1.1.1.1&quot;: 5}' className="font-mono min-h-[80px]" {...field} /></FormControl><FormDescription>For &apos;Weighted Rotation&apos; strategy. Object with resolver as key and weight as value.</FormDescription><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="config_resolversPreferredOrderInput" render={({ field }) => (<FormItem><FormLabel>Preferred Order (comma-separated - Optional)</FormLabel><FormControl><Textarea placeholder="1.1.1.1, 8.8.8.8" {...field} /></FormControl><FormDescription>For &apos;Sequential Failover&apos; strategy. Order of resolvers to try.</FormDescription><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="config_concurrentQueriesPerDomain" render={({ field }) => (<FormItem><FormLabel>Concurrent Queries Per Domain</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="config_queryDelayMinMs" render={({ field }) => (<FormItem><FormLabel>Query Delay Min (ms - Optional)</FormLabel><FormControl><Input type="number" placeholder="e.g., 0" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl><FormDescription>Minimum random delay before a query.</FormDescription><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="config_queryDelayMaxMs" render={({ field }) => (<FormItem><FormLabel>Query Delay Max (ms - Optional)</FormLabel><FormControl><Input type="number" placeholder="e.g., 100" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl><FormDescription>Maximum random delay before a query. Must be &gt;= Min Delay.</FormDescription><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="config_maxConcurrentGoroutines" render={({ field }) => (<FormItem><FormLabel>Max Concurrent Operations</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl><FormDescription>Overall concurrency limit for DNS operations using this persona.</FormDescription><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="config_rateLimitDps" render={({ field }) => (<FormItem><FormLabel>Rate Limit (DPS - Optional)</FormLabel><FormControl><Input type="number" placeholder="e.g., 100 (Domains Per Second)" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl><FormDescription>Max domains to process per second.</FormDescription><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="config_rateLimitBurst" render={({ field }) => (<FormItem><FormLabel>Rate Limit Burst (Optional)</FormLabel><FormControl><Input type="number" placeholder="e.g., 10" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl><FormDescription>Allowed burst size for rate limiting.</FormDescription><FormMessage /></FormItem>)} />
-            <FormField control={form.control} name="tagsInput" render={({ field }) => (<FormItem><FormLabel>Tags (comma-separated - Optional)</FormLabel><FormControl><Input placeholder="e.g., stealth, primary-dns, us-region-proxy" {...field} /></FormControl><FormDescription>Help organize and filter personas. Use for grouping or classification.</FormDescription><FormMessage /></FormItem>)} />
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => router.push("/personas")} disabled={form.formState.isSubmitting}>Cancel</Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
+          <form data-testid="persona-dns-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <FormField control={form.control} name="name" render={({ field }) => (
+              <FormItem data-testid="persona-dns-field-name">
+                <FormLabel>Persona Name</FormLabel>
+                <FormControl><Input data-testid="persona-dns-input-name" placeholder="e.g., Quad9 Secure DNS" {...field} /></FormControl>
+                <FormDescription>A unique and descriptive name for this persona.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="description" render={({ field }) => (
+              <FormItem data-testid="persona-dns-field-description">
+                <FormLabel>Description (Optional)</FormLabel>
+                <FormControl><Textarea data-testid="persona-dns-input-description" placeholder="Describe the purpose or key characteristics of this persona." {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="config_resolverStrategy" render={({ field }) => ( 
+              <FormItem data-testid="persona-dns-field-resolver-strategy">
+                <FormLabel>Resolver Strategy</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger data-testid="persona-dns-input-resolver-strategy"><SelectValue placeholder="Select a strategy" /></SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {DNS_RESOLVER_STRATEGIES.map(s => (
+                      <SelectItem key={s} value={s}>{s.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="config_resolversInput" render={({ field }) => (
+              <FormItem data-testid="persona-dns-field-resolvers">
+                <FormLabel>Resolvers (comma-separated)</FormLabel>
+                <FormControl><Textarea data-testid="persona-dns-input-resolvers" placeholder="8.8.8.8, 1.1.1.1, https://dns.google/dns-query" {...field} /></FormControl>
+                <FormDescription>List of DNS resolver IP addresses or DoH/DoT URLs.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="config_useSystemResolvers" render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-dns-field-use-system-resolvers">
+                <div className="space-y-0.5">
+                  <FormLabel>Use System Resolvers</FormLabel>
+                  <FormDescription>Fallback to system&apos;s DNS if custom resolvers fail or are not set.</FormDescription>
+                </div>
+                <FormControl><Switch data-testid="persona-dns-input-use-system-resolvers" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="config_queryTimeoutSeconds" render={({ field }) => (
+              <FormItem data-testid="persona-dns-field-query-timeout">
+                <FormLabel>Query Timeout (seconds)</FormLabel>
+                <FormControl><Input data-testid="persona-dns-input-query-timeout" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="config_maxDomainsPerRequest" render={({ field }) => (
+              <FormItem data-testid="persona-dns-field-max-domains-per-request">
+                <FormLabel>Max Domains Per Request (Optional)</FormLabel>
+                <FormControl><Input data-testid="persona-dns-input-max-domains-per-request" type="number" placeholder="e.g., 10 (for DoH batching)" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
+                <FormDescription>Relevant for protocols like DoH that support batch queries.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="config_resolversWeightedJson" render={({ field }) => (
+              <FormItem data-testid="persona-dns-field-resolvers-weighted-json">
+                <FormLabel>Weighted Resolvers (JSON Object - Optional)</FormLabel>
+                <FormControl><Textarea data-testid="persona-dns-input-resolvers-weighted-json" placeholder='{"8.8.8.8": 10, "1.1.1.1": 5}' className="font-mono min-h-[80px]" {...field} /></FormControl>
+                <FormDescription>For &apos;Weighted Rotation&apos; strategy. Object with resolver as key and weight as value.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="config_resolversPreferredOrderInput" render={({ field }) => (
+              <FormItem data-testid="persona-dns-field-resolvers-preferred-order">
+                <FormLabel>Preferred Order (comma-separated - Optional)</FormLabel>
+                <FormControl><Textarea data-testid="persona-dns-input-resolvers-preferred-order" placeholder="1.1.1.1, 8.8.8.8" {...field} /></FormControl>
+                <FormDescription>For &apos;Sequential Failover&apos; strategy. Order of resolvers to try.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="config_concurrentQueriesPerDomain" render={({ field }) => (
+              <FormItem data-testid="persona-dns-field-concurrent-queries-per-domain">
+                <FormLabel>Concurrent Queries Per Domain</FormLabel>
+                <FormControl><Input data-testid="persona-dns-input-concurrent-queries-per-domain" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="config_queryDelayMinMs" render={({ field }) => (
+              <FormItem data-testid="persona-dns-field-query-delay-min-ms">
+                <FormLabel>Query Delay Min (ms - Optional)</FormLabel>
+                <FormControl><Input data-testid="persona-dns-input-query-delay-min-ms" type="number" placeholder="e.g., 0" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
+                <FormDescription>Minimum random delay before a query.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="config_queryDelayMaxMs" render={({ field }) => (
+              <FormItem data-testid="persona-dns-field-query-delay-max-ms">
+                <FormLabel>Query Delay Max (ms - Optional)</FormLabel>
+                <FormControl><Input data-testid="persona-dns-input-query-delay-max-ms" type="number" placeholder="e.g., 100" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
+                <FormDescription>Maximum random delay before a query. Must be &gt;= Min Delay.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="config_maxConcurrentGoroutines" render={({ field }) => (
+              <FormItem data-testid="persona-dns-field-max-concurrent-goroutines">
+                <FormLabel>Max Concurrent Operations</FormLabel>
+                <FormControl><Input data-testid="persona-dns-input-max-concurrent-goroutines" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl>
+                <FormDescription>Overall concurrency limit for DNS operations using this persona.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="config_rateLimitDps" render={({ field }) => (
+              <FormItem data-testid="persona-dns-field-rate-limit-dps">
+                <FormLabel>Rate Limit (DPS - Optional)</FormLabel>
+                <FormControl><Input data-testid="persona-dns-input-rate-limit-dps" type="number" placeholder="e.g., 100 (Domains Per Second)" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
+                <FormDescription>Max domains to process per second.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="config_rateLimitBurst" render={({ field }) => (
+              <FormItem data-testid="persona-dns-field-rate-limit-burst">
+                <FormLabel>Rate Limit Burst (Optional)</FormLabel>
+                <FormControl><Input data-testid="persona-dns-input-rate-limit-burst" type="number" placeholder="e.g., 10" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
+                <FormDescription>Allowed burst size for rate limiting.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="tagsInput" render={({ field }) => (
+              <FormItem data-testid="persona-dns-field-tags">
+                <FormLabel>Tags (comma-separated - Optional)</FormLabel>
+                <FormControl><Input data-testid="persona-dns-input-tags" placeholder="e.g., stealth, primary-dns, us-region-proxy" {...field} /></FormControl>
+                <FormDescription>Help organize and filter personas. Use for grouping or classification.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <div className="flex justify-end gap-2 pt-4" data-testid="persona-dns-actions">
+              <Button data-testid="persona-dns-cancel" type="button" variant="outline" onClick={() => router.push("/personas")} disabled={form.formState.isSubmitting}>Cancel</Button>
+              <Button data-testid="persona-dns-submit" type="submit" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {form.formState.isSubmitting ? (isEditing ? "Saving..." : "Creating...") : (isEditing ? "Save Changes" : "Create Persona")}
               </Button>

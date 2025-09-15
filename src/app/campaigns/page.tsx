@@ -49,38 +49,19 @@ const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | 
 export default function CampaignsPage() {
   const { toast: _toast } = useToast();
   const router = useRouter();
-  
-  // RTK CONSOLIDATION: Use new RTK provider instead of legacy hook
   const { campaigns: enrichedCampaigns, loading, error, refetch } = useRTKCampaignsList();
-
-  // Transform enriched campaigns to legacy format for compatibility
   const campaigns = useMemo(() => {
     return enrichedCampaigns.map((campaign: CampaignLite) => {
-      // Now properly handle GeneratedDomain[] array instead of string[]
       const domains = (campaign.domains || []) as DomainListItem[];
       const leads = (campaign.leads || []) as unknown[];
-      
-      // Calculate DNS validation stats from rich domain objects
-      const dnsValidatedCount = domains.filter((domain) =>
-        domain && typeof domain === 'object' && (domain as DomainListItem).dnsStatus === 'ok'
-      ).length;
-      
-      // Calculate HTTP validation stats
-      const httpValidatedCount = domains.filter((domain) =>
-        domain && typeof domain === 'object' && (domain as DomainListItem).httpStatus === 'ok'
-      ).length;
-      
-      // Calculate lead generation stats
-      const leadsFoundCount = domains.filter((domain) =>
-        domain && typeof domain === 'object' && (domain as DomainListItem).leadStatus === 'match'
-      ).length;
-
+      const dnsValidatedCount = domains.filter((domain) => domain && typeof domain === 'object' && (domain as DomainListItem).dnsStatus === 'ok').length;
+      const httpValidatedCount = domains.filter((domain) => domain && typeof domain === 'object' && (domain as DomainListItem).httpStatus === 'ok').length;
+      const leadsFoundCount = domains.filter((domain) => domain && typeof domain === 'object' && (domain as DomainListItem).leadStatus === 'match').length;
       return {
         campaignId: campaign.id,
         name: campaign.name,
-  // Prefer API phase names; fall back to discovery to avoid engine/API mismatch
-  currentPhase: campaign.currentPhase || 'discovery',
-  phaseStatus: 'not_started',
+        currentPhase: campaign.currentPhase || 'discovery',
+        phaseStatus: 'not_started',
         totalItems: domains.length,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -92,49 +73,38 @@ export default function CampaignsPage() {
         leadsFound: leadsFoundCount,
         domainsData: domains,
         leadsData: leads,
-  dnsResults: undefined,
-  httpResults: undefined,
-  analysisResults: undefined
+        dnsResults: undefined,
+        httpResults: undefined,
+        analysisResults: undefined
       };
     });
   }, [enrichedCampaigns]);
-
   const fetchCampaigns = refetch;
 
-  const getBulkDataSummary = (campaign: CampaignData) => {
-    const items = [];
-    
-    if (campaign.domains) {
-      items.push(`${campaign.domains.toLocaleString()} domains`);
-    }
-    
-    if (campaign.dnsValidatedDomains) {
-      items.push(`${campaign.dnsValidatedDomains.toLocaleString()} DNS validated`);
-    }
-    
-    if (campaign.leads) {
-      items.push(`${campaign.leads.toLocaleString()} leads`);
-    }
-    
+  const getBulkDataSummary = (campaign: any) => {
+    const items: string[] = [];
+    if (campaign.domains) items.push(`${campaign.domains.toLocaleString()} domains`);
+    if (campaign.dnsValidatedDomains) items.push(`${campaign.dnsValidatedDomains.toLocaleString()} DNS validated`);
+    if (campaign.leads) items.push(`${campaign.leads.toLocaleString()} leads`);
     return items.join(' • ');
   };
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Campaigns</h1>
-          <Button disabled>
+      <div className="p-6" data-testid="campaign-list-page-loading">
+        <div className="flex items-center justify-between mb-6" data-testid="campaign-list-header-loading">
+          <h1 className="text-3xl font-bold" data-testid="campaign-list-title">Campaigns</h1>
+          <Button disabled data-testid="campaign-list-refresh-loading">
             <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
             Loading...
           </Button>
         </div>
-        <div className="grid gap-4">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="animate-pulse">
+        <div className="grid gap-4" data-testid="campaign-list-skeletons">
+          {[1,2,3].map(i => (
+            <Card key={i} className="animate-pulse" data-testid="campaign-list-skeleton">
               <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-200 rounded w-1/4 mb-2" />
+                <div className="h-3 bg-gray-200 rounded w-1/2" />
               </CardContent>
             </Card>
           ))}
@@ -145,19 +115,19 @@ export default function CampaignsPage() {
 
   if (error) {
     return (
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Campaigns</h1>
-          <Button onClick={fetchCampaigns}>
+      <div className="p-6" data-testid="campaign-list-page-error">
+        <div className="flex items-center justify-between mb-6" data-testid="campaign-list-header-error">
+          <h1 className="text-3xl font-bold" data-testid="campaign-list-title">Campaigns</h1>
+          <Button onClick={fetchCampaigns} data-testid="campaign-list-refresh-error">
             <RefreshCw className="mr-2 h-4 w-4" />
             Retry
           </Button>
         </div>
-        <Card>
+        <Card data-testid="campaign-list-error-card">
           <CardContent className="p-6">
-            <div className="text-center">
-              <p className="text-red-600 mb-4">{error}</p>
-              <Button onClick={fetchCampaigns}>Try Again</Button>
+            <div className="text-center" data-testid="campaign-list-error-content">
+              <p className="text-red-600 mb-4" data-testid="campaign-list-error-message">{error as any}</p>
+              <Button onClick={fetchCampaigns} data-testid="campaign-list-error-retry">Try Again</Button>
             </div>
           </CardContent>
         </Card>
@@ -166,20 +136,18 @@ export default function CampaignsPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Campaigns</h1>
-          <p className="text-muted-foreground">
-            Enterprise-scale domain generation and validation campaigns
-          </p>
+    <div className="p-6" data-testid="campaign-list-page">
+      <div className="flex items-center justify-between mb-6" data-testid="campaign-list-header">
+        <div data-testid="campaign-list-heading">
+          <h1 className="text-3xl font-bold" data-testid="campaign-list-title">Campaigns</h1>
+          <p className="text-muted-foreground" data-testid="campaign-list-subtitle">Enterprise-scale domain generation and validation campaigns</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={fetchCampaigns} variant="outline">
+        <div className="flex gap-2" data-testid="campaign-list-actions">
+          <Button onClick={fetchCampaigns} variant="outline" data-testid="campaign-list-refresh">
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
-          <Button onClick={() => router.push('/campaigns/new')}>
+            <Button onClick={() => router.push('/campaigns/new')} data-testid="campaign-list-new">
             <Plus className="mr-2 h-4 w-4" />
             New Campaign
           </Button>
@@ -187,77 +155,76 @@ export default function CampaignsPage() {
       </div>
 
       {campaigns.length === 0 ? (
-        <Card>
-          <CardContent className="p-6 text-center">
-            <Database className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Campaigns Found</h3>
-            <p className="text-muted-foreground mb-4">
-              Get started by creating your first campaign
-            </p>
-            <Button onClick={() => router.push('/campaigns/new')}>
+        <Card data-testid="campaign-list-empty">
+          <CardContent className="p-6 text-center" data-testid="campaign-list-empty-content">
+            <Database className="mx-auto h-12 w-12 text-gray-400 mb-4" data-testid="campaign-list-empty-icon" />
+            <h3 className="text-lg font-semibold mb-2" data-testid="campaign-list-empty-title">No Campaigns Found</h3>
+            <p className="text-muted-foreground mb-4" data-testid="campaign-list-empty-description">Get started by creating your first campaign</p>
+            <Button onClick={() => router.push('/campaigns/new')} data-testid="campaign-list-empty-create">
               <Plus className="mr-2 h-4 w-4" />
               Create First Campaign
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4">
-          {campaigns.map((campaign: CampaignData) => (
-            <Card key={campaign.campaignId} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
+        <div className="grid gap-4" data-testid="campaign-list-grid">
+          {campaigns.map((campaign: any) => (
+            <Card
+              key={campaign.campaignId}
+              className="hover:shadow-md transition-shadow"
+              data-testid="campaign-card"
+              data-campaign-id={campaign.campaignId}
+            >
+              <CardHeader data-testid="campaign-card-header">
+                <div className="flex items-center justify-between" data-testid="campaign-card-header-row">
+                  <CardTitle className="flex items-center gap-2" data-testid="campaign-card-title">
                     <Activity className="h-5 w-5" />
                     {campaign.name}
                   </CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={STATUS_VARIANTS[campaign.phaseStatus] || "outline"}>
-                      {PHASE_LABELS[campaign.currentPhase] || campaign.currentPhase}
+                  <div className="flex items-center gap-2" data-testid="campaign-card-badges">
+                    <Badge variant={"outline"} data-testid="campaign-card-phase">
+                      {campaign.currentPhase}
                     </Badge>
-                    <Badge variant="outline">
+                    <Badge variant="outline" data-testid="campaign-card-status">
                       {campaign.phaseStatus?.replace('_', ' ')}
                     </Badge>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                  <div className="flex items-center gap-2">
+              <CardContent data-testid="campaign-card-content">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4" data-testid="campaign-card-stats">
+                  <div className="flex items-center gap-2" data-testid="campaign-card-stat-domains">
                     <Globe className="h-4 w-4 text-blue-500" />
-                    <span className="text-sm text-muted-foreground">
-                      {campaign.domains || 0} domains
-                    </span>
+                    <span className="text-sm text-muted-foreground">{campaign.domains || 0} domains</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" data-testid="campaign-card-stat-dns-validated">
                     <Database className="h-4 w-4 text-green-500" />
-                    <span className="text-sm text-muted-foreground">
-                      {campaign.dnsValidatedDomains || 0} validated
-                    </span>
+                    <span className="text-sm text-muted-foreground">{campaign.dnsValidatedDomains || 0} validated</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2" data-testid="campaign-card-stat-progress">
                     <BarChart3 className="h-4 w-4 text-purple-500" />
-                    <span className="text-sm text-muted-foreground">
-                      {campaign.progress || 0}% complete
-                    </span>
+                    <span className="text-sm text-muted-foreground">{campaign.progress || 0}% complete</span>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">
+                <div className="flex items-center justify-between" data-testid="campaign-card-footer">
+                  <div className="text-sm text-muted-foreground" data-testid="campaign-card-summary">
                     {getBulkDataSummary(campaign) || 'No data available'}
                   </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
+                  <div className="flex gap-2" data-testid="campaign-card-actions">
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => router.push(`/campaigns/${campaign.campaignId}`)}
+                      data-testid="campaign-card-view"
                     >
                       View Details
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => router.push(`/campaigns/${campaign.campaignId}/edit`)}
+                      data-testid="campaign-card-edit"
                     >
                       Edit
                     </Button>

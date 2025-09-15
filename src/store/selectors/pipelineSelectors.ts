@@ -1,5 +1,6 @@
 import { createSelector } from '@reduxjs/toolkit';
 import type { RootState } from '@/store';
+import { campaignApi } from '@/store/api/campaignApi';
 
 // ---------------------------------------------
 // Phase & Model Types
@@ -24,38 +25,54 @@ const selectCampaignUiSlice = (s: RootState) => s.campaignUI;
 const selectCampaignUIById = (id: string) => createSelector(selectCampaignUiSlice, slice => slice.byId?.[id]);
 const selectCampaignApiState = (s: RootState) => (s as any).campaignApi; // RTK Query slice
 
-// Grab phase status (query data) defensively from RTK Query cache.
-const phaseStatusCacheSelector = (campaignId: string, phase: PipelinePhaseKey) => createSelector(
-  selectCampaignApiState,
-  apiState => {
-    const queries = apiState?.queries as Record<string, any> | undefined;
-    if (!queries) return undefined;
-    for (const q of Object.values(queries)) {
-      if (q?.endpointName === 'getPhaseStatusStandalone' && q?.originalArgs?.campaignId === campaignId && q?.originalArgs?.phase === phase) {
-        return q?.data as { status?: BackendStatus } | undefined;
-      }
-    }
-    return undefined;
+// Direct RTK Query data selectors per phase to avoid O(N) scans over query cache.
+// Each call to campaignApi.endpoints.getPhaseStatusStandalone.select(arg) returns a selector (RootState)=>QuerySubstate.
+// We wrap it to surface only the data/status field while maintaining memoization.
+const _phaseStatusSelectorCache = new WeakMap<object, Map<string, (state: RootState) => { status?: BackendStatus } | undefined>>();
+
+const selectPhaseStatusQuery = (campaignId: string, phase: PipelinePhaseKey) => {
+  // Use campaignApi as the root cache key (since endpoints are stable singletons)
+  let campaignCache = _phaseStatusSelectorCache.get(campaignApi);
+  if (!campaignCache) {
+    campaignCache = new Map();
+    _phaseStatusSelectorCache.set(campaignApi, campaignCache);
   }
-);
+  const cacheKey = `${campaignId}:${phase}`;
+  if (campaignCache.has(cacheKey)) {
+    return campaignCache.get(cacheKey)!;
+  }
+  const base = campaignApi.endpoints.getPhaseStatusStandalone?.select({ campaignId, phase });
+  const selector = (state: RootState): { status?: BackendStatus } | undefined => {
+    // Fallback if endpoint missing (should not happen in normal runtime) to preserve safety.
+    if (!base) return undefined;
+    const sub = base(state as any);
+    return (sub as any)?.data as { status?: BackendStatus } | undefined;
+  };
+  campaignCache.set(cacheKey, selector);
+  return selector;
+};
 
 // ---------------------------------------------
 // Core Phase List
 // ---------------------------------------------
-export const makeSelectPipelinePhases = (campaignId: string) => createSelector(
-  ...PIPELINE_PHASE_ORDER.map(p => phaseStatusCacheSelector(campaignId, p)),
-  (...statuses: ({ status?: BackendStatus } | undefined)[]): UIPipelinePhase[] => {
-    return PIPELINE_PHASE_ORDER.map((key, idx) => {
-      const status = statuses[idx]?.status;
-      const configured = !!status && status !== 'not_started';
-      let execState: UIPipelinePhase['execState'] = 'idle';
-      if (status === 'running' || status === 'in_progress' || status === 'paused') execState = 'running';
-      else if (status === 'completed') execState = 'completed';
-      else if (status === 'failed') execState = 'failed';
-      return { key, configState: configured ? 'valid' : 'missing', execState, statusRaw: status };
-    });
-  }
-);
+export const makeSelectPipelinePhases = (campaignId: string) => {
+  const perPhaseSelectors = PIPELINE_PHASE_ORDER.map(phase => selectPhaseStatusQuery(campaignId, phase));
+  // We build a selector whose inputs are the per-phase data objects.
+  return createSelector(
+    perPhaseSelectors,
+    (...statuses: ({ status?: BackendStatus } | undefined)[]): UIPipelinePhase[] => {
+      return PIPELINE_PHASE_ORDER.map((key, idx) => {
+        const status = statuses[idx]?.status;
+        const configured = !!status && status !== 'not_started';
+        let execState: UIPipelinePhase['execState'] = 'idle';
+        if (status === 'running' || status === 'in_progress' || status === 'paused') execState = 'running';
+        else if (status === 'completed') execState = 'completed';
+        else if (status === 'failed') execState = 'failed';
+        return { key, configState: configured ? 'valid' : 'missing', execState, statusRaw: status };
+      });
+    }
+  );
+};
 
 export const makeSelectPhase = (campaignId: string, phase: PipelinePhaseKey) => createSelector(
   makeSelectPipelinePhases(campaignId),
@@ -241,14 +258,25 @@ export const makeSelectNextUserAction = (campaignId: string) => createSelector(
       const last = phases[phases.length-1];
       if (last) fallbackPhase = last.key;
     }
-    // Manual mode: enforce sequential configuration before any phase is started (enterprise gating).
-    // Rationale: simplifies mental model & matches test expectations for progressive configuration.
+    // Manual (step-by-step) mode:
+    // Allow starting the earliest runnable configured phase even if later phases are still unconfigured.
+    // Only force configuration if the earliest missing phase precedes the runnable phase.
     if (!auto) {
       if (activeExec) return { type: 'watch', phase: activeExec.key } as const;
+      if (nextRunnable) {
+        if (missing.length) {
+          const firstMissing = missing[0] as PipelinePhaseKey; // safe due to length check
+          const firstMissingIdx = PIPELINE_PHASE_ORDER.indexOf(firstMissing);
+          const runnableIdx = PIPELINE_PHASE_ORDER.indexOf(nextRunnable.key);
+          if (firstMissingIdx > -1 && firstMissingIdx < runnableIdx) {
+            return { type: 'configure', phase: firstMissing, reason: 'Configure earlier phase' } as const;
+          }
+        }
+        return { type: 'start', phase: nextRunnable.key } as const;
+      }
       if (missing.length) {
         return { type: 'configure', phase: missing[0], reason: 'Configuration required' } as const;
       }
-      if (nextRunnable) return { type: 'start', phase: nextRunnable.key } as const;
       return { type: 'wait', phase: fallbackPhase } as const;
     }
     // Auto mode strict requirement.

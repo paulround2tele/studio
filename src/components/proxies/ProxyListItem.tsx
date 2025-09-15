@@ -1,4 +1,3 @@
-
 "use client";
 
 import type { ModelsProxy as ProxyType } from '@/lib/api-client/models/models-proxy';
@@ -50,35 +49,35 @@ export default function ProxyListItem({ proxy, onEdit, onDelete, onTest, onToggl
 
 
   return (
-    <TableRow className={cn(isLoading && "opacity-50 pointer-events-none")}>
-      <TableCell>
-        <div className="font-medium truncate max-w-xs" title={proxy.name}>{proxy.name}</div>
-        {proxy.description && <div className="text-xs text-muted-foreground truncate max-w-xs" title={proxy.description}>{proxy.description}</div>}
+    <TableRow className={cn(isLoading && "opacity-50 pointer-events-none")} data-testid={`proxy-row-${proxy.id || 'unknown'}`}>
+      <TableCell data-testid="proxy-cell-name">
+        <div className="font-medium truncate max-w-xs" title={proxy.name} data-testid="proxy-name">{proxy.name}</div>
+        {proxy.description && <div className="text-xs text-muted-foreground truncate max-w-xs" title={proxy.description} data-testid="proxy-description">{proxy.description}</div>}
       </TableCell>
-      <TableCell>
-        <div className="font-medium truncate max-w-xs" title={proxy.address}>{proxy.address}</div>
-        {proxy.username && <div className="text-xs text-muted-foreground truncate max-w-xs" title={proxy.username}>User: {proxy.username}</div>}
-        {proxy.notes && <div className="text-xs text-muted-foreground truncate max-w-xs" title={proxy.notes}>{proxy.notes}</div>}
+      <TableCell data-testid="proxy-cell-address">
+        <div className="font-medium truncate max-w-xs" title={proxy.address} data-testid="proxy-address">{proxy.address}</div>
+        {proxy.username && <div className="text-xs text-muted-foreground truncate max-w-xs" title={proxy.username} data-testid="proxy-username">User: {proxy.username}</div>}
+        {proxy.notes && <div className="text-xs text-muted-foreground truncate max-w-xs" title={proxy.notes} data-testid="proxy-notes">{proxy.notes}</div>}
       </TableCell>
-      <TableCell><Badge variant="outline">{proxy.protocol}</Badge></TableCell>
-      <TableCell className="text-xs">{proxy.countryCode || '-'}</TableCell>
-      <TableCell>
-        <Badge variant={statusInfo.variant} className="text-xs">
+      <TableCell data-testid="proxy-cell-protocol"><Badge variant="outline" data-testid="proxy-protocol">{proxy.protocol}</Badge></TableCell>
+      <TableCell className="text-xs" data-testid="proxy-cell-country">{proxy.countryCode || '-'}</TableCell>
+      <TableCell data-testid="proxy-cell-status">
+        <Badge variant={statusInfo.variant} className="text-xs" data-testid={`proxy-status-${statusInfo.text.toLowerCase()}`}>
           {statusInfo.icon}
           <span className="ml-1">{statusInfo.text}</span>
         </Badge>
       </TableCell>
-      <TableCell className="text-xs text-muted-foreground">
+      <TableCell className="text-xs text-muted-foreground" data-testid="proxy-cell-last-tested">
         {proxy.lastTested ? format(new Date(proxy.lastTested), 'PPp') : 'Never'}
       </TableCell>
-      <TableCell className="text-xs">
-        <span className="text-green-600">{proxy.successCount}</span> / <span className="text-red-600">{proxy.failureCount}</span>
+      <TableCell className="text-xs" data-testid="proxy-cell-success-failure">
+        <span className="text-green-600" data-testid="proxy-success-count">{proxy.successCount}</span> / <span className="text-red-600" data-testid="proxy-failure-count">{proxy.failureCount}</span>
       </TableCell>
-      <TableCell className="text-xs text-destructive truncate max-w-[150px]" title={proxy.lastError}>
+      <TableCell className="text-xs text-destructive truncate max-w-[150px]" title={proxy.lastError} data-testid="proxy-cell-last-error">
         {proxy.lastError || 'None'}
       </TableCell>
-      <TableCell className="text-right">
-        <div className="flex items-center justify-end gap-1">
+      <TableCell className="text-right" data-testid="proxy-cell-actions">
+        <div className="flex items-center justify-end gap-1" data-testid="proxy-actions">
            <Switch
             checked={proxy.status === 'Active' || proxy.status === 'Testing'}
             onCheckedChange={handleToggle}
@@ -87,21 +86,22 @@ export default function ProxyListItem({ proxy, onEdit, onDelete, onTest, onToggl
             className={cn(
                (proxy.status === 'Active' || proxy.status === 'Testing') ? "data-[state=checked]:bg-green-500" : "data-[state=unchecked]:bg-muted-foreground/50",
             )}
+            data-testid="proxy-toggle-status"
           />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8" disabled={isLoading}>
+              <Button variant="ghost" size="icon" className="h-8 w-8" disabled={isLoading} data-testid="proxy-menu-trigger">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onEdit(proxy)} disabled={isLoading}>
+            <DropdownMenuContent align="end" data-testid="proxy-menu">
+              <DropdownMenuItem onClick={() => onEdit(proxy)} disabled={isLoading} data-testid="proxy-menu-edit">
                 <Edit3 className="mr-2 h-4 w-4" /> Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => proxy.id && onTest(proxy.id)} disabled={isLoading || !proxy.id}>
+              <DropdownMenuItem onClick={() => proxy.id && onTest(proxy.id)} disabled={isLoading || !proxy.id} data-testid="proxy-menu-test">
                 <TestTubeDiagonal className="mr-2 h-4 w-4" /> Test
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDelete(proxy)} className="text-destructive focus:text-destructive-foreground focus:bg-destructive" disabled={isLoading}>
+              <DropdownMenuItem onClick={() => onDelete(proxy)} className="text-destructive focus:text-destructive-foreground focus:bg-destructive" disabled={isLoading} data-testid="proxy-menu-delete">
                 <Trash2 className="mr-2 h-4 w-4" /> Delete
               </DropdownMenuItem>
             </DropdownMenuContent>

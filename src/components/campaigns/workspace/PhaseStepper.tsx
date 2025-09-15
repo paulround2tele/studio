@@ -14,7 +14,7 @@ export interface StepPhaseInfo {
 export interface PhaseStepperProps {
   phases: StepPhaseInfo[];
   activePhase?: string;
-  onSelect?: (phaseKey: string) => void;
+  onPhaseSelect?: (phaseKey: string) => void;
   orientation?: 'vertical' | 'horizontal';
   className?: string;
   condensed?: boolean; // smaller labels for tight spaces
@@ -31,7 +31,7 @@ function deriveVariant(p: StepPhaseInfo): StatusVariant {
   return 'idle';
 }
 
-export const PhaseStepper: React.FC<PhaseStepperProps> = ({ phases, activePhase, onSelect, orientation = 'horizontal', className, condensed = false }) => {
+export const PhaseStepper: React.FC<PhaseStepperProps & Omit<React.HTMLAttributes<HTMLElement>, 'onSelect'>> = ({ phases, activePhase, onPhaseSelect, orientation = 'horizontal', className, condensed = false, ...rest }) => {
   const sorted = React.useMemo(() => [...phases].sort((a,b)=>a.order - b.order), [phases]);
   const vertical = orientation === 'vertical';
 
@@ -64,8 +64,8 @@ export const PhaseStepper: React.FC<PhaseStepperProps> = ({ phases, activePhase,
     else if (e.key === 'End') { next = sorted.length -1; }
     else if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      const target = sorted[idx];
-      if (target) onSelect?.(target.key);
+  const target = sorted[idx];
+  if (target) onPhaseSelect?.(target.key);
       return;
     } else { return; }
     e.preventDefault();
@@ -81,7 +81,7 @@ export const PhaseStepper: React.FC<PhaseStepperProps> = ({ phases, activePhase,
   };
 
   return (
-    <nav aria-label="Pipeline phases" className={cn(vertical ? 'flex flex-col gap-4' : 'flex items-stretch gap-6', className)} data-phase-stepper>
+    <nav aria-label="Pipeline phases" className={cn(vertical ? 'flex flex-col gap-4' : 'flex items-stretch gap-6', className)} data-phase-stepper {...rest}>
   {sorted.map((p, idx) => {
         const active = p.key === activePhase;
         const badgeVariant = deriveVariant(p);
@@ -89,7 +89,7 @@ export const PhaseStepper: React.FC<PhaseStepperProps> = ({ phases, activePhase,
           <button
             key={p.key}
             type="button"
-            onClick={() => onSelect?.(p.key)}
+            onClick={() => onPhaseSelect?.(p.key)}
             className={cn(
               'group relative focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-md transition-colors',
               vertical ? 'flex items-start gap-3 text-left' : 'flex flex-col items-center gap-1',

@@ -86,6 +86,20 @@ export function extractResponseData<T>(response: unknown): T | null {
     console.log('[DEBUG] Detected direct backend envelope');
     apiResponse = response;
   } else {
+    // Fallback: Some legacy or internal endpoints may return raw arrays or plain objects without envelope.
+    // To avoid hard failure (e.g., campaign list returning []), accept array/object as data when clearly not an envelope.
+    if (Array.isArray(response)) {
+      console.log('[DEBUG] Fallback raw array response accepted');
+      return response as unknown as T;
+    }
+    const plain = response as Record<string, unknown>;
+    // Heuristic: if it lacks 'success' key but has obvious list/data keys
+    if (!('success' in plain)) {
+      if ('items' in plain || 'id' in plain || Object.keys(plain).length > 0) {
+        console.log('[DEBUG] Fallback plain object response accepted');
+        return plain as unknown as T;
+      }
+    }
     console.log('[DEBUG] Unknown response format');
     throw new Error('Invalid response format: missing unified envelope structure');
   }

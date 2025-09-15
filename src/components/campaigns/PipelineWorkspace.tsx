@@ -11,7 +11,7 @@ import AnalysisConfigForm from '@/components/campaigns/workspace/forms/AnalysisC
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { PhaseStepper, PhasePanelShell, StatusBadge, CampaignOverviewCard, AlertStack } from '@/components/campaigns/workspace';
-import { useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
+import { useStartPhaseStandaloneMutation, useGetPhaseStatusStandaloneQuery, campaignApi } from '@/store/api/campaignApi';
 import computeAutoStartPhase from '@/store/selectors/autoAdvanceLogic';
 
 interface PipelineWorkspaceProps { campaignId: string; }
@@ -27,6 +27,11 @@ const railColor = (p:any) => {
 };
 
 export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId }) => {
+  // Actively subscribe to per-phase status so selectors receive data+invalidations
+  useGetPhaseStatusStandaloneQuery({ campaignId, phase: 'discovery' });
+  useGetPhaseStatusStandaloneQuery({ campaignId, phase: 'validation' });
+  useGetPhaseStatusStandaloneQuery({ campaignId, phase: 'extraction' });
+  useGetPhaseStatusStandaloneQuery({ campaignId, phase: 'analysis' });
   const selectOverview = React.useMemo(()=>pipelineSelectors.overview(campaignId),[campaignId]);
   const ov = useAppSelector(selectOverview);
   const { phases, config, exec, mode, guidance, failures, nextAction } = ov;
@@ -46,6 +51,8 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
     if (!nextAction) return;
     if (nextAction.type === 'start') {
       await startPhase({ campaignId, phase: nextAction.phase as any });
+      // Force immediate status refetch for the started phase
+      dispatch(campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: nextAction.phase } as any));
     }
     // configure path will be handled in Phase 5 when inline forms introduced
   };
@@ -93,13 +100,14 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
   })), [phases]);
 
   return (
-    <div className="border rounded-lg p-4 flex flex-col gap-6" data-pipeline-workspace>
+    <div className="border rounded-lg p-4 flex flex-col gap-6" data-pipeline-workspace data-testid="pipeline-workspace">
       <CampaignOverviewCard campaignId={campaignId} />
       <PhaseStepper
         phases={stepperPhases}
         activePhase={panelPhase}
-        onSelect={handlePhaseClick}
+        onPhaseSelect={handlePhaseClick}
         className="w-full"
+        data-testid="pipeline-phase-stepper"
         orientation="horizontal"
       />
       {/* Adaptive Panel */}
@@ -160,10 +168,10 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
           </>}
         >
           {!panelPhase && (
-            <div className="text-gray-600 text-sm">Select a phase or follow the next action guidance. Inline forms will render here.</div>
+            <div className="text-gray-600 text-sm" data-testid="pipeline-phase-placeholder">Select a phase or follow the next action guidance. Inline forms will render here.</div>
           )}
           {panelPhase && (
-            <div className="space-y-3">
+            <div className="space-y-3" data-testid={`pipeline-phase-panel-${panelPhase}`}>
               {renderPhaseForm(panelPhase)}
             </div>
           )}
