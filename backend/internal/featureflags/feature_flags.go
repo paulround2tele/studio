@@ -1,0 +1,166 @@
+package featureflags
+
+import (
+	"os"
+	"strconv"
+	"strings"
+)
+
+// Extraction → Analysis Redesign Feature Flags
+// These constants control the phased rollout of the new extraction and analysis architecture.
+// All flags default to false for safe deployment.
+
+// IsExtractionFeatureTableEnabled returns true if the system should write
+// feature extraction results to the domain_extraction_features table.
+// 
+// Phase: P1 - Feature extraction table integration
+// Environment Variable: EXTRACTION_FEATURE_TABLE_ENABLED
+// Default: false
+//
+// TODO Phase P1: Wire this flag into FeatureExtractionService
+// TODO Phase P1: Implement dual-write mode (legacy + new table)
+// TODO Phase P1: Add monitoring for extraction processing states
+func IsExtractionFeatureTableEnabled() bool {
+	return getBoolEnv("EXTRACTION_FEATURE_TABLE_ENABLED", false)
+}
+
+// IsExtractionKeywordDetailEnabled returns true if the system should perform
+// detailed keyword extraction and write results to domain_extracted_keywords table.
+//
+// Phase: P2 - Keyword extraction enhancement  
+// Environment Variable: EXTRACTION_KEYWORD_DETAIL_ENABLED
+// Default: false
+//
+// TODO Phase P2: Wire this flag into DetailedKeywordExtractionService
+// TODO Phase P2: Implement semantic clustering and sentiment analysis
+// TODO Phase P2: Add keyword density and relevance scoring
+func IsExtractionKeywordDetailEnabled() bool {
+	return getBoolEnv("EXTRACTION_KEYWORD_DETAIL_ENABLED", false)
+}
+
+// IsAnalysisReadsFeatureTableEnabled returns true if the analysis phase should
+// read feature data from the new extraction tables instead of legacy feature_vector.
+//
+// Phase: P3 - Analysis reading migration
+// Environment Variable: ANALYSIS_READS_FEATURE_TABLE  
+// Default: false
+//
+// TODO Phase P3: Wire this flag into AnalysisService
+// TODO Phase P3: Implement fallback logic for incomplete extractions
+// TODO Phase P3: Add data mapping between old and new schemas
+func IsAnalysisReadsFeatureTableEnabled() bool {
+	return getBoolEnv("ANALYSIS_READS_FEATURE_TABLE", false)
+}
+
+// IsMicrocrawlAdaptiveModeEnabled returns true if the system should use
+// adaptive crawling strategies based on site characteristics and extraction results.
+//
+// Phase: P4 - Adaptive crawling implementation
+// Environment Variable: MICROCRAWL_ADAPTIVE_MODE
+// Default: false  
+//
+// TODO Phase P4: Wire this flag into MicrocrawlAdaptiveService
+// TODO Phase P4: Implement site complexity analysis
+// TODO Phase P4: Add dynamic crawl depth adjustment
+func IsMicrocrawlAdaptiveModeEnabled() bool {
+	return getBoolEnv("MICROCRAWL_ADAPTIVE_MODE", false)
+}
+
+// IsAnalysisRescoringEnabled returns true if the system should use
+// advanced scoring algorithms based on detailed extraction data.
+//
+// Phase: P5 - Advanced scoring implementation (Future)
+// Environment Variable: ANALYSIS_RESCORING_ENABLED
+// Default: false
+//
+// TODO Phase P5: Wire this flag into DetailedScoringService  
+// TODO Phase P5: Implement feature-weighted scoring algorithms
+// TODO Phase P5: Add keyword relevance and technical metrics scoring
+func IsAnalysisRescoringEnabled() bool {
+	return getBoolEnv("ANALYSIS_RESCORING_ENABLED", false)
+}
+
+// ExtractionAnalysisFeatureFlags returns a structured view of all extraction/analysis
+// feature flags for monitoring and debugging purposes.
+type ExtractionAnalysisFeatureFlags struct {
+	ExtractionFeatureTableEnabled  bool `json:"extractionFeatureTableEnabled"`
+	ExtractionKeywordDetailEnabled bool `json:"extractionKeywordDetailEnabled"`
+	AnalysisReadsFeatureTable     bool `json:"analysisReadsFeatureTable"`
+	MicrocrawlAdaptiveMode        bool `json:"microcrawlAdaptiveMode"`
+	AnalysisRescoringEnabled      bool `json:"analysisRescoringEnabled"`
+}
+
+// GetExtractionAnalysisFlags returns the current state of all extraction/analysis
+// feature flags for API responses and monitoring.
+func GetExtractionAnalysisFlags() ExtractionAnalysisFeatureFlags {
+	return ExtractionAnalysisFeatureFlags{
+		ExtractionFeatureTableEnabled:  IsExtractionFeatureTableEnabled(),
+		ExtractionKeywordDetailEnabled: IsExtractionKeywordDetailEnabled(),
+		AnalysisReadsFeatureTable:      IsAnalysisReadsFeatureTableEnabled(),
+		MicrocrawlAdaptiveMode:         IsMicrocrawlAdaptiveModeEnabled(),
+		AnalysisRescoringEnabled:       IsAnalysisRescoringEnabled(),
+	}
+}
+
+// Helper Functions
+
+// getBoolEnv reads a boolean environment variable with a default value.
+// Accepts: "true", "1", "yes", "on" (case insensitive) as true values.
+// Everything else (including empty/missing) returns the default value.
+func getBoolEnv(key string, defaultValue bool) bool {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return defaultValue
+	}
+	
+	// Parse boolean-like values
+	lowerValue := strings.ToLower(value)
+	switch lowerValue {
+	case "true", "1", "yes", "on":
+		return true
+	case "false", "0", "no", "off":
+		return false
+	default:
+		// Try parsing as integer (non-zero = true)
+		if intVal, err := strconv.Atoi(value); err == nil {
+			return intVal != 0
+		}
+		return defaultValue
+	}
+}
+
+// Phase Implementation Notes:
+//
+// Phase P0 (Current): Infrastructure setup - no runtime integration yet
+// - [x] Feature flag constants defined
+// - [x] Database migration created  
+// - [x] Documentation complete
+// - [ ] Migration testing and verification
+//
+// Phase P1 (Next): Feature extraction table integration
+// - [ ] Implement FeatureExtractionService.SaveFeatures()
+// - [ ] Add dual-write logic in extraction handlers
+// - [ ] Wire IsExtractionFeatureTableEnabled() into extraction flow
+// - [ ] Add processing state tracking and retry logic
+//
+// Phase P2: Enhanced keyword extraction 
+// - [ ] Implement DetailedKeywordExtractionService
+// - [ ] Wire IsExtractionKeywordDetailEnabled() into keyword flow
+// - [ ] Add semantic analysis and clustering algorithms
+//
+// Phase P3: Analysis migration to new tables
+// - [ ] Modify AnalysisService to support dual read paths
+// - [ ] Wire IsAnalysisReadsFeatureTableEnabled() into analysis flow  
+// - [ ] Implement fallback and data mapping logic
+//
+// Phase P4: Adaptive crawling
+// - [ ] Implement MicrocrawlAdaptiveService
+// - [ ] Wire IsMicrocrawlAdaptiveModeEnabled() into crawl orchestration
+// - [ ] Add site analysis and dynamic strategy selection
+//
+// Phase P5: Advanced scoring
+// - [ ] Implement DetailedScoringService with new algorithms
+// - [ ] Wire IsAnalysisRescoringEnabled() into scoring flow
+// - [ ] Add feature-weighted and keyword-relevance scoring
+//
+// Subsequent phases (P6-P8) will focus on optimization, migration, and cleanup.
