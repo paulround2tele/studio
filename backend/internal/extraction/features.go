@@ -142,6 +142,13 @@ func BuildFeatures(signals RawSignals, params BuilderParams) FeatureAggregate {
 		"kw_hits_total": total,
 		"content_bytes": signals.ContentBytes,
 	}
+	// Add top3 and signal distribution for downstream API (if not already present by previous runs)
+	if len(all) > 0 {
+		ids := make([]string, 0, len(all))
+		for _, wk := range all { ids = append(ids, wk.KeywordID) }
+		featureVector["kw_top3"] = ids
+	}
+	if len(signalDistribution) > 0 { featureVector["kw_signal_distribution"] = signalDistribution }
 
 	var legacyRichness float64
 	computeLegacy := func() float64 {
@@ -410,22 +417,23 @@ func computeRichnessV2(signals RawSignals, kwCounts map[string]int, signalDistri
 	}
 
 	fvExtras := map[string]any{
-		"richness":                   final,
-		"richness_weights_version":   2,
-		"diversity_effective_unique": effectiveUnique,
-		"diversity_target":           target,
-		"prominence_norm":            P,
-		"density_norm":               D,
-		"signal_entropy_norm":        S,
-		"length_quality_norm":        L,
-		"enrichment_norm":            G,
-		"stuffing_penalty":           stuffingPenalty,
-		"repetition_index":           repetitionIndex,
-		"anchor_share":               anchorShare,
-		"applied_bonus":              bonus,
-		"applied_deductions_total":   penalties,
-		"richness_weight_profile":    map[string]any{"V": weightsProfile.V, "P": weightsProfile.P, "D": weightsProfile.D, "S": weightsProfile.S, "L": weightsProfile.L, "bonus_max": weightsProfile.BonusMax},
-	}
+			"richness":                   final,
+			"richness_weights_version":   2,
+			"diversity_effective_unique": effectiveUnique,
+			"diversity_target":           target,
+			"diversity_norm":             V,
+			"prominence_norm":            P,
+			"density_norm":               D,
+			"signal_entropy_norm":        S,
+			"length_quality_norm":        L,
+			"enrichment_norm":            G,
+			"stuffing_penalty":           stuffingPenalty,
+			"repetition_index":           repetitionIndex,
+			"anchor_share":               anchorShare,
+			"applied_bonus":              bonus,
+			"applied_deductions_total":   penalties,
+			"richness_weight_profile":    map[string]any{"V": weightsProfile.V, "P": weightsProfile.P, "D": weightsProfile.D, "S": weightsProfile.S, "L": weightsProfile.L, "bonus_max": weightsProfile.BonusMax},
+		}
 	return richnessV2Result{Final: final, FeatureVectorExtras: fvExtras}
 }
 

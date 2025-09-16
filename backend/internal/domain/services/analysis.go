@@ -1501,7 +1501,9 @@ func (s *analysisService) dualReadFetchFeatures(ctx context.Context, campaignID 
 	if dbx == nil {
 		return nil, fmt.Errorf("db unavailable for dual-read")
 	}
-	rows, err := dbx.QueryContext(ctx, `SELECT def.domain_id, gd.domain_name, def.kw_unique_count, def.kw_weight_sum, def.content_richness_score
+	rows, err := dbx.QueryContext(ctx, `SELECT def.domain_id, gd.domain_name,
+	   def.kw_unique_count, def.kw_total_occurrences, def.kw_weight_sum,
+	   def.content_richness_score, def.microcrawl_gain_ratio, def.feature_vector
 FROM analysis_ready_features def
 JOIN generated_domains gd ON gd.id = def.domain_id AND gd.campaign_id = def.campaign_id
 WHERE def.campaign_id=$1`, campaignID)
@@ -1514,16 +1516,55 @@ WHERE def.campaign_id=$1`, campaignID)
 		var domainID string
 		var domainName string
 		var kwUnique sql.NullInt64
+		var kwHits sql.NullInt64
 		var weightSum sql.NullFloat64
 		var richness sql.NullFloat64
-		if err := rows.Scan(&domainID, &domainName, &kwUnique, &weightSum, &richness); err != nil {
+		var gain sql.NullFloat64
+		var fvRaw []byte
+		if err := rows.Scan(&domainID, &domainName, &kwUnique, &kwHits, &weightSum, &richness, &gain, &fvRaw); err != nil {
 			return res, err
 		}
-		res[domainName] = map[string]any{
-			"kw_unique_count":        nullableInt64(kwUnique),
-			"kw_weight_sum":          nullableFloat64(weightSum),
-			"content_richness_score": nullableFloat64(richness),
+		// Parse feature_vector JSON
+		fv := map[string]any{}
+		if len(fvRaw) > 0 {
+			if err := json.Unmarshal(fvRaw, &fv); err != nil {
+				return res, fmt.Errorf("failed to unmarshal feature_vector for domain %s: %w", domainName, err)
+			}
 		}
+		// Fail fast if critical richness keys missing
+		required := []string{"richness_weights_version","prominence_norm","diversity_effective_unique","diversity_norm","enrichment_norm","applied_bonus","applied_deductions_total","stuffing_penalty","repetition_index","anchor_share"}
+		for _, k := range required { if _, ok := fv[k]; !ok { return res, fmt.Errorf("missing required feature_vector key '%s' for domain %s", k, domainName) } }
+
+		// Build nested structure
+		top3 := anyToStringSlice(fv["kw_top3"])
+		sigDist := anyToStringIntMap(fv["kw_signal_distribution"])
+		nested := map[string]any{
+			"domain": domainName,
+			"keywords": map[string]any{
+				"unique_count": nullableInt64(kwUnique),
+				"hits_total": nullableInt64(kwHits),
+				"weight_sum": nullableFloat64(weightSum),
+				"top3": top3,
+				"signal_distribution": sigDist,
+			},
+			"richness": map[string]any{
+				"score": nullableFloat64(richness),
+				"version": fv["richness_weights_version"],
+				"prominence_norm": fv["prominence_norm"],
+				"diversity_effective_unique": fv["diversity_effective_unique"],
+				"diversity_norm": fv["diversity_norm"],
+				"enrichment_norm": fv["enrichment_norm"],
+				"applied_bonus": fv["applied_bonus"],
+				"applied_deductions_total": fv["applied_deductions_total"],
+				"stuffing_penalty": fv["stuffing_penalty"],
+				"repetition_index": fv["repetition_index"],
+				"anchor_share": fv["anchor_share"],
+			},
+			"microcrawl": map[string]any{
+				"gain_ratio": nullableFloat64(gain),
+			},
+		}
+		res[domainName] = nested
 	}
 	return res, rows.Err()
 }
@@ -1539,4 +1580,30 @@ func nullableFloat64(v sql.NullFloat64) any {
 		return v.Float64
 	}
 	return nil
+}
+
+func anyToStringSlice(v any) []string {
+	if v == nil { return []string{} }
+	switch arr := v.(type) {
+	case []string:
+		return arr
+	case []any:
+		out := make([]string,0,len(arr))
+		for _, e := range arr { if s, ok := e.(string); ok { out = append(out, s) } }
+		return out
+	default:
+		return []string{}
+	}
+}
+
+func anyToStringIntMap(v any) map[string]int {
+	out := map[string]int{}
+	if v == nil { return out }
+	switch m := v.(type) {
+	case map[string]any:
+		for k,val := range m { switch x:=val.(type){case float64: out[k]=int(x); case int: out[k]=x; case int64: out[k]=int(x)} }
+	case map[string]int:
+		return m
+	}
+	return out
 }
