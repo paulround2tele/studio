@@ -16,6 +16,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/fntelecomllc/studio/backend/internal/extraction"
+
 	"github.com/fntelecomllc/studio/backend/internal/contentfetcher"
 	"github.com/fntelecomllc/studio/backend/internal/keywordextractor"
 	"github.com/fntelecomllc/studio/backend/internal/models"
@@ -952,6 +954,7 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 		ContentLenScore   float64
 		TitleScore        float64
 		FreshnessScore    float64
+		LegacyKwUnique    float64
 	}
 	scores := make([]scoreRow, 0, 1024)
 	processed := int64(0)
@@ -1062,6 +1065,7 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 			ContentLenScore:   contentLenScore,
 			TitleScore:        titleScore,
 			FreshnessScore:    freshness,
+			LegacyKwUnique:    kwUnique,
 		})
 
 		// Progress SSE emission (only during rescore / scoring runs). Guard on totalCount>0 and interval>0.
@@ -1086,6 +1090,91 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 	}
 	if len(scores) == 0 {
 		return correlationId, nil
+	}
+
+	// Dual-read comparison (non-blocking). Only executed if ANALYSIS_DUAL_READ enabled.
+	if envVal, ok := os.LookupEnv("ANALYSIS_DUAL_READ"); ok && (envVal == "1" || strings.EqualFold(envVal, "true") || strings.EqualFold(envVal, "on")) {
+		if newFeatures, derr := s.dualReadFetchFeatures(ctx, campaignID); derr == nil && len(newFeatures) > 0 {
+			missingLegacy := 0
+			missingNew := 0
+			varianceHigh := 0
+			threshold := 0.25
+			if tv := os.Getenv("DUAL_READ_VARIANCE_THRESHOLD"); tv != "" {
+				if f, perr := strconv.ParseFloat(tv, 64); perr == nil && f > 0 {
+					threshold = f
+				}
+			}
+			perDomainVariance := 0
+			legacyKwSum := 0.0
+			for _, sr := range scores {
+				legacyKwSum += sr.LegacyKwUnique
+			}
+			newKwSum := 0.0
+			for _, nf := range newFeatures {
+				if v, ok := nf["kw_unique_count"].(int64); ok {
+					newKwSum += float64(v)
+				}
+				if v, ok := nf["kw_unique_count"].(float64); ok {
+					newKwSum += v
+				}
+			}
+			legacyAvg := 0.0
+			if len(scores) > 0 {
+				legacyAvg = legacyKwSum / float64(len(scores))
+			}
+			newAvg := 0.0
+			if len(newFeatures) > 0 {
+				newAvg = newKwSum / float64(len(newFeatures))
+			}
+			relDiff := 0.0
+			if legacyAvg > 0 {
+				relDiff = math.Abs(newAvg-legacyAvg) / legacyAvg
+			}
+			if relDiff > threshold {
+				varianceHigh++
+				if extraction.DualReadDiffCounter != nil {
+					extraction.DualReadDiffCounter.WithLabelValues("kw_unique_mean_variance").Inc()
+				}
+			}
+			for _, sr := range scores {
+				if nf, ok := newFeatures[sr.Domain]; ok {
+					legacyVal := sr.LegacyKwUnique
+					var newVal float64
+					switch v := nf["kw_unique_count"].(type) {
+					case int64:
+						newVal = float64(v)
+					case float64:
+						newVal = v
+					}
+					if legacyVal > 0 {
+						pd := math.Abs(newVal-legacyVal) / legacyVal
+						if pd > threshold {
+							perDomainVariance++
+							if extraction.DualReadDiffCounter != nil {
+								extraction.DualReadDiffCounter.WithLabelValues("kw_unique_domain_variance").Inc()
+							}
+						}
+					}
+				} else {
+					missingLegacy++
+				}
+			}
+			if s.deps.Logger != nil {
+				s.deps.Logger.Info(ctx, "dual-read comparison", map[string]interface{}{
+					"campaign_id":          campaignID.String(),
+					"features_new":         len(newFeatures),
+					"domains_scored":       len(scores),
+					"missing_legacy":       missingLegacy,
+					"missing_new":          missingNew,
+					"high_variance_cnt":    varianceHigh,
+					"per_domain_variance":  perDomainVariance,
+					"legacy_kw_unique_avg": legacyAvg,
+					"new_kw_unique_avg":    newAvg,
+					"relative_diff":        relDiff,
+					"threshold":            threshold,
+				})
+			}
+		}
 	}
 	// Bulk update
 	// VALUES (domain, relevance, domain_score)
@@ -1394,4 +1483,60 @@ func clamp(v, lo, hi float64) float64 {
 		return hi
 	}
 	return v
+}
+
+// dualReadFetchFeatures loads minimal features from new extraction table when ANALYSIS_DUAL_READ is enabled.
+// It returns a map domain_id -> feature subset for comparison; errors are non-fatal to legacy path caller.
+func (s *analysisService) dualReadFetchFeatures(ctx context.Context, campaignID uuid.UUID) (map[string]map[string]any, error) {
+	if v, ok := os.LookupEnv("ANALYSIS_DUAL_READ"); !ok || !strings.EqualFold(v, "true") && v != "1" && !strings.EqualFold(v, "on") {
+		return nil, nil
+	}
+	var dbx *sql.DB
+	switch db := s.deps.DB.(type) {
+	case *sqlx.DB:
+		dbx = db.DB
+	case *sql.DB:
+		dbx = db
+	}
+	if dbx == nil {
+		return nil, fmt.Errorf("db unavailable for dual-read")
+	}
+	rows, err := dbx.QueryContext(ctx, `SELECT def.domain_id, gd.domain_name, def.kw_unique_count, def.kw_weight_sum, def.content_richness_score
+FROM analysis_ready_features def
+JOIN generated_domains gd ON gd.id = def.domain_id AND gd.campaign_id = def.campaign_id
+WHERE def.campaign_id=$1`, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	res := make(map[string]map[string]any)
+	for rows.Next() {
+		var domainID string
+		var domainName string
+		var kwUnique sql.NullInt64
+		var weightSum sql.NullFloat64
+		var richness sql.NullFloat64
+		if err := rows.Scan(&domainID, &domainName, &kwUnique, &weightSum, &richness); err != nil {
+			return res, err
+		}
+		res[domainName] = map[string]any{
+			"kw_unique_count":        nullableInt64(kwUnique),
+			"kw_weight_sum":          nullableFloat64(weightSum),
+			"content_richness_score": nullableFloat64(richness),
+		}
+	}
+	return res, rows.Err()
+}
+
+func nullableInt64(v sql.NullInt64) any {
+	if v.Valid {
+		return v.Int64
+	}
+	return nil
+}
+func nullableFloat64(v sql.NullFloat64) any {
+	if v.Valid {
+		return v.Float64
+	}
+	return nil
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/dnsvalidator"
 	domainservices "github.com/fntelecomllc/studio/backend/internal/domain/services"
 	domaininfra "github.com/fntelecomllc/studio/backend/internal/domain/services/infra"
+	"github.com/fntelecomllc/studio/backend/internal/extraction"
 	"github.com/fntelecomllc/studio/backend/internal/httpvalidator"
 	"github.com/fntelecomllc/studio/backend/internal/monitoring"
 	"github.com/fntelecomllc/studio/backend/internal/proxymanager"
@@ -215,6 +216,22 @@ func initAppDependencies() (*AppDeps, error) {
 		deps.Stores.Keyword = pg_store.NewKeywordStorePostgres(db)
 		deps.Stores.AuditLog = pg_store.NewAuditLogStorePostgres(db)
 		deps.Stores.CampaignJob = pg_store.NewCampaignJobStorePostgres(db)
+
+		// Extraction metrics initialization (idempotent)
+		// Guard via env flag to allow early disable if not desired in some environments.
+		if os.Getenv("EXTRACTION_FEATURE_TABLE_ENABLED") != "" { // loose gate: any value attempts init
+			// best-effort: avoid panic if import path changes.
+			func() {
+				defer func() { _ = recover() }()
+				extraction.InitMetrics()
+				// Start periodic gauge updater (30s default)
+				if raw := db.DB; raw != nil {
+					ctx, cancel := context.WithCancel(context.Background())
+					_ = cancel // in future wire into shutdown
+					extraction.StartFeatureMetricsLoop(ctx, raw, 30*time.Second)
+				}
+			}()
+		}
 	}
 
 	// Initialize session service (uses DB if available; defaults to relaxed config)
