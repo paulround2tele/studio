@@ -607,7 +607,9 @@ let minScore: number; //Minimum inclusive domain score to include (optional) (de
 let notParked: boolean; //Exclude domains detected as parked (optional) (default to undefined)
 let hasContact: boolean; //Only include domains with detected contact signals (optional) (default to undefined)
 let keyword: string; //Require at least one keyword match (any) (optional) (default to undefined)
-let sort: 'score_desc' | 'score_asc' | 'last_http_fetched_at_desc'; //Sort ordering strategy (optional) (default to undefined)
+let sort: 'richness_score' | 'microcrawl_gain' | 'keywords_unique'; //Richness-based sort field (defaults to richness_score when omitted) (optional) (default to undefined)
+let dir: 'asc' | 'desc'; //Sort direction (defaults to desc) (optional) (default to undefined)
+let warnings: 'has' | 'none'; //Warning filter applied before sorting (has = only domains with penalties; none = only clean domains) (optional) (default to undefined)
 let first: number; //Page size for cursor pagination (overrides limit when present) (optional) (default to undefined)
 let after: string; //Cursor token to continue listing after (optional) (default to undefined)
 
@@ -624,6 +626,8 @@ const { status, data } = await apiInstance.campaignsDomainsList(
     hasContact,
     keyword,
     sort,
+    dir,
+    warnings,
     first,
     after
 );
@@ -644,7 +648,9 @@ const { status, data } = await apiInstance.campaignsDomainsList(
 | **notParked** | [**boolean**] | Exclude domains detected as parked | (optional) defaults to undefined|
 | **hasContact** | [**boolean**] | Only include domains with detected contact signals | (optional) defaults to undefined|
 | **keyword** | [**string**] | Require at least one keyword match (any) | (optional) defaults to undefined|
-| **sort** | [**&#39;score_desc&#39; | &#39;score_asc&#39; | &#39;last_http_fetched_at_desc&#39;**]**Array<&#39;score_desc&#39; &#124; &#39;score_asc&#39; &#124; &#39;last_http_fetched_at_desc&#39;>** | Sort ordering strategy | (optional) defaults to undefined|
+| **sort** | [**&#39;richness_score&#39; | &#39;microcrawl_gain&#39; | &#39;keywords_unique&#39;**]**Array<&#39;richness_score&#39; &#124; &#39;microcrawl_gain&#39; &#124; &#39;keywords_unique&#39;>** | Richness-based sort field (defaults to richness_score when omitted) | (optional) defaults to undefined|
+| **dir** | [**&#39;asc&#39; | &#39;desc&#39;**]**Array<&#39;asc&#39; &#124; &#39;desc&#39;>** | Sort direction (defaults to desc) | (optional) defaults to undefined|
+| **warnings** | [**&#39;has&#39; | &#39;none&#39;**]**Array<&#39;has&#39; &#124; &#39;none&#39;>** | Warning filter applied before sorting (has &#x3D; only domains with penalties; none &#x3D; only clean domains) | (optional) defaults to undefined|
 | **first** | [**number**] | Page size for cursor pagination (overrides limit when present) | (optional) defaults to undefined|
 | **after** | [**string**] | Cursor token to continue listing after | (optional) defaults to undefined|
 

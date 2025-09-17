@@ -485,13 +485,15 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
          * @param {boolean} [notParked] Exclude domains detected as parked
          * @param {boolean} [hasContact] Only include domains with detected contact signals
          * @param {string} [keyword] Require at least one keyword match (any)
-         * @param {CampaignsDomainsListSortEnum} [sort] Sort ordering strategy
+         * @param {CampaignsDomainsListSortEnum} [sort] Richness-based sort field (defaults to richness_score when omitted)
+         * @param {CampaignsDomainsListDirEnum} [dir] Sort direction (defaults to desc)
+         * @param {CampaignsDomainsListWarningsEnum} [warnings] Warning filter applied before sorting (has &#x3D; only domains with penalties; none &#x3D; only clean domains)
          * @param {number} [first] Page size for cursor pagination (overrides limit when present)
          * @param {string} [after] Cursor token to continue listing after
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsDomainsList: async (campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, first?: number, after?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        campaignsDomainsList: async (campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, dir?: CampaignsDomainsListDirEnum, warnings?: CampaignsDomainsListWarningsEnum, first?: number, after?: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'campaignId' is not null or undefined
             assertParamExists('campaignsDomainsList', 'campaignId', campaignId)
             const localVarPath = `/campaigns/{campaignId}/domains`
@@ -551,6 +553,14 @@ export const CampaignsApiAxiosParamCreator = function (configuration?: Configura
 
             if (sort !== undefined) {
                 localVarQueryParameter['sort'] = sort;
+            }
+
+            if (dir !== undefined) {
+                localVarQueryParameter['dir'] = dir;
+            }
+
+            if (warnings !== undefined) {
+                localVarQueryParameter['warnings'] = warnings;
             }
 
             if (first !== undefined) {
@@ -1536,14 +1546,16 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * @param {boolean} [notParked] Exclude domains detected as parked
          * @param {boolean} [hasContact] Only include domains with detected contact signals
          * @param {string} [keyword] Require at least one keyword match (any)
-         * @param {CampaignsDomainsListSortEnum} [sort] Sort ordering strategy
+         * @param {CampaignsDomainsListSortEnum} [sort] Richness-based sort field (defaults to richness_score when omitted)
+         * @param {CampaignsDomainsListDirEnum} [dir] Sort direction (defaults to desc)
+         * @param {CampaignsDomainsListWarningsEnum} [warnings] Warning filter applied before sorting (has &#x3D; only domains with penalties; none &#x3D; only clean domains)
          * @param {number} [first] Page size for cursor pagination (overrides limit when present)
          * @param {string} [after] Cursor token to continue listing after
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, first?: number, after?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsDomainsList200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsDomainsList(campaignId, limit, offset, dnsStatus, httpStatus, dnsReason, httpReason, minScore, notParked, hasContact, keyword, sort, first, after, options);
+        async campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, dir?: CampaignsDomainsListDirEnum, warnings?: CampaignsDomainsListWarningsEnum, first?: number, after?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsDomainsList200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsDomainsList(campaignId, limit, offset, dnsStatus, httpStatus, dnsReason, httpReason, minScore, notParked, hasContact, keyword, sort, dir, warnings, first, after, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsDomainsList']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -1956,14 +1968,16 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          * @param {boolean} [notParked] Exclude domains detected as parked
          * @param {boolean} [hasContact] Only include domains with detected contact signals
          * @param {string} [keyword] Require at least one keyword match (any)
-         * @param {CampaignsDomainsListSortEnum} [sort] Sort ordering strategy
+         * @param {CampaignsDomainsListSortEnum} [sort] Richness-based sort field (defaults to richness_score when omitted)
+         * @param {CampaignsDomainsListDirEnum} [dir] Sort direction (defaults to desc)
+         * @param {CampaignsDomainsListWarningsEnum} [warnings] Warning filter applied before sorting (has &#x3D; only domains with penalties; none &#x3D; only clean domains)
          * @param {number} [first] Page size for cursor pagination (overrides limit when present)
          * @param {string} [after] Cursor token to continue listing after
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, first?: number, after?: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsDomainsList200Response> {
-            return localVarFp.campaignsDomainsList(campaignId, limit, offset, dnsStatus, httpStatus, dnsReason, httpReason, minScore, notParked, hasContact, keyword, sort, first, after, options).then((request) => request(axios, basePath));
+        campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, dir?: CampaignsDomainsListDirEnum, warnings?: CampaignsDomainsListWarningsEnum, first?: number, after?: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsDomainsList200Response> {
+            return localVarFp.campaignsDomainsList(campaignId, limit, offset, dnsStatus, httpStatus, dnsReason, httpReason, minScore, notParked, hasContact, keyword, sort, dir, warnings, first, after, options).then((request) => request(axios, basePath));
         },
         /**
          * Returns campaign with state and recent phase executions as a single enriched read model
@@ -2309,14 +2323,16 @@ export interface CampaignsApiInterface {
      * @param {boolean} [notParked] Exclude domains detected as parked
      * @param {boolean} [hasContact] Only include domains with detected contact signals
      * @param {string} [keyword] Require at least one keyword match (any)
-     * @param {CampaignsDomainsListSortEnum} [sort] Sort ordering strategy
+     * @param {CampaignsDomainsListSortEnum} [sort] Richness-based sort field (defaults to richness_score when omitted)
+     * @param {CampaignsDomainsListDirEnum} [dir] Sort direction (defaults to desc)
+     * @param {CampaignsDomainsListWarningsEnum} [warnings] Warning filter applied before sorting (has &#x3D; only domains with penalties; none &#x3D; only clean domains)
      * @param {number} [first] Page size for cursor pagination (overrides limit when present)
      * @param {string} [after] Cursor token to continue listing after
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, first?: number, after?: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsDomainsList200Response>;
+    campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, dir?: CampaignsDomainsListDirEnum, warnings?: CampaignsDomainsListWarningsEnum, first?: number, after?: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsDomainsList200Response>;
 
     /**
      * Returns campaign with state and recent phase executions as a single enriched read model
@@ -2682,15 +2698,17 @@ export class CampaignsApi extends BaseAPI implements CampaignsApiInterface {
      * @param {boolean} [notParked] Exclude domains detected as parked
      * @param {boolean} [hasContact] Only include domains with detected contact signals
      * @param {string} [keyword] Require at least one keyword match (any)
-     * @param {CampaignsDomainsListSortEnum} [sort] Sort ordering strategy
+     * @param {CampaignsDomainsListSortEnum} [sort] Richness-based sort field (defaults to richness_score when omitted)
+     * @param {CampaignsDomainsListDirEnum} [dir] Sort direction (defaults to desc)
+     * @param {CampaignsDomainsListWarningsEnum} [warnings] Warning filter applied before sorting (has &#x3D; only domains with penalties; none &#x3D; only clean domains)
      * @param {number} [first] Page size for cursor pagination (overrides limit when present)
      * @param {string} [after] Cursor token to continue listing after
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof CampaignsApi
      */
-    public campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, first?: number, after?: string, options?: RawAxiosRequestConfig) {
-        return CampaignsApiFp(this.configuration).campaignsDomainsList(campaignId, limit, offset, dnsStatus, httpStatus, dnsReason, httpReason, minScore, notParked, hasContact, keyword, sort, first, after, options).then((request) => request(this.axios, this.basePath));
+    public campaignsDomainsList(campaignId: string, limit?: number, offset?: number, dnsStatus?: CampaignsDomainsListDnsStatusEnum, httpStatus?: CampaignsDomainsListHttpStatusEnum, dnsReason?: string, httpReason?: string, minScore?: number, notParked?: boolean, hasContact?: boolean, keyword?: string, sort?: CampaignsDomainsListSortEnum, dir?: CampaignsDomainsListDirEnum, warnings?: CampaignsDomainsListWarningsEnum, first?: number, after?: string, options?: RawAxiosRequestConfig) {
+        return CampaignsApiFp(this.configuration).campaignsDomainsList(campaignId, limit, offset, dnsStatus, httpStatus, dnsReason, httpReason, minScore, notParked, hasContact, keyword, sort, dir, warnings, first, after, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -2982,9 +3000,25 @@ export enum CampaignsDomainsListHttpStatusEnum {
   * @enum {string}
   */
 export enum CampaignsDomainsListSortEnum {
-    score_desc = 'score_desc',
-    score_asc = 'score_asc',
-    last_http_fetched_at_desc = 'last_http_fetched_at_desc'
+    richness_score = 'richness_score',
+    microcrawl_gain = 'microcrawl_gain',
+    keywords_unique = 'keywords_unique'
+}
+/**
+  * @export
+  * @enum {string}
+  */
+export enum CampaignsDomainsListDirEnum {
+    asc = 'asc',
+    desc = 'desc'
+}
+/**
+  * @export
+  * @enum {string}
+  */
+export enum CampaignsDomainsListWarningsEnum {
+    has = 'has',
+    none = 'none'
 }
 /**
   * @export

@@ -3117,13 +3117,31 @@ paths:
         - name: sort
           in: query
           required: false
-          description: Sort ordering strategy
+          description: Richness-based sort field (defaults to richness_score when omitted)
           schema:
             type: string
             enum:
-              - score_desc
-              - score_asc
-              - last_http_fetched_at_desc
+              - richness_score
+              - microcrawl_gain
+              - keywords_unique
+        - name: dir
+          in: query
+          required: false
+          description: Sort direction (defaults to desc)
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+        - name: warnings
+          in: query
+          required: false
+          description: Warning filter applied before sorting (has = only domains with penalties; none = only clean domains)
+          schema:
+            type: string
+            enum:
+              - has
+              - none
         - name: first
           in: query
           required: false

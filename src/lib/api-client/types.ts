@@ -5692,8 +5692,12 @@ export interface operations {
                 hasContact?: boolean;
                 /** @description Require at least one keyword match (any) */
                 keyword?: string;
-                /** @description Sort ordering strategy */
-                sort?: "score_desc" | "score_asc" | "last_http_fetched_at_desc";
+                /** @description Richness-based sort field (defaults to richness_score when omitted) */
+                sort?: "richness_score" | "microcrawl_gain" | "keywords_unique";
+                /** @description Sort direction (defaults to desc) */
+                dir?: "asc" | "desc";
+                /** @description Warning filter applied before sorting (has = only domains with penalties; none = only clean domains) */
+                warnings?: "has" | "none";
                 /** @description Page size for cursor pagination (overrides limit when present) */
                 first?: number;
                 /** @description Cursor token to continue listing after */

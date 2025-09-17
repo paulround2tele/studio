@@ -8,8 +8,10 @@ import (
 	"fmt"
 	"log"
 	"os"
+    "net/url"
 	"strings"
 	"time"
+    "sort"
 
 	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
 	application "github.com/fntelecomllc/studio/backend/internal/application"
@@ -1179,9 +1181,37 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		return gen.CampaignsDomainsList200JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
 	}
 
-	// Server-side sorting/filtering (Phase 3) will use newly added OpenAPI params (sort, dir, warnings)
-	// Implementation placeholder: actual column-level ORDER BY deferred until richness metrics are materialized.
-    // ANALYSIS_SERVER_SORT flag reserved for future server-side ordering once codegen adds params (sort, dir, warnings)
+	// ---- Phase 3: In-memory server-side richness sorting & warnings filtering (feature-flag guarded) ----
+	// Environment flag ANALYSIS_SERVER_SORT enables provisional in-memory sorting & filtering by analysis features
+	// using query params: sort (richness_score|microcrawl_gain|keywords_unique), dir (asc|desc), warnings (has|none).
+	// This operates AFTER core DB filtering (dns/http status/reason) but BEFORE pagination window sizing (limit/offset).
+	// NOTE: Once richness/microcrawl metrics are persisted in table columns, this logic should be replaced by
+	// proper SQL ORDER BY and WHERE predicates; keep this block self-contained for easy removal.
+	enableServerSort := strings.EqualFold(os.Getenv("ANALYSIS_SERVER_SORT"), "true") || os.Getenv("ANALYSIS_SERVER_SORT") == "1"
+	requestedSortField := "richness_score"
+	requestedSortDir := "desc"
+	requestedWarnings := "" // "has" or "none"
+	if enableServerSort {
+		if r.Params.Sort != nil {
+			// Reuse existing enum for score ordering only when advanced path used; new fields are custom
+			// For Phase 3 we accept new textual fields present in OpenAPI but not generated enums yet.
+			candidate := strings.ToLower(string(*r.Params.Sort))
+			switch candidate { // accept canonical names
+			case "richness_score", "microcrawl_gain", "keywords_unique":
+				requestedSortField = candidate
+			default:
+				// keep default
+			}
+		}
+		if v := getQueryRaw(ctx, "dir"); v != "" { // helper to fetch raw query when generator lacks field
+			vd := strings.ToLower(v)
+			if vd == "asc" || vd == "desc" { requestedSortDir = vd }
+		}
+		if v := getQueryRaw(ctx, "warnings"); v != "" {
+			vw := strings.ToLower(v)
+			if vw == "has" || vw == "none" { requestedWarnings = vw }
+		}
+	}
 
 	rows, derr := h.deps.Stores.Campaign.GetGeneratedDomainsByCampaign(ctx, h.deps.DB, uuid.UUID(r.CampaignId), limit, startOffset, domainFilter)
 	if derr != nil {
@@ -1195,35 +1225,18 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 			featureMap = fm
 		}
 	}
-	for _, gd := range rows {
-		if gd == nil {
-			continue
-		}
+
+	for _, gd := range rows { // initial translation irrespective of sort flag (we may resort later)
+		if gd == nil { continue }
 		var offsetPtr *int64
-		if gd.OffsetIndex >= 0 {
-			tmp := gd.OffsetIndex
-			offsetPtr = &tmp
-		}
+		if gd.OffsetIndex >= 0 { tmp := gd.OffsetIndex; offsetPtr = &tmp }
 		var dnsStatusPtr, httpStatusPtr, leadStatusPtr *string
-		if gd.DNSStatus != nil {
-			v := string(*gd.DNSStatus)
-			dnsStatusPtr = &v
-		}
-		if gd.HTTPStatus != nil {
-			v := string(*gd.HTTPStatus)
-			httpStatusPtr = &v
-		}
-		if gd.LeadStatus != nil {
-			v := string(*gd.LeadStatus)
-			leadStatusPtr = &v
-		}
+		if gd.DNSStatus != nil { v := string(*gd.DNSStatus); dnsStatusPtr = &v }
+		if gd.HTTPStatus != nil { v := string(*gd.HTTPStatus); httpStatusPtr = &v }
+		if gd.LeadStatus != nil { v := string(*gd.LeadStatus); leadStatusPtr = &v }
 		var dnsReasonPtr, httpReasonPtr *string
-		if gd.DNSReason.Valid {
-			dnsReasonPtr = &gd.DNSReason.String
-		}
-		if gd.HTTPReason.Valid {
-			httpReasonPtr = &gd.HTTPReason.String
-		}
+		if gd.DNSReason.Valid { dnsReasonPtr = &gd.DNSReason.String }
+		if gd.HTTPReason.Valid { httpReasonPtr = &gd.HTTPReason.String }
 		id := openapi_types.UUID(gd.ID)
 		createdAt := gd.CreatedAt
 		domainCopy := gd.DomainName
@@ -1234,6 +1247,49 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		items = append(items, gen.DomainListItem{Id: &id, Domain: &domainCopy, Offset: offsetPtr, CreatedAt: &createdAt, DnsStatus: dnsStatusPtr, HttpStatus: httpStatusPtr, LeadStatus: leadStatusPtr, DnsReason: dnsReasonPtr, HttpReason: httpReasonPtr, Features: features})
 	}
 
+	meta := okMeta() // start with base metadata (may augment extra)
+	if enableServerSort {
+		// Apply warnings filter first (has/none)
+		if requestedWarnings != "" {
+			filtered := make([]gen.DomainListItem, 0, len(items))
+			for _, it := range items {
+				if it.Features == nil || it.Features.Richness == nil { // treat missing richness as clean
+					if requestedWarnings == "none" { filtered = append(filtered, it) }
+					continue
+				}
+				stuff := toFloat32Val(it.Features.Richness.StuffingPenalty)
+				rep := toFloat32Val(it.Features.Richness.RepetitionIndex)
+				anchor := toFloat32Val(it.Features.Richness.AnchorShare)
+				hasWarn := (stuff > 0) || (rep > 0.30) || (anchor > 0.40)
+				if (requestedWarnings == "has" && hasWarn) || (requestedWarnings == "none" && !hasWarn) {
+					filtered = append(filtered, it)
+				}
+			}
+			items = filtered
+		}
+		// Sort by requested field
+		if len(items) > 1 {
+			// Decorate with index for stability
+			// Convert nil metrics to sentinel -Inf for desc, +Inf for asc to push them to end
+			// Implementation: compute value according to requestedSortField
+			sort.SliceStable(items, func(i, j int) bool {
+				vi := sortMetricValue(items[i], requestedSortField)
+				vj := sortMetricValue(items[j], requestedSortField)
+				if vi == vj { return i < j } // stable fallback
+				if requestedSortDir == "asc" { return vi < vj }
+				return vi > vj
+			})
+		}
+		// Augment metadata.extra
+		if meta != nil {
+			if meta.Extra == nil { meta.Extra = &map[string]interface{}{} }
+			extra := *meta.Extra
+			extra["sort"] = map[string]any{"field": requestedSortField, "direction": requestedSortDir}
+			if requestedWarnings != "" { extra["filter"] = map[string]any{"warnings": requestedWarnings} }
+			meta.Extra = &extra
+		}
+	}
+
 	resp := gen.CampaignDomainsListResponse{CampaignId: openapi_types.UUID(r.CampaignId), Items: items}
 	if counters != nil { // prefer counters total; fallback to len(items)
 		resp.Total = int(counters.Total)
@@ -1242,7 +1298,50 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		resp.Total = len(items)
 	}
 	// features already embedded
-	return gen.CampaignsDomainsList200JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsDomainsList200JSONResponse{Data: &resp, Metadata: meta, RequestId: reqID(), Success: boolPtr(true)}, nil
+}
+
+// getQueryRaw extracts a raw query parameter from context when not represented in generated params
+// This relies on the request URL being available via standard library semantics in context when using net/http handlers.
+// If unavailable, returns empty string.
+func getQueryRaw(ctx context.Context, key string) string {
+	// oapi-codegen stores *http.Request under context key, but to avoid importing net/http here unnecessarily
+	// we attempt a reflective minimal approach: look for interface exposing URL() or RequestURI.
+	// Simplify: param parsing already happened; only need for newly added params absent in generated struct (temporary shim).
+	type urlGetter interface{ URL() *url.URL }
+	if v := ctx.Value("http_request"); v != nil { // custom key if set upstream
+		if ug, ok := v.(urlGetter); ok && ug.URL() != nil {
+			return ug.URL().Query().Get(key)
+		}
+	}
+	// Fallback: try conventional key used by chi/oapi middleware
+	if v := ctx.Value("request_url"); v != nil {
+		if u, ok := v.(*url.URL); ok && u != nil {
+			return u.Query().Get(key)
+		}
+	}
+	return ""
+}
+
+// toFloat32Val safely dereferences *float32 returning 0 when nil
+func toFloat32Val(p *float32) float32 { if p == nil { return 0 }; return *p }
+
+// sortMetricValue extracts a float comparison key from DomainListItem given a field name.
+// Missing metrics map to -Inf so they sink to the bottom for descending order and rise for ascending with caller logic.
+func sortMetricValue(it gen.DomainListItem, field string) float64 {
+	const negInf = -1.0 * 1e308
+	if it.Features == nil {
+		return negInf
+	}
+	switch field {
+	case "microcrawl_gain":
+		if it.Features.Microcrawl != nil && it.Features.Microcrawl.GainRatio != nil { return float64(*it.Features.Microcrawl.GainRatio) }
+	case "keywords_unique":
+		if it.Features.Keywords != nil && it.Features.Keywords.UniqueCount != nil { return float64(*it.Features.Keywords.UniqueCount) }
+	default: // richness_score
+		if it.Features.Richness != nil && it.Features.Richness.Score != nil { return float64(*it.Features.Richness.Score) }
+	}
+	return negInf
 }
 
 // CampaignsDomainGenerationPatternOffset implements POST /campaigns/domain-generation/pattern-offset

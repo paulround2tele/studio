@@ -61,14 +61,7 @@ get:
       required: false
       description: Require at least one keyword match (any)
       schema: { type: string }
-    - name: sort
-      in: query
-      required: false
-      description: LEGACY (Phase 2 cursor path) domain score/time sorting. Prefer new sort/dir pair below when using offset pagination.
-      schema:
-        type: string
-        enum: [score_desc, score_asc, last_http_fetched_at_desc]
-    # New unified server-side sorting (Phase 3). Applies AFTER filtering, BEFORE pagination window.
+    # Unified server-side sorting (Phase 3). Applies AFTER warnings filter (if any) and BEFORE pagination window.
     - name: sort
       in: query
       required: false
