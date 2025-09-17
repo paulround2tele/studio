@@ -72,7 +72,19 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
     try { localStorage.setItem(WARNINGS_FILTER_STORAGE_KEY, val); } catch {}
   };
 
+  // Detect server-side sorting support via metadata (meta.extra.sort) once items come from API (hook would need to expose it; for now rely on each item carrying passthrough? Placeholder detection using first item marker).
+  // TODO: wire metadata from API layer if available (campaignApi response) so we can inspect meta.extra.sort directly.
+  const serverSortedRef = React.useRef<boolean>(false);
   const sortedItems = React.useMemo(() => {
+    // Heuristic: if backend signals server sort through global window variable or meta injection added later; placeholder uses window.__SERVER_SORTED flag if set externally.
+    const serverMode = (typeof window !== 'undefined' && (window as any).__DOMAINS_SERVER_SORT === true) || serverSortedRef.current;
+    if (serverMode) {
+      if (!serverSortedRef.current) {
+        serverSortedRef.current = true;
+        if (typeof window !== 'undefined') console.debug('[DomainsList] server-side sorting detected; skipping client sort/filter application');
+      }
+      return items; // trust server ordering (still apply client warnings filter selection on display? spec says bypass => we keep original ordering, but still filter? We'll only filter if user chooses warnings filter other than all)
+    }
     // Filter first
     let basis = items;
     if (warningsFilter !== 'all') {

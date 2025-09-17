@@ -1,56 +1,108 @@
-# Domain List API Sorting & Filtering Contract (Proposed)
+# Campaign Domains List API
 
-Endpoint:
-GET /api/campaigns/{id}/domains
+Endpoint: `GET /campaigns/{campaignId}/domains`
 
-Query Parameters:
-- sort: one of `richness_score`, `microcrawl_gain`, `keywords_unique`, `warnings` (future optional)
-  - Maps to columns/paths:
-    - richness_score -> richness.score
-    - microcrawl_gain -> microcrawl.gain_ratio
-    - keywords_unique -> keywords.unique_count
-    - warnings -> derived boolean (has_warnings) (optional future)
-- dir: `asc` | `desc` (default: desc if invalid/omitted)
-- filter: one of `has_warnings`, `no_warnings`
-  - has_warnings: any of (stuffing_penalty > 0 OR repetition_index > 0.30 OR anchor_share > 0.40)
-  - no_warnings: NOT has_warnings
-  - omitted/unrecognized: no filter
-- limit / offset or cursor params (existing pagination) remain compatible
+## Purpose
+Returns generated domains for a campaign with optional filtering, cursor/paged pagination, and (behind a feature flag) server‑side richness based sorting and warnings filtering.
 
-Response Envelope Additions (example):
+## Feature Flag
+Server‑side in‑memory sorting/filtering is gated by the environment variable:
+```
+ANALYSIS_SERVER_SORT=true
+```
+If disabled, results are unsorted with respect to richness metrics (client performs sorting) and no `X-Domains-Sort-Version` header or `meta.extra.sort` object is emitted.
+
+## Query Parameters
+| Name | Type | Description | Default | Notes |
+|------|------|-------------|---------|-------|
+| limit | int (1–1000) | Offset page size | 100 | Ignored when `first` (cursor) supplied |
+| offset | int >=0 | Offset start | 0 | Legacy offset pagination |
+| dnsStatus | enum(pending,ok,error,timeout) | Filter by DNS status | – | |
+| httpStatus | enum(pending,ok,error,timeout) | Filter by HTTP status | – | |
+| dnsReason | string | Exact DNS error reason | – | Examples: NXDOMAIN, TIMEOUT |
+| httpReason | string | Exact HTTP error reason | – | Examples: TIMEOUT, TLS_ERROR |
+| minScore | number | Minimum domain score | – | Advanced/cursor path only |
+| notParked | boolean | Exclude parked domains | – | Advanced/cursor path only |
+| hasContact | boolean | Include only domains with contact signals | – | Advanced/cursor path only |
+| keyword | string | Require at least one keyword match | – | Advanced/cursor path only |
+| sort | enum(richness_score, microcrawl_gain, keywords_unique) | Server-side richness sort field | richness_score | Enabled only when `ANALYSIS_SERVER_SORT` true |
+| dir | enum(asc, desc) | Sort direction | desc | |
+| warnings | enum(has, none) | Filter domains by presence of any richness penalty warning (see thresholds) | – | Applied before sorting |
+| first | int | Cursor page size | – | Cursor pagination path |
+| after | string | Cursor continuation token | – | Cursor pagination path |
+
+## Server-Side Sorting Metadata
+When server sorting is active the success envelope metadata contains:
 ```json
 {
-  "data": {
-    "campaignId": "...",
-    "items": [ /* domain objects */ ],
-    "total": 123,
+  "extra": {
     "sort": { "field": "richness_score", "direction": "desc" },
-    "filters": { "warnings": "has_warnings" },
-    "aggregates": { "warnings_count": 17, "total": 120 }
-  },
-  "success": true
+    "filter": { "warnings": "has" }
+  }
 }
 ```
+`filter.warnings` is omitted if no warnings filter applied.
 
-Validation Logic:
-- If `sort` not in allowlist -> default to `richness_score` desc.
-- If `dir` not in {asc,desc} -> desc.
-- If `filter` unrecognized -> ignore silently (return all).
+## Response Header
+When server-side sorting/filtering is applied the response includes:
+```
+X-Domains-Sort-Version: 1
+```
+This header version increments if the semantics of server ordering change (e.g. tie-breakers, field weighting).
 
-Indexes / Performance Suggestions:
-- Partial or composite index: `(campaign_id, richness_score DESC)`
-- Additional: `(campaign_id, microcrawl_gain_ratio DESC)` if heavily used.
-- Boolean computed/persisted column `has_warnings` with index `(campaign_id, has_warnings)` to accelerate filters.
+## Warnings Classification
+A domain is considered to have warnings (and matches `warnings=has`) if ANY of:
+- stuffing_penalty > 0
+- repetition_index > 0.30
+- anchor_share > 0.40
 
-Future Extensions:
-- `warnings` sort = prioritize domains with warnings first (sort on has_warnings DESC, then richness_score DESC).
-- Multi-filter syntax: `filter=has_warnings;min_richness=0.5` (not in initial scope).
+These constants are currently defined server-side:
+```
+repetitionWarningThreshold = 0.30
+anchorShareWarningThreshold = 0.40
+```
+and must remain in sync with the frontend utility `getDomainWarnings` in `src/components/campaigns/DomainsList.tsx`.
 
-Backward Compatibility:
-- Clients not sending new params get current default ordering (richness desc) and no filters.
+Warnings indicators:
+| Key | Column Label | Condition | Tooltip |
+|-----|--------------|-----------|---------|
+| S | stuffing | stuffing_penalty > 0 | Keyword stuffing penalty applied |
+| R | repetition | repetition_index > 0.30 | High repetition index (>0.30) |
+| A | anchor_share | anchor_share > 0.40 | High anchor share proportion (>40%) |
 
-Security / Safety:
-- Strict server-side allowlist mapping prevents SQL injection (never interpolate raw query params into ORDER BY).
+## Client Detection Logic
+Frontend should detect server sorting by presence of `meta.extra.sort` OR the header `X-Domains-Sort-Version`. When detected, it should:
+1. Skip client-side re-sorting of richness/microcrawl/keywords metrics.
+2. (Optional) Still allow client-only *display* filtering toggles (current implementation retains local warnings filter for UX, but future iterations may offload fully to server).
 
-Versioning:
-- Add `X-Domains-Sort-Version: 1` response header to enable future revisions without breaking clients.
+## Telemetry
+Prometheus counter (registered when feature flag active):
+```
+domains_list_server_sort_requests_total{sort_field, warnings_filter}
+```
+`warnings_filter` label empty when no filter applied.
+
+## Fallback / Invalid Parameters
+If an unsupported `sort` or `dir` value is provided the server falls back silently to `richness_score` / `desc` and reflects canonical values in `meta.extra.sort` so the client can reconcile UI state.
+
+## Future Work
+- Persist richness & microcrawl metrics in the database to push sorting into SQL (eliminating memory sort and large payload fetching).
+- Add `warnings` materialized boolean column to allow DB-side filtering.
+- Extend metadata with aggregate counts of warning categories.
+
+## Example
+```
+GET /campaigns/11111111-1111-1111-1111-111111111111/domains?sort=keywords_unique&dir=asc&warnings=none&limit=50
+X-Domains-Sort-Version: 1
+{
+  "data": { "campaignId": "...", "items": [ ... ], "total": 500 },
+  "metadata": {
+    "extra": {
+      "sort": { "field": "keywords_unique", "direction": "asc" },
+      "filter": { "warnings": "none" }
+    }
+  },
+  "success": true,
+  "requestId": "..."
+}
+```

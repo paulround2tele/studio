@@ -7,10 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
@@ -22,7 +24,42 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/store"
 	"github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
+	"github.com/prometheus/client_golang/prometheus"
 )
+
+// ---- Server-side sorting / warnings thresholds (shared with frontend logic) ----
+// NOTE: Keep these in sync with frontend getDomainWarnings thresholds. If updating, document change in
+// DOMAIN_LIST_API spec section to avoid drift.
+const (
+	repetitionWarningThreshold  = 0.30
+	anchorShareWarningThreshold = 0.40
+)
+
+// Telemetry (registered once)
+var (
+	domainsListMetricsOnce        sync.Once
+	domainsListServerSortRequests *prometheus.CounterVec
+)
+
+func ensureDomainsListMetrics() {
+	domainsListMetricsOnce.Do(func() {
+		domainsListServerSortRequests = prometheus.NewCounterVec(prometheus.CounterOpts{
+			Name: "domains_list_server_sort_requests_total",
+			Help: "Server-side domains list sort requests (ANALYSIS_SERVER_SORT enabled)",
+		}, []string{"sort_field", "warnings_filter"})
+		prometheus.MustRegister(domainsListServerSortRequests)
+	})
+}
+
+// Wrapper to inject version header when server sorting active
+type campaignsDomainsList200WithHeader struct {
+	gen.CampaignsDomainsList200JSONResponse
+}
+
+func (r campaignsDomainsList200WithHeader) VisitCampaignsDomainsListResponse(w http.ResponseWriter) error {
+	w.Header().Set("X-Domains-Sort-Version", "1")
+	return r.CampaignsDomainsList200JSONResponse.VisitCampaignsDomainsListResponse(w)
+}
 
 // CampaignsEnrichedGet implements GET /campaigns/{campaignId}/enriched (strict)
 func (h *strictHandlers) CampaignsEnrichedGet(ctx context.Context, r gen.CampaignsEnrichedGetRequestObject) (gen.CampaignsEnrichedGetResponseObject, error) {
@@ -1284,7 +1321,7 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 				stuff := toFloat32Val(it.Features.Richness.StuffingPenalty)
 				rep := toFloat32Val(it.Features.Richness.RepetitionIndex)
 				anchor := toFloat32Val(it.Features.Richness.AnchorShare)
-				hasWarn := (stuff > 0) || (rep > 0.30) || (anchor > 0.40)
+				hasWarn := (stuff > 0) || (rep > repetitionWarningThreshold) || (anchor > anchorShareWarningThreshold)
 				if (requestedWarnings == "has" && hasWarn) || (requestedWarnings == "none" && !hasWarn) {
 					filtered = append(filtered, it)
 				}
@@ -1330,6 +1367,13 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		resp.Total = len(items)
 	}
 	// features already embedded
+	if enableServerSort {
+		ensureDomainsListMetrics()
+		if domainsListServerSortRequests != nil {
+			domainsListServerSortRequests.WithLabelValues(requestedSortField, requestedWarnings).Inc()
+		}
+		return campaignsDomainsList200WithHeader{gen.CampaignsDomainsList200JSONResponse{Data: &resp, Metadata: meta, RequestId: reqID(), Success: boolPtr(true)}}, nil
+	}
 	return gen.CampaignsDomainsList200JSONResponse{Data: &resp, Metadata: meta, RequestId: reqID(), Success: boolPtr(true)}, nil
 }
 
