@@ -13,12 +13,15 @@ import ClassificationBuckets from './ClassificationBuckets';
 import WarningSummary from './WarningSummary';
 import ConfigSummary from './ConfigSummary';
 import PipelineBarContainer from './PipelineBarContainer';
+import RecommendationPanel from './RecommendationPanel';
 
+import { useCampaignMetrics } from '@/lib/hooks/useCampaignMetrics';
 import type { 
   CampaignKpi, 
   ClassificationBucket, 
   CampaignDomain 
 } from '../types';
+import type { DomainMetricsInput } from '@/types/campaignMetrics';
 
 interface CampaignOverviewV2Props {
   campaignId: string;
@@ -97,6 +100,19 @@ function convertDomains(apiDomains: any[]): CampaignDomain[] {
   }));
 }
 
+// Convert to new service input format
+function convertToMetricsInput(domains: CampaignDomain[]): DomainMetricsInput[] {
+  return domains.map(domain => ({
+    id: domain.id,
+    domain_name: domain.domain_name,
+    dns_status: domain.dns_status as any,
+    http_status: domain.http_status as any,
+    lead_score: domain.lead_score,
+    created_at: domain.created_at,
+    updated_at: domain.updated_at
+  }));
+}
+
 export function CampaignOverviewV2({ campaignId, className }: CampaignOverviewV2Props) {
   const { data: enriched, isLoading, error } = useGetCampaignEnrichedQuery(campaignId);
   
@@ -125,7 +141,42 @@ export function CampaignOverviewV2({ campaignId, className }: CampaignOverviewV2
   // TODO: Phase 2 - Integrate with getDomains query when needed
   // For now, use empty array to show the UI structure with mock data
   const domains = convertDomains([]);
-  const { kpis, buckets, warnings, config } = generateMockData(domains);
+  
+  // Use new service layer for metrics calculation
+  const metricsInput = convertToMetricsInput(domains);
+  const { aggregates, uiBuckets, recommendations } = useCampaignMetrics(metricsInput);
+  
+  // Generate KPIs from aggregates (backward compatibility)
+  const kpis: CampaignKpi[] = [
+    {
+      label: 'Total Domains',
+      value: aggregates.totalDomains,
+      format: 'number',
+      trend: { direction: 'up', percentage: 12 }
+    },
+    {
+      label: 'Success Rate',
+      value: aggregates.successRate,
+      format: 'percentage',
+      trend: { direction: 'up', percentage: 5 }
+    },
+    {
+      label: 'Avg Lead Score',
+      value: aggregates.avgLeadScore,
+      format: 'number',
+      trend: { direction: 'stable', percentage: 0 }
+    },
+    {
+      label: 'Runtime',
+      value: 127,
+      format: 'duration',
+      trend: { direction: 'down', percentage: 8 }
+    }
+  ];
+  
+  // Generate mock data for backward compatibility
+  const { warnings, config } = generateMockData(domains);
+  const buckets = uiBuckets; // Use service-generated buckets
 
   return (
     <div className={cn("space-y-6", className)}>
@@ -153,6 +204,9 @@ export function CampaignOverviewV2({ campaignId, className }: CampaignOverviewV2
           <ConfigSummary config={config} />
         </div>
       </div>
+
+      {/* Recommendations Panel - Phase 2 */}
+      <RecommendationPanel recommendations={recommendations} />
     </div>
   );
 }
