@@ -24,6 +24,40 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
   const [pageSize, setPageSize] = React.useState<number>(DEFAULT_DOMAIN_PAGE_SIZE);
   const [paginated, api] = usePaginatedDomains(campaignId, { pageSize, infinite: false, virtualizationThreshold: 2000 });
   const { items, page, pageCount, total, loading, hasNext, hasPrev, infinite, shouldVirtualize, cursorMode } = paginated;
+
+  // Sorting state (persisted)
+  type SortKey = 'richness' | 'microcrawl' | 'keywords';
+  const SORT_STORAGE_KEY = 'campaignDomains.sort';
+  const [sortKey, setSortKey] = React.useState<SortKey>(() => {
+    if (typeof window === 'undefined') return 'richness';
+    try { const raw = localStorage.getItem(SORT_STORAGE_KEY); if (raw) { const p = JSON.parse(raw); if (['richness','microcrawl','keywords'].includes(p.key)) return p.key; } } catch {}
+    return 'richness';
+  });
+  const [sortDir, setSortDir] = React.useState<'asc'|'desc'>(() => {
+    if (typeof window === 'undefined') return 'desc';
+    try { const raw = localStorage.getItem(SORT_STORAGE_KEY); if (raw) { const p = JSON.parse(raw); if (p.dir === 'asc' || p.dir === 'desc') return p.dir; } } catch {}
+    return 'desc';
+  });
+  const persistSort = React.useCallback((key: SortKey, dir: 'asc'|'desc') => { try { localStorage.setItem(SORT_STORAGE_KEY, JSON.stringify({ key, dir })); } catch {} }, []);
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) { const nd = sortDir === 'asc' ? 'desc' : 'asc'; setSortDir(nd); persistSort(key, nd); return; }
+    setSortKey(key); setSortDir('desc'); persistSort(key, 'desc');
+  };
+  const sortedItems = React.useMemo(() => {
+    const arr = [...items];
+    const val = (d: any): number => {
+      const f = d.features;
+      switch (sortKey) {
+        case 'richness': return typeof f?.richness?.score === 'number' ? f.richness.score : -Infinity;
+        case 'microcrawl': return typeof f?.microcrawl?.gain_ratio === 'number' ? f.microcrawl.gain_ratio : -Infinity;
+        case 'keywords': return typeof f?.keywords?.unique_count === 'number' ? f.keywords.unique_count : -Infinity;
+      }
+    };
+    arr.sort((a,b)=>{ const av = val(a), bv = val(b); if (av===bv) return 0; return av < bv ? -1 : 1; });
+    if (sortDir === 'desc') arr.reverse();
+    return arr;
+  }, [items, sortKey, sortDir]);
+  const ariaSort = (key: SortKey): React.AriaAttributes['aria-sort'] => sortKey === key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none';
   // Enriched campaign to surface scoring association + aggregates if backend provides
   const { data: enriched } = useGetCampaignEnrichedQuery(campaignId, { skip: !campaignId });
   // Scoring profiles list (to resolve profile display name)
@@ -101,9 +135,7 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
                   ))}
                 </SelectContent>
               </Select>
-              <Button variant="outline" onClick={() => api.refresh()} disabled={loading} data-testid="campaign-domains-refresh">
-                Refresh
-              </Button>
+              <Button variant="outline" onClick={() => api.refresh()} disabled={loading} data-testid="campaign-domains-refresh">Refresh</Button>
             </div>
             <div className="flex items-center gap-3 text-xs" data-testid="campaign-domains-pagination-cluster">
               <div className="flex items-center gap-1" data-testid="campaign-domains-pagination-buttons">
@@ -130,19 +162,27 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
           <div className="overflow-x-auto" data-testid="campaign-domains-table-wrapper">
             {!infinite || !shouldVirtualize ? (
               <Table data-testid="campaign-domains-table">
+                <caption className="sr-only" id="campaign-domains-warnings-legend">Warnings legend: S = Keyword stuffing penalty applied. R = High repetition index (&gt;0.30). A = High anchor share (&gt;40%).</caption>
                 <TableHeader data-testid="campaign-domains-thead">
                   <TableRow data-testid="campaign-domains-header-row">
                     <TableHead data-testid="campaign-domains-col-domain">Domain</TableHead>
                     <TableHead data-testid="campaign-domains-col-dns">DNS</TableHead>
                     <TableHead data-testid="campaign-domains-col-http">HTTP</TableHead>
-                    <TableHead data-testid="campaign-domains-col-richness">Richness</TableHead>
-                    <TableHead data-testid="campaign-domains-col-topkeywords">Top Keywords</TableHead>
-                    <TableHead data-testid="campaign-domains-col-microcrawl">Microcrawl</TableHead>
+                    <TableHead aria-sort={ariaSort('richness')} data-testid="campaign-domains-col-richness">
+                      <button type="button" className="underline text-xs" onClick={()=>toggleSort('richness')} data-testid="campaign-domains-sort-richness">Richness</button>
+                    </TableHead>
+                    <TableHead aria-sort={ariaSort('keywords')} data-testid="campaign-domains-col-topkeywords">
+                      <button type="button" className="underline text-xs" onClick={()=>toggleSort('keywords')} data-testid="campaign-domains-sort-keywords">Top Keywords</button>
+                    </TableHead>
+                    <TableHead aria-sort={ariaSort('microcrawl')} data-testid="campaign-domains-col-microcrawl">
+                      <button type="button" className="underline text-xs" onClick={()=>toggleSort('microcrawl')} data-testid="campaign-domains-sort-microcrawl">Microcrawl</button>
+                    </TableHead>
+                    <TableHead data-testid="campaign-domains-col-warnings">Warnings</TableHead>
                     <TableHead data-testid="campaign-domains-col-lead">Lead</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody data-testid="campaign-domains-tbody">
-                  {items.map((d: any, idx: number) => (
+                  {sortedItems.map((d: any, idx: number) => (
                     <TableRow key={`${d.id || d.domain || idx}`} data-row-index={idx} data-testid="campaign-domains-row">
                       <TableCell className="font-medium" data-testid="campaign-domains-cell-domain">{d.domain || d.name || d.domainName}</TableCell>
                       <TableCell data-testid="campaign-domains-cell-dns">{d.dnsStatus || '—'}</TableCell>
@@ -150,6 +190,31 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
                       <TableCell data-testid="campaign-domains-cell-richness"><RichnessBadge features={d.features} /></TableCell>
                       <TableCell data-testid="campaign-domains-cell-topkeywords"><TopKeywordsList features={d.features} /></TableCell>
                       <TableCell data-testid="campaign-domains-cell-microcrawl"><MicrocrawlGainChip features={d.features} /></TableCell>
+                      <TableCell data-testid="campaign-domains-cell-warnings">
+                        {(() => {
+                          const f = d.features;
+                          const r = f?.richness;
+                          if (!r) return '—';
+                          const warns: { key: string; label: string; title: string; }[] = [];
+                          if ((r as any).stuffing_penalty && (r as any).stuffing_penalty > 0) {
+                            warns.push({ key: 'stuff', label: 'S', title: 'Keyword stuffing penalty applied' });
+                          }
+                          if (typeof (r as any).repetition_index === 'number' && (r as any).repetition_index > 0.30) {
+                            warns.push({ key: 'rep', label: 'R', title: 'High repetition index (>0.30)' });
+                          }
+                          if (typeof (r as any).anchor_share === 'number' && (r as any).anchor_share > 0.40) {
+                            warns.push({ key: 'anc', label: 'A', title: 'High anchor share proportion (>40%)' });
+                          }
+                          if (warns.length === 0) return '—';
+                          return (
+                            <div className="flex gap-1" data-testid="campaign-domains-warnings-icons">
+                              {warns.map(w => (
+                                <span key={w.key} title={w.title} aria-label={w.title} aria-describedby="campaign-domains-warnings-legend" data-testid={`campaign-domains-warning-${w.key}`} className="w-4 h-4 text-[10px] rounded-full bg-amber-500/20 text-amber-700 flex items-center justify-center font-semibold border border-amber-600/30">{w.label}</span>
+                              ))}
+                            </div>
+                          );
+                        })()}
+                      </TableCell>
                       <TableCell data-testid="campaign-domains-cell-lead">{d.leadStatus || '—'}</TableCell>
                     </TableRow>
                   ))}
@@ -158,6 +223,7 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
             ) : (
               <div style={{ height: 400 }} data-testid="campaign-domains-virtualized">
                 <Table data-testid="campaign-domains-virtual-table">
+                  <caption className="sr-only" id="campaign-domains-warnings-legend">Warnings legend: S = Keyword stuffing penalty applied. R = High repetition index (&gt;0.30). A = High anchor share (&gt;40%).</caption>
                   <TableHeader>
                     <TableRow>
                       <TableHead data-testid="campaign-domains-col-domain">Domain</TableHead>
@@ -166,11 +232,12 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
                       <TableHead data-testid="campaign-domains-col-richness">Richness</TableHead>
                       <TableHead data-testid="campaign-domains-col-topkeywords">Top Keywords</TableHead>
                       <TableHead data-testid="campaign-domains-col-microcrawl">Microcrawl</TableHead>
+                      <TableHead data-testid="campaign-domains-col-warnings">Warnings</TableHead>
                       <TableHead data-testid="campaign-domains-col-lead">Lead</TableHead>
                     </TableRow>
                   </TableHeader>
                 </Table>
-                <List height={360} itemCount={items.length} itemSize={40} width={'100%'} itemData={items}>
+                <List height={360} itemCount={sortedItems.length} itemSize={40} width={'100%'} itemData={sortedItems}>
                   {({ index, style, data }: ListChildComponentProps<any[]>) => {
                     const d = data[index];
                     return (
@@ -184,6 +251,31 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
                               <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-richness"><RichnessBadge features={d.features} /></TableCell>
                               <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-topkeywords"><TopKeywordsList features={d.features} /></TableCell>
                               <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-microcrawl"><MicrocrawlGainChip features={d.features} /></TableCell>
+                              <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-warnings">
+                                {(() => {
+                                  const f = d.features;
+                                  const r = f?.richness;
+                                  if (!r) return '—';
+                                  const warns: { key: string; label: string; title: string; }[] = [];
+                                  if ((r as any).stuffing_penalty && (r as any).stuffing_penalty > 0) {
+                                    warns.push({ key: 'stuff', label: 'S', title: 'Keyword stuffing penalty applied' });
+                                  }
+                                  if (typeof (r as any).repetition_index === 'number' && (r as any).repetition_index > 0.30) {
+                                    warns.push({ key: 'rep', label: 'R', title: 'High repetition index (>0.30)' });
+                                  }
+                                  if (typeof (r as any).anchor_share === 'number' && (r as any).anchor_share > 0.40) {
+                                    warns.push({ key: 'anc', label: 'A', title: 'High anchor share proportion (>40%)' });
+                                  }
+                                  if (warns.length === 0) return '—';
+                                  return (
+                                    <div className="flex gap-1" data-testid="campaign-domains-virtual-warnings-icons">
+                                      {warns.map(w => (
+                                        <span key={w.key} title={w.title} aria-label={w.title} aria-describedby="campaign-domains-warnings-legend" data-testid={`campaign-domains-virtual-warning-${w.key}`} className="w-4 h-4 text-[10px] rounded-full bg-amber-500/20 text-amber-700 flex items-center justify-center font-semibold border border-amber-600/30">{w.label}</span>
+                                      ))}
+                                    </div>
+                                  );
+                                })()}
+                              </TableCell>
                               <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-lead">{d.leadStatus || '—'}</TableCell>
                             </TableRow>
                           </TableBody>

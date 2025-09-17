@@ -51,6 +51,9 @@ type analysisService struct {
 		// Optional metrics for feature fetch (initialized lazily)
 		analysisFeatureFetchDuration prometheus.Histogram
 		analysisFeatureFetchDomains  prometheus.Histogram
+		featureCacheHits             prometheus.Counter
+		featureCacheMisses           prometheus.Counter
+		featureCacheInvalidations    prometheus.Counter
 	}
 
 	// Execution tracking per campaign
@@ -65,6 +68,7 @@ type analysisService struct {
 		at   time.Time
 		data map[string]map[string]any
 	}
+	featureCacheMu sync.RWMutex // guards featureCache and _featureCacheTTL
 }
 
 // DomainAnalysisFeaturesTyped provides a strongly typed internal view of domain analysis features.
@@ -114,9 +118,14 @@ func toTypedFeature(raw map[string]any) *DomainAnalysisFeaturesTyped {
 		case int:
 			f := float64(x)
 			return &f
+		case json.Number:
+			if f64, err := x.Float64(); err == nil {
+				return &f64
+			}
 		default:
 			return nil
 		}
+		return nil
 	}
 	toI64 := func(v any) *int64 {
 		switch x := v.(type) {
@@ -128,9 +137,14 @@ func toTypedFeature(raw map[string]any) *DomainAnalysisFeaturesTyped {
 		case float64:
 			i := int64(x)
 			return &i
+		case json.Number:
+			if i64, err := x.Int64(); err == nil {
+				return &i64
+			}
 		default:
 			return nil
 		}
+		return nil
 	}
 	toI32 := func(v any) *int32 {
 		switch x := v.(type) {
@@ -142,9 +156,15 @@ func toTypedFeature(raw map[string]any) *DomainAnalysisFeaturesTyped {
 		case float64:
 			i := int32(x)
 			return &i
+		case json.Number:
+			if i64, err := x.Int64(); err == nil {
+				i32 := int32(i64)
+				return &i32
+			}
 		default:
 			return nil
 		}
+		return nil
 	}
 	if kw != nil {
 		tf.Keywords.UniqueCount = toI64(kw["unique_count"])
@@ -248,6 +268,9 @@ func NewAnalysisService(
 		Help:    "Number of domains whose features were fetched in a single query",
 		Buckets: []float64{1, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000},
 	})
+	cacheHits := prometheus.NewCounter(prometheus.CounterOpts{Name: "analysis_feature_cache_hits_total", Help: "Feature fetch cache hits (TTL or legacy)"})
+	cacheMisses := prometheus.NewCounter(prometheus.CounterOpts{Name: "analysis_feature_cache_misses_total", Help: "Feature fetch cache misses (DB queries)"})
+	cacheInvalidations := prometheus.NewCounter(prometheus.CounterOpts{Name: "analysis_feature_cache_invalidations_total", Help: "Explicit feature cache invalidations"})
 	// Best-effort registration; ignore errors (caller may register externally as part of metrics wiring)
 	if deps.Logger != nil {
 		if regErr := prometheus.Register(featureFetchDuration); regErr != nil {
@@ -255,6 +278,15 @@ func NewAnalysisService(
 		}
 		if regErr := prometheus.Register(featureFetchDomains); regErr != nil {
 			deps.Logger.Debug(context.Background(), "metrics register skip", map[string]interface{}{"metric": "analysis_feature_fetch_domain_count", "err": regErr.Error()})
+		}
+		if regErr := prometheus.Register(cacheHits); regErr != nil {
+			deps.Logger.Debug(context.Background(), "metrics register skip", map[string]interface{}{"metric": "analysis_feature_cache_hits_total", "err": regErr.Error()})
+		}
+		if regErr := prometheus.Register(cacheMisses); regErr != nil {
+			deps.Logger.Debug(context.Background(), "metrics register skip", map[string]interface{}{"metric": "analysis_feature_cache_misses_total", "err": regErr.Error()})
+		}
+		if regErr := prometheus.Register(cacheInvalidations); regErr != nil {
+			deps.Logger.Debug(context.Background(), "metrics register skip", map[string]interface{}{"metric": "analysis_feature_cache_invalidations_total", "err": regErr.Error()})
 		}
 	}
 	return &analysisService{
@@ -270,7 +302,7 @@ func NewAnalysisService(
 			at   time.Time
 			data map[string]map[string]any
 		}{},
-		mtx: struct {
+		mtx: func() struct {
 			scoreHistogram               prometheus.Histogram
 			rescoreRuns                  *prometheus.CounterVec
 			rescoreRunsV2                *prometheus.CounterVec
@@ -279,10 +311,30 @@ func NewAnalysisService(
 			preflightFail                prometheus.Counter
 			analysisFeatureFetchDuration prometheus.Histogram
 			analysisFeatureFetchDomains  prometheus.Histogram
-		}{
-			analysisFeatureFetchDuration: featureFetchDuration,
-			analysisFeatureFetchDomains:  featureFetchDomains,
-		},
+			featureCacheHits             prometheus.Counter
+			featureCacheMisses           prometheus.Counter
+			featureCacheInvalidations    prometheus.Counter
+		} {
+			return struct {
+				scoreHistogram               prometheus.Histogram
+				rescoreRuns                  *prometheus.CounterVec
+				rescoreRunsV2                *prometheus.CounterVec
+				phaseDuration                prometheus.Histogram
+				reuseCounter                 prometheus.Counter
+				preflightFail                prometheus.Counter
+				analysisFeatureFetchDuration prometheus.Histogram
+				analysisFeatureFetchDomains  prometheus.Histogram
+				featureCacheHits             prometheus.Counter
+				featureCacheMisses           prometheus.Counter
+				featureCacheInvalidations    prometheus.Counter
+			}{
+				analysisFeatureFetchDuration: featureFetchDuration,
+				analysisFeatureFetchDomains:  featureFetchDomains,
+				featureCacheHits:             cacheHits,
+				featureCacheMisses:           cacheMisses,
+				featureCacheInvalidations:    cacheInvalidations,
+			}
+		}(),
 	}
 }
 
@@ -917,6 +969,8 @@ func (s *analysisService) storeAnalysisResults(ctx context.Context, campaignID u
 	if err := s.store.UpdateAnalysisResults(ctx, exec, campaignID, payload); err != nil {
 		return fmt.Errorf("failed to persist analysis results: %w", err)
 	}
+	// Invalidate feature cache so subsequent fetch reflects new results
+	s.InvalidateFeatureCache(campaignID)
 	return nil
 }
 
@@ -1617,19 +1671,25 @@ func clamp(v, lo, hi float64) float64 {
 func (s *analysisService) FetchAnalysisReadyFeatures(ctx context.Context, campaignID uuid.UUID) (map[string]map[string]any, error) {
 	// TTL-based memoization (simple map + timestamp sidecar); default 30s
 	const ttl = 30 * time.Second
-	// Lazy init sidecar store on struct via interface{} trick (avoid new field churn if already present)
-	if s._featureCacheTTL == nil {
-		s._featureCacheTTL = map[uuid.UUID]struct {
-			at   time.Time
-			data map[string]map[string]any
-		}{}
-	}
+	// Read lock fast path
+	s.featureCacheMu.RLock()
 	if ce, ok := s._featureCacheTTL[campaignID]; ok && time.Since(ce.at) < ttl {
-		return ce.data, nil
+		data := ce.data
+		if s.mtx.featureCacheHits != nil {
+			s.mtx.featureCacheHits.Inc()
+		}
+		s.featureCacheMu.RUnlock()
+		return data, nil
 	}
-	if cached, ok := s.featureCache[campaignID]; ok { // legacy cache path (no TTL) used as fallback
-		return cached, nil
+	if cached, ok := s.featureCache[campaignID]; ok {
+		data := cached
+		if s.mtx.featureCacheHits != nil {
+			s.mtx.featureCacheHits.Inc()
+		}
+		s.featureCacheMu.RUnlock()
+		return data, nil
 	}
+	s.featureCacheMu.RUnlock()
 	var dbx *sql.DB
 	switch db := s.deps.DB.(type) {
 	case *sqlx.DB:
@@ -1642,13 +1702,16 @@ func (s *analysisService) FetchAnalysisReadyFeatures(ctx context.Context, campai
 	}
 	start := time.Now()
 	rows, err := dbx.QueryContext(ctx, `SELECT def.domain_id, gd.domain_name,
-	   def.kw_unique_count, def.kw_total_occurrences, def.kw_weight_sum,
+		   def.kw_unique_count, def.kw_total_occurrences AS kw_hits_total, def.kw_weight_sum,
 	   def.content_richness_score, def.microcrawl_gain_ratio, def.feature_vector
 FROM analysis_ready_features def
 JOIN generated_domains gd ON gd.id = def.domain_id AND gd.campaign_id = def.campaign_id
 WHERE def.campaign_id=$1`, campaignID)
 	if err != nil {
 		return nil, fmt.Errorf("fetch analysis features: %w", err)
+	}
+	if s.mtx.featureCacheMisses != nil {
+		s.mtx.featureCacheMisses.Inc()
 	}
 	defer rows.Close()
 	res := make(map[string]map[string]any)
@@ -1670,7 +1733,7 @@ WHERE def.campaign_id=$1`, campaignID)
 				return res, fmt.Errorf("fetch analysis features unmarshal %s: %w", domainName, err)
 			}
 		}
-		required := []string{"richness_weights_version", "prominence_norm", "diversity_effective_unique", "diversity_norm", "enrichment_norm", "applied_bonus", "applied_deductions_total", "stuffing_penalty", "repetition_index", "anchor_share"}
+		required := []string{"richness_weights_version", "prominence_norm", "diversity_effective_unique", "diversity_norm", "enrichment_norm", "applied_bonus", "applied_deductions_total", "stuffing_penalty", "repetition_index", "anchor_share", "kw_top3", "kw_signal_distribution"}
 		for _, k := range required {
 			if _, ok := fv[k]; !ok {
 				return res, fmt.Errorf("fetch analysis features missing key %s domain %s", k, domainName)
@@ -1709,12 +1772,14 @@ WHERE def.campaign_id=$1`, campaignID)
 	if err := rows.Err(); err != nil {
 		return res, fmt.Errorf("fetch analysis features rows: %w", err)
 	}
-	// Populate both legacy and TTL caches
+	// Populate caches with write lock
+	s.featureCacheMu.Lock()
 	s.featureCache[campaignID] = res
 	s._featureCacheTTL[campaignID] = struct {
 		at   time.Time
 		data map[string]map[string]any
 	}{at: time.Now(), data: res}
+	s.featureCacheMu.Unlock()
 	durMs := time.Since(start).Milliseconds()
 	if s.deps.Logger != nil {
 		s.deps.Logger.Debug(ctx, "fetched analysis features", map[string]interface{}{"campaign": campaignID.String(), "domains": len(res), "duration_ms": durMs})
@@ -1741,6 +1806,17 @@ func (s *analysisService) dualReadFetchFeatures(ctx context.Context, campaignID 
 // disabled flag or any retrieval error (callers treat absence as non-fatal enhancement miss).
 func (s *analysisService) DualReadFetch(ctx context.Context, campaignID uuid.UUID) (map[string]map[string]any, error) {
 	return s.dualReadFetchFeatures(ctx, campaignID)
+}
+
+// InvalidateFeatureCache removes cached features for a campaign (called after new analysis results stored)
+func (s *analysisService) InvalidateFeatureCache(campaignID uuid.UUID) {
+	s.featureCacheMu.Lock()
+	delete(s.featureCache, campaignID)
+	delete(s._featureCacheTTL, campaignID)
+	s.featureCacheMu.Unlock()
+	if s.mtx.featureCacheInvalidations != nil {
+		s.mtx.featureCacheInvalidations.Inc()
+	}
 }
 
 func nullableInt64(v sql.NullInt64) any {
