@@ -14,6 +14,10 @@ import PageHeader from '@/components/shared/PageHeader';
 import CampaignControls from '@/components/campaigns/CampaignControls';
 import DomainsList from '@/components/campaigns/DomainsList';
 
+// Phase 1 UI Refactor components
+import CampaignOverviewV2 from '@/components/refactor/campaign/CampaignOverviewV2';
+import { useCampaignOverviewV2 } from '@/lib/feature-flags-simple';
+
 interface _CampaignPageParams {
   id: string;
 }
@@ -22,6 +26,10 @@ export default function CampaignPage() {
   const params = useParams();
   const router = useRouter();
   const campaignId = params?.id as string;
+  
+  // Feature flag for new overview
+  const showOverviewV2 = useCampaignOverviewV2();
+  
   // Use enriched campaign endpoint via RTK Query
   const { data: enriched, isLoading: loading, error } = useGetCampaignEnrichedQuery(campaignId);
   const campaign: CampaignResponse | null = enriched?.campaign ?? null;
@@ -92,10 +100,10 @@ export default function CampaignPage() {
         onBack={handleBack}
       />
 
-  {/* Overview details now provided through unified workspace (CampaignHeader removed) */}
-      
-      {/* Professional campaign progress using real enum values */}
-  {/* Removed CampaignProgress (redundant) now represented in overview + stepper */}
+      {/* Phase 1 UI Refactor: Value-first overview above legacy domains table */}
+      {showOverviewV2 && (
+        <CampaignOverviewV2 campaignId={campaignId} />
+      )}
       
       {/* Professional campaign controls (disaster recovery component) */}
   <CampaignControls campaign={campaign} state={state} phaseExecutions={phaseExecutions} />
