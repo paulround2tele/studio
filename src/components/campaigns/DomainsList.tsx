@@ -16,6 +16,22 @@ import TopKeywordsList from '@/components/domains/TopKeywordsList';
 import MicrocrawlGainChip from '@/components/domains/MicrocrawlGainChip';
 import { Switch } from '@/components/ui/switch';
 
+// Utility: derive warning indicators from a richness feature object
+function getDomainWarnings(richness: any | undefined | null) {
+  if (!richness) return [] as { key: string; label: string; title: string }[];
+  const warns: { key: string; label: string; title: string }[] = [];
+  if (richness.stuffing_penalty && richness.stuffing_penalty > 0) {
+    warns.push({ key: 'stuff', label: 'S', title: 'Keyword stuffing penalty applied' });
+  }
+  if (typeof richness.repetition_index === 'number' && richness.repetition_index > 0.30) {
+    warns.push({ key: 'rep', label: 'R', title: 'High repetition index (>0.30)' });
+  }
+  if (typeof richness.anchor_share === 'number' && richness.anchor_share > 0.40) {
+    warns.push({ key: 'anc', label: 'A', title: 'High anchor share proportion (>40%)' });
+  }
+  return warns;
+}
+
 type DomainsListProps = {
   campaignId: string;
 };
@@ -43,9 +59,30 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
     if (sortKey === key) { const nd = sortDir === 'asc' ? 'desc' : 'asc'; setSortDir(nd); persistSort(key, nd); return; }
     setSortKey(key); setSortDir('desc'); persistSort(key, 'desc');
   };
+  // Warnings filter state
+  type WarningsFilter = 'all' | 'with' | 'without';
+  const WARNINGS_FILTER_STORAGE_KEY = 'campaignDomains.warningsFilter';
+  const [warningsFilter, setWarningsFilter] = React.useState<WarningsFilter>(() => {
+    if (typeof window === 'undefined') return 'all';
+    try { const raw = localStorage.getItem(WARNINGS_FILTER_STORAGE_KEY); if (raw && ['all','with','without'].includes(raw)) return raw as WarningsFilter; } catch {}
+    return 'all';
+  });
+  const onChangeWarningsFilter = (val: WarningsFilter) => {
+    setWarningsFilter(val);
+    try { localStorage.setItem(WARNINGS_FILTER_STORAGE_KEY, val); } catch {}
+  };
+
   const sortedItems = React.useMemo(() => {
-    const arr = [...items];
-    const val = (d: any): number => {
+    // Filter first
+    let basis = items;
+    if (warningsFilter !== 'all') {
+      basis = items.filter(d => {
+        const has = getDomainWarnings(d.features?.richness).length > 0;
+        return warningsFilter === 'with' ? has : !has;
+      });
+    }
+    const decorated = basis.map((it, idx) => ({ it, idx }));
+    const metricValue = (d: any): number => {
       const f = d.features;
       switch (sortKey) {
         case 'richness': return typeof f?.richness?.score === 'number' ? f.richness.score : -Infinity;
@@ -53,11 +90,16 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
         case 'keywords': return typeof f?.keywords?.unique_count === 'number' ? f.keywords.unique_count : -Infinity;
       }
     };
-    arr.sort((a,b)=>{ const av = val(a), bv = val(b); if (av===bv) return 0; return av < bv ? -1 : 1; });
-    if (sortDir === 'desc') arr.reverse();
-    return arr;
-  }, [items, sortKey, sortDir]);
+    const dir = sortDir === 'asc' ? 1 : -1;
+    decorated.sort((a,b) => {
+      const av = metricValue(a.it); const bv = metricValue(b.it);
+      if (av === bv) return a.idx - b.idx; // stable tie-breaker
+      return av < bv ? -1 * dir : 1 * dir;
+    });
+    return decorated.map(d => d.it);
+  }, [items, sortKey, sortDir, warningsFilter]);
   const ariaSort = (key: SortKey): React.AriaAttributes['aria-sort'] => sortKey === key ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none';
+
   // Enriched campaign to surface scoring association + aggregates if backend provides
   const { data: enriched } = useGetCampaignEnrichedQuery(campaignId, { skip: !campaignId });
   // Scoring profiles list (to resolve profile display name)
@@ -94,6 +136,10 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
   const avgScore = (enriched as any)?.scoring?.averageScore ?? (aggregates.averageScore);
   const lastRescore = (enriched as any)?.scoring?.lastRescoreAt;
 
+  // Prevalence (client-side for now)
+  const flaggedCount = React.useMemo(() => items.reduce((acc: number, d: any) => acc + (getDomainWarnings(d.features?.richness).length > 0 ? 1 : 0), 0), [items]);
+  const prevalencePct = items.length ? (flaggedCount / items.length) * 100 : 0;
+
   return (
     <Card data-testid="campaign-domains-card">
       <CardHeader className="flex flex-row items-center justify-between" data-testid="campaign-domains-header">
@@ -110,6 +156,7 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
               <span data-testid="campaign-domains-agg-scoring-profile">Scoring Profile: {profileLabel}</span>
               {avgScore !== undefined && <span data-testid="campaign-domains-agg-avg-score">Avg Score: {typeof avgScore === 'number' ? avgScore.toFixed(1) : avgScore}</span>}
               {lastRescore && <span data-testid="campaign-domains-agg-last-rescore">Last Rescore: {new Date(lastRescore).toLocaleDateString()}</span>}
+              <span data-testid="campaign-domains-agg-penalty-prevalence" aria-label="Penalty prevalence">⚠ {prevalencePct.toFixed(0)}% flagged</span>
             </div>
           </CardDescription>
         </div>
@@ -148,6 +195,19 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
               <div className="flex items-center gap-1" data-testid="campaign-domains-infinite-toggle">
                 <Switch checked={infinite} onCheckedChange={(v)=>api.toggleInfinite(v)} data-testid="campaign-domains-infinite-switch" />
                 <span data-testid="campaign-domains-infinite-label">Infinite</span>
+              </div>
+              <div className="flex items-center gap-1" data-testid="campaign-domains-warnings-filter">
+                <span className="text-xs" id="warnings-filter-label">Warnings</span>
+                <Select value={warningsFilter} onValueChange={(v)=>onChangeWarningsFilter(v as WarningsFilter)}>
+                  <SelectTrigger className="h-7 w-[110px]" aria-labelledby="warnings-filter-label" data-testid="campaign-domains-warnings-filter-trigger">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent data-testid="campaign-domains-warnings-filter-options">
+                    <SelectItem value="all" data-testid="campaign-domains-warnings-filter-all">All</SelectItem>
+                    <SelectItem value="with" data-testid="campaign-domains-warnings-filter-with">With</SelectItem>
+                    <SelectItem value="without" data-testid="campaign-domains-warnings-filter-without">Without</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -192,19 +252,7 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
                       <TableCell data-testid="campaign-domains-cell-microcrawl"><MicrocrawlGainChip features={d.features} /></TableCell>
                       <TableCell data-testid="campaign-domains-cell-warnings">
                         {(() => {
-                          const f = d.features;
-                          const r = f?.richness;
-                          if (!r) return '—';
-                          const warns: { key: string; label: string; title: string; }[] = [];
-                          if ((r as any).stuffing_penalty && (r as any).stuffing_penalty > 0) {
-                            warns.push({ key: 'stuff', label: 'S', title: 'Keyword stuffing penalty applied' });
-                          }
-                          if (typeof (r as any).repetition_index === 'number' && (r as any).repetition_index > 0.30) {
-                            warns.push({ key: 'rep', label: 'R', title: 'High repetition index (>0.30)' });
-                          }
-                          if (typeof (r as any).anchor_share === 'number' && (r as any).anchor_share > 0.40) {
-                            warns.push({ key: 'anc', label: 'A', title: 'High anchor share proportion (>40%)' });
-                          }
+                          const warns = getDomainWarnings(d.features?.richness);
                           if (warns.length === 0) return '—';
                           return (
                             <div className="flex gap-1" data-testid="campaign-domains-warnings-icons">
@@ -253,19 +301,7 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
                               <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-microcrawl"><MicrocrawlGainChip features={d.features} /></TableCell>
                               <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-warnings">
                                 {(() => {
-                                  const f = d.features;
-                                  const r = f?.richness;
-                                  if (!r) return '—';
-                                  const warns: { key: string; label: string; title: string; }[] = [];
-                                  if ((r as any).stuffing_penalty && (r as any).stuffing_penalty > 0) {
-                                    warns.push({ key: 'stuff', label: 'S', title: 'Keyword stuffing penalty applied' });
-                                  }
-                                  if (typeof (r as any).repetition_index === 'number' && (r as any).repetition_index > 0.30) {
-                                    warns.push({ key: 'rep', label: 'R', title: 'High repetition index (>0.30)' });
-                                  }
-                                  if (typeof (r as any).anchor_share === 'number' && (r as any).anchor_share > 0.40) {
-                                    warns.push({ key: 'anc', label: 'A', title: 'High anchor share proportion (>40%)' });
-                                  }
+                                  const warns = getDomainWarnings(d.features?.richness);
                                   if (warns.length === 0) return '—';
                                   return (
                                     <div className="flex gap-1" data-testid="campaign-domains-virtual-warnings-icons">

@@ -2,6 +2,7 @@
 import React from 'react';
 import type { DomainAnalysisFeatures } from '@/lib/api-client/models/domain-analysis-features';
 import { cn } from '@/lib/utils';
+import RichnessContributionBar from '@/components/analysis/RichnessContributionBar';
 
 interface Props {
   open: boolean;
@@ -55,6 +56,9 @@ export const RichnessBreakdownModal: React.FC<Props> = ({ open, onClose, domain,
             {score != null && <p className="text-xs text-muted-foreground" data-testid="richness-breakdown-score">Score: {score.toFixed(3)}{richness?.version != null && <span className="ml-1 opacity-60">v{richness.version}</span>}</p>}
           </div>
           <button type="button" onClick={onClose} aria-label="Close richness breakdown" className="text-xs px-2 py-1 rounded border hover:bg-muted" data-testid="richness-breakdown-close">Close</button>
+        </div>
+        <div className="mb-4" data-testid="richness-breakdown-contrib">
+          <RichnessContributionBar richness={richness as any} />
         </div>
         <div className="space-y-3" data-testid="richness-breakdown-bars">
           {metricDefs.map(md => {

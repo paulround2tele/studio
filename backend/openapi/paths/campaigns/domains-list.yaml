@@ -64,10 +64,32 @@ get:
     - name: sort
       in: query
       required: false
-      description: Sort ordering strategy
+      description: LEGACY (Phase 2 cursor path) domain score/time sorting. Prefer new sort/dir pair below when using offset pagination.
       schema:
         type: string
         enum: [score_desc, score_asc, last_http_fetched_at_desc]
+    # New unified server-side sorting (Phase 3). Applies AFTER filtering, BEFORE pagination window.
+    - name: sort
+      in: query
+      required: false
+      description: Richness-based sort field (defaults to richness_score when omitted)
+      schema:
+        type: string
+        enum: [richness_score, microcrawl_gain, keywords_unique]
+    - name: dir
+      in: query
+      required: false
+      description: Sort direction (defaults to desc)
+      schema:
+        type: string
+        enum: [asc, desc]
+    - name: warnings
+      in: query
+      required: false
+      description: Warning filter applied before sorting (has = only domains with penalties; none = only clean domains)
+      schema:
+        type: string
+        enum: [has, none]
     - name: first
       in: query
       required: false

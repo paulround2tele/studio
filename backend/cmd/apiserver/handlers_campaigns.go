@@ -1179,6 +1179,10 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		return gen.CampaignsDomainsList200JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
 	}
 
+	// Server-side sorting/filtering (Phase 3) will use newly added OpenAPI params (sort, dir, warnings)
+	// Implementation placeholder: actual column-level ORDER BY deferred until richness metrics are materialized.
+    // ANALYSIS_SERVER_SORT flag reserved for future server-side ordering once codegen adds params (sort, dir, warnings)
+
 	rows, derr := h.deps.Stores.Campaign.GetGeneratedDomainsByCampaign(ctx, h.deps.DB, uuid.UUID(r.CampaignId), limit, startOffset, domainFilter)
 	if derr != nil {
 		return gen.CampaignsDomainsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed domain listing", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
