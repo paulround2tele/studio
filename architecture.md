@@ -59,6 +59,40 @@ graph TD
     E --> K
 ```
 
+## Extraction → Analysis Redesign (Phase P0/P1 Integration)
+
+The new extraction feature pipeline introduces canonical, versioned feature rows decoupling HTML parsing from scoring.
+
+### New Persistence Artifacts (Migration 000055)
+- `domain_extraction_features` (one row per campaign+domain)
+- `domain_extracted_keywords` (optional detail rows per keyword)
+- `analysis_ready_features` view (projection used by analysis phase in future dual-read mode)
+
+### Feature Flags / Env Vars
+| Flag | Default | Purpose |
+|------|---------|---------|
+| `EXTRACTION_FEATURE_TABLE_ENABLED` | false | Gate writes to new feature tables (safe shadow mode) |
+| `EXTRACTION_KEYWORD_DETAIL_ENABLED` | false | Persist keyword detail rows (P2 onward) |
+| `ANALYSIS_DUAL_READ` | false | Future: compare legacy scoring vs new feature-table driven scoring |
+
+Flags follow existing pattern: set to `1`, `true`, or `on` (case-insensitive) to enable.
+
+### Package Scaffold
+`internal/extraction` provides:
+- Pure aggregation stub (`BuildFeatures`) returning a minimal `FeatureAggregate`.
+- Upsert helpers (`UpsertFeatureRow`, `TransitionReady`, `TransitionError`).
+- Flag helpers for gating.
+
+### Next Steps (High-Level)
+1. Expand `BuildFeatures` to compute full richness & microcrawl metrics.
+2. Integrate extraction sub-steps (http_fetch, primary_parse, microcrawl) feeding `RawSignals`.
+3. Implement batch keyword detail persistence behind detail flag.
+4. Add reconciliation job for stuck `building` rows.
+5. Introduce dual-read scoring path and delta instrumentation.
+
+### Rollback
+Disabling `EXTRACTION_FEATURE_TABLE_ENABLED` halts new writes; legacy path (generated_domains feature_vector) remains unaffected. Migration reversible via 000055 down script.
+
 ## Sequence Diagram for Domain Generation
 
 ```mermaid

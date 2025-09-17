@@ -136,6 +136,25 @@ func (o *CampaignOrchestrator) RescoreCampaign(ctx context.Context, campaignID u
 	return o.analysisSvc.RescoreCampaign(ctx, campaignID)
 }
 
+// FetchAnalysisReadyFeatures returns analysis-ready feature maps for domains in a campaign
+// when the underlying analysis service supports the optional DualReadFetch method. It is a
+// thin indirection that keeps the concrete analysis service unexported while giving HTTP
+// handlers access to the cached dual-read path. Absent support or on any error it returns
+// a nil map and non-fatal error (handlers treat feature absence as an enhancement miss).
+func (o *CampaignOrchestrator) FetchAnalysisReadyFeatures(ctx context.Context, campaignID uuid.UUID) (map[string]map[string]any, error) {
+	if o == nil || o.analysisSvc == nil {
+		return nil, nil
+	}
+	// Optional interface for dual read feature fetch
+	type dualReadFetcher interface {
+		DualReadFetch(context.Context, uuid.UUID) (map[string]map[string]any, error)
+	}
+	if dr, ok := o.analysisSvc.(dualReadFetcher); ok {
+		return dr.DualReadFetch(ctx, campaignID)
+	}
+	return nil, nil
+}
+
 // PostCompletionHook defines a hook executed after campaign completion
 type PostCompletionHook interface {
 	Run(ctx context.Context, campaignID uuid.UUID) error

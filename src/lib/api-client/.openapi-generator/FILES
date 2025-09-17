@@ -143,6 +143,10 @@ docs/DatabaseStats.md
 docs/DatabaseValue.md
 docs/DbBulkQuery200Response.md
 docs/DbBulkStats200Response.md
+docs/DomainAnalysisFeatures.md
+docs/DomainAnalysisFeaturesKeywords.md
+docs/DomainAnalysisFeaturesMicrocrawl.md
+docs/DomainAnalysisFeaturesRichness.md
 docs/DomainListItem.md
 docs/DomainScoreBreakdownResponse.md
 docs/DomainScoreBreakdownResponseComponents.md
@@ -375,6 +379,10 @@ models/database-value.ts
 models/db-bulk-query200-response.ts
 models/db-bulk-stats200-response.ts
 models/dnsvalidator-config-json.ts
+models/domain-analysis-features-keywords.ts
+models/domain-analysis-features-microcrawl.ts
+models/domain-analysis-features-richness.ts
+models/domain-analysis-features.ts
 models/domain-list-item.ts
 models/domain-score-breakdown-response-components.ts
 models/domain-score-breakdown-response.ts

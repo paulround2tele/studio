@@ -48,12 +48,161 @@ type analysisService struct {
 		phaseDuration  prometheus.Histogram
 		reuseCounter   prometheus.Counter
 		preflightFail  prometheus.Counter
+		// Optional metrics for feature fetch (initialized lazily)
+		analysisFeatureFetchDuration prometheus.Histogram
+		analysisFeatureFetchDomains  prometheus.Histogram
 	}
 
 	// Execution tracking per campaign
 	mu         sync.RWMutex
 	executions map[uuid.UUID]*analysisExecution
 	status     models.PhaseStatusEnum
+
+	// lightweight memo cache of feature vectors per campaign (invalidated implicitly by new executions)
+	featureCache map[uuid.UUID]map[string]map[string]any
+	// TTL side-cache (campaign -> cachedEntry). Using interface{} field naming avoided; explicit field clearer.
+	_featureCacheTTL map[uuid.UUID]struct {
+		at   time.Time
+		data map[string]map[string]any
+	}
+}
+
+// DomainAnalysisFeaturesTyped provides a strongly typed internal view of domain analysis features.
+// It mirrors the shape exposed via the HTTP API but keeps float precision as float64 internally.
+type DomainAnalysisFeaturesTyped struct {
+	Keywords struct {
+		UniqueCount        *int64
+		HitsTotal          *int64
+		WeightSum          *float64
+		Top3               []string
+		SignalDistribution map[string]int32
+	}
+	Richness struct {
+		Score                    *float64
+		Version                  *int32
+		ProminenceNorm           *float64
+		DiversityEffectiveUnique *float64
+		DiversityNorm            *float64
+		EnrichmentNorm           *float64
+		AppliedBonus             *float64
+		AppliedDeductionsTotal   *float64
+		StuffingPenalty          *float64
+		RepetitionIndex          *float64
+		AnchorShare              *float64
+	}
+	Microcrawl struct {
+		GainRatio *float64
+	}
+}
+
+// toTypedFeature converts a raw nested any map (same shape produced by FetchAnalysisReadyFeatures) into typed struct.
+func toTypedFeature(raw map[string]any) *DomainAnalysisFeaturesTyped {
+	if raw == nil {
+		return nil
+	}
+	tf := &DomainAnalysisFeaturesTyped{}
+	kw, _ := raw["keywords"].(map[string]any)
+	rich, _ := raw["richness"].(map[string]any)
+	mc, _ := raw["microcrawl"].(map[string]any)
+	toF := func(v any) *float64 {
+		switch x := v.(type) {
+		case float64:
+			return &x
+		case float32:
+			f := float64(x)
+			return &f
+		case int:
+			f := float64(x)
+			return &f
+		default:
+			return nil
+		}
+	}
+	toI64 := func(v any) *int64 {
+		switch x := v.(type) {
+		case int64:
+			return &x
+		case int:
+			i := int64(x)
+			return &i
+		case float64:
+			i := int64(x)
+			return &i
+		default:
+			return nil
+		}
+	}
+	toI32 := func(v any) *int32 {
+		switch x := v.(type) {
+		case int32:
+			return &x
+		case int:
+			i := int32(x)
+			return &i
+		case float64:
+			i := int32(x)
+			return &i
+		default:
+			return nil
+		}
+	}
+	if kw != nil {
+		tf.Keywords.UniqueCount = toI64(kw["unique_count"])
+		tf.Keywords.HitsTotal = toI64(kw["hits_total"])
+		tf.Keywords.WeightSum = toF(kw["weight_sum"])
+		if arr, ok := kw["top3"].([]any); ok {
+			for _, e := range arr {
+				if s, ok := e.(string); ok {
+					tf.Keywords.Top3 = append(tf.Keywords.Top3, s)
+				}
+			}
+		} else if arrs, ok := kw["top3"].([]string); ok {
+			tf.Keywords.Top3 = append(tf.Keywords.Top3, arrs...)
+		}
+		if sd, ok := kw["signal_distribution"].(map[string]any); ok {
+			tf.Keywords.SignalDistribution = make(map[string]int32, len(sd))
+			for k, v := range sd {
+				switch n := v.(type) {
+				case float64:
+					tf.Keywords.SignalDistribution[k] = int32(n)
+				case int:
+					tf.Keywords.SignalDistribution[k] = int32(n)
+				case int64:
+					tf.Keywords.SignalDistribution[k] = int32(n)
+				}
+			}
+		}
+	}
+	if rich != nil {
+		tf.Richness.Score = toF(rich["score"])
+		tf.Richness.Version = toI32(rich["version"])
+		tf.Richness.ProminenceNorm = toF(rich["prominence_norm"])
+		tf.Richness.DiversityEffectiveUnique = toF(rich["diversity_effective_unique"])
+		tf.Richness.DiversityNorm = toF(rich["diversity_norm"])
+		tf.Richness.EnrichmentNorm = toF(rich["enrichment_norm"])
+		tf.Richness.AppliedBonus = toF(rich["applied_bonus"])
+		tf.Richness.AppliedDeductionsTotal = toF(rich["applied_deductions_total"])
+		tf.Richness.StuffingPenalty = toF(rich["stuffing_penalty"])
+		tf.Richness.RepetitionIndex = toF(rich["repetition_index"])
+		tf.Richness.AnchorShare = toF(rich["anchor_share"])
+	}
+	if mc != nil {
+		tf.Microcrawl.GainRatio = toF(mc["gain_ratio"])
+	}
+	return tf
+}
+
+// FetchAnalysisReadyFeaturesTyped wraps FetchAnalysisReadyFeatures and returns a typed map.
+func (s *analysisService) FetchAnalysisReadyFeaturesTyped(ctx context.Context, campaignID uuid.UUID) (map[string]*DomainAnalysisFeaturesTyped, error) {
+	raw, err := s.FetchAnalysisReadyFeatures(ctx, campaignID)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[string]*DomainAnalysisFeaturesTyped, len(raw))
+	for k, v := range raw {
+		out[k] = toTypedFeature(v)
+	}
+	return out, nil
 }
 
 // analysisExecution tracks analysis execution state
@@ -88,6 +237,26 @@ func NewAnalysisService(
 	personaStore store.PersonaStore,
 	proxyStore store.ProxyStore,
 ) AnalysisService {
+	// Create lightweight histograms (use MustNewConstHistogram patterns if registry absent; here direct new with nil check)
+	featureFetchDuration := prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:    "analysis_feature_fetch_duration_seconds",
+		Help:    "Time to fetch analysis-ready features per campaign",
+		Buckets: prometheus.DefBuckets,
+	})
+	featureFetchDomains := prometheus.NewHistogram(prometheus.HistogramOpts{
+		Name:    "analysis_feature_fetch_domain_count",
+		Help:    "Number of domains whose features were fetched in a single query",
+		Buckets: []float64{1, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000},
+	})
+	// Best-effort registration; ignore errors (caller may register externally as part of metrics wiring)
+	if deps.Logger != nil {
+		if regErr := prometheus.Register(featureFetchDuration); regErr != nil {
+			deps.Logger.Debug(context.Background(), "metrics register skip", map[string]interface{}{"metric": "analysis_feature_fetch_duration_seconds", "err": regErr.Error()})
+		}
+		if regErr := prometheus.Register(featureFetchDomains); regErr != nil {
+			deps.Logger.Debug(context.Background(), "metrics register skip", map[string]interface{}{"metric": "analysis_feature_fetch_domain_count", "err": regErr.Error()})
+		}
+	}
 	return &analysisService{
 		store:          store,
 		personaStore:   personaStore,
@@ -96,6 +265,24 @@ func NewAnalysisService(
 		contentFetcher: contentFetcher,
 		executions:     make(map[uuid.UUID]*analysisExecution),
 		status:         models.PhaseStatusNotStarted,
+		featureCache:   make(map[uuid.UUID]map[string]map[string]any),
+		_featureCacheTTL: map[uuid.UUID]struct {
+			at   time.Time
+			data map[string]map[string]any
+		}{},
+		mtx: struct {
+			scoreHistogram               prometheus.Histogram
+			rescoreRuns                  *prometheus.CounterVec
+			rescoreRunsV2                *prometheus.CounterVec
+			phaseDuration                prometheus.Histogram
+			reuseCounter                 prometheus.Counter
+			preflightFail                prometheus.Counter
+			analysisFeatureFetchDuration prometheus.Histogram
+			analysisFeatureFetchDomains  prometheus.Histogram
+		}{
+			analysisFeatureFetchDuration: featureFetchDuration,
+			analysisFeatureFetchDomains:  featureFetchDomains,
+		},
 	}
 }
 
@@ -506,11 +693,8 @@ func (s *analysisService) fetchContent(ctx context.Context, campaignID uuid.UUID
 
 	contentResults := make(map[string][]byte)
 
-	// Get personas for content fetching
-	httpPersona, dnsPersona, proxy, err := s.getPersonasForFetching(ctx, config)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get personas: %w", err)
-	}
+	// Personas removed (unused); future persona-based fetch can be reintroduced via strategy struct.
+	httpPersona, dnsPersona, proxy := (*models.Persona)(nil), (*models.Persona)(nil), (*models.Proxy)(nil)
 
 	// Fetch content for each domain using the contentfetcher engine
 	for i, domain := range domains {
@@ -693,67 +877,6 @@ func (s *analysisService) getAnalysisConfig(ctx context.Context, campaignID uuid
 		return &defaultCfg, nil
 	}
 	return &cfg, nil
-}
-
-// getPersonasForFetching gets personas and proxy for content fetching
-func (s *analysisService) getPersonasForFetching(ctx context.Context, config *AnalysisConfig) (*models.Persona, *models.Persona, *models.Proxy, error) {
-	if config == nil || len(config.PersonaIDs) == 0 || s.personaStore == nil {
-		return nil, nil, nil, nil
-	}
-	var exec store.Querier
-	if q, ok := s.deps.DB.(store.Querier); ok {
-		exec = q
-	}
-	// Parse persona IDs
-	personaUUIDs := make([]uuid.UUID, 0, len(config.PersonaIDs))
-	for _, idStr := range config.PersonaIDs {
-		if id, err := uuid.Parse(idStr); err == nil {
-			personaUUIDs = append(personaUUIDs, id)
-		}
-	}
-	if len(personaUUIDs) == 0 {
-		return nil, nil, nil, nil
-	}
-	personas, err := s.personaStore.GetPersonasByIDs(ctx, exec, personaUUIDs)
-	if err != nil {
-		return nil, nil, nil, fmt.Errorf("failed to load personas: %w", err)
-	}
-	var httpPersona *models.Persona
-	var dnsPersona *models.Persona
-	for _, p := range personas {
-		if p == nil || !p.IsEnabled {
-			continue
-		}
-		switch p.PersonaType {
-		case models.PersonaTypeHTTP:
-			if httpPersona == nil {
-				httpPersona = p
-			}
-		case models.PersonaTypeDNS:
-			if dnsPersona == nil {
-				dnsPersona = p
-			}
-		}
-		if httpPersona != nil && dnsPersona != nil {
-			break
-		}
-	}
-	// Resolve proxy: prefer proxies associated with these personas
-	var proxy *models.Proxy
-	if s.proxyStore != nil {
-		if proxies, err := s.proxyStore.GetProxiesByPersonaIDs(ctx, exec, personaUUIDs); err == nil && len(proxies) > 0 {
-			for _, pr := range proxies {
-				if pr != nil && pr.IsEnabled && pr.IsHealthy {
-					proxy = pr
-					break
-				}
-			}
-			if proxy == nil {
-				proxy = proxies[0]
-			}
-		}
-	}
-	return httpPersona, dnsPersona, proxy, nil
 }
 
 // storeAnalysisResults stores analysis results in the campaign store
@@ -1111,11 +1234,13 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 			}
 			newKwSum := 0.0
 			for _, nf := range newFeatures {
-				if v, ok := nf["kw_unique_count"].(int64); ok {
-					newKwSum += float64(v)
-				}
-				if v, ok := nf["kw_unique_count"].(float64); ok {
-					newKwSum += v
+				if kwSection, ok := nf["keywords"].(map[string]any); ok {
+					if v, ok := kwSection["unique_count"].(int64); ok {
+						newKwSum += float64(v)
+					}
+					if v, ok := kwSection["unique_count"].(float64); ok {
+						newKwSum += v
+					}
 				}
 			}
 			legacyAvg := 0.0
@@ -1140,13 +1265,15 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 				if nf, ok := newFeatures[sr.Domain]; ok {
 					legacyVal := sr.LegacyKwUnique
 					var newVal float64
-					switch v := nf["kw_unique_count"].(type) {
-					case int64:
-						newVal = float64(v)
-					case float64:
-						newVal = v
+					if kwSection, ok := nf["keywords"].(map[string]any); ok {
+						switch v := kwSection["unique_count"].(type) {
+						case int64:
+							newVal = float64(v)
+						case float64:
+							newVal = v
+						}
 					}
-					if legacyVal > 0 {
+					if legacyVal > 0 && newVal > 0 {
 						pd := math.Abs(newVal-legacyVal) / legacyVal
 						if pd > threshold {
 							perDomainVariance++
@@ -1487,9 +1614,21 @@ func clamp(v, lo, hi float64) float64 {
 
 // dualReadFetchFeatures loads minimal features from new extraction table when ANALYSIS_DUAL_READ is enabled.
 // It returns a map domain_id -> feature subset for comparison; errors are non-fatal to legacy path caller.
-func (s *analysisService) dualReadFetchFeatures(ctx context.Context, campaignID uuid.UUID) (map[string]map[string]any, error) {
-	if v, ok := os.LookupEnv("ANALYSIS_DUAL_READ"); !ok || !strings.EqualFold(v, "true") && v != "1" && !strings.EqualFold(v, "on") {
-		return nil, nil
+func (s *analysisService) FetchAnalysisReadyFeatures(ctx context.Context, campaignID uuid.UUID) (map[string]map[string]any, error) {
+	// TTL-based memoization (simple map + timestamp sidecar); default 30s
+	const ttl = 30 * time.Second
+	// Lazy init sidecar store on struct via interface{} trick (avoid new field churn if already present)
+	if s._featureCacheTTL == nil {
+		s._featureCacheTTL = map[uuid.UUID]struct {
+			at   time.Time
+			data map[string]map[string]any
+		}{}
+	}
+	if ce, ok := s._featureCacheTTL[campaignID]; ok && time.Since(ce.at) < ttl {
+		return ce.data, nil
+	}
+	if cached, ok := s.featureCache[campaignID]; ok { // legacy cache path (no TTL) used as fallback
+		return cached, nil
 	}
 	var dbx *sql.DB
 	switch db := s.deps.DB.(type) {
@@ -1499,8 +1638,9 @@ func (s *analysisService) dualReadFetchFeatures(ctx context.Context, campaignID 
 		dbx = db
 	}
 	if dbx == nil {
-		return nil, fmt.Errorf("db unavailable for dual-read")
+		return nil, fmt.Errorf("fetch analysis features: db unavailable")
 	}
+	start := time.Now()
 	rows, err := dbx.QueryContext(ctx, `SELECT def.domain_id, gd.domain_name,
 	   def.kw_unique_count, def.kw_total_occurrences, def.kw_weight_sum,
 	   def.content_richness_score, def.microcrawl_gain_ratio, def.feature_vector
@@ -1508,7 +1648,7 @@ FROM analysis_ready_features def
 JOIN generated_domains gd ON gd.id = def.domain_id AND gd.campaign_id = def.campaign_id
 WHERE def.campaign_id=$1`, campaignID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fetch analysis features: %w", err)
 	}
 	defer rows.Close()
 	res := make(map[string]map[string]any)
@@ -1522,43 +1662,43 @@ WHERE def.campaign_id=$1`, campaignID)
 		var gain sql.NullFloat64
 		var fvRaw []byte
 		if err := rows.Scan(&domainID, &domainName, &kwUnique, &kwHits, &weightSum, &richness, &gain, &fvRaw); err != nil {
-			return res, err
+			return res, fmt.Errorf("fetch analysis features scan: %w", err)
 		}
-		// Parse feature_vector JSON
 		fv := map[string]any{}
 		if len(fvRaw) > 0 {
 			if err := json.Unmarshal(fvRaw, &fv); err != nil {
-				return res, fmt.Errorf("failed to unmarshal feature_vector for domain %s: %w", domainName, err)
+				return res, fmt.Errorf("fetch analysis features unmarshal %s: %w", domainName, err)
 			}
 		}
-		// Fail fast if critical richness keys missing
-		required := []string{"richness_weights_version","prominence_norm","diversity_effective_unique","diversity_norm","enrichment_norm","applied_bonus","applied_deductions_total","stuffing_penalty","repetition_index","anchor_share"}
-		for _, k := range required { if _, ok := fv[k]; !ok { return res, fmt.Errorf("missing required feature_vector key '%s' for domain %s", k, domainName) } }
-
-		// Build nested structure
+		required := []string{"richness_weights_version", "prominence_norm", "diversity_effective_unique", "diversity_norm", "enrichment_norm", "applied_bonus", "applied_deductions_total", "stuffing_penalty", "repetition_index", "anchor_share"}
+		for _, k := range required {
+			if _, ok := fv[k]; !ok {
+				return res, fmt.Errorf("fetch analysis features missing key %s domain %s", k, domainName)
+			}
+		}
 		top3 := anyToStringSlice(fv["kw_top3"])
 		sigDist := anyToStringIntMap(fv["kw_signal_distribution"])
 		nested := map[string]any{
 			"domain": domainName,
 			"keywords": map[string]any{
-				"unique_count": nullableInt64(kwUnique),
-				"hits_total": nullableInt64(kwHits),
-				"weight_sum": nullableFloat64(weightSum),
-				"top3": top3,
+				"unique_count":        nullableInt64(kwUnique),
+				"hits_total":          nullableInt64(kwHits),
+				"weight_sum":          nullableFloat64(weightSum),
+				"top3":                top3,
 				"signal_distribution": sigDist,
 			},
 			"richness": map[string]any{
-				"score": nullableFloat64(richness),
-				"version": fv["richness_weights_version"],
-				"prominence_norm": fv["prominence_norm"],
+				"score":                      nullableFloat64(richness),
+				"version":                    fv["richness_weights_version"],
+				"prominence_norm":            fv["prominence_norm"],
 				"diversity_effective_unique": fv["diversity_effective_unique"],
-				"diversity_norm": fv["diversity_norm"],
-				"enrichment_norm": fv["enrichment_norm"],
-				"applied_bonus": fv["applied_bonus"],
-				"applied_deductions_total": fv["applied_deductions_total"],
-				"stuffing_penalty": fv["stuffing_penalty"],
-				"repetition_index": fv["repetition_index"],
-				"anchor_share": fv["anchor_share"],
+				"diversity_norm":             fv["diversity_norm"],
+				"enrichment_norm":            fv["enrichment_norm"],
+				"applied_bonus":              fv["applied_bonus"],
+				"applied_deductions_total":   fv["applied_deductions_total"],
+				"stuffing_penalty":           fv["stuffing_penalty"],
+				"repetition_index":           fv["repetition_index"],
+				"anchor_share":               fv["anchor_share"],
 			},
 			"microcrawl": map[string]any{
 				"gain_ratio": nullableFloat64(gain),
@@ -1566,7 +1706,41 @@ WHERE def.campaign_id=$1`, campaignID)
 		}
 		res[domainName] = nested
 	}
-	return res, rows.Err()
+	if err := rows.Err(); err != nil {
+		return res, fmt.Errorf("fetch analysis features rows: %w", err)
+	}
+	// Populate both legacy and TTL caches
+	s.featureCache[campaignID] = res
+	s._featureCacheTTL[campaignID] = struct {
+		at   time.Time
+		data map[string]map[string]any
+	}{at: time.Now(), data: res}
+	durMs := time.Since(start).Milliseconds()
+	if s.deps.Logger != nil {
+		s.deps.Logger.Debug(ctx, "fetched analysis features", map[string]interface{}{"campaign": campaignID.String(), "domains": len(res), "duration_ms": durMs})
+	}
+	// Metrics emission (best-effort; skip if nil)
+	if s.mtx.analysisFeatureFetchDuration != nil {
+		s.mtx.analysisFeatureFetchDuration.Observe(float64(durMs) / 1000.0)
+	}
+	if s.mtx.analysisFeatureFetchDomains != nil {
+		s.mtx.analysisFeatureFetchDomains.Observe(float64(len(res)))
+	}
+	return res, nil
+}
+
+func (s *analysisService) dualReadFetchFeatures(ctx context.Context, campaignID uuid.UUID) (map[string]map[string]any, error) {
+	if v, ok := os.LookupEnv("ANALYSIS_DUAL_READ"); !ok || (!strings.EqualFold(v, "true") && v != "1" && !strings.EqualFold(v, "on")) {
+		return nil, nil
+	}
+	return s.FetchAnalysisReadyFeatures(ctx, campaignID)
+}
+
+// DualReadFetch exposes dualReadFetchFeatures for external callers (HTTP handlers) without
+// committing them to the internal unexported method signature directly. Returns nil map on
+// disabled flag or any retrieval error (callers treat absence as non-fatal enhancement miss).
+func (s *analysisService) DualReadFetch(ctx context.Context, campaignID uuid.UUID) (map[string]map[string]any, error) {
+	return s.dualReadFetchFeatures(ctx, campaignID)
 }
 
 func nullableInt64(v sql.NullInt64) any {
@@ -1583,13 +1757,19 @@ func nullableFloat64(v sql.NullFloat64) any {
 }
 
 func anyToStringSlice(v any) []string {
-	if v == nil { return []string{} }
+	if v == nil {
+		return []string{}
+	}
 	switch arr := v.(type) {
 	case []string:
 		return arr
 	case []any:
-		out := make([]string,0,len(arr))
-		for _, e := range arr { if s, ok := e.(string); ok { out = append(out, s) } }
+		out := make([]string, 0, len(arr))
+		for _, e := range arr {
+			if s, ok := e.(string); ok {
+				out = append(out, s)
+			}
+		}
 		return out
 	default:
 		return []string{}
@@ -1598,10 +1778,21 @@ func anyToStringSlice(v any) []string {
 
 func anyToStringIntMap(v any) map[string]int {
 	out := map[string]int{}
-	if v == nil { return out }
+	if v == nil {
+		return out
+	}
 	switch m := v.(type) {
 	case map[string]any:
-		for k,val := range m { switch x:=val.(type){case float64: out[k]=int(x); case int: out[k]=x; case int64: out[k]=int(x)} }
+		for k, val := range m {
+			switch x := val.(type) {
+			case float64:
+				out[k] = int(x)
+			case int:
+				out[k] = x
+			case int64:
+				out[k] = int(x)
+			}
+		}
 	case map[string]int:
 		return m
 	}

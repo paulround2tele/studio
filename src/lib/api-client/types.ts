@@ -2293,6 +2293,46 @@ export interface components {
                 completedAt?: string | null;
             };
         };
+        /** @description Canonical nested analysis feature vector for a discovered domain. */
+        DomainAnalysisFeatures: {
+            keywords?: {
+                unique_count?: number | null;
+                hits_total?: number | null;
+                /** Format: float */
+                weight_sum?: number | null;
+                top3?: string[];
+                signal_distribution?: {
+                    [key: string]: number;
+                };
+            };
+            richness?: {
+                /** Format: float */
+                score?: number | null;
+                version?: number | null;
+                /** Format: float */
+                prominence_norm?: number | null;
+                /** Format: float */
+                diversity_effective_unique?: number | null;
+                /** Format: float */
+                diversity_norm?: number | null;
+                /** Format: float */
+                enrichment_norm?: number | null;
+                /** Format: float */
+                applied_bonus?: number | null;
+                /** Format: float */
+                applied_deductions_total?: number | null;
+                /** Format: float */
+                stuffing_penalty?: number | null;
+                /** Format: float */
+                repetition_index?: number | null;
+                /** Format: float */
+                anchor_share?: number | null;
+            };
+            microcrawl?: {
+                /** Format: float */
+                gain_ratio?: number | null;
+            };
+        };
         DomainListItem: {
             /** Format: uuid */
             id?: string;
@@ -2311,6 +2351,7 @@ export interface components {
             dnsReason?: string | null;
             /** @description Human-readable reason string for current HTTP status (e.g., CONNECT_ERROR, TLS_ERROR, TIMEOUT, NON_200, BODY_MISMATCH) */
             httpReason?: string | null;
+            features?: components["schemas"]["DomainAnalysisFeatures"];
         };
         /** @description Cursor-based pagination metadata */
         PageInfo: {

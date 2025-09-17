@@ -281,7 +281,44 @@ DomainListItem:
     leadStatus: { type: string, description: "Lead extraction status if available" }
     dnsReason: { type: string, nullable: true, description: "Human-readable reason string for current DNS status (e.g., NXDOMAIN, SERVFAIL, TIMEOUT, BAD_RESPONSE)" }
     httpReason: { type: string, nullable: true, description: "Human-readable reason string for current HTTP status (e.g., CONNECT_ERROR, TLS_ERROR, TIMEOUT, NON_200, BODY_MISMATCH)" }
+    features:
+      $ref: '#/DomainAnalysisFeatures'
   # required list declared above with properties; stray duplicated fields removed
+
+DomainAnalysisFeatures:
+  type: object
+  description: Canonical nested analysis feature vector for a discovered domain.
+  properties:
+    keywords:
+      type: object
+      properties:
+        unique_count: { type: integer, nullable: true }
+        hits_total: { type: integer, nullable: true }
+        weight_sum: { type: number, format: float, nullable: true }
+        top3:
+          type: array
+          items: { type: string }
+        signal_distribution:
+          type: object
+          additionalProperties: { type: number, format: float }
+    richness:
+      type: object
+      properties:
+        score: { type: number, format: float, nullable: true }
+        version: { type: integer, nullable: true }
+        prominence_norm: { type: number, format: float, nullable: true }
+        diversity_effective_unique: { type: number, format: float, nullable: true }
+        diversity_norm: { type: number, format: float, nullable: true }
+        enrichment_norm: { type: number, format: float, nullable: true }
+        applied_bonus: { type: number, format: float, nullable: true }
+        applied_deductions_total: { type: number, format: float, nullable: true }
+        stuffing_penalty: { type: number, format: float, nullable: true }
+        repetition_index: { type: number, format: float, nullable: true }
+        anchor_share: { type: number, format: float, nullable: true }
+    microcrawl:
+      type: object
+      properties:
+        gain_ratio: { type: number, format: float, nullable: true }
 CampaignDomainsListResponse:
   type: object
   properties:

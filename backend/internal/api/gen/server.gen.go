@@ -1012,6 +1012,42 @@ type DomainListItem struct {
 	// LeadStatus Lead extraction status if available
 	LeadStatus *string `json:"leadStatus,omitempty"`
 	Offset     *int64  `json:"offset,omitempty"`
+
+	// Features Nested analysis feature vector (optional; present when ANALYSIS_DUAL_READ enabled)
+	Features *DomainAnalysisFeatures `json:"features,omitempty"`
+}
+
+// DomainAnalysisFeatures canonical nested feature vector
+type DomainAnalysisFeatures struct {
+	Keywords   *DomainAnalysisFeaturesKeywords   `json:"keywords,omitempty"`
+	Richness   *DomainAnalysisFeaturesRichness   `json:"richness,omitempty"`
+	Microcrawl *DomainAnalysisFeaturesMicrocrawl `json:"microcrawl,omitempty"`
+}
+
+type DomainAnalysisFeaturesKeywords struct {
+	UniqueCount        *int64            `json:"unique_count,omitempty"`
+	HitsTotal          *int64            `json:"hits_total,omitempty"`
+	WeightSum          *float32          `json:"weight_sum,omitempty"`
+	Top3               *[]string         `json:"top3,omitempty"`
+	SignalDistribution *map[string]int32 `json:"signal_distribution,omitempty"`
+}
+
+type DomainAnalysisFeaturesRichness struct {
+	Score                    *float32 `json:"score,omitempty"`
+	Version                  *int32   `json:"version,omitempty"`
+	ProminenceNorm           *float32 `json:"prominence_norm,omitempty"`
+	DiversityEffectiveUnique *float32 `json:"diversity_effective_unique,omitempty"`
+	DiversityNorm            *float32 `json:"diversity_norm,omitempty"`
+	EnrichmentNorm           *float32 `json:"enrichment_norm,omitempty"`
+	AppliedBonus             *float32 `json:"applied_bonus,omitempty"`
+	AppliedDeductionsTotal   *float32 `json:"applied_deductions_total,omitempty"`
+	StuffingPenalty          *float32 `json:"stuffing_penalty,omitempty"`
+	RepetitionIndex          *float32 `json:"repetition_index,omitempty"`
+	AnchorShare              *float32 `json:"anchor_share,omitempty"`
+}
+
+type DomainAnalysisFeaturesMicrocrawl struct {
+	GainRatio *float32 `json:"gain_ratio,omitempty"`
 }
 
 // DomainScoreBreakdownResponse Component scores contributing to the final relevance score for a domain.

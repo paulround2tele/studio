@@ -11,6 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DEFAULT_DOMAIN_PAGE_SIZE, DOMAIN_PAGE_SIZE_OPTIONS } from '@/lib/constants';
 import { usePaginatedDomains } from '@/lib/hooks/usePaginatedDomains';
 import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
+import RichnessBadge from '@/components/domains/RichnessBadge';
+import TopKeywordsList from '@/components/domains/TopKeywordsList';
+import MicrocrawlGainChip from '@/components/domains/MicrocrawlGainChip';
 import { Switch } from '@/components/ui/switch';
 
 type DomainsListProps = {
@@ -132,6 +135,9 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
                     <TableHead data-testid="campaign-domains-col-domain">Domain</TableHead>
                     <TableHead data-testid="campaign-domains-col-dns">DNS</TableHead>
                     <TableHead data-testid="campaign-domains-col-http">HTTP</TableHead>
+                    <TableHead data-testid="campaign-domains-col-richness">Richness</TableHead>
+                    <TableHead data-testid="campaign-domains-col-topkeywords">Top Keywords</TableHead>
+                    <TableHead data-testid="campaign-domains-col-microcrawl">Microcrawl</TableHead>
                     <TableHead data-testid="campaign-domains-col-lead">Lead</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -141,6 +147,9 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
                       <TableCell className="font-medium" data-testid="campaign-domains-cell-domain">{d.domain || d.name || d.domainName}</TableCell>
                       <TableCell data-testid="campaign-domains-cell-dns">{d.dnsStatus || '—'}</TableCell>
                       <TableCell data-testid="campaign-domains-cell-http">{d.httpStatus || '—'}</TableCell>
+                      <TableCell data-testid="campaign-domains-cell-richness"><RichnessBadge features={d.features} /></TableCell>
+                      <TableCell data-testid="campaign-domains-cell-topkeywords"><TopKeywordsList features={d.features} /></TableCell>
+                      <TableCell data-testid="campaign-domains-cell-microcrawl"><MicrocrawlGainChip features={d.features} /></TableCell>
                       <TableCell data-testid="campaign-domains-cell-lead">{d.leadStatus || '—'}</TableCell>
                     </TableRow>
                   ))}
@@ -154,6 +163,9 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
                       <TableHead data-testid="campaign-domains-col-domain">Domain</TableHead>
                       <TableHead data-testid="campaign-domains-col-dns">DNS</TableHead>
                       <TableHead data-testid="campaign-domains-col-http">HTTP</TableHead>
+                      <TableHead data-testid="campaign-domains-col-richness">Richness</TableHead>
+                      <TableHead data-testid="campaign-domains-col-topkeywords">Top Keywords</TableHead>
+                      <TableHead data-testid="campaign-domains-col-microcrawl">Microcrawl</TableHead>
                       <TableHead data-testid="campaign-domains-col-lead">Lead</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -166,9 +178,12 @@ export const DomainsList: React.FC<DomainsListProps> = ({ campaignId }) => {
                         <Table className="table-fixed w-full">
                           <TableBody>
                             <TableRow key={`${d.id || d.domain || index}`}> 
-                              <TableCell className="font-medium truncate max-w-[240px]" data-testid="campaign-domains-virtual-cell-domain">{d.domain || d.name || d.domainName}</TableCell>
+                              <TableCell className="font-medium truncate max-w-[180px]" data-testid="campaign-domains-virtual-cell-domain">{d.domain || d.name || d.domainName}</TableCell>
                               <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-dns">{d.dnsStatus || '—'}</TableCell>
                               <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-http">{d.httpStatus || '—'}</TableCell>
+                              <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-richness"><RichnessBadge features={d.features} /></TableCell>
+                              <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-topkeywords"><TopKeywordsList features={d.features} /></TableCell>
+                              <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-microcrawl"><MicrocrawlGainChip features={d.features} /></TableCell>
                               <TableCell className="truncate" data-testid="campaign-domains-virtual-cell-lead">{d.leadStatus || '—'}</TableCell>
                             </TableRow>
                           </TableBody>

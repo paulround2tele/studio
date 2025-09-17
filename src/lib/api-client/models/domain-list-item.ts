@@ -13,6 +13,9 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { DomainAnalysisFeatures } from './domain-analysis-features';
 
 /**
  * 
@@ -74,5 +77,11 @@ export interface DomainListItem {
      * @memberof DomainListItem
      */
     'httpReason'?: string;
+    /**
+     * 
+     * @type {DomainAnalysisFeatures}
+     * @memberof DomainListItem
+     */
+    'features'?: DomainAnalysisFeatures;
 }
 

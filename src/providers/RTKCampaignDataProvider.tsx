@@ -36,29 +36,11 @@ interface RTKCampaignDataProviderProps {
 export function RTKCampaignDataProvider({ children }: RTKCampaignDataProviderProps) {
   // Step 1: Get list of campaign IDs
   const { 
-    data: campaignsListRaw, 
+    data: campaignsList, 
     isLoading: isLoadingIds, 
     error: idsError,
     refetch: refetchIds
   } = useGetCampaignsStandaloneQuery();
-
-  // DEBUG: Diagnose shape & contents (will remove after fix confirmed)
-  // eslint-disable-next-line no-console
-  console.log('[DEBUG] campaignsListRaw value', campaignsListRaw);
-
-  // Defensive normalization: accept already-parsed array, wrapped envelope, or unexpected object.
-  const campaignsList = useMemo(() => {
-    if (!campaignsListRaw) return [] as any[];
-    if (Array.isArray(campaignsListRaw)) return campaignsListRaw as any[];
-    // Some RTK query usage might pass through an envelope-like object accidentally; attempt to unwrap common keys
-    const anyRaw: any = campaignsListRaw;
-    if (Array.isArray(anyRaw.data)) return anyRaw.data;
-    if (Array.isArray(anyRaw.items)) return anyRaw.items;
-    // As last resort, collect values that look like campaigns (have id & name)
-    const vals = Object.values(anyRaw).filter(v => v && typeof v === 'object' && 'id' in (v as any) && 'name' in (v as any));
-    if (vals.length) return vals as any[];
-    return [] as any[];
-  }, [campaignsListRaw]);
 
   // Extract campaign IDs from response - respects backend APIResponse structure
   // Derive campaigns map directly; list of ids not needed currently

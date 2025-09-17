@@ -30,6 +30,7 @@ import { toRtkError } from '@/lib/utils/toRtkError';
 // Centralized API configuration targeting /api/v2
 const campaignsApi = new CampaignsApi(apiConfiguration);
 
+
 export const campaignApi = createApi({
   reducerPath: 'campaignApi',
   baseQuery: fetchBaseQuery({
@@ -75,22 +76,7 @@ export const campaignApi = createApi({
       queryFn: async () => {
         try {
           const response = await campaignsApi.campaignsList();
-          // TEMP DEBUG instrumentation to inspect actual shape coming back from generated client
-          // (Will be removed once confirmed.)
-          // eslint-disable-next-line no-console
-          console.log('[DEBUG] campaignsList raw response', response);
-          let data: CampaignResponse[] = [];
-          try {
-            data = extractResponseData<CampaignResponse[]>(response) || [];
-          } catch (e) {
-            // Fallback strategies: common shapes: response.data?.data (array), response.data (array)
-            const anyResp: any = response as any;
-            if (Array.isArray(anyResp?.data?.data)) data = anyResp.data.data;
-            else if (Array.isArray(anyResp?.data)) data = anyResp.data;
-            else if (Array.isArray(anyResp)) data = anyResp;
-          }
-          // eslint-disable-next-line no-console
-          console.log('[DEBUG] campaignsList normalized data length', data.length);
+          const data = extractResponseData<CampaignResponse[]>(response) || [];
           return { data };
         } catch (error: any) {
           return { error: toRtkError(error) as any };
@@ -100,10 +86,7 @@ export const campaignApi = createApi({
     }),
 
     // Domains list for a campaign (replaces legacy bulk enriched-data usage for domains)
-    getCampaignDomains: builder.query<
-      CampaignDomainsListResponse,
-      { campaignId: string; limit?: number; offset?: number }
-    >({
+    getCampaignDomains: builder.query<CampaignDomainsListResponse, { campaignId: string; limit?: number; offset?: number }>({
       queryFn: async ({ campaignId, limit, offset }) => {
         try {
           const response = await campaignsApi.campaignsDomainsList(campaignId, limit, offset);

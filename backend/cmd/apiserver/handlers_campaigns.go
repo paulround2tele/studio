@@ -1122,6 +1122,13 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 			return gen.CampaignsDomainsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed advanced domain listing", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
 		items := make([]gen.DomainListItem, 0, len(page.Data))
+		var featureMap map[string]map[string]any
+		if h.deps != nil && h.deps.Orchestrator != nil {
+			// Non-fatal on error
+			if fm, err := h.deps.Orchestrator.FetchAnalysisReadyFeatures(ctx, uuid.UUID(r.CampaignId)); err == nil {
+				featureMap = fm
+			}
+		}
 		for _, gd := range page.Data {
 			if gd == nil {
 				continue
@@ -1154,7 +1161,11 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 			id := openapi_types.UUID(gd.ID)
 			createdAt := gd.CreatedAt
 			domainCopy := gd.DomainName
-			items = append(items, gen.DomainListItem{Id: &id, Domain: &domainCopy, Offset: offsetPtr, CreatedAt: &createdAt, DnsStatus: dnsStatusPtr, HttpStatus: httpStatusPtr, LeadStatus: leadStatusPtr, DnsReason: dnsReasonPtr, HttpReason: httpReasonPtr})
+			var features *gen.DomainAnalysisFeatures
+			if fv, ok := featureMap[domainCopy]; ok {
+				features = mapRawToDomainAnalysisFeatures(fv)
+			}
+			items = append(items, gen.DomainListItem{Id: &id, Domain: &domainCopy, Offset: offsetPtr, CreatedAt: &createdAt, DnsStatus: dnsStatusPtr, HttpStatus: httpStatusPtr, LeadStatus: leadStatusPtr, DnsReason: dnsReasonPtr, HttpReason: httpReasonPtr, Features: features})
 		}
 		resp := gen.CampaignDomainsListResponse{CampaignId: openapi_types.UUID(r.CampaignId), Items: items}
 		if counters != nil {
@@ -1163,6 +1174,8 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		} else {
 			resp.Total = len(items)
 		}
+		// If feature map present, perform a JSON-level augmentation by serializing then injecting 'features'
+		// features already embedded per item
 		return gen.CampaignsDomainsList200JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
 	}
 
@@ -1172,6 +1185,12 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 	}
 
 	items := make([]gen.DomainListItem, 0, len(rows))
+	var featureMap map[string]map[string]any
+	if h.deps != nil && h.deps.Orchestrator != nil {
+		if fm, err := h.deps.Orchestrator.FetchAnalysisReadyFeatures(ctx, uuid.UUID(r.CampaignId)); err == nil {
+			featureMap = fm
+		}
+	}
 	for _, gd := range rows {
 		if gd == nil {
 			continue
@@ -1204,7 +1223,11 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		id := openapi_types.UUID(gd.ID)
 		createdAt := gd.CreatedAt
 		domainCopy := gd.DomainName
-		items = append(items, gen.DomainListItem{Id: &id, Domain: &domainCopy, Offset: offsetPtr, CreatedAt: &createdAt, DnsStatus: dnsStatusPtr, HttpStatus: httpStatusPtr, LeadStatus: leadStatusPtr, DnsReason: dnsReasonPtr, HttpReason: httpReasonPtr})
+		var features *gen.DomainAnalysisFeatures
+		if fv, ok := featureMap[domainCopy]; ok {
+			features = mapRawToDomainAnalysisFeatures(fv)
+		}
+		items = append(items, gen.DomainListItem{Id: &id, Domain: &domainCopy, Offset: offsetPtr, CreatedAt: &createdAt, DnsStatus: dnsStatusPtr, HttpStatus: httpStatusPtr, LeadStatus: leadStatusPtr, DnsReason: dnsReasonPtr, HttpReason: httpReasonPtr, Features: features})
 	}
 
 	resp := gen.CampaignDomainsListResponse{CampaignId: openapi_types.UUID(r.CampaignId), Items: items}
@@ -1214,6 +1237,7 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 	} else {
 		resp.Total = len(items)
 	}
+	// features already embedded
 	return gen.CampaignsDomainsList200JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
 }
 
@@ -1263,6 +1287,109 @@ func (h *strictHandlers) CampaignsDomainGenerationPatternOffset(ctx context.Cont
 	}
 	data := gen.PatternOffsetResponse{CurrentOffset: &current}
 	return gen.CampaignsDomainGenerationPatternOffset200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+}
+
+// augmentDomainFeatures injects feature objects into response.Items by converting each item to a generic map then back.
+// Because generated structs lack 'features' until next Go codegen integration, we append via reflection-safe JSON maps.
+// mapRawToDomainAnalysisFeatures converts raw nested map to typed struct.
+func mapRawToDomainAnalysisFeatures(raw map[string]any) *gen.DomainAnalysisFeatures {
+	if raw == nil {
+		return nil
+	}
+	kw, _ := raw["keywords"].(map[string]any)
+	rich, _ := raw["richness"].(map[string]any)
+	mc, _ := raw["microcrawl"].(map[string]any)
+	toFloat32 := func(v any) *float32 {
+		switch x := v.(type) {
+		case float64:
+			f := float32(x)
+			return &f
+		case float32:
+			return &x
+		case int:
+			f := float32(x)
+			return &f
+		default:
+			return nil
+		}
+	}
+	toInt64 := func(v any) *int64 {
+		switch x := v.(type) {
+		case int64:
+			return &x
+		case int:
+			xi := int64(x)
+			return &xi
+		case float64:
+			xi := int64(x)
+			return &xi
+		default:
+			return nil
+		}
+	}
+	var top3 *[]string
+	if arr, ok := kw["top3"].([]any); ok {
+		tmp := make([]string, 0, len(arr))
+		for _, e := range arr {
+			if s, ok := e.(string); ok {
+				tmp = append(tmp, s)
+			}
+		}
+		top3 = &tmp
+	} else if arrs, ok := kw["top3"].([]string); ok {
+		top3 = &arrs
+	}
+	var sigMap *map[string]int32
+	if sd, ok := kw["signal_distribution"].(map[string]any); ok {
+		tmp := make(map[string]int32, len(sd))
+		for k, v := range sd {
+			switch n := v.(type) {
+			case float64:
+				tmp[k] = int32(n)
+			case int:
+				tmp[k] = int32(n)
+			case int64:
+				tmp[k] = int32(n)
+			}
+		}
+		sigMap = &tmp
+	}
+	keywordsStruct := &gen.DomainAnalysisFeaturesKeywords{
+		UniqueCount:        toInt64(kw["unique_count"]),
+		HitsTotal:          toInt64(kw["hits_total"]),
+		WeightSum:          toFloat32(kw["weight_sum"]),
+		Top3:               top3,
+		SignalDistribution: sigMap,
+	}
+	richnessStruct := &gen.DomainAnalysisFeaturesRichness{
+		Score: toFloat32(rich["score"]),
+		Version: func() *int32 {
+			if v := rich["version"]; v != nil {
+				switch x := v.(type) {
+				case int:
+					t := int32(x)
+					return &t
+				case int32:
+					return &x
+				case float64:
+					t := int32(x)
+					return &t
+				}
+			}
+			return nil
+		}(),
+		ProminenceNorm:           toFloat32(rich["prominence_norm"]),
+		DiversityEffectiveUnique: toFloat32(rich["diversity_effective_unique"]),
+		DiversityNorm:            toFloat32(rich["diversity_norm"]),
+		EnrichmentNorm:           toFloat32(rich["enrichment_norm"]),
+		AppliedBonus:             toFloat32(rich["applied_bonus"]),
+		AppliedDeductionsTotal:   toFloat32(rich["applied_deductions_total"]),
+		StuffingPenalty:          toFloat32(rich["stuffing_penalty"]),
+		RepetitionIndex:          toFloat32(rich["repetition_index"]),
+		AnchorShare:              toFloat32(rich["anchor_share"]),
+	}
+	microcrawlStruct := &gen.DomainAnalysisFeaturesMicrocrawl{GainRatio: toFloat32(mc["gain_ratio"])}
+	return &gen.DomainAnalysisFeatures{Keywords: keywordsStruct, Richness: richnessStruct, Microcrawl: microcrawlStruct}
 }
 
 // CampaignsStateGet implements GET /campaigns/{campaignId}/state
