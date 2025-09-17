@@ -7,11 +7,11 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
-    "net/url"
+	"sort"
 	"strings"
 	"time"
-    "sort"
 
 	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
 	application "github.com/fntelecomllc/studio/backend/internal/application"
@@ -1205,11 +1205,15 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		}
 		if v := getQueryRaw(ctx, "dir"); v != "" { // helper to fetch raw query when generator lacks field
 			vd := strings.ToLower(v)
-			if vd == "asc" || vd == "desc" { requestedSortDir = vd }
+			if vd == "asc" || vd == "desc" {
+				requestedSortDir = vd
+			}
 		}
 		if v := getQueryRaw(ctx, "warnings"); v != "" {
 			vw := strings.ToLower(v)
-			if vw == "has" || vw == "none" { requestedWarnings = vw }
+			if vw == "has" || vw == "none" {
+				requestedWarnings = vw
+			}
 		}
 	}
 
@@ -1227,16 +1231,34 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 	}
 
 	for _, gd := range rows { // initial translation irrespective of sort flag (we may resort later)
-		if gd == nil { continue }
+		if gd == nil {
+			continue
+		}
 		var offsetPtr *int64
-		if gd.OffsetIndex >= 0 { tmp := gd.OffsetIndex; offsetPtr = &tmp }
+		if gd.OffsetIndex >= 0 {
+			tmp := gd.OffsetIndex
+			offsetPtr = &tmp
+		}
 		var dnsStatusPtr, httpStatusPtr, leadStatusPtr *string
-		if gd.DNSStatus != nil { v := string(*gd.DNSStatus); dnsStatusPtr = &v }
-		if gd.HTTPStatus != nil { v := string(*gd.HTTPStatus); httpStatusPtr = &v }
-		if gd.LeadStatus != nil { v := string(*gd.LeadStatus); leadStatusPtr = &v }
+		if gd.DNSStatus != nil {
+			v := string(*gd.DNSStatus)
+			dnsStatusPtr = &v
+		}
+		if gd.HTTPStatus != nil {
+			v := string(*gd.HTTPStatus)
+			httpStatusPtr = &v
+		}
+		if gd.LeadStatus != nil {
+			v := string(*gd.LeadStatus)
+			leadStatusPtr = &v
+		}
 		var dnsReasonPtr, httpReasonPtr *string
-		if gd.DNSReason.Valid { dnsReasonPtr = &gd.DNSReason.String }
-		if gd.HTTPReason.Valid { httpReasonPtr = &gd.HTTPReason.String }
+		if gd.DNSReason.Valid {
+			dnsReasonPtr = &gd.DNSReason.String
+		}
+		if gd.HTTPReason.Valid {
+			httpReasonPtr = &gd.HTTPReason.String
+		}
 		id := openapi_types.UUID(gd.ID)
 		createdAt := gd.CreatedAt
 		domainCopy := gd.DomainName
@@ -1254,7 +1276,9 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 			filtered := make([]gen.DomainListItem, 0, len(items))
 			for _, it := range items {
 				if it.Features == nil || it.Features.Richness == nil { // treat missing richness as clean
-					if requestedWarnings == "none" { filtered = append(filtered, it) }
+					if requestedWarnings == "none" {
+						filtered = append(filtered, it)
+					}
 					continue
 				}
 				stuff := toFloat32Val(it.Features.Richness.StuffingPenalty)
@@ -1275,17 +1299,25 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 			sort.SliceStable(items, func(i, j int) bool {
 				vi := sortMetricValue(items[i], requestedSortField)
 				vj := sortMetricValue(items[j], requestedSortField)
-				if vi == vj { return i < j } // stable fallback
-				if requestedSortDir == "asc" { return vi < vj }
+				if vi == vj {
+					return i < j
+				} // stable fallback
+				if requestedSortDir == "asc" {
+					return vi < vj
+				}
 				return vi > vj
 			})
 		}
 		// Augment metadata.extra
 		if meta != nil {
-			if meta.Extra == nil { meta.Extra = &map[string]interface{}{} }
+			if meta.Extra == nil {
+				meta.Extra = &map[string]interface{}{}
+			}
 			extra := *meta.Extra
 			extra["sort"] = map[string]any{"field": requestedSortField, "direction": requestedSortDir}
-			if requestedWarnings != "" { extra["filter"] = map[string]any{"warnings": requestedWarnings} }
+			if requestedWarnings != "" {
+				extra["filter"] = map[string]any{"warnings": requestedWarnings}
+			}
 			meta.Extra = &extra
 		}
 	}
@@ -1324,7 +1356,12 @@ func getQueryRaw(ctx context.Context, key string) string {
 }
 
 // toFloat32Val safely dereferences *float32 returning 0 when nil
-func toFloat32Val(p *float32) float32 { if p == nil { return 0 }; return *p }
+func toFloat32Val(p *float32) float32 {
+	if p == nil {
+		return 0
+	}
+	return *p
+}
 
 // sortMetricValue extracts a float comparison key from DomainListItem given a field name.
 // Missing metrics map to -Inf so they sink to the bottom for descending order and rise for ascending with caller logic.
@@ -1335,11 +1372,17 @@ func sortMetricValue(it gen.DomainListItem, field string) float64 {
 	}
 	switch field {
 	case "microcrawl_gain":
-		if it.Features.Microcrawl != nil && it.Features.Microcrawl.GainRatio != nil { return float64(*it.Features.Microcrawl.GainRatio) }
+		if it.Features.Microcrawl != nil && it.Features.Microcrawl.GainRatio != nil {
+			return float64(*it.Features.Microcrawl.GainRatio)
+		}
 	case "keywords_unique":
-		if it.Features.Keywords != nil && it.Features.Keywords.UniqueCount != nil { return float64(*it.Features.Keywords.UniqueCount) }
+		if it.Features.Keywords != nil && it.Features.Keywords.UniqueCount != nil {
+			return float64(*it.Features.Keywords.UniqueCount)
+		}
 	default: // richness_score
-		if it.Features.Richness != nil && it.Features.Richness.Score != nil { return float64(*it.Features.Richness.Score) }
+		if it.Features.Richness != nil && it.Features.Richness.Score != nil {
+			return float64(*it.Features.Richness.Score)
+		}
 	}
 	return negInf
 }
