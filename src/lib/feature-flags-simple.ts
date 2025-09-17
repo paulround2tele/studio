@@ -69,6 +69,11 @@ export const PHASE1_FLAGS = {
   CAMPAIGN_OVERVIEW_V2: 'CAMPAIGN_OVERVIEW_V2'
 } as const;
 
+// Phase 2 feature flags
+export const PHASE2_FLAGS = {
+  SHOW_LEGACY_DOMAINS_TABLE: 'SHOW_LEGACY_DOMAINS_TABLE'
+} as const;
+
 /**
  * Check if campaign wizard should be used (default enabled unless explicitly disabled)
  */
@@ -84,4 +89,11 @@ export function useCampaignWizard(): boolean {
  */
 export function useCampaignOverviewV2(): boolean {
   return isFeatureEnabled(PHASE1_FLAGS.CAMPAIGN_OVERVIEW_V2, false);
+}
+
+/**
+ * Check if legacy domains table should be shown (Phase 2)
+ */
+export function useShowLegacyDomainsTable(): boolean {
+  return isFeatureEnabled(PHASE2_FLAGS.SHOW_LEGACY_DOMAINS_TABLE, false);
 }
