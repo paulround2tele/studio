@@ -6,13 +6,16 @@ import { Button } from '@/components/ui/button';
 import { AlertCircle, Briefcase, Loader2, ArrowLeft } from 'lucide-react';
 
 import type { CampaignResponse } from '@/lib/api-client/models';
-import { useGetCampaignEnrichedQuery } from '@/store/api/campaignApi';
+import { useGetCampaignEnrichedQuery, useGetCampaignDomainsQuery } from '@/store/api/campaignApi';
+import { isFlagEnabled, FEATURE_FLAGS } from '@/utils/featureFlags';
+import { useDomainClassification } from '@/hooks/refactor/useDomainClassification';
 
 // Professional components using real OpenAPI types
 import PageHeader from '@/components/shared/PageHeader';
 // Removed legacy CampaignHeader (superseded by OverviewCard within workspace)
 import CampaignControls from '@/components/campaigns/CampaignControls';
 import DomainsList from '@/components/campaigns/DomainsList';
+import { CampaignOverviewV2 } from '@/components/refactor/overview/CampaignOverviewV2';
 
 interface _CampaignPageParams {
   id: string;
@@ -22,11 +25,22 @@ export default function CampaignPage() {
   const params = useParams();
   const router = useRouter();
   const campaignId = params?.id as string;
+  
   // Use enriched campaign endpoint via RTK Query
   const { data: enriched, isLoading: loading, error } = useGetCampaignEnrichedQuery(campaignId);
   const campaign: CampaignResponse | null = enriched?.campaign ?? null;
   const phaseExecutions = enriched?.phaseExecutions;
   const state = enriched?.state;
+
+  // Fetch domains for overview (only when overview is enabled)
+  const overviewEnabled = isFlagEnabled(FEATURE_FLAGS.CAMPAIGN_OVERVIEW_V2, false);
+  const { data: domainsResponse } = useGetCampaignDomainsQuery(
+    { campaignId, limit: 1000, offset: 0 },
+    { skip: !overviewEnabled || !campaignId }
+  );
+  
+  // Transform domains for classification
+  const domainFeatures = useDomainClassification(domainsResponse?.items || []);
 
   const handleBack = () => {
     router.push('/campaigns');
@@ -92,18 +106,22 @@ export default function CampaignPage() {
         onBack={handleBack}
       />
 
-  {/* Overview details now provided through unified workspace (CampaignHeader removed) */}
-      
-      {/* Professional campaign progress using real enum values */}
-  {/* Removed CampaignProgress (redundant) now represented in overview + stepper */}
-      
+      {/* Campaign Overview V2 (feature gated) */}
+      {overviewEnabled && campaign && (
+        <CampaignOverviewV2
+          campaign={campaign}
+          domains={domainFeatures}
+          phaseExecutions={phaseExecutions}
+        />
+      )}
+
       {/* Professional campaign controls (disaster recovery component) */}
-  <CampaignControls campaign={campaign} state={state} phaseExecutions={phaseExecutions} />
+      <CampaignControls campaign={campaign} state={state} phaseExecutions={phaseExecutions} />
 
-  {/* Generated domains table */}
-  <DomainsList campaignId={campaign.id} />
+      {/* Generated domains table */}
+      <DomainsList campaignId={campaign.id} />
 
-  {/* CampaignControls is the single source of truth for phase configuration & execution (CampaignPhaseManager removed) */}
+      {/* CampaignControls is the single source of truth for phase configuration & execution (CampaignPhaseManager removed) */}
     </div>
   );
 }
