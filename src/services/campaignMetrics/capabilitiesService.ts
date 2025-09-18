@@ -7,7 +7,6 @@
 import { telemetryService } from './telemetryService';
 
 // Declare process for Node.js environment variables
-declare const process: any;
 
 /**
  * Server capabilities response structure
