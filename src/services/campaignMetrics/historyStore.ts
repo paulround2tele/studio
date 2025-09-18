@@ -14,6 +14,7 @@ interface HistoryEntry {
 interface CampaignHistory {
   entries: HistoryEntry[];
   maxSnapshots: number;
+  lastServerSync?: string; // Phase 5: Last server sync timestamp
 }
 
 // In-memory store
@@ -313,4 +314,65 @@ export function getMemoryStats(): {
     totalSnapshots,
     estimatedSizeKB: estimatedSize
   };
+}
+
+/**
+ * Integrate server snapshot batch (Phase 5)
+ * Adds server snapshots to history store without duplicates
+ */
+export function integrateServerSnapshotBatch(
+  campaignId: string,
+  serverSnapshots: AggregateSnapshot[]
+): number {
+  if (!isEnabled() || serverSnapshots.length === 0) {
+    return 0;
+  }
+
+  let addedCount = 0;
+  const existingIds = new Set(
+    getSnapshots(campaignId).map(snapshot => snapshot.id)
+  );
+
+  for (const snapshot of serverSnapshots) {
+    // Skip if already exists
+    if (existingIds.has(snapshot.id)) {
+      continue;
+    }
+
+    try {
+      addSnapshot(campaignId, snapshot, true); // Pin server snapshots
+      addedCount++;
+      existingIds.add(snapshot.id);
+    } catch (error) {
+      console.warn(`Failed to integrate server snapshot ${snapshot.id}:`, error);
+    }
+  }
+
+  // Update last server sync timestamp
+  if (addedCount > 0) {
+    const history = store.get(campaignId);
+    if (history) {
+      history.lastServerSync = new Date().toISOString();
+    }
+  }
+
+  return addedCount;
+}
+
+/**
+ * Get last server sync timestamp (Phase 5)
+ */
+export function getLastServerSync(campaignId: string): string | null {
+  const history = store.get(campaignId);
+  return history?.lastServerSync || null;
+}
+
+/**
+ * Set last server sync timestamp (Phase 5)
+ */
+export function setLastServerSync(campaignId: string, timestamp: string): void {
+  const history = store.get(campaignId);
+  if (history) {
+    history.lastServerSync = timestamp;
+  }
 }
