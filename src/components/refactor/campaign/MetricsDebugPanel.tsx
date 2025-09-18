@@ -1,5 +1,5 @@
 /**
- * Metrics Debug Panel (Phase 4)
+ * Metrics Debug Panel (Phase 4, Updated for Phase 5)
  * Development debugging panel for metrics inspection
  */
 
@@ -11,8 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { getPerformanceStats, getTimingStats, clearPerformanceData, exportPerformanceData } from '@/services/campaignMetrics/metricsPerf';
 import { getMemoryStats } from '@/services/campaignMetrics/historyStore';
+import { getStreamPoolStats } from '@/services/campaignMetrics/streamPool';
+import { getTelemetryStatus } from '@/services/campaignMetrics/telemetryService';
 import type { ConnectionState } from '@/services/campaignMetrics/progressChannel';
 import type { AggregateSnapshot } from '@/types/campaignMetrics';
+import type { Anomaly } from '@/services/campaignMetrics/anomalyService';
+import type { PortfolioSummary, PortfolioOutlier } from '@/services/campaignMetrics/portfolioMetricsService';
 
 // Feature flag
 const ENABLE_DEBUG_PANEL = process.env.NEXT_PUBLIC_DEBUG_METRICS_PANEL === 'true' || 
@@ -23,6 +27,9 @@ interface MetricsDebugPanelProps {
   connectionState?: ConnectionState;
   lastDeltas?: any[];
   topMovers?: any[];
+  anomalies?: Anomaly[];
+  portfolioSummary?: PortfolioSummary | null;
+  portfolioOutliers?: PortfolioOutlier[];
   className?: string;
 }
 
@@ -40,11 +47,16 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
   connectionState = 'disconnected',
   lastDeltas = [],
   topMovers = [],
+  anomalies = [],
+  portfolioSummary = null,
+  portfolioOutliers = [],
   className
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [perfMetrics, setPerfMetrics] = useState<PerformanceMetric[]>([]);
   const [memoryStats, setMemoryStats] = useState<any>(null);
+  const [streamStats, setStreamStats] = useState<any>(null);
+  const [telemetryStats, setTelemetryStats] = useState<any>(null);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
 
   // Check if debug panel should be shown
@@ -73,6 +85,13 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
       // Get memory stats
       const memory = getMemoryStats();
       setMemoryStats(memory);
+
+      // Get Phase 5 stats
+      const streamPoolStats = getStreamPoolStats();
+      setStreamStats(streamPoolStats);
+
+      const telemetryStatus = getTelemetryStatus();
+      setTelemetryStats(telemetryStatus);
     };
 
     updateMetrics();
@@ -147,12 +166,15 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
       
       <CardContent className="space-y-4">
         <Tabs defaultValue="snapshots" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="snapshots">Snapshots</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-8 text-xs">
+            <TabsTrigger value="snapshots">Timeline</TabsTrigger>
+            <TabsTrigger value="anomalies">Anomalies</TabsTrigger>
+            <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+            <TabsTrigger value="export">Export</TabsTrigger>
+            <TabsTrigger value="telemetry">Telemetry</TabsTrigger>
             <TabsTrigger value="deltas">Deltas</TabsTrigger>
             <TabsTrigger value="movers">Movers</TabsTrigger>
             <TabsTrigger value="performance">Performance</TabsTrigger>
-            <TabsTrigger value="connection">Connection</TabsTrigger>
           </TabsList>
 
           <TabsContent value="snapshots" className="space-y-2">
@@ -296,6 +318,148 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
             </div>
           </TabsContent>
 
+          {/* Phase 5 New Tabs */}
+          <TabsContent value="anomalies" className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-medium">Detected Anomalies ({anomalies.length})</h4>
+              {process.env.NEXT_PUBLIC_ENABLE_ANOMALY_RULES !== 'false' && (
+                <Badge variant="outline" className="text-xs bg-green-50">
+                  Enabled
+                </Badge>
+              )}
+            </div>
+            
+            <div className="space-y-1 max-h-40 overflow-y-auto">
+              {anomalies.map((anomaly, index) => (
+                <div
+                  key={index}
+                  className="text-xs p-2 bg-red-50 border border-red-200 rounded"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-red-800">{anomaly.metric}</span>
+                    <Badge 
+                      variant={anomaly.severity === 'critical' ? 'destructive' : 'outline'} 
+                      className="text-xs"
+                    >
+                      {anomaly.severity}
+                    </Badge>
+                  </div>
+                  <div className="text-red-700 mt-1">{anomaly.description}</div>
+                  <div className="text-red-600 text-xs mt-1">
+                    Z-Score: {anomaly.zScore.toFixed(2)} | Value: {anomaly.value}
+                  </div>
+                </div>
+              ))}
+              
+              {anomalies.length === 0 && (
+                <div className="text-xs text-gray-500 italic text-center py-4">
+                  No anomalies detected
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="portfolio" className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-medium">Portfolio Metrics</h4>
+              {process.env.NEXT_PUBLIC_ENABLE_PORTFOLIO_METRICS !== 'false' && (
+                <Badge variant="outline" className="text-xs bg-green-50">
+                  Enabled
+                </Badge>
+              )}
+            </div>
+            
+            {portfolioSummary ? (
+              <div className="space-y-2">
+                <div className="text-xs p-2 bg-blue-50 border border-blue-200 rounded">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>Campaigns: {portfolioSummary.totalCampaigns}</div>
+                    <div>Total Domains: {portfolioSummary.totalDomains}</div>
+                    <div>Avg Success: {(portfolioSummary.avgSuccessRate * 100).toFixed(1)}%</div>
+                    <div>Total Leads: {portfolioSummary.totalLeads}</div>
+                  </div>
+                </div>
+                
+                {portfolioOutliers.length > 0 && (
+                  <div className="space-y-1">
+                    <div className="text-xs font-medium">Outliers ({portfolioOutliers.length})</div>
+                    {portfolioOutliers.slice(0, 3).map((outlier, index) => (
+                      <div key={index} className="text-xs p-1 bg-yellow-50 border border-yellow-200 rounded">
+                        {outlier.campaignId.slice(0, 8)}: {outlier.metric} ({outlier.severity})
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-xs text-gray-500 italic text-center py-4">
+                Portfolio metrics not available (need ≥2 campaigns)
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="export" className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-medium">Export Status</h4>
+              {process.env.NEXT_PUBLIC_ENABLE_EXPORT_TOOLS !== 'false' && (
+                <Badge variant="outline" className="text-xs bg-green-50">
+                  Enabled
+                </Badge>
+              )}
+            </div>
+            
+            <div className="space-y-2">
+              <div className="text-xs p-2 bg-gray-50 border rounded">
+                <div>Available Snapshots: {snapshots.length}</div>
+                <div>Estimated Size: {Math.round(JSON.stringify(snapshots).length / 1024)}KB</div>
+                <div>Export Formats: JSON, CSV, Share Bundle</div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-2">
+                <Button size="sm" variant="outline" className="text-xs">
+                  Test JSON
+                </Button>
+                <Button size="sm" variant="outline" className="text-xs">
+                  Test CSV
+                </Button>
+                <Button size="sm" variant="outline" className="text-xs">
+                  Test Bundle
+                </Button>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="telemetry" className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-medium">Telemetry Status</h4>
+              {telemetryStats?.enabled && (
+                <Badge variant="outline" className="text-xs bg-green-50">
+                  {telemetryStats.inSample ? 'Sampling' : 'Enabled'}
+                </Badge>
+              )}
+            </div>
+            
+            {telemetryStats && (
+              <div className="space-y-2">
+                <div className="text-xs p-2 bg-gray-50 border rounded">
+                  <div>Session: {telemetryStats.sessionId.slice(0, 12)}...</div>
+                  <div>Sampling Rate: {(telemetryStats.samplingRate * 100).toFixed(1)}%</div>
+                  <div>In Sample: {telemetryStats.inSample ? 'Yes' : 'No'}</div>
+                  <div>Queue Size: {telemetryStats.queueSize}</div>
+                </div>
+                
+                {streamStats && (
+                  <div className="text-xs p-2 bg-blue-50 border border-blue-200 rounded">
+                    <div className="font-medium mb-1">Stream Pool</div>
+                    <div>Active Pools: {streamStats.totalPools}</div>
+                    <div>Total Connections: {streamStats.totalConnections}</div>
+                    <div>Efficiency: {streamStats.totalPools > 0 ? (streamStats.totalConnections / streamStats.totalPools).toFixed(1) : 0}x</div>
+                  </div>
+                )}
+              </div>
+            )}
+          </TabsContent>
+
           <TabsContent value="connection" className="space-y-2">
             <h4 className="text-sm font-medium">Connection Status</h4>
             
@@ -307,9 +471,13 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
               
               <div className="text-xs space-y-1">
                 <div>Last update: {new Date().toLocaleTimeString()}</div>
-                <div>Reconnect attempts: {/* TODO: Add from progress channel metrics */}</div>
-                <div>Total messages: {/* TODO: Add from progress channel metrics */}</div>
-                <div>Uptime: {/* TODO: Add from progress channel metrics */}</div>
+                <div>Stream pooling: {process.env.NEXT_PUBLIC_STREAM_POOLING !== 'false' ? 'Enabled' : 'Disabled'}</div>
+                {streamStats && (
+                  <>
+                    <div>Active streams: {streamStats.totalPools}</div>
+                    <div>Total refs: {streamStats.totalConnections}</div>
+                  </>
+                )}
               </div>
             </div>
           </TabsContent>

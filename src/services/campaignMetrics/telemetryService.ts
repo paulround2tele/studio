@@ -1,0 +1,327 @@
+/**
+ * Telemetry Service (Phase 5)
+ * Sampling-based metrics collection for Phase 5 features
+ */
+
+// Feature flag for telemetry
+const isTelemetryEnabled = () => {
+  const sampling = parseFloat(process.env.NEXT_PUBLIC_METRICS_TELEMETRY_SAMPLING || '0');
+  return sampling > 0;
+};
+
+const getTelemetrySampling = (): number => {
+  return parseFloat(process.env.NEXT_PUBLIC_METRICS_TELEMETRY_SAMPLING || '0.25');
+};
+
+/**
+ * Telemetry event schema (metrics-v1)
+ */
+export interface TelemetryEvent {
+  type: 'timeline_hydrate' | 'anomaly_detect' | 'worker_task' | 'stream_pool_state' | 'export_generated';
+  timestamp: string;
+  sessionId: string;
+  data: Record<string, any>;
+}
+
+/**
+ * Specific telemetry event data types
+ */
+export interface TimelineHydrateEvent {
+  campaignId: string;
+  serverCount: number;
+  mergedCount: number;
+  durationMs: number;
+}
+
+export interface AnomalyDetectEvent {
+  campaignId: string;
+  anomalies: number;
+}
+
+export interface WorkerTaskEvent {
+  taskType: string;
+  queueTimeMs: number;
+  execTimeMs: number;
+  domains: number;
+  hadPrevious: boolean;
+}
+
+export interface StreamPoolStateEvent {
+  url: string;
+  refCount: number;
+  missedHeartbeats?: number;
+  status?: string;
+}
+
+export interface ExportGeneratedEvent {
+  type: 'json' | 'csv' | 'bundle';
+  snapshots: number;
+  sizeMB: number;
+}
+
+/**
+ * Telemetry service class
+ */
+class TelemetryService {
+  private sessionId: string;
+  private isInSample: boolean;
+  private eventQueue: TelemetryEvent[] = [];
+  private flushInterval: ReturnType<typeof setInterval> | null = null;
+  private maxQueueSize = 100;
+  private flushIntervalMs = 30000; // 30 seconds
+
+  constructor() {
+    this.sessionId = this.generateSessionId();
+    this.isInSample = this.checkSampling();
+    
+    if (this.isInSample) {
+      this.startFlushInterval();
+      // Expose to global for other services
+      if (typeof window !== 'undefined') {
+        (window as any).__telemetryService = this;
+      }
+    }
+  }
+
+  /**
+   * Initialize telemetry service
+   */
+  public initTelemetry(): void {
+    if (!isTelemetryEnabled()) {
+      return;
+    }
+
+    console.log(`[Telemetry] Initialized with sampling rate: ${getTelemetrySampling()}, in sample: ${this.isInSample}`);
+    
+    if (this.isInSample) {
+      this.emitTelemetry('session_start', {
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+
+  /**
+   * Emit a telemetry event
+   */
+  public emitTelemetry(
+    type: TelemetryEvent['type'],
+    data: Record<string, any>
+  ): void {
+    if (!isTelemetryEnabled() || !this.isInSample) {
+      return;
+    }
+
+    const event: TelemetryEvent = {
+      type,
+      timestamp: new Date().toISOString(),
+      sessionId: this.sessionId,
+      data
+    };
+
+    this.eventQueue.push(event);
+
+    // Flush if queue is full
+    if (this.eventQueue.length >= this.maxQueueSize) {
+      this.flush();
+    }
+  }
+
+  /**
+   * Emit timeline hydration event
+   */
+  public emitTimelineHydrate(data: TimelineHydrateEvent): void {
+    this.emitTelemetry('timeline_hydrate', data);
+  }
+
+  /**
+   * Emit anomaly detection event
+   */
+  public emitAnomalyDetect(data: AnomalyDetectEvent): void {
+    this.emitTelemetry('anomaly_detect', data);
+  }
+
+  /**
+   * Emit worker task event
+   */
+  public emitWorkerTask(data: WorkerTaskEvent): void {
+    this.emitTelemetry('worker_task', data);
+  }
+
+  /**
+   * Emit stream pool state event
+   */
+  public emitStreamPoolState(data: StreamPoolStateEvent): void {
+    this.emitTelemetry('stream_pool_state', data);
+  }
+
+  /**
+   * Emit export generated event
+   */
+  public emitExportGenerated(data: ExportGeneratedEvent): void {
+    this.emitTelemetry('export_generated', data);
+  }
+
+  /**
+   * Flush events to backend
+   */
+  private async flush(): void {
+    if (this.eventQueue.length === 0) {
+      return;
+    }
+
+    const events = [...this.eventQueue];
+    this.eventQueue = [];
+
+    try {
+      // Send to backend telemetry endpoint
+      const response = await fetch('/api/v2/telemetry/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          version: 'metrics-v1',
+          events
+        }),
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error(`Telemetry flush failed: ${response.status}`);
+      }
+    } catch (error) {
+      console.warn('[Telemetry] Failed to flush events:', error);
+      // Re-queue events with limit to prevent memory issues
+      if (this.eventQueue.length < this.maxQueueSize / 2) {
+        this.eventQueue.unshift(...events.slice(-10)); // Keep only last 10 failed events
+      }
+    }
+  }
+
+  /**
+   * Start automatic flushing
+   */
+  private startFlushInterval(): void {
+    if (this.flushInterval) return;
+
+    this.flushInterval = setInterval(() => {
+      this.flush();
+    }, this.flushIntervalMs);
+  }
+
+  /**
+   * Generate unique session ID
+   */
+  private generateSessionId(): string {
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2);
+    return `${timestamp}-${random}`;
+  }
+
+  /**
+   * Check if this session is in the sampling group
+   */
+  private checkSampling(): boolean {
+    const samplingRate = getTelemetrySampling();
+    if (samplingRate <= 0) return false;
+    if (samplingRate >= 1) return true;
+
+    // Use session ID for consistent sampling
+    const hash = this.hashString(this.sessionId);
+    return (hash % 100) / 100 < samplingRate;
+  }
+
+  /**
+   * Simple hash function for consistent sampling
+   */
+  private hashString(str: string): number {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash);
+  }
+
+  /**
+   * Get recent events for debugging
+   */
+  public getRecentEvents(limit: number = 10): TelemetryEvent[] {
+    return this.eventQueue.slice(-limit);
+  }
+
+  /**
+   * Get telemetry status
+   */
+  public getStatus(): {
+    enabled: boolean;
+    inSample: boolean;
+    sessionId: string;
+    queueSize: number;
+    samplingRate: number;
+  } {
+    return {
+      enabled: isTelemetryEnabled(),
+      inSample: this.isInSample,
+      sessionId: this.sessionId,
+      queueSize: this.eventQueue.length,
+      samplingRate: getTelemetrySampling()
+    };
+  }
+
+  /**
+   * Destroy telemetry service
+   */
+  public destroy(): void {
+    if (this.flushInterval) {
+      clearInterval(this.flushInterval);
+      this.flushInterval = null;
+    }
+
+    // Final flush
+    if (this.eventQueue.length > 0) {
+      this.flush();
+    }
+
+    // Clean up global reference
+    if (typeof window !== 'undefined' && (window as any).__telemetryService === this) {
+      delete (window as any).__telemetryService;
+    }
+  }
+}
+
+// Create and export singleton instance
+export const telemetryService = new TelemetryService();
+
+/**
+ * Initialize telemetry service (call once at app startup)
+ */
+export function initTelemetry(): void {
+  telemetryService.initTelemetry();
+}
+
+/**
+ * Emit telemetry event (convenience function)
+ */
+export function emitTelemetry(
+  type: TelemetryEvent['type'],
+  data: Record<string, any>
+): void {
+  telemetryService.emitTelemetry(type, data);
+}
+
+/**
+ * Check if telemetry is available
+ */
+export function isTelemetryAvailable(): boolean {
+  return isTelemetryEnabled();
+}
+
+/**
+ * Get telemetry status
+ */
+export function getTelemetryStatus(): ReturnType<TelemetryService['getStatus']> {
+  return telemetryService.getStatus();
+}

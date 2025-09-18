@@ -1,9 +1,11 @@
 /**
- * Progress Stream Service (Phase 3)
- * SSE or polling abstraction for real-time progress updates
+ * Progress Stream Service (Phase 3, Updated for Phase 5)
+ * SSE or polling abstraction for real-time progress updates with stream pooling
  */
 
 import { ProgressUpdate } from '@/types/campaignMetrics';
+import { subscribeStreamPool, isStreamPoolingAvailable } from './streamPool';
+import { telemetryService } from './telemetryService';
 
 export interface ProgressStreamOptions {
   campaignId: string;
@@ -21,14 +23,18 @@ export interface ProgressStreamCallbacks {
 }
 
 /**
- * Progress stream manager - handles both SSE and polling fallback
+ * Progress stream manager - handles both SSE and polling fallback with stream pooling
  */
 export class ProgressStream {
   private eventSource: EventSource | null = null;
+  private streamUnsubscribe: (() => void) | null = null;
   private pollingTimer: NodeJS.Timeout | null = null;
   private isConnected = false;
   private retryCount = 0;
   private isDestroyed = false;
+  private missedHeartbeats = 0;
+  private lastHeartbeat = Date.now();
+  private heartbeatCheckInterval: NodeJS.Timeout | null = null;
 
   constructor(
     private options: ProgressStreamOptions,
@@ -82,53 +88,133 @@ export class ProgressStream {
   }
 
   /**
-   * Start SSE connection
+   * Start SSE connection with optional stream pooling
    */
   private async startSSE(): Promise<void> {
-    const sseUrl = `/api/campaigns/${this.options.campaignId}/progress/stream`;
+    const sseUrl = `/api/v2/campaigns/${this.options.campaignId}/progress/stream`;
+    const useStreamPooling = isStreamPoolingAvailable();
     
     return new Promise((resolve, reject) => {
-      this.eventSource = new EventSource(sseUrl);
-      
-      this.eventSource.onopen = () => {
-        this.isConnected = true;
-        this.retryCount = 0;
-        this.callbacks.onConnect?.();
-        resolve();
-      };
-
-      this.eventSource.onmessage = (event) => {
-        try {
-          const update: ProgressUpdate = JSON.parse(event.data);
-          this.callbacks.onUpdate(update);
-          
-          // Check if terminal phase
-          if (this.isTerminalPhase(update.phase)) {
-            this.callbacks.onComplete();
-            this.stop();
-          }
-        } catch (error) {
-          this.callbacks.onError(new Error(`Failed to parse SSE data: ${error}`));
-        }
-      };
-
-      this.eventSource.onerror = (error) => {
-        this.isConnected = false;
+      if (useStreamPooling) {
+        // Use stream pooling for Phase 5
+        const subscriberId = `progress-${this.options.campaignId}-${Date.now()}`;
         
-        if (this.retryCount < (this.options.maxRetries || 3)) {
-          this.retryCount++;
-          setTimeout(() => {
-            if (!this.isDestroyed) {
-              this.startSSE().catch(() => {
-                reject(new Error('SSE connection failed'));
-              });
-            }
-          }, 1000 * this.retryCount);
-        } else {
-          reject(new Error('SSE connection failed after retries'));
-        }
-      };
+        this.streamUnsubscribe = subscribeStreamPool(
+          sseUrl,
+          subscriberId,
+          (event: MessageEvent) => {
+            this.handleSSEMessage(event);
+          }
+        );
+        
+        // Simulate connection success for pooled streams
+        setTimeout(() => {
+          this.isConnected = true;
+          this.retryCount = 0;
+          this.callbacks.onConnect?.();
+          this.startHeartbeatMonitoring();
+          resolve();
+        }, 100);
+      } else {
+        // Use direct EventSource for backward compatibility
+        this.eventSource = new EventSource(sseUrl);
+        
+        this.eventSource.onopen = () => {
+          this.isConnected = true;
+          this.retryCount = 0;
+          this.callbacks.onConnect?.();
+          this.startHeartbeatMonitoring();
+          resolve();
+        };
+
+        this.eventSource.onmessage = (event) => {
+          this.handleSSEMessage(event);
+        };
+
+        this.eventSource.onerror = (error) => {
+          this.handleSSEError(reject);
+        };
+      }
     });
+  }
+
+  /**
+   * Handle SSE message (common for both pooled and direct streams)
+   */
+  private handleSSEMessage(event: MessageEvent): void {
+    try {
+      const data = JSON.parse(event.data);
+      
+      // Check for heartbeat messages
+      if (data.type === 'heartbeat') {
+        this.lastHeartbeat = Date.now();
+        this.missedHeartbeats = 0;
+        return;
+      }
+      
+      // Handle progress updates
+      const update: ProgressUpdate = data;
+      this.callbacks.onUpdate(update);
+      
+      // Check if terminal phase
+      if (this.isTerminalPhase(update.phase)) {
+        this.callbacks.onComplete();
+        this.stop();
+      }
+    } catch (error) {
+      this.callbacks.onError(new Error(`Failed to parse SSE data: ${error}`));
+    }
+  }
+
+  /**
+   * Handle SSE errors for direct EventSource
+   */
+  private handleSSEError(reject: (reason?: any) => void): void {
+    this.isConnected = false;
+    
+    if (this.retryCount < (this.options.maxRetries || 3)) {
+      this.retryCount++;
+      setTimeout(() => {
+        if (!this.isDestroyed) {
+          this.startSSE().catch(() => {
+            reject(new Error('SSE connection failed'));
+          });
+        }
+      }, 1000 * this.retryCount);
+    } else {
+      reject(new Error('SSE connection failed after retries'));
+    }
+  }
+
+  /**
+   * Start heartbeat monitoring for QoS degradation detection
+   */
+  private startHeartbeatMonitoring(): void {
+    const heartbeatTimeout = parseInt(process.env.NEXT_PUBLIC_PROGRESS_HEARTBEAT_SECS || '45') * 1000;
+    
+    this.heartbeatCheckInterval = setInterval(() => {
+      const now = Date.now();
+      const timeSinceLastHeartbeat = now - this.lastHeartbeat;
+      
+      if (timeSinceLastHeartbeat > heartbeatTimeout) {
+        this.missedHeartbeats++;
+        
+        if (this.missedHeartbeats >= 3) {
+          console.warn('[ProgressStream] Multiple heartbeat failures, switching to polling');
+          
+          // Emit telemetry for degradation
+          telemetryService.emitTelemetry('stream_pool_state', {
+            url: `/api/v2/campaigns/${this.options.campaignId}/progress/stream`,
+            status: 'heartbeat_failure',
+            missedHeartbeats: this.missedHeartbeats
+          });
+          
+          // Switch to polling mode
+          this.stop();
+          this.startPolling();
+        }
+      }
+    }, heartbeatTimeout / 2);
   }
 
   /**
@@ -210,9 +296,19 @@ export class ProgressStream {
       this.eventSource = null;
     }
     
+    if (this.streamUnsubscribe) {
+      this.streamUnsubscribe();
+      this.streamUnsubscribe = null;
+    }
+    
     if (this.pollingTimer) {
       clearTimeout(this.pollingTimer);
       this.pollingTimer = null;
+    }
+    
+    if (this.heartbeatCheckInterval) {
+      clearInterval(this.heartbeatCheckInterval);
+      this.heartbeatCheckInterval = null;
     }
   }
 }

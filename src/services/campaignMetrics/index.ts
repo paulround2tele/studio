@@ -1,5 +1,5 @@
 /**
- * Campaign Metrics Services (Phase 2 + Phase 3)
+ * Campaign Metrics Services (Phase 2 + Phase 3 + Phase 5)
  * Centralized export of all metrics services
  */
 
@@ -57,3 +57,70 @@ export {
   createProgressStream,
   createMockProgressStream
 } from './progressStream';
+
+// Phase 5: Timeline service
+export {
+  fetchServerTimeline,
+  mergeTimelines,
+  integrateServerSnapshotBatch,
+  isServerTimelineAvailable,
+  getLastServerSync,
+  setLastServerSync
+} from './timelineService';
+
+// Phase 5: Anomaly detection service
+export {
+  detectAnomalies,
+  getAnomalyThresholds,
+  isAnomalyDetectionAvailable
+} from './anomalyService';
+
+// Phase 5: Recommendations V3 pipeline
+export {
+  pipelineRecommendationsV3,
+  isExplainabilityAvailable,
+  isAnomalyRecommendationsAvailable
+} from './recommendationsV3Pipeline';
+
+// Phase 5: Portfolio metrics service
+export {
+  computePortfolioAggregate,
+  detectPortfolioOutliers,
+  isPortfolioMetricsAvailable
+} from './portfolioMetricsService';
+
+// Phase 5: Export service
+export {
+  exportSnapshotsJSON,
+  exportSnapshotsCSV,
+  buildShareBundle,
+  decodeShareBundle,
+  generateShareableURL,
+  parseShareBundleFromURL,
+  validateExportSize,
+  isExportToolsAvailable
+} from './exportService';
+
+// Phase 5: Worker coordinator
+export {
+  workerCoordinator,
+  computeAllMetrics,
+  isWorkerCoordinatorAvailable
+} from './workerCoordinator';
+
+// Phase 5: Stream pool service
+export {
+  streamPool,
+  subscribeStreamPool,
+  isStreamPoolingAvailable,
+  getStreamPoolStats
+} from './streamPool';
+
+// Phase 5: Telemetry service
+export {
+  telemetryService,
+  initTelemetry,
+  emitTelemetry,
+  isTelemetryAvailable,
+  getTelemetryStatus
+} from './telemetryService';
