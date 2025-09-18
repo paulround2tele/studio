@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -100,6 +101,65 @@ func TestAnalysisCoverageOK_EmptyContext(t *testing.T) {
 	// Real tests would use sqlmock or test database
 	_, _, err := analysisCoverageOK(ctx, nil, campaignID)
 	assert.Error(t, err) // Should error with nil DB
+}
+
+func TestAnalysisServiceCoverageIntegration(t *testing.T) {
+	// This tests the actual service method implementation
+	// Note: This test requires the analysisService to be properly initialized
+	// In a real scenario, this would use test fixtures and database mocks
+	
+	ctx := context.Background()
+	campaignID := uuid.New()
+	
+	// Test with nil dependencies - should fail gracefully
+	service := &analysisService{
+		deps: Dependencies{
+			DB: nil,
+		},
+	}
+	
+	_, ratio, err := service.analysisCoverageOK(ctx, campaignID)
+	assert.Error(t, err)
+	assert.Equal(t, 0.0, ratio)
+	assert.Contains(t, err.Error(), "database connection required")
+}
+
+func TestReadPathDecisionIntegration(t *testing.T) {
+	// Test the makeReadPathDecision method on the service
+	ctx := context.Background()
+	campaignID := uuid.New()
+	
+	// Mock service with nil DB (will trigger error path)
+	service := &analysisService{
+		deps: Dependencies{
+			DB: nil,
+		},
+		mtx: struct {
+			scoreHistogram                       prometheus.Histogram
+			rescoreRuns                          *prometheus.CounterVec
+			rescoreRunsV2                        *prometheus.CounterVec
+			phaseDuration                        prometheus.Histogram
+			reuseCounter                         prometheus.Counter
+			preflightFail                        prometheus.Counter
+			analysisFeatureFetchDuration         prometheus.Histogram
+			analysisFeatureFetchDomains          prometheus.Histogram
+			featureCacheHits                     prometheus.Counter
+			featureCacheMisses                   prometheus.Counter
+			featureCacheInvalidations            prometheus.Counter
+			analysisFeatureTableCoverageRatio    *prometheus.GaugeVec
+			analysisFeatureTableFallbacks        *prometheus.CounterVec
+			analysisFeatureTablePrimaryReads     prometheus.Counter
+		}{
+			// Initialize to nil - will be set by initReadSwitchMetrics if called
+		},
+	}
+	
+	// Test decision making with nil DB (should handle gracefully)
+	decision := service.makeReadPathDecision(ctx, campaignID)
+	
+	// When flag is disabled (default), should use legacy path
+	assert.False(t, decision.useNew)
+	assert.Equal(t, "flag_disabled", decision.reason)
 }
 
 // makeReadPathDecision implements the core decision logic for testing
