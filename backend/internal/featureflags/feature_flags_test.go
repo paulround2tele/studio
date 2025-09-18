@@ -42,3 +42,39 @@ func TestFeatureFlags(t *testing.T) {
 	// Clean up
 	os.Unsetenv("EXTRACTION_FEATURE_TABLE_ENABLED")
 }
+
+func TestGetDualReadVarianceThreshold(t *testing.T) {
+	// Store original value
+	originalVal := os.Getenv("DUAL_READ_VARIANCE_THRESHOLD")
+	defer os.Setenv("DUAL_READ_VARIANCE_THRESHOLD", originalVal)
+	
+	// Test default value
+	os.Unsetenv("DUAL_READ_VARIANCE_THRESHOLD")
+	if threshold := GetDualReadVarianceThreshold(); threshold != 0.25 {
+		t.Errorf("Expected default threshold 0.25, got %f", threshold)
+	}
+	
+	// Test valid value
+	os.Setenv("DUAL_READ_VARIANCE_THRESHOLD", "0.5")
+	if threshold := GetDualReadVarianceThreshold(); threshold != 0.5 {
+		t.Errorf("Expected threshold 0.5, got %f", threshold)
+	}
+	
+	// Test boundary clamping - high
+	os.Setenv("DUAL_READ_VARIANCE_THRESHOLD", "1.5")
+	if threshold := GetDualReadVarianceThreshold(); threshold != 1.0 {
+		t.Errorf("Expected threshold clamped to 1.0, got %f", threshold)
+	}
+	
+	// Test boundary clamping - low
+	os.Setenv("DUAL_READ_VARIANCE_THRESHOLD", "-0.5")
+	if threshold := GetDualReadVarianceThreshold(); threshold != 0.0 {
+		t.Errorf("Expected threshold clamped to 0.0, got %f", threshold)
+	}
+	
+	// Test invalid value falls back to default
+	os.Setenv("DUAL_READ_VARIANCE_THRESHOLD", "invalid")
+	if threshold := GetDualReadVarianceThreshold(); threshold != 0.25 {
+		t.Errorf("Expected threshold to fallback to default 0.25, got %f", threshold)
+	}
+}

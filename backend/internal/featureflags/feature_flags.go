@@ -80,6 +80,16 @@ func IsAnalysisRescoringEnabled() bool {
 	return getBoolEnv("ANALYSIS_RESCORING_ENABLED", false)
 }
 
+// GetDualReadVarianceThreshold returns the threshold for dual-read variance detection.
+// This controls when variance between legacy and new feature vectors is considered "high".
+// 
+// Environment Variable: DUAL_READ_VARIANCE_THRESHOLD
+// Default: 0.25 (25% variance threshold)
+// Range: 0.0 to 1.0 (0% to 100% variance)
+func GetDualReadVarianceThreshold() float64 {
+	return getFloatEnv("DUAL_READ_VARIANCE_THRESHOLD", 0.25)
+}
+
 // ExtractionAnalysisFeatureFlags returns a structured view of all extraction/analysis
 // feature flags for monitoring and debugging purposes.
 type ExtractionAnalysisFeatureFlags struct {
@@ -127,6 +137,27 @@ func getBoolEnv(key string, defaultValue bool) bool {
 		}
 		return defaultValue
 	}
+}
+
+// getFloatEnv reads a float environment variable with a default value.
+// Ensures the value is within bounds (0.0 to 1.0) for thresholds.
+func getFloatEnv(key string, defaultValue float64) float64 {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return defaultValue
+	}
+	
+	if floatVal, err := strconv.ParseFloat(value, 64); err == nil {
+		// Clamp to valid threshold range
+		if floatVal < 0.0 {
+			return 0.0
+		}
+		if floatVal > 1.0 {
+			return 1.0
+		}
+		return floatVal
+	}
+	return defaultValue
 }
 
 // Phase Implementation Notes:
