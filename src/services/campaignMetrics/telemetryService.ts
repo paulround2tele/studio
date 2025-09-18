@@ -4,7 +4,6 @@
  */
 
 // Declare process for Node.js environment variables
-declare const process: any;
 
 // Feature flag for telemetry
 const isTelemetryEnabled = () => {
