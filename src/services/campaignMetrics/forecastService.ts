@@ -671,7 +671,7 @@ async function performModelArbitration(
     const expForecast = computeSimpleExponentialSmoothing(
       trainingData, 
       historicalWindow, 
-      { method: 'simpleExp', alpha: options.alpha || 0.3 }
+      { alpha: options.alpha || 0.3 }
     );
     const expPredicted = expForecast.map(p => p.value);
     const expMAE = calculateMAE(actualValues, expPredicted);
