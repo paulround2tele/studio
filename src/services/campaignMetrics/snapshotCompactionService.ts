@@ -354,7 +354,7 @@ class SnapshotCompactionService {
     Object.keys(firstAgg).forEach(key => {
       const values = snapshots
         .map(s => s.aggregates[key as keyof typeof s.aggregates])
-        .filter(v => typeof v === 'number') as number[];
+        .filter(v => v != null && typeof v === 'number') as number[];
       
       if (values.length > 0) {
         aggregates[key] = values.reduce((sum, val) => sum + val, 0) / values.length;
