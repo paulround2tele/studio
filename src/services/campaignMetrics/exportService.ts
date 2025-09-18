@@ -16,7 +16,7 @@ const isExportToolsEnabled = () =>
   process.env.NEXT_PUBLIC_ENABLE_EXPORT_TOOLS !== 'false';
 
 /**
- * Share bundle structure for encoding/decoding (Phase 7: Version 3)
+ * Share bundle structure for encoding/decoding (Phase 10: Version 6)
  */
 export interface ShareBundle {
   version: string;
@@ -58,6 +58,77 @@ export interface ShareBundle {
     mode: DomainResolution;
     ts: number;
   }>;
+  // Phase 10: Version 6 additions
+  causalGraph?: {
+    nodes: Array<{
+      id: string;
+      metric: string;
+      type: string;
+      sampleCount: number;
+      averageValue: number;
+    }>;
+    edges: Array<{
+      id: string;
+      from: string;
+      to: string;
+      confidence: number;
+      strength: number;
+      direction: string;
+    }>;
+    version: string;
+    generatedAt: string;
+  };
+  experiments?: {
+    arms: Array<{
+      id: string;
+      name: string;
+      pulls: number;
+      averageReward: number;
+    }>;
+    decisions: Array<{
+      armId: string;
+      strategy: string;
+      timestamp: string;
+    }>;
+    rewardsSummary: {
+      totalRewards: number;
+      averageReward: number;
+      bestArm: string | null;
+    };
+  };
+  semanticSummaries?: {
+    anomalies: Array<{
+      id: string;
+      summary: string;
+      confidence: number;
+      method: string;
+    }>;
+    causalDeltas: Array<{
+      id: string;
+      summary: string;
+      confidence: number;
+      method: string;
+    }>;
+  };
+  privacyLedger?: {
+    redactionsApplied: number;
+    violationsDetected: number;
+    auditEntries: number;
+    dpEpsilon: number;
+    policyVersion: string;
+  };
+  perfTraces?: {
+    spans: Array<{
+      id: string;
+      operation: string;
+      duration: number;
+      status: string;
+      startTime: number;
+    }>;
+    totalSpans: number;
+    averageDuration: number;
+    errorRate: number;
+  };
 }
 
 /**
@@ -90,6 +161,44 @@ export interface ExportOptionsV2 {
 export interface ExportOptionsV3 extends ExportOptionsV2 {
   includeCapabilities?: boolean;
   includeResolutionDecisions?: boolean;
+}
+
+/**
+ * Phase 10: Export options for version 6
+ */
+export interface ExportOptionsV6 extends ExportOptionsV3 {
+  includeCausalGraph?: boolean;
+  includeExperiments?: boolean;
+  includeSemanticSummaries?: boolean;
+  includePrivacyLedger?: boolean;
+  includePerfTraces?: boolean;
+  causalGraphData?: {
+    nodes: any[];
+    edges: any[];
+    version: string;
+  };
+  experimentsData?: {
+    arms: any[];
+    decisions: any[];
+    rewardsSummary: any;
+  };
+  semanticSummariesData?: {
+    anomalies: any[];
+    causalDeltas: any[];
+  };
+  privacyLedgerData?: {
+    redactionsApplied: number;
+    violationsDetected: number;
+    auditEntries: number;
+    dpEpsilon: number;
+    policyVersion: string;
+  };
+  perfTracesData?: {
+    spans: any[];
+    totalSpans: number;
+    averageDuration: number;
+    errorRate: number;
+  };
 }
 
 /**
@@ -188,6 +297,129 @@ export function exportSnapshotsJSONV3(
     snapshots: snapshots.length,
     sizeMB: Math.round(sizeMB * 100) / 100,
     version: version === '3.0' ? 3 : (version === '2.0' ? 2 : 1),
+  });
+
+  const jsonString = JSON.stringify(exportData, null, 2);
+  const blob = new Blob([jsonString], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename || `campaign-${campaignId}-v${version}-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Export snapshots as JSON with Phase 10 enhancements (Version 6)
+ */
+export function exportSnapshotsJSONV6(
+  snapshots: AggregateSnapshot[],
+  campaignId: string,
+  filename?: string,
+  optionsV6?: ExportOptionsV6
+): void {
+  if (!isExportToolsEnabled()) {
+    console.warn('[ExportService] Export tools disabled');
+    return;
+  }
+
+  const hasPhase10Data = !!(
+    optionsV6?.includeCausalGraph || 
+    optionsV6?.includeExperiments || 
+    optionsV6?.includeSemanticSummaries ||
+    optionsV6?.includePrivacyLedger ||
+    optionsV6?.includePerfTraces
+  );
+  
+  const version = hasPhase10Data ? '6.0' : '3.0';
+  
+  const exportData: ShareBundle = {
+    version,
+    campaignId,
+    exportedAt: new Date().toISOString(),
+    snapshots,
+    metadata: {
+      totalSnapshots: snapshots.length,
+      dateRange: {
+        from: snapshots.length > 0 ? snapshots[0].timestamp : new Date().toISOString(),
+        to: snapshots.length > 0 ? snapshots[snapshots.length - 1].timestamp : new Date().toISOString()
+      }
+    }
+  };
+
+  // Include all previous version features
+  if (optionsV6?.includeForecast && optionsV6.forecastData) {
+    exportData.forecast = optionsV6.forecastData;
+  }
+  
+  if (optionsV6?.includeNormalized && optionsV6.normalizationData) {
+    exportData.normalization = optionsV6.normalizationData;
+  }
+  
+  if (optionsV6?.includeCohorts && optionsV6.cohortData) {
+    exportData.cohorts = optionsV6.cohortData;
+  }
+
+  if (optionsV6?.includeCapabilities) {
+    exportData.capabilitiesSnapshot = {
+      versions: capabilitiesService.getAllVersions(),
+      features: capabilitiesService.getAllFeatures(),
+      capturedAt: new Date().toISOString()
+    };
+  }
+
+  if (optionsV6?.includeResolutionDecisions) {
+    exportData.resolutionDecisions = resolutionDecisions.map(decision => ({
+      domain: decision.domain,
+      mode: decision.mode,
+      ts: decision.ts
+    }));
+  }
+
+  // Phase 10: Add version 6 data
+  if (optionsV6?.includeCausalGraph && optionsV6.causalGraphData) {
+    exportData.causalGraph = {
+      ...optionsV6.causalGraphData,
+      generatedAt: new Date().toISOString()
+    };
+  }
+
+  if (optionsV6?.includeExperiments && optionsV6.experimentsData) {
+    exportData.experiments = optionsV6.experimentsData;
+  }
+
+  if (optionsV6?.includeSemanticSummaries && optionsV6.semanticSummariesData) {
+    exportData.semanticSummaries = optionsV6.semanticSummariesData;
+  }
+
+  if (optionsV6?.includePrivacyLedger && optionsV6.privacyLedgerData) {
+    exportData.privacyLedger = optionsV6.privacyLedgerData;
+  }
+
+  if (optionsV6?.includePerfTraces && optionsV6.perfTracesData) {
+    exportData.perfTraces = optionsV6.perfTracesData;
+  }
+
+  // Emit telemetry
+  telemetryService.emitTelemetry('export_generated', {
+    version: 6,
+    campaignId,
+    totalSnapshots: snapshots.length,
+    features: {
+      forecast: !!exportData.forecast,
+      normalization: !!exportData.normalization,
+      cohorts: !!exportData.cohorts,
+      capabilities: !!exportData.capabilitiesSnapshot,
+      resolutionDecisions: !!exportData.resolutionDecisions,
+      causalGraph: !!exportData.causalGraph,
+      experiments: !!exportData.experiments,
+      semanticSummaries: !!exportData.semanticSummaries,
+      privacyLedger: !!exportData.privacyLedger,
+      perfTraces: !!exportData.perfTraces
+    }
   });
 
   const jsonString = JSON.stringify(exportData, null, 2);
