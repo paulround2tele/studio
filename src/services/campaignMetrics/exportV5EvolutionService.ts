@@ -10,8 +10,6 @@ import { DeferredAction, OfflineSyncStatus } from './offlineResilienceService';
 import { CapabilityDiff } from './capabilitiesService';
 
 // Declare process for Node.js environment variables
-declare const process: any;
-
 /**
  * Export format versions
  */
