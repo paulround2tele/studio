@@ -156,7 +156,7 @@ class TaskSchedulerService {
         // Use a static path that will be resolved by the bundler
         workerURL = '/workers/edgeProcessor.worker.js';
       } else {
-        throw new Error('Worker not supported');
+        throw new Error('Web Workers are not supported in this environment');
       }
       
       this.worker = new Worker(workerURL, { type: 'module' });
