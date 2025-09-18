@@ -1224,8 +1224,21 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 			Help:      "Absolute variance ratio per domain (legacy_score vs new_score)",
 			Buckets:   []float64{0, .05, .1, .15, .2, .25, .3, .4, .5, 1},
 		})
-		prometheus.MustRegister(s.mtx.scoreHistogram, s.mtx.rescoreRuns, s.mtx.rescoreRunsV2, s.mtx.phaseDuration, s.mtx.reuseCounter, s.mtx.preflightFail,
-			s.mtx.dualReadCampaignsTotal, s.mtx.dualReadDomainsComparedTotal, s.mtx.dualReadHighVarianceDomainsTotal, s.mtx.dualReadDomainVariance)
+		dualReadMetrics := []prometheus.Collector{
+			s.mtx.dualReadCampaignsTotal,
+			s.mtx.dualReadDomainsComparedTotal,
+			s.mtx.dualReadHighVarianceDomainsTotal,
+			s.mtx.dualReadDomainVariance,
+		}
+		prometheus.MustRegister(
+			s.mtx.scoreHistogram,
+			s.mtx.rescoreRuns,
+			s.mtx.rescoreRunsV2,
+			s.mtx.phaseDuration,
+			s.mtx.reuseCounter,
+			s.mtx.preflightFail,
+			dualReadMetrics...,
+		)
 	})
 	phaseStart := time.Now()
 	// Campaign store is optional for pure scoring recompute; skip if absent.
