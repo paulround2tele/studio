@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/fntelecomllc/studio/backend/internal/featureflags"
 	"github.com/google/uuid"
 )
 
@@ -18,5 +19,24 @@ func TestDualReadDisabledGating(t *testing.T) {
 	}
 	if feats != nil {
 		t.Fatalf("expected nil features when disabled")
+	}
+}
+
+func TestDualReadEnabledGating(t *testing.T) {
+	// Test that the flag is properly read through the centralized function
+	os.Setenv("ANALYSIS_DUAL_READ", "true")
+	defer os.Unsetenv("ANALYSIS_DUAL_READ")
+	
+	if !featureflags.IsAnalysisDualReadEnabled() {
+		t.Fatalf("expected dual read to be enabled when env var is true")
+	}
+	
+	// Test variance threshold
+	os.Setenv("DUAL_READ_VARIANCE_THRESHOLD", "0.5")
+	defer os.Unsetenv("DUAL_READ_VARIANCE_THRESHOLD")
+	
+	threshold := featureflags.GetDualReadVarianceThreshold()
+	if threshold != 0.5 {
+		t.Fatalf("expected variance threshold to be 0.5, got %f", threshold)
 	}
 }
