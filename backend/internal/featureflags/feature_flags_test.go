@@ -27,10 +27,20 @@ func TestFeatureFlags(t *testing.T) {
 		t.Error("IsAnalysisRescoringEnabled should default to false")
 	}
 	
+	if IsAnalysisDualReadEnabled() != false {
+		t.Error("IsAnalysisDualReadEnabled should default to false")
+	}
+	
 	// Test with environment variable set
 	os.Setenv("EXTRACTION_FEATURE_TABLE_ENABLED", "true")
 	if IsExtractionFeatureTableEnabled() != true {
 		t.Error("IsExtractionFeatureTableEnabled should return true when env var is set")
+	}
+	
+	// Test ANALYSIS_DUAL_READ flag
+	os.Setenv("ANALYSIS_DUAL_READ", "true")
+	if IsAnalysisDualReadEnabled() != true {
+		t.Error("IsAnalysisDualReadEnabled should return true when env var is set")
 	}
 	
 	// Test structured output
@@ -38,7 +48,51 @@ func TestFeatureFlags(t *testing.T) {
 	if !flags.ExtractionFeatureTableEnabled {
 		t.Error("GetExtractionAnalysisFlags should reflect env var setting")
 	}
+	if !flags.AnalysisDualReadEnabled {
+		t.Error("GetExtractionAnalysisFlags should reflect AnalysisDualReadEnabled setting")
+	}
 	
 	// Clean up
 	os.Unsetenv("EXTRACTION_FEATURE_TABLE_ENABLED")
+	os.Unsetenv("ANALYSIS_DUAL_READ")
+}
+
+func TestGetDualReadVarianceThreshold(t *testing.T) {
+	// Test default value
+	if threshold := GetDualReadVarianceThreshold(); threshold != 0.25 {
+		t.Errorf("GetDualReadVarianceThreshold should default to 0.25, got %f", threshold)
+	}
+	
+	// Test custom value
+	os.Setenv("DUAL_READ_VARIANCE_THRESHOLD", "0.5")
+	if threshold := GetDualReadVarianceThreshold(); threshold != 0.5 {
+		t.Errorf("GetDualReadVarianceThreshold should return 0.5, got %f", threshold)
+	}
+	
+	// Test invalid value (should return default)
+	os.Setenv("DUAL_READ_VARIANCE_THRESHOLD", "invalid")
+	if threshold := GetDualReadVarianceThreshold(); threshold != 0.25 {
+		t.Errorf("GetDualReadVarianceThreshold should return default 0.25 for invalid value, got %f", threshold)
+	}
+	
+	// Test zero value (should return default since it's <= 0)
+	os.Setenv("DUAL_READ_VARIANCE_THRESHOLD", "0")
+	if threshold := GetDualReadVarianceThreshold(); threshold != 0.25 {
+		t.Errorf("GetDualReadVarianceThreshold should return default 0.25 for zero value, got %f", threshold)
+	}
+	
+	// Test negative value (should return default since it's <= 0)
+	os.Setenv("DUAL_READ_VARIANCE_THRESHOLD", "-0.1")
+	if threshold := GetDualReadVarianceThreshold(); threshold != 0.25 {
+		t.Errorf("GetDualReadVarianceThreshold should return default 0.25 for negative value, got %f", threshold)
+	}
+	
+	// Test very small positive value
+	os.Setenv("DUAL_READ_VARIANCE_THRESHOLD", "0.001")
+	if threshold := GetDualReadVarianceThreshold(); threshold != 0.001 {
+		t.Errorf("GetDualReadVarianceThreshold should return 0.001, got %f", threshold)
+	}
+	
+	// Clean up
+	os.Unsetenv("DUAL_READ_VARIANCE_THRESHOLD")
 }

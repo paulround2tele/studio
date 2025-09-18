@@ -80,6 +80,18 @@ func IsAnalysisRescoringEnabled() bool {
 	return getBoolEnv("ANALYSIS_RESCORING_ENABLED", false)
 }
 
+// IsAnalysisDualReadEnabled returns true if the analysis phase should
+// perform dual read comparison between legacy and new extraction data.
+//
+// Phase: P1 - Flag unification (Current)
+// Environment Variable: ANALYSIS_DUAL_READ
+// Default: false
+//
+// Used for non-blocking comparison and validation during migration.
+func IsAnalysisDualReadEnabled() bool {
+	return getBoolEnv("ANALYSIS_DUAL_READ", false)
+}
+
 // ExtractionAnalysisFeatureFlags returns a structured view of all extraction/analysis
 // feature flags for monitoring and debugging purposes.
 type ExtractionAnalysisFeatureFlags struct {
@@ -88,6 +100,7 @@ type ExtractionAnalysisFeatureFlags struct {
 	AnalysisReadsFeatureTable     bool `json:"analysisReadsFeatureTable"`
 	MicrocrawlAdaptiveMode        bool `json:"microcrawlAdaptiveMode"`
 	AnalysisRescoringEnabled      bool `json:"analysisRescoringEnabled"`
+	AnalysisDualReadEnabled       bool `json:"analysisDualReadEnabled"`
 }
 
 // GetExtractionAnalysisFlags returns the current state of all extraction/analysis
@@ -99,6 +112,7 @@ func GetExtractionAnalysisFlags() ExtractionAnalysisFeatureFlags {
 		AnalysisReadsFeatureTable:      IsAnalysisReadsFeatureTableEnabled(),
 		MicrocrawlAdaptiveMode:         IsMicrocrawlAdaptiveModeEnabled(),
 		AnalysisRescoringEnabled:       IsAnalysisRescoringEnabled(),
+		AnalysisDualReadEnabled:        IsAnalysisDualReadEnabled(),
 	}
 }
 
@@ -127,6 +141,35 @@ func getBoolEnv(key string, defaultValue bool) bool {
 		}
 		return defaultValue
 	}
+}
+
+// getFloatEnv reads a float64 environment variable with a default value.
+// The value must be a valid float string and greater than 0.
+// If the value is invalid or <= 0, returns the default value.
+func getFloatEnv(key string, defaultValue float64) float64 {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return defaultValue
+	}
+	
+	if floatVal, err := strconv.ParseFloat(value, 64); err == nil && floatVal > 0 {
+		return floatVal
+	}
+	
+	return defaultValue
+}
+
+// GetDualReadVarianceThreshold returns the variance threshold for dual read comparison.
+// Values are clamped to be > 0. 
+//
+// Environment Variable: DUAL_READ_VARIANCE_THRESHOLD
+// Default: 0.25
+// Format: float64 string (e.g., "0.25", "0.1", "0.5")
+//
+// Used to determine when variance between legacy and new extraction data
+// is significant enough to warrant investigation.
+func GetDualReadVarianceThreshold() float64 {
+	return getFloatEnv("DUAL_READ_VARIANCE_THRESHOLD", 0.25)
 }
 
 // Phase Implementation Notes:
