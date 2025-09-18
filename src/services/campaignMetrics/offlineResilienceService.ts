@@ -572,7 +572,7 @@ class OfflineResilienceService {
       clearInterval(this.syncTimer);
     }
 
-    this.syncTimer = window.setInterval(() => {
+    this.syncTimer = (typeof window !== 'undefined' && window.setInterval ? window.setInterval : setInterval)(() => {
       if (this.isOnline && this.actionQueue.length > 0) {
         this.processActionQueue();
       }
