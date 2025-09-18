@@ -3,6 +3,7 @@ import { campaignApi } from './api/campaignApi';
 import { authApi } from './api/authApi';
 import { bulkOperationsApi } from './api/bulkOperationsApi';
 import { scoringApi } from './api/scoringApi';
+import { serverMetricsApi } from '@/hooks/useCampaignServerMetrics';
 import campaignSlice from './slices/campaignSlice';
 import bulkOperationsSlice from './slices/bulkOperationsSlice';
 import campaignUiSlice from './ui/campaignUiSlice';
@@ -20,6 +21,7 @@ export const store = configureStore({
   [authApi.reducerPath]: authApi.reducer,
     [bulkOperationsApi.reducerPath]: bulkOperationsApi.reducer,
     [scoringApi.reducerPath]: scoringApi.reducer,
+    [serverMetricsApi.reducerPath]: serverMetricsApi.reducer,
   },
   // Adding the api middleware enables caching, invalidation, polling,
   // and other useful features of `rtk-query`.
@@ -33,6 +35,7 @@ export const store = configureStore({
   .concat(authApi.middleware)
   .concat(bulkOperationsApi.middleware)
   .concat(scoringApi.middleware)
+  .concat(serverMetricsApi.middleware)
   .concat(campaignStateSyncMiddleware),
 });
 
