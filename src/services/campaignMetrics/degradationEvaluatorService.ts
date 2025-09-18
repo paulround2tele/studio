@@ -151,11 +151,12 @@ class DegradationEvaluatorService {
       userVisibleImpact: this.assessUserImpact(tier, healthAnalysis.failed)
     };
 
-    // Store current state
+    // Store previous state and update current state
+    const prevState = this.currentState;
     this.currentState = state;
 
     // Emit telemetry if tier changed
-    if (!this.currentState || this.currentState.tier !== tier) {
+    if (!prevState || prevState.tier !== tier) {
       telemetryService.emitTelemetry('degradation_tier', {
         tier,
         missingDomains: healthAnalysis.failed,
