@@ -178,46 +178,6 @@ function sortMLRecommendationsByScore(recommendations: EnhancedRecommendation[])
     return bConfidence - aConfidence;
   });
 }
-  const enhancedRecommendations: EnhancedRecommendation[] = [];
-
-  // Start with existing scoring-based recommendations
-  scoringRecommendations.forEach(rec => {
-    const enhanced: EnhancedRecommendation = {
-      ...rec,
-    };
-
-    // Add explainability metadata if enabled
-    if (isExplainabilityEnabled()) {
-      enhanced.explanation = {
-        source: 'scoring',
-        confidence: 0.8, // Default confidence for scoring recommendations
-        factors: ['historical_patterns', 'domain_quality', 'performance_metrics'],
-        reasoning: 'Based on campaign performance analysis and domain scoring patterns'
-      };
-    }
-
-    enhancedRecommendations.push(enhanced);
-  });
-
-  // Add anomaly-based recommendations if enabled
-  if (isAnomalyRecommendationsEnabled()) {
-    const anomalyRecommendations = generateAnomalyRecommendations(anomalies);
-    enhancedRecommendations.push(...anomalyRecommendations);
-  }
-
-  // Sort by severity (action > warn > info) and confidence
-  return enhancedRecommendations.sort((a, b) => {
-    const severityOrder = { action: 3, warn: 2, info: 1 };
-    const severityDiff = severityOrder[b.severity] - severityOrder[a.severity];
-    
-    if (severityDiff !== 0) return severityDiff;
-    
-    // If same severity, sort by confidence (if available)
-    const aConfidence = a.explanation?.confidence || 0.5;
-    const bConfidence = b.explanation?.confidence || 0.5;
-    return bConfidence - aConfidence;
-  });
-}
 
 /**
  * Generate recommendations based on detected anomalies
@@ -390,4 +350,99 @@ function mergeRecommendations(
   }
 
   return merged.slice(0, 10); // Limit to 10 total recommendations
+}
+
+/**
+ * Calculate confidence score for anomaly-based recommendations
+ */
+function calculateAnomalyConfidence(anomaly: Anomaly): number {
+  // Convert z-score to confidence (higher z-score = higher confidence)
+  const absZScore = Math.abs(anomaly.zScore);
+  
+  // Cap at 95% confidence for very high z-scores
+  if (absZScore >= 4.0) return 0.95;
+  if (absZScore >= 3.0) return 0.85;
+  if (absZScore >= 2.5) return 0.75;
+  if (absZScore >= 2.0) return 0.65;
+  
+  return 0.5; // Default moderate confidence
+}
+
+/**
+ * Metric-specific action recommendations
+ */
+function getMetricActionMap(): Record<string, { detail: string }> {
+  return {
+    warningRate: {
+      detail: 'High warning rate detected. Review domain quality filters and validation rules to reduce false positives.'
+    },
+    avgRichness: {
+      detail: 'Domain richness anomaly detected. Check keyword extraction and content analysis processes.'
+    },
+    leadsCount: {
+      detail: 'Unusual lead count variation. Verify lead generation sources and scoring algorithms.'
+    },
+    highPotentialCount: {
+      detail: 'High potential domain count anomaly. Review classification thresholds and quality criteria.'
+    },
+    successRate: {
+      detail: 'Success rate deviation detected. Check DNS/HTTP validation processes and network connectivity.'
+    },
+    avgLeadScore: {
+      detail: 'Lead scoring anomaly detected. Verify scoring model inputs and weights.'
+    },
+    dnsSuccessRate: {
+      detail: 'DNS resolution issues detected. Check DNS server performance and domain validity.'
+    },
+    httpSuccessRate: {
+      detail: 'HTTP request failures detected. Investigate network connectivity and server responses.'
+    }
+  };
+}
+
+/**
+ * Default action for unknown metrics
+ */
+function getDefaultAction(anomaly: Anomaly): { detail: string } {
+  const direction = anomaly.zScore > 0 ? 'increase' : 'decrease';
+  return {
+    detail: `Investigate the unexpected ${direction} in ${formatMetricName(anomaly.metric)} and review related campaign settings`
+  };
+}
+
+/**
+ * Format metric names for display
+ */
+function formatMetricName(metric: string): string {
+  const names: Record<string, string> = {
+    warningRate: 'Warning Rate',
+    avgRichness: 'Average Richness',
+    leadsCount: 'Leads Count',
+    highPotentialCount: 'High Potential Count',
+    successRate: 'Success Rate',
+    avgLeadScore: 'Average Lead Score',
+    dnsSuccessRate: 'DNS Success Rate',
+    httpSuccessRate: 'HTTP Success Rate',
+    medianGain: 'Median Gain',
+    keywordCoverage: 'Keyword Coverage'
+  };
+  
+  return names[metric] || metric.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+}
+
+/**
+ * Format metric values for display
+ */
+function formatMetricValue(metric: string, value: number): string {
+  const percentageMetrics = ['warningRate', 'avgRichness', 'successRate', 'dnsSuccessRate', 'httpSuccessRate', 'keywordCoverage'];
+  
+  if (percentageMetrics.includes(metric)) {
+    return `${(value * 100).toFixed(1)}%`;
+  }
+  
+  if (metric.includes('Count') || metric === 'leadsCount') {
+    return value.toFixed(0);
+  }
+  
+  return value.toFixed(2);
 }

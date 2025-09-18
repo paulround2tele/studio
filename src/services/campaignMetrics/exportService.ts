@@ -1,17 +1,20 @@
 /**
- * Export Service (Phase 5)
- * JSON, CSV, and base64 share bundle utilities for snapshots & recommendations
+ * Export Service (Phase 5 + Phase 6)
+ * JSON, CSV, and base64 share bundle utilities with version 2 support for forecasts & normalization
  */
 
 import { AggregateSnapshot, ExtendedAggregateMetrics } from '@/types/campaignMetrics';
 import { EnhancedRecommendation } from './recommendationsV3Pipeline';
+import { ForecastPoint } from './forecastService';
+import { NormalizedSnapshot } from './normalizationService';
+import { CohortMatrix } from './cohortService';
 
 // Feature flag for export tools
 const isExportToolsEnabled = () => 
   process.env.NEXT_PUBLIC_ENABLE_EXPORT_TOOLS !== 'false';
 
 /**
- * Share bundle structure for encoding/decoding
+ * Share bundle structure for encoding/decoding (Phase 6: Version 2)
  */
 export interface ShareBundle {
   version: string;
@@ -26,35 +29,103 @@ export interface ShareBundle {
       to: string;
     };
   };
+  // Phase 6: Version 2 additions
+  forecast?: {
+    points: ForecastPoint[];
+    method: 'server' | 'client';
+    horizon: number;
+    generatedAt: string;
+  };
+  normalization?: {
+    benchmarkVersion: string;
+    normalizedSnapshots: NormalizedSnapshot[];
+    method: 'baseline' | 'zscore';
+  };
+  cohorts?: {
+    matrix: CohortMatrix;
+    campaignNames: Record<string, string>;
+  };
 }
 
 /**
- * Export snapshots as JSON
+ * Version 2 export options (Phase 6)
+ */
+export interface ExportOptionsV2 {
+  includeForecast?: boolean;
+  includeNormalized?: boolean;
+  includeCohorts?: boolean;
+  forecastData?: {
+    points: ForecastPoint[];
+    method: 'server' | 'client';
+    horizon: number;
+    generatedAt: string;
+  };
+  normalizationData?: {
+    benchmarkVersion: string;
+    normalizedSnapshots: NormalizedSnapshot[];
+    method: 'baseline' | 'zscore';
+  };
+  cohortData?: {
+    matrix: CohortMatrix;
+    campaignNames: Record<string, string>;
+  };
+}
+
+/**
+ * Export snapshots as JSON with Phase 6 enhancements
  */
 export function exportSnapshotsJSON(
   snapshots: AggregateSnapshot[],
   campaignId: string,
-  filename?: string
+  filename?: string,
+  optionsV2?: ExportOptionsV2
 ): void {
   if (!isExportToolsEnabled()) {
     console.warn('[ExportService] Export tools disabled');
     return;
   }
 
-  const exportData = {
-    version: '1.0',
+  const version = optionsV2 ? '2.0' : '1.0';
+  const exportData: ShareBundle = {
+    version,
     campaignId,
     exportedAt: new Date().toISOString(),
     snapshots,
     metadata: {
       totalSnapshots: snapshots.length,
-      dateRange: getDateRange(snapshots)
+      dateRange: {
+        from: snapshots.length > 0 ? snapshots[0].timestamp : new Date().toISOString(),
+        to: snapshots.length > 0 ? snapshots[snapshots.length - 1].timestamp : new Date().toISOString()
+      }
     }
   };
 
+  // Phase 6: Add version 2 data
+  if (optionsV2) {
+    if (optionsV2.includeForecast && optionsV2.forecastData) {
+      exportData.forecast = optionsV2.forecastData;
+    }
+    
+    if (optionsV2.includeNormalized && optionsV2.normalizationData) {
+      exportData.normalization = optionsV2.normalizationData;
+    }
+    
+    if (optionsV2.includeCohorts && optionsV2.cohortData) {
+      exportData.cohorts = optionsV2.cohortData;
+    }
+  }
+
   const jsonString = JSON.stringify(exportData, null, 2);
   const blob = new Blob([jsonString], { type: 'application/json' });
-  downloadBlob(blob, filename || `campaign-${campaignId}-snapshots.json`);
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename || `campaign-${campaignId}-${version}-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 /**
@@ -124,6 +195,71 @@ export function decodeShareBundle(base64Data: string): ShareBundle {
   } catch (error) {
     throw new Error(`Failed to decode share bundle: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
+}
+
+/**
+ * Decode share bundle with backward compatibility (Phase 6)
+ */
+export function decodeShareBundleV2(encodedData: string): ShareBundle {
+  try {
+    const bundle = decodeShareBundle(encodedData);
+    
+    // If it's already version 2, return as-is
+    if (bundle.version === '2.0') {
+      return bundle;
+    }
+    
+    // Convert version 1.0 to 2.0 format
+    const upgradedBundle: ShareBundle = {
+      ...bundle,
+      version: '2.0'
+      // Phase 6 fields will be undefined for v1 data, which is correct
+    };
+    
+    return upgradedBundle;
+  } catch (error) {
+    throw new Error(`Failed to decode share bundle: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+/**
+ * Check if export data contains Phase 6 features
+ */
+export function hasPhase6Features(bundle: ShareBundle): {
+  hasForecast: boolean;
+  hasNormalization: boolean;
+  hasCohorts: boolean;
+} {
+  return {
+    hasForecast: !!(bundle.forecast && bundle.forecast.points.length > 0),
+    hasNormalization: !!(bundle.normalization && bundle.normalization.normalizedSnapshots.length > 0),
+    hasCohorts: !!(bundle.cohorts && bundle.cohorts.matrix.campaigns.length > 0)
+  };
+}
+
+/**
+ * Get export version info
+ */
+export function getExportVersionInfo(bundle: ShareBundle): {
+  version: string;
+  isV2: boolean;
+  features: string[];
+} {
+  const isV2 = bundle.version === '2.0';
+  const features: string[] = [];
+  
+  if (isV2) {
+    const phase6Features = hasPhase6Features(bundle);
+    if (phase6Features.hasForecast) features.push('Forecast');
+    if (phase6Features.hasNormalization) features.push('Normalization');
+    if (phase6Features.hasCohorts) features.push('Cohorts');
+  }
+  
+  return {
+    version: bundle.version,
+    isV2,
+    features
+  };
 }
 
 /**
