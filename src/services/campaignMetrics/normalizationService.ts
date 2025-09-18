@@ -1,20 +1,25 @@
 /**
- * Normalization Service (Phase 6)
- * Benchmark-based metric normalization with raw value preservation
+ * Normalization Service (Phase 7)
+ * Benchmark-based metric normalization with advanced caching and server-first integration
  */
 
 import { AggregateSnapshot } from '@/types/campaignMetrics';
+import { capabilitiesService } from './capabilitiesService';
+import { telemetryService } from './telemetryService';
+import { fetchWithPolicy } from '@/lib/utils/fetchWithPolicy';
+import { useBackendCanonical } from '@/lib/feature-flags-simple';
 
 // Feature flag
 const isNormalizationEnabled = () => 
   process.env.NEXT_PUBLIC_ENABLE_NORMALIZATION !== 'false';
 
 /**
- * Benchmark data structure from server
+ * Benchmark data structure from server (Phase 7 enhanced)
  */
 export interface BenchmarkMetrics {
   version: string;
   generatedAt: string;
+  expiresAt?: string; // Phase 7: Server-controlled cache expiry
   metrics: {
     warningRate: BenchmarkData;
     avgRichness: BenchmarkData;
@@ -52,79 +57,170 @@ export interface NormalizedSnapshot extends AggregateSnapshot {
 }
 
 /**
- * Normalization configuration
+ * Normalization configuration (Phase 7 enhanced)
  */
 export interface NormalizationConfig {
   method: 'baseline' | 'zscore'; // baseline = raw/baseline, zscore = (raw-mean)/std
   preserveRaw: boolean;
   cacheTime: number; // milliseconds
+  // Phase 7: Per-metric toggle support
+  enabledMetrics?: {
+    successRate?: boolean;
+    avgLeadScore?: boolean;
+    dnsSuccessRate?: boolean;
+    httpSuccessRate?: boolean;
+  };
 }
 
 /**
- * Default normalization configuration
+ * Phase 7: Normalization selection state
+ */
+export interface NormalizationSelection {
+  successRate: boolean;
+  avgLeadScore: boolean;
+  dnsSuccessRate: boolean;
+  httpSuccessRate: boolean;
+}
+
+const NORMALIZATION_SELECTION_KEY = 'normalization:selection';
+
+/**
+ * Default normalization configuration (Phase 7 enhanced)
  */
 const DEFAULT_CONFIG: NormalizationConfig = {
   method: 'baseline',
   preserveRaw: true,
-  cacheTime: 6 * 60 * 60 * 1000 // 6 hours
+  cacheTime: 6 * 60 * 60 * 1000, // 6 hours
+  enabledMetrics: {
+    successRate: true,
+    avgLeadScore: true,
+    dnsSuccessRate: true,
+    httpSuccessRate: true,
+  }
 };
 
 /**
- * Cached benchmark data
+ * Cached benchmark data (Phase 7 enhanced)
  */
-let cachedBenchmarks: BenchmarkMetrics | null = null;
-let cacheTimestamp: number = 0;
+interface CachedBenchmarkData {
+  data: BenchmarkMetrics;
+  cachedAt: number;
+  staleAt: number;
+  version: string;
+}
+
+let cachedBenchmarks: CachedBenchmarkData | null = null;
+const BENCHMARK_STORAGE_KEY = 'benchmarks:cache:v1';
 
 /**
- * Fetch benchmarks from server with caching
+ * Fetch benchmarks from server with enhanced caching (Phase 7)
+ * Implements stale-while-revalidate pattern
  */
-export async function fetchBenchmarks(): Promise<BenchmarkMetrics> {
+export async function fetchBenchmarks(force: boolean = false): Promise<BenchmarkMetrics> {
   if (!isNormalizationEnabled()) {
     throw new Error('Normalization feature is disabled via configuration. Enable NEXT_PUBLIC_ENABLE_NORMALIZATION to use this feature.');
   }
 
   const now = Date.now();
   
-  // Return cached data if still valid
-  if (cachedBenchmarks && (now - cacheTimestamp) < DEFAULT_CONFIG.cacheTime) {
-    return cachedBenchmarks;
+  // Check memory cache first
+  if (!force && cachedBenchmarks) {
+    // Return fresh cache
+    if (now < cachedBenchmarks.staleAt) {
+      return cachedBenchmarks.data;
+    }
+    
+    // Use stale cache while revalidating in background
+    if (now < cachedBenchmarks.staleAt + (30 * 60 * 1000)) { // 30 min grace period
+      setImmediate(() => {
+        fetchBenchmarksFromServer(true).catch(err => 
+          console.warn('[NormalizationService] Background revalidation failed:', err)
+        );
+      });
+      return cachedBenchmarks.data;
+    }
   }
 
+  // Check localStorage cache
+  if (!force && !cachedBenchmarks) {
+    const storedCache = getStoredBenchmarkCache();
+    if (storedCache && now < storedCache.staleAt) {
+      cachedBenchmarks = storedCache;
+      return storedCache.data;
+    }
+  }
+
+  // Fetch fresh data from server
+  return await fetchBenchmarksFromServer(force);
+}
+
+/**
+ * Fetch benchmarks directly from server
+ */
+async function fetchBenchmarksFromServer(isRevalidation: boolean = false): Promise<BenchmarkMetrics> {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   if (!apiUrl) {
     throw new Error('API URL not configured');
   }
 
   try {
-    const response = await fetch(`${apiUrl}/benchmarks/metrics`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'max-age=21600', // 6 hours
-      },
-    });
-
-    if (!response.ok) {
-      if (response.status === 404 || response.status === 501) {
-        throw new Error('Benchmarks not available');
+    const response = await fetchWithPolicy<BenchmarkMetrics>(
+      `${apiUrl}/benchmarks/metrics`,
+      { method: 'GET' },
+      {
+        category: 'api',
+        retries: 2,
+        timeoutMs: 10000,
+        enableETag: true,
       }
-      throw new Error(`Benchmark fetch failed: ${response.status}`);
-    }
+    );
 
-    const benchmarks = await response.json();
-    
     // Validate benchmark structure
-    if (!validateBenchmarkData(benchmarks)) {
+    if (!validateBenchmarkData(response)) {
       throw new Error('Invalid benchmark data structure');
     }
 
-    // Cache the results
-    cachedBenchmarks = benchmarks;
-    cacheTimestamp = now;
+    // Calculate cache expiry
+    const now = Date.now();
+    let staleAt: number;
+    
+    if (response.expiresAt) {
+      // Use server-specified expiry
+      staleAt = new Date(response.expiresAt).getTime();
+    } else {
+      // Fallback to default cache time
+      staleAt = now + DEFAULT_CONFIG.cacheTime;
+    }
 
-    return benchmarks;
+    // Update cache
+    const cacheData: CachedBenchmarkData = {
+      data: response,
+      cachedAt: now,
+      staleAt,
+      version: response.version,
+    };
+
+    cachedBenchmarks = cacheData;
+    setBenchmarkCache(cacheData);
+
+    return response;
   } catch (error) {
+    // Emit domain validation failure if appropriate
+    if (error instanceof Error && error.message.includes('validation')) {
+      telemetryService.emitTelemetry('domain_validation_fail', {
+        domain: 'benchmarks',
+        reason: error.message,
+      });
+    }
+    
     console.warn('[NormalizationService] Benchmark fetch failed:', error);
+    
+    // Return stale cache if available during revalidation
+    if (isRevalidation && cachedBenchmarks) {
+      console.warn('[NormalizationService] Using stale cache due to fetch failure');
+      return cachedBenchmarks.data;
+    }
+    
     throw error;
   }
 }
@@ -154,7 +250,82 @@ function validateBenchmarkData(data: any): data is BenchmarkMetrics {
 }
 
 /**
- * Apply normalization to snapshot aggregates
+ * Get stored benchmark cache from localStorage
+ */
+function getStoredBenchmarkCache(): CachedBenchmarkData | null {
+  try {
+    const stored = localStorage.getItem(BENCHMARK_STORAGE_KEY);
+    if (!stored) return null;
+
+    const parsed = JSON.parse(stored);
+    
+    // Validate cache structure
+    if (!parsed.data || !parsed.cachedAt || !parsed.staleAt || !parsed.version) {
+      return null;
+    }
+
+    return parsed;
+  } catch (error) {
+    console.warn('[NormalizationService] Failed to read stored cache:', error);
+    localStorage.removeItem(BENCHMARK_STORAGE_KEY);
+    return null;
+  }
+}
+
+/**
+ * Store benchmark cache in localStorage
+ */
+function setBenchmarkCache(cache: CachedBenchmarkData): void {
+  try {
+    localStorage.setItem(BENCHMARK_STORAGE_KEY, JSON.stringify(cache));
+  } catch (error) {
+    console.warn('[NormalizationService] Failed to store cache:', error);
+  }
+}
+
+/**
+ * Phase 7: Get normalization selection from sessionStorage
+ */
+export function getNormalizationSelection(): NormalizationSelection {
+  try {
+    const stored = sessionStorage.getItem(NORMALIZATION_SELECTION_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return {
+        successRate: parsed.successRate ?? true,
+        avgLeadScore: parsed.avgLeadScore ?? true,
+        dnsSuccessRate: parsed.dnsSuccessRate ?? true,
+        httpSuccessRate: parsed.httpSuccessRate ?? true,
+      };
+    }
+  } catch (error) {
+    console.warn('[NormalizationService] Failed to read selection:', error);
+  }
+
+  // Default selection
+  return {
+    successRate: true,
+    avgLeadScore: true,
+    dnsSuccessRate: true,
+    httpSuccessRate: true,
+  };
+}
+
+/**
+ * Phase 7: Set normalization selection in sessionStorage
+ */
+export function setNormalizationSelection(selection: Partial<NormalizationSelection>): void {
+  try {
+    const current = getNormalizationSelection();
+    const updated = { ...current, ...selection };
+    sessionStorage.setItem(NORMALIZATION_SELECTION_KEY, JSON.stringify(updated));
+  } catch (error) {
+    console.warn('[NormalizationService] Failed to save selection:', error);
+  }
+}
+
+/**
+ * Apply normalization to snapshot aggregates (Phase 7 enhanced)
  */
 export async function applyNormalization(
   snapshot: AggregateSnapshot,
@@ -164,9 +335,27 @@ export async function applyNormalization(
     return snapshot;
   }
 
+  // Phase 7: Use domain resolution for server vs client decision
+  let resolution: 'server' | 'client-fallback' | 'skip' = 'client-fallback';
+  
+  if (useBackendCanonical()) {
+    try {
+      await capabilitiesService.initialize();
+      resolution = capabilitiesService.resolveDomain('benchmarks');
+    } catch (error) {
+      console.warn('[applyNormalization] Failed to resolve domain, falling back to client:', error);
+      resolution = 'client-fallback';
+    }
+  }
+
+  if (resolution === 'skip') {
+    return snapshot;
+  }
+
   try {
     const benchmarks = await fetchBenchmarks();
-    const normalizedAggregates = normalizeAggregates(snapshot.aggregates, benchmarks, config);
+    const selection = getNormalizationSelection();
+    const normalizedAggregates = normalizeAggregates(snapshot.aggregates, benchmarks, config, selection);
 
     const normalizedSnapshot: NormalizedSnapshot = {
       ...snapshot,
@@ -185,7 +374,7 @@ export async function applyNormalization(
 }
 
 /**
- * Apply normalization to multiple snapshots
+ * Apply normalization to multiple snapshots (Phase 7 enhanced)
  */
 export async function applyNormalizationBatch(
   snapshots: AggregateSnapshot[],
@@ -197,9 +386,10 @@ export async function applyNormalizationBatch(
 
   try {
     const benchmarks = await fetchBenchmarks();
+    const selection = getNormalizationSelection();
     
     return snapshots.map(snapshot => {
-      const normalizedAggregates = normalizeAggregates(snapshot.aggregates, benchmarks, config);
+      const normalizedAggregates = normalizeAggregates(snapshot.aggregates, benchmarks, config, selection);
 
       return {
         ...snapshot,
@@ -217,19 +407,28 @@ export async function applyNormalizationBatch(
 }
 
 /**
- * Normalize individual aggregate metrics
+ * Normalize individual aggregate metrics (Phase 7 enhanced)
  */
 function normalizeAggregates(
   aggregates: AggregateSnapshot['aggregates'],
   benchmarks: BenchmarkMetrics,
-  config: NormalizationConfig
+  config: NormalizationConfig,
+  selection: NormalizationSelection
 ): AggregateSnapshot['aggregates'] {
   const normalized: AggregateSnapshot['aggregates'] = {
     totalDomains: aggregates.totalDomains, // Don't normalize counts
-    successRate: normalizeMetric(aggregates.successRate, benchmarks.metrics.successRate, config),
-    avgLeadScore: normalizeMetric(aggregates.avgLeadScore, benchmarks.metrics.avgLeadScore, config),
-    dnsSuccessRate: normalizeMetric(aggregates.dnsSuccessRate, benchmarks.metrics.dnsSuccessRate, config),
-    httpSuccessRate: normalizeMetric(aggregates.httpSuccessRate, benchmarks.metrics.httpSuccessRate, config)
+    successRate: selection.successRate 
+      ? normalizeMetric(aggregates.successRate, benchmarks.metrics.successRate, config)
+      : aggregates.successRate,
+    avgLeadScore: selection.avgLeadScore
+      ? normalizeMetric(aggregates.avgLeadScore, benchmarks.metrics.avgLeadScore, config)
+      : aggregates.avgLeadScore,
+    dnsSuccessRate: selection.dnsSuccessRate
+      ? normalizeMetric(aggregates.dnsSuccessRate, benchmarks.metrics.dnsSuccessRate, config)
+      : aggregates.dnsSuccessRate,
+    httpSuccessRate: selection.httpSuccessRate
+      ? normalizeMetric(aggregates.httpSuccessRate, benchmarks.metrics.httpSuccessRate, config)
+      : aggregates.httpSuccessRate
   };
 
   return normalized;
@@ -306,18 +505,48 @@ export function getNormalizationMetadata(snapshot: NormalizedSnapshot): {
 }
 
 /**
- * Clear normalization cache (useful for testing or forced refresh)
+ * Clear normalization cache (useful for testing or forced refresh) (Phase 7 enhanced)
  */
 export function clearNormalizationCache(): void {
   cachedBenchmarks = null;
-  cacheTimestamp = 0;
+  
+  // Clear localStorage cache
+  try {
+    localStorage.removeItem(BENCHMARK_STORAGE_KEY);
+  } catch (error) {
+    console.warn('[NormalizationService] Failed to clear stored cache:', error);
+  }
 }
 
 /**
- * Get cached benchmark data (for debugging)
+ * Get cached benchmark data (for debugging) (Phase 7 enhanced)
  */
 export function getCachedBenchmarks(): BenchmarkMetrics | null {
-  return cachedBenchmarks;
+  return cachedBenchmarks?.data || null;
+}
+
+/**
+ * Get cache status for debugging
+ */
+export function getCacheStatus(): {
+  hasCache: boolean;
+  version?: string;
+  cachedAt?: number;
+  staleAt?: number;
+  isStale: boolean;
+} {
+  if (!cachedBenchmarks) {
+    return { hasCache: false, isStale: true };
+  }
+
+  const now = Date.now();
+  return {
+    hasCache: true,
+    version: cachedBenchmarks.version,
+    cachedAt: cachedBenchmarks.cachedAt,
+    staleAt: cachedBenchmarks.staleAt,
+    isStale: now > cachedBenchmarks.staleAt,
+  };
 }
 
 /**

@@ -5,7 +5,7 @@
 
 // Import types for worker communication
 interface WorkerMessage {
-  type: 'compute' | 'computeAll' | 'forecastCompute' | 'result' | 'error' | 'cancel';
+  type: 'compute' | 'computeAll' | 'forecastCompute' | 'forecastBulk' | 'result' | 'error' | 'cancel';
   id?: string;
   domains?: any[];
   previousDomains?: any[];
@@ -33,6 +33,11 @@ interface WorkerMessage {
     lower: number;
     upper: number;
   }>;
+  // Phase 7: Bulk forecast computation
+  series?: Array<{ key: string; points: Array<{ t: number; v: number }> }>;
+  method?: 'holtWinters' | 'simpleExp';
+  params?: Record<string, any>;
+  forecasts?: Array<{ key: string; points: Array<{ timestamp: string; metricKey: string; value: number; lower: number; upper: number }> }>;
 }
 
 // Import the pure functions used for computation
@@ -357,6 +362,71 @@ self.onmessage = function(event: MessageEvent<WorkerMessage>) {
         type: 'error',
         id,
         error: error instanceof Error ? error.message : 'Forecast computation error'
+      };
+      
+      self.postMessage(errorResponse);
+    }
+    return;
+  }
+  
+  // Phase 7: Handle bulk forecast computation
+  if (type === 'forecastBulk' && event.data.series) {
+    currentTaskId = id || null;
+    const startTime = performance.now();
+    
+    try {
+      const { series, method = 'simpleExp', params = {} } = event.data;
+      const forecasts: Array<{ key: string; points: Array<{ timestamp: string; metricKey: string; value: number; lower: number; upper: number }> }> = [];
+      
+      // Process each series
+      for (const seriesItem of series) {
+        const timeSeries = seriesItem.points.map(p => ({ timestamp: p.t, value: p.v }));
+        const horizon = params.horizon || 7;
+        
+        const forecastOptions = {
+          method: method as 'holtWinters' | 'simpleExp',
+          alpha: params.alpha || 0.3,
+          beta: params.beta || 0.1,
+          gamma: params.gamma || 0.1,
+          seasonLength: params.seasonLength || 7,
+        };
+        
+        // Compute forecast for this series
+        const forecastPoints = computeForecastInWorker(timeSeries, horizon, forecastOptions);
+        
+        forecasts.push({
+          key: seriesItem.key,
+          points: forecastPoints,
+        });
+      }
+      
+      const endTime = performance.now();
+      const timingMs = endTime - startTime;
+      
+      // Check if task was cancelled during execution
+      if (currentTaskId !== id) {
+        return; // Task was cancelled, don't send result
+      }
+      
+      // Send result back to main thread
+      const response: WorkerMessage = {
+        type: 'result',
+        id,
+        forecasts,
+        timingMs
+      };
+      
+      self.postMessage(response);
+      currentTaskId = null;
+      
+    } catch (error) {
+      currentTaskId = null;
+      
+      // Send error back to main thread
+      const errorResponse: WorkerMessage = {
+        type: 'error',
+        id,
+        error: error instanceof Error ? error.message : 'Bulk forecast computation error'
       };
       
       self.postMessage(errorResponse);

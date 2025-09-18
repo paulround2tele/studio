@@ -17,7 +17,9 @@ const getTelemetrySampling = (): number => {
  * Telemetry event schema (metrics-v1)
  */
 export interface TelemetryEvent {
-  type: 'timeline_hydrate' | 'anomaly_detect' | 'worker_task' | 'stream_pool_state' | 'export_generated';
+  type: 'timeline_hydrate' | 'anomaly_detect' | 'worker_task' | 'stream_pool_state' | 'export_generated' | 
+        'domain_resolution' | 'domain_validation_fail' | 'capability_version_change' | 'forecast_request' | 'fetch_error' |
+        'session_start';
   timestamp: string;
   sessionId: string;
   data: Record<string, any>;
@@ -57,6 +59,38 @@ export interface ExportGeneratedEvent {
   type: 'json' | 'csv' | 'bundle';
   snapshots: number;
   sizeMB: number;
+  version?: number; // Phase 7: Track export schema version
+}
+
+/**
+ * Phase 7 telemetry event types
+ */
+export interface DomainResolutionEvent {
+  domain: 'forecast' | 'anomalies' | 'recommendations' | 'timeline' | 'benchmarks';
+  mode: 'server' | 'client-fallback' | 'skip';
+}
+
+export interface DomainValidationFailEvent {
+  domain: string;
+  reason: string;
+}
+
+export interface CapabilityVersionChangeEvent {
+  key: string;
+  oldVersion: string;
+  newVersion: string;
+}
+
+export interface ForecastRequestEvent {
+  requested: number;
+  clamped: number;
+}
+
+export interface FetchErrorEvent {
+  endpoint: string;
+  category: 'network' | 'server' | 'validation' | 'timeout';
+  status?: number;
+  attempt: number;
 }
 
 /**
@@ -165,7 +199,7 @@ class TelemetryService {
   /**
    * Flush events to backend
    */
-  private async flush(): void {
+  private async flush(): Promise<void> {
     if (this.eventQueue.length === 0) {
       return;
     }

@@ -1,63 +1,100 @@
 /**
- * Timeline Service (Phase 5)
- * Server historical timeline integration with local history merging
+ * Timeline Service (Phase 7)
+ * Server historical timeline integration with pagination and canonical resolution
  */
 
 import { AggregateSnapshot } from '@/types/campaignMetrics';
+import { capabilitiesService } from './capabilitiesService';
+import { telemetryService } from './telemetryService';
+import { fetchWithPolicy } from '@/lib/utils/fetchWithPolicy';
+import { useBackendCanonical, useTimelinePagination } from '@/lib/feature-flags-simple';
 
 // Feature flag for server timeline
 const isServerTimelineEnabled = () => 
   process.env.NEXT_PUBLIC_ENABLE_SERVER_TIMELINE !== 'false';
 
 /**
- * Server timeline response structure
+ * Server timeline response structure (Phase 7 enhanced)
  */
 export interface ServerTimelineResponse {
   snapshots: AggregateSnapshot[];
   totalCount: number;
   lastSync?: string;
+  // Phase 7: Pagination support
+  cursor?: string;
+  hasMore?: boolean;
+  nextCursor?: string;
 }
 
 /**
- * Fetch server timeline snapshots for a campaign
+ * Timeline pagination options
+ */
+export interface TimelinePaginationOptions {
+  cursor?: string;
+  before?: string;
+  limit?: number;
+}
+
+/**
+ * Fetch server timeline snapshots for a campaign (Phase 7 enhanced)
  */
 export async function fetchServerTimeline(
   campaignId: string,
   since?: string,
-  limit: number = 50
+  limit: number = 50,
+  paginationOptions?: TimelinePaginationOptions
 ): Promise<ServerTimelineResponse> {
   if (!isServerTimelineEnabled()) {
     return { snapshots: [], totalCount: 0 };
   }
 
   try {
-    // TODO: Replace with actual API endpoint when available
-    const url = new URL(`/campaigns/${campaignId}/timeline`, process.env.NEXT_PUBLIC_API_URL || '');
-    if (since) {
-      url.searchParams.set('since', since);
-    }
-    url.searchParams.set('limit', limit.toString());
-
-    const response = await fetch(url.toString(), {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch server timeline: ${response.status}`);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!apiUrl) {
+      throw new Error('API URL not configured');
     }
 
-    const data = await response.json();
-    return {
-      snapshots: data.snapshots || [],
-      totalCount: data.totalCount || 0,
-      lastSync: data.lastSync,
-    };
+    // Build query parameters
+    const params = new URLSearchParams();
+    if (since) params.set('since', since);
+    params.set('limit', limit.toString());
+    
+    // Phase 7: Add pagination parameters
+    if (useTimelinePagination() && paginationOptions) {
+      if (paginationOptions.cursor) params.set('cursor', paginationOptions.cursor);
+      if (paginationOptions.before) params.set('before', paginationOptions.before);
+      if (paginationOptions.limit) params.set('limit', paginationOptions.limit.toString());
+    }
+
+    const url = `${apiUrl}/campaigns/${campaignId}/timeline?${params.toString()}`;
+
+    const response = await fetchWithPolicy<ServerTimelineResponse>(
+      url,
+      { method: 'GET' },
+      {
+        category: 'api',
+        retries: 2,
+        timeoutMs: 10000,
+      }
+    );
+
+    // Validate response structure
+    if (!response.snapshots || !Array.isArray(response.snapshots)) {
+      throw new Error('Invalid timeline response structure');
+    }
+
+    return response;
   } catch (error) {
     console.warn('[TimelineService] Failed to fetch server timeline:', error);
+    
+    // Emit domain validation failure if appropriate
+    if (error instanceof Error && error.message.includes('validation')) {
+      telemetryService.emitTelemetry('domain_validation_fail', {
+        domain: 'timeline',
+        reason: error.message,
+      });
+    }
+    
     // Graceful fallback - return empty timeline
     return { snapshots: [], totalCount: 0 };
   }
@@ -153,4 +190,64 @@ export function setLastServerSync(campaignId: string, timestamp: string): void {
   } catch (error) {
     console.warn('[TimelineService] Failed to save sync timestamp:', error);
   }
+}
+
+/**
+ * Fetch next page of timeline data (Phase 7)
+ */
+export async function fetchNextTimelinePage(
+  campaignId: string,
+  cursor: string,
+  limit: number = 50
+): Promise<ServerTimelineResponse> {
+  if (!useTimelinePagination()) {
+    throw new Error('Timeline pagination is disabled');
+  }
+
+  return fetchServerTimeline(campaignId, undefined, limit, {
+    cursor,
+    limit,
+  });
+}
+
+/**
+ * Unified timeline fetch with domain resolution (Phase 7)
+ */
+export async function getTimeline(
+  campaignId: string,
+  since?: string,
+  limit: number = 50
+): Promise<ServerTimelineResponse> {
+  // Phase 7: Use domain resolution for server vs client decision
+  let resolution: 'server' | 'client-fallback' | 'skip' = 'client-fallback';
+  
+  if (useBackendCanonical()) {
+    try {
+      // Ensure capabilities are loaded
+      await capabilitiesService.initialize();
+      resolution = capabilitiesService.resolveDomain('timeline');
+    } catch (error) {
+      console.warn('[getTimeline] Failed to resolve domain, falling back to client:', error);
+      resolution = 'client-fallback';
+    }
+  }
+
+  // Try server timeline if resolution indicates server
+  if (resolution === 'server') {
+    try {
+      return await fetchServerTimeline(campaignId, since, limit);
+    } catch (error) {
+      console.warn('[getTimeline] Server timeline failed, falling back:', error);
+      // Fall through to client fallback
+    }
+  }
+
+  // Client fallback or skip
+  if (resolution === 'skip') {
+    return { snapshots: [], totalCount: 0 };
+  }
+
+  // Return empty timeline as client fallback
+  // In a real implementation, this might return locally stored snapshots
+  return { snapshots: [], totalCount: 0 };
 }
