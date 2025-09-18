@@ -16,10 +16,11 @@ export type HealthScore = number;
 export type HealthStatus = 'healthy' | 'warning' | 'critical' | 'unknown';
 
 /**
- * Domain health metrics
+ * Domain health metrics (Extended for Phase 10)
  */
 export interface DomainHealth {
-  domainType: 'forecast' | 'anomalies' | 'recommendations' | 'timeline' | 'benchmarks' | 'stream' | 'data_quality';
+  domainType: 'forecast' | 'anomalies' | 'recommendations' | 'timeline' | 'benchmarks' | 'stream' | 'data_quality' | 
+               'causal_graph' | 'experiments' | 'privacy' | 'wasm_acceleration' | 'tracing' | 'summarization' | 'memory_pressure';
   score: HealthScore;
   status: HealthStatus;
   lastUpdated: string;
@@ -34,6 +35,15 @@ export interface DomainHealth {
     direction: 'improving' | 'stable' | 'degrading';
     changeRate: number; // score change per hour
     confidence: number; // 0-1
+  };
+  // Phase 10 extensions
+  phase10Extensions?: {
+    causalEdges?: number;
+    activeArms?: number;
+    privacyViolations?: number;
+    wasmKernelsLoaded?: number;
+    activeSpans?: number;
+    memoryUsageMB?: number;
   };
 }
 
@@ -608,16 +618,23 @@ class HealthFabricService {
   }
 
   /**
-   * Get domain weight for overall health calculation
+   * Get domain weight for overall health calculation (Extended for Phase 10)
    */
   private getDomainWeight(domainType: string): number {
     const weights: Record<string, number> = {
       data_quality: 1.2, // Critical for all other functions
       stream: 1.1, // Important for real-time operations
+      memory_pressure: 1.1, // Critical for system stability
+      privacy: 1.0, // Important for compliance
       forecast: 1.0,
       anomalies: 1.0,
       recommendations: 0.9,
+      causal_graph: 0.9, // Phase 10: Important for insights
+      experiments: 0.8, // Phase 10: Important for optimization
+      tracing: 0.8, // Phase 10: Important for debugging
       timeline: 0.8,
+      wasm_acceleration: 0.7, // Phase 10: Performance enhancement
+      summarization: 0.7, // Phase 10: Nice to have
       benchmarks: 0.7,
     };
 
@@ -820,6 +837,281 @@ class HealthFabricService {
    */
   private generateCascadeId(): string {
     return `cascade_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Update causal graph health status (Phase 10)
+   */
+  updateCausalGraphHealth(stats: { nodes: number; edges: number; confidence: number }): void {
+    const score = this.calculateCausalGraphScore(stats);
+    this.updateDomainHealth('causal_graph', {
+      score,
+      components: [
+        {
+          name: 'Node Count',
+          score: Math.min(100, (stats.nodes / 50) * 100), // Up to 50 nodes considered optimal
+          status: this.calculateStatusFromScore(Math.min(100, (stats.nodes / 50) * 100)),
+          message: `${stats.nodes} nodes in graph`
+        },
+        {
+          name: 'Edge Quality',
+          score: stats.confidence * 100,
+          status: this.calculateStatusFromScore(stats.confidence * 100),
+          message: `Average confidence: ${(stats.confidence * 100).toFixed(1)}%`
+        }
+      ],
+      phase10Extensions: {
+        causalEdges: stats.edges
+      }
+    });
+  }
+
+  /**
+   * Update experiment health status (Phase 10)
+   */
+  updateExperimentHealth(stats: { totalArms: number; totalPulls: number; averageReward: number }): void {
+    const score = this.calculateExperimentScore(stats);
+    this.updateDomainHealth('experiments', {
+      score,
+      components: [
+        {
+          name: 'Arm Coverage',
+          score: Math.min(100, (stats.totalArms / 10) * 100), // Up to 10 arms considered good
+          status: this.calculateStatusFromScore(Math.min(100, (stats.totalArms / 10) * 100)),
+          message: `${stats.totalArms} active arms`
+        },
+        {
+          name: 'Sample Size',
+          score: Math.min(100, (stats.totalPulls / 1000) * 100), // 1000 pulls considered good sample
+          status: this.calculateStatusFromScore(Math.min(100, (stats.totalPulls / 1000) * 100)),
+          message: `${stats.totalPulls} total pulls`
+        },
+        {
+          name: 'Reward Performance',
+          score: stats.averageReward * 100,
+          status: this.calculateStatusFromScore(stats.averageReward * 100),
+          message: `Average reward: ${(stats.averageReward * 100).toFixed(1)}%`
+        }
+      ],
+      phase10Extensions: {
+        activeArms: stats.totalArms
+      }
+    });
+  }
+
+  /**
+   * Update privacy health status (Phase 10)
+   */
+  updatePrivacyHealth(stats: { redactionsApplied: number; violations: number; auditEntries: number }): void {
+    const score = this.calculatePrivacyScore(stats);
+    this.updateDomainHealth('privacy', {
+      score,
+      components: [
+        {
+          name: 'Compliance',
+          score: stats.violations === 0 ? 100 : Math.max(0, 100 - (stats.violations * 10)),
+          status: stats.violations === 0 ? 'healthy' : (stats.violations < 5 ? 'warning' : 'critical'),
+          message: `${stats.violations} violations detected`
+        },
+        {
+          name: 'Audit Coverage',
+          score: Math.min(100, (stats.auditEntries / 100) * 100),
+          status: this.calculateStatusFromScore(Math.min(100, (stats.auditEntries / 100) * 100)),
+          message: `${stats.auditEntries} audit entries`
+        }
+      ],
+      phase10Extensions: {
+        privacyViolations: stats.violations
+      }
+    });
+  }
+
+  /**
+   * Update WASM acceleration health status (Phase 10)
+   */
+  updateWasmHealth(stats: { kernelsLoaded: number; totalKernels: number; fallbackRate: number }): void {
+    const score = this.calculateWasmScore(stats);
+    this.updateDomainHealth('wasm_acceleration', {
+      score,
+      components: [
+        {
+          name: 'Kernel Availability',
+          score: stats.totalKernels > 0 ? (stats.kernelsLoaded / stats.totalKernels) * 100 : 100,
+          status: this.calculateStatusFromScore(stats.totalKernels > 0 ? (stats.kernelsLoaded / stats.totalKernels) * 100 : 100),
+          message: `${stats.kernelsLoaded}/${stats.totalKernels} kernels loaded`
+        },
+        {
+          name: 'Performance',
+          score: Math.max(0, 100 - (stats.fallbackRate * 100)),
+          status: this.calculateStatusFromScore(Math.max(0, 100 - (stats.fallbackRate * 100))),
+          message: `${(stats.fallbackRate * 100).toFixed(1)}% fallback rate`
+        }
+      ],
+      phase10Extensions: {
+        wasmKernelsLoaded: stats.kernelsLoaded
+      }
+    });
+  }
+
+  /**
+   * Update tracing health status (Phase 10)
+   */
+  updateTracingHealth(stats: { activeSpans: number; errorRate: number; averageDuration: number }): void {
+    const score = this.calculateTracingScore(stats);
+    this.updateDomainHealth('tracing', {
+      score,
+      components: [
+        {
+          name: 'Active Spans',
+          score: stats.activeSpans < 100 ? 100 : Math.max(0, 100 - ((stats.activeSpans - 100) / 10)),
+          status: this.calculateStatusFromScore(stats.activeSpans < 100 ? 100 : Math.max(0, 100 - ((stats.activeSpans - 100) / 10))),
+          message: `${stats.activeSpans} active spans`
+        },
+        {
+          name: 'Error Rate',
+          score: Math.max(0, 100 - (stats.errorRate * 100)),
+          status: this.calculateStatusFromScore(Math.max(0, 100 - (stats.errorRate * 100))),
+          message: `${(stats.errorRate * 100).toFixed(1)}% error rate`
+        }
+      ],
+      phase10Extensions: {
+        activeSpans: stats.activeSpans
+      }
+    });
+  }
+
+  /**
+   * Update memory pressure health status (Phase 10)
+   */
+  updateMemoryPressureHealth(stats: { usedMB: number; totalMB: number; isHigh: boolean; isCritical: boolean }): void {
+    const score = this.calculateMemoryScore(stats);
+    this.updateDomainHealth('memory_pressure', {
+      score,
+      components: [
+        {
+          name: 'Memory Usage',
+          score: Math.max(0, 100 - ((stats.usedMB / stats.totalMB) * 100)),
+          status: stats.isCritical ? 'critical' : (stats.isHigh ? 'warning' : 'healthy'),
+          message: `${stats.usedMB}MB / ${stats.totalMB}MB used`
+        }
+      ],
+      phase10Extensions: {
+        memoryUsageMB: stats.usedMB
+      }
+    });
+  }
+
+  /**
+   * Get extended health fabric status (Phase 10)
+   */
+  getExtendedHealthStatus(): {
+    overallScore: number;
+    overallStatus: HealthStatus;
+    phase10Status: {
+      causalEdges: number;
+      activeArms: number;
+      privacyViolations: number;
+      wasmKernelsLoaded: number;
+      activeSpans: number;
+      memoryUsageMB: number;
+    };
+    lastUpdated: string;
+  } {
+    const fabric = this.getHealthFabric();
+    const domains = Array.from(fabric.domains.values());
+    
+    // Aggregate Phase 10 extensions
+    const phase10Status = {
+      causalEdges: 0,
+      activeArms: 0,
+      privacyViolations: 0,
+      wasmKernelsLoaded: 0,
+      activeSpans: 0,
+      memoryUsageMB: 0
+    };
+
+    domains.forEach(domain => {
+      if (domain.phase10Extensions) {
+        phase10Status.causalEdges += domain.phase10Extensions.causalEdges || 0;
+        phase10Status.activeArms += domain.phase10Extensions.activeArms || 0;
+        phase10Status.privacyViolations += domain.phase10Extensions.privacyViolations || 0;
+        phase10Status.wasmKernelsLoaded += domain.phase10Extensions.wasmKernelsLoaded || 0;
+        phase10Status.activeSpans += domain.phase10Extensions.activeSpans || 0;
+        phase10Status.memoryUsageMB = Math.max(phase10Status.memoryUsageMB, domain.phase10Extensions.memoryUsageMB || 0);
+      }
+    });
+
+    return {
+      overallScore: fabric.overallScore,
+      overallStatus: fabric.overallStatus,
+      phase10Status,
+      lastUpdated: fabric.lastUpdated
+    };
+  }
+
+  /**
+   * Calculate causal graph health score
+   */
+  private calculateCausalGraphScore(stats: { nodes: number; edges: number; confidence: number }): number {
+    const nodeScore = Math.min(100, (stats.nodes / 50) * 100); // Optimal: 50 nodes
+    const edgeScore = Math.min(100, (stats.edges / 100) * 100); // Optimal: 100 edges
+    const confidenceScore = stats.confidence * 100;
+    
+    return (nodeScore * 0.3 + edgeScore * 0.3 + confidenceScore * 0.4);
+  }
+
+  /**
+   * Calculate experiment health score
+   */
+  private calculateExperimentScore(stats: { totalArms: number; totalPulls: number; averageReward: number }): number {
+    const armScore = Math.min(100, (stats.totalArms / 10) * 100);
+    const sampleScore = Math.min(100, (stats.totalPulls / 1000) * 100);
+    const rewardScore = stats.averageReward * 100;
+    
+    return (armScore * 0.3 + sampleScore * 0.3 + rewardScore * 0.4);
+  }
+
+  /**
+   * Calculate privacy health score
+   */
+  private calculatePrivacyScore(stats: { redactionsApplied: number; violations: number; auditEntries: number }): number {
+    const complianceScore = stats.violations === 0 ? 100 : Math.max(0, 100 - (stats.violations * 10));
+    const auditScore = Math.min(100, (stats.auditEntries / 100) * 100);
+    const activityScore = Math.min(100, (stats.redactionsApplied / 50) * 100);
+    
+    return (complianceScore * 0.5 + auditScore * 0.3 + activityScore * 0.2);
+  }
+
+  /**
+   * Calculate WASM health score
+   */
+  private calculateWasmScore(stats: { kernelsLoaded: number; totalKernels: number; fallbackRate: number }): number {
+    const availabilityScore = stats.totalKernels > 0 ? (stats.kernelsLoaded / stats.totalKernels) * 100 : 100;
+    const performanceScore = Math.max(0, 100 - (stats.fallbackRate * 100));
+    
+    return (availabilityScore * 0.6 + performanceScore * 0.4);
+  }
+
+  /**
+   * Calculate tracing health score
+   */
+  private calculateTracingScore(stats: { activeSpans: number; errorRate: number; averageDuration: number }): number {
+    const spanScore = stats.activeSpans < 100 ? 100 : Math.max(0, 100 - ((stats.activeSpans - 100) / 10));
+    const errorScore = Math.max(0, 100 - (stats.errorRate * 100));
+    const performanceScore = stats.averageDuration < 100 ? 100 : Math.max(0, 100 - ((stats.averageDuration - 100) / 10));
+    
+    return (spanScore * 0.3 + errorScore * 0.4 + performanceScore * 0.3);
+  }
+
+  /**
+   * Calculate memory health score
+   */
+  private calculateMemoryScore(stats: { usedMB: number; totalMB: number; isHigh: boolean; isCritical: boolean }): number {
+    if (stats.isCritical) return 20;
+    if (stats.isHigh) return 50;
+    
+    const usagePercentage = (stats.usedMB / stats.totalMB) * 100;
+    return Math.max(0, 100 - usagePercentage);
   }
 
   /**

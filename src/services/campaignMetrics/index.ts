@@ -281,3 +281,95 @@ export {
   type CapabilityDiff,
   type LiveCapabilityUpdate
 } from './capabilitiesService';
+
+// Phase 10: Causal Graph service
+export {
+  causalGraphService,
+  type CausalGraph,
+  type CausalNode,
+  type CausalEdge,
+  type ObservationFeatures,
+  isCausalGraphAvailable
+} from '../analytics/causalGraphService';
+
+// Phase 10: Bandit Experiments service
+export {
+  banditService,
+  type BanditArm,
+  type BanditContext,
+  type BanditDecision,
+  type BanditOutcome,
+  type BanditConfig,
+  isBanditAvailable
+} from '../experimentation/banditService';
+
+// Phase 10: Privacy Redaction service
+export {
+  privacyRedactionService,
+  type PrivacyPolicy,
+  type PrivacyRule,
+  type RedactionResult,
+  type AuditEntry,
+  isPrivacyRedactionAvailable
+} from '../privacy/privacyRedactionService';
+
+// Phase 10: Differential Privacy service
+export {
+  differentialPrivacyService,
+  type DPConfig,
+  type DPResult,
+  type DPDomain,
+  isDifferentialPrivacyAvailable
+} from '../privacy/differentialPrivacyService';
+
+// Phase 10: WASM Acceleration service
+export {
+  wasmAccelerationService,
+  type WasmKernel,
+  type LttbPoint,
+  type BlendWeights,
+  type QuantileBand,
+  isWasmAccelerationAvailable
+} from '../perf/wasmAccelerationService';
+
+// Phase 10: Tracing service
+export {
+  tracingService,
+  type TraceSpan,
+  type TraceExport,
+  isTracingAvailable,
+  trace
+} from '../observability/tracingService';
+
+// Phase 10: Summarization service
+export {
+  summarizationService,
+  type AnomalyCluster,
+  type CausalGraphDelta,
+  type SummaryResult,
+  isSummarizationAvailable
+} from '../summarization/summarizationService';
+
+// Phase 10: i18n service
+export {
+  i18nService,
+  type SupportedLocale,
+  type MessageCatalog,
+  type LocaleConfig,
+  isI18nAvailable,
+  t
+} from '../i18n/i18nService';
+
+// Phase 10: Memory Pressure service
+export {
+  memoryPressureService,
+  type MemoryStats,
+  type MemoryPressureConfig,
+  isMemoryMonitoringAvailable
+} from '../perf/memoryPressureService';
+
+// Phase 10: Export v6 enhancements
+export {
+  exportSnapshotsJSONV6,
+  type ExportOptionsV6
+} from './exportService';
