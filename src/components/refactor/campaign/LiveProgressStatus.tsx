@@ -310,7 +310,6 @@ export function ProgressIndicator({
         },
         className
       )}
-      title={getStatusConfig(status).label}
     />
   );
 }

@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useMemo, ReactNode } from 'react';
-import { DomainMetricsInput, AggregateSnapshot, DeltaMetrics, Mover, ProgressUpdate } from '@/types/campaignMetrics';
+import { DomainMetricsInput, AggregateSnapshot, DeltaMetrics, Mover, ProgressUpdate, ClassificationBuckets } from '@/types/campaignMetrics';
 import { useCampaignServerMetrics } from '@/hooks/useCampaignServerMetrics';
 import { useCampaignDeltas } from '@/hooks/useCampaignDeltas';
 import { useCampaignMovers } from '@/hooks/useCampaignMovers';
@@ -98,9 +98,50 @@ export function MetricsProvider({
   
   // Enhanced recommendations with delta awareness
   const enhancedRecommendations = useMemo(() => {
+    // Convert classification to the expected format if needed
+    let classification: ClassificationBuckets;
+    
+    const serverClassification = serverMetrics.classification;
+    
+    // Check if classification is already in ClassificationBuckets format
+    if (serverClassification && 
+        typeof serverClassification === 'object' &&
+        'highQuality' in serverClassification &&
+        typeof serverClassification.highQuality === 'object' &&
+        'count' in serverClassification.highQuality) {
+      // Already in ClassificationBuckets format
+      classification = serverClassification as ClassificationBuckets;
+    } else if (serverClassification && typeof serverClassification === 'object') {
+      // Convert from server format (Record<string, number>) to ClassificationBuckets format
+      const total = serverMetrics.aggregates?.totalDomains || 1;
+      const counts = serverClassification as Record<string, number>;
+      
+      classification = {
+        highQuality: {
+          count: counts.highQuality || 0,
+          percentage: ((counts.highQuality || 0) / total) * 100
+        },
+        mediumQuality: {
+          count: counts.mediumQuality || 0,
+          percentage: ((counts.mediumQuality || 0) / total) * 100
+        },
+        lowQuality: {
+          count: counts.lowQuality || 0,
+          percentage: ((counts.lowQuality || 0) / total) * 100
+        }
+      };
+    } else {
+      // Fallback to empty classification
+      classification = {
+        highQuality: { count: 0, percentage: 0 },
+        mediumQuality: { count: 0, percentage: 0 },
+        lowQuality: { count: 0, percentage: 0 }
+      };
+    }
+
     return getRecommendations({
       aggregates: serverMetrics.aggregates,
-      classification: serverMetrics.classification,
+      classification,
       warningRate: 0, // TODO: Calculate from actual data
       deltas: deltaResults.significantDeltas,
       previousAggregates: deltaResults.snapshots.previous?.aggregates
@@ -117,7 +158,12 @@ export function MetricsProvider({
     useServerMetrics: process.env.NEXT_PUBLIC_USE_SERVER_METRICS === 'true',
     enableDeltas: process.env.NEXT_PUBLIC_ENABLE_DELTAS !== 'false',
     enableMoversPanel: process.env.NEXT_PUBLIC_ENABLE_MOVERS_PANEL !== 'false',
-    enableRealtimeProgress: process.env.NEXT_PUBLIC_ENABLE_REALTIME_PROGRESS === 'true'
+    enableRealtimeProgress: process.env.NEXT_PUBLIC_ENABLE_REALTIME_PROGRESS === 'true',
+    // Phase 4: New feature flags
+    enableTrends: process.env.NEXT_PUBLIC_ENABLE_TRENDS !== 'false',
+    enableWorkerMetrics: process.env.NEXT_PUBLIC_ENABLE_WORKER_METRICS !== 'false',
+    enableAdvancedScoring: process.env.NEXT_PUBLIC_RECOMMENDATION_SCORING_V2 !== 'false',
+    enableDebugPanel: process.env.NEXT_PUBLIC_DEBUG_METRICS_PANEL === 'true'
   }), []);
   
   const contextValue: MetricsContextValue = useMemo(() => ({
@@ -148,7 +194,7 @@ export function MetricsProvider({
     // States
     isLoading: serverMetrics.isLoading,
     isServerData: serverMetrics.isServerData,
-    error: serverMetrics.error || progressResults.error,
+    error: (serverMetrics.error || progressResults.error) as Error | null,
     
     // Features
     features

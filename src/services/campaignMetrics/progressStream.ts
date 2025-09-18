@@ -257,7 +257,7 @@ export function createMockProgressStream(
         analyzedCount = Math.min(totalDomains, analyzedCount + Math.floor(Math.random() * 10) + 5);
         
         const update: ProgressUpdate = {
-          phase: phases[phaseIndex],
+          phase: phases[phaseIndex] || 'unknown',
           analyzedDomains: analyzedCount,
           totalDomains,
           status: phaseIndex === phases.length - 1 ? 'completed' : 'in_progress',
