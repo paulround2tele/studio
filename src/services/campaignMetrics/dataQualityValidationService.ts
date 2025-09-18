@@ -181,8 +181,13 @@ class DataQualityValidationService {
     const issues: DataQualityIssue[] = [];
     
     for (let i = 1; i < snapshots.length; i++) {
-      const currentTime = new Date(snapshots[i].timestamp).getTime();
-      const previousTime = new Date(snapshots[i - 1].timestamp).getTime();
+      const current = snapshots[i];
+      const previous = snapshots[i - 1];
+      
+      if (!current || !previous) continue;
+      
+      const currentTime = new Date(current.timestamp).getTime();
+      const previousTime = new Date(previous.timestamp).getTime();
       
       if (currentTime < previousTime) {
         const skewSeconds = (previousTime - currentTime) / 1000;

@@ -116,11 +116,17 @@ export function useForecast(
           const serverForecast = await getServerForecast(campaignId, config.horizon);
           forecastResult = {
             ...serverForecast,
-            timingMs: performance.now() - startTime
+            timingMs: performance.now() - startTime,
+            // Map confidence to residualVariance for type compatibility
+            qualityMetrics: serverForecast.qualityMetrics ? {
+              mae: serverForecast.qualityMetrics.mae,
+              mape: serverForecast.qualityMetrics.mape,
+              residualVariance: serverForecast.qualityMetrics.confidence || 0
+            } : undefined
           };
           
           // Emit telemetry for server forecast
-          emitForecastTelemetry(campaignId, config.horizon, 'server', forecastResult.timingMs);
+          emitForecastTelemetry(campaignId, config.horizon, 'server', forecastResult.timingMs || 0);
           
         } catch (serverError) {
           console.warn('[useForecast] Server forecast failed:', serverError);

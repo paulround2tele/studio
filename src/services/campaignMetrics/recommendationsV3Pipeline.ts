@@ -227,31 +227,7 @@ function calculateAnomalyConfidence(anomaly: Anomaly): number {
   return 0.65;
 }
 
-/**
- * Metric-specific action recommendations
- */
-function getMetricActionMap(): Record<string, { detail: string }> {
-  return {
-    warningRate: {
-      detail: 'Review domain validation settings and check for DNS/HTTP configuration issues'
-    },
-    avgRichness: {
-      detail: 'Analyze content extraction patterns and keyword matching rules'
-    },
-    leadsCount: {
-      detail: 'Examine lead scoring criteria and domain quality thresholds'
-    },
-    highPotentialCount: {
-      detail: 'Review high-potential classification rules and scoring weights'
-    },
-    medianGain: {
-      detail: 'Investigate performance gains calculation and baseline metrics'
-    },
-    keywordCoverage: {
-      detail: 'Check keyword extraction rules and content analysis depth'
-    }
-  };
-}
+
 
 /**
  * Default action for unknown metrics
@@ -352,21 +328,7 @@ function mergeRecommendations(
   return merged.slice(0, 10); // Limit to 10 total recommendations
 }
 
-/**
- * Calculate confidence score for anomaly-based recommendations
- */
-function calculateAnomalyConfidence(anomaly: Anomaly): number {
-  // Convert z-score to confidence (higher z-score = higher confidence)
-  const absZScore = Math.abs(anomaly.zScore);
-  
-  // Cap at 95% confidence for very high z-scores
-  if (absZScore >= 4.0) return 0.95;
-  if (absZScore >= 3.0) return 0.85;
-  if (absZScore >= 2.5) return 0.75;
-  if (absZScore >= 2.0) return 0.65;
-  
-  return 0.5; // Default moderate confidence
-}
+
 
 /**
  * Metric-specific action recommendations
@@ -400,49 +362,3 @@ function getMetricActionMap(): Record<string, { detail: string }> {
   };
 }
 
-/**
- * Default action for unknown metrics
- */
-function getDefaultAction(anomaly: Anomaly): { detail: string } {
-  const direction = anomaly.zScore > 0 ? 'increase' : 'decrease';
-  return {
-    detail: `Investigate the unexpected ${direction} in ${formatMetricName(anomaly.metric)} and review related campaign settings`
-  };
-}
-
-/**
- * Format metric names for display
- */
-function formatMetricName(metric: string): string {
-  const names: Record<string, string> = {
-    warningRate: 'Warning Rate',
-    avgRichness: 'Average Richness',
-    leadsCount: 'Leads Count',
-    highPotentialCount: 'High Potential Count',
-    successRate: 'Success Rate',
-    avgLeadScore: 'Average Lead Score',
-    dnsSuccessRate: 'DNS Success Rate',
-    httpSuccessRate: 'HTTP Success Rate',
-    medianGain: 'Median Gain',
-    keywordCoverage: 'Keyword Coverage'
-  };
-  
-  return names[metric] || metric.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-}
-
-/**
- * Format metric values for display
- */
-function formatMetricValue(metric: string, value: number): string {
-  const percentageMetrics = ['warningRate', 'avgRichness', 'successRate', 'dnsSuccessRate', 'httpSuccessRate', 'keywordCoverage'];
-  
-  if (percentageMetrics.includes(metric)) {
-    return `${(value * 100).toFixed(1)}%`;
-  }
-  
-  if (metric.includes('Count') || metric === 'leadsCount') {
-    return value.toFixed(0);
-  }
-  
-  return value.toFixed(2);
-}

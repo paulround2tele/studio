@@ -197,23 +197,13 @@ export function useCausalGraph(options: UseCausalGraphOptions = {}): [CausalGrap
     }
   }, [refresh]);
 
-  const actions: CausalGraphActions = {
-    refresh,
-    ingestObservation,
-    pruneByConfidence,
-    getNodesByConfidence,
-    getEdgesByConfidence,
-    clearHistory
-  };
-
-  return [state, actions];
-
   // Auto-refresh effect
   useEffect(() => {
     if (autoRefresh && refreshInterval > 0) {
       const interval = setInterval(refresh, refreshInterval);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [autoRefresh, refreshInterval, refresh]);
 
   // Initial load

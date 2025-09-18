@@ -74,7 +74,12 @@ export function normalizeSnapshotsByStart(
   );
 
   // Determine t0 (launch date) - first snapshot timestamp
-  const t0 = new Date(sortedSnapshots[0].timestamp).getTime();
+  const firstSnapshot = sortedSnapshots[0];
+  if (!firstSnapshot) {
+    return [];
+  }
+  
+  const t0 = new Date(firstSnapshot.timestamp).getTime();
 
   // Convert to normalized snapshots with day index
   return sortedSnapshots.map(snapshot => {
@@ -113,10 +118,11 @@ export function buildCohortMatrix(
   // Create cohort campaigns with normalized snapshots
   const cohortCampaigns: CohortCampaign[] = campaignSnapshots.map(campaign => {
     const normalizedSnapshots = normalizeSnapshotsByStart(campaign.snapshots);
-    const launchDate = campaign.snapshots.length > 0 ? 
-      campaign.snapshots.sort((a, b) => 
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
-      )[0].timestamp : 
+    const sortedSnapshots = campaign.snapshots.sort((a, b) => 
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+    const launchDate = sortedSnapshots.length > 0 && sortedSnapshots[0] ? 
+      sortedSnapshots[0].timestamp : 
       new Date().toISOString();
 
     return {
@@ -150,14 +156,14 @@ export function buildCohortMatrix(
       // Find snapshot for this day index
       const normalizedSnapshot = campaign.normalizedSnapshots.find(ns => ns.dayIndex === dayIndex);
       
-      if (normalizedSnapshot) {
-        alignedData[dayIndex][campaign.campaignId] = normalizedSnapshot.snapshot;
+      if (normalizedSnapshot && alignedData[dayIndex]) {
+        alignedData[dayIndex]![campaign.campaignId] = normalizedSnapshot.snapshot;
         filledCells++;
       } else if (config.enableInterpolation) {
         // Linear interpolation for missing days
         const interpolatedSnapshot = interpolateSnapshot(campaign.normalizedSnapshots, dayIndex);
-        if (interpolatedSnapshot) {
-          alignedData[dayIndex][campaign.campaignId] = interpolatedSnapshot;
+        if (interpolatedSnapshot && alignedData[dayIndex]) {
+          alignedData[dayIndex]![campaign.campaignId] = interpolatedSnapshot;
           filledCells++;
         }
       }
@@ -193,10 +199,13 @@ function interpolateSnapshot(
   let afterSnapshot: NormalizedSnapshot | null = null;
 
   for (let i = 0; i < sortedSnapshots.length; i++) {
-    if (sortedSnapshots[i].dayIndex < targetDayIndex) {
-      beforeSnapshot = sortedSnapshots[i];
-    } else if (sortedSnapshots[i].dayIndex > targetDayIndex && !afterSnapshot) {
-      afterSnapshot = sortedSnapshots[i];
+    const snapshot = sortedSnapshots[i];
+    if (!snapshot) continue;
+    
+    if (snapshot.dayIndex < targetDayIndex) {
+      beforeSnapshot = snapshot;
+    } else if (snapshot.dayIndex > targetDayIndex && !afterSnapshot) {
+      afterSnapshot = snapshot;
       break;
     }
   }
@@ -228,10 +237,10 @@ function interpolateSnapshot(
   const afterClass = afterSnapshot.snapshot.classifiedCounts;
 
   const interpolatedClassification = {
-    highQuality: Math.round(lerp(beforeClass.highQuality, afterClass.highQuality, factor)),
-    mediumQuality: Math.round(lerp(beforeClass.mediumQuality, afterClass.mediumQuality, factor)),
-    lowQuality: Math.round(lerp(beforeClass.lowQuality, afterClass.lowQuality, factor)),
-    total: Math.round(lerp(beforeClass.total, afterClass.total, factor))
+    highQuality: Math.round(lerp(beforeClass.highQuality ?? 0, afterClass.highQuality ?? 0, factor)),
+    mediumQuality: Math.round(lerp(beforeClass.mediumQuality ?? 0, afterClass.mediumQuality ?? 0, factor)),
+    lowQuality: Math.round(lerp(beforeClass.lowQuality ?? 0, afterClass.lowQuality ?? 0, factor)),
+    total: Math.round(lerp(beforeClass.total ?? 0, afterClass.total ?? 0, factor))
   };
 
   // Create interpolated timestamp
@@ -243,8 +252,7 @@ function interpolateSnapshot(
     id: `interpolated-${targetDayIndex}`,
     timestamp: new Date(interpolatedTime).toISOString(),
     aggregates: interpolatedAggregates,
-    classifiedCounts: interpolatedClassification,
-    interpolated: true // Mark as interpolated
+    classifiedCounts: interpolatedClassification
   };
 }
 
@@ -269,11 +277,11 @@ export function extractCohortGrowthCurves(
 
     for (let dayIndex = 0; dayIndex <= cohortMatrix.maxDays; dayIndex++) {
       const snapshot = cohortMatrix.alignedData[dayIndex]?.[campaign.campaignId];
-      if (snapshot) {
-        curves[campaign.campaignId].push({
+      if (snapshot && curves[campaign.campaignId]) {
+        curves[campaign.campaignId]!.push({
           dayIndex,
           value: snapshot.aggregates[metricKey] as number,
-          interpolated: 'interpolated' in snapshot ? snapshot.interpolated : false
+          interpolated: false // Since we removed the interpolated property
         });
       }
     }
@@ -327,11 +335,11 @@ function calculatePercentile(sortedValues: number[], percentile: number): number
   const upper = Math.ceil(index);
   
   if (lower === upper) {
-    return sortedValues[lower];
+    return sortedValues[lower] ?? 0;
   }
   
   const weight = index - lower;
-  return sortedValues[lower] * (1 - weight) + sortedValues[upper] * weight;
+  return (sortedValues[lower] ?? 0) * (1 - weight) + (sortedValues[upper] ?? 0) * weight;
 }
 
 /**
