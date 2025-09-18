@@ -74,6 +74,13 @@ export const PHASE2_FLAGS = {
   SHOW_LEGACY_DOMAINS_TABLE: 'SHOW_LEGACY_DOMAINS_TABLE'
 } as const;
 
+// Phase 7 feature flags (Backend Canonical Integration)
+export const PHASE7_FLAGS = {
+  ENABLE_BACKEND_CANONICAL: 'ENABLE_BACKEND_CANONICAL',
+  ENABLE_TIMELINE_PAGINATION: 'ENABLE_TIMELINE_PAGINATION', 
+  ENABLE_FORECAST_CUSTOM_HORIZON: 'ENABLE_FORECAST_CUSTOM_HORIZON'
+} as const;
+
 /**
  * Check if campaign wizard should be used (default enabled unless explicitly disabled)
  */
@@ -96,4 +103,26 @@ export function useCampaignOverviewV2(): boolean {
  */
 export function useShowLegacyDomainsTable(): boolean {
   return isFeatureEnabled(PHASE2_FLAGS.SHOW_LEGACY_DOMAINS_TABLE, false);
+}
+
+/**
+ * Check if backend canonical integration is enabled (Phase 7)
+ * Master flag for server-first resolution
+ */
+export function useBackendCanonical(): boolean {
+  return isFeatureEnabled(PHASE7_FLAGS.ENABLE_BACKEND_CANONICAL, true);
+}
+
+/**
+ * Check if timeline pagination is enabled (Phase 7)
+ */
+export function useTimelinePagination(): boolean {
+  return isFeatureEnabled(PHASE7_FLAGS.ENABLE_TIMELINE_PAGINATION, true);
+}
+
+/**
+ * Check if forecast custom horizon is enabled (Phase 7)
+ */
+export function useForecastCustomHorizon(): boolean {
+  return isFeatureEnabled(PHASE7_FLAGS.ENABLE_FORECAST_CUSTOM_HORIZON, true);
 }

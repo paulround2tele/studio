@@ -1,9 +1,13 @@
 /**
- * Forecast Service (Phase 6)
- * Server-first forecast with client fallback using exponential smoothing/Holt-Winters
+ * Forecast Service (Phase 7)
+ * Server-first forecast with client fallback, custom horizon, and canonical integration
  */
 
 import { AggregateSnapshot } from '@/types/campaignMetrics';
+import { capabilitiesService } from './capabilitiesService';
+import { telemetryService } from './telemetryService';
+import { fetchWithPolicy } from '@/lib/utils/fetchWithPolicy';
+import { useBackendCanonical, useForecastCustomHorizon } from '@/lib/feature-flags-simple';
 
 // Feature flags
 const isForecastsEnabled = () => 
@@ -11,6 +15,22 @@ const isForecastsEnabled = () =>
 
 const getForecastHorizon = () => 
   parseInt(process.env.NEXT_PUBLIC_FORECAST_HORIZON_DAYS || '7', 10);
+
+/**
+ * Clamp forecast horizon to acceptable bounds (1-30 days)
+ */
+function clampForecastHorizon(requested: number): number {
+  const clamped = Math.max(1, Math.min(30, requested));
+  
+  if (clamped !== requested) {
+    telemetryService.emitTelemetry('forecast_request', {
+      requested,
+      clamped,
+    });
+  }
+  
+  return clamped;
+}
 
 /**
  * Server forecast response structure
@@ -65,7 +85,7 @@ interface TimeSeriesPoint {
 }
 
 /**
- * Fetch server-provided forecast for a campaign
+ * Fetch server-provided forecast for a campaign (Phase 7 enhanced)
  */
 export async function getServerForecast(
   campaignId: string,
@@ -75,26 +95,39 @@ export async function getServerForecast(
     throw new Error('Forecasting feature is disabled via configuration. Enable NEXT_PUBLIC_ENABLE_FORECASTS to use this feature.');
   }
 
+  // Apply horizon clamping if custom horizon is enabled
+  const finalHorizon = useForecastCustomHorizon() ? clampForecastHorizon(horizon) : getForecastHorizon();
+
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   if (!apiUrl) {
     throw new Error('API URL not configured');
   }
 
-  const response = await fetch(`${apiUrl}/campaigns/${campaignId}/forecast?horizon=${horizon}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
+  try {
+    const response = await fetchWithPolicy<ServerForecastResponse>(
+      `${apiUrl}/campaigns/${campaignId}/forecast?horizon=${finalHorizon}`,
+      {
+        method: 'GET',
+      },
+      {
+        category: 'api',
+        retries: 2,
+        timeoutMs: 15000, // Longer timeout for forecast computation
+      }
+    );
 
-  if (!response.ok) {
-    if (response.status === 404 || response.status === 501) {
-      throw new Error('Server forecast not available');
+    return response;
+  } catch (error) {
+    // Emit domain validation failure if the error suggests corrupted data
+    if (error instanceof Error && error.message.includes('validation')) {
+      telemetryService.emitTelemetry('domain_validation_fail', {
+        domain: 'forecast',
+        reason: error.message,
+      });
     }
-    throw new Error(`Server forecast failed: ${response.status}`);
+    
+    throw error;
   }
-
-  return response.json();
 }
 
 /**
@@ -324,4 +357,219 @@ export function isForecastAvailable(): boolean {
  */
 export function getDefaultHorizon(): number {
   return getForecastHorizon();
+}
+
+/**
+ * Unified forecast function with server-first resolution (Phase 7)
+ */
+export async function getForecast(
+  campaignId: string,
+  snapshots: AggregateSnapshot[],
+  metricKey: keyof AggregateSnapshot['aggregates'] = 'avgLeadScore',
+  customHorizon?: number
+): Promise<ForecastResult> {
+  if (!isForecastsEnabled()) {
+    throw new Error('Forecasting feature is disabled');
+  }
+
+  // Determine horizon
+  const horizon = customHorizon ? clampForecastHorizon(customHorizon) : getForecastHorizon();
+
+  // Extract time series from snapshots
+  const timeSeries = extractTimeSeriesFromSnapshots(snapshots, metricKey);
+  
+  if (timeSeries.length < 8) {
+    return {
+      horizon,
+      points: [],
+      generatedAt: new Date().toISOString(),
+      method: 'insufficient-data',
+      confidence: 0,
+    };
+  }
+
+  // Phase 7: Use domain resolution for server vs client decision
+  let resolution: 'server' | 'client-fallback' | 'skip' = 'client-fallback';
+  
+  if (useBackendCanonical()) {
+    try {
+      // Ensure capabilities are loaded
+      await capabilitiesService.initialize();
+      resolution = capabilitiesService.resolveDomain('forecast');
+    } catch (error) {
+      console.warn('[getForecast] Failed to resolve domain, falling back to client:', error);
+      resolution = 'client-fallback';
+    }
+  }
+
+  // Try server forecast first if resolution indicates server
+  if (resolution === 'server') {
+    try {
+      const serverResponse = await getServerForecast(campaignId, horizon);
+      
+      // Validate server response has required fields
+      if (!serverResponse.points || !Array.isArray(serverResponse.points)) {
+        throw new Error('Invalid server forecast structure');
+      }
+
+      // If server forecast missing confidence bands, compute from residuals
+      const enhancedPoints = serverResponse.points.map(point => {
+        if (point.lower === undefined || point.upper === undefined) {
+          const confidence = computeClientConfidenceBands(timeSeries, point.value);
+          return {
+            ...point,
+            lower: point.lower ?? confidence.lower,
+            upper: point.upper ?? confidence.upper,
+          };
+        }
+        return point;
+      });
+
+      return {
+        horizon: serverResponse.horizon,
+        points: enhancedPoints,
+        generatedAt: serverResponse.generatedAt,
+        method: 'server',
+        confidence: 0.95, // Server confidence level
+      };
+    } catch (error) {
+      console.warn('[getForecast] Server forecast failed, falling back to client:', error);
+      
+      // Emit validation failure if appropriate
+      if (error instanceof Error && error.message.includes('validation')) {
+        telemetryService.emitTelemetry('domain_validation_fail', {
+          domain: 'forecast',
+          reason: error.message,
+        });
+      }
+      
+      // Fall through to client computation
+    }
+  }
+
+  // Client-side forecast computation
+  if (resolution === 'skip') {
+    return {
+      horizon,
+      points: [],
+      generatedAt: new Date().toISOString(),
+      method: 'skipped',
+      confidence: 0,
+    };
+  }
+
+  // Use worker for large datasets (> 400 points)
+  if (timeSeries.length > 400) {
+    try {
+      const workerPoints = await computeForecastInWorker(timeSeries, horizon, metricKey);
+      return {
+        horizon,
+        points: workerPoints,
+        generatedAt: new Date().toISOString(),
+        method: 'client-worker',
+        confidence: 0.8,
+      };
+    } catch (error) {
+      console.warn('[getForecast] Worker forecast failed, using main thread:', error);
+    }
+  }
+
+  // Main thread client computation
+  const clientPoints = computeClientForecast(timeSeries, horizon, {
+    method: 'simpleExp',
+    alpha: 0.3,
+  });
+
+  return {
+    horizon,
+    points: clientPoints,
+    generatedAt: new Date().toISOString(),
+    method: 'client',
+    confidence: 0.8,
+  };
+}
+
+/**
+ * Compute confidence bands from historical residuals
+ */
+function computeClientConfidenceBands(
+  timeSeries: TimeSeriesPoint[],
+  forecastValue: number,
+  confidenceLevel: number = 0.95
+): { lower: number; upper: number } {
+  if (timeSeries.length < 2) {
+    const margin = forecastValue * 0.1; // 10% margin as fallback
+    return {
+      lower: Math.max(0, forecastValue - margin),
+      upper: forecastValue + margin,
+    };
+  }
+
+  // Simple exponential smoothing to get fitted values
+  const alpha = 0.3;
+  let smoothed = timeSeries[0].value;
+  const residuals: number[] = [];
+
+  for (let i = 1; i < timeSeries.length; i++) {
+    const actual = timeSeries[i].value;
+    residuals.push(actual - smoothed);
+    smoothed = alpha * actual + (1 - alpha) * smoothed;
+  }
+
+  const residualStdDev = calculateStandardDeviation(residuals);
+  const zScore = confidenceLevel === 0.95 ? 1.96 : 1.645; // 95% or 90%
+  const margin = zScore * residualStdDev;
+
+  return {
+    lower: Math.max(0, forecastValue - margin),
+    upper: forecastValue + margin,
+  };
+}
+
+/**
+ * Worker-based forecast computation for large datasets
+ */
+async function computeForecastInWorker(
+  timeSeries: TimeSeriesPoint[],
+  horizon: number,
+  metricKey: string
+): Promise<ForecastPoint[]> {
+  return new Promise((resolve, reject) => {
+    const worker = new Worker('/workers/metricsWorker.js');
+    
+    const timeout = setTimeout(() => {
+      worker.terminate();
+      reject(new Error('Worker forecast timeout'));
+    }, 30000); // 30 second timeout
+
+    worker.onmessage = (event) => {
+      clearTimeout(timeout);
+      worker.terminate();
+      
+      if (event.data.type === 'result' && event.data.forecastPoints) {
+        resolve(event.data.forecastPoints);
+      } else if (event.data.type === 'error') {
+        reject(new Error(event.data.error));
+      } else {
+        reject(new Error('Invalid worker response'));
+      }
+    };
+
+    worker.onerror = (error) => {
+      clearTimeout(timeout);
+      worker.terminate();
+      reject(error);
+    };
+
+    // Send forecast computation message
+    worker.postMessage({
+      type: 'forecastCompute',
+      timeSeries: timeSeries,
+      horizon: horizon,
+      forecastOptions: {
+        method: 'simpleExp',
+        alpha: 0.3,
+      },
+    });
+  });
 }

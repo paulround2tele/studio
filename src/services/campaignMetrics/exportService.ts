@@ -1,6 +1,6 @@
 /**
- * Export Service (Phase 5 + Phase 6)
- * JSON, CSV, and base64 share bundle utilities with version 2 support for forecasts & normalization
+ * Export Service (Phase 7)
+ * JSON, CSV, and base64 share bundle utilities with version 3 support for capabilities & domain resolution
  */
 
 import { AggregateSnapshot, ExtendedAggregateMetrics } from '@/types/campaignMetrics';
@@ -8,13 +8,15 @@ import { EnhancedRecommendation } from './recommendationsV3Pipeline';
 import { ForecastPoint } from './forecastService';
 import { NormalizedSnapshot } from './normalizationService';
 import { CohortMatrix } from './cohortService';
+import { capabilitiesService, DomainType, DomainResolution } from './capabilitiesService';
+import { telemetryService } from './telemetryService';
 
 // Feature flag for export tools
 const isExportToolsEnabled = () => 
   process.env.NEXT_PUBLIC_ENABLE_EXPORT_TOOLS !== 'false';
 
 /**
- * Share bundle structure for encoding/decoding (Phase 6: Version 2)
+ * Share bundle structure for encoding/decoding (Phase 7: Version 3)
  */
 export interface ShareBundle {
   version: string;
@@ -32,7 +34,7 @@ export interface ShareBundle {
   // Phase 6: Version 2 additions
   forecast?: {
     points: ForecastPoint[];
-    method: 'server' | 'client';
+    method: 'server' | 'client' | 'client-worker';
     horizon: number;
     generatedAt: string;
   };
@@ -45,6 +47,17 @@ export interface ShareBundle {
     matrix: CohortMatrix;
     campaignNames: Record<string, string>;
   };
+  // Phase 7: Version 3 additions
+  capabilitiesSnapshot?: {
+    versions: Record<string, string>;
+    features: Record<string, boolean>;
+    capturedAt: string;
+  };
+  resolutionDecisions?: Array<{
+    domain: DomainType;
+    mode: DomainResolution;
+    ts: number;
+  }>;
 }
 
 /**
@@ -69,6 +82,125 @@ export interface ExportOptionsV2 {
     matrix: CohortMatrix;
     campaignNames: Record<string, string>;
   };
+}
+
+/**
+ * Phase 7: Export options for version 3
+ */
+export interface ExportOptionsV3 extends ExportOptionsV2 {
+  includeCapabilities?: boolean;
+  includeResolutionDecisions?: boolean;
+}
+
+/**
+ * Resolution decision tracker for export
+ */
+interface ResolutionDecision {
+  domain: DomainType;
+  mode: DomainResolution;
+  ts: number;
+}
+
+let resolutionDecisions: ResolutionDecision[] = [];
+
+/**
+ * Track domain resolution decision for export
+ */
+export function trackResolutionDecision(domain: DomainType, mode: DomainResolution): void {
+  resolutionDecisions.push({
+    domain,
+    mode,
+    ts: Date.now(),
+  });
+
+  // Keep only recent decisions (last 100)
+  if (resolutionDecisions.length > 100) {
+    resolutionDecisions = resolutionDecisions.slice(-100);
+  }
+}
+
+/**
+ * Export snapshots as JSON with Phase 7 enhancements (Version 3)
+ */
+export function exportSnapshotsJSONV3(
+  snapshots: AggregateSnapshot[],
+  campaignId: string,
+  filename?: string,
+  optionsV3?: ExportOptionsV3
+): void {
+  if (!isExportToolsEnabled()) {
+    console.warn('[ExportService] Export tools disabled');
+    return;
+  }
+
+  const hasCanonicalData = !!(optionsV3?.includeCapabilities || optionsV3?.includeResolutionDecisions);
+  const version = hasCanonicalData ? '3.0' : '2.0';
+  
+  const exportData: ShareBundle = {
+    version,
+    campaignId,
+    exportedAt: new Date().toISOString(),
+    snapshots,
+    metadata: {
+      totalSnapshots: snapshots.length,
+      dateRange: {
+        from: snapshots.length > 0 ? snapshots[0].timestamp : new Date().toISOString(),
+        to: snapshots.length > 0 ? snapshots[snapshots.length - 1].timestamp : new Date().toISOString()
+      }
+    }
+  };
+
+  // Include Phase 6 data
+  if (optionsV3) {
+    if (optionsV3.includeForecast && optionsV3.forecastData) {
+      exportData.forecast = optionsV3.forecastData;
+    }
+    
+    if (optionsV3.includeNormalized && optionsV3.normalizationData) {
+      exportData.normalization = optionsV3.normalizationData;
+    }
+    
+    if (optionsV3.includeCohorts && optionsV3.cohortData) {
+      exportData.cohorts = optionsV3.cohortData;
+    }
+
+    // Phase 7: Include capabilities and resolution decisions
+    if (optionsV3.includeCapabilities) {
+      const currentCapabilities = capabilitiesService.getCurrentCapabilities();
+      if (currentCapabilities) {
+        exportData.capabilitiesSnapshot = {
+          versions: currentCapabilities.versions,
+          features: currentCapabilities.features,
+          capturedAt: new Date().toISOString(),
+        };
+      }
+    }
+
+    if (optionsV3.includeResolutionDecisions && resolutionDecisions.length > 0) {
+      exportData.resolutionDecisions = resolutionDecisions.slice(); // Copy array
+    }
+  }
+
+  // Emit telemetry
+  const sizeMB = new Blob([JSON.stringify(exportData)]).size / (1024 * 1024);
+  telemetryService.emitTelemetry('export_generated', {
+    type: 'json',
+    snapshots: snapshots.length,
+    sizeMB: Math.round(sizeMB * 100) / 100,
+    version: version === '3.0' ? 3 : (version === '2.0' ? 2 : 1),
+  });
+
+  const jsonString = JSON.stringify(exportData, null, 2);
+  const blob = new Blob([jsonString], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename || `campaign-${campaignId}-v${version}-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 /**
