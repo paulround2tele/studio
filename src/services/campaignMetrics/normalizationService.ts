@@ -80,7 +80,7 @@ let cacheTimestamp: number = 0;
  */
 export async function fetchBenchmarks(): Promise<BenchmarkMetrics> {
   if (!isNormalizationEnabled()) {
-    throw new Error('Normalization disabled');
+    throw new Error('Normalization feature is disabled via configuration. Enable NEXT_PUBLIC_ENABLE_NORMALIZATION to use this feature.');
   }
 
   const now = Date.now();
