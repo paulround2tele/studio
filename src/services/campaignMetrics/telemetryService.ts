@@ -14,12 +14,16 @@ const getTelemetrySampling = (): number => {
 };
 
 /**
- * Telemetry event schema (metrics-v1)
+ * Telemetry event schema (metrics-v1 + Phase 8)
  */
 export interface TelemetryEvent {
   type: 'timeline_hydrate' | 'anomaly_detect' | 'worker_task' | 'stream_pool_state' | 'export_generated' | 
         'domain_resolution' | 'domain_validation_fail' | 'capability_version_change' | 'forecast_request' | 'fetch_error' |
-        'session_start';
+        'session_start' | 
+        // Phase 8 event types
+        'stream_quality_update' | 'governance_action' | 'recommendation_mix' | 'degradation_tier' | 'data_quality_flag' |
+        'forecast_arbitration' | 'multi_model_comparison' | 'cohort_segmentation' | 'optimistic_reconciliation' |
+        'snapshot_compaction' | 'quantile_synthesis';
   timestamp: string;
   sessionId: string;
   data: Record<string, any>;
@@ -91,6 +95,101 @@ export interface FetchErrorEvent {
   category: 'network' | 'server' | 'validation' | 'timeout';
   status?: number;
   attempt: number;
+}
+
+/**
+ * Phase 8 telemetry event types
+ */
+export interface StreamQualityUpdateEvent {
+  streamId: string;
+  qualityScore: number; // 0-100
+  metricsCount: number;
+  latencyMs?: number;
+  errorRate?: number;
+}
+
+export interface GovernanceActionEvent {
+  action: 'normalization_toggle' | 'horizon_override' | 'cohort_mode_change' | 'metric_intervention';
+  context: {
+    campaignId?: string;
+    metricKey?: string;
+    oldValue?: any;
+    newValue?: any;
+    userId?: string;
+  };
+}
+
+export interface RecommendationMixEvent {
+  counts: {
+    server: number;
+    experimental: number;
+    anomalyAugmented: number;
+  };
+  totalRecommendations: number;
+}
+
+export interface DegradationTierEvent {
+  tier: 0 | 1 | 2; // 0=full, 1=partial, 2=minimal
+  missingDomains: string[];
+  availableDomains: string[];
+}
+
+export interface DataQualityFlagEvent {
+  campaignId: string;
+  flags: ('out_of_order' | 'negative_derivative' | 'stagnation' | 'low_variance')[];
+  affectedMetrics: string[];
+}
+
+export interface ForecastArbitrationEvent {
+  selectedModel: 'server' | 'client_holt_winters' | 'client_exp_smoothing';
+  modelScores: {
+    model: string;
+    mae: number;
+    mape: number;
+    confidence: number;
+  }[];
+  horizon: number;
+}
+
+export interface MultiModelComparisonEvent {
+  models: {
+    name: string;
+    method: 'server' | 'client';
+    mae: number;
+    mape: number;
+    executionTimeMs: number;
+  }[];
+  primaryModel: string;
+  secondaryModel?: string;
+}
+
+export interface CohortSegmentationEvent {
+  mode: 'launchWindow' | 'performanceTier';
+  cohortCount: number;
+  totalCampaigns: number;
+  segmentationTimeMs: number;
+}
+
+export interface OptimisticReconciliationEvent {
+  provisionalUpdates: number;
+  reconciledUpdates: number;
+  conflicts: number;
+  reconciliationTimeMs: number;
+}
+
+export interface SnapshotCompactionEvent {
+  originalPoints: number;
+  compactedPoints: number;
+  compressionRatio: number;
+  compactionTimeMs: number;
+  strategy: 'lttb' | 'rolling_average';
+}
+
+export interface QuantileSynthesisEvent {
+  synthesizedBands: number;
+  baseVariance: number;
+  synthesisTimeMs: number;
+  method: 'residual_variance' | 'bootstrap';
 }
 
 /**

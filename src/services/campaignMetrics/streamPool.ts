@@ -1,16 +1,59 @@
 /**
- * Stream Pool Service (Phase 5)
- * EventSource pooling/multiplexing to reduce connection count
+ * Stream Pool Service (Phase 5 + Phase 8)
+ * EventSource pooling/multiplexing with differential updates and optimistic queue
  */
 
 // Feature flag for stream pooling
 const isStreamPoolingEnabled = () => 
   process.env.NEXT_PUBLIC_STREAM_POOLING !== 'false';
 
+// Feature flag for differential updates (Phase 8)
+const isDifferentialUpdatesEnabled = () =>
+  process.env.NEXT_PUBLIC_STREAM_DIFFERENTIAL_UPDATES !== 'false';
+
 /**
  * Stream pool event callback
  */
 export type StreamEventCallback = (event: MessageEvent) => void;
+
+/**
+ * Phase 8: Differential update patch
+ */
+export interface DifferentialPatch {
+  type: 'delta' | 'full_snapshot';
+  timestamp: string;
+  changes: Array<{
+    path: string; // JSONPath-style path to the changed field
+    operation: 'set' | 'delete' | 'increment' | 'push';
+    value?: any;
+    previousValue?: any;
+  }>;
+  sequenceNumber?: number;
+  campaignId?: string;
+}
+
+/**
+ * Phase 8: Optimistic update entry
+ */
+interface OptimisticUpdate {
+  id: string;
+  patch: DifferentialPatch;
+  timestamp: number;
+  applied: boolean;
+  confirmed: boolean;
+}
+
+/**
+ * Phase 8: Stream quality metrics
+ */
+interface StreamQualityMetrics {
+  score: number; // 0-100
+  latencyMs: number;
+  errorRate: number;
+  lastUpdated: number;
+  updateCount: number;
+  missedUpdates: number;
+}
 
 /**
  * Stream pool entry
@@ -23,6 +66,11 @@ interface PooledStream {
   lastHeartbeat: number;
   missedHeartbeats: number;
   failureCount: number;
+  // Phase 8: Enhanced state
+  qualityMetrics: StreamQualityMetrics;
+  optimisticQueue: OptimisticUpdate[];
+  lastSequenceNumber: number;
+  patchProcessor?: DifferentialPatchProcessor;
 }
 
 /**
@@ -33,6 +81,120 @@ interface StreamPoolConfig {
   heartbeatTimeoutMs: number;
   maxFailures: number;
   reconnectDelayMs: number;
+  // Phase 8: Quality and optimistic update configs
+  qualityThresholdMs: number;
+  maxOptimisticUpdates: number;
+  reconciliationTimeoutMs: number;
+}
+
+/**
+ * Phase 8: Differential patch processor for optimistic updates
+ */
+class DifferentialPatchProcessor {
+  private baseSnapshot: any = {};
+  private pendingPatches = new Map<string, DifferentialPatch>();
+
+  /**
+   * Apply a differential patch to create updated data
+   */
+  applyPatch(patch: DifferentialPatch, baseData?: any): any {
+    const target = baseData || this.baseSnapshot;
+    const result = JSON.parse(JSON.stringify(target)); // Deep clone
+    
+    for (const change of patch.changes) {
+      try {
+        this.applyChange(result, change);
+      } catch (error) {
+        console.warn('[DifferentialPatchProcessor] Failed to apply change:', change, error);
+      }
+    }
+    
+    return result;
+  }
+
+  /**
+   * Apply a single change operation
+   */
+  private applyChange(target: any, change: { path: string; operation: string; value?: any }): void {
+    const pathParts = change.path.split('.');
+    let current = target;
+    
+    // Navigate to the parent of the target field
+    for (let i = 0; i < pathParts.length - 1; i++) {
+      const part = pathParts[i];
+      if (!(part in current)) {
+        current[part] = {};
+      }
+      current = current[part];
+    }
+    
+    const finalKey = pathParts[pathParts.length - 1];
+    
+    switch (change.operation) {
+      case 'set':
+        current[finalKey] = change.value;
+        break;
+      case 'delete':
+        delete current[finalKey];
+        break;
+      case 'increment':
+        current[finalKey] = (current[finalKey] || 0) + (change.value || 1);
+        break;
+      case 'push':
+        if (!Array.isArray(current[finalKey])) {
+          current[finalKey] = [];
+        }
+        current[finalKey].push(change.value);
+        break;
+      default:
+        console.warn('[DifferentialPatchProcessor] Unknown operation:', change.operation);
+    }
+  }
+
+  /**
+   * Update base snapshot for future patch applications
+   */
+  updateBaseSnapshot(snapshot: any): void {
+    this.baseSnapshot = JSON.parse(JSON.stringify(snapshot));
+  }
+
+  /**
+   * Get current computed state after applying all pending patches
+   */
+  getCurrentState(): any {
+    let current = this.baseSnapshot;
+    
+    // Apply patches in sequence order
+    const sortedPatches = Array.from(this.pendingPatches.values())
+      .sort((a, b) => (a.sequenceNumber || 0) - (b.sequenceNumber || 0));
+    
+    for (const patch of sortedPatches) {
+      current = this.applyPatch(patch, current);
+    }
+    
+    return current;
+  }
+
+  /**
+   * Add pending patch for optimistic updates
+   */
+  addPendingPatch(id: string, patch: DifferentialPatch): void {
+    this.pendingPatches.set(id, patch);
+  }
+
+  /**
+   * Remove confirmed patch
+   */
+  removePatch(id: string): void {
+    this.pendingPatches.delete(id);
+  }
+
+  /**
+   * Clear all pending patches (on full reconciliation)
+   */
+  clearPendingPatches(): void {
+    this.pendingPatches.clear();
+  }
 }
 
 /**
@@ -44,12 +206,19 @@ class StreamPool {
     maxMissedHeartbeats: 3,
     heartbeatTimeoutMs: 60000, // 60 seconds
     maxFailures: 5,
-    reconnectDelayMs: 3000
+    reconnectDelayMs: 3000,
+    // Phase 8: New configs
+    qualityThresholdMs: 5000, // 5 second threshold for quality degradation
+    maxOptimisticUpdates: 50,
+    reconciliationTimeoutMs: 30000 // 30 seconds
   };
   private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+  // Phase 8: Quality monitoring interval
+  private qualityInterval: ReturnType<typeof setInterval> | null = null;
 
   constructor() {
     this.startHeartbeatMonitoring();
+    this.startQualityMonitoring();
   }
 
   /**
@@ -93,7 +262,19 @@ class StreamPool {
       url,
       lastHeartbeat: Date.now(),
       missedHeartbeats: 0,
-      failureCount: 0
+      failureCount: 0,
+      // Phase 8: Initialize enhanced state
+      qualityMetrics: {
+        score: 100,
+        latencyMs: 0,
+        errorRate: 0,
+        lastUpdated: Date.now(),
+        updateCount: 0,
+        missedUpdates: 0
+      },
+      optimisticQueue: [],
+      lastSequenceNumber: 0,
+      patchProcessor: isDifferentialUpdatesEnabled() ? new DifferentialPatchProcessor() : undefined
     };
 
     // Set up event handlers
@@ -115,39 +296,171 @@ class StreamPool {
   }
 
   /**
-   * Handle incoming messages
+   * Handle incoming messages with Phase 8 enhancements
    */
   private handleMessage(pool: PooledStream, event: MessageEvent): void {
+    const messageStartTime = Date.now();
+    
     // Update heartbeat tracking
     const now = Date.now();
     pool.lastHeartbeat = now;
     pool.missedHeartbeats = 0;
+    pool.qualityMetrics.updateCount++;
 
-    // Check if this is a heartbeat message
+    let messageData: any;
+    let isDifferentialUpdate = false;
+    
+    // Parse message
     try {
-      const data = JSON.parse(event.data);
-      if (data.type === 'heartbeat') {
-        // Don't forward heartbeat messages to callbacks
-        return;
-      }
+      messageData = JSON.parse(event.data);
     } catch {
-      // Not JSON, proceed normally
+      // Not JSON, proceed with raw data
+      messageData = { type: 'raw', data: event.data };
     }
 
-    // Forward message to all subscribers
+    // Check if this is a heartbeat message
+    if (messageData.type === 'heartbeat') {
+      // Update quality metrics from heartbeat
+      if (messageData.serverTime) {
+        const latency = now - new Date(messageData.serverTime).getTime();
+        pool.qualityMetrics.latencyMs = latency;
+      }
+      return; // Don't forward heartbeat messages
+    }
+
+    // Phase 8: Handle differential updates
+    if (isDifferentialUpdatesEnabled() && messageData.type === 'differential_update' && pool.patchProcessor) {
+      isDifferentialUpdate = true;
+      
+      try {
+        const patch: DifferentialPatch = messageData.patch;
+        
+        // Validate sequence number for ordering
+        if (patch.sequenceNumber && patch.sequenceNumber <= pool.lastSequenceNumber) {
+          console.warn('[StreamPool] Out-of-order patch received, skipping');
+          pool.qualityMetrics.missedUpdates++;
+          return;
+        }
+        
+        // Apply optimistic update
+        const updateId = `${patch.campaignId || 'global'}_${patch.sequenceNumber || Date.now()}`;
+        
+        if (pool.optimisticQueue.length < this.config.maxOptimisticUpdates) {
+          pool.optimisticQueue.push({
+            id: updateId,
+            patch,
+            timestamp: now,
+            applied: false,
+            confirmed: false
+          });
+          
+          pool.patchProcessor.addPendingPatch(updateId, patch);
+          pool.lastSequenceNumber = patch.sequenceNumber || pool.lastSequenceNumber + 1;
+          
+          // Create enhanced event with computed state
+          const computedState = pool.patchProcessor.getCurrentState();
+          const enhancedEvent = new MessageEvent('message', {
+            ...event,
+            data: JSON.stringify({
+              ...messageData,
+              computedState,
+              isOptimistic: true
+            })
+          });
+          
+          // Forward enhanced message to callbacks
+          this.forwardToCallbacks(pool, enhancedEvent);
+          
+          // Emit telemetry for optimistic update
+          this.emitTelemetryEvent('stream_quality_update', {
+            streamId: pool.url,
+            qualityScore: this.calculateQualityScore(pool),
+            metricsCount: pool.optimisticQueue.length,
+            latencyMs: pool.qualityMetrics.latencyMs
+          });
+          
+          return;
+        } else {
+          console.warn('[StreamPool] Optimistic queue full, dropping update');
+          pool.qualityMetrics.missedUpdates++;
+        }
+      } catch (error) {
+        console.warn('[StreamPool] Error processing differential update:', error);
+        pool.qualityMetrics.errorRate = Math.min(1, pool.qualityMetrics.errorRate + 0.1);
+      }
+    }
+
+    // Handle full snapshot updates (reconciliation)
+    if (messageData.type === 'full_snapshot' && pool.patchProcessor) {
+      try {
+        // Update base snapshot and clear optimistic queue
+        pool.patchProcessor.updateBaseSnapshot(messageData.snapshot);
+        pool.patchProcessor.clearPendingPatches();
+        
+        // Mark optimistic updates as confirmed/reconciled
+        const reconciledCount = pool.optimisticQueue.length;
+        pool.optimisticQueue = [];
+        
+        // Emit reconciliation telemetry
+        this.emitTelemetryEvent('optimistic_reconciliation', {
+          provisionalUpdates: reconciledCount,
+          reconciledUpdates: reconciledCount,
+          conflicts: 0, // Would be calculated in real implementation
+          reconciliationTimeMs: Date.now() - messageStartTime
+        });
+      } catch (error) {
+        console.warn('[StreamPool] Error processing full snapshot:', error);
+      }
+    }
+
+    // Forward message to all subscribers (if not already forwarded)
+    if (!isDifferentialUpdate) {
+      this.forwardToCallbacks(pool, event);
+    }
+
+    // Update quality metrics
+    pool.qualityMetrics.lastUpdated = now;
+  }
+
+  /**
+   * Forward message to all callbacks
+   */
+  private forwardToCallbacks(pool: PooledStream, event: MessageEvent): void {
     pool.callbacks.forEach(callback => {
       try {
         callback(event);
       } catch (error) {
         console.warn('[StreamPool] Callback error:', error);
+        pool.qualityMetrics.errorRate = Math.min(1, pool.qualityMetrics.errorRate + 0.05);
       }
     });
+  }
 
-    // Emit telemetry event
-    this.emitTelemetryEvent('stream_pool_state', {
-      url: pool.url,
-      refCount: pool.refCount
-    });
+  /**
+   * Calculate stream quality score (0-100)
+   */
+  private calculateQualityScore(pool: PooledStream): number {
+    const metrics = pool.qualityMetrics;
+    let score = 100;
+    
+    // Deduct for high latency
+    if (metrics.latencyMs > this.config.qualityThresholdMs) {
+      score -= Math.min(30, (metrics.latencyMs - this.config.qualityThresholdMs) / 1000);
+    }
+    
+    // Deduct for error rate
+    score -= metrics.errorRate * 40;
+    
+    // Deduct for missed updates
+    if (metrics.updateCount > 0) {
+      const missedRatio = metrics.missedUpdates / metrics.updateCount;
+      score -= missedRatio * 30;
+    }
+    
+    // Deduct for missed heartbeats
+    score -= pool.missedHeartbeats * 10;
+    
+    return Math.max(0, Math.round(score));
   }
 
   /**
@@ -199,6 +512,17 @@ class StreamPool {
     return () => {
       eventSource.close();
     };
+  }
+
+  /**
+   * Start quality monitoring (Phase 8)
+   */
+  private startQualityMonitoring(): void {
+    if (this.qualityInterval) return;
+
+    this.qualityInterval = setInterval(() => {
+      this.updateQualityMetrics();
+    }, this.config.qualityThresholdMs);
   }
 
   /**
@@ -295,6 +619,12 @@ class StreamPool {
     if (this.heartbeatInterval) {
       clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;
+    }
+
+    // Phase 8: Clean up quality monitoring
+    if (this.qualityInterval) {
+      clearInterval(this.qualityInterval);
+      this.qualityInterval = null;
     }
   }
 

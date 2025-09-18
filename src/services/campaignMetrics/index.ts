@@ -89,17 +89,19 @@ export {
   isPortfolioMetricsAvailable
 } from './portfolioMetricsService';
 
-// Phase 6: Forecast service
+// Phase 6 + Phase 8: Forecast service
 export {
   getServerForecast,
   computeClientForecast,
   mergeForecastIntoSeries,
   extractTimeSeriesFromSnapshots,
   isForecastAvailable,
-  getDefaultHorizon
+  getDefaultHorizon,
+  // Phase 8: Multi-model forecasting
+  getMultiModelForecast
 } from './forecastService';
 
-// Phase 6: Cohort service
+// Phase 6 + Phase 8: Cohort service
 export {
   normalizeSnapshotsByStart,
   buildCohortMatrix,
@@ -108,6 +110,64 @@ export {
   isCohortComparisonAvailable,
   getDefaultCohortConfig
 } from './cohortService';
+
+// Phase 8: Audit Log service
+export {
+  auditLogService,
+  logGovernanceAction,
+  exportAuditTrail,
+  isAuditLoggingAvailable,
+  getAuditStatistics
+} from './auditLogService';
+
+// Phase 8: Dynamic Cohort Segmentation service
+export {
+  dynamicCohortSegmentationService,
+  buildCohorts,
+  isDynamicCohortSegmentationAvailable
+} from './dynamicCohortService';
+
+// Phase 8: Enhanced Recommendation service
+export {
+  enhancedRecommendationService,
+  generateLayeredRecommendations,
+  isLayeredRecommendationsAvailable
+} from './enhancedRecommendationService';
+
+// Phase 8: Degradation Evaluator service
+export {
+  degradationEvaluatorService,
+  evaluateDegradationTier,
+  getCurrentDegradationState,
+  isDegradationManagementAvailable,
+  getDegradationTierName,
+  DegradationTier
+} from './degradationEvaluatorService';
+
+// Phase 8: Data Quality Validation service
+export {
+  dataQualityValidationService,
+  validateCampaignDataQuality,
+  isEnhancedDataQualityValidationAvailable
+} from './dataQualityValidationService';
+
+// Phase 8: Snapshot Compaction service
+export {
+  snapshotCompactionService,
+  compactSnapshots,
+  isSnapshotCompactionAvailable,
+  getRecommendedCompactionStrategy
+} from './snapshotCompactionService';
+
+// Phase 8: Security Hardening service
+export {
+  securityHardeningService,
+  sanitizeNumericPayload,
+  validateForecastHorizon,
+  sanitizeForecastPoints,
+  isSecurityHardeningAvailable,
+  sanitizeString
+} from './securityHardeningService';
 
 // Phase 6: Normalization service
 export {
