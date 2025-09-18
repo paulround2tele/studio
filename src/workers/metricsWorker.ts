@@ -5,7 +5,7 @@
 
 // Import types for worker communication
 interface WorkerMessage {
-  type: 'compute' | 'computeAll' | 'result' | 'error' | 'cancel';
+  type: 'compute' | 'computeAll' | 'forecastCompute' | 'result' | 'error' | 'cancel';
   id?: string;
   domains?: any[];
   previousDomains?: any[];
@@ -16,6 +16,23 @@ interface WorkerMessage {
   deltas?: any;
   error?: string;
   timingMs?: number;
+  // Phase 6: Forecast computation fields
+  timeSeries?: Array<{ timestamp: number; value: number }>;
+  horizon?: number;
+  forecastOptions?: {
+    method: 'holtWinters' | 'simpleExp';
+    alpha?: number;
+    beta?: number;
+    gamma?: number;
+    seasonLength?: number;
+  };
+  forecastPoints?: Array<{
+    timestamp: string;
+    metricKey: string;
+    value: number;
+    lower: number;
+    upper: number;
+  }>;
 }
 
 // Import the pure functions used for computation
@@ -100,6 +117,174 @@ function safeCalculateDeltas(current: any, previous?: any) {
   }));
 }
 
+/**
+ * Phase 6: Forecast computation in worker for large datasets
+ */
+function computeForecastInWorker(
+  timeSeries: Array<{ timestamp: number; value: number }>,
+  horizon: number,
+  options?: {
+    method?: 'holtWinters' | 'simpleExp';
+    alpha?: number;
+    beta?: number;
+    gamma?: number;
+    seasonLength?: number;
+  }
+): Array<{ timestamp: string; metricKey: string; value: number; lower: number; upper: number }> {
+  if (timeSeries.length < 8) {
+    return [];
+  }
+
+  const method = options?.method || 'simpleExp';
+  const alpha = options?.alpha || 0.3;
+  
+  // Sort by timestamp
+  const sortedSeries = [...timeSeries].sort((a, b) => a.timestamp - b.timestamp);
+  const values = sortedSeries.map(p => p.value);
+  
+  if (method === 'holtWinters' && 
+      options?.seasonLength && 
+      options.seasonLength >= 5 && 
+      values.length > 2 * options.seasonLength) {
+    return computeHoltWintersInWorker(sortedSeries, horizon, options);
+  } else {
+    return computeSimpleExpSmoothingInWorker(sortedSeries, horizon, alpha);
+  }
+}
+
+/**
+ * Simple Exponential Smoothing in worker
+ */
+function computeSimpleExpSmoothingInWorker(
+  series: Array<{ timestamp: number; value: number }>,
+  horizon: number,
+  alpha: number
+): Array<{ timestamp: string; metricKey: string; value: number; lower: number; upper: number }> {
+  const values = series.map(p => p.value);
+  
+  // Calculate smoothed values
+  let smoothed = values[0];
+  const smoothedValues = [smoothed];
+  
+  for (let i = 1; i < values.length; i++) {
+    smoothed = alpha * values[i] + (1 - alpha) * smoothed;
+    smoothedValues.push(smoothed);
+  }
+  
+  // Calculate residuals for confidence intervals
+  const residuals = values.map((val, i) => val - smoothedValues[i]);
+  const residualStdDev = calculateStdDev(residuals);
+  
+  // Generate forecast points
+  const forecasts = [];
+  const lastTimestamp = series[series.length - 1].timestamp;
+  const timestampInterval = series.length > 1 ? 
+    (series[series.length - 1].timestamp - series[series.length - 2].timestamp) : 
+    86400000; // Default to 1 day
+  
+  const lastSmoothed = smoothedValues[smoothedValues.length - 1];
+  
+  for (let i = 1; i <= horizon; i++) {
+    const forecastTimestamp = lastTimestamp + (i * timestampInterval);
+    const forecastValue = lastSmoothed;
+    const confidenceInterval = 1.96 * residualStdDev;
+    
+    forecasts.push({
+      timestamp: new Date(forecastTimestamp).toISOString(),
+      metricKey: 'forecast',
+      value: forecastValue,
+      lower: Math.max(0, forecastValue - confidenceInterval),
+      upper: forecastValue + confidenceInterval
+    });
+  }
+  
+  return forecasts;
+}
+
+/**
+ * Holt-Winters in worker (simplified additive)
+ */
+function computeHoltWintersInWorker(
+  series: Array<{ timestamp: number; value: number }>,
+  horizon: number,
+  options: any
+): Array<{ timestamp: string; metricKey: string; value: number; lower: number; upper: number }> {
+  const alpha = options.alpha || 0.3;
+  const beta = options.beta || 0.1;
+  const gamma = options.gamma || 0.1;
+  const seasonLength = options.seasonLength || 7;
+  
+  const values = series.map(p => p.value);
+  const n = values.length;
+  
+  // Initialize components
+  let level = values[0];
+  let trend = (values[seasonLength] - values[0]) / seasonLength;
+  const seasonal = new Array(seasonLength).fill(0);
+  
+  // Initialize seasonal indices
+  for (let i = 0; i < seasonLength; i++) {
+    seasonal[i] = values[i] - level;
+  }
+  
+  const fitted = [];
+  
+  // Holt-Winters equations
+  for (let i = 0; i < n; i++) {
+    const seasonalIndex = seasonal[i % seasonLength];
+    const predicted = level + trend + seasonalIndex;
+    fitted.push(predicted);
+    
+    if (i < n - 1) {
+      const newLevel = alpha * (values[i] - seasonalIndex) + (1 - alpha) * (level + trend);
+      const newTrend = beta * (newLevel - level) + (1 - beta) * trend;
+      const newSeasonal = gamma * (values[i] - newLevel) + (1 - gamma) * seasonalIndex;
+      
+      level = newLevel;
+      trend = newTrend;
+      seasonal[i % seasonLength] = newSeasonal;
+    }
+  }
+  
+  // Calculate residuals
+  const residuals = values.map((val, i) => val - fitted[i]);
+  const residualStdDev = calculateStdDev(residuals);
+  
+  // Generate forecasts
+  const forecasts = [];
+  const lastTimestamp = series[series.length - 1].timestamp;
+  const timestampInterval = series.length > 1 ? 
+    (series[series.length - 1].timestamp - series[series.length - 2].timestamp) : 
+    86400000;
+  
+  for (let i = 1; i <= horizon; i++) {
+    const forecastTimestamp = lastTimestamp + (i * timestampInterval);
+    const seasonalIndex = seasonal[(n + i - 1) % seasonLength];
+    const forecastValue = level + (i * trend) + seasonalIndex;
+    const confidenceInterval = 1.96 * residualStdDev * Math.sqrt(i);
+    
+    forecasts.push({
+      timestamp: new Date(forecastTimestamp).toISOString(),
+      metricKey: 'forecast',
+      value: Math.max(0, forecastValue),
+      lower: Math.max(0, forecastValue - confidenceInterval),
+      upper: forecastValue + confidenceInterval
+    });
+  }
+  
+  return forecasts;
+}
+
+/**
+ * Calculate standard deviation helper
+ */
+function calculateStdDev(values: number[]): number {
+  const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
+  const squaredDiffs = values.map(val => Math.pow(val - mean, 2));
+  const variance = squaredDiffs.reduce((sum, diff) => sum + diff, 0) / (values.length - 1);
+  return Math.sqrt(variance);
+}
+
 // Try to import actual functions, fall back to safe versions
 try {
   // In worker context, we might not have access to the full module system
@@ -122,7 +307,7 @@ try {
 let currentTaskId: string | null = null;
 
 self.onmessage = function(event: MessageEvent<WorkerMessage>) {
-  const { type, id, domains, previousDomains, includeMovers } = event.data;
+  const { type, id, domains, previousDomains, includeMovers, timeSeries, horizon, forecastOptions } = event.data;
   
   // Handle cancellation
   if (type === 'cancel') {
@@ -134,6 +319,47 @@ self.onmessage = function(event: MessageEvent<WorkerMessage>) {
         error: 'Task cancelled'
       };
       self.postMessage(cancelResponse);
+    }
+    return;
+  }
+  
+  if (type === 'forecastCompute' && timeSeries && horizon) {
+    currentTaskId = id || null;
+    const startTime = performance.now();
+    
+    try {
+      // Perform forecast computation in worker
+      const forecastPoints = computeForecastInWorker(timeSeries, horizon, forecastOptions);
+      const endTime = performance.now();
+      const timingMs = endTime - startTime;
+      
+      // Check if task was cancelled during execution
+      if (currentTaskId !== id) {
+        return; // Task was cancelled, don't send result
+      }
+      
+      // Send result back to main thread
+      const response: WorkerMessage = {
+        type: 'result',
+        id,
+        forecastPoints,
+        timingMs
+      };
+      
+      self.postMessage(response);
+      currentTaskId = null;
+      
+    } catch (error) {
+      currentTaskId = null;
+      
+      // Send error back to main thread
+      const errorResponse: WorkerMessage = {
+        type: 'error',
+        id,
+        error: error instanceof Error ? error.message : 'Forecast computation error'
+      };
+      
+      self.postMessage(errorResponse);
     }
     return;
   }
