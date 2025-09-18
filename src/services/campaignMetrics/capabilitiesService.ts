@@ -1,6 +1,7 @@
 /**
- * Capabilities Negotiation Service (Phase 7)
- * Handles version detection, capability bootstrapping, and compatibility matrix
+ * Capabilities Negotiation Service (Phase 7 + Phase 9)
+ * Handles version detection, capability bootstrapping, compatibility matrix,
+ * and live capability negotiation via Server-Sent Events
  */
 
 import { telemetryService } from './telemetryService';
@@ -14,6 +15,10 @@ export interface ServerCapabilities {
     anomaliesModel?: string;
     recModel?: string;
     forecastModel?: string;
+    // Phase 9: Additional version tracking
+    blendingEngine?: string;
+    rootCauseAnalytics?: string;
+    offlineResilience?: string;
   };
   features: {
     timeline?: boolean;
@@ -22,6 +27,18 @@ export interface ServerCapabilities {
     recommendations?: boolean;
     benchmarks?: boolean;
     pagination?: boolean;
+    // Phase 9: New features
+    bayesianBlending?: boolean;
+    rootCauseAnalysis?: boolean;
+    liveCapabilityNegotiation?: boolean;
+    serverSentEvents?: boolean;
+    offlineSupport?: boolean;
+  };
+  // Phase 9: Server push configuration
+  serverPush?: {
+    enabled: boolean;
+    endpoint?: string;
+    supportedEvents: string[];
   };
 }
 
@@ -31,6 +48,28 @@ export interface ServerCapabilities {
 interface CachedCapabilities extends ServerCapabilities {
   lastFetched: number;
   cacheExpiry: number;
+}
+
+/**
+ * Phase 9: Capability diff for live updates
+ */
+export interface CapabilityDiff {
+  type: 'feature_added' | 'feature_removed' | 'version_updated' | 'config_changed';
+  path: string; // JSONPath to the changed field
+  oldValue?: any;
+  newValue?: any;
+  timestamp: string;
+}
+
+/**
+ * Phase 9: Live capability update
+ */
+export interface LiveCapabilityUpdate {
+  capabilities: ServerCapabilities;
+  diffs: CapabilityDiff[];
+  updateId: string;
+  timestamp: string;
+  requiresReload?: boolean;
 }
 
 /**
@@ -55,7 +94,16 @@ class CapabilitiesService {
     ['forecastModel', 2], // Server forecast required if forecastModel >= 2
     ['anomaliesModel', 1], // Server anomalies required if model >= 1
     ['recModel', 1], // Server recommendations required if model >= 1
+    // Phase 9: New model requirements
+    ['blendingEngine', 1], // Bayesian blending if available
+    ['rootCauseAnalytics', 1], // Root cause analysis if available
   ]);
+
+  // Phase 9: SSE for live capability negotiation
+  private sseConnection: EventSource | null = null;
+  private capabilityUpdateCallbacks = new Set<(update: LiveCapabilityUpdate) => void>();
+  private rollbackStack: ServerCapabilities[] = [];
+  private maxRollbackDepth = 5;
 
   /**
    * Fetch capabilities from server with caching
@@ -276,13 +324,228 @@ class CapabilitiesService {
   }
 
   /**
-   * Initialize capabilities service
+   * Initialize capabilities service with optional live negotiation
    */
   async initialize(): Promise<void> {
     try {
       await this.fetchCapabilities();
+      
+      // Phase 9: Start live capability negotiation if supported
+      if (this.capabilities?.serverPush?.enabled && this.capabilities.features.liveCapabilityNegotiation) {
+        this.initializeLiveNegotiation();
+      }
     } catch (error) {
       console.warn('[CapabilitiesService] Failed to initialize:', error);
+    }
+  }
+
+  /**
+   * Phase 9: Initialize live capability negotiation via SSE
+   */
+  private initializeLiveNegotiation(): void {
+    if (!this.capabilities?.serverPush?.endpoint) {
+      console.warn('[CapabilitiesService] No SSE endpoint configured for live negotiation');
+      return;
+    }
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const sseUrl = `${apiUrl}${this.capabilities.serverPush.endpoint}`;
+      
+      this.sseConnection = new EventSource(sseUrl);
+
+      this.sseConnection.addEventListener('capability-update', (event) => {
+        this.handleLiveCapabilityUpdate(event);
+      });
+
+      this.sseConnection.addEventListener('capability-rollback', (event) => {
+        this.handleCapabilityRollback(event);
+      });
+
+      this.sseConnection.onerror = (error) => {
+        console.error('[CapabilitiesService] SSE error:', error);
+        telemetryService.emitTelemetry('sse_capability_error', {
+          error: String(error),
+          timestamp: new Date().toISOString(),
+        });
+      };
+
+      this.sseConnection.onopen = () => {
+        telemetryService.emitTelemetry('sse_capability_connected', {
+          timestamp: new Date().toISOString(),
+        });
+      };
+
+    } catch (error) {
+      console.error('[CapabilitiesService] Failed to initialize SSE:', error);
+    }
+  }
+
+  /**
+   * Phase 9: Handle live capability updates
+   */
+  private handleLiveCapabilityUpdate(event: MessageEvent): void {
+    try {
+      const update: LiveCapabilityUpdate = JSON.parse(event.data);
+      
+      // Store current capabilities for rollback
+      if (this.capabilities) {
+        this.rollbackStack.push(JSON.parse(JSON.stringify(this.capabilities)));
+        if (this.rollbackStack.length > this.maxRollbackDepth) {
+          this.rollbackStack.shift();
+        }
+      }
+
+      // Validate the update before applying
+      if (this.validateCapabilityUpdate(update)) {
+        // Apply the update
+        this.capabilities = update.capabilities;
+        this.setCachedCapabilities(update.capabilities);
+
+        // Notify callbacks
+        this.capabilityUpdateCallbacks.forEach(callback => {
+          try {
+            callback(update);
+          } catch (error) {
+            console.error('[CapabilitiesService] Error in update callback:', error);
+          }
+        });
+
+        telemetryService.emitTelemetry('capability_update_applied', {
+          updateId: update.updateId,
+          diffsCount: update.diffs.length,
+          requiresReload: update.requiresReload,
+        });
+
+        // If update requires reload, emit warning
+        if (update.requiresReload) {
+          console.warn('[CapabilitiesService] Capability update requires page reload for full effect');
+        }
+      } else {
+        console.error('[CapabilitiesService] Invalid capability update rejected:', update);
+        telemetryService.emitTelemetry('capability_update_rejected', {
+          updateId: update.updateId,
+          reason: 'validation_failed',
+        });
+      }
+    } catch (error) {
+      console.error('[CapabilitiesService] Error processing capability update:', error);
+    }
+  }
+
+  /**
+   * Phase 9: Handle capability rollback requests
+   */
+  private handleCapabilityRollback(event: MessageEvent): void {
+    try {
+      const rollbackData = JSON.parse(event.data);
+      const { steps = 1 } = rollbackData;
+
+      if (this.rollbackStack.length >= steps) {
+        // Rollback to previous state
+        const previousCapabilities = this.rollbackStack[this.rollbackStack.length - steps];
+        this.capabilities = JSON.parse(JSON.stringify(previousCapabilities));
+        this.setCachedCapabilities(this.capabilities);
+
+        // Remove rolled back states
+        this.rollbackStack = this.rollbackStack.slice(0, -steps);
+
+        telemetryService.emitTelemetry('capability_rollback_applied', {
+          steps,
+          timestamp: new Date().toISOString(),
+        });
+
+        console.info(`[CapabilitiesService] Rolled back ${steps} capability updates`);
+      } else {
+        console.warn('[CapabilitiesService] Cannot rollback: insufficient history');
+      }
+    } catch (error) {
+      console.error('[CapabilitiesService] Error processing rollback:', error);
+    }
+  }
+
+  /**
+   * Phase 9: Validate capability update before applying
+   */
+  private validateCapabilityUpdate(update: LiveCapabilityUpdate): boolean {
+    // Basic structure validation
+    if (!update.capabilities || !Array.isArray(update.diffs) || !update.updateId) {
+      return false;
+    }
+
+    // Validate that versions are either missing or valid
+    if (update.capabilities.versions) {
+      for (const [key, version] of Object.entries(update.capabilities.versions)) {
+        if (version && typeof version !== 'string') {
+          return false;
+        }
+      }
+    }
+
+    // Validate features structure
+    if (update.capabilities.features) {
+      for (const [key, feature] of Object.entries(update.capabilities.features)) {
+        if (feature !== undefined && typeof feature !== 'boolean') {
+          return false;
+        }
+      }
+    }
+
+    // Validate diffs structure
+    for (const diff of update.diffs) {
+      if (!diff.type || !diff.path || !diff.timestamp) {
+        return false;
+      }
+      
+      if (!['feature_added', 'feature_removed', 'version_updated', 'config_changed'].includes(diff.type)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Phase 9: Subscribe to live capability updates
+   */
+  subscribeTo(callback: (update: LiveCapabilityUpdate) => void): () => void {
+    this.capabilityUpdateCallbacks.add(callback);
+    
+    return () => {
+      this.capabilityUpdateCallbacks.delete(callback);
+    };
+  }
+
+  /**
+   * Phase 9: Manual rollback trigger
+   */
+  rollbackCapabilities(steps: number = 1): boolean {
+    if (this.rollbackStack.length >= steps) {
+      const previousCapabilities = this.rollbackStack[this.rollbackStack.length - steps];
+      this.capabilities = JSON.parse(JSON.stringify(previousCapabilities));
+      this.setCachedCapabilities(this.capabilities);
+      this.rollbackStack = this.rollbackStack.slice(0, -steps);
+
+      telemetryService.emitTelemetry('manual_capability_rollback', {
+        steps,
+        timestamp: new Date().toISOString(),
+      });
+
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Phase 9: Close SSE connection
+   */
+  disconnect(): void {
+    if (this.sseConnection) {
+      this.sseConnection.close();
+      this.sseConnection = null;
+      telemetryService.emitTelemetry('sse_capability_disconnected', {
+        timestamp: new Date().toISOString(),
+      });
     }
   }
 }
