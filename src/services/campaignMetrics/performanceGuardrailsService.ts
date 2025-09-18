@@ -7,7 +7,6 @@ import { telemetryService } from './telemetryService';
 
 // Declare process and global for Node.js environment
 declare const process: any;
-declare const global: any;
 
 /**
  * Memory usage statistics
