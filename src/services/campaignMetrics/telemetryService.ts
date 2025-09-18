@@ -3,6 +3,8 @@
  * Sampling-based metrics collection for Phase 5 features
  */
 
+// Declare process for Node.js environment variables
+
 // Feature flag for telemetry
 const isTelemetryEnabled = () => {
   const sampling = parseFloat(process.env.NEXT_PUBLIC_METRICS_TELEMETRY_SAMPLING || '0');
@@ -14,7 +16,7 @@ const getTelemetrySampling = (): number => {
 };
 
 /**
- * Telemetry event schema (metrics-v1 + Phase 8)
+ * Telemetry event schema (metrics-v1 + Phase 8 + Phase 9)
  */
 export interface TelemetryEvent {
   type: 'timeline_hydrate' | 'anomaly_detect' | 'worker_task' | 'stream_pool_state' | 'export_generated' | 
@@ -23,7 +25,16 @@ export interface TelemetryEvent {
         // Phase 8 event types
         'stream_quality_update' | 'governance_action' | 'recommendation_mix' | 'degradation_tier' | 'data_quality_flag' |
         'forecast_arbitration' | 'multi_model_comparison' | 'cohort_segmentation' | 'optimistic_reconciliation' |
-        'snapshot_compaction' | 'quantile_synthesis';
+        'snapshot_compaction' | 'quantile_synthesis' |
+        // Phase 9 event types
+        'model_registered' | 'model_performance_updated' | 'forecast_blended' | 'forecast_blend_fallback' |
+        'root_cause_analysis_completed' | 'action_queued' | 'action_queue_processed' | 'connection_restored' |
+        'connection_lost' | 'governance_event_recorded' | 'offline_cache_set' | 'offline_data_cleared' |
+        'sse_capability_connected' | 'sse_capability_error' | 'sse_capability_disconnected' |
+        'capability_update_applied' | 'capability_update_rejected' | 'capability_rollback_applied' |
+        'manual_capability_rollback' | 'domain_health_updated' | 'propagation_rule_added' |
+        'propagation_rule_removed' | 'health_propagated' | 'health_event_emitted' | 'critical_cache_refresh' |
+        'recommendation_attribution' | 'security_hardening' | 'performance_guardrails' | 'export_v5_generated';
   timestamp: string;
   sessionId: string;
   data: Record<string, any>;

@@ -89,7 +89,7 @@ export {
   isPortfolioMetricsAvailable
 } from './portfolioMetricsService';
 
-// Phase 6 + Phase 8: Forecast service
+// Phase 6 + Phase 8 + Phase 9: Forecast service
 export {
   getServerForecast,
   computeClientForecast,
@@ -98,7 +98,9 @@ export {
   isForecastAvailable,
   getDefaultHorizon,
   // Phase 8: Multi-model forecasting
-  getMultiModelForecast
+  getMultiModelForecast,
+  // Phase 9: Enhanced Bayesian blending
+  getEnhancedMultiModelForecast
 } from './forecastService';
 
 // Phase 6 + Phase 8: Cohort service
@@ -230,3 +232,52 @@ export {
   isTelemetryAvailable,
   getTelemetryStatus
 } from './telemetryService';
+
+// Phase 9: Bayesian Model Blending service
+export {
+  forecastBlendService,
+  type ModelRegistration,
+  type ModelPerformanceStats,
+  type BlendedForecast
+} from './forecastBlendService';
+
+// Phase 9: Root-Cause Analytics service
+export {
+  rootCauseAnalyticsService,
+  type ContributingFactor,
+  type InterventionRecommendation,
+  type CausalChain,
+  type AnomalyContext,
+  type CausalFactorType
+} from './rootCauseAnalyticsService';
+
+// Phase 9: Offline Resilience service
+export {
+  offlineResilienceService,
+  type DeferredAction,
+  type GovernanceEvent,
+  type OfflineSyncStatus,
+  type DeferredActionType
+} from './offlineResilienceService';
+
+// Phase 9: Health Fabric service
+export {
+  healthFabricService,
+  type DomainHealth,
+  type PropagationRule,
+  type CascadingEffect,
+  type HealthFabric,
+  type HealthEvent,
+  type HealthScore,
+  type HealthStatus
+} from './healthFabricService';
+
+// Phase 7 + Phase 9: Enhanced Capabilities service
+export {
+  capabilitiesService,
+  type ServerCapabilities,
+  type DomainResolution,
+  type DomainType,
+  type CapabilityDiff,
+  type LiveCapabilityUpdate
+} from './capabilitiesService';
