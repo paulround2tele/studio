@@ -20,7 +20,7 @@ const getForecastHorizon = () =>
 
 // Phase 9: Bayesian blending feature flag
 const isBayesianBlendingEnabled = () =>
-  process.env.NEXT_PUBLIC_ENABLE_BAYESIAN_BLENDING !== 'false';
+  process.env.NEXT_PUBLIC_ENABLE_BAYESIAN_BLENDING === 'true';
 
 /**
  * Clamp forecast horizon to acceptable bounds (1-30 days)
