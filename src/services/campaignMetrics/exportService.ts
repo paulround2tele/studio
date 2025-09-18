@@ -771,6 +771,292 @@ export function parseShareBundleFromURL(url: string): ShareBundle | null {
 }
 
 /**
+ * Phase 11: Export v7 with scenarios, policies, visualization profiles, and edge processing
+ */
+
+// Add Phase 11 fields to ShareBundle interface
+export interface ShareBundleV7 extends ShareBundle {
+  // Phase 11: Version 7 additions
+  scenarios?: Array<{
+    id: string;
+    name: string;
+    interventions: Array<{
+      type: string;
+      metricKey?: string;
+      adjustment?: number;
+      description?: string;
+    }>;
+    projectionsHash: string;
+    createdAt: string;
+  }>;
+  policies?: Array<{
+    id: string;
+    version: string;
+    hash: string;
+    name: string;
+    enabled: boolean;
+    actionsCount: number;
+  }>;
+  vizProfiles?: Array<{
+    metricKey: string;
+    resolutions: number[];
+    highlightStats: {
+      anomalies: number;
+      causalPivots: number;
+      interventions: number;
+    };
+    originalPoints: number;
+    downsampledPoints: number;
+  }>;
+  edgeProcessing?: {
+    tasksExecuted: number;
+    avgLatencyMs: number;
+    workerHealthy: boolean;
+    fallbackRate: number;
+    queueStats: {
+      maxQueueSize: number;
+      avgQueueTime: number;
+    };
+  };
+}
+
+/**
+ * Export options for Phase 11 v7
+ */
+export interface ExportOptionsV7 extends ExportOptionsV3 {
+  includeScenarios?: boolean;
+  includePolicies?: boolean;
+  includeVizProfiles?: boolean;
+  includeEdgeProcessing?: boolean;
+  scenarioData?: ShareBundleV7['scenarios'];
+  policyData?: ShareBundleV7['policies'];
+  vizProfileData?: ShareBundleV7['vizProfiles'];
+  edgeProcessingData?: ShareBundleV7['edgeProcessing'];
+}
+
+/**
+ * Export snapshots as JSON with Phase 11 enhancements (Version 7)
+ */
+export function exportSnapshotsJSONV7(
+  snapshots: AggregateSnapshot[],
+  campaignId: string,
+  filename?: string,
+  optionsV7?: ExportOptionsV7
+): void {
+  if (!isExportToolsEnabled()) {
+    console.warn('[ExportService] Export tools disabled');
+    return;
+  }
+
+  // Check if any Phase 11 features are included
+  const hasPhase11Data = !!(
+    optionsV7?.includeScenarios || 
+    optionsV7?.includePolicies || 
+    optionsV7?.includeVizProfiles || 
+    optionsV7?.includeEdgeProcessing
+  );
+  
+  const version = hasPhase11Data ? '7.0' : '6.0';
+  
+  const exportData: ShareBundleV7 = {
+    version,
+    campaignId,
+    exportedAt: new Date().toISOString(),
+    snapshots,
+    metadata: {
+      totalSnapshots: snapshots.length,
+      dateRange: {
+        from: snapshots.length > 0 ? snapshots[0].timestamp : new Date().toISOString(),
+        to: snapshots.length > 0 ? snapshots[snapshots.length - 1].timestamp : new Date().toISOString()
+      }
+    }
+  };
+
+  // Include all previous version data (Phase 6, 7, 10)
+  if (optionsV7) {
+    // Phase 6 data
+    if (optionsV7.includeForecast && optionsV7.forecastData) {
+      exportData.forecast = optionsV7.forecastData;
+    }
+    
+    if (optionsV7.includeNormalized && optionsV7.normalizationData) {
+      exportData.normalization = optionsV7.normalizationData;
+    }
+    
+    if (optionsV7.includeCohorts && optionsV7.cohortData) {
+      exportData.cohorts = optionsV7.cohortData;
+    }
+
+    // Phase 7 data
+    if (optionsV7.includeCapabilities) {
+      const currentCapabilities = capabilitiesService.getCurrentCapabilities();
+      if (currentCapabilities) {
+        exportData.capabilitiesSnapshot = {
+          versions: currentCapabilities.versions,
+          features: currentCapabilities.features,
+          capturedAt: new Date().toISOString(),
+        };
+      }
+    }
+
+    if (optionsV7.includeResolutionDecisions && resolutionDecisions.length > 0) {
+      exportData.resolutionDecisions = resolutionDecisions.slice();
+    }
+
+    // Phase 10 data
+    if (optionsV7.causalGraphData) {
+      exportData.causalGraph = optionsV7.causalGraphData;
+    }
+
+    if (optionsV7.experimentsData) {
+      exportData.experiments = optionsV7.experimentsData;
+    }
+
+    if (optionsV7.semanticSummariesData) {
+      exportData.semanticSummaries = optionsV7.semanticSummariesData;
+    }
+
+    if (optionsV7.privacyLedgerData) {
+      exportData.privacyLedger = optionsV7.privacyLedgerData;
+    }
+
+    if (optionsV7.perfTracesData) {
+      exportData.perfTraces = optionsV7.perfTracesData;
+    }
+
+    // Phase 11 data
+    if (optionsV7.includeScenarios && optionsV7.scenarioData) {
+      exportData.scenarios = optionsV7.scenarioData;
+    }
+
+    if (optionsV7.includePolicies && optionsV7.policyData) {
+      exportData.policies = optionsV7.policyData;
+    }
+
+    if (optionsV7.includeVizProfiles && optionsV7.vizProfileData) {
+      exportData.vizProfiles = optionsV7.vizProfileData;
+    }
+
+    if (optionsV7.includeEdgeProcessing && optionsV7.edgeProcessingData) {
+      exportData.edgeProcessing = optionsV7.edgeProcessingData;
+    }
+  }
+
+  // Create and download file
+  const jsonString = JSON.stringify(exportData, null, 2);
+  const blob = new Blob([jsonString], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename || `campaign-${campaignId}-export-v7-${new Date().toISOString().split('T')[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  // Emit telemetry
+  const sizeMB = blob.size / (1024 * 1024);
+  telemetryService.emitTelemetry('export_generated', {
+    version: 7,
+    type: 'json',
+    snapshots: snapshots.length,
+    sizeMB: Math.round(sizeMB * 100) / 100,
+    hasScenarios: !!optionsV7?.includeScenarios,
+    hasPolicies: !!optionsV7?.includePolicies,
+    hasVizProfiles: !!optionsV7?.includeVizProfiles,
+    hasEdgeProcessing: !!optionsV7?.includeEdgeProcessing
+  });
+}
+
+/**
+ * Decode share bundle with backward compatibility for v1-v7
+ */
+export function decodeShareBundleV7(encodedData: string): ShareBundleV7 | null {
+  try {
+    const decoded = atob(encodedData);
+    const parsed = JSON.parse(decoded) as ShareBundleV7;
+    
+    // Validate version
+    const version = parseFloat(parsed.version);
+    if (version < 1.0 || version > 7.0) {
+      console.warn(`[ExportService] Unsupported bundle version: ${parsed.version}`);
+      return null;
+    }
+
+    // Backward compatibility handling
+    if (version < 7.0) {
+      // Bundle is from earlier version, ensure optional Phase 11 fields are undefined
+      delete (parsed as any).scenarios;
+      delete (parsed as any).policies;
+      delete (parsed as any).vizProfiles;
+      delete (parsed as any).edgeProcessing;
+    }
+
+    return parsed;
+  } catch (error) {
+    console.warn('[ExportService] Failed to decode share bundle:', error);
+    return null;
+  }
+}
+
+/**
+ * Create share bundle from current state (v7)
+ */
+export function createShareBundleV7(
+  snapshots: AggregateSnapshot[],
+  campaignId: string,
+  options?: ExportOptionsV7
+): string {
+  const exportData: ShareBundleV7 = {
+    version: '7.0',
+    campaignId,
+    exportedAt: new Date().toISOString(),
+    snapshots,
+    metadata: {
+      totalSnapshots: snapshots.length,
+      dateRange: {
+        from: snapshots.length > 0 ? snapshots[0].timestamp : new Date().toISOString(),
+        to: snapshots.length > 0 ? snapshots[snapshots.length - 1].timestamp : new Date().toISOString()
+      }
+    }
+  };
+
+  // Add optional data based on options
+  if (options) {
+    // Include Phase 11 data if available
+    if (options.includeScenarios && options.scenarioData) {
+      exportData.scenarios = options.scenarioData;
+    }
+
+    if (options.includePolicies && options.policyData) {
+      exportData.policies = options.policyData;
+    }
+
+    if (options.includeVizProfiles && options.vizProfileData) {
+      exportData.vizProfiles = options.vizProfileData;
+    }
+
+    if (options.includeEdgeProcessing && options.edgeProcessingData) {
+      exportData.edgeProcessing = options.edgeProcessingData;
+    }
+
+    // Include all other version data as well
+    if (options.includeForecast && options.forecastData) {
+      exportData.forecast = options.forecastData;
+    }
+
+    if (options.causalGraphData) {
+      exportData.causalGraph = options.causalGraphData;
+    }
+
+    // Add other data as needed...
+  }
+
+  return btoa(JSON.stringify(exportData));
+}
+
+/**
  * Validate export file size
  */
 export function validateExportSize(snapshots: AggregateSnapshot[]): { valid: boolean; size: number; warning?: string } {

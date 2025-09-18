@@ -81,6 +81,16 @@ export const PHASE7_FLAGS = {
   ENABLE_FORECAST_CUSTOM_HORIZON: 'ENABLE_FORECAST_CUSTOM_HORIZON'
 } as const;
 
+// Phase 11 feature flags (Collaborative Scenarios, Edge Processing, Policy Governance)
+export const PHASE11_FLAGS = {
+  ENABLE_SCENARIOS: 'ENABLE_SCENARIOS',
+  ENABLE_EDGE_PROCESSING: 'ENABLE_EDGE_PROCESSING',
+  ENABLE_POLICY_ENGINE: 'ENABLE_POLICY_ENGINE',
+  ENABLE_COLLAB_DRAFTS: 'ENABLE_COLLAB_DRAFTS',
+  ENABLE_ADAPTIVE_VIZ: 'ENABLE_ADAPTIVE_VIZ',
+  ENABLE_I18N_EXTENDED: 'ENABLE_I18N_EXTENDED'
+} as const;
+
 /**
  * Check if campaign wizard should be used (default enabled unless explicitly disabled)
  */
@@ -125,4 +135,51 @@ export function useTimelinePagination(): boolean {
  */
 export function useForecastCustomHorizon(): boolean {
   return isFeatureEnabled(PHASE7_FLAGS.ENABLE_FORECAST_CUSTOM_HORIZON, true);
+}
+
+/**
+ * Phase 11 Feature Flag Functions
+ * All default to false for strict backward compatibility
+ */
+
+/**
+ * Check if scenario simulation is enabled (Phase 11)
+ */
+export function useScenarioSimulation(): boolean {
+  return isFeatureEnabled(PHASE11_FLAGS.ENABLE_SCENARIOS, false);
+}
+
+/**
+ * Check if edge processing is enabled (Phase 11)
+ */
+export function useEdgeProcessing(): boolean {
+  return isFeatureEnabled(PHASE11_FLAGS.ENABLE_EDGE_PROCESSING, false);
+}
+
+/**
+ * Check if policy engine is enabled (Phase 11)
+ */
+export function usePolicyEngine(): boolean {
+  return isFeatureEnabled(PHASE11_FLAGS.ENABLE_POLICY_ENGINE, false);
+}
+
+/**
+ * Check if collaborative drafts are enabled (Phase 11)
+ */
+export function useCollaborativeDrafts(): boolean {
+  return isFeatureEnabled(PHASE11_FLAGS.ENABLE_COLLAB_DRAFTS, false);
+}
+
+/**
+ * Check if adaptive visualization is enabled (Phase 11)
+ */
+export function useAdaptiveVisualization(): boolean {
+  return isFeatureEnabled(PHASE11_FLAGS.ENABLE_ADAPTIVE_VIZ, false);
+}
+
+/**
+ * Check if extended i18n is enabled (Phase 11)
+ */
+export function useExtendedI18n(): boolean {
+  return isFeatureEnabled(PHASE11_FLAGS.ENABLE_I18N_EXTENDED, false);
 }
