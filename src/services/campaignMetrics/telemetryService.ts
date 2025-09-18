@@ -34,7 +34,8 @@ export interface TelemetryEvent {
         'sse_capability_connected' | 'sse_capability_error' | 'sse_capability_disconnected' |
         'capability_update_applied' | 'capability_update_rejected' | 'capability_rollback_applied' |
         'manual_capability_rollback' | 'domain_health_updated' | 'propagation_rule_added' |
-        'propagation_rule_removed' | 'health_propagated' | 'health_event_emitted' | 'critical_cache_refresh';
+        'propagation_rule_removed' | 'health_propagated' | 'health_event_emitted' | 'critical_cache_refresh' |
+        'recommendation_attribution' | 'security_hardening' | 'performance_guardrails' | 'export_v5_generated';
   timestamp: string;
   sessionId: string;
   data: Record<string, any>;

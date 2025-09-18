@@ -1,4 +1,4 @@
-// Simple test file to check Phase 9 services compilation
+// Simple test file to check Phase 9 NEW services compilation only
 import { forecastBlendService } from './forecastBlendService';
 import { rootCauseAnalyticsService } from './rootCauseAnalyticsService';
 import { offlineResilienceService } from './offlineResilienceService';
@@ -8,8 +8,8 @@ import { enhancedSecurityHardeningService } from './enhancedSecurityHardeningSer
 import { performanceGuardrailsService } from './performanceGuardrailsService';
 import { exportV5EvolutionService } from './exportV5EvolutionService';
 
-// Test basic functionality
-console.log('Phase 9 services loaded successfully');
+// Test basic functionality of NEW Phase 9 services only
+console.log('Phase 9 NEW services loaded successfully');
 
 // Test forecast blend service
 forecastBlendService.registerModel('test-model', 'client', 1.0);
@@ -53,4 +53,4 @@ console.log('Memory monitoring available:', memoryStats !== null);
 const exportStats = exportV5EvolutionService.getExportStatistics();
 console.log('Export v5 service ready:', exportStats.totalExports >= 0);
 
-console.log('All Phase 9 services operational!');
+console.log('All Phase 9 NEW services operational!');
