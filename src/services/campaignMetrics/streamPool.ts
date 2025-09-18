@@ -249,7 +249,7 @@ class StreamPool {
     // This will be implemented when telemetry service is available
     if (typeof window !== 'undefined' && (window as any).__telemetryService) {
       try {
-        (window as any).__telemetryService.emit(eventType, data);
+        (window as any).__telemetryService.emitTelemetry(eventType, data);
       } catch (error) {
         // Silent fail for telemetry
       }
