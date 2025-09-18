@@ -72,7 +72,7 @@ export async function getServerForecast(
   horizon: number = getForecastHorizon()
 ): Promise<ServerForecastResponse> {
   if (!isForecastsEnabled()) {
-    throw new Error('Forecasts disabled');
+    throw new Error('Forecasting feature is disabled via configuration. Enable NEXT_PUBLIC_ENABLE_FORECASTS to use this feature.');
   }
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
