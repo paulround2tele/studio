@@ -32,7 +32,7 @@ export async function fetchServerTimeline(
 
   try {
     // TODO: Replace with actual API endpoint when available
-    const url = new URL(`/api/v2/campaigns/${campaignId}/timeline`, process.env.NEXT_PUBLIC_API_URL || '');
+    const url = new URL(`/campaigns/${campaignId}/timeline`, process.env.NEXT_PUBLIC_API_URL || '');
     if (since) {
       url.searchParams.set('since', since);
     }
