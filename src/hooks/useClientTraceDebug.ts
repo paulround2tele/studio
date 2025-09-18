@@ -220,6 +220,7 @@ export function useClientTraceDebug(options: UseTracingDebugOptions = {}): [Trac
       const interval = setInterval(refresh, refreshInterval);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [autoRefresh, refreshInterval, refresh]);
 
   // Initial load
@@ -227,24 +228,13 @@ export function useClientTraceDebug(options: UseTracingDebugOptions = {}): [Trac
     refresh();
   }, [refresh]);
 
-  const actions: TracingDebugActions = {
-    refresh,
-    exportRecent,
-    clearTraces,
-    getSpan,
-    filterByOperation,
-    filterByStatus,
-    getSpanDuration
-  };
-
-  return [state, actions];
-
   // Auto-refresh effect
   useEffect(() => {
     if (autoRefresh && refreshInterval > 0) {
       const interval = setInterval(refresh, refreshInterval);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [autoRefresh, refreshInterval, refresh]);
 
   // Initial load

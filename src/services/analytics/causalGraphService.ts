@@ -277,12 +277,17 @@ class CausalGraphService {
         if (i !== j) {
           const fromMetric = metrics[i];
           const toMetric = metrics[j];
+          
+          if (!fromMetric || !toMetric) continue;
+          
           const edgeId = `${fromMetric}->${toMetric}`;
+          
+          const fromObs = metricObservations.get(fromMetric);
+          const toObs = metricObservations.get(toMetric);
+          
+          if (!fromObs || !toObs) continue;
 
-          const causalStrength = this.calculateCausalStrength(
-            metricObservations.get(fromMetric)!,
-            metricObservations.get(toMetric)!
-          );
+          const causalStrength = this.calculateCausalStrength(fromObs, toObs);
 
           if (causalStrength.confidence > 0.1) {
             this.edges.set(edgeId, {
@@ -407,8 +412,13 @@ class CausalGraphService {
     let sumSqY = 0;
 
     for (let i = 0; i < n; i++) {
-      const deltaX = x[i] - meanX;
-      const deltaY = y[i] - meanY;
+      const xVal = x[i];
+      const yVal = y[i];
+      
+      if (xVal === undefined || yVal === undefined) continue;
+      
+      const deltaX = xVal - meanX;
+      const deltaY = yVal - meanY;
       numerator += deltaX * deltaY;
       sumSqX += deltaX * deltaX;
       sumSqY += deltaY * deltaY;

@@ -299,16 +299,16 @@ export function ForecastSparkline({
               
               {points.length > 0 && (
                 <div>
-                  Current: {formatMetricValue(metricKey, points[historicalCount - 1]?.value)}
+                  Current: {formatMetricValue(metricKey, points[historicalCount - 1]?.value ?? 0)}
                 </div>
               )}
               
               {forecast && forecast.length > 0 && (
                 <div>
-                  Projected: {formatMetricValue(metricKey, forecast[forecast.length - 1].value)}
-                  {forecast[forecast.length - 1].lower !== undefined && (
+                  Projected: {formatMetricValue(metricKey, forecast[forecast.length - 1]?.value ?? 0)}
+                  {(forecast[forecast.length - 1]?.lower !== undefined) && (
                     <span className="text-gray-500">
-                      {' '}({formatMetricValue(metricKey, forecast[forecast.length - 1].lower)} - {formatMetricValue(metricKey, forecast[forecast.length - 1].upper)})
+                      {' '}({formatMetricValue(metricKey, forecast[forecast.length - 1]?.lower ?? 0)} - {formatMetricValue(metricKey, forecast[forecast.length - 1]?.upper ?? 0)})
                     </span>
                   )}
                 </div>
@@ -329,6 +329,9 @@ function calculateTrend(values: number[]): 'up' | 'down' | 'flat' {
   
   const first = values[0];
   const last = values[values.length - 1];
+  
+  if (first === undefined || last === undefined) return 'flat';
+  
   const percentChange = Math.abs((last - first) / first) * 100;
   
   if (percentChange < 5) return 'flat'; // Less than 5% change is considered flat

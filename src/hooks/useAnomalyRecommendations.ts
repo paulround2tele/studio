@@ -91,7 +91,7 @@ export function useAnomalyRecommendations(
 
     try {
       const startTime = Date.now();
-      const detectedAnomalies = detectAnomalies(snapshots, anomalyConfig);
+      const detectedAnomalies = detectAnomalies(snapshots, undefined, anomalyConfig);
       
       setAnomalies(detectedAnomalies);
       setLastDetection(new Date().toISOString());
@@ -141,6 +141,7 @@ export function useAnomalyRecommendations(
       const timeoutId = setTimeout(runDetection, 300);
       return () => clearTimeout(timeoutId);
     }
+    return undefined;
   }, [autoDetect, isEnabled, runDetection]);
 
   /**

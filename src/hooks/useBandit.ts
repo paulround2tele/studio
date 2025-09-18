@@ -240,6 +240,7 @@ export function useBandit(options: UseBanditOptions = {}): [BanditState, BanditA
       const interval = setInterval(refresh, refreshInterval);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [autoRefresh, refreshInterval, refresh]);
 
   // Initial load
