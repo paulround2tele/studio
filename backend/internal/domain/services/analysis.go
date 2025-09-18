@@ -1500,7 +1500,29 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 					
 					if legacyVal > 0 && newVal > 0 {
 						// Add to variance collector with metadata
-						legacyMeta := map[string]any{"keywords": map[string]any{"unique_count": legacyVal}}
+						// Attempt to extract actual legacy metadata from sr.LegacyMeta if available.
+						var legacyMeta map[string]any
+						if sr.LegacyMeta != nil {
+							// sr.LegacyMeta is assumed to be a JSON-encoded []byte or string.
+							switch v := sr.LegacyMeta.(type) {
+							case []byte:
+								if err := json.Unmarshal(v, &legacyMeta); err != nil {
+									legacyMeta = nil
+								}
+							case string:
+								if err := json.Unmarshal([]byte(v), &legacyMeta); err != nil {
+									legacyMeta = nil
+								}
+							case map[string]any:
+								legacyMeta = v
+							default:
+								legacyMeta = nil
+							}
+						}
+						// Fallback: If legacyMeta is nil, use synthetic structure for backward compatibility.
+						if legacyMeta == nil {
+							legacyMeta = map[string]any{"keywords": map[string]any{"unique_count": legacyVal}}
+						}
 						collector.Add(sr.Domain, legacyVal, newVal, legacyMeta, nf)
 						
 						// Record variance in histogram if metrics available
