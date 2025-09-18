@@ -728,7 +728,7 @@ class HealthFabricService {
       clearInterval(this.updateTimer);
     }
 
-    this.updateTimer = window.setInterval(() => {
+    this.updateTimer = setInterval(() => {
       this.updateCounter++;
       
       // Calculate update frequency
