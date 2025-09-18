@@ -1,6 +1,6 @@
 /**
- * Anomaly Detection Service (Phase 5)
- * Z-score based anomaly detection for key campaign metrics
+ * Anomaly Detection Service (Phase 5 + Phase 6)
+ * Z-score based anomaly detection with server-provided anomaly preference
  */
 
 import { AggregateSnapshot, ExtendedAggregateMetrics } from '@/types/campaignMetrics';
@@ -19,7 +19,7 @@ export interface AnomalyConfig {
 }
 
 /**
- * Detected anomaly object
+ * Detected anomaly object (Phase 6: Added source tracking)
  */
 export interface Anomaly {
   metric: string;
@@ -28,6 +28,22 @@ export interface Anomaly {
   severity: 'warning' | 'critical';
   timestamp: string;
   description: string;
+  source?: 'client' | 'server'; // Phase 6: Track anomaly source
+}
+
+/**
+ * Server-provided anomaly (Phase 6)
+ */
+export interface ServerAnomaly {
+  id: string;
+  metric: string;
+  value: number;
+  threshold: number;
+  severity: 'warning' | 'critical';
+  timestamp: string;
+  description: string;
+  confidence: number;
+  modelVersion?: string;
 }
 
 /**
@@ -52,16 +68,48 @@ const DEFAULT_CONFIG: AnomalyConfig = {
 };
 
 /**
- * Detect anomalies in campaign timeline
+ * Detect anomalies in campaign timeline with server anomaly preference (Phase 6)
  */
 export function detectAnomalies(
   snapshots: AggregateSnapshot[],
+  serverAnomalies?: ServerAnomaly[],
   config: Partial<AnomalyConfig> = {}
 ): Anomaly[] {
   if (!isAnomalyDetectionEnabled()) {
     return [];
   }
 
+  // Phase 6: Prefer server-provided anomalies when available
+  if (serverAnomalies && serverAnomalies.length > 0) {
+    return adaptServerAnomalies(serverAnomalies);
+  }
+
+  // Phase 5: Original client-side anomaly detection
+  return detectClientAnomalies(snapshots, config);
+}
+
+/**
+ * Phase 6: Adapt server anomalies to local format
+ */
+function adaptServerAnomalies(serverAnomalies: ServerAnomaly[]): Anomaly[] {
+  return serverAnomalies.map(serverAnomaly => ({
+    metric: serverAnomaly.metric,
+    value: serverAnomaly.value,
+    zScore: serverAnomaly.threshold, // Use threshold as z-score equivalent
+    severity: serverAnomaly.severity,
+    timestamp: serverAnomaly.timestamp,
+    description: serverAnomaly.description,
+    source: 'server'
+  }));
+}
+
+/**
+ * Phase 5: Original client-side anomaly detection
+ */
+function detectClientAnomalies(
+  snapshots: AggregateSnapshot[],
+  config: Partial<AnomalyConfig> = {}
+): Anomaly[] {
   const finalConfig = { ...DEFAULT_CONFIG, ...config };
   
   // Need minimum snapshots for statistical analysis
@@ -130,7 +178,8 @@ function detectMetricAnomaly(
       zScore,
       severity,
       timestamp: latestSnapshot.timestamp,
-      description: `${formatMetricName(metric)} has ${direction} significantly (${Math.abs(zScore).toFixed(2)}σ from normal)`
+      description: `${formatMetricName(metric)} has ${direction} significantly (${Math.abs(zScore).toFixed(2)}σ from normal)`,
+      source: 'client' // Phase 6: Mark as client-generated
     };
   }
 

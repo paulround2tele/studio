@@ -89,6 +89,52 @@ export {
   isPortfolioMetricsAvailable
 } from './portfolioMetricsService';
 
+// Phase 6: Forecast service
+export {
+  getServerForecast,
+  computeClientForecast,
+  mergeForecastIntoSeries,
+  extractTimeSeriesFromSnapshots,
+  isForecastAvailable,
+  getDefaultHorizon
+} from './forecastService';
+
+// Phase 6: Cohort service
+export {
+  normalizeSnapshotsByStart,
+  buildCohortMatrix,
+  extractCohortGrowthCurves,
+  calculateCohortBenchmarks,
+  isCohortComparisonAvailable,
+  getDefaultCohortConfig
+} from './cohortService';
+
+// Phase 6: Normalization service
+export {
+  fetchBenchmarks,
+  applyNormalization,
+  applyNormalizationBatch,
+  getDisplayAggregates,
+  isNormalized,
+  getNormalizationMetadata,
+  clearNormalizationCache,
+  createMockBenchmarks,
+  isNormalizationAvailable
+} from './normalizationService';
+
+// Phase 6: ML recommendations service
+export {
+  fetchMLRecommendations,
+  adaptMLRecommendations,
+  sortMLRecommendations,
+  filterMLRecommendationsByConfidence,
+  mergeMLWithLocalRecommendations,
+  getCachedModelVersion,
+  clearModelVersionCache,
+  createMockMLRecommendations,
+  isMLRecommendationsAvailable
+} from './mlRecommendationsService';
+
 // Phase 5: Export service
 export {
   exportSnapshotsJSON,
