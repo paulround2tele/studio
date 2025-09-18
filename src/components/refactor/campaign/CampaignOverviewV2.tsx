@@ -1,6 +1,6 @@
 /**
- * Campaign Overview V2 Component
- * Value-first campaign overview that appears above the legacy domains table
+ * Campaign Overview V2 Component (Phase 2 + Phase 3)
+ * Value-first campaign overview with server metrics, deltas, movers, and real-time progress
  */
 
 import React from 'react';
@@ -15,7 +15,13 @@ import ConfigSummary from './ConfigSummary';
 import PipelineBarContainer from './PipelineBarContainer';
 import RecommendationPanel from './RecommendationPanel';
 
-import { useCampaignMetrics } from '@/lib/hooks/useCampaignMetrics';
+// Phase 3 Components
+import DeltaBadge, { CompactDeltaBadge } from './DeltaBadge';
+import MoversPanel from './MoversPanel';
+import LiveProgressStatus from './LiveProgressStatus';
+
+// Phase 3 Hooks and Context
+import { MetricsProvider, useMetricsContext } from '@/hooks/useMetricsContext';
 import type { 
   CampaignKpi, 
   ClassificationBucket, 
@@ -58,13 +64,6 @@ function generateMockData(domains: any[] = []) {
     }
   ];
 
-  // Mock classification buckets
-  const buckets: ClassificationBucket[] = [
-    { label: 'High Quality', count: Math.round(domains.length * 0.3), percentage: 30, color: '#10b981' },
-    { label: 'Medium Quality', count: Math.round(domains.length * 0.5), percentage: 50, color: '#f59e0b' },
-    { label: 'Low Quality', count: Math.round(domains.length * 0.2), percentage: 20, color: '#ef4444' }
-  ];
-
   // Mock warnings
   const warnings = domains.length > 0 && domains.some((d: any) => d.dns_status === 'error') ? [
     {
@@ -84,7 +83,7 @@ function generateMockData(domains: any[] = []) {
     { label: 'Extensions', value: 'com,net,org', type: 'list' as const }
   ];
 
-  return { kpis, buckets, warnings, config };
+  return { kpis, warnings, config };
 }
 
 // Convert API domains to our lightweight interface
@@ -113,6 +112,138 @@ function convertToMetricsInput(domains: CampaignDomain[]): DomainMetricsInput[] 
   }));
 }
 
+/**
+ * Inner component that consumes metrics context
+ */
+function CampaignOverviewV2Inner({ className }: { className?: string }) {
+  const metrics = useMetricsContext();
+  
+  // Mock domain data for UI structure (Phase 2 compatibility)
+  const domains = convertDomains([]);
+  const { warnings, config } = generateMockData(domains);
+  
+  // Generate KPIs from Phase 3 aggregates with delta badges
+  const kpisWithDeltas: (CampaignKpi & { delta?: any })[] = [
+    {
+      label: 'Total Domains',
+      value: metrics.aggregates.totalDomains,
+      format: 'number',
+      trend: { direction: 'up', percentage: 12 },
+      delta: metrics.deltas.find(d => d.key === 'totalDomains')
+    },
+    {
+      label: 'Success Rate',
+      value: metrics.aggregates.successRate,
+      format: 'percentage', 
+      trend: { direction: 'up', percentage: 5 },
+      delta: metrics.deltas.find(d => d.key === 'successRate')
+    },
+    {
+      label: 'Avg Lead Score',
+      value: metrics.aggregates.avgLeadScore,
+      format: 'number',
+      trend: { direction: 'stable', percentage: 0 },
+      delta: metrics.deltas.find(d => d.key === 'avgLeadScore')
+    },
+    {
+      label: 'Runtime',
+      value: 127,
+      format: 'duration',
+      trend: { direction: 'down', percentage: 8 }
+    }
+  ];
+
+  return (
+    <div className={cn("space-y-6", className)}>
+      {/* Phase 3: Live Progress Status */}
+      {metrics.features.enableRealtimeProgress && (
+        <LiveProgressStatus
+          progress={metrics.progress}
+          isConnected={metrics.isConnected}
+          isEnabled={metrics.features.enableRealtimeProgress}
+          isCompleted={false}
+          error={metrics.error}
+          stats={metrics.progressStats}
+          showStats={true}
+        />
+      )}
+
+      {/* KPI Cards Row with Delta Badges */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {kpisWithDeltas.map((kpi, index) => (
+          <div key={`${kpi.label}-${index}`} className="relative">
+            <CampaignKpiCard kpi={kpi} />
+            {/* Phase 3: Delta Badge Overlay */}
+            {metrics.features.enableDeltas && kpi.delta && (
+              <div className="absolute top-2 right-2">
+                <CompactDeltaBadge delta={kpi.delta} />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Column */}
+        <div className="space-y-6">
+          <PipelineBarContainer domains={domains} />
+          <ClassificationBuckets buckets={metrics.uiBuckets} />
+          
+          {/* Phase 3: Movers Panel */}
+          {metrics.features.enableMoversPanel && metrics.hasMovers && (
+            <MoversPanel 
+              movers={metrics.movers}
+              title="Top Domain Movers"
+              isSynthetic={!metrics.hasPreviousData}
+              maxDisplay={5}
+            />
+          )}
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-6">
+          <WarningSummary warnings={warnings} />
+          <ConfigSummary config={config} />
+        </div>
+      </div>
+
+      {/* Enhanced Recommendations Panel with Delta Awareness */}
+      <RecommendationPanel recommendations={metrics.recommendations} />
+
+      {/* Phase 3: Debug Info (Development Only) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mt-8 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg text-sm">
+          <h4 className="font-semibold mb-2">Phase 3 Debug Info:</h4>
+          <div className="grid grid-cols-2 gap-4 text-xs">
+            <div>
+              <strong>Features:</strong>
+              <ul className="ml-2">
+                <li>Server Metrics: {metrics.features.useServerMetrics ? '✓' : '✗'}</li>
+                <li>Deltas: {metrics.features.enableDeltas ? '✓' : '✗'}</li>
+                <li>Movers: {metrics.features.enableMoversPanel ? '✓' : '✗'}</li>
+                <li>Real-time: {metrics.features.enableRealtimeProgress ? '✓' : '✗'}</li>
+              </ul>
+            </div>
+            <div>
+              <strong>Data Sources:</strong>
+              <ul className="ml-2">
+                <li>Server Data: {metrics.isServerData ? '✓' : '✗'}</li>
+                <li>Previous Data: {metrics.hasPreviousData ? '✓' : '✗'}</li>
+                <li>Significant Deltas: {metrics.significantDeltas.length}</li>
+                <li>Movers: {metrics.movers.length}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Main Campaign Overview V2 Component with Metrics Provider
+ */
 export function CampaignOverviewV2({ campaignId, className }: CampaignOverviewV2Props) {
   const { data: enriched, isLoading, error } = useGetCampaignEnrichedQuery(campaignId);
   
@@ -141,73 +272,16 @@ export function CampaignOverviewV2({ campaignId, className }: CampaignOverviewV2
   // TODO: Phase 2 - Integrate with getDomains query when needed
   // For now, use empty array to show the UI structure with mock data
   const domains = convertDomains([]);
-  
-  // Use new service layer for metrics calculation
   const metricsInput = convertToMetricsInput(domains);
-  const { aggregates, uiBuckets, recommendations } = useCampaignMetrics(metricsInput);
   
-  // Generate KPIs from aggregates (backward compatibility)
-  const kpis: CampaignKpi[] = [
-    {
-      label: 'Total Domains',
-      value: aggregates.totalDomains,
-      format: 'number',
-      trend: { direction: 'up', percentage: 12 }
-    },
-    {
-      label: 'Success Rate',
-      value: aggregates.successRate,
-      format: 'percentage',
-      trend: { direction: 'up', percentage: 5 }
-    },
-    {
-      label: 'Avg Lead Score',
-      value: aggregates.avgLeadScore,
-      format: 'number',
-      trend: { direction: 'stable', percentage: 0 }
-    },
-    {
-      label: 'Runtime',
-      value: 127,
-      format: 'duration',
-      trend: { direction: 'down', percentage: 8 }
-    }
-  ];
-  
-  // Generate mock data for backward compatibility
-  const { warnings, config } = generateMockData(domains);
-  const buckets = uiBuckets; // Use service-generated buckets
-
   return (
-    <div className={cn("space-y-6", className)}>
-      {/* KPI Cards Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpis.map((kpi, index) => (
-          <CampaignKpiCard 
-            key={`${kpi.label}-${index}`}
-            kpi={kpi}
-          />
-        ))}
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left Column */}
-        <div className="space-y-6">
-          <PipelineBarContainer domains={domains} />
-          <ClassificationBuckets buckets={buckets} />
-        </div>
-
-        {/* Right Column */}
-        <div className="space-y-6">
-          <WarningSummary warnings={warnings} />
-          <ConfigSummary config={config} />
-        </div>
-      </div>
-
-      {/* Recommendations Panel - Phase 2 */}
-      <RecommendationPanel recommendations={recommendations} />
-    </div>
+    <MetricsProvider 
+      campaignId={campaignId} 
+      domains={metricsInput}
+      previousDomains={[]} // TODO: Add previous domains support
+    >
+      <CampaignOverviewV2Inner className={className} />
+    </MetricsProvider>
   );
 }
 
