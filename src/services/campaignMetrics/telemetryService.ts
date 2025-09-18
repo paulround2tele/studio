@@ -34,7 +34,15 @@ export interface TelemetryEvent {
         'capability_update_applied' | 'capability_update_rejected' | 'capability_rollback_applied' |
         'manual_capability_rollback' | 'domain_health_updated' | 'propagation_rule_added' |
         'propagation_rule_removed' | 'health_propagated' | 'health_event_emitted' | 'critical_cache_refresh' |
-        'recommendation_attribution' | 'security_hardening' | 'performance_guardrails' | 'export_v5_generated';
+        'recommendation_attribution' | 'security_hardening' | 'performance_guardrails' | 'export_v5_generated' |
+        // Phase 11 event types
+        'scenario_created' | 'scenario_intervention_applied' | 'scenario_projection_generated' | 'scenario_deleted' |
+        'worker_task_scheduled' | 'worker_task_fallback' | 'policy_registered' | 'policy_evaluated' | 
+        'policy_action_applied' | 'policy_updated' | 'policy_removed' | 'draft_opened' | 'draft_change_applied' |
+        'draft_conflict_detected' | 'draft_remote_merged' | 'draft_saved' | 'draft_closed' |
+        'viz_series_prepared' | 'viz_series_cache_hit' | 'viz_resolution_selected' | 'viz_cache_cleared' |
+        'viz_preparation_error' | 'determinism_seed_generated' | 'determinism_seed_used' | 'determinism_seed_reset' |
+        'i18n_locale_loaded';
   timestamp: string;
   sessionId: string;
   data: Record<string, any>;

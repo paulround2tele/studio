@@ -471,6 +471,294 @@ class I18nService {
     
     return result;
   }
+
+  // =============================
+  // Phase 11 Extensions
+  // =============================
+
+  /**
+   * Dynamic locale loading (Phase 11)
+   */
+  async loadLocale(locale: SupportedLocale): Promise<void> {
+    if (!this.isExtendedI18nEnabled()) {
+      return;
+    }
+
+    try {
+      // Simulate dynamic import - in production this would load actual locale chunks
+      await this.loadCatalogChunk(locale);
+      
+      // Emit telemetry
+      if (typeof window !== 'undefined' && (window as any).telemetryService) {
+        (window as any).telemetryService.emitTelemetry('i18n_locale_loaded', {
+          locale,
+          keysLoaded: this.getCatalogKeyCount(locale)
+        });
+      }
+    } catch (error) {
+      console.warn(`Failed to load locale ${locale}:`, error);
+    }
+  }
+
+  /**
+   * Get message domains (Phase 11)
+   */
+  getAvailableDomains(): string[] {
+    if (!this.isExtendedI18nEnabled()) {
+      return ['common'];
+    }
+
+    const catalog = this.catalogs.get(this.currentLocale);
+    return catalog ? Object.keys(catalog) : [];
+  }
+
+  /**
+   * Load specific domain messages (Phase 11)
+   */
+  async loadDomain(domain: string, locale?: SupportedLocale): Promise<void> {
+    if (!this.isExtendedI18nEnabled()) {
+      return;
+    }
+
+    const targetLocale = locale || this.currentLocale;
+    
+    try {
+      await this.loadDomainChunk(domain, targetLocale);
+    } catch (error) {
+      console.warn(`Failed to load domain ${domain} for locale ${targetLocale}:`, error);
+    }
+  }
+
+  /**
+   * Get locale-specific formatting helpers (Phase 11)
+   */
+  getLocaleFormatters(): {
+    currency: (amount: number) => string;
+    date: (date: Date) => string;
+    number: (num: number) => string;
+    percentage: (ratio: number) => string;
+  } {
+    const config = this.localeConfigs.get(this.currentLocale);
+    
+    return {
+      currency: (amount: number) => {
+        try {
+          return new Intl.NumberFormat(this.currentLocale, {
+            style: 'currency',
+            currency: config?.currency || 'USD',
+            ...config?.numberFormat
+          }).format(amount);
+        } catch {
+          return `$${amount.toFixed(2)}`; // Fallback
+        }
+      },
+      
+      date: (date: Date) => {
+        try {
+          return new Intl.DateTimeFormat(this.currentLocale, {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          }).format(date);
+        } catch {
+          return date.toLocaleDateString(); // Fallback
+        }
+      },
+      
+      number: (num: number) => {
+        try {
+          return new Intl.NumberFormat(this.currentLocale, config?.numberFormat).format(num);
+        } catch {
+          return num.toString(); // Fallback
+        }
+      },
+      
+      percentage: (ratio: number) => {
+        try {
+          return new Intl.NumberFormat(this.currentLocale, {
+            style: 'percent',
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 2
+          }).format(ratio);
+        } catch {
+          return `${(ratio * 100).toFixed(1)}%`; // Fallback
+        }
+      }
+    };
+  }
+
+  /**
+   * Get Phase 11 translation domains
+   */
+  getPhase11Domains(): Record<string, MessageCatalog> {
+    if (!this.isExtendedI18nEnabled()) {
+      return {};
+    }
+
+    const phase11Catalog: Record<string, MessageCatalog> = {
+      simulation: {
+        scenario: 'Scenario',
+        intervention: 'Intervention',
+        projection: 'Projection',
+        baseline: 'Baseline',
+        assumptions: 'Assumptions',
+        confidence: 'Confidence',
+        metricShift: 'Metric Shift',
+        cohortMixChange: 'Cohort Mix Change',
+        modelWeightOverride: 'Model Weight Override',
+        dataQualityImprovement: 'Data Quality Improvement',
+        createScenario: 'Create Scenario',
+        applyIntervention: 'Apply Intervention',
+        viewProjection: 'View Projection'
+      },
+      
+      policy: {
+        policy: 'Policy',
+        rule: 'Rule',
+        action: 'Action',
+        condition: 'Condition',
+        governance: 'Governance',
+        compliance: 'Compliance',
+        enforcement: 'Enforcement',
+        violation: 'Violation',
+        approved: 'Approved',
+        denied: 'Denied',
+        pending: 'Pending Review',
+        escalated: 'Escalated',
+        suppressRecommendations: 'Suppress Recommendations',
+        escalatePrivacy: 'Escalate Privacy',
+        excludeExperimentArm: 'Exclude Experiment Arm',
+        requireApproval: 'Require Approval',
+        auditLog: 'Audit Log',
+        notifyAdmin: 'Notify Admin',
+        blockAccess: 'Block Access'
+      },
+      
+      collaboration: {
+        draft: 'Draft',
+        collaborate: 'Collaborate',
+        merge: 'Merge',
+        conflict: 'Conflict',
+        resolved: 'Resolved',
+        pending: 'Pending',
+        shared: 'Shared',
+        private: 'Private',
+        collaborator: 'Collaborator',
+        lastModified: 'Last Modified',
+        version: 'Version',
+        changes: 'Changes',
+        conflictResolution: 'Conflict Resolution',
+        semanticMerge: 'Semantic Merge',
+        lastWriterWins: 'Last Writer Wins'
+      },
+      
+      visualization: {
+        adaptive: 'Adaptive',
+        timeline: 'Timeline',
+        resolution: 'Resolution',
+        downsampling: 'Downsampling',
+        focusContext: 'Focus + Context',
+        semantic: 'Semantic',
+        highlights: 'Highlights',
+        extremes: 'Extremes',
+        anomaly: 'Anomaly',
+        trend: 'Trend',
+        causalPivot: 'Causal Pivot',
+        experimentSwitch: 'Experiment Switch',
+        intervention: 'Intervention',
+        viewport: 'Viewport',
+        pixelDensity: 'Pixel Density',
+        cache: 'Cache'
+      },
+      
+      worker: {
+        edge: 'Edge',
+        processing: 'Processing',
+        worker: 'Worker',
+        task: 'Task',
+        queue: 'Queue',
+        priority: 'Priority',
+        scheduled: 'Scheduled',
+        executing: 'Executing',
+        completed: 'Completed',
+        failed: 'Failed',
+        fallback: 'Fallback',
+        timeout: 'Timeout',
+        backpressure: 'Backpressure',
+        healthy: 'Healthy',
+        unhealthy: 'Unhealthy'
+      }
+    };
+
+    return phase11Catalog;
+  }
+
+  /**
+   * Check if extended i18n is enabled
+   */
+  private isExtendedI18nEnabled(): boolean {
+    return process.env.NEXT_PUBLIC_ENABLE_I18N_EXTENDED === 'true';
+  }
+
+  /**
+   * Load catalog chunk (simulated dynamic import)
+   */
+  private async loadCatalogChunk(locale: SupportedLocale): Promise<void> {
+    // Simulate async loading delay
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // In production, this would be:
+    // const chunk = await import(`./locales/${locale}.json`);
+    // this.catalogs.set(locale, chunk.default);
+    
+    // For now, extend existing catalog with Phase 11 domains
+    const existingCatalog = this.catalogs.get(locale) || {};
+    const phase11Domains = this.getPhase11Domains();
+    
+    const extendedCatalog = {
+      ...existingCatalog,
+      ...phase11Domains
+    };
+    
+    this.catalogs.set(locale, extendedCatalog);
+  }
+
+  /**
+   * Load specific domain chunk
+   */
+  private async loadDomainChunk(domain: string, locale: SupportedLocale): Promise<void> {
+    // Simulate loading specific domain
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
+    const phase11Domains = this.getPhase11Domains();
+    if (phase11Domains[domain]) {
+      const catalog = this.catalogs.get(locale) || {};
+      catalog[domain] = phase11Domains[domain];
+      this.catalogs.set(locale, catalog);
+    }
+  }
+
+  /**
+   * Get number of keys in a catalog
+   */
+  private getCatalogKeyCount(locale: SupportedLocale): number {
+    const catalog = this.catalogs.get(locale);
+    if (!catalog) return 0;
+    
+    const countKeys = (obj: any): number => {
+      let count = 0;
+      for (const key in obj) {
+        if (typeof obj[key] === 'string') {
+          count++;
+        } else if (typeof obj[key] === 'object') {
+          count += countKeys(obj[key]);
+        }
+      }
+      return count;
+    };
+    
+    return countKeys(catalog);
+  }
 }
 
 // Export singleton instance
