@@ -73,7 +73,7 @@ export async function fetchMLRecommendations(
   campaignId: string
 ): Promise<MLRecommendationsResponse> {
   if (!isMLRecommendationsEnabled()) {
-    throw new Error('ML recommendations disabled');
+    throw new Error('ML recommendations feature is disabled via configuration. Enable NEXT_PUBLIC_ENABLE_ML_RECOMMENDATIONS to use this feature.');
   }
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
