@@ -104,6 +104,35 @@ func GetExtractionAnalysisFlags() ExtractionAnalysisFeatureFlags {
 
 // Helper Functions
 
+// GetAnalysisFeatureTableMinCoverage returns the minimum coverage ratio required
+// for using the new feature tables. If coverage is below this threshold, the system
+// falls back to legacy feature_vector path.
+//
+// Environment Variable: ANALYSIS_FEATURE_TABLE_MIN_COVERAGE
+// Default: 0.9 (90%)
+// Range: 0.0 - 1.0 (clamped, defaults on parse errors)
+func GetAnalysisFeatureTableMinCoverage() float64 {
+	value := strings.TrimSpace(os.Getenv("ANALYSIS_FEATURE_TABLE_MIN_COVERAGE"))
+	if value == "" {
+		return 0.9 // Default 90%
+	}
+	
+	parsed, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return 0.9 // Default on parse error
+	}
+	
+	// Clamp to valid range
+	if parsed < 0.0 {
+		return 0.0
+	}
+	if parsed > 1.0 {
+		return 1.0
+	}
+	
+	return parsed
+}
+
 // getBoolEnv reads a boolean environment variable with a default value.
 // Accepts: "true", "1", "yes", "on" (case insensitive) as true values.
 // Everything else (including empty/missing) returns the default value.

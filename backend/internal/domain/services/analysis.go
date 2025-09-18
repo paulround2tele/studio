@@ -17,6 +17,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/fntelecomllc/studio/backend/internal/extraction"
+	"github.com/fntelecomllc/studio/backend/internal/featureflags"
 
 	"github.com/fntelecomllc/studio/backend/internal/contentfetcher"
 	"github.com/fntelecomllc/studio/backend/internal/keywordextractor"
@@ -54,6 +55,10 @@ type analysisService struct {
 		featureCacheHits             prometheus.Counter
 		featureCacheMisses           prometheus.Counter
 		featureCacheInvalidations    prometheus.Counter
+		// Analysis read switch metrics
+		analysisFeatureTableCoverageRatio *prometheus.GaugeVec
+		analysisFeatureTableFallbacks     *prometheus.CounterVec
+		analysisFeatureTablePrimaryReads  prometheus.Counter
 	}
 
 	// Execution tracking per campaign
@@ -97,6 +102,15 @@ type DomainAnalysisFeaturesTyped struct {
 	Microcrawl struct {
 		GainRatio *float64
 	}
+}
+
+// readPathDecision represents the decision logic for analysis read path selection.
+// Used internally for testing and structured decision making.
+type readPathDecision struct {
+	useNew    bool
+	coverage  float64
+	threshold float64
+	reason    string
 }
 
 // toTypedFeature converts a raw nested any map (same shape produced by FetchAnalysisReadyFeatures) into typed struct.
@@ -303,36 +317,46 @@ func NewAnalysisService(
 			data map[string]map[string]any
 		}{},
 		mtx: func() struct {
-			scoreHistogram               prometheus.Histogram
-			rescoreRuns                  *prometheus.CounterVec
-			rescoreRunsV2                *prometheus.CounterVec
-			phaseDuration                prometheus.Histogram
-			reuseCounter                 prometheus.Counter
-			preflightFail                prometheus.Counter
-			analysisFeatureFetchDuration prometheus.Histogram
-			analysisFeatureFetchDomains  prometheus.Histogram
-			featureCacheHits             prometheus.Counter
-			featureCacheMisses           prometheus.Counter
-			featureCacheInvalidations    prometheus.Counter
+			scoreHistogram                       prometheus.Histogram
+			rescoreRuns                          *prometheus.CounterVec
+			rescoreRunsV2                        *prometheus.CounterVec
+			phaseDuration                        prometheus.Histogram
+			reuseCounter                         prometheus.Counter
+			preflightFail                        prometheus.Counter
+			analysisFeatureFetchDuration         prometheus.Histogram
+			analysisFeatureFetchDomains          prometheus.Histogram
+			featureCacheHits                     prometheus.Counter
+			featureCacheMisses                   prometheus.Counter
+			featureCacheInvalidations            prometheus.Counter
+			analysisFeatureTableCoverageRatio    *prometheus.GaugeVec
+			analysisFeatureTableFallbacks        *prometheus.CounterVec
+			analysisFeatureTablePrimaryReads     prometheus.Counter
 		} {
 			return struct {
-				scoreHistogram               prometheus.Histogram
-				rescoreRuns                  *prometheus.CounterVec
-				rescoreRunsV2                *prometheus.CounterVec
-				phaseDuration                prometheus.Histogram
-				reuseCounter                 prometheus.Counter
-				preflightFail                prometheus.Counter
-				analysisFeatureFetchDuration prometheus.Histogram
-				analysisFeatureFetchDomains  prometheus.Histogram
-				featureCacheHits             prometheus.Counter
-				featureCacheMisses           prometheus.Counter
-				featureCacheInvalidations    prometheus.Counter
+				scoreHistogram                       prometheus.Histogram
+				rescoreRuns                          *prometheus.CounterVec
+				rescoreRunsV2                        *prometheus.CounterVec
+				phaseDuration                        prometheus.Histogram
+				reuseCounter                         prometheus.Counter
+				preflightFail                        prometheus.Counter
+				analysisFeatureFetchDuration         prometheus.Histogram
+				analysisFeatureFetchDomains          prometheus.Histogram
+				featureCacheHits                     prometheus.Counter
+				featureCacheMisses                   prometheus.Counter
+				featureCacheInvalidations            prometheus.Counter
+				analysisFeatureTableCoverageRatio    *prometheus.GaugeVec
+				analysisFeatureTableFallbacks        *prometheus.CounterVec
+				analysisFeatureTablePrimaryReads     prometheus.Counter
 			}{
 				analysisFeatureFetchDuration: featureFetchDuration,
 				analysisFeatureFetchDomains:  featureFetchDomains,
 				featureCacheHits:             cacheHits,
 				featureCacheMisses:           cacheMisses,
 				featureCacheInvalidations:    cacheInvalidations,
+				// Read switch metrics initialized to nil, will be set in initReadSwitchMetrics
+				analysisFeatureTableCoverageRatio: nil,
+				analysisFeatureTableFallbacks:     nil,
+				analysisFeatureTablePrimaryReads:  nil,
 			}
 		}(),
 	}
@@ -677,6 +701,60 @@ func (s *analysisService) executeAnalysis(ctx context.Context, campaignID uuid.U
 		s.deps.SSE.Send(string(payload))
 	}
 	// TODO(metrics): consider histogram for featureVectorCount distribution and gauge for active analysis executions.
+
+	// Initialize read switch metrics (once per service instance)
+	s.initReadSwitchMetrics()
+
+	// Make read path decision based on feature flag and coverage
+	decision := s.makeReadPathDecision(ctx, campaignID)
+	
+	// Emit structured logging based on decision
+	if decision.useNew {
+		if s.deps.Logger != nil {
+			s.deps.Logger.Info(ctx, "analysis primary read switched", map[string]interface{}{
+				"campaign":  campaignID.String(),
+				"coverage":  decision.coverage,
+				"threshold": decision.threshold,
+				"reason":    decision.reason,
+			})
+		}
+	} else if featureflags.IsAnalysisReadsFeatureTableEnabled() {
+		// Flag is enabled but we're falling back
+		if s.deps.Logger != nil {
+			if decision.reason == "error" {
+				// For error case, we need to get the error from makeReadPathDecision
+				// but we'll use a generic error since the specific error was already logged
+				errToLog := fmt.Errorf("coverage check failed: %s", decision.reason)
+				s.deps.Logger.Error(ctx, "analysis coverage check failed", errToLog, map[string]interface{}{
+					"campaign":  campaignID.String(),
+					"coverage":  decision.coverage,
+					"threshold": decision.threshold,
+					"reason":    decision.reason,
+				})
+			} else {
+				s.deps.Logger.Warn(ctx, "analysis feature table coverage insufficient", map[string]interface{}{
+					"campaign":  campaignID.String(),
+					"coverage":  decision.coverage,
+					"threshold": decision.threshold,
+					"reason":    decision.reason,
+				})
+			}
+		}
+	}
+
+	// Emit SSE event when flag is enabled (regardless of decision)
+	if featureflags.IsAnalysisReadsFeatureTableEnabled() && s.deps.SSE != nil {
+		payload, _ := json.Marshal(map[string]interface{}{
+			"event":      "analysis_read_switch",
+			"campaignId": campaignID.String(),
+			"coverage":   decision.coverage,
+			"threshold":  decision.threshold,
+			"adopted":    decision.useNew,
+			"reason":     decision.reason,
+			"timestamp":  time.Now().UTC(),
+		})
+		s.deps.SSE.Send(string(payload))
+	}
 
 	// Directly proceed to scoring; repurpose majority of remaining progress window.
 	s.sendProgress(campaignID, 85.0, "Starting scoring computation (reused HTTP enrichment)")
@@ -1067,6 +1145,37 @@ func (s *analysisService) updateExecutionStatus(campaignID uuid.UUID, status mod
 
 // Global once to avoid duplicate metric registration when multiple service instances are created (tests)
 var globalScoringMetricsOnce sync.Once
+var globalReadSwitchMetricsOnce sync.Once
+
+func (s *analysisService) initReadSwitchMetrics() {
+	globalReadSwitchMetricsOnce.Do(func() {
+		s.mtx.analysisFeatureTableCoverageRatio = prometheus.NewGaugeVec(
+			prometheus.GaugeOpts{
+				Name: "analysis_feature_table_coverage_ratio",
+				Help: "Coverage ratio of ready features vs expected domains",
+			},
+			[]string{"campaign_id"},
+		)
+		s.mtx.analysisFeatureTableFallbacks = prometheus.NewCounterVec(
+			prometheus.CounterOpts{
+				Name: "analysis_feature_table_fallbacks_total", 
+				Help: "Times analysis fell back to legacy path",
+			},
+			[]string{"reason"}, // below_coverage, error
+		)
+		s.mtx.analysisFeatureTablePrimaryReads = prometheus.NewCounter(
+			prometheus.CounterOpts{
+				Name: "analysis_feature_table_primary_reads_total",
+				Help: "Times analysis used new feature table path",
+			},
+		)
+		prometheus.MustRegister(
+			s.mtx.analysisFeatureTableCoverageRatio,
+			s.mtx.analysisFeatureTableFallbacks,
+			s.mtx.analysisFeatureTablePrimaryReads,
+		)
+	})
+}
 
 func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID) (string, error) {
 	globalScoringMetricsOnce.Do(func() {
@@ -1873,4 +1982,147 @@ func anyToStringIntMap(v any) map[string]int {
 		return m
 	}
 	return out
+}
+
+// analysisCoverageOK calculates the coverage ratio for analysis-ready features
+// and determines if coverage meets the minimum threshold.
+//
+// Returns:
+//   - bool: true if coverage is sufficient for new feature table reads
+//   - float64: actual coverage ratio (0.0-1.0)
+//   - error: any error during calculation
+func (s *analysisService) analysisCoverageOK(ctx context.Context, campaignID uuid.UUID) (bool, float64, error) {
+	// Get database connection
+	var dbx *sql.DB
+	switch db := s.deps.DB.(type) {
+	case *sqlx.DB:
+		dbx = db.DB
+	case *sql.DB:
+		dbx = db
+	default:
+		return false, 0.0, fmt.Errorf("analysis coverage check: database connection required")
+	}
+
+	// Count expected domains (from legacy path or campaign domain table)
+	var expectedDomainCount int64
+	err := dbx.QueryRowContext(ctx, `
+		SELECT COUNT(*) 
+		FROM generated_domains 
+		WHERE campaign_id = $1`, campaignID).Scan(&expectedDomainCount)
+	if err != nil {
+		return false, 0.0, fmt.Errorf("analysis coverage check: failed to count expected domains: %w", err)
+	}
+
+	// Small sample guard: if expected count < 5, treat as coverage satisfied
+	if expectedDomainCount < 5 {
+		return true, 1.0, nil
+	}
+
+	// Count ready feature rows from analysis_ready_features 
+	var readyFeatureRows int64
+	err = dbx.QueryRowContext(ctx, `
+		SELECT COUNT(*) 
+		FROM analysis_ready_features 
+		WHERE campaign_id = $1`, campaignID).Scan(&readyFeatureRows)
+	if err != nil {
+		return false, 0.0, fmt.Errorf("analysis coverage check: failed to count ready features: %w", err)
+	}
+
+	// Calculate coverage ratio
+	var coverageRatio float64
+	if expectedDomainCount > 0 {
+		coverageRatio = float64(readyFeatureRows) / float64(expectedDomainCount)
+	}
+
+	// Get minimum coverage threshold
+	minCoverage := featureflags.GetAnalysisFeatureTableMinCoverage()
+
+	// Update coverage metric
+	if s.mtx.analysisFeatureTableCoverageRatio != nil {
+		s.mtx.analysisFeatureTableCoverageRatio.WithLabelValues(campaignID.String()).Set(coverageRatio)
+	}
+
+	return coverageRatio >= minCoverage, coverageRatio, nil
+}
+
+// makeReadPathDecision implements the core logic for analysis read path selection.
+// This function is extracted for testability and clear decision logic.
+func (s *analysisService) makeReadPathDecision(ctx context.Context, campaignID uuid.UUID) readPathDecision {
+	// Check if feature flag is enabled
+	flagEnabled := featureflags.IsAnalysisReadsFeatureTableEnabled()
+	threshold := featureflags.GetAnalysisFeatureTableMinCoverage()
+
+	if !flagEnabled {
+		return readPathDecision{
+			useNew:    false,
+			coverage:  0.0,
+			threshold: threshold,
+			reason:    "flag_disabled",
+		}
+	}
+
+	// Check coverage
+	coverageOK, coverage, err := s.analysisCoverageOK(ctx, campaignID)
+	if err != nil {
+		// Log error and fall back to legacy
+		if s.deps.Logger != nil {
+			s.deps.Logger.Error(ctx, "analysis coverage check failed", err, map[string]interface{}{
+				"campaign": campaignID.String(),
+				"error":    err.Error(),
+			})
+		}
+		// Increment error fallback metric
+		if s.mtx.analysisFeatureTableFallbacks != nil {
+			s.mtx.analysisFeatureTableFallbacks.WithLabelValues("error").Inc()
+		}
+		return readPathDecision{
+			useNew:    false,
+			coverage:  0.0,
+			threshold: threshold,
+			reason:    "error",
+		}
+	}
+
+	if coverageOK {
+		// Coverage is sufficient - use new path
+		if s.mtx.analysisFeatureTablePrimaryReads != nil {
+			s.mtx.analysisFeatureTablePrimaryReads.Inc()
+		}
+		// Determine the specific reason
+		reason := "coverage_sufficient"
+		
+		// Check if this was due to small sample override
+		var dbx *sql.DB
+		switch db := s.deps.DB.(type) {
+		case *sqlx.DB:
+			dbx = db.DB
+		case *sql.DB:
+			dbx = db
+		}
+		if dbx != nil {
+			var expectedCount int64
+			if err := dbx.QueryRowContext(ctx, `SELECT COUNT(*) FROM generated_domains WHERE campaign_id = $1`, campaignID).Scan(&expectedCount); err == nil && expectedCount < 5 {
+				reason = "small_sample_override"
+			}
+		}
+
+		return readPathDecision{
+			useNew:    true,
+			coverage:  coverage,
+			threshold: threshold,
+			reason:    reason,
+		}
+	}
+
+	// Coverage insufficient - fall back to legacy
+	if s.mtx.analysisFeatureTableFallbacks != nil {
+		s.mtx.analysisFeatureTableFallbacks.WithLabelValues("below_coverage").Inc()
+	}
+
+	return readPathDecision{
+		useNew:    false,
+		coverage:  coverage,
+		threshold: threshold,
+		reason:    "below_coverage",
+	}
 }
