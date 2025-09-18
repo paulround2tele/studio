@@ -3,7 +3,7 @@
  * Wraps progressStream for real-time progress updates
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { ProgressUpdate } from '@/types/campaignMetrics';
 import { 
   ProgressStream, 
@@ -92,6 +92,13 @@ export interface UseCampaignProgressReturn {
     totalDomains: number;
     estimatedTimeRemaining?: string;
   };
+  
+  /**
+   * Phase 4: Enhanced connection state and metrics
+   */
+  connectionState: 'disconnected' | 'connecting' | 'connected' | 'degraded' | 'pollingFallback' | 'error';
+  reconnectCount: number;
+  lastHeartbeat: number | null;
 }
 
 /**
@@ -113,6 +120,11 @@ export function useCampaignProgress(
   const [isConnected, setIsConnected] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  
+  // Phase 4: Enhanced state tracking
+  const [connectionState, setConnectionState] = useState<'disconnected' | 'connecting' | 'connected' | 'degraded' | 'pollingFallback' | 'error'>('disconnected');
+  const [reconnectCount, setReconnectCount] = useState(0);
+  const [lastHeartbeat, setLastHeartbeat] = useState<number | null>(null);
   
   const streamRef = useRef<ProgressStream | null>(null);
   const startTimeRef = useRef<number | null>(null);
@@ -256,7 +268,11 @@ export function useCampaignProgress(
       stop,
       restart
     },
-    stats
+    stats,
+    // Phase 4: Enhanced state
+    connectionState,
+    reconnectCount,
+    lastHeartbeat
   };
 }
 
