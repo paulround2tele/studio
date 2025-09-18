@@ -205,7 +205,7 @@ export class ProgressStream {
           // Emit telemetry for degradation
           telemetryService.emitTelemetry('stream_pool_state', {
             url: `/api/v2/campaigns/${this.options.campaignId}/progress/stream`,
-            event: 'heartbeat_failure',
+            status: 'heartbeat_failure',
             missedHeartbeats: this.missedHeartbeats
           });
           
