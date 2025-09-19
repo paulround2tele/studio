@@ -446,18 +446,22 @@ class CapabilitiesService {
       if (this.rollbackStack.length >= steps) {
         // Rollback to previous state
         const previousCapabilities = this.rollbackStack[this.rollbackStack.length - steps];
-        this.capabilities = JSON.parse(JSON.stringify(previousCapabilities));
-        this.setCachedCapabilities(this.capabilities);
+        if (previousCapabilities) {
+          this.capabilities = JSON.parse(JSON.stringify(previousCapabilities));
+          if (this.capabilities) {
+            this.setCachedCapabilities(this.capabilities);
+          }
 
-        // Remove rolled back states
-        this.rollbackStack = this.rollbackStack.slice(0, -steps);
+          // Remove rolled back states
+          this.rollbackStack = this.rollbackStack.slice(0, -steps);
 
-        telemetryService.emitTelemetry('capability_rollback_applied', {
-          steps,
-          timestamp: new Date().toISOString(),
-        });
+          telemetryService.emitTelemetry('capability_rollback_applied', {
+            steps,
+            timestamp: new Date().toISOString(),
+          });
 
-        console.info(`[CapabilitiesService] Rolled back ${steps} capability updates`);
+          console.info(`[CapabilitiesService] Rolled back ${steps} capability updates`);
+        }
       } else {
         console.warn('[CapabilitiesService] Cannot rollback: insufficient history');
       }
@@ -524,16 +528,20 @@ class CapabilitiesService {
   rollbackCapabilities(steps: number = 1): boolean {
     if (this.rollbackStack.length >= steps) {
       const previousCapabilities = this.rollbackStack[this.rollbackStack.length - steps];
-      this.capabilities = JSON.parse(JSON.stringify(previousCapabilities));
-      this.setCachedCapabilities(this.capabilities);
-      this.rollbackStack = this.rollbackStack.slice(0, -steps);
+      if (previousCapabilities) {
+        this.capabilities = JSON.parse(JSON.stringify(previousCapabilities));
+        if (this.capabilities) {
+          this.setCachedCapabilities(this.capabilities);
+        }
+        this.rollbackStack = this.rollbackStack.slice(0, -steps);
 
-      telemetryService.emitTelemetry('manual_capability_rollback', {
-        steps,
-        timestamp: new Date().toISOString(),
-      });
+        telemetryService.emitTelemetry('manual_capability_rollback', {
+          steps,
+          timestamp: new Date().toISOString(),
+        });
 
-      return true;
+        return true;
+      }
     }
     return false;
   }

@@ -134,7 +134,7 @@ class AuditLogService {
       if (filter.campaignId) {
         filteredLogs = filteredLogs.filter(log => 
           log.context.campaignId === filter.campaignId ||
-          log.impact.affectedCampaigns?.includes(filter.campaignId)
+          (filter.campaignId && log.impact.affectedCampaigns?.includes(filter.campaignId))
         );
       }
       if (filter.userId) {

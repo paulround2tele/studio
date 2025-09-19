@@ -136,7 +136,7 @@ export function CohortComparisonPanel({
         <div className="flex flex-wrap items-center gap-4 pt-2">
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium">Metric:</label>
-            <Select value={selectedMetric} onValueChange={setSelectedMetric}>
+            <Select value={selectedMetric} onValueChange={(value) => setSelectedMetric(value as keyof AggregateSnapshot['aggregates'])}>
               <SelectTrigger className="w-40">
                 <SelectValue />
               </SelectTrigger>

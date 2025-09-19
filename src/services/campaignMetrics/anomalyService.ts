@@ -130,6 +130,8 @@ function detectClientAnomalies(
 
   // Check each monitored metric for anomalies
   MONITORED_METRICS.forEach(metric => {
+    if (!latestSnapshot) return;
+    
     const anomaly = detectMetricAnomaly(
       recentSnapshots,
       latestSnapshot,

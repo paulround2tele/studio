@@ -17,6 +17,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/fntelecomllc/studio/backend/internal/extraction"
+	"github.com/fntelecomllc/studio/backend/internal/featureflags"
 
 	"github.com/fntelecomllc/studio/backend/internal/contentfetcher"
 	"github.com/fntelecomllc/studio/backend/internal/featureflags"
@@ -1431,7 +1432,7 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 	}
 
 	// Dual-read comparison (non-blocking). Only executed if ANALYSIS_DUAL_READ enabled.
-	if envVal, ok := os.LookupEnv("ANALYSIS_DUAL_READ"); ok && (envVal == "1" || strings.EqualFold(envVal, "true") || strings.EqualFold(envVal, "on")) {
+	if featureflags.IsAnalysisDualReadEnabled() {
 		if newFeatures, derr := s.dualReadFetchFeatures(ctx, campaignID); derr == nil && len(newFeatures) > 0 {
 			// Increment campaigns counter if metrics available
 			if s.mtx.dualReadCampaignsTotal != nil {
@@ -1447,6 +1448,9 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 			missingLegacy := 0
 			missingNew := 0
 			varianceHigh := 0
+
+			threshold := featureflags.GetDualReadVarianceThreshold()
+			perDomainVariance := 0
 			legacyKwSum := 0.0
 			
 			for _, sr := range scores {
@@ -2040,7 +2044,7 @@ WHERE def.campaign_id=$1`, campaignID)
 }
 
 func (s *analysisService) dualReadFetchFeatures(ctx context.Context, campaignID uuid.UUID) (map[string]map[string]any, error) {
-	if v, ok := os.LookupEnv("ANALYSIS_DUAL_READ"); !ok || (!strings.EqualFold(v, "true") && v != "1" && !strings.EqualFold(v, "on")) {
+	if !featureflags.IsAnalysisDualReadEnabled() {
 		return nil, nil
 	}
 	return s.FetchAnalysisReadyFeatures(ctx, campaignID)

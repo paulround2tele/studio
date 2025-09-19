@@ -281,6 +281,7 @@ export function useSemanticSummaries(options: UseSemanticSummariesOptions = {}):
       const interval = setInterval(refresh, refreshInterval);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [autoRefresh, refreshInterval, refresh]);
 
   // Initial load
@@ -308,24 +309,13 @@ export function useSemanticSummaries(options: UseSemanticSummariesOptions = {}):
     return () => clearInterval(cleanupInterval);
   }, [enableCaching, cacheExpiry, summaryCache, isCacheValid]);
 
-  const actions: SemanticSummariesActions = {
-    refresh,
-    summarizeAnomalyCluster,
-    summarizeCausalDelta,
-    getSummary,
-    clearSummaries,
-    clearCache,
-    setRemoteEndpoint
-  };
-
-  return [state, actions];
-
   // Auto-refresh effect
   useEffect(() => {
     if (autoRefresh && refreshInterval > 0) {
       const interval = setInterval(refresh, refreshInterval);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [autoRefresh, refreshInterval, refresh]);
 
   // Initial load

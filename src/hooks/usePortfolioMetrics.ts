@@ -122,6 +122,7 @@ export function usePortfolioMetrics(
       setOutliers([]);
       setError(null);
     }
+    return undefined;
   }, [autoUpdate, isEnabled, computeMetrics]);
 
   /**

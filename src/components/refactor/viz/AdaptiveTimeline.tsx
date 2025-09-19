@@ -69,7 +69,7 @@ const HighlightMarker: React.FC<{
       strokeDasharray={highlight.severity === 'high' ? 'none' : '5 5'}
       label={{
         value: highlight.label,
-        position: 'topLeft',
+        position: 'top',
         style: { 
           fontSize: '10px', 
           fill: getColor(highlight.type, highlight.severity),
@@ -306,12 +306,12 @@ export const AdaptiveTimeline: React.FC<AdaptiveTimelineProps> = ({
           />
           <Tooltip 
             content={({ active, payload, label }) => {
-              if (!active || !payload || payload.length === 0) return null;
+              if (!active || !payload || payload.length === 0 || !payload[0]) return null;
               
               const point = payload[0].payload;
               return (
                 <div className="bg-white border border-gray-200 shadow-lg rounded-lg p-3">
-                  {formatTooltip(payload[0].value, payload[0].name, { payload: point })}
+                  {formatTooltip(payload[0].value, String(payload[0].name ?? ''), { payload: point })}
                 </div>
               );
             }}
@@ -325,8 +325,7 @@ export const AdaptiveTimeline: React.FC<AdaptiveTimelineProps> = ({
             dot={<ExtremeDot />}
             activeDot={{ 
               r: 4, 
-              fill: '#1d4ed8',
-              onClick: handlePointClick 
+              fill: '#1d4ed8'
             }}
           />
 
@@ -347,14 +346,14 @@ export const AdaptiveTimeline: React.FC<AdaptiveTimelineProps> = ({
                 stroke="#10b981"
                 strokeWidth={1}
                 strokeDasharray="2 2"
-                label={{ value: "Focus Start", position: "bottomLeft", style: { fontSize: '10px' } }}
+                label={{ value: "Focus Start", position: "bottom", style: { fontSize: '10px' } }}
               />
               <ReferenceLine
                 x={focusWindow.endTimestamp}
                 stroke="#10b981"
                 strokeWidth={1}
                 strokeDasharray="2 2"
-                label={{ value: "Focus End", position: "bottomRight", style: { fontSize: '10px' } }}
+                label={{ value: "Focus End", position: "bottom", style: { fontSize: '10px' } }}
               />
             </>
           )}
@@ -362,7 +361,7 @@ export const AdaptiveTimeline: React.FC<AdaptiveTimelineProps> = ({
       </ResponsiveContainer>
 
       {/* Legend for highlights */}
-      {isAdaptiveEnabled && series?.highlights.length > 0 && (
+      {isAdaptiveEnabled && series?.highlights && series.highlights.length > 0 && (
         <div className="absolute bottom-2 left-2 text-xs bg-white bg-opacity-90 p-2 rounded shadow">
           <div className="font-medium mb-1">Highlights:</div>
           <div className="space-y-1">
