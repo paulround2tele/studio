@@ -38,19 +38,7 @@ func IsExtractionKeywordDetailEnabled() bool {
 	return getBoolEnv("EXTRACTION_KEYWORD_DETAIL_ENABLED", false)
 }
 
-// IsAnalysisReadsFeatureTableEnabled returns true if the analysis phase should
-// read feature data from the new extraction tables instead of legacy feature_vector.
-//
-// Phase: P3 - Analysis reading migration
-// Environment Variable: ANALYSIS_READS_FEATURE_TABLE  
-// Default: false
-//
-// TODO Phase P3: Wire this flag into AnalysisService
-// TODO Phase P3: Implement fallback logic for incomplete extractions
-// TODO Phase P3: Add data mapping between old and new schemas
-func IsAnalysisReadsFeatureTableEnabled() bool {
-	return getBoolEnv("ANALYSIS_READS_FEATURE_TABLE", false)
-}
+
 
 // IsMicrocrawlAdaptiveModeEnabled returns true if the system should use
 // adaptive crawling strategies based on site characteristics and extraction results.
@@ -102,15 +90,17 @@ func IsAnalysisDualReadEnabled() bool {
 	return getBoolEnv("ANALYSIS_DUAL_READ", false)
 }
 
+
+
+
+
 // ExtractionAnalysisFeatureFlags returns a structured view of all extraction/analysis
 // feature flags for monitoring and debugging purposes.
 type ExtractionAnalysisFeatureFlags struct {
 	ExtractionFeatureTableEnabled  bool `json:"extractionFeatureTableEnabled"`
 	ExtractionKeywordDetailEnabled bool `json:"extractionKeywordDetailEnabled"`
-	AnalysisReadsFeatureTable     bool `json:"analysisReadsFeatureTable"`
 	MicrocrawlAdaptiveMode        bool `json:"microcrawlAdaptiveMode"`
 	AnalysisRescoringEnabled      bool `json:"analysisRescoringEnabled"`
-	AnalysisDualReadEnabled       bool `json:"analysisDualReadEnabled"`
 }
 
 // GetExtractionAnalysisFlags returns the current state of all extraction/analysis
@@ -119,10 +109,8 @@ func GetExtractionAnalysisFlags() ExtractionAnalysisFeatureFlags {
 	return ExtractionAnalysisFeatureFlags{
 		ExtractionFeatureTableEnabled:  IsExtractionFeatureTableEnabled(),
 		ExtractionKeywordDetailEnabled: IsExtractionKeywordDetailEnabled(),
-		AnalysisReadsFeatureTable:      IsAnalysisReadsFeatureTableEnabled(),
 		MicrocrawlAdaptiveMode:         IsMicrocrawlAdaptiveModeEnabled(),
 		AnalysisRescoringEnabled:       IsAnalysisRescoringEnabled(),
-		AnalysisDualReadEnabled:        IsAnalysisDualReadEnabled(),
 	}
 }
 

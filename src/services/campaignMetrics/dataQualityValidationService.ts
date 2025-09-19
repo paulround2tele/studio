@@ -211,6 +211,21 @@ class DataQualityValidationService {
               suggestion: 'Check data ingestion pipeline for timestamp consistency'
             });
           }
+
+          issues.push({
+            flag: 'out_of_order',
+            severity: skewSeconds > 300 ? 'high' : 'medium', // 5+ minutes is high severity
+            description: `Snapshot at index ${i} is ${skewSeconds.toFixed(1)}s older than previous snapshot`,
+            affectedMetrics: ['timestamp'],
+            affectedTimeRange: {
+              start: snapshots[i]?.timestamp,
+              end: snapshots[i - 1]?.timestamp
+            },
+            detectedAt: new Date().toISOString(),
+            value: currentTime,
+            expectedValue: previousTime,
+            suggestion: 'Check data ingestion pipeline for timestamp consistency'
+          });
         }
       }
     }

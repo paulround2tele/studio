@@ -16,7 +16,6 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/fntelecomllc/studio/backend/internal/extraction"
 	"github.com/fntelecomllc/studio/backend/internal/featureflags"
 
 	"github.com/fntelecomllc/studio/backend/internal/contentfetcher"
@@ -59,12 +58,6 @@ type analysisService struct {
 		analysisFeatureTableCoverageRatio *prometheus.GaugeVec
 		analysisFeatureTableFallbacks     *prometheus.CounterVec
 		analysisFeatureTablePrimaryReads  prometheus.Counter
-
-		// Dual-read variance metrics
-		dualReadCampaignsTotal          prometheus.Counter
-		dualReadDomainsComparedTotal    prometheus.Counter
-		dualReadHighVarianceDomainsTotal prometheus.Counter
-		dualReadDomainVariance          prometheus.Histogram
 	}
 
 	// Execution tracking per campaign
@@ -131,104 +124,9 @@ type dualReadVarianceDiff struct {
 	NewKwWeightSum       float64 `json:"new_kw_weight_sum"`
 }
 
-// dualReadVarianceCollector collects variance diffs during dual-read comparison
-type dualReadVarianceCollector struct {
-	diffs              []dualReadVarianceDiff
-	highVarianceCount  int
-	totalDomainsCount  int
-	campaignID         string
-	threshold          float64
-}
 
-// maxVarianceDiffs limits memory usage by capping retained diff objects
-const maxVarianceDiffs = 50
 
-// newDualReadVarianceCollector creates a new variance collector
-func newDualReadVarianceCollector(campaignID string, threshold float64) *dualReadVarianceCollector {
-	return &dualReadVarianceCollector{
-		diffs:      make([]dualReadVarianceDiff, 0, maxVarianceDiffs),
-		campaignID: campaignID,
-		threshold:  threshold,
-	}
-}
 
-// Add records a domain comparison, capturing high-variance cases
-func (c *dualReadVarianceCollector) Add(domain string, legacyScore, newScore float64, legacyMeta, newMeta map[string]any) {
-	c.totalDomainsCount++
-	
-	// Calculate variance ratio: abs(legacy - new) / max(legacy, 1e-9)
-	denominator := legacyScore
-	if denominator < 1e-9 {
-		denominator = 1e-9
-	}
-	varianceRatio := math.Abs(legacyScore-newScore) / denominator
-	
-	if varianceRatio >= c.threshold {
-		c.highVarianceCount++
-		
-		// Collect detailed diff if under cap
-		if len(c.diffs) < maxVarianceDiffs {
-			// Extract keyword metadata
-			legacyKwUnique := extractKeywordUnique(legacyMeta)
-			newKwUnique := extractKeywordUnique(newMeta)
-			legacyKwWeight := extractKeywordWeightSum(legacyMeta)
-			newKwWeight := extractKeywordWeightSum(newMeta)
-			
-			diff := dualReadVarianceDiff{
-				Domain:                domain,
-				LegacyScore:          legacyScore,
-				NewScore:             newScore,
-				VarianceRatio:        varianceRatio,
-				LegacyKeywordsUnique: legacyKwUnique,
-				NewKeywordsUnique:    newKwUnique,
-				LegacyKwWeightSum:    legacyKwWeight,
-				NewKwWeightSum:       newKwWeight,
-			}
-			c.diffs = append(c.diffs, diff)
-		}
-	}
-}
-
-// Summary returns counts and diff collection for testing/logging
-func (c *dualReadVarianceCollector) Summary() (highVarianceCount, totalDomainsCount int, diffs []dualReadVarianceDiff) {
-	return c.highVarianceCount, c.totalDomainsCount, c.diffs
-}
-
-// extractKeywordUnique extracts unique keyword count from metadata
-func extractKeywordUnique(meta map[string]any) float64 {
-	if meta == nil {
-		return 0
-	}
-	if kw, ok := meta["keywords"].(map[string]any); ok {
-		switch v := kw["unique_count"].(type) {
-		case int64:
-			return float64(v)
-		case float64:
-			return v
-		case int:
-			return float64(v)
-		}
-	}
-	return 0
-}
-
-// extractKeywordWeightSum extracts keyword weight sum from metadata
-func extractKeywordWeightSum(meta map[string]any) float64 {
-	if meta == nil {
-		return 0
-	}
-	if kw, ok := meta["keywords"].(map[string]any); ok {
-		switch v := kw["weight_sum"].(type) {
-		case int64:
-			return float64(v)
-		case float64:
-			return v
-		case int:
-			return float64(v)
-		}
-	}
-	return 0
-}
 
 // toTypedFeature converts a raw nested any map (same shape produced by FetchAnalysisReadyFeatures) into typed struct.
 func toTypedFeature(raw map[string]any) *DomainAnalysisFeaturesTyped {
@@ -452,12 +350,32 @@ func NewAnalysisService(
 			dualReadDomainsComparedTotal         prometheus.Counter
 			dualReadHighVarianceDomainsTotal     prometheus.Counter
 			dualReadDomainVariance               prometheus.Histogram
+
+			scoreHistogram                    prometheus.Histogram
+			rescoreRuns                       *prometheus.CounterVec
+			rescoreRunsV2                     *prometheus.CounterVec
+			phaseDuration                     prometheus.Histogram
+			reuseCounter                      prometheus.Counter
+			preflightFail                     prometheus.Counter
+			analysisFeatureFetchDuration      prometheus.Histogram
+			analysisFeatureFetchDomains       prometheus.Histogram
+			featureCacheHits                  prometheus.Counter
+			featureCacheMisses                prometheus.Counter
+			featureCacheInvalidations         prometheus.Counter
+			analysisFeatureTableCoverageRatio *prometheus.GaugeVec
+			analysisFeatureTableFallbacks     *prometheus.CounterVec
+			analysisFeatureTablePrimaryReads  prometheus.Counter
 		}{
 			analysisFeatureFetchDuration: featureFetchDuration,
 			analysisFeatureFetchDomains:  featureFetchDomains,
 			featureCacheHits:             cacheHits,
 			featureCacheMisses:           cacheMisses,
 			featureCacheInvalidations:    cacheInvalidations,
+
+			// Read switch metrics initialized to nil, will be set in initReadSwitchMetrics
+			analysisFeatureTableCoverageRatio: nil,
+			analysisFeatureTableFallbacks:     nil,
+			analysisFeatureTablePrimaryReads:  nil,
 		},
 	}
 }
@@ -806,54 +724,13 @@ func (s *analysisService) executeAnalysis(ctx context.Context, campaignID uuid.U
 	s.initReadSwitchMetrics()
 
 	// Make read path decision based on feature flag and coverage
-	decision := s.makeReadPathDecision(ctx, campaignID)
-	
-	// Emit structured logging based on decision
-	if decision.useNew {
-		if s.deps.Logger != nil {
-			s.deps.Logger.Info(ctx, "analysis primary read switched", map[string]interface{}{
-				"campaign":  campaignID.String(),
-				"coverage":  decision.coverage,
-				"threshold": decision.threshold,
-				"reason":    decision.reason,
-			})
-		}
-	} else if featureflags.IsAnalysisReadsFeatureTableEnabled() {
-		// Flag is enabled but we're falling back
-		if s.deps.Logger != nil {
-			if decision.reason == "error" {
-				// For error case, we need to get the error from makeReadPathDecision
-				// but we'll use a generic error since the specific error was already logged
-				errToLog := fmt.Errorf("coverage check failed: %s", decision.reason)
-				s.deps.Logger.Error(ctx, "analysis coverage check failed", errToLog, map[string]interface{}{
-					"campaign":  campaignID.String(),
-					"coverage":  decision.coverage,
-					"threshold": decision.threshold,
-					"reason":    decision.reason,
-				})
-			} else {
-				s.deps.Logger.Warn(ctx, "analysis feature table coverage insufficient", map[string]interface{}{
-					"campaign":  campaignID.String(),
-					"coverage":  decision.coverage,
-					"threshold": decision.threshold,
-					"reason":    decision.reason,
-				})
-			}
-		}
-	}
 
-	// Emit SSE event when flag is enabled (regardless of decision)
-	if featureflags.IsAnalysisReadsFeatureTableEnabled() && s.deps.SSE != nil {
-		payload, _ := json.Marshal(map[string]interface{}{
-			"event":      "analysis_read_switch",
-			"campaignId": campaignID.String(),
-			"coverage":   decision.coverage,
-			"threshold":  decision.threshold,
-			"adopted":    decision.useNew,
-			"reason":     decision.reason,
-			"timestamp":  time.Now().UTC(),
+	
+	// Log the unified pipeline usage
+	if s.deps.Logger != nil {
+		s.deps.Logger.Info(ctx, "analysis using consolidated pipeline", map[string]interface{}{
+			"campaign": campaignID.String(),
 		})
-		s.deps.SSE.Send(string(payload))
 	}
 
 	// Directly proceed to scoring; repurpose majority of remaining progress window.
@@ -1315,6 +1192,9 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 			s.mtx.dualReadDomainVariance,
 		}
 		allMetrics := []prometheus.Collector{
+
+		prometheus.MustRegister(
+ 
 			s.mtx.scoreHistogram,
 			s.mtx.rescoreRuns,
 			s.mtx.rescoreRunsV2,
@@ -1324,6 +1204,8 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 		}
 		allMetrics = append(allMetrics, dualReadMetrics...)
 		prometheus.MustRegister(allMetrics...)
+
+		)
 	})
 	phaseStart := time.Now()
 	// Campaign store is optional for pure scoring recompute; skip if absent.
@@ -1671,6 +1553,8 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 			}
 		}
 	}
+
+
 	// Bulk update
 	// VALUES (domain, relevance, domain_score)
 	valueStrings := make([]string, 0, len(scores))
@@ -1980,8 +1864,7 @@ func clamp(v, lo, hi float64) float64 {
 	return v
 }
 
-// dualReadFetchFeatures loads minimal features from new extraction table when ANALYSIS_DUAL_READ is enabled.
-// It returns a map domain_id -> feature subset for comparison; errors are non-fatal to legacy path caller.
+
 func (s *analysisService) FetchAnalysisReadyFeatures(ctx context.Context, campaignID uuid.UUID) (map[string]map[string]any, error) {
 	// TTL-based memoization (simple map + timestamp sidecar); default 30s
 	const ttl = 30 * time.Second
@@ -2108,19 +1991,7 @@ WHERE def.campaign_id=$1`, campaignID)
 	return res, nil
 }
 
-func (s *analysisService) dualReadFetchFeatures(ctx context.Context, campaignID uuid.UUID) (map[string]map[string]any, error) {
-	if !featureflags.IsAnalysisDualReadEnabled() {
-		return nil, nil
-	}
-	return s.FetchAnalysisReadyFeatures(ctx, campaignID)
-}
 
-// DualReadFetch exposes dualReadFetchFeatures for external callers (HTTP handlers) without
-// committing them to the internal unexported method signature directly. Returns nil map on
-// disabled flag or any retrieval error (callers treat absence as non-fatal enhancement miss).
-func (s *analysisService) DualReadFetch(ctx context.Context, campaignID uuid.UUID) (map[string]map[string]any, error) {
-	return s.dualReadFetchFeatures(ctx, campaignID)
-}
 
 // InvalidateFeatureCache removes cached features for a campaign (called after new analysis results stored)
 func (s *analysisService) InvalidateFeatureCache(campaignID uuid.UUID) {
@@ -2252,84 +2123,3 @@ func (s *analysisService) analysisCoverageOK(ctx context.Context, campaignID uui
 	return coverageRatio >= minCoverage, coverageRatio, nil
 }
 
-// makeReadPathDecision implements the core logic for analysis read path selection.
-// This function is extracted for testability and clear decision logic.
-func (s *analysisService) makeReadPathDecision(ctx context.Context, campaignID uuid.UUID) readPathDecision {
-	// Check if feature flag is enabled
-	flagEnabled := featureflags.IsAnalysisReadsFeatureTableEnabled()
-	threshold := featureflags.GetAnalysisFeatureTableMinCoverage()
-
-	if !flagEnabled {
-		return readPathDecision{
-			useNew:    false,
-			coverage:  0.0,
-			threshold: threshold,
-			reason:    "flag_disabled",
-		}
-	}
-
-	// Check coverage
-	coverageOK, coverage, err := s.analysisCoverageOK(ctx, campaignID)
-	if err != nil {
-		// Log error and fall back to legacy
-		if s.deps.Logger != nil {
-			s.deps.Logger.Error(ctx, "analysis coverage check failed", err, map[string]interface{}{
-				"campaign": campaignID.String(),
-				"error":    err.Error(),
-			})
-		}
-		// Increment error fallback metric
-		if s.mtx.analysisFeatureTableFallbacks != nil {
-			s.mtx.analysisFeatureTableFallbacks.WithLabelValues("error").Inc()
-		}
-		return readPathDecision{
-			useNew:    false,
-			coverage:  0.0,
-			threshold: threshold,
-			reason:    "error",
-		}
-	}
-
-	if coverageOK {
-		// Coverage is sufficient - use new path
-		if s.mtx.analysisFeatureTablePrimaryReads != nil {
-			s.mtx.analysisFeatureTablePrimaryReads.Inc()
-		}
-		// Determine the specific reason
-		reason := "coverage_sufficient"
-		
-		// Check if this was due to small sample override
-		var dbx *sql.DB
-		switch db := s.deps.DB.(type) {
-		case *sqlx.DB:
-			dbx = db.DB
-		case *sql.DB:
-			dbx = db
-		}
-		if dbx != nil {
-			var expectedCount int64
-			if err := dbx.QueryRowContext(ctx, `SELECT COUNT(*) FROM generated_domains WHERE campaign_id = $1`, campaignID).Scan(&expectedCount); err == nil && expectedCount < 5 {
-				reason = "small_sample_override"
-			}
-		}
-
-		return readPathDecision{
-			useNew:    true,
-			coverage:  coverage,
-			threshold: threshold,
-			reason:    reason,
-		}
-	}
-
-	// Coverage insufficient - fall back to legacy
-	if s.mtx.analysisFeatureTableFallbacks != nil {
-		s.mtx.analysisFeatureTableFallbacks.WithLabelValues("below_coverage").Inc()
-	}
-
-	return readPathDecision{
-		useNew:    false,
-		coverage:  coverage,
-		threshold: threshold,
-		reason:    "below_coverage",
-	}
-}

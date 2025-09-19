@@ -6,6 +6,48 @@ Authoritative historical log of the unified multi‑phase campaign pipeline refa
 - Added: ✨  | Changed: ♻️ | Removed: 🔥 | Fixed: 🐛 | Docs: 📝 | Tests: ✅
 
 ---
+
+## Pipeline Consolidation (January 2025)
+- 🔥 **MAJOR**: Removed all dual-read comparison and variance telemetry code
+  - Deleted `analysis_dualread_*` metrics, functions, and test files
+  - Removed `ANALYSIS_DUAL_READ`, `ANALYSIS_READS_FEATURE_TABLE`, `DUAL_READ_VARIANCE_THRESHOLD` environment variables
+  - Eliminated dual-read shadow comparison logic from analysis service
+- ✨ **NEW**: Unified pipeline configuration system
+  - Added `PipelineConfig` struct with environment-based configuration
+  - Introduced dedicated pipeline configuration loading with validation and clamping
+  - Consolidated scattered environment variable getters into single config structure
+- ✨ **NEW**: Extraction reconciliation system
+  - Added `ExtractionReconciler` service for handling stuck and failed extraction tasks
+  - Implemented single-flight protection and configurable retry logic
+  - Added support for stuck_running, stuck_pending, error_retryable, and missing_features categories
+- ✨ **NEW**: Stale score detection system
+  - Added `StaleScoreDetector` service for identifying outdated analysis scores
+  - Automatic detection of scores older than features with rescore job enqueueing
+  - Configurable thresholds and detection intervals
+- ✨ **NEW**: Simplified metrics system
+  - Added pipeline-specific Prometheus metrics for reconciliation and stale detection
+  - Kept existing `analysis_feature_table_coverage_ratio` gauge as required
+  - Removed all dual-read and variance metrics
+- ✨ **NEW**: Clock abstraction for deterministic testing
+  - Added `Clock` interface with real and mock implementations
+  - Enables reliable time-based testing for reconciliation and detection logic
+- ✅ **TESTS**: Comprehensive test suite for new components
+  - Table-driven tests for extraction reconciler covering all reconciliation categories
+  - Unit tests for stale score detection with boundary conditions
+  - Single-flight protection and disabled reconciliation tests
+- 📝 **DOCS**: Updated architecture and operational documentation
+  - Rewrote `architecture.md` to reflect final steady-state pipeline
+  - Updated `feature_flags.md` removing deleted flags and adding pipeline config
+  - Added `docs/ops/alerts.md` with Prometheus alerting rule examples
+- ♻️ **SIMPLIFIED**: Analysis service always uses unified feature extraction pipeline
+  - Removed complex read path decision logic and coverage checking
+  - Consolidated to single extraction approach eliminating fallback complexity
+- 🔥 **CLEANUP**: Removed obsolete test files and legacy code paths
+  - Deleted `analysis_read_switch_test.go` and related dual-read test infrastructure
+  - Eliminated variance collection, threshold checking, and SSE variance events
+
+---
+
 ## Phase 0 – Baseline Capture
 - 📝 Recorded failing legacy tests & existing `chain_blocked` semantics.
 - 📝 Tagged baseline (pre-unified) state.
