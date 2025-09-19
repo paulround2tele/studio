@@ -99,7 +99,7 @@ Alerts when stale score detection hasn't run recently (may indicate the detector
 ```yaml
   - alert: AnalysisStaleScoreDetectionStalled
     expr: |
-      time() - analysis_stale_scores_detected_total > 3600
+      time() - timestamp(analysis_stale_scores_detected_total) > 3600
     for: 5m
     labels:
       severity: warning
