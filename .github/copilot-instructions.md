@@ -89,7 +89,7 @@ scripts/smoke-e2e-campaign.sh
 **Environment overrides:**
 - `BASE_URL` (default http://localhost:8080/api/v2)
 - `USER_EMAIL` (default test@example.com)  
-- `USER_PASSWORD` (default password)
+- `USER_PASSWORD` (default password123)
 
 **ALWAYS run linting and type checking before committing:**
 ```bash
