@@ -92,6 +92,7 @@ func TestGetAnalysisFeatureTableMinCoverage(t *testing.T) {
 	
 	// Clean up
 	os.Unsetenv("ANALYSIS_FEATURE_TABLE_MIN_COVERAGE")
+}
 
 func TestGetDualReadVarianceThreshold(t *testing.T) {
 	// Store original value

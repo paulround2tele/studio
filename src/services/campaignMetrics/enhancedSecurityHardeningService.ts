@@ -310,6 +310,8 @@ class SecurityHardeningService {
 
     for (let i = 0; i < points.length; i++) {
       const point = points[i];
+      if (!point) continue;
+      
       const pointErrors: string[] = [];
 
       try {
@@ -617,6 +619,8 @@ class SecurityHardeningService {
     for (let i = 1; i < points.length; i++) {
       const prev = points[i - 1];
       const curr = points[i];
+      
+      if (!prev || !curr) continue;
 
       // Check timestamp ordering
       const prevTime = new Date(prev.timestamp).getTime();

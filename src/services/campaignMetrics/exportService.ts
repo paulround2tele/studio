@@ -253,8 +253,8 @@ export function exportSnapshotsJSONV3(
     metadata: {
       totalSnapshots: snapshots.length,
       dateRange: {
-        from: snapshots.length > 0 ? snapshots[0].timestamp : new Date().toISOString(),
-        to: snapshots.length > 0 ? snapshots[snapshots.length - 1].timestamp : new Date().toISOString()
+        from: snapshots.length > 0 ? snapshots[0]?.timestamp ?? new Date().toISOString() : new Date().toISOString(),
+        to: snapshots.length > 0 ? snapshots[snapshots.length - 1]?.timestamp ?? new Date().toISOString() : new Date().toISOString()
       }
     }
   };
@@ -344,8 +344,8 @@ export function exportSnapshotsJSONV6(
     metadata: {
       totalSnapshots: snapshots.length,
       dateRange: {
-        from: snapshots.length > 0 ? snapshots[0].timestamp : new Date().toISOString(),
-        to: snapshots.length > 0 ? snapshots[snapshots.length - 1].timestamp : new Date().toISOString()
+        from: snapshots.length > 0 ? snapshots[0]?.timestamp ?? new Date().toISOString() : new Date().toISOString(),
+        to: snapshots.length > 0 ? snapshots[snapshots.length - 1]?.timestamp ?? new Date().toISOString() : new Date().toISOString()
       }
     }
   };
@@ -364,9 +364,10 @@ export function exportSnapshotsJSONV6(
   }
 
   if (optionsV6?.includeCapabilities) {
+    const capabilities = capabilitiesService.getCurrentCapabilities();
     exportData.capabilitiesSnapshot = {
-      versions: capabilitiesService.getAllVersions(),
-      features: capabilitiesService.getAllFeatures(),
+      versions: capabilities?.versions || {},
+      features: capabilities?.features || {},
       capturedAt: new Date().toISOString()
     };
   }
@@ -458,8 +459,8 @@ export function exportSnapshotsJSON(
     metadata: {
       totalSnapshots: snapshots.length,
       dateRange: {
-        from: snapshots.length > 0 ? snapshots[0].timestamp : new Date().toISOString(),
-        to: snapshots.length > 0 ? snapshots[snapshots.length - 1].timestamp : new Date().toISOString()
+        from: snapshots.length > 0 ? snapshots[0]?.timestamp ?? new Date().toISOString() : new Date().toISOString(),
+        to: snapshots.length > 0 ? snapshots[snapshots.length - 1]?.timestamp ?? new Date().toISOString() : new Date().toISOString()
       }
     }
   };
@@ -698,8 +699,8 @@ function getDateRange(snapshots: AggregateSnapshot[]): { from: string; to: strin
   const timestamps = snapshots.map(s => new Date(s.timestamp).getTime()).sort();
   
   return {
-    from: new Date(timestamps[0]).toISOString(),
-    to: new Date(timestamps[timestamps.length - 1]).toISOString()
+    from: new Date(timestamps[0] ?? Date.now()).toISOString(),
+    to: new Date(timestamps[timestamps.length - 1] ?? Date.now()).toISOString()
   };
 }
 
@@ -866,8 +867,8 @@ export function exportSnapshotsJSONV7(
     metadata: {
       totalSnapshots: snapshots.length,
       dateRange: {
-        from: snapshots.length > 0 ? snapshots[0].timestamp : new Date().toISOString(),
-        to: snapshots.length > 0 ? snapshots[snapshots.length - 1].timestamp : new Date().toISOString()
+        from: snapshots.length > 0 ? snapshots[0]?.timestamp ?? new Date().toISOString() : new Date().toISOString(),
+        to: snapshots.length > 0 ? snapshots[snapshots.length - 1]?.timestamp ?? new Date().toISOString() : new Date().toISOString()
       }
     }
   };
@@ -904,8 +905,8 @@ export function exportSnapshotsJSONV7(
     }
 
     // Phase 10 data
-    if (optionsV7.causalGraphData) {
-      exportData.causalGraph = optionsV7.causalGraphData;
+    if ((optionsV7 as any).includeCausalGraph && (optionsV7 as any).causalGraphData) {
+      exportData.causalGraph = (optionsV7 as any).causalGraphData;
     }
 
     if (optionsV7.experimentsData) {
@@ -1016,8 +1017,8 @@ export function createShareBundleV7(
     metadata: {
       totalSnapshots: snapshots.length,
       dateRange: {
-        from: snapshots.length > 0 ? snapshots[0].timestamp : new Date().toISOString(),
-        to: snapshots.length > 0 ? snapshots[snapshots.length - 1].timestamp : new Date().toISOString()
+        from: snapshots.length > 0 ? snapshots[0]?.timestamp ?? new Date().toISOString() : new Date().toISOString(),
+        to: snapshots.length > 0 ? snapshots[snapshots.length - 1]?.timestamp ?? new Date().toISOString() : new Date().toISOString()
       }
     }
   };

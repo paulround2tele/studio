@@ -1,33 +1,29 @@
 {
   "server": {
-    "port": "8080",
-    "apiKey": "SET_A_REAL_KEY_IN_CONFIG_OR_ENV_d9f8s7d9f8s7d9f8",
+    "port": "${SERVER_PORT:-8080}",
     "streamChunkSize": 50,
-    "ginMode": "debug",
-    "dbMaxOpenConns": 300,
-    "dbMaxIdleConns": 150,
-    "dbConnMaxLifetimeMinutes": 30,
-    "database": {
-      "host": "localhost",
-      "port": 5432,
-      "name": "domainflow_production",
-      "user": "domainflow",
-      "password": "pNpTHxEWr2SmY270p1IjGn3dP",
-      "sslmode": "disable",
-      "maxConnections": 100,
-      "maxIdleConnections": 20,
-      "connectionLifetime": 600
-    }
+    "ginMode": "${GIN_MODE:-debug}"
   },
-  "worker": {
-    "numWorkers": 5,
-    "pollIntervalSeconds": 5,
-    "errorRetryDelaySeconds": 30,
-    "maxJobRetries": 3,
-    "jobProcessingTimeoutMinutes": 15,
-    "batchSize": 100,
-    "maxRetries": 3,
-    "retryDelaySeconds": 30
+  "database": {
+    "host": "localhost",
+    "port": "5432",
+    "name": "domainflow",
+    "user": "postgres",
+    "password": "postgres",
+    "sslmode": "disable",
+    "maxConnections": 100,
+    "maxIdleConnections": 20,
+    "connectionLifetime": 600
+  },
+  "auth": {
+    "jwtSecret": "test-jwt-secret-key-for-development",
+    "sessionSecret": "test-session-secret-key-for-development",
+    "encryptionKey": "test-encryption-key-for-development-32",
+    "apiKeySalt": "test-api-key-salt-for-development",
+    "sessionTimeout": "${SESSION_TIMEOUT:-24h}",
+    "cookieSecure": "${COOKIE_SECURE:-true}",
+    "cookieHttpOnly": true,
+    "cookieSameSite": "strict"
   },
   "dnsValidator": {
     "resolvers": [
@@ -48,7 +44,6 @@
     "rateLimitBurst": 5
   },
   "httpValidator": {
-    "defaultUserAgent": "DomainFlowBot/1.2 (DefaultStudioAgent)",
     "userAgents": [
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36",
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36",
@@ -56,24 +51,24 @@
     ],
     "defaultHeaders": {
       "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-      "Accept-Encoding": "gzip, deflate",
       "Accept-Language": "en-US,en;q=0.5",
-      "Connection": "keep-alive",
+      "Accept-Encoding": "gzip, deflate",
       "DNT": "1",
+      "Connection": "keep-alive",
       "Upgrade-Insecure-Requests": "1"
     },
-    "requestTimeoutSeconds": 15,
-    "maxRedirects": 5,
+    "timeoutSeconds": 30,
     "followRedirects": true,
+    "maxRedirects": 5,
     "maxDomainsPerRequest": 50,
-    "allowInsecureTLS": false,
+    "concurrentRequestsPerDomain": 1,
+    "requestDelayMaxMs": 100,
     "maxConcurrentGoroutines": 10,
-    "rateLimitDps": 5,
-    "rateLimitBurst": 10,
-    "maxBodyReadBytes": 10485760
+    "rateLimitRps": 5,
+    "rateLimitBurst": 10
   },
   "logging": {
-    "level": "DEBUG",
+    "level": "${LOG_LEVEL:-info}",
     "enableFileLogging": true,
     "logDirectory": "logs",
     "maxFileSize": 100,
@@ -83,28 +78,21 @@
     "enableRequestLogging": true,
     "enablePerformanceLogging": true
   },
+  "worker": {
+    "numWorkers": 5,
+    "pollIntervalSeconds": 5,
+    "batchSize": 100,
+    "maxRetries": 3,
+    "retryDelaySeconds": 30
+  },
   "rateLimiter": {
     "maxRequests": 1000,
     "windowSeconds": 900
-  },
-  "proxyManager": {
-    "testTimeoutSeconds": 10,
-    "testUrl": "https://httpbin.org/ip",
-    "initialHealthCheckTimeoutSeconds": 7,
-    "maxConcurrentInitialChecks": 10
   },
   "features": {
     "enableRealTimeUpdates": true,
     "enableOfflineMode": false,
     "enableAnalytics": false,
-    "enableDebugMode": false,
-    "enableStealth": true
-  },
-  "reconciliation": {
-    "enabled": true,
-    "intervalMinutes": 1440,
-    "driftThresholdPct": 0.01,
-    "autoCorrect": false,
-    "maxCorrectionsPerRun": 50
+    "enableDebugMode": false
   }
 }

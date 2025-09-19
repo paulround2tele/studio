@@ -88,6 +88,8 @@ func IsAnalysisRescoringEnabled() bool {
 // Range: 0.0 to 1.0 (0% to 100% variance)
 func GetDualReadVarianceThreshold() float64 {
 	return getFloatEnv("DUAL_READ_VARIANCE_THRESHOLD", 0.25)
+}
+
 // IsAnalysisDualReadEnabled returns true if the analysis phase should
 // perform dual read comparison between legacy and new extraction data.
 //
@@ -203,27 +205,6 @@ func getFloatEnv(key string, defaultValue float64) float64 {
 		return floatVal
 	}
 	return defaultValue
-}
-
-
-	if floatVal, err := strconv.ParseFloat(value, 64); err == nil && floatVal > 0 {
-		return floatVal
-	}
-	
-	return defaultValue
-}
-
-// GetDualReadVarianceThreshold returns the variance threshold for dual read comparison.
-// Values are clamped to be > 0. 
-//
-// Environment Variable: DUAL_READ_VARIANCE_THRESHOLD
-// Default: 0.25
-// Format: float64 string (e.g., "0.25", "0.1", "0.5")
-//
-// Used to determine when variance between legacy and new extraction data
-// is significant enough to warrant investigation.
-func GetDualReadVarianceThreshold() float64 {
-	return getFloatEnv("DUAL_READ_VARIANCE_THRESHOLD", 0.25)
 }
 
 // Phase Implementation Notes:

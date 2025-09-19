@@ -20,7 +20,6 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/featureflags"
 
 	"github.com/fntelecomllc/studio/backend/internal/contentfetcher"
-	"github.com/fntelecomllc/studio/backend/internal/featureflags"
 	"github.com/fntelecomllc/studio/backend/internal/keywordextractor"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
@@ -118,6 +117,7 @@ type readPathDecision struct {
 	coverage  float64
 	threshold float64
 	reason    string
+}
 
 // dualReadVarianceDiff represents a high-variance domain comparison
 type dualReadVarianceDiff struct {
@@ -433,7 +433,7 @@ func NewAnalysisService(
 			at   time.Time
 			data map[string]map[string]any
 		}{},
-		mtx: func() struct {
+		mtx: struct {
 			scoreHistogram                       prometheus.Histogram
 			rescoreRuns                          *prometheus.CounterVec
 			rescoreRunsV2                        *prometheus.CounterVec
@@ -448,67 +448,17 @@ func NewAnalysisService(
 			analysisFeatureTableCoverageRatio    *prometheus.GaugeVec
 			analysisFeatureTableFallbacks        *prometheus.CounterVec
 			analysisFeatureTablePrimaryReads     prometheus.Counter
-		} {
-			return struct {
-				scoreHistogram                       prometheus.Histogram
-				rescoreRuns                          *prometheus.CounterVec
-				rescoreRunsV2                        *prometheus.CounterVec
-				phaseDuration                        prometheus.Histogram
-				reuseCounter                         prometheus.Counter
-				preflightFail                        prometheus.Counter
-				analysisFeatureFetchDuration         prometheus.Histogram
-				analysisFeatureFetchDomains          prometheus.Histogram
-				featureCacheHits                     prometheus.Counter
-				featureCacheMisses                   prometheus.Counter
-				featureCacheInvalidations            prometheus.Counter
-				analysisFeatureTableCoverageRatio    *prometheus.GaugeVec
-				analysisFeatureTableFallbacks        *prometheus.CounterVec
-				analysisFeatureTablePrimaryReads     prometheus.Counter
-
-			scoreHistogram               prometheus.Histogram
-			rescoreRuns                  *prometheus.CounterVec
-			rescoreRunsV2                *prometheus.CounterVec
-			phaseDuration                prometheus.Histogram
-			reuseCounter                 prometheus.Counter
-			preflightFail                prometheus.Counter
-			analysisFeatureFetchDuration prometheus.Histogram
-			analysisFeatureFetchDomains  prometheus.Histogram
-			featureCacheHits             prometheus.Counter
-			featureCacheMisses           prometheus.Counter
-			featureCacheInvalidations    prometheus.Counter
-			dualReadCampaignsTotal          prometheus.Counter
-			dualReadDomainsComparedTotal    prometheus.Counter
-			dualReadHighVarianceDomainsTotal prometheus.Counter
-			dualReadDomainVariance          prometheus.Histogram
-		} {
-			return struct {
-				scoreHistogram               prometheus.Histogram
-				rescoreRuns                  *prometheus.CounterVec
-				rescoreRunsV2                *prometheus.CounterVec
-				phaseDuration                prometheus.Histogram
-				reuseCounter                 prometheus.Counter
-				preflightFail                prometheus.Counter
-				analysisFeatureFetchDuration prometheus.Histogram
-				analysisFeatureFetchDomains  prometheus.Histogram
-				featureCacheHits             prometheus.Counter
-				featureCacheMisses           prometheus.Counter
-				featureCacheInvalidations    prometheus.Counter
-				dualReadCampaignsTotal          prometheus.Counter
-				dualReadDomainsComparedTotal    prometheus.Counter
-				dualReadHighVarianceDomainsTotal prometheus.Counter
-				dualReadDomainVariance          prometheus.Histogram
-			}{
-				analysisFeatureFetchDuration: featureFetchDuration,
-				analysisFeatureFetchDomains:  featureFetchDomains,
-				featureCacheHits:             cacheHits,
-				featureCacheMisses:           cacheMisses,
-				featureCacheInvalidations:    cacheInvalidations,
-				// Read switch metrics initialized to nil, will be set in initReadSwitchMetrics
-				analysisFeatureTableCoverageRatio: nil,
-				analysisFeatureTableFallbacks:     nil,
-				analysisFeatureTablePrimaryReads:  nil,
-			}
-		}(),
+			dualReadCampaignsTotal               prometheus.Counter
+			dualReadDomainsComparedTotal         prometheus.Counter
+			dualReadHighVarianceDomainsTotal     prometheus.Counter
+			dualReadDomainVariance               prometheus.Histogram
+		}{
+			analysisFeatureFetchDuration: featureFetchDuration,
+			analysisFeatureFetchDomains:  featureFetchDomains,
+			featureCacheHits:             cacheHits,
+			featureCacheMisses:           cacheMisses,
+			featureCacheInvalidations:    cacheInvalidations,
+		},
 	}
 }
 
@@ -1364,15 +1314,16 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 			s.mtx.dualReadHighVarianceDomainsTotal,
 			s.mtx.dualReadDomainVariance,
 		}
-		prometheus.MustRegister(
+		allMetrics := []prometheus.Collector{
 			s.mtx.scoreHistogram,
 			s.mtx.rescoreRuns,
 			s.mtx.rescoreRunsV2,
 			s.mtx.phaseDuration,
 			s.mtx.reuseCounter,
 			s.mtx.preflightFail,
-			dualReadMetrics...,
-		)
+		}
+		allMetrics = append(allMetrics, dualReadMetrics...)
+		prometheus.MustRegister(allMetrics...)
 	})
 	phaseStart := time.Now()
 	// Campaign store is optional for pure scoring recompute; skip if absent.
@@ -1581,9 +1532,6 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 			missingLegacy := 0
 			missingNew := 0
 			varianceHigh := 0
-
-			threshold := featureflags.GetDualReadVarianceThreshold()
-			perDomainVariance := 0
 			legacyKwSum := 0.0
 			
 			for _, sr := range scores {
@@ -1637,25 +1585,9 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 					
 					if legacyVal > 0 && newVal > 0 {
 						// Add to variance collector with metadata
-						// Attempt to extract actual legacy metadata from sr.LegacyMeta if available.
-						var legacyMeta map[string]any
-						if sr.LegacyMeta != nil {
-							// sr.LegacyMeta is assumed to be a JSON-encoded []byte or string.
-							switch v := sr.LegacyMeta.(type) {
-							case []byte:
-								if err := json.Unmarshal(v, &legacyMeta); err != nil {
-									legacyMeta = nil
-								}
-							case string:
-								if err := json.Unmarshal([]byte(v), &legacyMeta); err != nil {
-									legacyMeta = nil
-								}
-							case map[string]any:
-								legacyMeta = v
-							default:
-								legacyMeta = nil
-							}
-						}
+						// Note: LegacyMeta field not available in scoreRow, using placeholder
+						var legacyMeta map[string]any = nil
+						// TODO: Implement proper metadata extraction when LegacyMeta field is added to scoreRow
 						// Fallback: If legacyMeta is nil, use synthetic structure for backward compatibility.
 						if legacyMeta == nil {
 							legacyMeta = map[string]any{"keywords": map[string]any{"unique_count": legacyVal}}
