@@ -193,6 +193,25 @@ class DataQualityValidationService {
         const skewSeconds = (previousTime - currentTime) / 1000;
         
         if (skewSeconds > this.config.maxTimeSkewSeconds) {
+          const currentSnapshot = snapshots[i];
+          const previousSnapshot = snapshots[i - 1];
+          if (currentSnapshot && previousSnapshot) {
+            issues.push({
+              flag: 'out_of_order',
+              severity: skewSeconds > 300 ? 'high' : 'medium', // 5+ minutes is high severity
+              description: `Snapshot at index ${i} is ${skewSeconds.toFixed(1)}s older than previous snapshot`,
+              affectedMetrics: ['timestamp'],
+              affectedTimeRange: {
+                start: currentSnapshot.timestamp,
+                end: previousSnapshot.timestamp
+              },
+              detectedAt: new Date().toISOString(),
+              value: currentTime,
+              expectedValue: previousTime,
+              suggestion: 'Check data ingestion pipeline for timestamp consistency'
+            });
+          }
+
           issues.push({
             flag: 'out_of_order',
             severity: skewSeconds > 300 ? 'high' : 'medium', // 5+ minutes is high severity
@@ -229,8 +248,13 @@ class DataQualityValidationService {
     const increasingMetrics = ['totalDomains'];
     
     for (let i = 1; i < snapshots.length; i++) {
-      const current = snapshots[i].aggregates;
-      const previous = snapshots[i - 1].aggregates;
+      const currentSnapshot = snapshots[i];
+      const previousSnapshot = snapshots[i - 1];
+      
+      if (!currentSnapshot || !previousSnapshot) continue;
+      
+      const current = currentSnapshot.aggregates;
+      const previous = previousSnapshot.aggregates;
       
       increasingMetrics.forEach(metric => {
         const currentValue = current[metric as keyof typeof current] as number;
@@ -246,8 +270,8 @@ class DataQualityValidationService {
               description: `${metric} decreased by ${decrease.toFixed(2)} (${((decrease / previousValue) * 100).toFixed(1)}%)`,
               affectedMetrics: [metric],
               affectedTimeRange: {
-                start: snapshots[i - 1].timestamp,
-                end: snapshots[i].timestamp
+                start: previousSnapshot.timestamp,
+                end: currentSnapshot.timestamp
               },
               detectedAt: new Date().toISOString(),
               value: currentValue,
@@ -281,8 +305,13 @@ class DataQualityValidationService {
       let stagnationValue: number | null = null;
       
       for (let i = 1; i < snapshots.length; i++) {
-        const currentAgg = snapshots[i].aggregates;
-        const previousAgg = snapshots[i - 1].aggregates;
+        const currentSnapshot = snapshots[i];
+        const previousSnapshot = snapshots[i - 1];
+        
+        if (!currentSnapshot || !previousSnapshot) continue;
+        
+        const currentAgg = currentSnapshot.aggregates;
+        const previousAgg = previousSnapshot.aggregates;
         const current = currentAgg[metric as keyof typeof currentAgg] as number;
         const previous = previousAgg[metric as keyof typeof previousAgg] as number;
         
@@ -297,56 +326,66 @@ class DataQualityValidationService {
             }
           } else {
             // Value changed significantly, check if we had a stagnation period
-            if (stagnationStart !== null) {
-              const stagnationDuration = this.calculateHoursBetween(
-                snapshots[stagnationStart].timestamp,
-                snapshots[i - 1].timestamp
-              );
+            if (stagnationStart !== null && stagnationStart < snapshots.length && i - 1 < snapshots.length) {
+              const stagnationStartSnapshot = snapshots[stagnationStart];
+              const stagnationEndSnapshot = snapshots[i - 1];
               
-              if (stagnationDuration >= this.config.stagnationThreshold) {
-                issues.push({
-                  flag: 'stagnation',
-                  severity: stagnationDuration > 24 ? 'high' : 'medium',
-                  description: `${metric} remained unchanged at ${stagnationValue?.toFixed(2)} for ${stagnationDuration.toFixed(1)} hours`,
-                  affectedMetrics: [metric],
-                  affectedTimeRange: {
-                    start: snapshots[stagnationStart].timestamp,
-                    end: snapshots[i - 1].timestamp
-                  },
-                  detectedAt: new Date().toISOString(),
-                  value: stagnationValue!,
-                  suggestion: 'Verify data pipeline is updating correctly and metric is being calculated'
-                });
+              if (stagnationStartSnapshot && stagnationEndSnapshot) {
+                const stagnationDuration = this.calculateHoursBetween(
+                  stagnationStartSnapshot.timestamp,
+                  stagnationEndSnapshot.timestamp
+                );
+                
+                if (stagnationDuration >= this.config.stagnationThreshold) {
+                  issues.push({
+                    flag: 'stagnation',
+                    severity: stagnationDuration > 24 ? 'high' : 'medium',
+                    description: `${metric} remained unchanged at ${stagnationValue?.toFixed(2)} for ${stagnationDuration.toFixed(1)} hours`,
+                    affectedMetrics: [metric],
+                    affectedTimeRange: {
+                      start: stagnationStartSnapshot.timestamp,
+                      end: stagnationEndSnapshot.timestamp
+                    },
+                    detectedAt: new Date().toISOString(),
+                    value: stagnationValue!,
+                    suggestion: 'Check if metric calculation is working correctly'
+                  });
+                }
               }
-              
-              stagnationStart = null;
-              stagnationValue = null;
             }
+            
+            stagnationStart = null;
+            stagnationValue = null;
           }
         }
       }
       
       // Check for stagnation that continues to the end
-      if (stagnationStart !== null) {
-        const stagnationDuration = this.calculateHoursBetween(
-          snapshots[stagnationStart].timestamp,
-          snapshots[snapshots.length - 1].timestamp
-        );
+      if (stagnationStart !== null && stagnationStart < snapshots.length && snapshots.length > 0) {
+        const stagnationStartSnapshot = snapshots[stagnationStart];
+        const lastSnapshot = snapshots[snapshots.length - 1];
         
-        if (stagnationDuration >= this.config.stagnationThreshold) {
-          issues.push({
-            flag: 'stagnation',
-            severity: 'high',
-            description: `${metric} has been stagnant at ${stagnationValue?.toFixed(2)} for ${stagnationDuration.toFixed(1)} hours (ongoing)`,
-            affectedMetrics: [metric],
-            affectedTimeRange: {
-              start: snapshots[stagnationStart].timestamp,
-              end: snapshots[snapshots.length - 1].timestamp
-            },
-            detectedAt: new Date().toISOString(),
-            value: stagnationValue!,
-            suggestion: 'Data may not be updating - check pipeline and data sources'
-          });
+        if (stagnationStartSnapshot && lastSnapshot) {
+          const stagnationDuration = this.calculateHoursBetween(
+            stagnationStartSnapshot.timestamp,
+            lastSnapshot.timestamp
+          );
+          
+          if (stagnationDuration >= this.config.stagnationThreshold) {
+            issues.push({
+              flag: 'stagnation',
+              severity: 'high',
+              description: `${metric} has been stagnant at ${stagnationValue?.toFixed(2)} for ${stagnationDuration.toFixed(1)} hours (ongoing)`,
+              affectedMetrics: [metric],
+              affectedTimeRange: {
+                start: stagnationStartSnapshot.timestamp,
+                end: lastSnapshot.timestamp
+              },
+              detectedAt: new Date().toISOString(),
+              value: stagnationValue!,
+              suggestion: 'Data may not be updating - check pipeline and data sources'
+            });
+          }
         }
       }
     });
@@ -384,8 +423,8 @@ class DataQualityValidationService {
               description: `${metric} shows very low variance (CV=${coefficientOfVariation.toFixed(3)}) over ${this.config.lowVarianceWindow} snapshots`,
               affectedMetrics: [metric],
               affectedTimeRange: {
-                start: window[0].timestamp,
-                end: window[window.length - 1].timestamp
+                start: window[0]?.timestamp || '',
+                end: window[window.length - 1]?.timestamp || ''
               },
               detectedAt: new Date().toISOString(),
               suggestion: 'Low variance may indicate measurement issues or genuine stability'
@@ -414,7 +453,10 @@ class DataQualityValidationService {
     
     spikeMetrics.forEach(metric => {
       for (let i = this.config.spikeWindowSize; i < snapshots.length; i++) {
-        const currentAgg = snapshots[i].aggregates;
+        const currentSnapshot = snapshots[i];
+        if (!currentSnapshot) continue;
+        
+        const currentAgg = currentSnapshot.aggregates;
         const currentValue = currentAgg[metric as keyof typeof currentAgg] as number;
         
         if (typeof currentValue === 'number') {
@@ -434,8 +476,8 @@ class DataQualityValidationService {
                 description: `${metric} shows unusual ${zScore > 0 ? 'spike' : 'drop'} (z-score: ${zScore.toFixed(2)})`,
                 affectedMetrics: [metric],
                 affectedTimeRange: {
-                  start: snapshots[i].timestamp,
-                  end: snapshots[i].timestamp
+                  start: currentSnapshot.timestamp,
+                  end: currentSnapshot.timestamp
                 },
                 detectedAt: new Date().toISOString(),
                 value: currentValue,
@@ -464,8 +506,13 @@ class DataQualityValidationService {
 
     // Check for large gaps in timestamp sequence
     for (let i = 1; i < snapshots.length; i++) {
-      const currentTime = new Date(snapshots[i].timestamp).getTime();
-      const previousTime = new Date(snapshots[i - 1].timestamp).getTime();
+      const currentSnapshot = snapshots[i];
+      const previousSnapshot = snapshots[i - 1];
+      
+      if (!currentSnapshot || !previousSnapshot) continue;
+      
+      const currentTime = new Date(currentSnapshot.timestamp).getTime();
+      const previousTime = new Date(previousSnapshot.timestamp).getTime();
       const gapHours = (currentTime - previousTime) / (1000 * 60 * 60);
       
       // If gap is more than 4 hours (assuming regular updates), flag as missing data
@@ -476,8 +523,8 @@ class DataQualityValidationService {
           description: `${gapHours.toFixed(1)} hour gap in data between snapshots`,
           affectedMetrics: ['timestamp'],
           affectedTimeRange: {
-            start: snapshots[i - 1].timestamp,
-            end: snapshots[i].timestamp
+            start: previousSnapshot.timestamp,
+            end: currentSnapshot.timestamp
           },
           detectedAt: new Date().toISOString(),
           suggestion: 'Check data collection pipeline for interruptions'
@@ -538,9 +585,9 @@ class DataQualityValidationService {
       });
     });
 
-    const timeSpan = snapshots.length > 1 
-      ? (new Date(snapshots[snapshots.length - 1].timestamp).getTime() - 
-         new Date(snapshots[0].timestamp).getTime()) / (1000 * 60 * 60 * 24)
+    const timeSpan = snapshots.length > 1 && snapshots[snapshots.length - 1] && snapshots[0]
+      ? (new Date(snapshots[snapshots.length - 1]!.timestamp).getTime() - 
+         new Date(snapshots[0]!.timestamp).getTime()) / (1000 * 60 * 60 * 24)
       : 0;
 
     const avgInterval = snapshots.length > 1

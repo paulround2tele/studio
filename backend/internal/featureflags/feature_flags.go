@@ -68,6 +68,28 @@ func IsAnalysisRescoringEnabled() bool {
 	return getBoolEnv("ANALYSIS_RESCORING_ENABLED", false)
 }
 
+// GetDualReadVarianceThreshold returns the threshold for dual-read variance detection.
+// This controls when variance between legacy and new feature vectors is considered "high".
+// 
+// Environment Variable: DUAL_READ_VARIANCE_THRESHOLD
+// Default: 0.25 (25% variance threshold)
+// Range: 0.0 to 1.0 (0% to 100% variance)
+func GetDualReadVarianceThreshold() float64 {
+	return getFloatEnv("DUAL_READ_VARIANCE_THRESHOLD", 0.25)
+}
+
+// IsAnalysisDualReadEnabled returns true if the analysis phase should
+// perform dual read comparison between legacy and new extraction data.
+//
+// Phase: P1 - Flag unification (Current)
+// Environment Variable: ANALYSIS_DUAL_READ
+// Default: false
+//
+// Used for non-blocking comparison and validation during migration.
+func IsAnalysisDualReadEnabled() bool {
+	return getBoolEnv("ANALYSIS_DUAL_READ", false)
+}
+
 
 
 

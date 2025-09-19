@@ -496,7 +496,7 @@ class DegradationEvaluatorService {
   /**
    * Estimate recovery time based on failed domains
    */
-  private estimateRecoveryTime(analysis: { healthy: string[]; degraded: string[]; failed: string[] }): string {
+  private estimateRecoveryTime(analysis: { healthy: string[]; degraded: string[]; failed: string[] }): string | undefined {
     const totalIssues = analysis.degraded.length + analysis.failed.length;
     
     if (totalIssues === 0) return undefined;

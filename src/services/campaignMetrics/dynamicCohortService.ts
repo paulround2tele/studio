@@ -219,8 +219,8 @@ class DynamicCohortSegmentationService {
 
     // Assign campaigns to tiers
     for (let tierIndex = 0; tierIndex < config.tiers; tierIndex++) {
-      const lowerBound = tierIndex === 0 ? -Infinity : tierBoundaries[tierIndex - 1];
-      const upperBound = tierIndex === config.tiers - 1 ? Infinity : tierBoundaries[tierIndex];
+      const lowerBound = tierIndex === 0 ? -Infinity : (tierBoundaries[tierIndex - 1] ?? -Infinity);
+      const upperBound = tierIndex === config.tiers - 1 ? Infinity : (tierBoundaries[tierIndex] ?? Infinity);
       
       const tierCampaigns = campaignScores
         .filter(item => item.score > lowerBound && item.score <= upperBound)
@@ -229,7 +229,7 @@ class DynamicCohortSegmentationService {
       if (tierCampaigns.length > 0) {
         const segment: CohortSegment = {
           id: `performance_tier_${tierIndex}`,
-          name: tierLabels[tierIndex],
+          name: tierLabels[tierIndex] ?? `Tier ${tierIndex}`,
           description: `Campaigns with ${config.metric} between ${this.formatBound(lowerBound)} and ${this.formatBound(upperBound)}`,
           campaigns: tierCampaigns,
           criteria: {
@@ -277,7 +277,7 @@ class DynamicCohortSegmentationService {
       const sortedKeys = Object.keys(groups).sort().slice(-config.maxWindows);
       const limitedGroups: Record<string, CampaignMetadata[]> = {};
       sortedKeys.forEach(key => {
-        limitedGroups[key] = groups[key];
+        limitedGroups[key] = groups[key] ?? [];
       });
       return limitedGroups;
     }
@@ -298,6 +298,10 @@ class DynamicCohortSegmentationService {
 
     // Use the latest snapshot for scoring
     const latestSnapshot = campaign.snapshots[campaign.snapshots.length - 1];
+    
+    if (!latestSnapshot) {
+      return NaN;
+    }
     
     switch (metric) {
       case 'avgLeadScore':
@@ -321,7 +325,7 @@ class DynamicCohortSegmentationService {
     for (let i = 1; i < tiers; i++) {
       const percentile = i / tiers;
       const index = Math.floor(percentile * sortedScores.length);
-      boundaries.push(sortedScores[Math.min(index, sortedScores.length - 1)]);
+      boundaries.push(sortedScores[Math.min(index, sortedScores.length - 1)] ?? 0);
     }
     
     return boundaries;
@@ -340,9 +344,9 @@ class DynamicCohortSegmentationService {
       if (tiers === 2) {
         labels.push(i === 0 ? 'Low Performance' : 'High Performance');
       } else if (tiers === 3) {
-        labels.push(['Low Performance', 'Medium Performance', 'High Performance'][i]);
+        labels.push(['Low Performance', 'Medium Performance', 'High Performance'][i] ?? `Tier ${i}`);
       } else if (tiers === 4) {
-        labels.push(['Bottom Quartile', 'Lower Middle', 'Upper Middle', 'Top Quartile'][i]);
+        labels.push(['Bottom Quartile', 'Lower Middle', 'Upper Middle', 'Top Quartile'][i] ?? `Tier ${i}`);
       } else {
         labels.push(`Tier ${i + 1} (${metric})`);
       }
@@ -375,10 +379,10 @@ class DynamicCohortSegmentationService {
 
     // Calculate averages
     const avgMetrics: Record<string, number> = {};
-    const metricKeys = Object.keys(aggregates[0]);
+    const metricKeys = aggregates[0] ? Object.keys(aggregates[0]) : [];
     
     metricKeys.forEach(key => {
-      const values = aggregates.map(agg => agg[key] as number).filter(v => typeof v === 'number' && !isNaN(v));
+      const values = aggregates.filter(agg => agg != null).map(agg => (agg as any)[key] as number).filter(v => typeof v === 'number' && !isNaN(v));
       if (values.length > 0) {
         avgMetrics[key] = values.reduce((sum, val) => sum + val, 0) / values.length;
       }
@@ -389,8 +393,13 @@ class DynamicCohortSegmentationService {
     const campaignsWithHistory = campaigns.filter(c => c.snapshots.length >= 2);
     if (campaignsWithHistory.length > 0) {
       const growthRates = campaignsWithHistory.map(campaign => {
-        const first = campaign.snapshots[0].aggregates.avgLeadScore || 0;
-        const last = campaign.snapshots[campaign.snapshots.length - 1].aggregates.avgLeadScore || 0;
+        const firstSnapshot = campaign.snapshots[0];
+        const lastSnapshot = campaign.snapshots[campaign.snapshots.length - 1];
+        
+        if (!firstSnapshot || !lastSnapshot) return 0;
+        
+        const first = firstSnapshot.aggregates.avgLeadScore || 0;
+        const last = lastSnapshot.aggregates.avgLeadScore || 0;
         return first > 0 ? ((last - first) / first) * 100 : 0;
       });
       growthRate = growthRates.reduce((sum, rate) => sum + rate, 0) / growthRates.length;
@@ -550,17 +559,17 @@ class DynamicCohortSegmentationService {
       
       case 'month': {
         const [year, month] = windowKey.split('-');
-        const startDate = new Date(parseInt(year), parseInt(month) - 1, 1);
-        const endDate = new Date(parseInt(year), parseInt(month), 0);
+        const startDate = new Date(parseInt(year ?? '0'), parseInt(month ?? '0') - 1, 1);
+        const endDate = new Date(parseInt(year ?? '0'), parseInt(month ?? '0'), 0);
         return [startDate.toISOString(), endDate.toISOString()];
       }
       
       case 'quarter': {
         const [year, quarterStr] = windowKey.split('-Q');
-        const quarter = parseInt(quarterStr);
+        const quarter = parseInt(quarterStr ?? '0');
         const startMonth = (quarter - 1) * 3;
-        const startDate = new Date(parseInt(year), startMonth, 1);
-        const endDate = new Date(parseInt(year), startMonth + 3, 0);
+        const startDate = new Date(parseInt(year ?? '0'), startMonth, 1);
+        const endDate = new Date(parseInt(year ?? '0'), startMonth + 3, 0);
         return [startDate.toISOString(), endDate.toISOString()];
       }
       
@@ -575,7 +584,7 @@ class DynamicCohortSegmentationService {
         return `Week of ${windowKey}`;
       case 'month':
         const [year, month] = windowKey.split('-');
-        const monthName = new Date(parseInt(year), parseInt(month) - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        const monthName = new Date(parseInt(year ?? '0'), parseInt(month ?? '0') - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
         return monthName;
       case 'quarter':
         return windowKey.replace('-', ' ');

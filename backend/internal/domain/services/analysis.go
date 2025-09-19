@@ -103,6 +103,27 @@ type DomainAnalysisFeaturesTyped struct {
 	}
 }
 
+// readPathDecision represents the decision logic for analysis read path selection.
+// Used internally for testing and structured decision making.
+type readPathDecision struct {
+	useNew    bool
+	coverage  float64
+	threshold float64
+	reason    string
+}
+
+// dualReadVarianceDiff represents a high-variance domain comparison
+type dualReadVarianceDiff struct {
+	Domain                string  `json:"domain"`
+	LegacyScore          float64 `json:"legacy_score"`
+	NewScore             float64 `json:"new_score"`
+	VarianceRatio        float64 `json:"variance_ratio"`
+	LegacyKeywordsUnique float64 `json:"legacy_keywords_unique"`
+	NewKeywordsUnique    float64 `json:"new_keywords_unique"`
+	LegacyKwWeightSum    float64 `json:"legacy_kw_weight_sum"`
+	NewKwWeightSum       float64 `json:"new_kw_weight_sum"`
+}
+
 
 
 
@@ -311,6 +332,25 @@ func NewAnalysisService(
 			data map[string]map[string]any
 		}{},
 		mtx: struct {
+			scoreHistogram                       prometheus.Histogram
+			rescoreRuns                          *prometheus.CounterVec
+			rescoreRunsV2                        *prometheus.CounterVec
+			phaseDuration                        prometheus.Histogram
+			reuseCounter                         prometheus.Counter
+			preflightFail                        prometheus.Counter
+			analysisFeatureFetchDuration         prometheus.Histogram
+			analysisFeatureFetchDomains          prometheus.Histogram
+			featureCacheHits                     prometheus.Counter
+			featureCacheMisses                   prometheus.Counter
+			featureCacheInvalidations            prometheus.Counter
+			analysisFeatureTableCoverageRatio    *prometheus.GaugeVec
+			analysisFeatureTableFallbacks        *prometheus.CounterVec
+			analysisFeatureTablePrimaryReads     prometheus.Counter
+			dualReadCampaignsTotal               prometheus.Counter
+			dualReadDomainsComparedTotal         prometheus.Counter
+			dualReadHighVarianceDomainsTotal     prometheus.Counter
+			dualReadDomainVariance               prometheus.Histogram
+
 			scoreHistogram                    prometheus.Histogram
 			rescoreRuns                       *prometheus.CounterVec
 			rescoreRunsV2                     *prometheus.CounterVec
@@ -331,6 +371,7 @@ func NewAnalysisService(
 			featureCacheHits:             cacheHits,
 			featureCacheMisses:           cacheMisses,
 			featureCacheInvalidations:    cacheInvalidations,
+
 			// Read switch metrics initialized to nil, will be set in initReadSwitchMetrics
 			analysisFeatureTableCoverageRatio: nil,
 			analysisFeatureTableFallbacks:     nil,
@@ -1122,13 +1163,48 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 		// New counters for preflight reuse/failure transparency
 		s.mtx.reuseCounter = prometheus.NewCounter(prometheus.CounterOpts{Name: "analysis_reuse_enrichment_total", Help: "Times analysis reused existing HTTP feature vectors"})
 		s.mtx.preflightFail = prometheus.NewCounter(prometheus.CounterOpts{Name: "analysis_preflight_failure_total", Help: "Times analysis preflight failed due to missing feature vectors"})
+		// Dual-read variance metrics
+		s.mtx.dualReadCampaignsTotal = prometheus.NewCounter(prometheus.CounterOpts{
+			Namespace: "analysis",
+			Name:      "dualread_campaigns_total", 
+			Help:      "Number of campaigns rescored with dual read enabled",
+		})
+		s.mtx.dualReadDomainsComparedTotal = prometheus.NewCounter(prometheus.CounterOpts{
+			Namespace: "analysis",
+			Name:      "dualread_domains_compared_total",
+			Help:      "Total domains compared between legacy and new feature vectors",
+		})
+		s.mtx.dualReadHighVarianceDomainsTotal = prometheus.NewCounter(prometheus.CounterOpts{
+			Namespace: "analysis", 
+			Name:      "dualread_high_variance_domains_total",
+			Help:      "Domains with variance above threshold",
+		})
+		s.mtx.dualReadDomainVariance = prometheus.NewHistogram(prometheus.HistogramOpts{
+			Namespace: "analysis",
+			Name:      "dualread_domain_variance",
+			Help:      "Absolute variance ratio per domain (legacy_score vs new_score)",
+			Buckets:   []float64{0, .05, .1, .15, .2, .25, .3, .4, .5, 1},
+		})
+		dualReadMetrics := []prometheus.Collector{
+			s.mtx.dualReadCampaignsTotal,
+			s.mtx.dualReadDomainsComparedTotal,
+			s.mtx.dualReadHighVarianceDomainsTotal,
+			s.mtx.dualReadDomainVariance,
+		}
+		allMetrics := []prometheus.Collector{
+
 		prometheus.MustRegister(
+ 
 			s.mtx.scoreHistogram,
 			s.mtx.rescoreRuns,
 			s.mtx.rescoreRunsV2,
 			s.mtx.phaseDuration,
 			s.mtx.reuseCounter,
 			s.mtx.preflightFail,
+		}
+		allMetrics = append(allMetrics, dualReadMetrics...)
+		prometheus.MustRegister(allMetrics...)
+
 		)
 	})
 	phaseStart := time.Now()
@@ -1319,6 +1395,163 @@ func (s *analysisService) scoreDomains(ctx context.Context, campaignID uuid.UUID
 	}
 	if len(scores) == 0 {
 		return correlationId, nil
+	}
+
+	// Dual-read comparison (non-blocking). Only executed if ANALYSIS_DUAL_READ enabled.
+	if featureflags.IsAnalysisDualReadEnabled() {
+		if newFeatures, derr := s.dualReadFetchFeatures(ctx, campaignID); derr == nil && len(newFeatures) > 0 {
+			// Increment campaigns counter if metrics available
+			if s.mtx.dualReadCampaignsTotal != nil {
+				s.mtx.dualReadCampaignsTotal.Inc()
+			}
+			
+			// Use featureflags helper instead of inline env parsing
+			threshold := featureflags.GetDualReadVarianceThreshold()
+			
+			// Initialize variance collector
+			collector := newDualReadVarianceCollector(campaignID.String(), threshold)
+			
+			missingLegacy := 0
+			missingNew := 0
+			varianceHigh := 0
+			legacyKwSum := 0.0
+			
+			for _, sr := range scores {
+				legacyKwSum += sr.LegacyKwUnique
+			}
+			
+			newKwSum := 0.0
+			for _, nf := range newFeatures {
+				if kwSection, ok := nf["keywords"].(map[string]any); ok {
+					if v, ok := kwSection["unique_count"].(int64); ok {
+						newKwSum += float64(v)
+					}
+					if v, ok := kwSection["unique_count"].(float64); ok {
+						newKwSum += v
+					}
+				}
+			}
+			
+			legacyAvg := 0.0
+			if len(scores) > 0 {
+				legacyAvg = legacyKwSum / float64(len(scores))
+			}
+			newAvg := 0.0
+			if len(newFeatures) > 0 {
+				newAvg = newKwSum / float64(len(newFeatures))
+			}
+			relDiff := 0.0
+			if legacyAvg > 0 {
+				relDiff = math.Abs(newAvg-legacyAvg) / legacyAvg
+			}
+			if relDiff > threshold {
+				varianceHigh++
+				if extraction.DualReadDiffCounter != nil {
+					extraction.DualReadDiffCounter.WithLabelValues("kw_unique_mean_variance").Inc()
+				}
+			}
+			
+			// Process per-domain comparisons with variance collection
+			for _, sr := range scores {
+				if nf, ok := newFeatures[sr.Domain]; ok {
+					legacyVal := sr.LegacyKwUnique
+					var newVal float64
+					if kwSection, ok := nf["keywords"].(map[string]any); ok {
+						switch v := kwSection["unique_count"].(type) {
+						case int64:
+							newVal = float64(v)
+						case float64:
+							newVal = v
+						}
+					}
+					
+					if legacyVal > 0 && newVal > 0 {
+						// Add to variance collector with metadata
+						// Note: LegacyMeta field not available in scoreRow, using placeholder
+						var legacyMeta map[string]any = nil
+						// TODO: Implement proper metadata extraction when LegacyMeta field is added to scoreRow
+						// Fallback: If legacyMeta is nil, use synthetic structure for backward compatibility.
+						if legacyMeta == nil {
+							legacyMeta = map[string]any{"keywords": map[string]any{"unique_count": legacyVal}}
+						}
+						collector.Add(sr.Domain, legacyVal, newVal, legacyMeta, nf)
+						
+						// Record variance in histogram if metrics available
+						varianceRatio := math.Abs(legacyVal-newVal) / math.Max(legacyVal, 1e-9)
+						if s.mtx.dualReadDomainVariance != nil {
+							s.mtx.dualReadDomainVariance.Observe(varianceRatio)
+						}
+						
+						if varianceRatio > threshold {
+							// High variance logging with structured fields
+							if s.deps.Logger != nil {
+								s.deps.Logger.Info(ctx, "dual-read high variance domain", map[string]interface{}{
+									"campaign_id":             campaignID.String(),
+									"correlation_id":          correlationId,
+									"domain":                  sr.Domain,
+									"legacy_score":            legacyVal,
+									"new_score":               newVal,
+									"variance_ratio":          varianceRatio,
+									"legacy_keywords_unique":  legacyVal,
+									"new_keywords_unique":     newVal,
+									"threshold":               threshold,
+								})
+							}
+							
+							if extraction.DualReadDiffCounter != nil {
+								extraction.DualReadDiffCounter.WithLabelValues("kw_unique_domain_variance").Inc()
+							}
+						}
+					}
+					
+					// Increment domains compared counter
+					if s.mtx.dualReadDomainsComparedTotal != nil {
+						s.mtx.dualReadDomainsComparedTotal.Inc()
+					}
+				} else {
+					missingLegacy++
+				}
+			}
+			
+			// Get final counts from collector
+			highVarianceCount, totalDomainsCompared, _ := collector.Summary()
+			
+			// Increment high variance counter
+			if s.mtx.dualReadHighVarianceDomainsTotal != nil {
+				s.mtx.dualReadHighVarianceDomainsTotal.Add(float64(highVarianceCount))
+			}
+			
+			// Standard dual-read comparison logging
+			if s.deps.Logger != nil {
+				s.deps.Logger.Info(ctx, "dual-read comparison", map[string]interface{}{
+					"campaign_id":           campaignID.String(),
+					"correlation_id":        correlationId,
+					"features_new":          len(newFeatures),
+					"domains_scored":        len(scores),
+					"missing_legacy":        missingLegacy,
+					"missing_new":           missingNew,
+					"high_variance_cnt":     varianceHigh,
+					"per_domain_variance":   highVarianceCount,
+					"total_domains_compared": totalDomainsCompared,
+					"legacy_kw_unique_avg":  legacyAvg,
+					"new_kw_unique_avg":     newAvg,
+					"relative_diff":         relDiff,
+					"threshold":             threshold,
+				})
+			}
+			
+			// SSE variance summary event emission
+			if s.deps.EventBus != nil && totalDomainsCompared > 0 {
+				payload := map[string]interface{}{
+					"campaignId":          campaignID.String(),
+					"highVarianceDomains": highVarianceCount,
+					"totalDomainsCompared": totalDomainsCompared,
+					"threshold":           threshold,
+					"timestamp":           time.Now().UTC(),
+				}
+				s.deps.EventBus.PublishSystemEvent(ctx, "dualread_variance_summary", payload)
+			}
+		}
 	}
 
 

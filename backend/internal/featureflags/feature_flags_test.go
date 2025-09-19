@@ -73,6 +73,43 @@ func TestAnalysisFeatureTableMinCoverage(t *testing.T) {
 	
 	// Test clamping - value below 0.0
 	os.Setenv("ANALYSIS_FEATURE_TABLE_MIN_COVERAGE", "-0.5")
+	value = GetAnalysisFeatureTableMinCoverage()
+	if value != 0.0 {
+		t.Errorf("GetAnalysisFeatureTableMinCoverage should clamp to 0.0, got %f", value)
+	}
+	
+	// Clean up
+	os.Unsetenv("ANALYSIS_FEATURE_TABLE_MIN_COVERAGE")
+}
+
+func TestGetDualReadVarianceThreshold(t *testing.T) {
+	// Store original value
+	originalVal := os.Getenv("DUAL_READ_VARIANCE_THRESHOLD")
+	defer os.Setenv("DUAL_READ_VARIANCE_THRESHOLD", originalVal)
+	
+	// Test default value
+	os.Unsetenv("DUAL_READ_VARIANCE_THRESHOLD")
+	if threshold := GetDualReadVarianceThreshold(); threshold != 0.25 {
+		t.Errorf("Expected default threshold 0.25, got %f", threshold)
+	}
+	
+	// Test valid value
+	os.Setenv("DUAL_READ_VARIANCE_THRESHOLD", "0.5")
+	if threshold := GetDualReadVarianceThreshold(); threshold != 0.5 {
+		t.Errorf("Expected threshold 0.5, got %f", threshold)
+	}
+	
+	// Test boundary clamping - high
+	os.Setenv("DUAL_READ_VARIANCE_THRESHOLD", "1.5")
+	if threshold := GetDualReadVarianceThreshold(); threshold != 1.0 {
+		t.Errorf("Expected threshold clamped to 1.0, got %f", threshold)
+	}
+	
+	// Test boundary clamping - low
+	os.Setenv("DUAL_READ_VARIANCE_THRESHOLD", "-0.5")
+	if threshold := GetDualReadVarianceThreshold(); threshold != 0.0 {
+		t.Errorf("Expected threshold clamped to 0.0, got %f", threshold)
+
 	coverage = GetAnalysisFeatureTableMinCoverage()
 	if coverage != 0.0 {
 		t.Errorf("Expected clamped coverage 0.0, got %f", coverage)
