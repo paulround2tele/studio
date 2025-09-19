@@ -70,24 +70,55 @@ if featureflags.IsExtractionKeywordDetailEnabled() {
 **Implementation Phase**: P3
 
 **Description**: 
-When enabled, the analysis service will read feature and keyword data from the new `domain_extraction_features` and `domain_extracted_keywords` tables. The system will fall back to legacy `feature_vector` data if new table data is not available.
+When enabled AND coverage criteria are satisfied, the analysis service will read feature data from the new `analysis_ready_features` table instead of the legacy `feature_vector` column. The system automatically falls back to legacy data if coverage is below the configured threshold.
+
+**Coverage Logic**:
+- Calculates ratio = `ready_feature_rows / expected_domain_count` for the campaign
+- Uses small sample guard: campaigns with <5 domains automatically pass coverage check
+- Controlled by `ANALYSIS_FEATURE_TABLE_MIN_COVERAGE` (default: 0.9 = 90%)
 
 **Usage**:
 ```go
-var features *FeatureData
-if featureflags.IsAnalysisReadsFeatureTableEnabled() {
-    features, err = analysisService.LoadFeaturesFromNewTables(ctx, domainID)
-    if err != nil || features == nil {
-        // Fallback to legacy
-        features, err = analysisService.LoadFeaturesFromLegacy(ctx, domainID)
-    }
-} else {
-    features, err = analysisService.LoadFeaturesFromLegacy(ctx, domainID)
-}
+// Coverage check and path selection happens automatically in analysis execution
+// The decision is logged and emitted via SSE events for monitoring
+
+// Metrics available:
+// - analysis_feature_table_coverage_ratio{campaign_id}
+// - analysis_feature_table_fallbacks_total{reason}  
+// - analysis_feature_table_primary_reads_total
 ```
 
-**Dependencies**: Requires `EXTRACTION_FEATURE_TABLE_ENABLED` and optionally `EXTRACTION_KEYWORD_DETAIL_ENABLED`  
+**Fallback Scenarios**:
+- Flag disabled → Always use legacy path
+- Coverage below threshold → Fall back with warning log
+- Database error → Fall back with error log
+- Small sample override → Use new path regardless of ratio
+
+**Dependencies**: Requires `EXTRACTION_FEATURE_TABLE_ENABLED` and stable feature extraction  
 **Rollback**: Set to `false` to read from legacy sources only
+
+**Related Configuration**:
+- `ANALYSIS_FEATURE_TABLE_MIN_COVERAGE`: Minimum coverage ratio (0.0-1.0, default: 0.9)
+
+---
+
+### ANALYSIS_FEATURE_TABLE_MIN_COVERAGE
+
+**Purpose**: Sets the minimum coverage ratio required for using new feature tables.
+
+**Type**: Float64  
+**Default**: `0.9` (90%)  
+**Environment Variable**: `ANALYSIS_FEATURE_TABLE_MIN_COVERAGE`  
+**Range**: 0.0 - 1.0 (values outside range are clamped)
+
+**Description**:
+Controls the threshold for coverage-based fallback when `ANALYSIS_READS_FEATURE_TABLE` is enabled. If the ratio of ready features to expected domains falls below this threshold, the system automatically falls back to legacy feature vectors.
+
+**Examples**:
+- `0.9` → Require 90% coverage (default)
+- `0.8` → Require 80% coverage  
+- `1.0` → Require 100% coverage (strict)
+- `0.0` → Accept any coverage (permissive)
 
 ---
 
