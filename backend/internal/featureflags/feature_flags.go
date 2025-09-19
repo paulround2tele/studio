@@ -38,19 +38,7 @@ func IsExtractionKeywordDetailEnabled() bool {
 	return getBoolEnv("EXTRACTION_KEYWORD_DETAIL_ENABLED", false)
 }
 
-// IsAnalysisReadsFeatureTableEnabled returns true if the analysis phase should
-// read feature data from the new extraction tables instead of legacy feature_vector.
-//
-// Phase: P3 - Analysis reading migration
-// Environment Variable: ANALYSIS_READS_FEATURE_TABLE  
-// Default: false
-//
-// TODO Phase P3: Wire this flag into AnalysisService
-// TODO Phase P3: Implement fallback logic for incomplete extractions
-// TODO Phase P3: Add data mapping between old and new schemas
-func IsAnalysisReadsFeatureTableEnabled() bool {
-	return getBoolEnv("ANALYSIS_READS_FEATURE_TABLE", false)
-}
+
 
 // IsMicrocrawlAdaptiveModeEnabled returns true if the system should use
 // adaptive crawling strategies based on site characteristics and extraction results.
@@ -80,35 +68,17 @@ func IsAnalysisRescoringEnabled() bool {
 	return getBoolEnv("ANALYSIS_RESCORING_ENABLED", false)
 }
 
-// GetDualReadVarianceThreshold returns the threshold for dual-read variance detection.
-// This controls when variance between legacy and new feature vectors is considered "high".
-// 
-// Environment Variable: DUAL_READ_VARIANCE_THRESHOLD
-// Default: 0.25 (25% variance threshold)
-// Range: 0.0 to 1.0 (0% to 100% variance)
-func GetDualReadVarianceThreshold() float64 {
-	return getFloatEnv("DUAL_READ_VARIANCE_THRESHOLD", 0.25)
-// IsAnalysisDualReadEnabled returns true if the analysis phase should
-// perform dual read comparison between legacy and new extraction data.
-//
-// Phase: P1 - Flag unification (Current)
-// Environment Variable: ANALYSIS_DUAL_READ
-// Default: false
-//
-// Used for non-blocking comparison and validation during migration.
-func IsAnalysisDualReadEnabled() bool {
-	return getBoolEnv("ANALYSIS_DUAL_READ", false)
-}
+
+
+
 
 // ExtractionAnalysisFeatureFlags returns a structured view of all extraction/analysis
 // feature flags for monitoring and debugging purposes.
 type ExtractionAnalysisFeatureFlags struct {
 	ExtractionFeatureTableEnabled  bool `json:"extractionFeatureTableEnabled"`
 	ExtractionKeywordDetailEnabled bool `json:"extractionKeywordDetailEnabled"`
-	AnalysisReadsFeatureTable     bool `json:"analysisReadsFeatureTable"`
 	MicrocrawlAdaptiveMode        bool `json:"microcrawlAdaptiveMode"`
 	AnalysisRescoringEnabled      bool `json:"analysisRescoringEnabled"`
-	AnalysisDualReadEnabled       bool `json:"analysisDualReadEnabled"`
 }
 
 // GetExtractionAnalysisFlags returns the current state of all extraction/analysis
@@ -117,10 +87,8 @@ func GetExtractionAnalysisFlags() ExtractionAnalysisFeatureFlags {
 	return ExtractionAnalysisFeatureFlags{
 		ExtractionFeatureTableEnabled:  IsExtractionFeatureTableEnabled(),
 		ExtractionKeywordDetailEnabled: IsExtractionKeywordDetailEnabled(),
-		AnalysisReadsFeatureTable:      IsAnalysisReadsFeatureTableEnabled(),
 		MicrocrawlAdaptiveMode:         IsMicrocrawlAdaptiveModeEnabled(),
 		AnalysisRescoringEnabled:       IsAnalysisRescoringEnabled(),
-		AnalysisDualReadEnabled:        IsAnalysisDualReadEnabled(),
 	}
 }
 
@@ -203,27 +171,6 @@ func getFloatEnv(key string, defaultValue float64) float64 {
 		return floatVal
 	}
 	return defaultValue
-}
-
-
-	if floatVal, err := strconv.ParseFloat(value, 64); err == nil && floatVal > 0 {
-		return floatVal
-	}
-	
-	return defaultValue
-}
-
-// GetDualReadVarianceThreshold returns the variance threshold for dual read comparison.
-// Values are clamped to be > 0. 
-//
-// Environment Variable: DUAL_READ_VARIANCE_THRESHOLD
-// Default: 0.25
-// Format: float64 string (e.g., "0.25", "0.1", "0.5")
-//
-// Used to determine when variance between legacy and new extraction data
-// is significant enough to warrant investigation.
-func GetDualReadVarianceThreshold() float64 {
-	return getFloatEnv("DUAL_READ_VARIANCE_THRESHOLD", 0.25)
 }
 
 // Phase Implementation Notes:

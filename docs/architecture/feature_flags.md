@@ -4,9 +4,11 @@
 
 This document describes the feature flags used throughout the system for gradual rollouts and A/B testing. Feature flags enable safe deployment of new features and allow for instant rollback if issues arise.
 
-## Extraction → Analysis Redesign Feature Flags
+## Consolidated Pipeline Configuration
 
-The following feature flags control the phased rollout of the new Extraction → Analysis architecture:
+The system has been consolidated to use a unified extraction/analysis pipeline. The legacy dual-read and variance flags have been removed in favor of a streamlined configuration approach.
+
+### Current Feature Flags
 
 ### EXTRACTION_FEATURE_TABLE_ENABLED
 
@@ -60,68 +62,6 @@ if featureflags.IsExtractionKeywordDetailEnabled() {
 
 ---
 
-### ANALYSIS_READS_FEATURE_TABLE
-
-**Purpose**: Controls whether the analysis phase reads feature data from the new extraction tables instead of the legacy `feature_vector` column.
-
-**Type**: Boolean  
-**Default**: `false`  
-**Environment Variable**: `ANALYSIS_READS_FEATURE_TABLE`  
-**Implementation Phase**: P3
-
-**Description**: 
-When enabled AND coverage criteria are satisfied, the analysis service will read feature data from the new `analysis_ready_features` table instead of the legacy `feature_vector` column. The system automatically falls back to legacy data if coverage is below the configured threshold.
-
-**Coverage Logic**:
-- Calculates ratio = `ready_feature_rows / expected_domain_count` for the campaign
-- Uses small sample guard: campaigns with <5 domains automatically pass coverage check
-- Controlled by `ANALYSIS_FEATURE_TABLE_MIN_COVERAGE` (default: 0.9 = 90%)
-
-**Usage**:
-```go
-// Coverage check and path selection happens automatically in analysis execution
-// The decision is logged and emitted via SSE events for monitoring
-
-// Metrics available:
-// - analysis_feature_table_coverage_ratio{campaign_id}
-// - analysis_feature_table_fallbacks_total{reason}  
-// - analysis_feature_table_primary_reads_total
-```
-
-**Fallback Scenarios**:
-- Flag disabled → Always use legacy path
-- Coverage below threshold → Fall back with warning log
-- Database error → Fall back with error log
-- Small sample override → Use new path regardless of ratio
-
-**Dependencies**: Requires `EXTRACTION_FEATURE_TABLE_ENABLED` and stable feature extraction  
-**Rollback**: Set to `false` to read from legacy sources only
-
-**Related Configuration**:
-- `ANALYSIS_FEATURE_TABLE_MIN_COVERAGE`: Minimum coverage ratio (0.0-1.0, default: 0.9)
-
----
-
-### ANALYSIS_FEATURE_TABLE_MIN_COVERAGE
-
-**Purpose**: Sets the minimum coverage ratio required for using new feature tables.
-
-**Type**: Float64  
-**Default**: `0.9` (90%)  
-**Environment Variable**: `ANALYSIS_FEATURE_TABLE_MIN_COVERAGE`  
-**Range**: 0.0 - 1.0 (values outside range are clamped)
-
-**Description**:
-Controls the threshold for coverage-based fallback when `ANALYSIS_READS_FEATURE_TABLE` is enabled. If the ratio of ready features to expected domains falls below this threshold, the system automatically falls back to legacy feature vectors.
-
-**Examples**:
-- `0.9` → Require 90% coverage (default)
-- `0.8` → Require 80% coverage  
-- `1.0` → Require 100% coverage (strict)
-- `0.0` → Accept any coverage (permissive)
-
----
-
 ### MICROCRAWL_ADAPTIVE_MODE
 
 **Purpose**: Enables adaptive crawling strategies based on website characteristics and extraction results.
@@ -145,55 +85,19 @@ if featureflags.IsMicrocrawlAdaptiveModeEnabled() {
 }
 ```
 
-**Dependencies**: Requires `ANALYSIS_READS_FEATURE_TABLE` to access detailed extraction data  
+**Dependencies**: Requires stable feature extraction pipeline  
 **Rollback**: Set to `false` to use standard crawling strategies
 
 ---
 
-### DUAL_READ_VARIANCE_THRESHOLD
-
-**Purpose**: Controls the variance threshold for dual-read comparison metrics between legacy and new feature vectors.
-
-**Type**: Float (0.0 to 1.0)  
-**Default**: `0.25` (25% variance threshold)  
-**Environment Variable**: `DUAL_READ_VARIANCE_THRESHOLD`  
-**Implementation Phase**: Current
-
-**Description**: 
-When dual-read mode is enabled (`ANALYSIS_DUAL_READ=true`), this threshold determines when variance between legacy `feature_vector` scores and new `analysis_ready_features` scores is considered "high". Domains with variance ratios at or above this threshold trigger additional logging, metrics, and observability events.
-
-**Usage**:
-```go
-threshold := featureflags.GetDualReadVarianceThreshold()
-varianceRatio := math.Abs(legacyScore-newScore) / math.Max(legacyScore, 1e-9)
-if varianceRatio >= threshold {
-    // High variance detected - emit metrics and logs
-    metrics.highVarianceCounter.Inc()
-    logger.Info("high variance domain detected", fields...)
-}
-```
-
-**Metrics Generated**:
-- `analysis_dualread_campaigns_total`: Counter of campaigns rescored with dual read enabled
-- `analysis_dualread_domains_compared_total`: Total domains compared between legacy and new paths  
-- `analysis_dualread_high_variance_domains_total`: Domains with variance above threshold
-- `analysis_dualread_domain_variance`: Histogram of variance ratios per domain
-
-**SSE Events**: Emits `dualread_variance_summary` events with campaign-level variance statistics
-
-**Dependencies**: Used with `ANALYSIS_DUAL_READ=true` environment flag  
-**Rollback**: Adjust threshold value or disable dual-read mode entirely
-
----
-
-### ANALYSIS_RESCORING_ENABLED (Future)
+### ANALYSIS_RESCORING_ENABLED
 
 **Purpose**: Enables advanced scoring algorithms that leverage detailed extraction data.
 
 **Type**: Boolean  
 **Default**: `false`  
 **Environment Variable**: `ANALYSIS_RESCORING_ENABLED`  
-**Implementation Phase**: P5 (Planned)
+**Implementation Phase**: P5
 
 **Description**: 
 When enabled, the analysis service will use advanced scoring algorithms that take advantage of the detailed feature and keyword data from the new extraction tables. This enables more sophisticated relevance scoring and feature-weighted analysis.
@@ -209,6 +113,31 @@ if featureflags.IsAnalysisRescoringEnabled() {
 
 **Dependencies**: Requires all previous flags to be enabled and stable  
 **Rollback**: Set to `false` to use legacy scoring algorithms
+
+---
+
+## Consolidated Pipeline Configuration
+
+The unified pipeline uses environment-based configuration instead of feature flags for operational parameters:
+
+| Environment Variable | Default | Purpose |
+|---------------------|---------|---------|
+| `ANALYSIS_FEATURE_TABLE_MIN_COVERAGE` | 0.9 | Minimum feature coverage ratio for analysis |
+| `PIPELINE_RECONCILE_ENABLED` | true | Enable/disable reconciliation process |
+| `PIPELINE_RECONCILE_INTERVAL` | 10m | Interval between reconciliation passes |
+| `PIPELINE_STUCK_RUNNING_MAX_AGE` | 30m | Max age for running tasks before reset |
+| `PIPELINE_STUCK_PENDING_MAX_AGE` | 20m | Max age for pending tasks before reset |
+| `PIPELINE_MISSING_FEATURE_GRACE` | 5m | Grace period for feature materialization |
+| `PIPELINE_MAX_RETRIES` | 3 | Maximum retry attempts per task |
+| `PIPELINE_STALE_SCORE_DETECTION_ENABLED` | true | Enable stale score detection |
+| `PIPELINE_STALE_SCORE_MAX_AGE` | 1h | Max age for analysis scores |
+
+### Removed Legacy Flags
+
+The following flags were removed during pipeline consolidation:
+- `ANALYSIS_DUAL_READ` - Dual-read comparison mode (replaced by unified pipeline)
+- `ANALYSIS_READS_FEATURE_TABLE` - Read path switching (unified pipeline always uses new approach)
+- `DUAL_READ_VARIANCE_THRESHOLD` - Variance detection (no longer needed after consolidation)
 
 ---
 

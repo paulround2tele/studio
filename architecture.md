@@ -59,58 +59,76 @@ graph TD
     E --> K
 ```
 
-## Extraction → Analysis Redesign (Phase P0/P1 Integration)
+## Consolidated Analysis/Extraction Pipeline
 
-The new extraction feature pipeline introduces canonical, versioned feature rows decoupling HTML parsing from scoring.
+The system implements a unified pipeline for content extraction, feature materialization, reconciliation, and analysis scoring. This represents the final, steady-state architecture after consolidation of legacy dual-read approaches.
 
-### New Persistence Artifacts (Migration 000055)
-- `domain_extraction_features` (one row per campaign+domain)
-- `domain_extracted_keywords` (optional detail rows per keyword)
-- `analysis_ready_features` view (projection used by analysis phase in future dual-read mode)
+### Pipeline Flow
 
-### Feature Flags / Env Vars
-| Flag | Default | Purpose |
-|------|---------|---------|
-| `EXTRACTION_FEATURE_TABLE_ENABLED` | false | Gate writes to new feature tables (safe shadow mode) |
-| `EXTRACTION_KEYWORD_DETAIL_ENABLED` | false | Persist keyword detail rows (P2 onward) |
-| `ANALYSIS_DUAL_READ` | false | Future: compare legacy scoring vs new feature-table driven scoring |
-| `DUAL_READ_VARIANCE_THRESHOLD` | 0.25 | Threshold for high variance detection in dual-read mode |
+The consolidated pipeline follows this sequence:
 
-Flags follow existing pattern: set to `1`, `true`, or `on` (case-insensitive) to enable.
+1. **Discovery Phase**: Domain generation and initial crawl target identification
+2. **HTTP Validation**: Domain accessibility and basic metadata collection  
+3. **Feature Extraction**: Content analysis and structured feature materialization
+4. **Reconciliation**: Cleanup of stuck/failed tasks and missing feature detection
+5. **Analysis Scoring**: Relevance scoring based on extracted features
+6. **Stale Score Detection**: Identification and re-scoring of outdated analysis results
 
-### Dual-Read Variance Telemetry
+### Core Components
 
-When `ANALYSIS_DUAL_READ=true`, the system performs shadow comparisons between legacy feature_vector scoring and new analysis_ready_features scoring paths. To accelerate diagnostic capabilities and comparison analysis, variance telemetry provides structured observability:
+#### Feature Extraction & Materialization
+- `domain_extraction_features`: Primary feature storage (one row per campaign+domain)
+- `domain_extracted_keywords`: Detailed keyword extraction results
+- Processing states: `pending` → `running` → `completed`/`error`/`fatal`
+- Automatic retry logic with configurable limits
 
-**Metrics Emitted**:
-- `analysis_dualread_campaigns_total`: Counter incremented once per rescore run with dual read enabled
-- `analysis_dualread_domains_compared_total`: Counter of total domain comparisons performed  
-- `analysis_dualread_high_variance_domains_total`: Counter of domains exceeding variance threshold
-- `analysis_dualread_domain_variance`: Histogram capturing absolute variance ratios with configurable buckets (0, .05, .1, .15, .2, .25, .3, .4, .5, 1)
+#### Reconciliation System
+The extraction reconciler (`ExtractionReconciler`) handles:
+- **Stuck Running Tasks**: Tasks in `running` state beyond `PIPELINE_STUCK_RUNNING_MAX_AGE`
+- **Stuck Pending Tasks**: Tasks in `pending` state beyond `PIPELINE_STUCK_PENDING_MAX_AGE`  
+- **Retryable Errors**: Tasks in `error` state within retry limit (`PIPELINE_MAX_RETRIES`)
+- **Missing Features**: Completed tasks without materialized features after grace period
 
-**Structured Logging**: High variance domains (>= threshold) trigger Info-level logs with structured fields including domain, scores, variance ratio, and correlation ID for traceability.
+#### Stale Score Detection
+The stale score detector (`StaleScoreDetector`) identifies:
+- Analysis scores older than `PIPELINE_STALE_SCORE_MAX_AGE`
+- Where corresponding extraction features are newer than the score
+- Automatically enqueues rescore jobs for detected stale scores
 
-**SSE Events**: Campaign completion emits `dualread_variance_summary` events containing aggregated variance statistics for real-time dashboard updates.
+### Pipeline Configuration
 
-**Memory Management**: Detailed diff collection is capped at 50 domains per campaign to prevent memory issues during large rescoring operations.
+Unified configuration via `PipelineConfig` loaded from environment variables:
 
-**Purpose**: This telemetry enables rapid identification of scoring discrepancies during the migration from legacy to new feature extraction paths, supporting data-driven rollout decisions and regression detection.
+| Environment Variable | Default | Purpose |
+|---------------------|---------|---------|
+| `ANALYSIS_FEATURE_TABLE_MIN_COVERAGE` | 0.9 | Minimum feature coverage ratio for analysis |
+| `PIPELINE_RECONCILE_ENABLED` | true | Enable/disable reconciliation process |
+| `PIPELINE_RECONCILE_INTERVAL` | 10m | Interval between reconciliation passes |
+| `PIPELINE_STUCK_RUNNING_MAX_AGE` | 30m | Max age for running tasks before reset |
+| `PIPELINE_STUCK_PENDING_MAX_AGE` | 20m | Max age for pending tasks before reset |
+| `PIPELINE_MISSING_FEATURE_GRACE` | 5m | Grace period for feature materialization |
+| `PIPELINE_MAX_RETRIES` | 3 | Maximum retry attempts per task |
+| `PIPELINE_STALE_SCORE_DETECTION_ENABLED` | true | Enable stale score detection |
+| `PIPELINE_STALE_SCORE_MAX_AGE` | 1h | Max age for analysis scores |
 
-### Package Scaffold
-`internal/extraction` provides:
-- Pure aggregation stub (`BuildFeatures`) returning a minimal `FeatureAggregate`.
-- Upsert helpers (`UpsertFeatureRow`, `TransitionReady`, `TransitionError`).
-- Flag helpers for gating.
+All values support duration strings (e.g., "30m", "1h") and are automatically clamped to reasonable ranges.
 
-### Next Steps (High-Level)
-1. Expand `BuildFeatures` to compute full richness & microcrawl metrics.
-2. Integrate extraction sub-steps (http_fetch, primary_parse, microcrawl) feeding `RawSignals`.
-3. Implement batch keyword detail persistence behind detail flag.
-4. Add reconciliation job for stuck `building` rows.
-5. Introduce dual-read scoring path and delta instrumentation.
+### Metrics & Observability
 
-### Rollback
-Disabling `EXTRACTION_FEATURE_TABLE_ENABLED` halts new writes; legacy path (generated_domains feature_vector) remains unaffected. Migration reversible via 000055 down script.
+#### Pipeline Metrics
+- `extraction_reconcile_pass_total{result}`: Reconciliation pass results (success/error/skipped)
+- `extraction_reconcile_rows_examined_total{category}`: Rows examined by category
+- `extraction_reconcile_rows_adjusted_total{action}`: Rows adjusted by action type
+- `extraction_reconcile_latency_seconds`: Reconciliation pass duration
+- `analysis_stale_scores_detected_total`: Count of stale scores detected
+- `analysis_feature_table_coverage_ratio{campaign_id}`: Feature coverage per campaign
+
+#### Safety & Reliability
+- Single-flight protection prevents overlapping reconciliation passes
+- Configurable timeouts (20s default) prevent runaway operations
+- All database operations use parameterized queries with row limits (500 per category)
+- Transactional updates ensure consistency
+- Clock abstraction enables deterministic testing
 
 ## Sequence Diagram for Domain Generation
 
