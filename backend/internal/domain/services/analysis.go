@@ -2032,6 +2032,8 @@ func (s *analysisService) analysisCoverageOK(ctx context.Context, campaignID uui
 	var coverageRatio float64
 	if expectedDomainCount > 0 {
 		coverageRatio = float64(readyFeatureRows) / float64(expectedDomainCount)
+		// Clamp coverageRatio to a maximum of 1.0 to handle data anomalies
+		coverageRatio = math.Min(coverageRatio, 1.0)
 	}
 
 	// Get minimum coverage threshold
