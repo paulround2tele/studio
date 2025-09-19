@@ -199,8 +199,8 @@ class DataQualityValidationService {
             description: `Snapshot at index ${i} is ${skewSeconds.toFixed(1)}s older than previous snapshot`,
             affectedMetrics: ['timestamp'],
             affectedTimeRange: {
-              start: snapshots[i].timestamp,
-              end: snapshots[i - 1].timestamp
+              start: snapshots[i]?.timestamp,
+              end: snapshots[i - 1]?.timestamp
             },
             detectedAt: new Date().toISOString(),
             value: currentTime,
