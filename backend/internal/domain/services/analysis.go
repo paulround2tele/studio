@@ -118,6 +118,7 @@ type readPathDecision struct {
 	coverage  float64
 	threshold float64
 	reason    string
+}
 
 // dualReadVarianceDiff represents a high-variance domain comparison
 type dualReadVarianceDiff struct {
