@@ -20,7 +20,6 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/featureflags"
 
 	"github.com/fntelecomllc/studio/backend/internal/contentfetcher"
-	"github.com/fntelecomllc/studio/backend/internal/featureflags"
 	"github.com/fntelecomllc/studio/backend/internal/keywordextractor"
 	"github.com/fntelecomllc/studio/backend/internal/models"
 	"github.com/fntelecomllc/studio/backend/internal/store"
@@ -118,6 +117,7 @@ type readPathDecision struct {
 	coverage  float64
 	threshold float64
 	reason    string
+}
 
 // dualReadVarianceDiff represents a high-variance domain comparison
 type dualReadVarianceDiff struct {
@@ -433,7 +433,7 @@ func NewAnalysisService(
 			at   time.Time
 			data map[string]map[string]any
 		}{},
-		mtx: func() struct {
+		mtx: struct {
 			scoreHistogram                       prometheus.Histogram
 			rescoreRuns                          *prometheus.CounterVec
 			rescoreRunsV2                        *prometheus.CounterVec
@@ -448,67 +448,26 @@ func NewAnalysisService(
 			analysisFeatureTableCoverageRatio    *prometheus.GaugeVec
 			analysisFeatureTableFallbacks        *prometheus.CounterVec
 			analysisFeatureTablePrimaryReads     prometheus.Counter
-		} {
-			return struct {
-				scoreHistogram                       prometheus.Histogram
-				rescoreRuns                          *prometheus.CounterVec
-				rescoreRunsV2                        *prometheus.CounterVec
-				phaseDuration                        prometheus.Histogram
-				reuseCounter                         prometheus.Counter
-				preflightFail                        prometheus.Counter
-				analysisFeatureFetchDuration         prometheus.Histogram
-				analysisFeatureFetchDomains          prometheus.Histogram
-				featureCacheHits                     prometheus.Counter
-				featureCacheMisses                   prometheus.Counter
-				featureCacheInvalidations            prometheus.Counter
-				analysisFeatureTableCoverageRatio    *prometheus.GaugeVec
-				analysisFeatureTableFallbacks        *prometheus.CounterVec
-				analysisFeatureTablePrimaryReads     prometheus.Counter
-
-			scoreHistogram               prometheus.Histogram
-			rescoreRuns                  *prometheus.CounterVec
-			rescoreRunsV2                *prometheus.CounterVec
-			phaseDuration                prometheus.Histogram
-			reuseCounter                 prometheus.Counter
-			preflightFail                prometheus.Counter
-			analysisFeatureFetchDuration prometheus.Histogram
-			analysisFeatureFetchDomains  prometheus.Histogram
-			featureCacheHits             prometheus.Counter
-			featureCacheMisses           prometheus.Counter
-			featureCacheInvalidations    prometheus.Counter
-			dualReadCampaignsTotal          prometheus.Counter
-			dualReadDomainsComparedTotal    prometheus.Counter
-			dualReadHighVarianceDomainsTotal prometheus.Counter
-			dualReadDomainVariance          prometheus.Histogram
-		} {
-			return struct {
-				scoreHistogram               prometheus.Histogram
-				rescoreRuns                  *prometheus.CounterVec
-				rescoreRunsV2                *prometheus.CounterVec
-				phaseDuration                prometheus.Histogram
-				reuseCounter                 prometheus.Counter
-				preflightFail                prometheus.Counter
-				analysisFeatureFetchDuration prometheus.Histogram
-				analysisFeatureFetchDomains  prometheus.Histogram
-				featureCacheHits             prometheus.Counter
-				featureCacheMisses           prometheus.Counter
-				featureCacheInvalidations    prometheus.Counter
-				dualReadCampaignsTotal          prometheus.Counter
-				dualReadDomainsComparedTotal    prometheus.Counter
-				dualReadHighVarianceDomainsTotal prometheus.Counter
-				dualReadDomainVariance          prometheus.Histogram
-			}{
-				analysisFeatureFetchDuration: featureFetchDuration,
-				analysisFeatureFetchDomains:  featureFetchDomains,
-				featureCacheHits:             cacheHits,
-				featureCacheMisses:           cacheMisses,
-				featureCacheInvalidations:    cacheInvalidations,
-				// Read switch metrics initialized to nil, will be set in initReadSwitchMetrics
-				analysisFeatureTableCoverageRatio: nil,
-				analysisFeatureTableFallbacks:     nil,
-				analysisFeatureTablePrimaryReads:  nil,
-			}
-		}(),
+			dualReadCampaignsTotal               prometheus.Counter
+			dualReadDomainsComparedTotal         prometheus.Counter
+			dualReadHighVarianceDomainsTotal     prometheus.Counter
+			dualReadDomainVariance               prometheus.Histogram
+		}{
+			analysisFeatureFetchDuration: featureFetchDuration,
+			analysisFeatureFetchDomains:  featureFetchDomains,
+			featureCacheHits:             cacheHits,
+			featureCacheMisses:           cacheMisses,
+			featureCacheInvalidations:    cacheInvalidations,
+			// Read switch metrics initialized to nil, will be set in initReadSwitchMetrics
+			analysisFeatureTableCoverageRatio: nil,
+			analysisFeatureTableFallbacks:     nil,
+			analysisFeatureTablePrimaryReads:  nil,
+			// Dual-read metrics initialized to nil
+			dualReadCampaignsTotal:          nil,
+			dualReadDomainsComparedTotal:    nil,
+			dualReadHighVarianceDomainsTotal: nil,
+			dualReadDomainVariance:          nil,
+		},
 	}
 }
 
