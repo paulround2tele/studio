@@ -150,6 +150,42 @@ if featureflags.IsMicrocrawlAdaptiveModeEnabled() {
 
 ---
 
+### DUAL_READ_VARIANCE_THRESHOLD
+
+**Purpose**: Controls the variance threshold for dual-read comparison metrics between legacy and new feature vectors.
+
+**Type**: Float (0.0 to 1.0)  
+**Default**: `0.25` (25% variance threshold)  
+**Environment Variable**: `DUAL_READ_VARIANCE_THRESHOLD`  
+**Implementation Phase**: Current
+
+**Description**: 
+When dual-read mode is enabled (`ANALYSIS_DUAL_READ=true`), this threshold determines when variance between legacy `feature_vector` scores and new `analysis_ready_features` scores is considered "high". Domains with variance ratios at or above this threshold trigger additional logging, metrics, and observability events.
+
+**Usage**:
+```go
+threshold := featureflags.GetDualReadVarianceThreshold()
+varianceRatio := math.Abs(legacyScore-newScore) / math.Max(legacyScore, 1e-9)
+if varianceRatio >= threshold {
+    // High variance detected - emit metrics and logs
+    metrics.highVarianceCounter.Inc()
+    logger.Info("high variance domain detected", fields...)
+}
+```
+
+**Metrics Generated**:
+- `analysis_dualread_campaigns_total`: Counter of campaigns rescored with dual read enabled
+- `analysis_dualread_domains_compared_total`: Total domains compared between legacy and new paths  
+- `analysis_dualread_high_variance_domains_total`: Domains with variance above threshold
+- `analysis_dualread_domain_variance`: Histogram of variance ratios per domain
+
+**SSE Events**: Emits `dualread_variance_summary` events with campaign-level variance statistics
+
+**Dependencies**: Used with `ANALYSIS_DUAL_READ=true` environment flag  
+**Rollback**: Adjust threshold value or disable dual-read mode entirely
+
+---
+
 ### ANALYSIS_RESCORING_ENABLED (Future)
 
 **Purpose**: Enables advanced scoring algorithms that leverage detailed extraction data.
