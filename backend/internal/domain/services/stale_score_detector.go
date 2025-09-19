@@ -135,11 +135,11 @@ func (d *StaleScoreDetector) EnqueueRescoreJobs(ctx context.Context, result *Sta
 		})
 	}
 
-	// TODO: Implement actual job enqueueing when job queue infrastructure is available
-	// For example:
-	// for each stale score:
-	//   jobQueue.Enqueue(&RescoreJob{CampaignID: campaignID, DomainName: domainName})
-
+	// NOTE: As of June 2024, actual job enqueueing is not implemented; this method only logs the intention to enqueue rescore jobs.
+	// TODO: Integrate with job queue infrastructure (e.g., when available in Q3 2024 or tracked in issue #123) to enqueue rescore jobs here.
+	// Example future implementation:
+	//   for each stale score:
+	//     jobQueue.Enqueue(&RescoreJob{CampaignID: campaignID, DomainName: domainName})
 	return result.StaleCount, nil
 }
 
