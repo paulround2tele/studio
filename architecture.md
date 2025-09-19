@@ -74,8 +74,27 @@ The new extraction feature pipeline introduces canonical, versioned feature rows
 | `EXTRACTION_FEATURE_TABLE_ENABLED` | false | Gate writes to new feature tables (safe shadow mode) |
 | `EXTRACTION_KEYWORD_DETAIL_ENABLED` | false | Persist keyword detail rows (P2 onward) |
 | `ANALYSIS_DUAL_READ` | false | Future: compare legacy scoring vs new feature-table driven scoring |
+| `DUAL_READ_VARIANCE_THRESHOLD` | 0.25 | Threshold for high variance detection in dual-read mode |
 
 Flags follow existing pattern: set to `1`, `true`, or `on` (case-insensitive) to enable.
+
+### Dual-Read Variance Telemetry
+
+When `ANALYSIS_DUAL_READ=true`, the system performs shadow comparisons between legacy feature_vector scoring and new analysis_ready_features scoring paths. To accelerate diagnostic capabilities and comparison analysis, variance telemetry provides structured observability:
+
+**Metrics Emitted**:
+- `analysis_dualread_campaigns_total`: Counter incremented once per rescore run with dual read enabled
+- `analysis_dualread_domains_compared_total`: Counter of total domain comparisons performed  
+- `analysis_dualread_high_variance_domains_total`: Counter of domains exceeding variance threshold
+- `analysis_dualread_domain_variance`: Histogram capturing absolute variance ratios with configurable buckets (0, .05, .1, .15, .2, .25, .3, .4, .5, 1)
+
+**Structured Logging**: High variance domains (>= threshold) trigger Info-level logs with structured fields including domain, scores, variance ratio, and correlation ID for traceability.
+
+**SSE Events**: Campaign completion emits `dualread_variance_summary` events containing aggregated variance statistics for real-time dashboard updates.
+
+**Memory Management**: Detailed diff collection is capped at 50 domains per campaign to prevent memory issues during large rescoring operations.
+
+**Purpose**: This telemetry enables rapid identification of scoring discrepancies during the migration from legacy to new feature extraction paths, supporting data-driven rollout decisions and regression detection.
 
 ### Package Scaffold
 `internal/extraction` provides:
