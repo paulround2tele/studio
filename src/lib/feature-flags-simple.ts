@@ -107,17 +107,30 @@ export function useCampaignWizard(): boolean {
 }
 
 /**
- * Check if campaign overview V2 should be shown
+ * Check if unified campaign experience is enabled (UX Refactor)
+ * Master flag controlling entire refactored experience
+ * Default: true (unified experience is now the default)
  */
-export function useCampaignOverviewV2(): boolean {
-  return isFeatureEnabled(PHASE1_FLAGS.CAMPAIGN_OVERVIEW_V2, false);
+export function useUnifiedCampaignExperience(): boolean {
+  return isFeatureEnabled(UX_REFACTOR_FLAGS.ENABLE_UNIFIED_CAMPAIGN_EXPERIENCE, true);
 }
 
 /**
+ * @deprecated Use useUnifiedCampaignExperience instead
+ * Check if campaign overview V2 should be shown
+ * This flag is now controlled by unified experience
+ */
+export function useCampaignOverviewV2(): boolean {
+  return useUnifiedCampaignExperience();
+}
+
+/**
+ * @deprecated Use useUnifiedCampaignExperience instead  
  * Check if legacy domains table should be shown (Phase 2)
+ * This flag is now controlled by unified experience
  */
 export function useShowLegacyDomainsTable(): boolean {
-  return isFeatureEnabled(PHASE2_FLAGS.SHOW_LEGACY_DOMAINS_TABLE, false);
+  return !useUnifiedCampaignExperience();
 }
 
 /**
@@ -192,7 +205,8 @@ export function useExtendedI18n(): boolean {
 /**
  * Check if unified campaign experience is enabled (UX Refactor)
  * Master flag controlling entire refactored experience
+ * Default: true (unified experience is now the default)
  */
 export function useUnifiedCampaignExperience(): boolean {
-  return isFeatureEnabled(UX_REFACTOR_FLAGS.ENABLE_UNIFIED_CAMPAIGN_EXPERIENCE, false);
+  return isFeatureEnabled(UX_REFACTOR_FLAGS.ENABLE_UNIFIED_CAMPAIGN_EXPERIENCE, true);
 }

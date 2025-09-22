@@ -121,53 +121,61 @@ export default function CampaignPage() {
     );
   }
 
-  // UX Refactor: Unified Campaign Experience (Phases A-E)
+  // UX Refactor: Unified Campaign Experience (Phases A-E) with Accessibility
   if (useUnifiedExperience) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8" role="main" aria-label="Campaign Dashboard">
         <PageHeader
           title={campaign.name || 'Untitled Campaign'}
           description="Unified campaign experience with real-time insights"
           showBackButton
           onBack={handleBack}
+          aria-label={`Campaign dashboard for ${campaign.name || 'untitled campaign'}`}
         />
-        <CampaignExperiencePage className="mt-6" />
+        <CampaignExperiencePage 
+          className="mt-6" 
+          aria-label="Campaign experience interface"
+          role="region"
+        />
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-6">
+    <div className="container mx-auto px-4 py-8 space-y-6" role="main" aria-label="Legacy Campaign Interface">
       {/* Professional page header */}
       <PageHeader
         title={campaign.name || 'Untitled Campaign'}
         description={`Campaign details and management for ${campaign.name || 'campaign'}`}
         showBackButton
         onBack={handleBack}
+        aria-label={`Campaign details for ${campaign.name || 'untitled campaign'}`}
       />
 
       {/* Phase 1 UI Refactor: Value-first overview above legacy domains table */}
       {showOverviewV2 && (
-        <>
+        <section aria-label="Campaign Overview" role="region">
           <CampaignOverviewV2 campaignId={campaignId} />
           
           {/* Phase 2: Compact toolbar with actions */}
-          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border">
+          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border" role="toolbar" aria-label="Campaign Actions">
             <div className="flex items-center gap-3">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleToggleDomainsTable}
                 className="flex items-center gap-2"
+                aria-label={showDomainsTable ? "Hide domain details table" : "Show domain details table"}
+                aria-pressed={showDomainsTable}
               >
                 {showDomainsTable ? (
                   <>
-                    <EyeOff className="w-4 h-4" />
+                    <EyeOff className="w-4 h-4" aria-hidden="true" />
                     Hide Raw Domains
                   </>
                 ) : (
                   <>
-                    <Eye className="w-4 h-4" />
+                    <Eye className="w-4 h-4" aria-hidden="true" />
                     Show Raw Domains
                   </>
                 )}
@@ -200,7 +208,7 @@ export default function CampaignPage() {
               Campaign Management Tools
             </div>
           </div>
-        </>
+        </section>
       )}
       
       {/* Professional campaign controls (disaster recovery component) */}
