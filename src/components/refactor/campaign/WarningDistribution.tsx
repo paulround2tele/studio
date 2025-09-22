@@ -193,12 +193,14 @@ function generateWarningNarrative(warnings: WarningData[], totalDomains: number)
   
   if (criticalWarnings.length > 0) {
     const criticalCount = criticalWarnings.reduce((sum, w) => sum + w.count, 0);
-    return `Critical quality issues detected across ${criticalCount} domains (${((criticalCount / totalDomains) * 100).toFixed(1)}%). Immediate attention recommended for ${criticalWarnings.map(w => warningConfig[w.type].label.toLowerCase()).join(', ')} patterns.`;
+    const criticalPercent = totalDomains > 0 ? (criticalCount / totalDomains) * 100 : 0;
+    return `Critical quality issues detected across ${criticalCount} domains (${criticalPercent.toFixed(1)}%). Immediate attention recommended for ${criticalWarnings.map(w => warningConfig[w.type].label.toLowerCase()).join(', ')} patterns.`;
   }
   
   if (highWarnings.length > 0) {
     const highCount = highWarnings.reduce((sum, w) => sum + w.count, 0);
-    return `High-priority warnings found in ${highCount} domains (${((highCount / totalDomains) * 100).toFixed(1)}%). Consider reviewing ${highWarnings.map(w => warningConfig[w.type].label.toLowerCase()).join(', ')} issues.`;
+    const highPercent = totalDomains > 0 ? (highCount / totalDomains) * 100 : 0;
+    return `High-priority warnings found in ${highCount} domains (${highPercent.toFixed(1)}%). Consider reviewing ${highWarnings.map(w => warningConfig[w.type].label.toLowerCase()).join(', ')} issues.`;
   }
   
   if (overallRate > 10) {
