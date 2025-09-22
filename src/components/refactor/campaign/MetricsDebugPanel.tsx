@@ -132,7 +132,6 @@ export const MetricsDebugPanel: React.FC<MetricsDebugPanelProps> = ({
       case 'connected': return 'bg-green-500';
       case 'connecting': return 'bg-yellow-500';
       case 'degraded': return 'bg-orange-500';
-      case 'pollingFallback': return 'bg-blue-500';
       case 'error': return 'bg-red-500';
       default: return 'bg-gray-500';
     }

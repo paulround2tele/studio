@@ -60,7 +60,7 @@ const colorSchemes = {
 function getBucketType(bucket: string): 'positive' | 'negative' | 'neutral' {
   // Parse bucket range to determine if it's positive, negative, or neutral
   const match = bucket.match(/([-+]?\d*\.?\d+)\s*to\s*([-+]?\d*\.?\d+)/);
-  if (match) {
+  if (match && match[1] && match[2]) {
     const min = parseFloat(match[1]);
     const max = parseFloat(match[2]);
     

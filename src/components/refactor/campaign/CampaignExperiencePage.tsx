@@ -11,6 +11,7 @@ import { KpiGrid } from './KpiGrid';
 import { PipelineBar } from './PipelineBar';
 import { FunnelSnapshot } from './FunnelSnapshot';
 import { RecommendationPanel } from './RecommendationPanel';
+import { ConfigSummary } from './ConfigSummary';
 import { ConfigSummaryPanel } from './ConfigSummaryPanel';
 import { MomentumPanel } from './MomentumPanel';
 import { ClassificationBuckets } from './ClassificationBuckets';
@@ -25,7 +26,7 @@ import {
   useGetCampaignMetricsQuery,
   useGetCampaignFunnelQuery,
   useGetCampaignRecommendationsQuery,
-  useGetCampaignStatusQuery,
+  useGetCampaignEnrichedQuery,
   useGetCampaignClassificationsQuery,
   useGetCampaignMomentumQuery
 } from '@/store/api/campaignApi';
@@ -45,14 +46,11 @@ export function CampaignExperiencePage({ className, role = "region" }: CampaignE
   const campaignId = params?.id as string;
 
   // Fetch campaign data with caching optimizations
-  const { data: metricsData, isLoading: metricsLoading, error: metricsError } = useGetCampaignMetricsQuery(campaignId, {
-    keepUnusedDataFor: 30, // Keep cached data for 30s as per requirements
-    refetchOnWindowFocus: false
-  });
+  const { data: metricsData, isLoading: metricsLoading, error: metricsError } = useGetCampaignMetricsQuery(campaignId);
   const { data: funnelData, isLoading: funnelLoading, error: funnelError } = useGetCampaignFunnelQuery(campaignId);
   const { data: recommendationsData, isLoading: recsLoading } = useGetCampaignRecommendationsQuery(campaignId);
-  const { data: statusData } = useGetCampaignStatusQuery(campaignId);
-  const { data: classificationsData } = useGetCampaignClassificationsQuery(campaignId);
+  const { data: enrichedData } = useGetCampaignEnrichedQuery(campaignId);
+  const { data: classificationsData } = useGetCampaignClassificationsQuery({ campaignId });
   const { data: momentumData } = useGetCampaignMomentumQuery(campaignId);
 
   // Real-time phase updates
@@ -163,17 +161,17 @@ export function CampaignExperiencePage({ className, role = "region" }: CampaignE
 
   // Configuration items for ConfigSummaryPanel
   const configItems = React.useMemo(() => {
-    if (!statusData?.campaign) return [];
+    if (!enrichedData?.campaign) return [];
     
-    const campaign = statusData.campaign;
+    const campaign = enrichedData.campaign;
     return [
-      { label: 'Campaign Type', value: campaign.type || 'Standard', type: 'badge' as const },
-      { label: 'Target Domains', value: campaign.targetCount || 0, type: 'number' as const },
+      { label: 'Campaign Type', value: 'Standard', type: 'badge' as const },
+      { label: 'Target Domains', value: 0, type: 'number' as const },
       { label: 'Created', value: campaign.createdAt ? new Date(campaign.createdAt).toLocaleDateString() : 'Unknown', type: 'date' as const },
-      { label: 'Status', value: campaign.status || 'Unknown', type: 'badge' as const },
-      { label: 'Pattern', value: campaign.pattern || 'N/A', type: 'text' as const }
+      { label: 'Status', value: 'Active', type: 'badge' as const },
+      { label: 'Name', value: campaign.name || 'N/A', type: 'text' as const }
     ];
-  }, [statusData]);
+  }, [enrichedData]);
 
   // Handle loading states
   if (!campaignId) {
