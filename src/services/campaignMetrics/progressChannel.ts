@@ -17,13 +17,11 @@ export type ConnectionState =
   | 'connecting' 
   | 'connected'
   | 'degraded'
-  | 'pollingFallback'
   | 'error';
 
 export interface ProgressChannelOptions {
   campaignId: string;
   useSSE?: boolean;
-  pollingInterval?: number;
   maxRetries?: number;
   useMock?: boolean;
   onStateChange?: (state: ConnectionState) => void;
@@ -36,13 +34,11 @@ export interface ProgressChannelMetrics {
   totalMessages: number;
   lastHeartbeat: number | null;
   uptime: number;
-  fallbackActivations: number;
 }
 
 export class ProgressChannel {
   private options: ProgressChannelOptions;
   private eventSource: EventSource | null = null;
-  private pollingTimer: NodeJS.Timeout | null = null;
   private heartbeatTimer: NodeJS.Timeout | null = null;
   private reconnectTimer: NodeJS.Timeout | null = null;
   
@@ -51,8 +47,7 @@ export class ProgressChannel {
     reconnectAttempts: 0,
     totalMessages: 0,
     lastHeartbeat: null,
-    uptime: 0,
-    fallbackActivations: 0
+    uptime: 0
   };
   
   private startTime: number = 0;
@@ -63,7 +58,7 @@ export class ProgressChannel {
   }
 
   /**
-   * Start the progress channel
+   * Start the progress channel - SSE only, no polling fallback
    */
   async start(): Promise<void> {
     if (this.isDestroyed) {
@@ -74,13 +69,15 @@ export class ProgressChannel {
     this.setState('connecting');
     
     try {
-      if (this.options.useSSE && typeof EventSource !== 'undefined') {
+      if (this.options.useMock) {
+        await this.startMockProgress();
+      } else if (typeof EventSource !== 'undefined') {
         await this.startSSE();
       } else {
-        await this.startPolling();
+        throw new Error('EventSource not supported in this environment');
       }
     } catch (error) {
-      this.handleError(error instanceof Error ? error : new Error('Failed to start'));
+      this.handleError(error instanceof Error ? error : new Error('Failed to start SSE connection'));
     }
   }
 
@@ -166,38 +163,6 @@ export class ProgressChannel {
   }
 
   /**
-   * Start polling fallback
-   */
-  private async startPolling(): Promise<void> {
-    this.setState('pollingFallback');
-    this.metrics.fallbackActivations++;
-    
-    const poll = async () => {
-      if (this.isDestroyed) return;
-      
-      try {
-        const url = this.buildPollingUrl();
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error(`Polling failed: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        this.handleMessage(JSON.stringify(data));
-        
-        // Schedule next poll
-        this.pollingTimer = setTimeout(poll, this.options.pollingInterval || 5000);
-        
-      } catch (error) {
-        console.error('Polling error:', error);
-        this.handleConnectionError();
-      }
-    };
-
-    // Start first poll
-    await poll();
-  }
 
   /**
    * Handle incoming message
@@ -227,7 +192,7 @@ export class ProgressChannel {
   }
 
   /**
-   * Handle connection errors
+   * Handle connection errors with exponential backoff
    */
   private handleConnectionError(): void {
     if (this.isDestroyed) return;
@@ -236,17 +201,11 @@ export class ProgressChannel {
     this.metrics.reconnectAttempts++;
     
     if (this.metrics.reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
-      // Try to reconnect
-      this.reconnect();
-    } else if (this.options.useSSE) {
-      // Fall back to polling
-      console.warn('Max SSE reconnection attempts reached, falling back to polling');
-      this.options.useSSE = false;
-      this.metrics.reconnectAttempts = 0;
+      // Try to reconnect with exponential backoff
       this.reconnect();
     } else {
-      // Final failure
-      this.handleError(new Error('Connection failed after maximum retry attempts'));
+      // Final failure after max attempts
+      this.handleError(new Error(`SSE connection failed after ${MAX_RECONNECT_ATTEMPTS} attempts`));
     }
   }
 
@@ -333,11 +292,6 @@ export class ProgressChannel {
     if (this.heartbeatTimer) {
       clearTimeout(this.heartbeatTimer);
       this.heartbeatTimer = null;
-    }
-    
-    if (this.pollingTimer) {
-      clearTimeout(this.pollingTimer);
-      this.pollingTimer = null;
     }
     
     if (this.reconnectTimer) {

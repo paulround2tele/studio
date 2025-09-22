@@ -11,31 +11,49 @@ import { KpiGrid } from './KpiGrid';
 import { PipelineBar } from './PipelineBar';
 import { FunnelSnapshot } from './FunnelSnapshot';
 import { RecommendationPanel } from './RecommendationPanel';
-import { ConfigSummary } from './ConfigSummary';
+import { ConfigSummaryPanel } from './ConfigSummaryPanel';
+import { MomentumPanel } from './MomentumPanel';
+import { ClassificationBuckets } from './ClassificationBuckets';
+import { WarningDistribution } from './WarningDistribution';
+import { WarningBar } from './WarningBar';
+import { WarningPills } from './WarningPills';
+import { MoverList } from './MoverList';
+import { Histogram } from './Histogram';
 
 import { useCampaignPhaseStream } from '@/hooks/useCampaignPhaseStream';
 import { 
   useGetCampaignMetricsQuery,
   useGetCampaignFunnelQuery,
   useGetCampaignRecommendationsQuery,
-  useGetCampaignStatusQuery
+  useGetCampaignStatusQuery,
+  useGetCampaignClassificationsQuery,
+  useGetCampaignMomentumQuery
 } from '@/store/api/campaignApi';
 
 import type { CampaignKpi } from '../types';
+import type { WarningData } from './WarningDistribution';
+import type { WarningBarData } from './WarningBar';
+import type { WarningPillData } from './WarningPills';
 
 interface CampaignExperiencePageProps {
   className?: string;
+  role?: string;
 }
 
-export function CampaignExperiencePage({ className }: CampaignExperiencePageProps) {
+export function CampaignExperiencePage({ className, role = "region" }: CampaignExperiencePageProps) {
   const params = useParams();
   const campaignId = params?.id as string;
 
-  // Fetch campaign data
-  const { data: metricsData, isLoading: metricsLoading, error: metricsError } = useGetCampaignMetricsQuery(campaignId);
+  // Fetch campaign data with caching optimizations
+  const { data: metricsData, isLoading: metricsLoading, error: metricsError } = useGetCampaignMetricsQuery(campaignId, {
+    keepUnusedDataFor: 30, // Keep cached data for 30s as per requirements
+    refetchOnWindowFocus: false
+  });
   const { data: funnelData, isLoading: funnelLoading, error: funnelError } = useGetCampaignFunnelQuery(campaignId);
   const { data: recommendationsData, isLoading: recsLoading } = useGetCampaignRecommendationsQuery(campaignId);
   const { data: statusData } = useGetCampaignStatusQuery(campaignId);
+  const { data: classificationsData } = useGetCampaignClassificationsQuery(campaignId);
+  const { data: momentumData } = useGetCampaignMomentumQuery(campaignId);
 
   // Real-time phase updates
   const { phases, isConnected, error: sseError } = useCampaignPhaseStream(campaignId, {
@@ -85,6 +103,77 @@ export function CampaignExperiencePage({ className }: CampaignExperiencePageProp
       }
     ];
   }, [metricsData]);
+
+  // Transform metrics data to warning format
+  const warningData: WarningData[] = React.useMemo(() => {
+    if (!metricsData) return [];
+    
+    const warnings: WarningData[] = [];
+    const totalDomains = metricsData.totalAnalyzed || 1;
+    
+    if (metricsData.stuffing && metricsData.stuffing > 0) {
+      warnings.push({
+        type: 'stuffing',
+        count: metricsData.stuffing,
+        rate: (metricsData.stuffing / totalDomains) * 100,
+        severity: metricsData.stuffing > totalDomains * 0.2 ? 'critical' : 
+                 metricsData.stuffing > totalDomains * 0.1 ? 'high' : 
+                 metricsData.stuffing > totalDomains * 0.05 ? 'medium' : 'low'
+      });
+    }
+    
+    if (metricsData.repetition && metricsData.repetition > 0) {
+      warnings.push({
+        type: 'repetition',
+        count: metricsData.repetition,
+        rate: (metricsData.repetition / totalDomains) * 100,
+        severity: metricsData.repetition > totalDomains * 0.15 ? 'critical' : 
+                 metricsData.repetition > totalDomains * 0.08 ? 'high' : 
+                 metricsData.repetition > totalDomains * 0.03 ? 'medium' : 'low'
+      });
+    }
+    
+    if (metricsData.anchor && metricsData.anchor > 0) {
+      warnings.push({
+        type: 'anchor',
+        count: metricsData.anchor,
+        rate: (metricsData.anchor / totalDomains) * 100,
+        severity: metricsData.anchor > totalDomains * 0.3 ? 'critical' : 
+                 metricsData.anchor > totalDomains * 0.2 ? 'high' : 
+                 metricsData.anchor > totalDomains * 0.1 ? 'medium' : 'low'
+      });
+    }
+    
+    return warnings;
+  }, [metricsData]);
+
+  // Transform for warning bar and pills
+  const warningBarData: WarningBarData[] = warningData.map(w => ({
+    type: w.type,
+    count: w.count,
+    rate: w.rate,
+    severity: w.severity
+  }));
+
+  const warningPillData: WarningPillData[] = warningData.map(w => ({
+    type: w.type,
+    count: w.count,
+    severity: w.severity
+  }));
+
+  // Configuration items for ConfigSummaryPanel
+  const configItems = React.useMemo(() => {
+    if (!statusData?.campaign) return [];
+    
+    const campaign = statusData.campaign;
+    return [
+      { label: 'Campaign Type', value: campaign.type || 'Standard', type: 'badge' as const },
+      { label: 'Target Domains', value: campaign.targetCount || 0, type: 'number' as const },
+      { label: 'Created', value: campaign.createdAt ? new Date(campaign.createdAt).toLocaleDateString() : 'Unknown', type: 'date' as const },
+      { label: 'Status', value: campaign.status || 'Unknown', type: 'badge' as const },
+      { label: 'Pattern', value: campaign.pattern || 'N/A', type: 'text' as const }
+    ];
+  }, [statusData]);
 
   // Handle loading states
   if (!campaignId) {
@@ -198,15 +287,78 @@ export function CampaignExperiencePage({ className }: CampaignExperiencePageProp
             )}
           </div>
 
-          {/* Additional insights panels can be added here */}
-          <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border">
-            <div className="text-center p-8 text-gray-500">
-              <h3 className="text-lg font-medium mb-2">Coming Soon</h3>
-              <p>Classification buckets, momentum analysis, and more insights</p>
-            </div>
-          </div>
+          {/* Additional insights panels - now implemented */}
+          <section aria-labelledby="insights-heading">
+            <h3 id="insights-heading" className="sr-only">Additional Insights</h3>
+            {warningData.length > 0 ? (
+              <WarningDistribution
+                warnings={warningData}
+                totalDomains={metricsData?.totalAnalyzed || 0}
+                aria-label="Warning analysis and distribution"
+              />
+            ) : (
+              <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border text-center text-gray-500">
+                <h3 className="text-lg font-medium mb-2">No Quality Issues</h3>
+                <p>All domains are passing quality checks</p>
+              </div>
+            )}
+          </section>
         </div>
       </div>
+
+      {/* Full-width momentum panel at bottom if data exists */}
+      {momentumData && (momentumData.moversUp?.length > 0 || momentumData.moversDown?.length > 0) && (
+        <section className="mt-8" aria-labelledby="momentum-full-heading">
+          <h2 id="momentum-full-heading" className="text-lg font-semibold mb-4">Momentum Analysis</h2>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <MoverList
+              movers={momentumData.moversUp || []}
+              type="up"
+              title="Top Gainers"
+              maxItems={10}
+              showScores={true}
+              showRanks={true}
+              aria-label="Detailed list of top gaining domains"
+            />
+            <MoverList
+              movers={momentumData.moversDown || []}
+              type="down"
+              title="Top Decliners"
+              maxItems={10}
+              showScores={true}
+              showRanks={true}
+              aria-label="Detailed list of top declining domains"
+            />
+          </div>
+          
+          {momentumData.histogram && (
+            <div className="mt-6">
+              <Histogram
+                bins={momentumData.histogram}
+                title="Score Delta Distribution"
+                orientation="horizontal"
+                colorScheme="diverging"
+                showStats={true}
+                aria-label="Comprehensive score change distribution"
+              />
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Loading overlay for initial load */}
+      {isLoading && !metricsData && (
+        <div 
+          className="fixed inset-0 bg-black/10 flex items-center justify-center z-50"
+          role="progressbar"
+          aria-label="Loading campaign data"
+        >
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+            <p className="text-sm text-gray-600 dark:text-gray-400">Loading unified campaign experience...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

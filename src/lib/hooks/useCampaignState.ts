@@ -1,3 +1,11 @@
+/**
+ * @deprecated This hook uses polling which has been replaced by SSE-driven updates.
+ * Use useCampaignPhaseEvents or the new campaign API endpoints with SSE for real-time updates.
+ * 
+ * Legacy Campaign State Hook with Polling (Phase 2)
+ * This hook will be removed in a future version.
+ */
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
 import { apiConfiguration } from '@/lib/api/config';
@@ -7,7 +15,12 @@ import { CampaignsPhaseExecutionPutPhaseTypeEnum, CampaignsPhaseExecutionDeleteP
 
 const api = new CampaignsApi(apiConfiguration);
 
+/**
+ * @deprecated Use useCampaignPhaseEvents with SSE instead
+ */
 export function useCampaignState(campaignId: string) {
+  console.warn('useCampaignState is deprecated. Use useCampaignPhaseEvents with SSE instead.');
+  
   const queryClient = useQueryClient();
 
   const stateQuery = useQuery({
@@ -17,7 +30,8 @@ export function useCampaignState(campaignId: string) {
       return res.data;
     },
     enabled: !!campaignId,
-    staleTime: 5_000,
+    staleTime: 30_000, // Increased stale time to reduce polling frequency
+    refetchInterval: false, // Disable automatic polling - rely on manual triggers
   });
 
   const updatePhase = useMutation({
