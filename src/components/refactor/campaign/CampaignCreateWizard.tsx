@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { useCreateCampaignMutation, useUpdateCampaignModeMutation } from '@/store/api/campaignApi';
+import { useCreateCampaignMutation, useUpdateCampaignModeMutation, useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { formToApiRequest } from '@/components/campaigns/types/SimpleCampaignFormTypes';
 import { CampaignModeEnum } from '@/lib/api-client';
 
@@ -42,6 +42,7 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
   const { toast } = useToast();
   const [createCampaign, { isLoading: isCreating }] = useCreateCampaignMutation();
   const [updateCampaignMode, { isLoading: isUpdatingMode }] = useUpdateCampaignModeMutation();
+  const [startPhase, { isLoading: isStartingPhase }] = useStartPhaseStandaloneMutation();
 
   const [wizardState, setWizardState] = useState<CampaignWizardState>({
     currentStep: 0,
@@ -74,6 +75,7 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
   };
 
   const canProceed = validateStep(wizardState.currentStep);
+  const isLoading = isCreating || isUpdatingMode || isStartingPhase;
 
   const handleNext = () => {
     if (isLastStep) {
@@ -139,16 +141,37 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
         mode: backendMode
       }).unwrap();
 
-      // For auto mode, we could trigger auto-start here
-      // TODO: Implement auto-start pipeline logic in future PR
+      // For auto mode, trigger auto-start of the first phase (discovery)
       if (wizardState.goal.executionMode === 'auto') {
-        console.debug('Auto mode selected - pipeline will auto-start when configured');
+        try {
+          console.debug('Auto mode selected - starting discovery phase automatically');
+          
+          // Start the discovery phase automatically for full auto mode
+          await startPhase({
+            campaignId,
+            phase: 'discovery'
+          }).unwrap();
+          
+          toast({
+            title: "Campaign Created & Started",
+            description: `Campaign "${wizardState.goal.campaignName}" has been created in auto mode and the discovery phase has started automatically.`,
+          });
+        } catch (startError: any) {
+          console.warn('Auto-start of discovery phase failed:', startError);
+          
+          // Show a warning but don't block the flow - user can start manually
+          toast({
+            title: "Campaign Created",
+            description: `Campaign "${wizardState.goal.campaignName}" was created successfully, but auto-start failed. You can start the discovery phase manually.`,
+            variant: 'default'
+          });
+        }
+      } else {
+        toast({
+          title: "Campaign Created Successfully",
+          description: `Campaign "${wizardState.goal.campaignName}" has been created in ${wizardState.goal.executionMode} mode.`,
+        });
       }
-
-      toast({
-        title: "Campaign Created Successfully",
-        description: `Campaign "${wizardState.goal.campaignName}" has been created in ${wizardState.goal.executionMode} mode.`,
-      });
 
       // Redirect to campaign detail page
       router.push(`/campaigns/${result.id}`);
@@ -292,16 +315,16 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
           <Button
             variant="ghost"
             onClick={() => router.push('/campaigns')}
-            disabled={isCreating || isUpdatingMode}
+            disabled={isLoading}
           >
             Cancel
           </Button>
           <Button
             onClick={handleNext}
-            disabled={!canProceed || isCreating || isUpdatingMode}
+            disabled={!canProceed || isLoading}
           >
-            {isCreating || isUpdatingMode ? (
-              'Creating...'
+            {isLoading ? (
+              isStartingPhase ? 'Starting Campaign...' : 'Creating...'
             ) : isLastStep ? (
               'Create Campaign'
             ) : (

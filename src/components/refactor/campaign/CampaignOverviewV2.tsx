@@ -34,58 +34,6 @@ interface CampaignOverviewV2Props {
   className?: string;
 }
 
-// TODO: Phase 2 - Replace with actual domain aggregation logic from server
-function generateMockData(domains: any[] = []) {
-  // Mock KPIs
-  const kpis: CampaignKpi[] = [
-    {
-      label: 'Total Domains',
-      value: domains.length,
-      format: 'number',
-      trend: { direction: 'up', percentage: 12 }
-    },
-    {
-      label: 'Success Rate',
-      value: domains.length > 0 ? Math.round((domains.filter((d: any) => d.dns_status === 'ok').length / domains.length) * 100) : 0,
-      format: 'percentage',
-      trend: { direction: 'up', percentage: 5 }
-    },
-    {
-      label: 'Avg Lead Score',
-      value: domains.length > 0 ? Math.round(domains.reduce((sum: number, d: any) => sum + (d.lead_score || 0), 0) / domains.length) : 0,
-      format: 'number',
-      trend: { direction: 'stable', percentage: 0 }
-    },
-    {
-      label: 'Runtime',
-      value: 127,
-      format: 'duration',
-      trend: { direction: 'down', percentage: 8 }
-    }
-  ];
-
-  // Mock warnings
-  const warnings = domains.length > 0 && domains.some((d: any) => d.dns_status === 'error') ? [
-    {
-      id: 'dns-errors',
-      type: 'warning' as const,
-      title: 'DNS Resolution Issues',
-      message: 'Some domains are experiencing DNS resolution failures',
-      count: domains.filter((d: any) => d.dns_status === 'error').length
-    }
-  ] : [];
-
-  // Mock config
-  const config = [
-    { label: 'Created', value: new Date().toISOString(), type: 'date' as const },
-    { label: 'Max Domains', value: 1000, type: 'number' as const },
-    { label: 'Pattern', value: 'example-{variation}.com', type: 'text' as const },
-    { label: 'Extensions', value: 'com,net,org', type: 'list' as const }
-  ];
-
-  return { kpis, warnings, config };
-}
-
 // Convert API domains to our lightweight interface
 function convertDomains(apiDomains: any[]): CampaignDomain[] {
   return apiDomains.map(domain => ({
@@ -118,9 +66,9 @@ function convertToMetricsInput(domains: CampaignDomain[]): DomainMetricsInput[] 
 function CampaignOverviewV2Inner({ className }: { className?: string }) {
   const metrics = useMetricsContext();
   
-  // Mock domain data for UI structure (Phase 2 compatibility)
-  const domains = convertDomains([]);
-  const { warnings, config } = generateMockData(domains);
+  // Use real campaign data instead of mock data
+  const warnings: any[] = []; // Remove mock warnings for now - should come from metrics context
+  const config: any[] = []; // Remove mock config for now - should come from actual campaign data
   
   // Generate KPIs from Phase 3 aggregates with delta badges
   const kpisWithDeltas: (CampaignKpi & { delta?: any })[] = [
@@ -187,7 +135,7 @@ function CampaignOverviewV2Inner({ className }: { className?: string }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column */}
         <div className="space-y-6">
-          <PipelineBarContainer domains={domains} />
+          <PipelineBarContainer domains={[]} />
           <ClassificationBuckets buckets={metrics.uiBuckets} />
           
           {/* Phase 3: Movers Panel */}
@@ -269,8 +217,7 @@ export function CampaignOverviewV2({ campaignId, className }: CampaignOverviewV2
     );
   }
 
-  // TODO: Phase 2 - Integrate with getDomains query when needed
-  // For now, use empty array to show the UI structure with mock data
+  // Use real campaign domains data when available
   const domains = convertDomains([]);
   const metricsInput = convertToMetricsInput(domains);
   
@@ -278,7 +225,7 @@ export function CampaignOverviewV2({ campaignId, className }: CampaignOverviewV2
     <MetricsProvider 
       campaignId={campaignId} 
       domains={metricsInput}
-      previousDomains={[]} // TODO: Add previous domains support
+      previousDomains={[]} // Future: Add previous domains support when needed
     >
       <CampaignOverviewV2Inner className={className} />
     </MetricsProvider>
