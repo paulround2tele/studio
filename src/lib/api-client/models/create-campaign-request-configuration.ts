@@ -15,6 +15,9 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
+import type { CreateCampaignRequestConfigurationPatternConfig } from './create-campaign-request-configuration-pattern-config';
+// May contain unused imports in some cases
+// @ts-ignore
 import type { CreateCampaignRequestConfigurationPhases } from './create-campaign-request-configuration-phases';
 
 /**
@@ -35,5 +38,11 @@ export interface CreateCampaignRequestConfiguration {
      * @memberof CreateCampaignRequestConfiguration
      */
     'phases'?: CreateCampaignRequestConfigurationPhases;
+    /**
+     * 
+     * @type {CreateCampaignRequestConfigurationPatternConfig}
+     * @memberof CreateCampaignRequestConfiguration
+     */
+    'patternConfig'?: CreateCampaignRequestConfigurationPatternConfig;
 }
 

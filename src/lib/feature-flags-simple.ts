@@ -91,6 +91,11 @@ export const PHASE11_FLAGS = {
   ENABLE_I18N_EXTENDED: 'ENABLE_I18N_EXTENDED'
 } as const;
 
+// UX Refactor feature flags (Phases A-E)
+export const UX_REFACTOR_FLAGS = {
+  ENABLE_UNIFIED_CAMPAIGN_EXPERIENCE: 'ENABLE_UNIFIED_CAMPAIGN_EXPERIENCE'
+} as const;
+
 /**
  * Check if campaign wizard should be used (default enabled unless explicitly disabled)
  */
@@ -182,4 +187,12 @@ export function useAdaptiveVisualization(): boolean {
  */
 export function useExtendedI18n(): boolean {
   return isFeatureEnabled(PHASE11_FLAGS.ENABLE_I18N_EXTENDED, false);
+}
+
+/**
+ * Check if unified campaign experience is enabled (UX Refactor)
+ * Master flag controlling entire refactored experience
+ */
+export function useUnifiedCampaignExperience(): boolean {
+  return isFeatureEnabled(UX_REFACTOR_FLAGS.ENABLE_UNIFIED_CAMPAIGN_EXPERIENCE, false);
 }

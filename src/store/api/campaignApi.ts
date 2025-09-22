@@ -279,6 +279,110 @@ export const campaignApi = createApi({
         { type: 'Campaign', id: campaignId },
       ],
     }),
+
+    // New UX Refactor endpoints (Phase A)
+    getCampaignFunnel: builder.query<any, string>({
+      queryFn: async (campaignId) => {
+        try {
+          const response = await campaignsApi.campaignsFunnelGet(campaignId);
+          const data = extractResponseData<any>(response);
+          return { data };
+        } catch (error: any) {
+          return { error: toRtkError(error) as any };
+        }
+      },
+      providesTags: (result, error, campaignId) => [
+        { type: 'Campaign', id: campaignId },
+      ],
+    }),
+
+    getCampaignMetrics: builder.query<any, string>({
+      queryFn: async (campaignId) => {
+        try {
+          const response = await campaignsApi.campaignsMetricsGet(campaignId);
+          const data = extractResponseData<any>(response);
+          return { data };
+        } catch (error: any) {
+          return { error: toRtkError(error) as any };
+        }
+      },
+      providesTags: (result, error, campaignId) => [
+        { type: 'Campaign', id: campaignId },
+      ],
+    }),
+
+    getCampaignClassifications: builder.query<any, { campaignId: string; limit?: number }>({
+      queryFn: async ({ campaignId, limit }) => {
+        try {
+          const response = await campaignsApi.campaignsClassificationsGet(campaignId, limit);
+          const data = extractResponseData<any>(response);
+          return { data };
+        } catch (error: any) {
+          return { error: toRtkError(error) as any };
+        }
+      },
+      providesTags: (result, error, { campaignId }) => [
+        { type: 'Campaign', id: campaignId },
+      ],
+    }),
+
+    getCampaignMomentum: builder.query<any, string>({
+      queryFn: async (campaignId) => {
+        try {
+          const response = await campaignsApi.campaignsMomentumGet(campaignId);
+          const data = extractResponseData<any>(response);
+          return { data };
+        } catch (error: any) {
+          return { error: toRtkError(error) as any };
+        }
+      },
+      providesTags: (result, error, campaignId) => [
+        { type: 'Campaign', id: campaignId },
+      ],
+    }),
+
+    getCampaignRecommendations: builder.query<any, string>({
+      queryFn: async (campaignId) => {
+        try {
+          const response = await campaignsApi.campaignsRecommendationsGet(campaignId);
+          const data = extractResponseData<any>(response);
+          return { data };
+        } catch (error: any) {
+          return { error: toRtkError(error) as any };
+        }
+      },
+      providesTags: (result, error, campaignId) => [
+        { type: 'Campaign', id: campaignId },
+      ],
+    }),
+
+    getCampaignStatus: builder.query<any, string>({
+      queryFn: async (campaignId) => {
+        try {
+          const response = await campaignsApi.campaignsStatusGet(campaignId);
+          const data = extractResponseData<any>(response);
+          return { data };
+        } catch (error: any) {
+          return { error: toRtkError(error) as any };
+        }
+      },
+      providesTags: (result, error, campaignId) => [
+        { type: 'Campaign', id: campaignId },
+      ],
+    }),
+
+    duplicateCampaign: builder.mutation<any, string>({
+      queryFn: async (campaignId) => {
+        try {
+          const response = await campaignsApi.campaignsDuplicatePost(campaignId);
+          const data = extractResponseData<any>(response);
+          return { data };
+        } catch (error: any) {
+          return { error: toRtkError(error) as any };
+        }
+      },
+      invalidatesTags: ['CampaignList'],
+    }),
   }),
 });
 
@@ -296,6 +400,14 @@ export const {
   useExportCampaignDomainsMutation,
   useUpdateCampaignModeMutation,
   useGetCampaignDomainScoreBreakdownQuery,
+  // New UX Refactor hooks
+  useGetCampaignFunnelQuery,
+  useGetCampaignMetricsQuery,
+  useGetCampaignClassificationsQuery,
+  useGetCampaignMomentumQuery,
+  useGetCampaignRecommendationsQuery,
+  useGetCampaignStatusQuery,
+  useDuplicateCampaignMutation,
 } = campaignApi;
 
 // Export the reducer for the store configuration

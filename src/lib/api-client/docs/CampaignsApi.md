@@ -10,15 +10,20 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**bulkValidateDNS**](#bulkvalidatedns) | **POST** /campaigns/bulk/domains/validate-dns | Bulk DNS validation|
 |[**bulkValidateHTTP**](#bulkvalidatehttp) | **POST** /campaigns/bulk/domains/validate-http | Bulk HTTP validation|
 |[**campaignsBulkOperationsList**](#campaignsbulkoperationslist) | **GET** /campaigns/bulk/operations | List bulk operations|
+|[**campaignsClassificationsGet**](#campaignsclassificationsget) | **GET** /campaigns/{campaignId}/classifications | Get campaign classification buckets|
 |[**campaignsCreate**](#campaignscreate) | **POST** /campaigns | Create campaign|
 |[**campaignsDelete**](#campaignsdelete) | **DELETE** /campaigns/{campaignId} | Delete campaign|
 |[**campaignsDomainGenerationPatternOffset**](#campaignsdomaingenerationpatternoffset) | **POST** /campaigns/domain-generation/pattern-offset | Get current global pattern offset for domain generation config|
 |[**campaignsDomainScoreBreakdown**](#campaignsdomainscorebreakdown) | **GET** /campaigns/{campaignId}/domains/{domain}/score-breakdown | Get component score breakdown for a single domain|
 |[**campaignsDomainsList**](#campaignsdomainslist) | **GET** /campaigns/{campaignId}/domains | List generated domains for a campaign|
+|[**campaignsDuplicatePost**](#campaignsduplicatepost) | **POST** /campaigns/{campaignId}/duplicate | Duplicate campaign|
 |[**campaignsEnrichedGet**](#campaignsenrichedget) | **GET** /campaigns/{campaignId}/enriched | Get enriched campaign details|
+|[**campaignsFunnelGet**](#campaignsfunnelget) | **GET** /campaigns/{campaignId}/funnel | Get campaign funnel snapshot|
 |[**campaignsGet**](#campaignsget) | **GET** /campaigns/{campaignId} | Get campaign|
 |[**campaignsList**](#campaignslist) | **GET** /campaigns | List campaigns|
+|[**campaignsMetricsGet**](#campaignsmetricsget) | **GET** /campaigns/{campaignId}/metrics | Get campaign KPI &amp; warning metrics|
 |[**campaignsModeUpdate**](#campaignsmodeupdate) | **PATCH** /campaigns/{campaignId}/mode | Update campaign execution mode|
+|[**campaignsMomentumGet**](#campaignsmomentumget) | **GET** /campaigns/{campaignId}/momentum | Get campaign momentum &amp; movers|
 |[**campaignsPhaseConfigsList**](#campaignsphaseconfigslist) | **GET** /campaigns/{campaignId}/configs | List stored phase configurations for a campaign|
 |[**campaignsPhaseConfigure**](#campaignsphaseconfigure) | **POST** /campaigns/{campaignId}/phases/{phase}/configure | Configure campaign phase|
 |[**campaignsPhaseExecutionDelete**](#campaignsphaseexecutiondelete) | **DELETE** /campaigns/{campaignId}/phase-executions/{phaseType} | Delete phase execution by phase type|
@@ -29,9 +34,11 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**campaignsPhaseStatus**](#campaignsphasestatus) | **GET** /campaigns/{campaignId}/phases/{phase}/status | Get phase status|
 |[**campaignsPhaseStop**](#campaignsphasestop) | **POST** /campaigns/{campaignId}/phases/{phase}/stop | Stop campaign phase|
 |[**campaignsProgress**](#campaignsprogress) | **GET** /campaigns/{campaignId}/progress | Get campaign progress|
+|[**campaignsRecommendationsGet**](#campaignsrecommendationsget) | **GET** /campaigns/{campaignId}/insights/recommendations | Get campaign recommendations|
 |[**campaignsStateDelete**](#campaignsstatedelete) | **DELETE** /campaigns/{campaignId}/state | Delete campaign state|
 |[**campaignsStateGet**](#campaignsstateget) | **GET** /campaigns/{campaignId}/state | Get campaign state|
 |[**campaignsStatePut**](#campaignsstateput) | **PUT** /campaigns/{campaignId}/state | Update campaign state|
+|[**campaignsStatusGet**](#campaignsstatusget) | **GET** /campaigns/{campaignId}/status | Get consolidated campaign phase statuses|
 |[**campaignsUpdate**](#campaignsupdate) | **PUT** /campaigns/{campaignId} | Update campaign|
 |[**cancelBulkOperation**](#cancelbulkoperation) | **POST** /campaigns/bulk/operations/{operationId}/cancel | Cancel bulk operation|
 |[**getBulkOperationStatus**](#getbulkoperationstatus) | **GET** /campaigns/bulk/operations/{operationId}/status | Get bulk operation status|
@@ -359,6 +366,61 @@ This endpoint does not have any parameters.
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **campaignsClassificationsGet**
+> CampaignsClassificationsGet200Response campaignsClassificationsGet()
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+let limit: number; // (optional) (default to 5)
+
+const { status, data } = await apiInstance.campaignsClassificationsGet(
+    campaignId,
+    limit
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+| **limit** | [**number**] |  | (optional) defaults to 5|
+
+
+### Return type
+
+**CampaignsClassificationsGet200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **campaignsCreate**
 > CampaignsCreate201Response campaignsCreate(createCampaignRequest)
 
@@ -679,6 +741,59 @@ const { status, data } = await apiInstance.campaignsDomainsList(
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **campaignsDuplicatePost**
+> CampaignsCreate201Response campaignsDuplicatePost()
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsDuplicatePost(
+    campaignId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**CampaignsCreate201Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**201** | Created |  -  |
+|**404** | Not Found |  -  |
+|**409** | Conflict |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **campaignsEnrichedGet**
 > CampaignsEnrichedGet200Response campaignsEnrichedGet()
 
@@ -712,6 +827,58 @@ const { status, data } = await apiInstance.campaignsEnrichedGet(
 ### Return type
 
 **CampaignsEnrichedGet200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsFunnelGet**
+> CampaignsFunnelGet200Response campaignsFunnelGet()
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsFunnelGet(
+    campaignId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**CampaignsFunnelGet200Response**
 
 ### Authorization
 
@@ -830,6 +997,58 @@ This endpoint does not have any parameters.
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **campaignsMetricsGet**
+> CampaignsMetricsGet200Response campaignsMetricsGet()
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsMetricsGet(
+    campaignId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**CampaignsMetricsGet200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **campaignsModeUpdate**
 > CampaignsModeUpdate200Response campaignsModeUpdate(campaignsModeUpdateRequest)
 
@@ -883,6 +1102,58 @@ const { status, data } = await apiInstance.campaignsModeUpdate(
 |**200** | Mode updated |  -  |
 |**400** | Bad Request |  -  |
 |**401** | Unauthorized |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsMomentumGet**
+> CampaignsMomentumGet200Response campaignsMomentumGet()
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsMomentumGet(
+    campaignId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**CampaignsMomentumGet200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
 |**404** | Not Found |  -  |
 |**500** | Internal Server Error |  -  |
 
@@ -1449,6 +1720,58 @@ const { status, data } = await apiInstance.campaignsProgress(
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
+# **campaignsRecommendationsGet**
+> CampaignsRecommendationsGet200Response campaignsRecommendationsGet()
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsRecommendationsGet(
+    campaignId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**CampaignsRecommendationsGet200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
 # **campaignsStateDelete**
 > campaignsStateDelete()
 
@@ -1605,6 +1928,58 @@ const { status, data } = await apiInstance.campaignsStatePut(
 |-------------|-------------|------------------|
 |**200** | OK |  -  |
 |**400** | Bad Request |  -  |
+|**404** | Not Found |  -  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **campaignsStatusGet**
+> CampaignsStatusGet200Response campaignsStatusGet()
+
+
+### Example
+
+```typescript
+import {
+    CampaignsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new CampaignsApi(configuration);
+
+let campaignId: string; // (default to undefined)
+
+const { status, data } = await apiInstance.campaignsStatusGet(
+    campaignId
+);
+```
+
+### Parameters
+
+|Name | Type | Description  | Notes|
+|------------- | ------------- | ------------- | -------------|
+| **campaignId** | [**string**] |  | defaults to undefined|
+
+
+### Return type
+
+**CampaignsStatusGet200Response**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | OK |  -  |
 |**404** | Not Found |  -  |
 |**500** | Internal Server Error |  -  |
 
