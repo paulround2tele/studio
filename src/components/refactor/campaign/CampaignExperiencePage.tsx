@@ -46,7 +46,7 @@ export function CampaignExperiencePage({ className, role = "region" }: CampaignE
 
   // Fetch campaign data with caching optimizations
   const { data: metricsData, isLoading: metricsLoading, error: metricsError } = useGetCampaignMetricsQuery(campaignId, {
-    pollingInterval: 30_000, // 30s cache TTL as per requirements
+    keepUnusedDataFor: 30, // Keep cached data for 30s as per requirements
     refetchOnWindowFocus: false
   });
   const { data: funnelData, isLoading: funnelLoading, error: funnelError } = useGetCampaignFunnelQuery(campaignId);
