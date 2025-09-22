@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 var metricsOnce sync.Once
@@ -18,6 +19,76 @@ var (
 	RichnessPenaltyCounter               *prometheus.CounterVec
 	RichnessCanaryDiffHistogram          *prometheus.HistogramVec
 	RichnessCanaryDiffArchetypeHistogram *prometheus.HistogramVec
+
+	// NEW: Extraction latency histograms (EXT-28)
+	extractionLatencyHistogram = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "extraction_step_duration_seconds",
+			Help:    "Time spent in each extraction sub-step",
+			Buckets: prometheus.ExponentialBuckets(0.001, 2, 15), // 1ms to ~32s
+		},
+		[]string{"step", "campaign_id", "status"},
+	)
+
+	// Per-domain total extraction time
+	domainExtractionDuration = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "extraction_domain_total_duration_seconds",
+			Help:    "Total time to complete extraction for a single domain",
+			Buckets: prometheus.ExponentialBuckets(0.1, 2, 12), // 100ms to ~6 minutes
+		},
+		[]string{"campaign_id", "status"},
+	)
+
+	// HTTP fetch metrics
+	httpFetchDuration = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "extraction_http_fetch_duration_seconds",
+			Help:    "Time spent fetching HTTP content",
+			Buckets: prometheus.ExponentialBuckets(0.1, 2, 10), // 100ms to ~1.7 minutes
+		},
+		[]string{"campaign_id", "status_code_class"},
+	)
+
+	// Keyword extraction metrics
+	keywordExtractionDuration = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "extraction_keyword_processing_duration_seconds",
+			Help:    "Time spent processing keywords for a domain",
+			Buckets: prometheus.ExponentialBuckets(0.01, 2, 10), // 10ms to ~17s
+		},
+		[]string{"campaign_id", "keyword_count_class"},
+	)
+
+	// Microcrawl metrics
+	microcrawlDuration = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "extraction_microcrawl_duration_seconds",
+			Help:    "Time spent in microcrawl operations",
+			Buckets: prometheus.ExponentialBuckets(1, 2, 10), // 1s to ~17 minutes
+		},
+		[]string{"campaign_id", "pages_crawled_class", "status"},
+	)
+
+	// Feature aggregation metrics
+	featureAggregationDuration = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "extraction_feature_aggregation_duration_seconds",
+			Help:    "Time spent aggregating features from raw signals",
+			Buckets: prometheus.ExponentialBuckets(0.001, 2, 12), // 1ms to ~4s
+		},
+		[]string{"campaign_id", "feature_count_class"},
+	)
+
+	// Persistence metrics
+	persistenceDuration = promauto.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "extraction_persistence_duration_seconds",
+			Help:    "Time spent persisting extraction results to database",
+			Buckets: prometheus.ExponentialBuckets(0.01, 2, 10), // 10ms to ~17s
+		},
+		[]string{"campaign_id", "operation_type"},
+	)
 )
 
 // InitMetrics registers extraction related metrics (idempotent).
@@ -142,4 +213,117 @@ func StartFeatureMetricsLoop(ctx context.Context, db *sql.DB, interval time.Dura
 			}
 		}
 	}()
+}
+
+// TimerWrapper provides convenient timing functionality for metrics
+type TimerWrapper struct {
+	start  time.Time
+	labels prometheus.Labels
+}
+
+// NewExtractionTimer creates a new timer for extraction step measurement
+func NewExtractionTimer(step, campaignID string) *TimerWrapper {
+	return &TimerWrapper{
+		start: time.Now(),
+		labels: prometheus.Labels{
+			"step":        step,
+			"campaign_id": campaignID,
+		},
+	}
+}
+
+// Finish records the duration and status for the extraction step
+func (t *TimerWrapper) Finish(status string) {
+	duration := time.Since(t.start)
+	t.labels["status"] = status
+	extractionLatencyHistogram.With(t.labels).Observe(duration.Seconds())
+}
+
+// ObserveDomainExtractionDuration records the total time for domain extraction
+func ObserveDomainExtractionDuration(campaignID, status string, duration time.Duration) {
+	domainExtractionDuration.WithLabelValues(campaignID, status).Observe(duration.Seconds())
+}
+
+// ObserveHTTPFetchDuration records HTTP fetch timing
+func ObserveHTTPFetchDuration(campaignID string, statusCode int, duration time.Duration) {
+	statusClass := getStatusCodeClass(statusCode)
+	httpFetchDuration.WithLabelValues(campaignID, statusClass).Observe(duration.Seconds())
+}
+
+// ObserveKeywordExtractionDuration records keyword processing timing
+func ObserveKeywordExtractionDuration(campaignID string, keywordCount int, duration time.Duration) {
+	countClass := getKeywordCountClass(keywordCount)
+	keywordExtractionDuration.WithLabelValues(campaignID, countClass).Observe(duration.Seconds())
+}
+
+// ObserveMicrocrawlDuration records microcrawl operation timing
+func ObserveMicrocrawlDuration(campaignID string, pagesCrawled int, status string, duration time.Duration) {
+	pagesClass := getPagesCrawledClass(pagesCrawled)
+	microcrawlDuration.WithLabelValues(campaignID, pagesClass, status).Observe(duration.Seconds())
+}
+
+// ObserveFeatureAggregationDuration records feature aggregation timing
+func ObserveFeatureAggregationDuration(campaignID string, featureCount int, duration time.Duration) {
+	countClass := getFeatureCountClass(featureCount)
+	featureAggregationDuration.WithLabelValues(campaignID, countClass).Observe(duration.Seconds())
+}
+
+// ObservePersistenceDuration records database persistence timing
+func ObservePersistenceDuration(campaignID, operationType string, duration time.Duration) {
+	persistenceDuration.WithLabelValues(campaignID, operationType).Observe(duration.Seconds())
+}
+
+// Helper functions for classification
+func getStatusCodeClass(statusCode int) string {
+	switch {
+	case statusCode >= 200 && statusCode < 300:
+		return "2xx"
+	case statusCode >= 300 && statusCode < 400:
+		return "3xx"
+	case statusCode >= 400 && statusCode < 500:
+		return "4xx"
+	case statusCode >= 500:
+		return "5xx"
+	default:
+		return "other"
+	}
+}
+
+func getKeywordCountClass(count int) string {
+	switch {
+	case count <= 10:
+		return "small"
+	case count <= 50:
+		return "medium"
+	case count <= 200:
+		return "large"
+	default:
+		return "xlarge"
+	}
+}
+
+func getPagesCrawledClass(pages int) string {
+	switch {
+	case pages <= 1:
+		return "single"
+	case pages <= 3:
+		return "few"
+	case pages <= 10:
+		return "many"
+	default:
+		return "extensive"
+	}
+}
+
+func getFeatureCountClass(count int) string {
+	switch {
+	case count <= 5:
+		return "minimal"
+	case count <= 15:
+		return "standard"
+	case count <= 30:
+		return "rich"
+	default:
+		return "comprehensive"
+	}
 }
