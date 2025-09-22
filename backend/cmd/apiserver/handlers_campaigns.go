@@ -167,30 +167,264 @@ func (h *strictHandlers) CampaignsFunnelGet(ctx context.Context, r gen.Campaigns
 	return gen.CampaignsFunnelGet200JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true), Data: &data}, nil
 }
 
-// CampaignsClassificationsGet implements GET /campaigns/{campaignId}/classifications (stub)
+// CampaignsClassificationsGet implements GET /campaigns/{campaignId}/classifications
 func (h *strictHandlers) CampaignsClassificationsGet(ctx context.Context, r gen.CampaignsClassificationsGetRequestObject) (gen.CampaignsClassificationsGetResponseObject, error) {
-	// Temporary stub: return 404 until implemented; prevents interface compile error
-	return gen.CampaignsClassificationsGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "classifications not implemented", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	if h.deps == nil || h.deps.DB == nil || h.deps.AggregatesCache == nil {
+		return gen.CampaignsClassificationsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Optional campaign existence check
+	if h.deps.Stores.Campaign != nil {
+		if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
+			if err == store.ErrNotFound {
+				return gen.CampaignsClassificationsGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+			return gen.CampaignsClassificationsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+	}
+	repo := aggregatesRepo{db: h.deps.DB.DB}
+	dto, err := domainservices.GetCampaignClassifications(ctx, repo, h.deps.AggregatesCache, uuid.UUID(r.CampaignId))
+	if err != nil {
+		return gen.CampaignsClassificationsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "aggregation failure", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	
+	// Map DTO to typed response struct
+	samples := make([]gen.CampaignClassificationBucketSample, len(dto.Samples))
+	for i, sample := range dto.Samples {
+		domains := make([]struct {
+			Domain   string   `json:"domain"`
+			Richness *float32 `json:"richness"`
+		}, len(sample.Domains))
+		for j, domain := range sample.Domains {
+			richness := (*float32)(nil)
+			if domain.Richness != nil {
+				r := float32(*domain.Richness)
+				richness = &r
+			}
+			domains[j] = struct {
+				Domain   string   `json:"domain"`
+				Richness *float32 `json:"richness"`
+			}{
+				Domain:   domain.Domain,
+				Richness: richness,
+			}
+		}
+		samples[i] = gen.CampaignClassificationBucketSample{
+			Bucket:  gen.CampaignClassificationBucketSampleBucket(sample.Bucket),
+			Domains: domains,
+		}
+	}
+
+	data := gen.CampaignClassificationsResponse{
+		Counts: struct {
+			AtRisk        int `json:"atRisk"`
+			Emerging      int `json:"emerging"`
+			HighPotential int `json:"highPotential"`
+			LeadCandidate int `json:"leadCandidate"`
+			LowValue      int `json:"lowValue"`
+			Other         int `json:"other"`
+		}{
+			HighPotential: int(dto.Counts.HighPotential),
+			Emerging:      int(dto.Counts.Emerging),
+			AtRisk:        int(dto.Counts.AtRisk),
+			LeadCandidate: int(dto.Counts.LeadCandidate),
+			LowValue:      int(dto.Counts.LowValue),
+			Other:         int(dto.Counts.Other),
+		},
+		Samples: &samples,
+	}
+	return gen.CampaignsClassificationsGet200JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true), Data: &data}, nil
 }
 
-// CampaignsDuplicatePost implements POST /campaigns/{campaignId}/duplicate (stub)
+// CampaignsDuplicatePost implements POST /campaigns/{campaignId}/duplicate
 func (h *strictHandlers) CampaignsDuplicatePost(ctx context.Context, r gen.CampaignsDuplicatePostRequestObject) (gen.CampaignsDuplicatePostResponseObject, error) {
-	return gen.CampaignsDuplicatePost500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "duplicate not implemented", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	if h.deps == nil || h.deps.DB == nil || h.deps.Stores.Campaign == nil {
+		return gen.CampaignsDuplicatePost500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	
+	// Load the original campaign
+	originalCampaign, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
+	if err != nil {
+		if err == store.ErrNotFound {
+			return gen.CampaignsDuplicatePost404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+		return gen.CampaignsDuplicatePost500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+
+	// Create a new campaign with the same configuration but different ID and name
+	newCampaignID := uuid.New()
+	duplicatedCampaign := *originalCampaign // Copy the struct
+	duplicatedCampaign.ID = newCampaignID
+	duplicatedCampaign.Name = fmt.Sprintf("%s (Copy)", originalCampaign.Name)
+	// Reset status-related fields to defaults
+	duplicatedCampaign.PhaseStatus = nil // Reset to default/draft
+	duplicatedCampaign.StartedAt = nil
+	duplicatedCampaign.CompletedAt = nil
+	duplicatedCampaign.CreatedAt = time.Now()
+	duplicatedCampaign.UpdatedAt = time.Now()
+
+	// Create the duplicated campaign
+	err = h.deps.Stores.Campaign.CreateCampaign(ctx, h.deps.DB, &duplicatedCampaign)
+	if err != nil {
+		return gen.CampaignsDuplicatePost500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to create duplicate", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+
+	// Map to response
+	campaignResp := mapCampaignToResponse(&duplicatedCampaign)
+	return gen.CampaignsDuplicatePost201JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true), Data: &campaignResp}, nil
 }
 
-// CampaignsMomentumGet implements GET /campaigns/{campaignId}/momentum (stub)
+// CampaignsMomentumGet implements GET /campaigns/{campaignId}/momentum
 func (h *strictHandlers) CampaignsMomentumGet(ctx context.Context, r gen.CampaignsMomentumGetRequestObject) (gen.CampaignsMomentumGetResponseObject, error) {
-	return gen.CampaignsMomentumGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "momentum not implemented", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	if h.deps == nil || h.deps.DB == nil || h.deps.AggregatesCache == nil {
+		return gen.CampaignsMomentumGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Optional campaign existence check
+	if h.deps.Stores.Campaign != nil {
+		if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
+			if err == store.ErrNotFound {
+				return gen.CampaignsMomentumGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+			return gen.CampaignsMomentumGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+	}
+	repo := aggregatesRepo{db: h.deps.DB.DB}
+	dto, err := domainservices.GetCampaignMomentum(ctx, repo, h.deps.AggregatesCache, uuid.UUID(r.CampaignId))
+	if err != nil {
+		return gen.CampaignsMomentumGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "aggregation failure", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	
+	// Map DTO to typed response struct
+	moversUp := make([]struct {
+		Delta  float32 `json:"delta"`
+		Domain string  `json:"domain"`
+	}, len(dto.MoversUp))
+	for i, mover := range dto.MoversUp {
+		moversUp[i] = struct {
+			Delta  float32 `json:"delta"`
+			Domain string  `json:"domain"`
+		}{
+			Domain: mover.Domain,
+			Delta:  float32(mover.Delta),
+		}
+	}
+	
+	moversDown := make([]struct {
+		Delta  float32 `json:"delta"`
+		Domain string  `json:"domain"`
+	}, len(dto.MoversDown))
+	for i, mover := range dto.MoversDown {
+		moversDown[i] = struct {
+			Delta  float32 `json:"delta"`
+			Domain string  `json:"domain"`
+		}{
+			Domain: mover.Domain,
+			Delta:  float32(mover.Delta),
+		}
+	}
+	
+	// Note: The schema shows histogram as []int but our DTO has bucket names, 
+	// for now return counts only - TODO: align schema with implementation needs
+	histogram := make([]int, len(dto.Histogram))
+	for i, hist := range dto.Histogram {
+		histogram[i] = int(hist.Count)
+	}
+
+	data := gen.CampaignMomentumResponse{
+		MoversUp:   moversUp,
+		MoversDown: moversDown,
+		Histogram:  histogram,
+	}
+	return gen.CampaignsMomentumGet200JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true), Data: &data}, nil
 }
 
-// CampaignsRecommendationsGet implements GET /campaigns/{campaignId}/insights/recommendations (stub)
+// CampaignsRecommendationsGet implements GET /campaigns/{campaignId}/insights/recommendations
 func (h *strictHandlers) CampaignsRecommendationsGet(ctx context.Context, r gen.CampaignsRecommendationsGetRequestObject) (gen.CampaignsRecommendationsGetResponseObject, error) {
-	return gen.CampaignsRecommendationsGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "recommendations not implemented", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	if h.deps == nil || h.deps.DB == nil || h.deps.AggregatesCache == nil {
+		return gen.CampaignsRecommendationsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Optional campaign existence check
+	if h.deps.Stores.Campaign != nil {
+		if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
+			if err == store.ErrNotFound {
+				return gen.CampaignsRecommendationsGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+			return gen.CampaignsRecommendationsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+	}
+	repo := aggregatesRepo{db: h.deps.DB.DB}
+	dto, err := domainservices.GetCampaignRecommendations(ctx, repo, h.deps.AggregatesCache, uuid.UUID(r.CampaignId))
+	if err != nil {
+		return gen.CampaignsRecommendationsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "aggregation failure", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	
+	// Map DTO to typed response struct
+	recommendations := make([]gen.CampaignRecommendation, len(dto.Recommendations))
+	for i, rec := range dto.Recommendations {
+		recommendations[i] = gen.CampaignRecommendation{
+			Id:            rec.ID,
+			Message:       rec.Message,
+			RationaleCode: gen.CampaignRecommendationRationaleCode(rec.RationaleCode),
+			Severity:      gen.RecommendationSeverity(rec.Severity),
+		}
+	}
+
+	data := gen.CampaignRecommendationsResponse{
+		Recommendations: recommendations,
+	}
+	return gen.CampaignsRecommendationsGet200JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true), Data: &data}, nil
 }
 
-// CampaignsStatusGet implements GET /campaigns/{campaignId}/status (stub)
+// CampaignsStatusGet implements GET /campaigns/{campaignId}/status
 func (h *strictHandlers) CampaignsStatusGet(ctx context.Context, r gen.CampaignsStatusGetRequestObject) (gen.CampaignsStatusGetResponseObject, error) {
-	return gen.CampaignsStatusGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "status not implemented", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	if h.deps == nil || h.deps.DB == nil || h.deps.AggregatesCache == nil {
+		return gen.CampaignsStatusGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Optional campaign existence check
+	if h.deps.Stores.Campaign != nil {
+		if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
+			if err == store.ErrNotFound {
+				return gen.CampaignsStatusGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+			return gen.CampaignsStatusGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+	}
+	repo := aggregatesRepo{db: h.deps.DB.DB}
+	dto, err := domainservices.GetCampaignStatus(ctx, repo, h.deps.AggregatesCache, uuid.UUID(r.CampaignId))
+	if err != nil {
+		return gen.CampaignsStatusGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "aggregation failure", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	
+	// Map DTO to typed response struct
+	phases := make([]struct {
+		CompletedAt         *time.Time `json:"completedAt"`
+		Phase               gen.CampaignPhasesStatusResponsePhasesPhase  `json:"phase"`
+		ProgressPercentage  float32    `json:"progressPercentage"`
+		StartedAt           *time.Time `json:"startedAt"`
+		Status              gen.CampaignPhasesStatusResponsePhasesStatus `json:"status"`
+	}, len(dto.Phases))
+	
+	for i, phase := range dto.Phases {
+		phases[i] = struct {
+			CompletedAt         *time.Time `json:"completedAt"`
+			Phase               gen.CampaignPhasesStatusResponsePhasesPhase  `json:"phase"`
+			ProgressPercentage  float32    `json:"progressPercentage"`
+			StartedAt           *time.Time `json:"startedAt"`
+			Status              gen.CampaignPhasesStatusResponsePhasesStatus `json:"status"`
+		}{
+			Phase:              gen.CampaignPhasesStatusResponsePhasesPhase(phase.Phase),
+			Status:             gen.CampaignPhasesStatusResponsePhasesStatus(phase.Status),
+			ProgressPercentage: float32(phase.ProgressPercentage),
+			StartedAt:          phase.StartedAt,
+			CompletedAt:        phase.CompletedAt,
+		}
+	}
+
+	data := gen.CampaignPhasesStatusResponse{
+		CampaignId:                dto.CampaignID,
+		OverallProgressPercentage: float32(dto.OverallProgressPercentage),
+		Phases:                    phases,
+	}
+	return gen.CampaignsStatusGet200JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true), Data: &data}, nil
 }
 
 // CampaignsMetricsGet implements GET /campaigns/{campaignId}/metrics

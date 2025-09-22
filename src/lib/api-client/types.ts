@@ -1441,6 +1441,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/campaigns/{campaignId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get consolidated campaign phase statuses */
+        get: operations["campaigns_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/{campaignId}/funnel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get campaign funnel snapshot */
+        get: operations["campaigns_funnel_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/{campaignId}/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get campaign KPI & warning metrics */
+        get: operations["campaigns_metrics_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/{campaignId}/classifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get campaign classification buckets */
+        get: operations["campaigns_classifications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/{campaignId}/momentum": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get campaign momentum & movers */
+        get: operations["campaigns_momentum_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/{campaignId}/insights/recommendations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get campaign recommendations */
+        get: operations["campaigns_recommendations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/campaigns/{campaignId}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Duplicate campaign */
+        post: operations["campaigns_duplicate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/campaigns/bulk/operations": {
         parameters: {
             query?: never;
@@ -2241,6 +2360,26 @@ export interface components {
                         generateReports?: boolean;
                     };
                 };
+                /** @description Domain generation pattern configuration snapshot */
+                patternConfig?: {
+                    /** @enum {string} */
+                    type: "constant" | "variable";
+                    /** @description Constant pattern string when type=constant */
+                    constant?: string;
+                    /** @description Desired variable length for generation */
+                    variableLength?: number;
+                    /** @description Character set used for variable generation */
+                    charset?: string;
+                    targetDomains?: string[];
+                    tlds?: string[];
+                    keywordSetIds?: string[];
+                    personaIds?: string[];
+                    crawlDepth?: number;
+                    /** @description Optional projection estimate payload for UI modeling */
+                    projectionEstimate?: {
+                        [key: string]: unknown;
+                    };
+                };
             };
         };
         UpdateCampaignRequest: {
@@ -2587,6 +2726,96 @@ export interface components {
             proxyPoolId?: string | null;
             /** @description Keyword sets for extraction phase */
             keywordSetIds?: string[];
+        };
+        /** @description Consolidated phase status list plus overall progress */
+        CampaignPhasesStatusResponse: {
+            /** Format: uuid */
+            campaignId: string;
+            /** Format: float */
+            overallProgressPercentage: number;
+            phases: {
+                /** @enum {string} */
+                phase: "generation" | "dns" | "http" | "analysis" | "leads";
+                /** @enum {string} */
+                status: "not_started" | "ready" | "configured" | "in_progress" | "paused" | "completed" | "failed";
+                /** Format: float */
+                progressPercentage: number;
+                /** Format: date-time */
+                startedAt?: string | null;
+                /** Format: date-time */
+                completedAt?: string | null;
+            }[];
+        };
+        CampaignFunnelResponse: {
+            generated: number;
+            dnsValid: number;
+            httpValid: number;
+            keywordHits: number;
+            analyzed: number;
+            highPotential: number;
+            leads: number;
+        };
+        /** @description KPI and warning component metrics for a campaign */
+        CampaignMetricsResponse: {
+            highPotential: number;
+            leads: number;
+            /** Format: float */
+            keywordCoveragePct: number;
+            /** Format: float */
+            avgRichness: number;
+            /** Format: float */
+            warningRatePct: number;
+            /** Format: float */
+            medianGain: number;
+            stuffing: number;
+            repetition: number;
+            anchor: number;
+            totalAnalyzed: number;
+        };
+        CampaignClassificationBucketSample: {
+            /** @enum {string} */
+            bucket: "highPotential" | "emerging" | "atRisk" | "leadCandidate" | "lowValue" | "other";
+            domains: {
+                domain: string;
+                /** Format: float */
+                richness?: number | null;
+            }[];
+        };
+        CampaignClassificationsResponse: {
+            counts: {
+                highPotential: number;
+                emerging: number;
+                atRisk: number;
+                leadCandidate: number;
+                lowValue: number;
+                other: number;
+            };
+            samples?: components["schemas"]["CampaignClassificationBucketSample"][];
+        };
+        CampaignMomentumResponse: {
+            moversUp: {
+                domain: string;
+                /** Format: float */
+                delta: number;
+            }[];
+            moversDown: {
+                domain: string;
+                /** Format: float */
+                delta: number;
+            }[];
+            histogram: number[];
+        };
+        /** @enum {string} */
+        RecommendationSeverity: "info" | "warn" | "action";
+        CampaignRecommendation: {
+            id: string;
+            message: string;
+            /** @enum {string} */
+            rationaleCode: "R_DNS_LOW" | "R_HTTP_LOW" | "R_FEW_HIGH_POTENTIAL" | "R_WARNING_RATE_HIGH" | "R_NO_LEADS" | "R_MOMENTUM_LOSS" | "R_MOMENTUM_SURGE" | "R_ALL_CLEAR";
+            severity: components["schemas"]["RecommendationSeverity"];
+        };
+        CampaignRecommendationsResponse: {
+            recommendations: components["schemas"]["CampaignRecommendation"][];
         };
         BulkDomainGenerationRequest: {
             operations: {
@@ -6170,6 +6399,191 @@ export interface operations {
             400: components["responses"]["BadRequest"];
             401: components["responses"]["Unauthorized"];
             404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["CampaignPhasesStatusResponse"];
+                    };
+                };
+            };
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_funnel_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["CampaignFunnelResponse"];
+                    };
+                };
+            };
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_metrics_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["CampaignMetricsResponse"];
+                    };
+                };
+            };
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_classifications_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["CampaignClassificationsResponse"];
+                    };
+                };
+            };
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_momentum_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["CampaignMomentumResponse"];
+                    };
+                };
+            };
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_recommendations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["CampaignRecommendationsResponse"];
+                    };
+                };
+            };
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    campaigns_duplicate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessEnvelope"] & {
+                        data?: components["schemas"]["CampaignResponse"];
+                    };
+                };
+            };
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             500: components["responses"]["InternalServerError"];
         };
     };

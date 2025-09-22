@@ -16,7 +16,10 @@ import DomainsList from '@/components/campaigns/DomainsList';
 
 // Phase 1 UI Refactor components
 import CampaignOverviewV2 from '@/components/refactor/campaign/CampaignOverviewV2';
-import { useCampaignOverviewV2, useShowLegacyDomainsTable } from '@/lib/feature-flags-simple';
+import { useCampaignOverviewV2, useShowLegacyDomainsTable, useUnifiedCampaignExperience } from '@/lib/feature-flags-simple';
+
+// UX Refactor - Unified Campaign Experience
+import { CampaignExperiencePage } from '@/components/refactor/campaign/CampaignExperiencePage';
 
 // Phase 2 additions
 import { useUserPreference } from '@/lib/hooks/useUserPreference';
@@ -34,6 +37,7 @@ export default function CampaignPage() {
   // Feature flags
   const showOverviewV2 = useCampaignOverviewV2();
   const showLegacyDomainsTable = useShowLegacyDomainsTable();
+  const useUnifiedExperience = useUnifiedCampaignExperience();
   
   // Phase 2: User preferences for UI state
   const [showDomainsTable, setShowDomainsTable] = useUserPreference(
@@ -113,6 +117,21 @@ export default function CampaignPage() {
             Back to Campaigns
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  // UX Refactor: Unified Campaign Experience (Phases A-E)
+  if (useUnifiedExperience) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <PageHeader
+          title={campaign.name || 'Untitled Campaign'}
+          description="Unified campaign experience with real-time insights"
+          showBackButton
+          onBack={handleBack}
+        />
+        <CampaignExperiencePage className="mt-6" />
       </div>
     );
   }

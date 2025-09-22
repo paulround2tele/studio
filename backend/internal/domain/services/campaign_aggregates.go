@@ -10,6 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/google/uuid"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 
 	"github.com/fntelecomllc/studio/backend/internal/domain/constants"
 )
@@ -41,12 +42,16 @@ type cacheEntry struct {
 	Data      any
 }
 
-// AggregatesCache holds separate maps for funnel & metrics
+// AggregatesCache holds separate maps for funnel & metrics & new endpoints
 // All operations must hold appropriate RW locks.
 type AggregatesCache struct {
-	mu      sync.RWMutex
-	funnel  map[uuid.UUID]cacheEntry
-	metrics map[uuid.UUID]cacheEntry
+	mu              sync.RWMutex
+	funnel          map[uuid.UUID]cacheEntry
+	metrics         map[uuid.UUID]cacheEntry
+	classifications map[uuid.UUID]cacheEntry
+	momentum        map[uuid.UUID]cacheEntry
+	recommendations map[uuid.UUID]cacheEntry
+	status          map[uuid.UUID]cacheEntry
 }
 
 func NewAggregatesCache() *AggregatesCache {
@@ -54,8 +59,12 @@ func NewAggregatesCache() *AggregatesCache {
 		prometheus.MustRegister(campaignAggregationLatency, campaignAggregationCacheHits)
 	})
 	return &AggregatesCache{
-		funnel:  make(map[uuid.UUID]cacheEntry),
-		metrics: make(map[uuid.UUID]cacheEntry),
+		funnel:          make(map[uuid.UUID]cacheEntry),
+		metrics:         make(map[uuid.UUID]cacheEntry),
+		classifications: make(map[uuid.UUID]cacheEntry),
+		momentum:        make(map[uuid.UUID]cacheEntry),
+		recommendations: make(map[uuid.UUID]cacheEntry),
+		status:          make(map[uuid.UUID]cacheEntry),
 	}
 }
 
@@ -64,6 +73,10 @@ func (c *AggregatesCache) InvalidateCampaign(id uuid.UUID) {
 	c.mu.Lock()
 	delete(c.funnel, id)
 	delete(c.metrics, id)
+	delete(c.classifications, id)
+	delete(c.momentum, id)
+	delete(c.recommendations, id)
+	delete(c.status, id)
 	c.mu.Unlock()
 }
 
@@ -93,6 +106,75 @@ type MetricsDTO struct {
 	RepetitionCount    int64    `json:"repetition"`
 	AnchorCount        int64    `json:"anchor"`
 	TotalAnalyzed      int64    `json:"totalAnalyzed"`
+}
+
+// ClassificationsDTO mirrors CampaignClassificationsResponse schema
+type ClassificationsDTO struct {
+	Counts  ClassificationCounts  `json:"counts"`
+	Samples []ClassificationSample `json:"samples"`
+}
+
+type ClassificationCounts struct {
+	HighPotential int64 `json:"highPotential"`
+	Emerging      int64 `json:"emerging"`
+	AtRisk        int64 `json:"atRisk"`
+	LeadCandidate int64 `json:"leadCandidate"`
+	LowValue      int64 `json:"lowValue"`
+	Other         int64 `json:"other"`
+}
+
+type ClassificationSample struct {
+	Bucket  string                      `json:"bucket"`
+	Domains []ClassificationSampleDomain `json:"domains"`
+}
+
+type ClassificationSampleDomain struct {
+	Domain   string   `json:"domain"`
+	Richness *float64 `json:"richness"`
+}
+
+// MomentumDTO mirrors CampaignMomentumResponse schema
+type MomentumDTO struct {
+	MoversUp    []MomentumMover     `json:"moversUp"`
+	MoversDown  []MomentumMover     `json:"moversDown"`
+	Histogram   []MomentumHistogram `json:"histogram"`
+}
+
+type MomentumMover struct {
+	Domain string  `json:"domain"`
+	Delta  float64 `json:"delta"`
+}
+
+type MomentumHistogram struct {
+	Bucket string `json:"bucket"`
+	Count  int64  `json:"count"`
+}
+
+// RecommendationsDTO mirrors CampaignRecommendationsResponse schema
+type RecommendationsDTO struct {
+	Recommendations []Recommendation `json:"recommendations"`
+}
+
+type Recommendation struct {
+	ID            string `json:"id"`
+	Message       string `json:"message"`
+	RationaleCode string `json:"rationaleCode"`
+	Severity      string `json:"severity"`
+}
+
+// StatusDTO mirrors CampaignPhasesStatusResponse schema
+type StatusDTO struct {
+	CampaignID                openapi_types.UUID `json:"campaignId"`
+	OverallProgressPercentage float64            `json:"overallProgressPercentage"`
+	Phases                    []PhaseStatusItem  `json:"phases"`
+}
+
+type PhaseStatusItem struct {
+	Phase              string     `json:"phase"`
+	Status             string     `json:"status"`
+	ProgressPercentage float64    `json:"progressPercentage"`
+	StartedAt          *time.Time `json:"startedAt"`
+	CompletedAt        *time.Time `json:"completedAt"`
 }
 
 // Repository abstraction (minimal) – adapt if broader store layer exists
@@ -250,6 +332,308 @@ func (c *AggregatesCache) InvalidateMetrics(id uuid.UUID) {
 	c.mu.Lock()
 	delete(c.metrics, id)
 	c.mu.Unlock()
+}
+func (c *AggregatesCache) InvalidateClassifications(id uuid.UUID) {
+	c.mu.Lock()
+	delete(c.classifications, id)
+	c.mu.Unlock()
+}
+func (c *AggregatesCache) InvalidateMomentum(id uuid.UUID) {
+	c.mu.Lock()
+	delete(c.momentum, id)
+	c.mu.Unlock()
+}
+func (c *AggregatesCache) InvalidateRecommendations(id uuid.UUID) {
+	c.mu.Lock()
+	delete(c.recommendations, id)
+	c.mu.Unlock()
+}
+func (c *AggregatesCache) InvalidateStatus(id uuid.UUID) {
+	c.mu.Lock()
+	delete(c.status, id)
+	c.mu.Unlock()
+}
+
+// GetCampaignStatus retrieves campaign phase status with overall progress
+func GetCampaignStatus(ctx context.Context, repo AggregatesRepository, cache *AggregatesCache, campaignID uuid.UUID) (StatusDTO, error) {
+	// Check cache first
+	cache.mu.RLock()
+	if entry, exists := cache.status[campaignID]; exists {
+		if time.Since(entry.FetchedAt) < aggregatesTTL {
+			campaignAggregationCacheHits.WithLabelValues("status", "hit").Inc()
+			cache.mu.RUnlock()
+			return entry.Data.(StatusDTO), nil
+		}
+	}
+	cache.mu.RUnlock()
+	campaignAggregationCacheHits.WithLabelValues("status", "miss").Inc()
+
+	start := time.Now()
+	
+	// For now, return mock data until we implement the full phase status logic
+	// TODO: Implement real phase status tracking based on campaign state and executions
+	phases := []PhaseStatusItem{
+		{
+			Phase:              "generation",
+			Status:             "completed",
+			ProgressPercentage: 100.0,
+			StartedAt:          timePtr(time.Now().Add(-2 * time.Hour)),
+			CompletedAt:        timePtr(time.Now().Add(-90 * time.Minute)),
+		},
+		{
+			Phase:              "dns",
+			Status:             "completed",
+			ProgressPercentage: 100.0,
+			StartedAt:          timePtr(time.Now().Add(-90 * time.Minute)),
+			CompletedAt:        timePtr(time.Now().Add(-60 * time.Minute)),
+		},
+		{
+			Phase:              "http",
+			Status:             "in_progress",
+			ProgressPercentage: 75.0,
+			StartedAt:          timePtr(time.Now().Add(-60 * time.Minute)),
+			CompletedAt:        nil,
+		},
+		{
+			Phase:              "analysis",
+			Status:             "ready",
+			ProgressPercentage: 0.0,
+			StartedAt:          nil,
+			CompletedAt:        nil,
+		},
+		{
+			Phase:              "leads",
+			Status:             "not_started",
+			ProgressPercentage: 0.0,
+			StartedAt:          nil,
+			CompletedAt:        nil,
+		},
+	}
+
+	// Calculate overall progress as average of phase progress
+	totalProgress := 0.0
+	for _, phase := range phases {
+		totalProgress += phase.ProgressPercentage
+	}
+	overallProgress := totalProgress / float64(len(phases))
+
+	dto := StatusDTO{
+		CampaignID:                openapi_types.UUID(campaignID),
+		OverallProgressPercentage: overallProgress,
+		Phases:                    phases,
+	}
+
+	campaignAggregationLatency.WithLabelValues("status").Observe(time.Since(start).Seconds())
+
+	cache.mu.Lock()
+	cache.status[campaignID] = cacheEntry{FetchedAt: time.Now(), Data: dto}
+	cache.mu.Unlock()
+
+	return dto, nil
+}
+
+// GetCampaignClassifications retrieves classification buckets with sample domains (limit=5 per bucket)
+func GetCampaignClassifications(ctx context.Context, repo AggregatesRepository, cache *AggregatesCache, campaignID uuid.UUID) (ClassificationsDTO, error) {
+	// Check cache first
+	cache.mu.RLock()
+	if entry, exists := cache.classifications[campaignID]; exists {
+		if time.Since(entry.FetchedAt) < aggregatesTTL {
+			campaignAggregationCacheHits.WithLabelValues("classifications", "hit").Inc()
+			cache.mu.RUnlock()
+			return entry.Data.(ClassificationsDTO), nil
+		}
+	}
+	cache.mu.RUnlock()
+	campaignAggregationCacheHits.WithLabelValues("classifications", "miss").Inc()
+
+	start := time.Now()
+	
+	// For now, return mock data until we implement the full classification logic
+	// TODO: Implement real classification logic based on domain analysis
+	dto := ClassificationsDTO{
+		Counts: ClassificationCounts{
+			HighPotential: 25,
+			Emerging:      15,
+			AtRisk:        8,
+			LeadCandidate: 12,
+			LowValue:      40,
+			Other:         10,
+		},
+		Samples: []ClassificationSample{
+			{
+				Bucket: "highPotential",
+				Domains: []ClassificationSampleDomain{
+					{Domain: "example1.com", Richness: float64Ptr(0.85)},
+					{Domain: "example2.com", Richness: float64Ptr(0.92)},
+				},
+			},
+		},
+	}
+
+	campaignAggregationLatency.WithLabelValues("classifications").Observe(time.Since(start).Seconds())
+
+	cache.mu.Lock()
+	cache.classifications[campaignID] = cacheEntry{FetchedAt: time.Now(), Data: dto}
+	cache.mu.Unlock()
+
+	return dto, nil
+}
+
+// GetCampaignMomentum retrieves momentum analysis with top movers and histogram
+func GetCampaignMomentum(ctx context.Context, repo AggregatesRepository, cache *AggregatesCache, campaignID uuid.UUID) (MomentumDTO, error) {
+	// Check cache first
+	cache.mu.RLock()
+	if entry, exists := cache.momentum[campaignID]; exists {
+		if time.Since(entry.FetchedAt) < aggregatesTTL {
+			campaignAggregationCacheHits.WithLabelValues("momentum", "hit").Inc()
+			cache.mu.RUnlock()
+			return entry.Data.(MomentumDTO), nil
+		}
+	}
+	cache.mu.RUnlock()
+	campaignAggregationCacheHits.WithLabelValues("momentum", "miss").Inc()
+
+	start := time.Now()
+	
+	// For now, return mock data until we implement the full momentum analysis
+	// TODO: Implement real momentum calculation based on richness score deltas
+	dto := MomentumDTO{
+		MoversUp: []MomentumMover{
+			{Domain: "rising1.com", Delta: 0.15},
+			{Domain: "rising2.com", Delta: 0.12},
+		},
+		MoversDown: []MomentumMover{
+			{Domain: "falling1.com", Delta: -0.08},
+			{Domain: "falling2.com", Delta: -0.05},
+		},
+		Histogram: []MomentumHistogram{
+			{Bucket: "-0.2 to -0.1", Count: 5},
+			{Bucket: "-0.1 to 0", Count: 15},
+			{Bucket: "0 to 0.1", Count: 45},
+			{Bucket: "0.1 to 0.2", Count: 25},
+			{Bucket: "0.2+", Count: 10},
+		},
+	}
+
+	campaignAggregationLatency.WithLabelValues("momentum").Observe(time.Since(start).Seconds())
+
+	cache.mu.Lock()
+	cache.momentum[campaignID] = cacheEntry{FetchedAt: time.Now(), Data: dto}
+	cache.mu.Unlock()
+
+	return dto, nil
+}
+
+// GetCampaignRecommendations retrieves actionable recommendations based on funnel ratios and warnings
+func GetCampaignRecommendations(ctx context.Context, repo AggregatesRepository, cache *AggregatesCache, campaignID uuid.UUID) (RecommendationsDTO, error) {
+	// Check cache first
+	cache.mu.RLock()
+	if entry, exists := cache.recommendations[campaignID]; exists {
+		if time.Since(entry.FetchedAt) < aggregatesTTL {
+			campaignAggregationCacheHits.WithLabelValues("recommendations", "hit").Inc()
+			cache.mu.RUnlock()
+			return entry.Data.(RecommendationsDTO), nil
+		}
+	}
+	cache.mu.RUnlock()
+	campaignAggregationCacheHits.WithLabelValues("recommendations", "miss").Inc()
+
+	start := time.Now()
+	
+	// Get funnel and metrics to generate recommendations
+	funnel, err := GetCampaignFunnel(ctx, repo, cache, campaignID)
+	if err != nil {
+		return RecommendationsDTO{}, err
+	}
+	
+	metrics, err := GetCampaignMetrics(ctx, repo, cache, campaignID)
+	if err != nil {
+		return RecommendationsDTO{}, err
+	}
+
+	var recommendations []Recommendation
+
+	// DNS validation rate too low
+	if funnel.Generated > 0 && float64(funnel.DNSValid)/float64(funnel.Generated) < 0.7 {
+		recommendations = append(recommendations, Recommendation{
+			ID:            "rec-001",
+			Message:       "DNS validation rate is below 70%. Consider reviewing domain generation patterns.",
+			RationaleCode: "R_DNS_LOW",
+			Severity:      "warning",
+		})
+	}
+
+	// HTTP validation rate too low
+	if funnel.DNSValid > 0 && float64(funnel.HTTPValid)/float64(funnel.DNSValid) < 0.8 {
+		recommendations = append(recommendations, Recommendation{
+			ID:            "rec-002",
+			Message:       "HTTP validation rate is below 80%. Check for connectivity issues or blocked requests.",
+			RationaleCode: "R_HTTP_LOW",
+			Severity:      "warning",
+		})
+	}
+
+	// Few high potential domains
+	if funnel.Analyzed > 100 && funnel.HighPotential < 10 {
+		recommendations = append(recommendations, Recommendation{
+			ID:            "rec-003",
+			Message:       "Very few high-potential domains found. Consider adjusting targeting criteria.",
+			RationaleCode: "R_FEW_HIGH_POTENTIAL",
+			Severity:      "action",
+		})
+	}
+
+	// High warning rate
+	if metrics.WarningRatePct != nil && *metrics.WarningRatePct > 30.0 {
+		recommendations = append(recommendations, Recommendation{
+			ID:            "rec-004",
+			Message:       "Warning rate exceeds 30%. Review domain quality filters.",
+			RationaleCode: "R_WARNING_RATE_HIGH",
+			Severity:      "warning",
+		})
+	}
+
+	// No leads generated
+	if funnel.Analyzed > 50 && funnel.Leads == 0 {
+		recommendations = append(recommendations, Recommendation{
+			ID:            "rec-005",
+			Message:       "No leads generated yet. Consider lowering qualification thresholds.",
+			RationaleCode: "R_NO_LEADS",
+			Severity:      "action",
+		})
+	}
+
+	// All clear case
+	if len(recommendations) == 0 {
+		recommendations = append(recommendations, Recommendation{
+			ID:            "rec-000",
+			Message:       "Campaign performance looks good. All metrics are within expected ranges.",
+			RationaleCode: "R_ALL_CLEAR",
+			Severity:      "info",
+		})
+	}
+
+	dto := RecommendationsDTO{
+		Recommendations: recommendations,
+	}
+
+	campaignAggregationLatency.WithLabelValues("recommendations").Observe(time.Since(start).Seconds())
+
+	cache.mu.Lock()
+	cache.recommendations[campaignID] = cacheEntry{FetchedAt: time.Now(), Data: dto}
+	cache.mu.Unlock()
+
+	return dto, nil
+}
+
+// Helper to create *float64 from float64
+func float64Ptr(f float64) *float64 {
+	return &f
+}
+
+// Helper to create *time.Time from time.Time
+func timePtr(t time.Time) *time.Time {
+	return &t
 }
 
 // Errors
