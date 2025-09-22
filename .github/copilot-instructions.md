@@ -105,7 +105,7 @@ npm run typecheck
 - Default test users are included in schema.sql:
   - Admin: admin@domainflow.com / AdminPassword123!
   - Developer: dev@domainflow.com / DevPassword123!  
-  - Test: test@example.com / password
+  - Test: test@example.com / password123
 
 **TypeScript Compilation Issues:**
 - Common pattern: Add null checks for array access

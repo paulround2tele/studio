@@ -1031,6 +1031,32 @@ CreateCampaignRequest:
               properties:
                 enabled: { type: boolean }
                 generateReports: { type: boolean }
+        patternConfig:
+          type: object
+          description: Domain generation pattern configuration snapshot
+          properties:
+            type: { type: string, enum: [constant, variable] }
+            constant: { type: string, description: Constant pattern string when type=constant }
+            variableLength: { type: integer, minimum: 1, maximum: 64, description: Desired variable length for generation }
+            charset: { type: string, description: Character set used for variable generation }
+            targetDomains:
+              type: array
+              items: { type: string }
+            tlds:
+              type: array
+              items: { type: string }
+            keywordSetIds:
+              type: array
+              items: { type: string, format: uuid }
+            personaIds:
+              type: array
+              items: { type: string, format: uuid }
+            crawlDepth: { type: integer, minimum: 0, maximum: 5 }
+            projectionEstimate:
+              type: object
+              description: Optional projection estimate payload for UI modeling
+              additionalProperties: true
+          required: [type]
   required: [name]
 UpdateCampaignRequest:
   type: object
@@ -1202,6 +1228,135 @@ PhaseProgressSummary:
     completedAt: { type: string, format: date-time, nullable: true }
     duration: { type: string, nullable: true, description: "Human readable duration" }
   required: [status, percentComplete, itemsProcessed, itemsTotal]
+
+# --- Unified Campaign UX Refactor Schemas ---
+CampaignPhasesStatusResponse:
+  type: object
+  description: Consolidated phase status list plus overall progress
+  properties:
+    campaignId: { type: string, format: uuid }
+    overallProgressPercentage: { type: number, format: float }
+    phases:
+      type: array
+      items:
+        type: object
+        properties:
+          phase: { type: string, enum: [generation, dns, http, analysis, leads] }
+          status: { type: string, enum: [not_started, ready, configured, in_progress, paused, completed, failed] }
+          progressPercentage: { type: number, format: float }
+          startedAt: { type: string, format: date-time, nullable: true }
+          completedAt: { type: string, format: date-time, nullable: true }
+        required: [phase, status, progressPercentage]
+  required: [campaignId, overallProgressPercentage, phases]
+
+CampaignFunnelResponse:
+  type: object
+  properties:
+    generated: { type: integer }
+    dnsValid: { type: integer }
+    httpValid: { type: integer }
+    keywordHits: { type: integer }
+    analyzed: { type: integer }
+    highPotential: { type: integer }
+    leads: { type: integer }
+  required: [generated, dnsValid, httpValid, keywordHits, analyzed, highPotential, leads]
+
+CampaignMetricsResponse:
+  type: object
+  description: KPI and warning component metrics for a campaign
+  properties:
+    highPotential: { type: integer }
+    leads: { type: integer }
+    keywordCoveragePct: { type: number, format: float }
+    avgRichness: { type: number, format: float }
+    warningRatePct: { type: number, format: float }
+    medianGain: { type: number, format: float }
+    stuffing: { type: integer }
+    repetition: { type: integer }
+    anchor: { type: integer }
+    totalAnalyzed: { type: integer }
+  required: [highPotential, leads, keywordCoveragePct, avgRichness, warningRatePct, medianGain, stuffing, repetition, anchor, totalAnalyzed]
+
+CampaignClassificationBucketSample:
+  type: object
+  properties:
+    bucket: { type: string, enum: [highPotential, emerging, atRisk, leadCandidate, lowValue, other] }
+    domains:
+      type: array
+      items:
+        type: object
+        properties:
+          domain: { type: string }
+          richness: { type: number, format: float, nullable: true }
+        required: [domain]
+  required: [bucket, domains]
+
+CampaignClassificationsResponse:
+  type: object
+  properties:
+    counts:
+      type: object
+      properties:
+        highPotential: { type: integer }
+        emerging: { type: integer }
+        atRisk: { type: integer }
+        leadCandidate: { type: integer }
+        lowValue: { type: integer }
+        other: { type: integer }
+      required: [highPotential, emerging, atRisk, leadCandidate, lowValue, other]
+    samples:
+      type: array
+      items: { $ref: '#/CampaignClassificationBucketSample' }
+  required: [counts]
+
+CampaignMomentumResponse:
+  type: object
+  properties:
+    moversUp:
+      type: array
+      items:
+        type: object
+        properties:
+          domain: { type: string }
+          delta: { type: number, format: float }
+        required: [domain, delta]
+    moversDown:
+      type: array
+      items:
+        type: object
+        properties:
+          domain: { type: string }
+          delta: { type: number, format: float }
+        required: [domain, delta]
+    histogram:
+      type: array
+      items: { type: integer }
+      minItems: 5
+      maxItems: 5
+  required: [moversUp, moversDown, histogram]
+
+RecommendationSeverity:
+  type: string
+  enum: [info, warn, action]
+
+CampaignRecommendation:
+  type: object
+  properties:
+    id: { type: string }
+    message: { type: string }
+    rationaleCode:
+      type: string
+      enum: [R_DNS_LOW, R_HTTP_LOW, R_FEW_HIGH_POTENTIAL, R_WARNING_RATE_HIGH, R_NO_LEADS, R_MOMENTUM_LOSS, R_MOMENTUM_SURGE, R_ALL_CLEAR]
+    severity: { $ref: '#/RecommendationSeverity' }
+  required: [id, message, rationaleCode, severity]
+
+CampaignRecommendationsResponse:
+  type: object
+  properties:
+    recommendations:
+      type: array
+      items: { $ref: '#/CampaignRecommendation' }
+  required: [recommendations]
 
 # Bulk operations
 BulkDNSValidationRequest:

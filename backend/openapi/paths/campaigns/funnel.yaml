@@ -1,0 +1,22 @@
+get:
+  tags: [campaigns]
+  summary: Get campaign funnel snapshot
+  operationId: campaigns_funnel_get
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+              - type: object
+                properties:
+                  data: { $ref: '../../components/schemas/all.yaml#/CampaignFunnelResponse' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

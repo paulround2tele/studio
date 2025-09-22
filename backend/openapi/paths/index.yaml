@@ -176,6 +176,21 @@
   $ref: "./campaigns/phase-configs.yaml"
 "/campaigns/{campaignId}/phases/{phase}/stop":
   $ref: "./campaigns/phase-stop.yaml"
+
+"/campaigns/{campaignId}/status":
+  $ref: "./campaigns/status.yaml"
+"/campaigns/{campaignId}/funnel":
+  $ref: "./campaigns/funnel.yaml"
+"/campaigns/{campaignId}/metrics":
+  $ref: "./campaigns/metrics.yaml"
+"/campaigns/{campaignId}/classifications":
+  $ref: "./campaigns/classifications.yaml"
+"/campaigns/{campaignId}/momentum":
+  $ref: "./campaigns/momentum.yaml"
+"/campaigns/{campaignId}/insights/recommendations":
+  $ref: "./campaigns/recommendations.yaml"
+"/campaigns/{campaignId}/duplicate":
+  $ref: "./campaigns/duplicate.yaml"
 "/campaigns/bulk/operations":
   $ref: "./campaigns/bulk.yaml"
 "/campaigns/bulk/operations/{operationId}/status":

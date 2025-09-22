@@ -3752,6 +3752,219 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/status:
+    get:
+      tags:
+        - campaigns
+      summary: Get consolidated campaign phase statuses
+      operationId: campaigns_status_get
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CampaignPhasesStatusResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/funnel:
+    get:
+      tags:
+        - campaigns
+      summary: Get campaign funnel snapshot
+      operationId: campaigns_funnel_get
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CampaignFunnelResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/metrics:
+    get:
+      tags:
+        - campaigns
+      summary: Get campaign KPI & warning metrics
+      operationId: campaigns_metrics_get
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CampaignMetricsResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/classifications:
+    get:
+      tags:
+        - campaigns
+      summary: Get campaign classification buckets
+      operationId: campaigns_classifications_get
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 5
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CampaignClassificationsResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/momentum:
+    get:
+      tags:
+        - campaigns
+      summary: Get campaign momentum & movers
+      operationId: campaigns_momentum_get
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CampaignMomentumResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/insights/recommendations:
+    get:
+      tags:
+        - campaigns
+      summary: Get campaign recommendations
+      operationId: campaigns_recommendations_get
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CampaignRecommendationsResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /campaigns/{campaignId}/duplicate:
+    post:
+      tags:
+        - campaigns
+      summary: Duplicate campaign
+      operationId: campaigns_duplicate_post
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessEnvelope'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/CampaignResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /campaigns/bulk/operations:
     get:
       tags:
@@ -5610,6 +5823,54 @@ components:
                       type: boolean
                     generateReports:
                       type: boolean
+            patternConfig:
+              type: object
+              description: Domain generation pattern configuration snapshot
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - constant
+                    - variable
+                constant:
+                  type: string
+                  description: Constant pattern string when type=constant
+                variableLength:
+                  type: integer
+                  minimum: 1
+                  maximum: 64
+                  description: Desired variable length for generation
+                charset:
+                  type: string
+                  description: Character set used for variable generation
+                targetDomains:
+                  type: array
+                  items:
+                    type: string
+                tlds:
+                  type: array
+                  items:
+                    type: string
+                keywordSetIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                personaIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                crawlDepth:
+                  type: integer
+                  minimum: 0
+                  maximum: 5
+                projectionEstimate:
+                  type: object
+                  description: Optional projection estimate payload for UI modeling
+                  additionalProperties: true
+              required:
+                - type
       required:
         - name
     UpdateCampaignRequest:
@@ -6284,6 +6545,260 @@ components:
           description: Keyword sets for extraction phase
       required:
         - configuration
+    CampaignPhasesStatusResponse:
+      type: object
+      description: Consolidated phase status list plus overall progress
+      properties:
+        campaignId:
+          type: string
+          format: uuid
+        overallProgressPercentage:
+          type: number
+          format: float
+        phases:
+          type: array
+          items:
+            type: object
+            properties:
+              phase:
+                type: string
+                enum:
+                  - generation
+                  - dns
+                  - http
+                  - analysis
+                  - leads
+              status:
+                type: string
+                enum:
+                  - not_started
+                  - ready
+                  - configured
+                  - in_progress
+                  - paused
+                  - completed
+                  - failed
+              progressPercentage:
+                type: number
+                format: float
+              startedAt:
+                type: string
+                format: date-time
+                nullable: true
+              completedAt:
+                type: string
+                format: date-time
+                nullable: true
+            required:
+              - phase
+              - status
+              - progressPercentage
+      required:
+        - campaignId
+        - overallProgressPercentage
+        - phases
+    CampaignFunnelResponse:
+      type: object
+      properties:
+        generated:
+          type: integer
+        dnsValid:
+          type: integer
+        httpValid:
+          type: integer
+        keywordHits:
+          type: integer
+        analyzed:
+          type: integer
+        highPotential:
+          type: integer
+        leads:
+          type: integer
+      required:
+        - generated
+        - dnsValid
+        - httpValid
+        - keywordHits
+        - analyzed
+        - highPotential
+        - leads
+    CampaignMetricsResponse:
+      type: object
+      description: KPI and warning component metrics for a campaign
+      properties:
+        highPotential:
+          type: integer
+        leads:
+          type: integer
+        keywordCoveragePct:
+          type: number
+          format: float
+        avgRichness:
+          type: number
+          format: float
+        warningRatePct:
+          type: number
+          format: float
+        medianGain:
+          type: number
+          format: float
+        stuffing:
+          type: integer
+        repetition:
+          type: integer
+        anchor:
+          type: integer
+        totalAnalyzed:
+          type: integer
+      required:
+        - highPotential
+        - leads
+        - keywordCoveragePct
+        - avgRichness
+        - warningRatePct
+        - medianGain
+        - stuffing
+        - repetition
+        - anchor
+        - totalAnalyzed
+    CampaignClassificationBucketSample:
+      type: object
+      properties:
+        bucket:
+          type: string
+          enum:
+            - highPotential
+            - emerging
+            - atRisk
+            - leadCandidate
+            - lowValue
+            - other
+        domains:
+          type: array
+          items:
+            type: object
+            properties:
+              domain:
+                type: string
+              richness:
+                type: number
+                format: float
+                nullable: true
+            required:
+              - domain
+      required:
+        - bucket
+        - domains
+    CampaignClassificationsResponse:
+      type: object
+      properties:
+        counts:
+          type: object
+          properties:
+            highPotential:
+              type: integer
+            emerging:
+              type: integer
+            atRisk:
+              type: integer
+            leadCandidate:
+              type: integer
+            lowValue:
+              type: integer
+            other:
+              type: integer
+          required:
+            - highPotential
+            - emerging
+            - atRisk
+            - leadCandidate
+            - lowValue
+            - other
+        samples:
+          type: array
+          items:
+            $ref: '#/components/schemas/CampaignClassificationBucketSample'
+      required:
+        - counts
+    CampaignMomentumResponse:
+      type: object
+      properties:
+        moversUp:
+          type: array
+          items:
+            type: object
+            properties:
+              domain:
+                type: string
+              delta:
+                type: number
+                format: float
+            required:
+              - domain
+              - delta
+        moversDown:
+          type: array
+          items:
+            type: object
+            properties:
+              domain:
+                type: string
+              delta:
+                type: number
+                format: float
+            required:
+              - domain
+              - delta
+        histogram:
+          type: array
+          items:
+            type: integer
+          minItems: 5
+          maxItems: 5
+      required:
+        - moversUp
+        - moversDown
+        - histogram
+    RecommendationSeverity:
+      type: string
+      enum:
+        - info
+        - warn
+        - action
+    CampaignRecommendation:
+      type: object
+      properties:
+        id:
+          type: string
+        message:
+          type: string
+        rationaleCode:
+          type: string
+          enum:
+            - R_DNS_LOW
+            - R_HTTP_LOW
+            - R_FEW_HIGH_POTENTIAL
+            - R_WARNING_RATE_HIGH
+            - R_NO_LEADS
+            - R_MOMENTUM_LOSS
+            - R_MOMENTUM_SURGE
+            - R_ALL_CLEAR
+        severity:
+          $ref: '#/components/schemas/RecommendationSeverity'
+      required:
+        - id
+        - message
+        - rationaleCode
+        - severity
+    CampaignRecommendationsResponse:
+      type: object
+      properties:
+        recommendations:
+          type: array
+          items:
+            $ref: '#/components/schemas/CampaignRecommendation'
+      required:
+        - recommendations
     BulkDomainGenerationRequest:
       type: object
       properties:

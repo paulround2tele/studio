@@ -41,6 +41,11 @@ var (
 	domainsListServerSortRequests *prometheus.CounterVec
 )
 
+// aggregatesRepo implements domainservices.AggregatesRepository
+type aggregatesRepo struct{ db *sql.DB }
+
+func (a aggregatesRepo) DB() *sql.DB { return a.db }
+
 func ensureDomainsListMetrics() {
 	domainsListMetricsOnce.Do(func() {
 		domainsListServerSortRequests = prometheus.NewCounterVec(prometheus.CounterOpts{
@@ -128,6 +133,101 @@ func (h *strictHandlers) CampaignsEnrichedGet(ctx context.Context, r gen.Campaig
 		enriched.PhaseExecutions = &execs
 	}
 	return gen.CampaignsEnrichedGet200JSONResponse{Data: &enriched, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+}
+
+// CampaignsFunnelGet implements GET /campaigns/{campaignId}/funnel
+func (h *strictHandlers) CampaignsFunnelGet(ctx context.Context, r gen.CampaignsFunnelGetRequestObject) (gen.CampaignsFunnelGetResponseObject, error) {
+	if h.deps == nil || h.deps.DB == nil || h.deps.AggregatesCache == nil {
+		return gen.CampaignsFunnelGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Optional campaign existence check (avoid unnecessary aggregation for 404)
+	if h.deps.Stores.Campaign != nil {
+		if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
+			if err == store.ErrNotFound {
+				return gen.CampaignsFunnelGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			}
+			return gen.CampaignsFunnelGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+	}
+	repo := aggregatesRepo{db: h.deps.DB.DB}
+	dto, err := domainservices.GetCampaignFunnel(ctx, repo, h.deps.AggregatesCache, uuid.UUID(r.CampaignId))
+	if err != nil {
+		return gen.CampaignsFunnelGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "aggregation failure", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Map DTO to typed response struct for schema compliance
+	data := gen.CampaignFunnelResponse{
+		Generated:     int(dto.Generated),
+		DnsValid:      int(dto.DNSValid),
+		HttpValid:     int(dto.HTTPValid),
+		KeywordHits:   int(dto.KeywordHits),
+		Analyzed:      int(dto.Analyzed),
+		HighPotential: int(dto.HighPotential),
+		Leads:         int(dto.Leads),
+	}
+	return gen.CampaignsFunnelGet200JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true), Data: &data}, nil
+}
+
+// CampaignsClassificationsGet implements GET /campaigns/{campaignId}/classifications (stub)
+func (h *strictHandlers) CampaignsClassificationsGet(ctx context.Context, r gen.CampaignsClassificationsGetRequestObject) (gen.CampaignsClassificationsGetResponseObject, error) {
+	// Temporary stub: return 404 until implemented; prevents interface compile error
+	return gen.CampaignsClassificationsGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "classifications not implemented", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+}
+
+// CampaignsDuplicatePost implements POST /campaigns/{campaignId}/duplicate (stub)
+func (h *strictHandlers) CampaignsDuplicatePost(ctx context.Context, r gen.CampaignsDuplicatePostRequestObject) (gen.CampaignsDuplicatePostResponseObject, error) {
+	return gen.CampaignsDuplicatePost500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "duplicate not implemented", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+}
+
+// CampaignsMomentumGet implements GET /campaigns/{campaignId}/momentum (stub)
+func (h *strictHandlers) CampaignsMomentumGet(ctx context.Context, r gen.CampaignsMomentumGetRequestObject) (gen.CampaignsMomentumGetResponseObject, error) {
+	return gen.CampaignsMomentumGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "momentum not implemented", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+}
+
+// CampaignsRecommendationsGet implements GET /campaigns/{campaignId}/insights/recommendations (stub)
+func (h *strictHandlers) CampaignsRecommendationsGet(ctx context.Context, r gen.CampaignsRecommendationsGetRequestObject) (gen.CampaignsRecommendationsGetResponseObject, error) {
+	return gen.CampaignsRecommendationsGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "recommendations not implemented", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+}
+
+// CampaignsStatusGet implements GET /campaigns/{campaignId}/status (stub)
+func (h *strictHandlers) CampaignsStatusGet(ctx context.Context, r gen.CampaignsStatusGetRequestObject) (gen.CampaignsStatusGetResponseObject, error) {
+	return gen.CampaignsStatusGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "status not implemented", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+}
+
+// CampaignsMetricsGet implements GET /campaigns/{campaignId}/metrics
+func (h *strictHandlers) CampaignsMetricsGet(ctx context.Context, r gen.CampaignsMetricsGetRequestObject) (gen.CampaignsMetricsGetResponseObject, error) {
+	if h.deps == nil || h.deps.DB == nil || h.deps.AggregatesCache == nil {
+		return gen.CampaignsMetricsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	if h.deps.Stores.Campaign != nil {
+		if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
+			return gen.CampaignsMetricsGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		}
+	}
+	repo := aggregatesRepo{db: h.deps.DB.DB}
+	dto, err := domainservices.GetCampaignMetrics(ctx, repo, h.deps.AggregatesCache, uuid.UUID(r.CampaignId))
+	if err != nil {
+		return gen.CampaignsMetricsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "aggregation failure", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// Helper to safely deref *float64 to float32
+	f32 := func(p *float64) float32 {
+		if p == nil {
+			return 0
+		}
+		return float32(*p)
+	}
+	data := gen.CampaignMetricsResponse{
+		HighPotential:      int(dto.HighPotential),
+		Leads:              int(dto.Leads),
+		KeywordCoveragePct: f32(dto.KeywordCoveragePct),
+		AvgRichness:        f32(dto.AvgRichness),
+		WarningRatePct:     f32(dto.WarningRatePct),
+		MedianGain:         f32(dto.MedianGain),
+		Stuffing:           int(dto.StuffingCount),
+		Repetition:         int(dto.RepetitionCount),
+		Anchor:             int(dto.AnchorCount),
+		TotalAnalyzed:      int(dto.TotalAnalyzed),
+	}
+	return gen.CampaignsMetricsGet200JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true), Data: &data}, nil
 }
 
 // mapToDomainGenerationConfig converts a generic map into the typed DomainGenerationConfig expected by the domain generation service
@@ -1093,13 +1193,13 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		}
 		if r.Params.Sort != nil {
 			switch *r.Params.Sort {
-			case gen.ScoreDesc:
+			case "score_desc":
 				sortBy = "domain_score"
 				sortOrder = "DESC"
-			case gen.ScoreAsc:
+			case "score_asc":
 				sortBy = "domain_score"
 				sortOrder = "ASC"
-			case gen.LastHttpFetchedAtDesc:
+			case "last_http_fetched_at_desc":
 				sortBy = "last_http_fetched_at"
 				sortOrder = "DESC"
 			}
@@ -1544,25 +1644,64 @@ func mapRawToDomainAnalysisFeatures(raw map[string]any) *gen.DomainAnalysisFeatu
 		}
 		sigMap = &tmp
 	}
-	keywordsStruct := &gen.DomainAnalysisFeaturesKeywords{
-		UniqueCount:        toInt64(kw["unique_count"]),
-		HitsTotal:          toInt64(kw["hits_total"]),
-		WeightSum:          toFloat32(kw["weight_sum"]),
-		Top3:               top3,
-		SignalDistribution: sigMap,
+	keywordsStruct := &struct {
+		HitsTotal          *int                `json:"hits_total"`
+		SignalDistribution *map[string]float32 `json:"signal_distribution,omitempty"`
+		Top3               *[]string           `json:"top3,omitempty"`
+		UniqueCount        *int                `json:"unique_count"`
+		WeightSum          *float32            `json:"weight_sum"`
+	}{
+		UniqueCount: func() *int {
+			if v := toInt64(kw["unique_count"]); v != nil {
+				t := int(*v)
+				return &t
+			}
+			return nil
+		}(),
+		HitsTotal: func() *int {
+			if v := toInt64(kw["hits_total"]); v != nil {
+				t := int(*v)
+				return &t
+			}
+			return nil
+		}(),
+		WeightSum: toFloat32(kw["weight_sum"]),
+		Top3:      top3,
+		SignalDistribution: func() *map[string]float32 {
+			if sigMap == nil {
+				return nil
+			}
+			tmp := make(map[string]float32, len(*sigMap))
+			for k, v := range *sigMap {
+				tmp[k] = float32(v)
+			}
+			return &tmp
+		}(),
 	}
-	richnessStruct := &gen.DomainAnalysisFeaturesRichness{
+	richnessStruct := &struct {
+		AnchorShare              *float32 `json:"anchor_share"`
+		AppliedBonus             *float32 `json:"applied_bonus"`
+		AppliedDeductionsTotal   *float32 `json:"applied_deductions_total"`
+		DiversityEffectiveUnique *float32 `json:"diversity_effective_unique"`
+		DiversityNorm            *float32 `json:"diversity_norm"`
+		EnrichmentNorm           *float32 `json:"enrichment_norm"`
+		ProminenceNorm           *float32 `json:"prominence_norm"`
+		RepetitionIndex          *float32 `json:"repetition_index"`
+		Score                    *float32 `json:"score"`
+		StuffingPenalty          *float32 `json:"stuffing_penalty"`
+		Version                  *int     `json:"version"`
+	}{
 		Score: toFloat32(rich["score"]),
-		Version: func() *int32 {
+		Version: func() *int {
 			if v := rich["version"]; v != nil {
 				switch x := v.(type) {
 				case int:
-					t := int32(x)
-					return &t
-				case int32:
 					return &x
+				case int32:
+					t := int(x)
+					return &t
 				case float64:
-					t := int32(x)
+					t := int(x)
 					return &t
 				}
 			}
@@ -1578,7 +1717,9 @@ func mapRawToDomainAnalysisFeatures(raw map[string]any) *gen.DomainAnalysisFeatu
 		RepetitionIndex:          toFloat32(rich["repetition_index"]),
 		AnchorShare:              toFloat32(rich["anchor_share"]),
 	}
-	microcrawlStruct := &gen.DomainAnalysisFeaturesMicrocrawl{GainRatio: toFloat32(mc["gain_ratio"])}
+	microcrawlStruct := &struct {
+		GainRatio *float32 `json:"gain_ratio"`
+	}{GainRatio: toFloat32(mc["gain_ratio"])}
 	return &gen.DomainAnalysisFeatures{Keywords: keywordsStruct, Richness: richnessStruct, Microcrawl: microcrawlStruct}
 }
 

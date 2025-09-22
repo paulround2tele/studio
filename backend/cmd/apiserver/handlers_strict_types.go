@@ -17,6 +17,9 @@ type strictHandlers struct {
 	deps *AppDeps
 }
 
+// Ensure strictHandlers implements new interface methods at compile time (when codegen updates include them)
+// var _ gen.StrictServerInterface = (*strictHandlers)(nil)
+
 // CampaignsDomainScoreBreakdown implements GET /campaigns/{campaignId}/domains/{domain}/score-breakdown
 // It delegates to the analysis service ScoreBreakdown method and returns component scores.
 func (h *strictHandlers) CampaignsDomainScoreBreakdown(ctx context.Context, r gen.CampaignsDomainScoreBreakdownRequestObject) (gen.CampaignsDomainScoreBreakdownResponseObject, error) {

@@ -1,0 +1,22 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: studio-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: domainflow
+      POSTGRES_PASSWORD: pNpTHxEWr2SmY270p1IjGn3dP
+      POSTGRES_DB: domainflow_production
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U domainflow -d domainflow_production"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/schema.sanitized.sql:/docker-entrypoint-initdb.d/00-schema.sql:ro
+volumes:
+  pgdata:

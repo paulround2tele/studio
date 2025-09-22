@@ -56,6 +56,8 @@ type AppDeps struct {
 	Session *services.SessionService
 	// Logger available to handlers (simple structured logger)
 	Logger HandlerLogger
+	// Aggregations cache (funnel & metrics)
+	AggregatesCache *domainservices.AggregatesCache
 }
 
 // HandlerLogger defines the minimal logging surface required at the HTTP handler layer.
@@ -233,6 +235,9 @@ func initAppDependencies() (*AppDeps, error) {
 			}()
 		}
 	}
+
+	// Initialize aggregates cache (always, even if DB nil; handlers will guard)
+	deps.AggregatesCache = domainservices.NewAggregatesCache()
 
 	// Initialize session service (uses DB if available; defaults to relaxed config)
 	sessSvc, err := services.NewSessionService(deps.DB, nil, deps.Stores.AuditLog)
