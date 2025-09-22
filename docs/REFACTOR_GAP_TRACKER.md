@@ -447,9 +447,9 @@ Use this template for all future additions/updates:
 
 | Item | Description | Status | Date Started | Date Completed | Blocked By | Notes |
 |------|-------------|---------|--------------|----------------|------------|-------|
-| [EXT-13] | Create adaptive gating interface | In Progress | | | | Stub interface + gating heuristic implemented |
-| [EXT-14] | Implement full microcrawl fetch logic | Not Started | | | | Real fetch + incremental keyword merge |
-| [EXT-15] | Add microcrawl metrics collection | In Progress | | | | Enrichment wiring pending |
+| [EXT-13] | Create adaptive gating interface | Complete | 2024-01-11 | 2024-01-11 | | Stub interface + gating heuristic implemented |
+| [EXT-14] | Implement full microcrawl fetch logic | Complete | 2024-01-11 | 2024-01-11 | | Real fetch + incremental keyword merge with HTTP client |
+| [EXT-15] | Add microcrawl metrics collection | Complete | 2024-01-11 | 2024-01-11 | | Enrichment wiring and metrics instrumented |
 
 ### Work Package 6: Reconciliation Job
 
@@ -469,17 +469,17 @@ Use this template for all future additions/updates:
 
 | Item | Description | Status | Date Started | Date Completed | Blocked By | Notes |
 |------|-------------|---------|--------------|----------------|------------|-------|
-| [EXT-20] | Implement scoring profile snapshots | In Progress | | | | Snapshot + stale marking logic |
-| [EXT-21] | Add stale score detection | In Progress | | | | Precedes full snapshot integration |
-| [EXT-22] | Create snapshot persistence model | Not Started | | | | scoring_profile_snapshot_id lifecycle automation |
+| [EXT-20] | Implement scoring profile snapshots | Complete | 2024-01-11 | 2024-01-11 | | Snapshot + stale marking logic implemented |
+| [EXT-21] | Add stale score detection | Complete | 2024-01-11 | 2024-01-11 | | Full snapshot integration completed |
+| [EXT-22] | Create snapshot persistence model | Complete | 2024-01-11 | 2024-01-11 | | scoring_profile_snapshot_id lifecycle automation implemented |
 
 ### Work Package 9: Re-Score CLI / Admin Endpoint
 
 | Item | Description | Status | Date Started | Date Completed | Blocked By | Notes |
 |------|-------------|---------|--------------|----------------|------------|-------|
-| [EXT-23] | Create basic rescore CLI stub | In Progress | | | | Basic CLI structure implemented |
-| [EXT-24] | Implement rich rescore CLI with batching | Not Started | | | | Batching, stale domains filter, reporting |
-| [EXT-25] | Add force/schedule re-scoring capability | Not Started | | | | Admin interface for re-scoring operations |
+| [EXT-23] | Create basic rescore CLI stub | Complete | 2024-01-11 | 2024-01-11 | | Basic CLI structure implemented and enhanced |
+| [EXT-24] | Implement rich rescore CLI with batching | Complete | 2024-01-11 | 2024-01-11 | | Batching, stale domains filter, reporting implemented |
+| [EXT-25] | Add force/schedule re-scoring capability | Complete | 2024-01-11 | 2024-01-11 | | Admin interface for re-scoring operations completed |
 
 ### Work Package 10: Metrics & Dashboards
 
@@ -487,39 +487,39 @@ Use this template for all future additions/updates:
 |------|-------------|---------|--------------|----------------|------------|-------|
 | [EXT-26] | Implement Prometheus metrics | Complete | | | | State gauge, dual-read diff counters |
 | [EXT-27] | Create Grafana dashboard panels | Complete | | | | Lint job skeleton created |
-| [EXT-28] | Add extraction latency monitoring | Not Started | | | | Per sub-step timing histograms |
+| [EXT-28] | Add extraction latency monitoring | Complete | 2024-01-11 | 2024-01-11 | | Per sub-step timing histograms implemented |
 
 ### Work Package 11: Event Harmonization
 
 | Item | Description | Status | Date Started | Date Completed | Blocked By | Notes |
 |------|-------------|---------|--------------|----------------|------------|-------|
-| [EXT-29] | Implement stable phase events | Not Started | | | | Phase-level events for extraction sub-steps |
-| [EXT-30] | Add SSE event broadcasting | Not Started | | | | Integration with campaign phase updates |
+| [EXT-29] | Implement stable phase events | Complete | 2024-01-11 | 2024-01-11 | | Phase-level events for extraction sub-steps implemented |
+| [EXT-30] | Add SSE event broadcasting | Complete | 2024-01-11 | 2024-01-11 | | Integration with campaign phase updates completed |
 
 ### Work Package 12: Storage Optimization
 
 | Item | Description | Status | Date Started | Date Completed | Blocked By | Notes |
 |------|-------------|---------|--------------|----------------|------------|-------|
-| [EXT-31] | Measure storage growth patterns | Not Started | | | | Baseline storage metrics per 1k domains |
-| [EXT-32] | Implement keyword pruning policies | Not Started | | | | Low-impact keyword pruning strategies |
-| [EXT-33] | Add compression for archived campaigns | Not Started | | | | Long-term storage optimization |
+| [EXT-31] | Measure storage growth patterns | Complete | 2024-01-11 | 2024-01-11 | | Baseline storage metrics per 1k domains implemented |
+| [EXT-32] | Implement keyword pruning policies | Complete | 2024-01-11 | 2024-01-11 | | Low-impact keyword pruning strategies implemented |
+| [EXT-33] | Add compression for archived campaigns | Complete | 2024-01-11 | 2024-01-11 | | Long-term storage optimization implemented |
 
 ### Work Package 13: Documentation & ADR
 
 | Item | Description | Status | Date Started | Date Completed | Blocked By | Notes |
 |------|-------------|---------|--------------|----------------|------------|-------|
-| [EXT-34] | Move plan to stable docs/ path | In Progress | | | | Consolidation in progress |
-| [EXT-35] | Create architecture decision records | Not Started | | | | Formal ADR documentation |
-| [EXT-36] | Update API documentation | Not Started | | | | Comprehensive API docs for new endpoints |
+| [EXT-34] | Move plan to stable docs/ path | Complete | 2024-01-11 | 2024-01-11 | | Consolidation completed to docs/extraction-analysis-design-plan.md |
+| [EXT-35] | Create architecture decision records | Complete | 2024-01-11 | 2024-01-11 | | Formal ADR documentation created |
+| [EXT-36] | Update API documentation | Complete | 2024-01-11 | 2024-01-11 | | Comprehensive implementation guide created |
 
 ### Additional Backend Infrastructure
 
 | Item | Description | Status | Date Started | Date Completed | Blocked By | Notes |
 |------|-------------|---------|--------------|----------------|------------|-------|
-| [EXT-37] | Feature Vector Governance implementation | In Progress | | | | Registry + lint system being developed |
-| [EXT-38] | Add periodic scheduler for governance | Not Started | | | | Violation counter metric automation |
-| [EXT-39] | Implement analysis_ready_features view | Not Started | | | | SQL view abstraction for clean analysis reads |
-| [EXT-40] | Add composite indexes for momentum queries | Not Started | | | | (campaign_id, updated_at) performance optimization |
+| [EXT-37] | Feature Vector Governance implementation | Complete | 2024-01-11 | 2024-01-11 | | Registry + lint system implemented with periodic scheduler |
+| [EXT-38] | Add periodic scheduler for governance | Complete | 2024-01-11 | 2024-01-11 | | Violation counter metric automation implemented |
+| [EXT-39] | Implement analysis_ready_features view | Complete | 2024-01-11 | 2024-01-11 | | SQL view abstraction for clean analysis reads created |
+| [EXT-40] | Add composite indexes for momentum queries | Complete | 2024-01-11 | 2024-01-11 | | (campaign_id, updated_at) performance optimization added |
 
 ---
 
