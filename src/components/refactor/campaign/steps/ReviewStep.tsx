@@ -44,6 +44,12 @@ export function ReviewStep({ goal, pattern, targeting }: ReviewStepProps) {
                 <p className="text-sm">{goal.description}</p>
               </div>
             )}
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Execution Mode</p>
+              <Badge variant={goal.executionMode === 'auto' ? 'default' : 'secondary'}>
+                {goal.executionMode === 'auto' ? 'Full Auto' : 'Manual (Step-by-Step)'}
+              </Badge>
+            </div>
           </CardContent>
         </Card>
 
@@ -142,9 +148,18 @@ export function ReviewStep({ goal, pattern, targeting }: ReviewStepProps) {
         <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Next Steps</h4>
         <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
           <li>• Campaign will be created with basic configuration</li>
-          <li>• Configure domain generation phases on the dashboard</li>
-          <li>• Set up DNS validation, HTTP validation, and analysis</li>
-          <li>• Monitor campaign progress and results</li>
+          {goal.executionMode === 'auto' ? (
+            <>
+              <li>• Pipeline will run automatically when phases are configured</li>
+              <li>• Monitor real-time progress on the dashboard</li>
+            </>
+          ) : (
+            <>
+              <li>• Configure and manually start each phase on the dashboard</li>
+              <li>• Control when to proceed to validation and analysis phases</li>
+            </>
+          )}
+          <li>• View campaign results and analytics</li>
         </ul>
       </div>
     </div>
