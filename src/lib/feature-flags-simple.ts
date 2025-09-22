@@ -201,12 +201,3 @@ export function useAdaptiveVisualization(): boolean {
 export function useExtendedI18n(): boolean {
   return isFeatureEnabled(PHASE11_FLAGS.ENABLE_I18N_EXTENDED, false);
 }
-
-/**
- * Check if unified campaign experience is enabled (UX Refactor)
- * Master flag controlling entire refactored experience
- * Default: true (unified experience is now the default)
- */
-export function useUnifiedCampaignExperience(): boolean {
-  return isFeatureEnabled(UX_REFACTOR_FLAGS.ENABLE_UNIFIED_CAMPAIGN_EXPERIENCE, true);
-}

@@ -29,10 +29,14 @@ export interface CampaignPhaseExecution {
   error_message?: string;
 }
 
+// Execution mode enum - matches backend CampaignModeEnum
+export type ExecutionMode = 'manual' | 'auto';
+
 // Wizard step data interfaces
 export interface WizardGoalStep {
   campaignName: string;
   description?: string;
+  executionMode: ExecutionMode;
 }
 
 export interface WizardPatternStep {

@@ -10,8 +10,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { useCreateCampaignMutation } from '@/store/api/campaignApi';
+import { useCreateCampaignMutation, useUpdateCampaignModeMutation } from '@/store/api/campaignApi';
 import { formToApiRequest } from '@/components/campaigns/types/SimpleCampaignFormTypes';
+import { CampaignModeEnum } from '@/lib/api-client';
 
 import GoalStep from './steps/GoalStep';
 import PatternStep from './steps/PatternStep';
@@ -40,6 +41,7 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [createCampaign, { isLoading: isCreating }] = useCreateCampaignMutation();
+  const [updateCampaignMode, { isLoading: isUpdatingMode }] = useUpdateCampaignModeMutation();
 
   const [wizardState, setWizardState] = useState<CampaignWizardState>({
     currentStep: 0,
@@ -59,7 +61,7 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
   const validateStep = (stepIndex: number): boolean => {
     switch (stepIndex) {
       case 0: // Goal
-        return !!(wizardState.goal.campaignName?.trim());
+        return !!(wizardState.goal.campaignName?.trim() && wizardState.goal.executionMode);
       case 1: // Pattern
         return !!(wizardState.pattern.basePattern?.trim() && wizardState.pattern.maxDomains && wizardState.pattern.maxDomains > 0);
       case 2: // Targeting
@@ -118,17 +120,34 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
   const handleSubmit = async () => {
     try {
       // Map wizard state to API request format
-      // TODO: Add advanced fields mapping in Phase 2
       const apiRequest = formToApiRequest({
         name: wizardState.goal.campaignName || '',
         description: wizardState.goal.description || ''
       });
 
+      // Create the campaign
       const result = await createCampaign(apiRequest).unwrap();
-      
+      const campaignId = result.id;
+
+      // Set the execution mode
+      const backendMode = wizardState.goal.executionMode === 'auto' 
+        ? CampaignModeEnum.full_sequence 
+        : CampaignModeEnum.step_by_step;
+
+      await updateCampaignMode({
+        campaignId,
+        mode: backendMode
+      }).unwrap();
+
+      // For auto mode, we could trigger auto-start here
+      // TODO: Implement auto-start pipeline logic in future PR
+      if (wizardState.goal.executionMode === 'auto') {
+        console.debug('Auto mode selected - pipeline will auto-start when configured');
+      }
+
       toast({
         title: "Campaign Created Successfully",
-        description: `Campaign "${wizardState.goal.campaignName}" has been created. Configure domain generation next.`,
+        description: `Campaign "${wizardState.goal.campaignName}" has been created in ${wizardState.goal.executionMode} mode.`,
       });
 
       // Redirect to campaign detail page
@@ -273,15 +292,15 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
           <Button
             variant="ghost"
             onClick={() => router.push('/campaigns')}
-            disabled={isCreating}
+            disabled={isCreating || isUpdatingMode}
           >
             Cancel
           </Button>
           <Button
             onClick={handleNext}
-            disabled={!canProceed || isCreating}
+            disabled={!canProceed || isCreating || isUpdatingMode}
           >
-            {isCreating ? (
+            {isCreating || isUpdatingMode ? (
               'Creating...'
             ) : isLastStep ? (
               'Create Campaign'
