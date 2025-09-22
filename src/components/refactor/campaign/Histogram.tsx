@@ -53,7 +53,7 @@ const colorSchemes = {
     neutral: 'bg-purple-400',
     lightPositive: 'bg-purple-200 dark:bg-purple-900/40',
     lightNegative: 'bg-purple-100 dark:bg-purple-900/20',
-    lightNeutral: 'bg-purple-150 dark:bg-purple-900/30'
+    lightNeutral: 'bg-purple-100 dark:bg-purple-900/30'
   }
 };
 
