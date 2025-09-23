@@ -269,6 +269,9 @@ class TaskSchedulerService {
     }
 
     const task = availableTasks[0];
+    if (!task) {
+      return; // No task available
+    }
     
     // Check for timeout
     const now = Date.now();

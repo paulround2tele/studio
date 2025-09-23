@@ -136,7 +136,8 @@ class SeedService {
     this.scenarioSeeds.delete(scenarioId);
     
     // Clean up related RNG states
-    for (const [seed, state] of this.rngStates) {
+    const rngEntries = Array.from(this.rngStates.entries());
+    for (const [seed] of rngEntries) {
       if (seed.includes(scenarioId)) {
         this.rngStates.delete(seed);
       }

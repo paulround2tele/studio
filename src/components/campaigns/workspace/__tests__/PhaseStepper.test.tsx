@@ -10,7 +10,7 @@ describe('PhaseStepper', () => {
 
   it('renders steps and handles selection', () => {
     const handler = jest.fn();
-    render(<PhaseStepper phases={phases} activePhase={'discovery'} onSelect={handler} />);
+    render(<PhaseStepper phases={phases} activePhase={'discovery'} onPhaseSelect={handler} />);
     expect(screen.getByText(/Discovery/i)).toBeInTheDocument();
     const validation = screen.getByText(/Validation/i);
     fireEvent.click(validation.closest('button')!);

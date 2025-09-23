@@ -211,22 +211,30 @@ function computeSimpleExponentialSmoothing(
   const smoothedValues = [smoothed];
   
   for (let i = 1; i < values.length; i++) {
-    smoothed = alpha * values[i] + (1 - alpha) * smoothed;
-    smoothedValues.push(smoothed);
+    const currentValue = values[i];
+    if (currentValue !== undefined && smoothed !== undefined) {
+      smoothed = alpha * currentValue + (1 - alpha) * smoothed;
+      smoothedValues.push(smoothed);
+    }
   }
   
   // Calculate residuals for confidence intervals
-  const residuals = values.map((val, i) => val - smoothedValues[i]);
+  const residuals = values.map((val, i) => val - (smoothedValues[i] ?? 0));
   const residualStdDev = calculateStandardDeviation(residuals);
   
   // Generate forecast points
   const forecasts: ForecastPoint[] = [];
-  const lastTimestamp = series[series.length - 1].timestamp;
+  const lastElement = series[series.length - 1];
+  if (!lastElement) {
+    return forecasts; // No data to forecast from
+  }
+  
+  const lastTimestamp = lastElement.timestamp;
   const timestampInterval = series.length > 1 ? 
-    (series[series.length - 1].timestamp - series[series.length - 2].timestamp) : 
+    (lastElement.timestamp - (series[series.length - 2]?.timestamp ?? lastElement.timestamp)) : 
     86400000; // Default to 1 day
   
-  const lastSmoothed = smoothedValues[smoothedValues.length - 1];
+  const lastSmoothed = smoothedValues[smoothedValues.length - 1] ?? 0;
   
   for (let i = 1; i <= horizon; i++) {
     const forecastTimestamp = lastTimestamp + (i * timestampInterval);
@@ -262,27 +270,28 @@ function computeHoltWinters(
   const n = values.length;
   
   // Initialize level, trend, and seasonal components
-  let level = values[0];
-  let trend = (values[seasonLength] - values[0]) / seasonLength;
+  let level = values[0] ?? 0;
+  let trend = ((values[seasonLength] ?? level) - level) / seasonLength;
   const seasonal: number[] = new Array(seasonLength).fill(0);
   
   // Initialize seasonal indices
   for (let i = 0; i < seasonLength; i++) {
-    seasonal[i] = values[i] - level;
+    seasonal[i] = (values[i] ?? level) - level;
   }
   
   const fitted: number[] = [];
   
   // Holt-Winters equations
   for (let i = 0; i < n; i++) {
-    const seasonalIndex = seasonal[i % seasonLength];
+    const seasonalIndex = seasonal[i % seasonLength] ?? 0;
     const predicted = level + trend + seasonalIndex;
     fitted.push(predicted);
     
     if (i < n - 1) { // Don't update on last observation
-      const newLevel = alpha * (values[i] - seasonalIndex) + (1 - alpha) * (level + trend);
+      const currentValue = values[i] ?? 0;
+      const newLevel = alpha * (currentValue - seasonalIndex) + (1 - alpha) * (level + trend);
       const newTrend = beta * (newLevel - level) + (1 - beta) * trend;
-      const newSeasonal = gamma * (values[i] - newLevel) + (1 - gamma) * seasonalIndex;
+      const newSeasonal = gamma * (currentValue - newLevel) + (1 - gamma) * seasonalIndex;
       
       level = newLevel;
       trend = newTrend;
@@ -291,19 +300,24 @@ function computeHoltWinters(
   }
   
   // Calculate residuals for confidence intervals
-  const residuals = values.map((val, i) => val - fitted[i]);
+  const residuals = values.map((val, i) => (val ?? 0) - (fitted[i] ?? 0));
   const residualStdDev = calculateStandardDeviation(residuals);
   
   // Generate forecast points
   const forecasts: ForecastPoint[] = [];
-  const lastTimestamp = series[series.length - 1].timestamp;
+  const lastElement = series[series.length - 1];
+  if (!lastElement) {
+    return forecasts;
+  }
+  
+  const lastTimestamp = lastElement.timestamp;
   const timestampInterval = series.length > 1 ? 
-    (series[series.length - 1].timestamp - series[series.length - 2].timestamp) : 
+    (lastElement.timestamp - (series[series.length - 2]?.timestamp ?? lastElement.timestamp)) : 
     86400000;
   
   for (let i = 1; i <= horizon; i++) {
     const forecastTimestamp = lastTimestamp + (i * timestampInterval);
-    const seasonalIndex = seasonal[(n + i - 1) % seasonLength];
+    const seasonalIndex = seasonal[(n + i - 1) % seasonLength] ?? 0;
     const forecastValue = level + (i * trend) + seasonalIndex;
     const confidenceInterval = 1.96 * residualStdDev * Math.sqrt(i); // Increasing uncertainty
     
@@ -423,7 +437,7 @@ export async function getForecast(
       horizon,
       points: [],
       generatedAt: new Date().toISOString(),
-      method: 'insufficient-data',
+      method: 'client' as const,
       confidence: 0,
     };
   }

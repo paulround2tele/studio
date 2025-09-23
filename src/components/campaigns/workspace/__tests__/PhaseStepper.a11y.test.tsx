@@ -11,9 +11,9 @@ describe('PhaseStepper keyboard navigation', () => {
 
   it('moves focus with arrow keys and activates with Enter', () => {
     const onSelect = jest.fn();
-  render(<PhaseStepper phases={phases} onSelect={onSelect} />);
-  const first = screen.getByRole('button', { name: /Phase 1: Discovery/i });
-  first.focus();
+    render(<PhaseStepper phases={phases} activePhase="discovery" onPhaseSelect={onSelect} />);
+    const first = screen.getByRole('button', { name: /Phase 1: Discovery/i });
+    first.focus();
     fireEvent.keyDown(first, { key: 'ArrowRight' });
     const second = screen.getByRole('button', { name: /Phase 2: Validation/i });
   // Focus effect runs after paint
@@ -24,9 +24,9 @@ describe('PhaseStepper keyboard navigation', () => {
 
   it('wraps focus with End/Home keys', () => {
     const onSelect = jest.fn();
-  render(<PhaseStepper phases={phases} onSelect={onSelect} />);
-  const first = screen.getByRole('button', { name: /Phase 1: Discovery/i });
-  first.focus();
+    render(<PhaseStepper phases={phases} activePhase="discovery" onPhaseSelect={onSelect} />);
+    const first = screen.getByRole('button', { name: /Phase 1: Discovery/i });
+    first.focus();
     fireEvent.keyDown(first, { key: 'End' });
     const last = screen.getByRole('button', { name: /Phase 3: Extraction/i });
     expect(document.activeElement).toBe(last);

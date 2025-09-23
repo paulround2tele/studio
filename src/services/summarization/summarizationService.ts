@@ -192,7 +192,7 @@ class SummarizationService {
   /**
    * Initialize the service
    */
-  private async initialize(): void {
+  private async initialize(): Promise<void> {
     try {
       // Try to initialize web worker for local model
       await this.initializeWorker();
@@ -391,7 +391,7 @@ class SummarizationService {
   ): SummaryResult {
     const anomalyCount = cluster.anomalies.length;
     const highSeverityCount = cluster.anomalies.filter(a => a.severity === 'high').length;
-    const metrics = [...new Set(cluster.anomalies.map(a => a.metric))];
+    const metrics = Array.from(new Set(cluster.anomalies.map(a => a.metric)));
     const domainCount = cluster.affectedDomains.length;
 
     let summary = `Detected ${anomalyCount} anomal${anomalyCount === 1 ? 'y' : 'ies'} in ${cluster.category} category`;

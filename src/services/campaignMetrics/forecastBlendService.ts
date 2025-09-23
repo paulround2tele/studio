@@ -378,6 +378,10 @@ class ForecastBlendService {
   ): BlendedForecast {
     // Simple arbitration: pick best performing model or default to first
     let bestModelId = modelForecasts[0]?.modelId;
+    if (!bestModelId) {
+      throw new Error('No valid forecasts provided for arbitration');
+    }
+    
     let bestScore = Infinity;
 
     for (const forecast of modelForecasts) {
@@ -455,7 +459,7 @@ class ForecastBlendService {
     const confidence = Math.max(0, Math.min(1, 1 - (Math.sqrt(variance) / (rollingMeanActual + 1))));
 
     const stats: ModelPerformanceStats = {
-      modelId: key.split(':')[1],
+      modelId: key.split(':')[1] || 'unknown',
       sampleCount: history.length,
       meanAbsoluteError,
       meanAbsolutePercentageError,
