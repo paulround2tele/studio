@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS domain_extraction_features (
     domain_id UUID NOT NULL REFERENCES generated_domains(id) ON DELETE CASCADE,
     campaign_id UUID NOT NULL REFERENCES lead_generation_campaigns(id) ON DELETE CASCADE,
     domain_name TEXT,
-    processing_state processing_state NOT NULL DEFAULT 'pending',
+    processing_state extraction_processing_state NOT NULL DEFAULT 'pending',
     attempt_count INT NOT NULL DEFAULT 0,
     last_error TEXT,
     
