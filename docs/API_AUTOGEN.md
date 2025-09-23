@@ -16,6 +16,54 @@ Pipeline steps:
   - typescript-axios client -> src/lib/api-client
   - Static docs -> src/lib/api-client/docs
 
+## Type Safety and Import Guidelines
+
+### Always use auto-generated types
+
+**✅ GOOD:**
+```typescript
+// Import from barrel export for main types
+import type { Campaign } from '@/lib/api-client';
+
+// Import directly from model files for specific types to avoid barrel issues
+import type { ModelsProxy } from '@/lib/api-client/models/models-proxy';
+import type { ModelsProxyPool } from '@/lib/api-client/models/models-proxy-pool';
+```
+
+**❌ BAD:**
+```typescript
+// Manual type definitions
+interface Campaign { /* ... */ }  // ESLint will block this
+
+// Bridge/proxy imports (deprecated)
+import { CampaignViewModel } from '@/lib/api-client/types-bridge';
+import { Campaign } from '@/lib/api-client/professional-types';
+
+// Barrel imports for certain types (can cause issues)
+import { ModelsProxy } from '@/lib/api-client/models';
+```
+
+### ESLint Enforcement
+
+The codebase enforces auto-generated type usage through:
+
+1. **Restricted imports**: Blocks deprecated bridge/proxy type paths
+2. **Direct import requirements**: Certain types must be imported directly
+3. **Manual type prevention**: Blocks interface/type definitions that conflict with generated types
+
+### Type Generation Commands
+
+```bash
+# Generate types only
+npm run gen:types
+
+# Generate full client + docs
+npm run gen:all
+
+# Quick regeneration (common workflow)
+npm run api:regen:quick
+```
+
 ## CI suggestion
 
 Run these in CI:
@@ -26,6 +74,8 @@ Run these in CI:
 - npm run gen:types
 - npm run gen:clients
 - npm run gen:docs
+- npm run lint  # Enforces type safety rules
+- npm run typecheck
 
 Any route mismatch will fail the build.
 
@@ -33,3 +83,5 @@ Any route mismatch will fail the build.
 
 - The Redocly localhost server URL warning is tolerated. You can change it if you need zero warnings.
 - If Gin routes change, the autogen script re-dumps before checking. Keep dump_routes.go in sync with router registrations.
+- ESLint rules prevent manual type definitions and enforce proper import patterns.
+- Git hooks block manual edits to generated files in src/lib/api-client/.

@@ -157,8 +157,40 @@ export default [
               ],
               message:
                 'Import generated model types directly from their files, e.g., models/models-proxy, models/models-proxy-pool, models/update-proxy-request-api, models/proxy-protocol.'
+            },
+            // Prevent imports from non-existent bridge/proxy type files
+            {
+              name: '@/lib/api-client/types-bridge',
+              message: 'Bridge types are deprecated. Use generated types from @/lib/api-client/models/ instead.'
+            },
+            {
+              name: '@/lib/api-client/professional-types',
+              message: 'Professional types are deprecated. Use generated types from @/lib/api-client/models/ instead.'
+            },
+            {
+              name: '@/lib/api-client/client-bridge',
+              message: 'Client bridge is deprecated. Use generated APIs from @/lib/api-client/apis/ instead.'
+            }
+          ],
+          patterns: [
+            {
+              group: ['**/types-bridge*', '**/professional-types*', '**/client-bridge*'],
+              message: 'Manual bridge/proxy types are not allowed. Use auto-generated types from @/lib/api-client/ instead.'
             }
           ]
+        }
+      ],
+      
+      // Prevent manual type definitions that conflict with generated types
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'TSInterfaceDeclaration[id.name=/^(Campaign|Proxy|Persona|KeywordSet|Models)$/]',
+          message: 'Manual interface definitions for API models are not allowed. Use auto-generated types from @/lib/api-client/ instead. If you need a local interface, use a different naming pattern that doesn\'t conflict with generated types.'
+        },
+        {
+          selector: 'TSTypeAliasDeclaration[id.name=/^(Campaign|Proxy|Persona|KeywordSet|Models)$/]',
+          message: 'Manual type aliases for API models are not allowed. Use auto-generated types from @/lib/api-client/ instead. If you need a local type, use a different naming pattern that doesn\'t conflict with generated types.'
         }
       ],
       
