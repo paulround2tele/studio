@@ -381,9 +381,17 @@ class HealthFabricService {
 
     // Calculate trend over recent history
     const recentHistory = history.slice(-10); // Last 10 data points
-    const oldestScore = recentHistory[0].score;
-    const newestScore = recentHistory[recentHistory.length - 1].score;
-    const timeDiffHours = (recentHistory[recentHistory.length - 1].timestamp - recentHistory[0].timestamp) / (1000 * 60 * 60);
+    if (recentHistory.length < 2) {
+      return {
+        direction: 'stable',
+        changeRate: 0,
+        confidence: 0.5,
+      };
+    }
+
+    const oldestScore = recentHistory[0]!.score;
+    const newestScore = recentHistory[recentHistory.length - 1]!.score;
+    const timeDiffHours = (recentHistory[recentHistory.length - 1]!.timestamp - recentHistory[0]!.timestamp) / (1000 * 60 * 60);
     
     const changeRate = timeDiffHours > 0 ? (newestScore - oldestScore) / timeDiffHours : 0;
     
@@ -412,8 +420,8 @@ class HealthFabricService {
     let totalChanges = 0;
 
     for (let i = 1; i < history.length - 1; i++) {
-      const prevChange = history[i].score - history[i - 1].score;
-      const nextChange = history[i + 1].score - history[i].score;
+      const prevChange = history[i]!.score - history[i - 1]!.score;
+      const nextChange = history[i + 1]!.score - history[i]!.score;
       
       totalChanges++;
       
@@ -745,7 +753,7 @@ class HealthFabricService {
       clearInterval(this.updateTimer);
     }
 
-    this.updateTimer = setInterval(() => {
+    this.updateTimer = (setInterval(() => {
       this.updateCounter++;
       
       // Calculate update frequency
@@ -763,7 +771,7 @@ class HealthFabricService {
       // Update overall health
       this.updateOverallHealth();
 
-    }, this.config.updateIntervalMs);
+    }, this.config.updateIntervalMs) as unknown) as number;
   }
 
   /**

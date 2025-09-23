@@ -572,11 +572,11 @@ class OfflineResilienceService {
       clearInterval(this.syncTimer);
     }
 
-    this.syncTimer = (typeof window !== 'undefined' && window.setInterval ? window.setInterval : setInterval)(() => {
+    this.syncTimer = ((typeof window !== 'undefined' && window.setInterval ? window.setInterval : setInterval)(() => {
       if (this.isOnline && this.actionQueue.length > 0) {
         this.processActionQueue();
       }
-    }, this.config.syncIntervalMs);
+    }, this.config.syncIntervalMs) as unknown) as number;
   }
 
   /**
@@ -603,7 +603,7 @@ class OfflineResilienceService {
     // Remove oldest 25% of entries
     const toRemove = Math.ceil(entries.length * 0.25);
     for (let i = 0; i < toRemove; i++) {
-      this.cache.delete(entries[i][0]);
+      this.cache.delete(entries[i]![0]);
     }
   }
 

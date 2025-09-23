@@ -177,7 +177,7 @@ function computeSimpleExpSmoothingInWorker(
   const smoothedValues = [smoothed];
   
   for (let i = 1; i < values.length; i++) {
-    smoothed = alpha * values[i] + (1 - alpha) * smoothed;
+    smoothed = alpha * values[i]! + (1 - alpha) * smoothed;
     smoothedValues.push(smoothed);
   }
   
@@ -187,12 +187,15 @@ function computeSimpleExpSmoothingInWorker(
   
   // Generate forecast points
   const forecasts = [];
-  const lastTimestamp = series[series.length - 1].timestamp;
+  const lastTimestamp = series[series.length - 1]!.timestamp;
   const timestampInterval = series.length > 1 ? 
-    (series[series.length - 1].timestamp - series[series.length - 2].timestamp) : 
+    (series[series.length - 1]!.timestamp - series[series.length - 2]!.timestamp) : 
     86400000; // Default to 1 day
   
   const lastSmoothed = smoothedValues[smoothedValues.length - 1];
+  if (lastSmoothed === undefined) {
+    return []; // Return empty if no smoothed values
+  }
   
   for (let i = 1; i <= horizon; i++) {
     const forecastTimestamp = lastTimestamp + (i * timestampInterval);
@@ -227,14 +230,19 @@ function computeHoltWintersInWorker(
   const values = series.map(p => p.value);
   const n = values.length;
   
-  // Initialize components
-  let level = values[0];
-  let trend = (values[seasonLength] - values[0]) / seasonLength;
+  // Ensure we have enough data for Holt-Winters
+  if (n < seasonLength + 1) {
+    return []; // Return empty if insufficient data
+  }
+  
+  // Initialize components - safe after length check
+  let level = values[0]!;
+  let trend = (values[seasonLength]! - values[0]!) / seasonLength;
   const seasonal = new Array(seasonLength).fill(0);
   
   // Initialize seasonal indices
   for (let i = 0; i < seasonLength; i++) {
-    seasonal[i] = values[i] - level;
+    seasonal[i] = values[i]! - level;
   }
   
   const fitted: number[] = [];

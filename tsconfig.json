@@ -49,7 +49,20 @@
     "build",
     "dist",
     "coverage",
-  "scripts",
-    "src/stories/**"
+    "scripts",
+    "src/stories/**",
+    "e2e/**",
+    "playwright-tests/**",
+    "tests/**",
+    "test-results/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "jest.config.ts",
+    "jest.setup.ts",
+    "playwright.config.ts",
+    "fix-frontend-type-safety.ts",
+    "test-*.ts"
   ]
 }

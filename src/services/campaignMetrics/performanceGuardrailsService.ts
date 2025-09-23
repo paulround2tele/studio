@@ -124,9 +124,12 @@ export class GCFriendlyCollection<T> {
       );
 
       for (let i = 0; i < itemsToRemove; i++) {
-        const [key] = sortedEntries[i];
-        this.data.delete(key);
-        this.accessOrder.delete(key);
+        const entry = sortedEntries[i];
+        if (entry) {
+          const [key] = entry;
+          this.data.delete(key);
+          this.accessOrder.delete(key);
+        }
       }
 
       this.cleanupInProgress = false;
@@ -250,6 +253,8 @@ class PerformanceGuardrailsService {
 
     for (let i = 0; i < sortedData.length; i++) {
       const item = sortedData[i];
+      if (!item) continue; // Skip undefined items
+      
       let shouldRetain = true;
 
       // Check age limit
@@ -431,8 +436,8 @@ class PerformanceGuardrailsService {
     let memoryTrend: 'stable' | 'increasing' | 'decreasing' = 'stable';
     
     if (recentMemoryStats.length >= 3) {
-      const first = recentMemoryStats[0].usagePercentage;
-      const last = recentMemoryStats[recentMemoryStats.length - 1].usagePercentage;
+      const first = recentMemoryStats[0]!.usagePercentage;
+      const last = recentMemoryStats[recentMemoryStats.length - 1]!.usagePercentage;
       const diff = last - first;
       
       if (diff > 5) memoryTrend = 'increasing';
