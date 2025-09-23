@@ -81,6 +81,17 @@ type OrchestratorMetrics interface {
 	IncPhaseAutoStarts()
 	IncCampaignCompletions()
 	RecordPhaseDuration(phase string, d time.Duration)
+	
+	// Auto-start specific metrics
+	IncAutoStartAttempts()
+	IncAutoStartSuccesses()
+	IncAutoStartFailures()
+	RecordAutoStartLatency(d time.Duration)
+	RecordFirstPhaseRunningLatency(d time.Duration)
+	
+	// Campaign mode tracking
+	IncManualModeCreations()
+	IncAutoModeCreations()
 }
 
 // noopMetrics provides no-op implementations when metrics are not configured.
@@ -92,6 +103,13 @@ func (n *noopMetrics) IncPhaseFailures()                         {}
 func (n *noopMetrics) IncPhaseAutoStarts()                       {}
 func (n *noopMetrics) IncCampaignCompletions()                   {}
 func (n *noopMetrics) RecordPhaseDuration(string, time.Duration) {}
+func (n *noopMetrics) IncAutoStartAttempts()                     {}
+func (n *noopMetrics) IncAutoStartSuccesses()                    {}
+func (n *noopMetrics) IncAutoStartFailures()                     {}
+func (n *noopMetrics) RecordAutoStartLatency(time.Duration)      {}
+func (n *noopMetrics) RecordFirstPhaseRunningLatency(time.Duration) {}
+func (n *noopMetrics) IncManualModeCreations()                   {}
+func (n *noopMetrics) IncAutoModeCreations()                     {}
 
 // SSEBroadcaster minimal interface needed from SSE service
 type SSEBroadcaster interface {

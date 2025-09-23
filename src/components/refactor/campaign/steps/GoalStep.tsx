@@ -68,49 +68,125 @@ export function GoalStep({ data, onChange }: GoalStepProps) {
           onValueChange={handleExecutionModeChange}
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
-          <Card className={`cursor-pointer transition-colors ${
-            data.executionMode === 'manual' 
-              ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-              : 'hover:bg-gray-50 dark:hover:bg-gray-800'
-          }`}>
-            <CardHeader className="pb-3">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="manual" id="manual" className="mt-1" />
-                <div className="flex items-center space-x-2">
-                  <Settings className="w-4 h-4" />
-                  <CardTitle className="text-base">Manual (Step-by-Step)</CardTitle>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <CardDescription>
-                Control each phase manually. You'll configure and start each phase 
-                (domain generation, validation, extraction) individually when ready.
-              </CardDescription>
-            </CardContent>
-          </Card>
+          <div className="relative">
+            <input
+              type="radio"
+              id="manual"
+              name="executionMode"
+              value="manual"
+              checked={data.executionMode === 'manual'}
+              onChange={() => handleExecutionModeChange('manual')}
+              className="sr-only"
+            />
+            <label
+              htmlFor="manual"
+              className={`block cursor-pointer transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 ${
+                data.executionMode === 'manual' 
+                  ? 'ring-2 ring-blue-600 bg-blue-50 dark:bg-blue-900/30 shadow-md' 
+                  : 'ring-1 ring-gray-200 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:ring-gray-300'
+              }`}
+            >
+              <Card className="border-0 shadow-none bg-transparent">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                      data.executionMode === 'manual'
+                        ? 'border-blue-600 bg-blue-600'
+                        : 'border-gray-300 dark:border-gray-600'
+                    }`}>
+                      {data.executionMode === 'manual' && (
+                        <div className="w-2 h-2 rounded-full bg-white" />
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Settings className={`w-4 h-4 ${
+                        data.executionMode === 'manual' 
+                          ? 'text-blue-600' 
+                          : 'text-gray-500'
+                      }`} />
+                      <CardTitle className={`text-base ${
+                        data.executionMode === 'manual' 
+                          ? 'text-blue-900 dark:text-blue-100' 
+                          : 'text-gray-900 dark:text-gray-100'
+                      }`}>
+                        Manual (Step-by-Step)
+                      </CardTitle>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <CardDescription className={
+                    data.executionMode === 'manual' 
+                      ? 'text-blue-700 dark:text-blue-200' 
+                      : 'text-gray-600 dark:text-gray-400'
+                  }>
+                    Control each phase manually. You'll configure and start each phase 
+                    (domain generation, validation, extraction) individually when ready.
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            </label>
+          </div>
 
-          <Card className={`cursor-pointer transition-colors ${
-            data.executionMode === 'auto' 
-              ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20' 
-              : 'hover:bg-gray-50 dark:hover:bg-gray-800'
-          }`}>
-            <CardHeader className="pb-3">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="auto" id="auto" className="mt-1" />
-                <div className="flex items-center space-x-2">
-                  <Play className="w-4 h-4" />
-                  <CardTitle className="text-base">Full Auto</CardTitle>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <CardDescription>
-                Run all phases automatically. The campaign will progress through 
-                domain generation, validation, and extraction without manual intervention.
-              </CardDescription>
-            </CardContent>
-          </Card>
+          <div className="relative">
+            <input
+              type="radio"
+              id="auto"
+              name="executionMode"
+              value="auto"
+              checked={data.executionMode === 'auto'}
+              onChange={() => handleExecutionModeChange('auto')}
+              className="sr-only"
+            />
+            <label
+              htmlFor="auto"
+              className={`block cursor-pointer transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 ${
+                data.executionMode === 'auto' 
+                  ? 'ring-2 ring-blue-600 bg-blue-50 dark:bg-blue-900/30 shadow-md' 
+                  : 'ring-1 ring-gray-200 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 hover:ring-gray-300'
+              }`}
+            >
+              <Card className="border-0 shadow-none bg-transparent">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                      data.executionMode === 'auto'
+                        ? 'border-blue-600 bg-blue-600'
+                        : 'border-gray-300 dark:border-gray-600'
+                    }`}>
+                      {data.executionMode === 'auto' && (
+                        <div className="w-2 h-2 rounded-full bg-white" />
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Play className={`w-4 h-4 ${
+                        data.executionMode === 'auto' 
+                          ? 'text-blue-600' 
+                          : 'text-gray-500'
+                      }`} />
+                      <CardTitle className={`text-base ${
+                        data.executionMode === 'auto' 
+                          ? 'text-blue-900 dark:text-blue-100' 
+                          : 'text-gray-900 dark:text-gray-100'
+                      }`}>
+                        Full Auto
+                      </CardTitle>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <CardDescription className={
+                    data.executionMode === 'auto' 
+                      ? 'text-blue-700 dark:text-blue-200' 
+                      : 'text-gray-600 dark:text-gray-400'
+                  }>
+                    Run all phases automatically. The campaign will progress through 
+                    domain generation, validation, and extraction without manual intervention.
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            </label>
+          </div>
         </RadioGroup>
       </fieldset>
     </div>

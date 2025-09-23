@@ -444,6 +444,7 @@ def check_performance_targets():
                 improvement = data['databasePerformance']['improvement'].get('queryPerformance', 0)
                 if improvement >= 40:
                     print(f"✅ Database improvement: {improvement}% (target: 40%)")
+                    targets_met += 1
                 else:
                     print(f"❌ Database improvement: {improvement}% (target: 40%)")
             
@@ -452,6 +453,7 @@ def check_performance_targets():
                 reduction = data['memoryUsage']['improvement'].get('memoryReduction', 0)
                 if reduction >= 25:
                     print(f"✅ Memory reduction: {reduction}% (target: 25%)")
+                    targets_met += 1
                 else:
                     print(f"❌ Memory reduction: {reduction}% (target: 25%)")
                     

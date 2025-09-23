@@ -6,6 +6,7 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { CheckCircle, Clock, Play, XCircle, AlertCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 export interface PipelinePhase {
   key: string;
@@ -21,6 +22,8 @@ interface PipelineBarProps {
   className?: string;
   orientation?: 'horizontal' | 'vertical';
   compact?: boolean;
+  campaignMode?: 'auto' | 'manual' | 'full_sequence' | 'step_by_step';
+  showAutoStartBadge?: boolean;
 }
 
 const statusConfig = {
@@ -68,9 +71,24 @@ const statusConfig = {
   }
 };
 
-function PipelinePhaseCard({ phase, compact = false }: { phase: PipelinePhase; compact?: boolean }) {
+function PipelinePhaseCard({ 
+  phase, 
+  compact = false, 
+  isAutoMode = false, 
+  showAutoStartBadge = false 
+}: { 
+  phase: PipelinePhase; 
+  compact?: boolean; 
+  isAutoMode?: boolean; 
+  showAutoStartBadge?: boolean;
+}) {
   const config = statusConfig[phase.status];
   const Icon = config.icon;
+
+  const showBadge = showAutoStartBadge && isAutoMode && (
+    phase.status === 'in_progress' || 
+    phase.status === 'completed'
+  );
 
   return (
     <div className={cn(
@@ -81,16 +99,26 @@ function PipelinePhaseCard({ phase, compact = false }: { phase: PipelinePhase; c
       <div className="flex items-center gap-2">
         <Icon className={cn("w-4 h-4", config.color)} />
         <div className="min-w-0 flex-1">
-          <h3 className={cn(
-            "font-medium leading-tight",
-            config.color,
-            compact ? "text-xs" : "text-sm"
-          )}>
-            {phase.label}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className={cn(
+              "font-medium leading-tight",
+              config.color,
+              compact ? "text-xs" : "text-sm"
+            )}>
+              {phase.label}
+            </h3>
+            {showBadge && (
+              <Badge variant="secondary" className="text-xs py-0 px-1">
+                Auto
+              </Badge>
+            )}
+          </div>
           {!compact && (
             <p className="text-xs text-gray-500 mt-1">
               {config.label}
+              {showBadge && phase.status === 'completed' && (
+                <span className="ml-1 text-green-600">• Started automatically</span>
+              )}
             </p>
           )}
         </div>
@@ -118,9 +146,12 @@ export function PipelineBar({
   phases, 
   className, 
   orientation = 'horizontal',
-  compact = false 
+  compact = false,
+  campaignMode,
+  showAutoStartBadge = false
 }: PipelineBarProps) {
   const isVertical = orientation === 'vertical';
+  const isAutoMode = campaignMode === 'auto' || campaignMode === 'full_sequence';
 
   return (
     <div className={cn(
@@ -130,7 +161,12 @@ export function PipelineBar({
     )}>
       {phases.map((phase, index) => (
         <React.Fragment key={phase.key}>
-          <PipelinePhaseCard phase={phase} compact={compact} />
+          <PipelinePhaseCard 
+            phase={phase} 
+            compact={compact} 
+            isAutoMode={isAutoMode} 
+            showAutoStartBadge={showAutoStartBadge}
+          />
           {!isVertical && index < phases.length - 1 && (
             <div className="flex items-center justify-center min-w-4">
               <div className="w-6 h-0.5 bg-gray-300 dark:bg-gray-600" />

@@ -28,6 +28,47 @@ The Campaign Creation Wizard now supports automatic pipeline startup for campaig
 4. **Auto-start trigger**: `startPhase` API is called with `phase: 'discovery'`
 5. User receives success feedback and is redirected to campaign detail page
 
+### Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Wizard
+    participant Backend
+    participant SSE
+    participant Pipeline
+
+    User->>Wizard: Complete wizard (auto mode)
+    Note over User,Wizard: Campaign creation flow
+    Wizard->>Backend: createCampaign(campaignData)
+    Backend-->>Wizard: {id, correlationId}
+    
+    Wizard->>Backend: updateCampaignMode(id, full_sequence)
+    Backend-->>Wizard: success
+    
+    Note over Wizard,Pipeline: Auto-start sequence
+    Wizard->>Backend: startPhase(id, discovery, correlationId)
+    Backend->>Pipeline: Initialize discovery phase
+    Backend->>SSE: Broadcast phase_auto_started event
+    Backend-->>Wizard: success
+    
+    SSE-->>Pipeline: Real-time phase updates
+    Pipeline->>User: Show "Started automatically" badge
+    
+    Note over User,Pipeline: Fallback resilience
+    opt No SSE events received (20s timeout)
+        Pipeline->>Backend: Fallback status poll
+        Backend-->>Pipeline: Current phase status
+    end
+    
+    opt Auto-start fails (409/422 errors)
+        Wizard->>Backend: Retry startPhase (exponential backoff)
+        alt Max retries exceeded
+            Wizard->>User: Show manual start option
+        end
+    end
+```
+
 ### Error Handling
 - **Graceful Failure**: If auto-start fails, campaign creation still succeeds
 - **User Feedback**: Clear messaging distinguishes between creation success and auto-start failure
@@ -142,11 +183,34 @@ The auto-start feature is **fully backwards compatible**:
 ## Troubleshooting
 
 ### Common Issues
-- **Auto-start fails**: Check discovery phase configuration requirements
-- **Permissions**: Ensure user has start phase permissions for the campaign
-- **Resource availability**: Verify personas and proxies are available
+
+| Symptom | Probable Cause | Remediation |
+|---------|---------------|-------------|
+| Auto-start fails immediately | Discovery phase not configured | Configure discovery phase settings before creating campaign |
+| Auto-start fails with 409 error | Phase already running or in wrong state | Wait for current phase to complete, then retry |
+| Auto-start fails with 422 error | Invalid phase configuration | Verify personas, proxies, and validation settings |
+| Auto-start succeeds but no progress | SSE connection failed | Check network connectivity, refresh page |
+| Campaign created but no auto-start | Execution mode not set correctly | Verify campaign mode is `full_sequence` |
+| Pipeline shows "Initializing" indefinitely | Backend service unavailable | Check server status, try manual start |
+| Auto-start retries exhausted | Resource availability issues | Check persona and proxy availability |
+| No real-time updates after start | SSE service disruption | Use manual refresh or wait for fallback polling |
 
 ### Debug Information
 - Check browser console for auto-start error details
 - Verify campaign mode was correctly set to `full_sequence`
 - Confirm discovery phase configuration exists and is valid
+- Look for correlation IDs in logs to trace requests
+- Check SSE connection status in browser dev tools
+
+### Performance Expectations
+- **Campaign Creation**: 1-3 seconds
+- **Auto-start Latency**: 2-5 seconds from creation to startPhase request
+- **First Phase Running**: 5-15 seconds from creation to first phase RUNNING status
+- **SSE Event Delivery**: Real-time (< 1 second)
+- **Fallback Polling**: Triggers after 20 seconds of no SSE events
+
+### Operational Monitoring
+- Monitor `campaign.auto_start.success_rate` metric (target: >95%)
+- Alert on `campaign.auto_start.latency_ms` >10s (P95)
+- Track `campaign.auto_start.failures_total` for error patterns
+- Monitor SSE connection health and event delivery rates

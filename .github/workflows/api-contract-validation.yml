@@ -3,8 +3,8 @@ name: API Contract Validation
 on:
   pull_request:
     paths:
-  - 'backend/**'
-  - 'backend/openapi/**'
+      - 'backend/**'
+      - 'backend/openapi/**'
   push:
     branches:
       - main
