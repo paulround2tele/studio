@@ -2,13 +2,14 @@
 -- Description: SQL view abstraction for clean analysis reads (EXT-39)
 
 -- Create the analysis-ready features view that provides clean interface for analysis service
-CREATE OR REPLACE VIEW analysis_ready_features AS
+DROP VIEW IF EXISTS analysis_ready_features;
+
+CREATE VIEW analysis_ready_features AS
 SELECT 
-    def.campaign_id,
-    def.domain_id,
-    gd.domain_name,
-    def.processing_state,
-    def.extracted_at,
+    def.campaign_id AS campaign_id,
+    def.domain_id   AS domain_id,
+    gd.domain_name  AS domain_name,
+    def.processing_state AS processing_state,
     
     -- Core metrics
     def.kw_unique_count,
@@ -36,7 +37,7 @@ SELECT
 FROM domain_extraction_features def
 JOIN generated_domains gd ON gd.id = def.domain_id
 WHERE def.processing_state = 'ready'
-  AND def.feature_vector IS NOT NULL;
+    AND def.feature_vector IS NOT NULL;
 
 -- Add indexes to support the view performance
 CREATE INDEX IF NOT EXISTS idx_analysis_ready_features_campaign_ready
@@ -49,4 +50,4 @@ CREATE INDEX IF NOT EXISTS idx_domain_extraction_features_momentum
     WHERE processing_state = 'ready';
 
 -- Add comment
-COMMENT ON VIEW analysis_ready_features IS 'Analysis-ready feature view providing clean interface for consumption by analysis service, filtering to ready domains with feature vectors';
+COMMENT ON VIEW analysis_ready_features IS 'Analysis-ready feature view (extracted_at omitted; not in canonical table) filtering to ready domains with feature vectors';
