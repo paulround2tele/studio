@@ -252,7 +252,6 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
       }
     }
   };
-  };
 
   const renderStepContent = () => {
     switch (wizardState.currentStep) {

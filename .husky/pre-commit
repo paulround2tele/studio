@@ -1,5 +1,4 @@
 #!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
 
 # Prevent committing manual edits to generated clients/models
 if git diff --cached --name-only | grep -E "^src/lib/api-client/(models|apis|api|base|common|configuration|index|types\.ts)" >/dev/null; then
