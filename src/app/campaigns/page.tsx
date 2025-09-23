@@ -11,41 +11,6 @@ import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
-interface CampaignData {
-  campaignId: string;
-  name: string;
-  currentPhase: string;
-  phaseStatus: string;
-  totalItems: number;
-  createdAt: string;
-  updatedAt: string;
-  progress?: number;
-  domains?: number;
-  leads?: number;
-  dnsValidatedDomains?: number;
-  domainsData?: any;
-  dnsResults?: any;
-  httpResults?: any;
-  analysisResults?: any;
-}
-
-const PHASE_LABELS: Record<string, string> = {
-  setup: "Setup",
-  generation: "Domain Generation",
-  discovery: "Domain Generation",
-  dns_validation: "DNS Validation",
-  http_keyword_validation: "HTTP Validation",
-  analysis: "Analysis"
-};
-
-const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  not_started: "outline",
-  in_progress: "default",
-  paused: "secondary",
-  completed: "secondary",
-  failed: "destructive"
-};
-
 export default function CampaignsPage() {
   const { toast: _toast } = useToast();
   const router = useRouter();
