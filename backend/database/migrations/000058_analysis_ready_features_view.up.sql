@@ -30,7 +30,6 @@ SELECT
     def.content_bytes,
     def.page_lang,
     def.http_status_code,
-    def.scoring_profile_snapshot_id,
     def.is_stale_score,
     def.updated_at
     

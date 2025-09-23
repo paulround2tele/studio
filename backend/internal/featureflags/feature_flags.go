@@ -54,6 +54,19 @@ func IsMicrocrawlAdaptiveModeEnabled() bool {
 	return getBoolEnv("MICROCRAWL_ADAPTIVE_MODE", false)
 }
 
+// IsAnalysisReadsFeatureTableEnabled returns true if the analysis phase should
+// read from new feature extraction tables (domain_extraction_features) instead of legacy feature_vector.
+//
+// Phase: P3 - Analysis read migration
+// Environment Variable: ANALYSIS_READS_FEATURE_TABLE  
+// Default: false
+//
+// TODO Phase P3: Complete analysis service read switch implementation
+// TODO Phase P3: Add fallback logic for incomplete extractions
+func IsAnalysisReadsFeatureTableEnabled() bool {
+	return getBoolEnv("ANALYSIS_READS_FEATURE_TABLE", false)
+}
+
 // IsAnalysisRescoringEnabled returns true if the system should use
 // advanced scoring algorithms based on detailed extraction data.
 //
