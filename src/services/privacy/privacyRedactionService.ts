@@ -297,7 +297,7 @@ class PrivacyRedactionService {
   private applyRedactionRule(value: any, rule: PrivacyRule): any {
     switch (rule.action) {
       case 'redact':
-        return this.redactValue(value, rule);
+        return this.applyRedactionToValue(value, rule);
       case 'hash':
         return this.hashValue(value, rule.hashSalt);
       case 'mask':
@@ -312,9 +312,9 @@ class PrivacyRedactionService {
   }
 
   /**
-   * Redact a value (replace with placeholder)
+   * Redact a value using specific rule (replace with placeholder)
    */
-  private redactValue(value: any, rule: PrivacyRule): string {
+  private applyRedactionToValue(value: any, rule: PrivacyRule): string {
     if (rule.preserveFormat && typeof value === 'string') {
       // Preserve format but redact content
       return value.replace(/[a-zA-Z0-9]/g, rule.maskCharacter || '*');

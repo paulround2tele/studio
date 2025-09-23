@@ -387,6 +387,11 @@ class AdaptiveTimelineService {
       const current = points[i];
       const next = points[i + 1];
       
+      // Ensure all points are defined
+      if (!prev || !current || !next) {
+        continue;
+      }
+      
       // Local maximum
       if (current.value > prev.value && current.value > next.value) {
         extremes.push(current);
