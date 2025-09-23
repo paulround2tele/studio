@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useCreateCampaignMutation, useUpdateCampaignModeMutation, useStartPhaseStandaloneMutation } from '@/store/api/campaignApi';
 import { formToApiRequest } from '@/components/campaigns/types/SimpleCampaignFormTypes';
 import { CampaignModeEnum } from '@/lib/api-client';
+import { AutoStartBanner, useAutoStartBanner } from './AutoStartBanner';
 
 import GoalStep from './steps/GoalStep';
 import PatternStep from './steps/PatternStep';
@@ -43,6 +44,16 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
   const [createCampaign, { isLoading: isCreating }] = useCreateCampaignMutation();
   const [updateCampaignMode, { isLoading: isUpdatingMode }] = useUpdateCampaignModeMutation();
   const [startPhase, { isLoading: isStartingPhase }] = useStartPhaseStandaloneMutation();
+  
+  // Auto-start banner state management
+  const {
+    bannerProps,
+    showInitializing,
+    showStarting,
+    showSuccess,
+    showError,
+    hide: hideBanner
+  } = useAutoStartBanner();
 
   const [wizardState, setWizardState] = useState<CampaignWizardState>({
     currentStep: 0,
@@ -121,9 +132,16 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
 
   const handleSubmit = async () => {
     try {
+      const campaignName = wizardState.goal.campaignName || '';
+      
+      // Show initializing banner for auto mode
+      if (wizardState.goal.executionMode === 'auto') {
+        showInitializing(`Initializing campaign "${campaignName}" in auto mode...`);
+      }
+      
       // Map wizard state to API request format
       const apiRequest = formToApiRequest({
-        name: wizardState.goal.campaignName || '',
+        name: campaignName,
         description: wizardState.goal.description || ''
       });
 
@@ -143,46 +161,97 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
 
       // For auto mode, trigger auto-start of the first phase (discovery)
       if (wizardState.goal.executionMode === 'auto') {
-        try {
-          console.debug('Auto mode selected - starting discovery phase automatically');
-          
-          // Start the discovery phase automatically for full auto mode
-          await startPhase({
-            campaignId,
-            phase: 'discovery'
-          }).unwrap();
-          
-          toast({
-            title: "Campaign Created & Started",
-            description: `Campaign "${wizardState.goal.campaignName}" has been created in auto mode and the discovery phase has started automatically.`,
-          });
-        } catch (startError: any) {
-          console.warn('Auto-start of discovery phase failed:', startError);
-          
-          // Show a warning but don't block the flow - user can start manually
-          toast({
-            title: "Campaign Created",
-            description: `Campaign "${wizardState.goal.campaignName}" was created successfully, but auto-start failed. You can start the discovery phase manually.`,
-            variant: 'default'
-          });
-        }
+        await attemptAutoStartWithRetry(campaignId, campaignName);
       } else {
         toast({
           title: "Campaign Created Successfully",
-          description: `Campaign "${wizardState.goal.campaignName}" has been created in ${wizardState.goal.executionMode} mode.`,
+          description: `Campaign "${campaignName}" has been created in ${wizardState.goal.executionMode} mode.`,
         });
       }
 
-      // Redirect to campaign detail page
-      router.push(`/campaigns/${result.id}`);
+      // Redirect to campaign detail page after a short delay for auto mode
+      const redirectDelay = wizardState.goal.executionMode === 'auto' ? 2000 : 500;
+      setTimeout(() => {
+        router.push(`/campaigns/${result.id}`);
+      }, redirectDelay);
+      
     } catch (error: any) {
       console.error('Campaign creation failed:', error);
+      
+      // Hide any showing banner and show error
+      hideBanner();
+      
       toast({
         title: "Campaign Creation Failed",
         description: error?.data?.message || error?.message || "Please try again.",
         variant: 'destructive'
       });
     }
+  };
+
+  // Auto-start with retry logic for resilience
+  const attemptAutoStartWithRetry = async (campaignId: string, campaignName: string) => {
+    const MAX_RETRIES = 2;
+    const BACKOFF_BASE = 1000; // 1 second
+
+    for (let attempt = 1; attempt <= MAX_RETRIES + 1; attempt++) {
+      try {
+        console.debug(`Auto-start attempt ${attempt} for campaign ${campaignId}`);
+        
+        if (attempt === 1) {
+          showStarting(`Starting discovery phase for "${campaignName}" automatically...`);
+        } else {
+          showStarting(`Retrying auto-start (attempt ${attempt})...`);
+        }
+        
+        // Start the discovery phase automatically for full auto mode
+        await startPhase({
+          campaignId,
+          phase: 'discovery'
+        }).unwrap();
+        
+        // Success!
+        showSuccess(`Campaign "${campaignName}" has been started automatically and is now running.`);
+        
+        toast({
+          title: "Campaign Created & Started",
+          description: `Campaign "${campaignName}" has been created in auto mode and the discovery phase has started automatically.`,
+        });
+        
+        return; // Success, exit retry loop
+        
+      } catch (startError: any) {
+        console.warn(`Auto-start attempt ${attempt} failed:`, startError);
+        
+        const isRetryableError = startError?.status === 409 || startError?.status === 422 || 
+                                 startError?.data?.code === 'CONFLICT' || 
+                                 startError?.data?.code === 'BADREQUEST';
+        
+        const isLastAttempt = attempt === MAX_RETRIES + 1;
+        
+        if (!isRetryableError || isLastAttempt) {
+          // Final failure or non-retryable error
+          const errorMessage = startError?.data?.message || startError?.message || 'Auto-start failed';
+          showError(errorMessage, `Campaign "${campaignName}" was created successfully, but auto-start failed.`);
+          
+          toast({
+            title: "Campaign Created",
+            description: `Campaign "${campaignName}" was created successfully, but auto-start failed. You can start the discovery phase manually.`,
+            variant: 'default'
+          });
+          
+          return; // Exit retry loop
+        }
+        
+        // Wait before retry with exponential backoff
+        if (attempt <= MAX_RETRIES) {
+          const delay = BACKOFF_BASE * Math.pow(2, attempt - 1);
+          console.debug(`Waiting ${delay}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+  };
   };
 
   const renderStepContent = () => {
@@ -250,6 +319,9 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
         </div>
         <Progress value={progress} className="h-2" />
       </div>
+
+      {/* Auto-start banner */}
+      <AutoStartBanner {...bannerProps} campaignName={wizardState.goal.campaignName} />
 
       {/* Step indicators */}
       <div className="flex items-center justify-between">
@@ -324,9 +396,10 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
             disabled={!canProceed || isLoading}
           >
             {isLoading ? (
+              isStartingPhase && wizardState.goal.executionMode === 'auto' ? 'Starting Auto Campaign...' :
               isStartingPhase ? 'Starting Campaign...' : 'Creating...'
             ) : isLastStep ? (
-              'Create Campaign'
+              wizardState.goal.executionMode === 'auto' ? 'Create & Start Campaign' : 'Create Campaign'
             ) : (
               <>
                 Next

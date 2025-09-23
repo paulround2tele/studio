@@ -115,12 +115,19 @@ func (s *stubPhaseService) RescoreCampaign(ctx context.Context, campaignID uuid.
 
 // testMetrics captures orchestrator metric increments for assertions.
 type testMetrics struct {
-	phaseStarts         int
-	phaseCompletions    int
-	phaseFailures       int
-	phaseAutoStarts     int
-	campaignCompletions int
-	durations           map[string]time.Duration
+	phaseStarts              int
+	phaseCompletions         int
+	phaseFailures            int
+	phaseAutoStarts          int
+	campaignCompletions      int
+	autoStartAttempts        int
+	autoStartSuccesses       int
+	autoStartFailures        int
+	manualModeCreations      int
+	autoModeCreations        int
+	durations                map[string]time.Duration
+	autoStartLatency         time.Duration
+	firstPhaseRunningLatency time.Duration
 }
 
 func (m *testMetrics) IncPhaseStarts()         { m.phaseStarts++ }
@@ -128,6 +135,17 @@ func (m *testMetrics) IncPhaseCompletions()    { m.phaseCompletions++ }
 func (m *testMetrics) IncPhaseFailures()       { m.phaseFailures++ }
 func (m *testMetrics) IncPhaseAutoStarts()     { m.phaseAutoStarts++ }
 func (m *testMetrics) IncCampaignCompletions() { m.campaignCompletions++ }
+func (m *testMetrics) IncAutoStartAttempts()   { m.autoStartAttempts++ }
+func (m *testMetrics) IncAutoStartSuccesses()  { m.autoStartSuccesses++ }
+func (m *testMetrics) IncAutoStartFailures()   { m.autoStartFailures++ }
+func (m *testMetrics) IncManualModeCreations() { m.manualModeCreations++ }
+func (m *testMetrics) IncAutoModeCreations()   { m.autoModeCreations++ }
+func (m *testMetrics) RecordAutoStartLatency(d time.Duration) {
+	m.autoStartLatency += d
+}
+func (m *testMetrics) RecordFirstPhaseRunningLatency(d time.Duration) {
+	m.firstPhaseRunningLatency += d
+}
 func (m *testMetrics) RecordPhaseDuration(p string, d time.Duration) {
 	if m.durations == nil {
 		m.durations = make(map[string]time.Duration)

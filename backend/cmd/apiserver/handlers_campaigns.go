@@ -619,10 +619,28 @@ func (h *strictHandlers) CampaignsCreate(ctx context.Context, r gen.CampaignsCre
 		return gen.CampaignsCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "name is required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
+	// Generate correlation ID for traceability
+	correlationID := uuid.New()
+	
 	now := time.Now().UTC()
 	// Default initial phase and status
 	phase := models.PhaseTypeDomainGeneration
 	status := models.PhaseStatusNotStarted
+
+	// Track campaign mode for metrics (to be implemented via mode update call)
+	// For now, assume manual mode since the mode is set separately
+	if h.deps.Metrics != nil {
+		h.deps.Metrics.IncManualModeCreations()
+	}
+
+	// Log campaign creation start with correlation ID
+	if h.deps.Logger != nil {
+		h.deps.Logger.Info(ctx, "campaign.create.start", map[string]interface{}{
+			"correlation_id": correlationID.String(),
+			"campaign_name": r.Body.Name,
+			"execution_mode": "manual", // Mode set separately
+		})
+	}
 
 	// Attach user if available (record raw for diagnostics)
 	var userIDPtr *uuid.UUID
@@ -676,18 +694,37 @@ func (h *strictHandlers) CampaignsCreate(ctx context.Context, r gen.CampaignsCre
 	}
 
 	if err := h.deps.Stores.Campaign.CreateCampaign(ctx, h.deps.DB, campaign); err != nil {
-		log.Printf("ERROR CampaignsCreate: store insert error=%v user_id=%v raw_user_id=%s", err, campaign.UserID, rawUserID)
+		log.Printf("ERROR CampaignsCreate: store insert error=%v user_id=%v raw_user_id=%s correlation_id=%s", err, campaign.UserID, rawUserID, correlationID.String())
 		if strings.Contains(err.Error(), "foreign key constraint \"lead_generation_campaigns_user_id_fkey\"") && campaign.UserID != nil {
-			log.Printf("INFO CampaignsCreate: retrying without user_id after FK violation (user %s)", campaign.UserID.String())
+			log.Printf("INFO CampaignsCreate: retrying without user_id after FK violation (user %s) correlation_id=%s", campaign.UserID.String(), correlationID.String())
 			campaign.UserID = nil
 			if rerr := h.deps.Stores.Campaign.CreateCampaign(ctx, h.deps.DB, campaign); rerr == nil {
 				resp := mapCampaignToResponse(campaign)
+				// Log successful creation with correlation ID
+				if h.deps.Logger != nil {
+					h.deps.Logger.Info(ctx, "campaign.create.success", map[string]interface{}{
+						"correlation_id": correlationID.String(),
+						"campaign_id": campaign.ID.String(),
+						"campaign_name": campaign.Name,
+						"execution_mode": "manual",
+					})
+				}
 				return gen.CampaignsCreate201JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
 			} else {
-				log.Printf("ERROR CampaignsCreate: retry without user_id failed: %v", rerr)
+				log.Printf("ERROR CampaignsCreate: retry without user_id failed: %v correlation_id=%s", rerr, correlationID.String())
 			}
 		}
 		return gen.CampaignsCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to create campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+
+	// Log successful creation with correlation ID
+	if h.deps.Logger != nil {
+		h.deps.Logger.Info(ctx, "campaign.create.success", map[string]interface{}{
+			"correlation_id": correlationID.String(),
+			"campaign_id": campaign.ID.String(),
+			"campaign_name": campaign.Name,
+			"execution_mode": "manual",
+		})
 	}
 
 	resp := mapCampaignToResponse(campaign)
@@ -1064,7 +1101,23 @@ func (h *strictHandlers) CampaignsPhaseStart(ctx context.Context, r gen.Campaign
 	if h.deps == nil || h.deps.Orchestrator == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
 		return gen.CampaignsPhaseStart401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
+	
+	// Track if this is an auto-start (look for correlation ID in context or assume manual for now)
+	// TODO: Implement proper correlation ID tracking via headers or request enhancement
+	isAutoStart := false
+	correlationID := ""
+	
+	// Track auto-start attempts
+	startTime := time.Now()
+	if isAutoStart && h.deps.Metrics != nil {
+		h.deps.Metrics.IncAutoStartAttempts()
+	}
+	
 	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
+		// Track failed auto-start attempts
+		if isAutoStart && h.deps.Metrics != nil {
+			h.deps.Metrics.IncAutoStartFailures()
+		}
 		if err == store.ErrNotFound {
 			return gen.CampaignsPhaseStart404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 		}
@@ -1072,9 +1125,18 @@ func (h *strictHandlers) CampaignsPhaseStart(ctx context.Context, r gen.Campaign
 	}
 	phaseModel, err := mapAPIPhaseToModel(string(r.Phase))
 	if err != nil {
+		// Track failed auto-start attempts
+		if isAutoStart && h.deps.Metrics != nil {
+			h.deps.Metrics.IncAutoStartFailures()
+		}
 		return gen.CampaignsPhaseStart400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid phase", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if err := h.deps.Orchestrator.StartPhaseInternal(ctx, uuid.UUID(r.CampaignId), phaseModel); err != nil {
+		// Track failed auto-start attempts
+		if isAutoStart && h.deps.Metrics != nil {
+			h.deps.Metrics.IncAutoStartFailures()
+		}
+		
 		if errors.Is(err, application.ErrMissingPhaseConfigs) {
 			missing := []string{}
 			// Attempt typed extraction using concrete error type
@@ -1087,7 +1149,13 @@ func (h *strictHandlers) CampaignsPhaseStart(ctx context.Context, r gen.Campaign
 				conflict.MissingPhases = &missing
 			}
 			if h.deps.Logger != nil {
-				h.deps.Logger.Warn(ctx, "campaign.phase.start.blocked_missing_configs", map[string]interface{}{"campaign_id": r.CampaignId, "phase": phaseModel, "missing": missing})
+				h.deps.Logger.Warn(ctx, "campaign.phase.start.blocked_missing_configs", map[string]interface{}{
+					"campaign_id": r.CampaignId, 
+					"phase": phaseModel, 
+					"missing": missing,
+					"correlation_id": correlationID,
+					"is_auto_start": isAutoStart,
+				})
 			}
 			return conflict, nil
 		}
@@ -1096,8 +1164,20 @@ func (h *strictHandlers) CampaignsPhaseStart(ctx context.Context, r gen.Campaign
 		}
 		return gen.CampaignsPhaseStart500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to start phase: " + err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
+	
+	// Track successful auto-start and timing
+	if isAutoStart && h.deps.Metrics != nil {
+		h.deps.Metrics.IncAutoStartSuccesses()
+		h.deps.Metrics.RecordAutoStartLatency(time.Since(startTime))
+	}
+	
 	if h.deps.Logger != nil {
-		h.deps.Logger.Info(ctx, "campaign.phase.start", map[string]interface{}{"campaign_id": r.CampaignId, "phase": phaseModel})
+		h.deps.Logger.Info(ctx, "campaign.phase.start", map[string]interface{}{
+			"campaign_id": r.CampaignId, 
+			"phase": phaseModel,
+			"correlation_id": correlationID,
+			"is_auto_start": isAutoStart,
+		})
 	}
 	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, uuid.UUID(r.CampaignId), phaseModel)
 	data := buildPhaseStatusResponse(phaseModel, st)
