@@ -1644,6 +1644,140 @@ func clamp(v, lo, hi float64) float64 {
 }
 
 func (s *analysisService) FetchAnalysisReadyFeatures(ctx context.Context, campaignID uuid.UUID) (map[string]map[string]any, error) {
+	// Phase P3: Analysis read switch implementation
+	// Decide whether to use new feature table or legacy feature_vector path
+	decision, err := s.makeReadPathDecision(ctx, campaignID)
+	if err != nil {
+		// Log error but fallback to legacy path
+		if s.deps.Logger != nil {
+			s.deps.Logger.Warn(ctx, "Failed to make read path decision, falling back to legacy", map[string]interface{}{
+				"campaign_id": campaignID,
+				"error":       err.Error(),
+			})
+		}
+		if s.mtx.analysisFeatureTableFallbacks != nil {
+			s.mtx.analysisFeatureTableFallbacks.WithLabelValues("error").Inc()
+		}
+		return s.fetchFeaturesLegacyPath(ctx, campaignID)
+	}
+
+	// Emit coverage ratio metric
+	if s.mtx.analysisFeatureTableCoverageRatio != nil {
+		s.mtx.analysisFeatureTableCoverageRatio.WithLabelValues(campaignID.String()).Set(decision.coverage)
+	}
+
+	if decision.useNew {
+		// Use new feature table path
+		if s.mtx.analysisFeatureTablePrimaryReads != nil {
+			s.mtx.analysisFeatureTablePrimaryReads.Inc()
+		}
+		if s.deps.Logger != nil {
+			s.deps.Logger.Debug(ctx, "Using new feature table path", map[string]interface{}{
+				"campaign_id": campaignID,
+				"coverage":    decision.coverage,
+				"reason":      decision.reason,
+			})
+		}
+		return s.fetchFeaturesNewPath(ctx, campaignID)
+	} else {
+		// Fallback to legacy path
+		if s.mtx.analysisFeatureTableFallbacks != nil {
+			s.mtx.analysisFeatureTableFallbacks.WithLabelValues(decision.reason).Inc()
+		}
+		if s.deps.Logger != nil {
+			s.deps.Logger.Debug(ctx, "Using legacy feature_vector path", map[string]interface{}{
+				"campaign_id": campaignID,
+				"coverage":    decision.coverage,
+				"threshold":   decision.threshold,
+				"reason":      decision.reason,
+			})
+		}
+		return s.fetchFeaturesLegacyPath(ctx, campaignID)
+	}
+}
+
+// makeReadPathDecision implements the decision logic for choosing between new and legacy feature reading paths
+func (s *analysisService) makeReadPathDecision(ctx context.Context, campaignID uuid.UUID) (*readPathDecision, error) {
+	// Check if feature flag is enabled
+	if !featureflags.IsAnalysisReadsFeatureTableEnabled() {
+		return &readPathDecision{
+			useNew:    false,
+			coverage:  0,
+			threshold: 0,
+			reason:    "flag_disabled",
+		}, nil
+	}
+
+	// Get database connection
+	var dbx *sql.DB
+	switch db := s.deps.DB.(type) {
+	case *sqlx.DB:
+		dbx = db.DB
+	case *sql.DB:
+		dbx = db
+	}
+	if dbx == nil {
+		return nil, fmt.Errorf("database unavailable")
+	}
+
+	// Get coverage threshold from feature flags
+	threshold := featureflags.GetAnalysisFeatureTableMinCoverage()
+
+	// Calculate coverage: ready features vs expected domains
+	var readyCount, expectedCount int64
+	
+	// Count ready features
+	err := dbx.QueryRowContext(ctx, 
+		`SELECT COUNT(*) FROM analysis_ready_features WHERE campaign_id = $1`, 
+		campaignID).Scan(&readyCount)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count ready features: %w", err)
+	}
+
+	// Count expected domains (domains with feature_vector or potentially extractable)
+	err = dbx.QueryRowContext(ctx, 
+		`SELECT COUNT(*) FROM generated_domains WHERE campaign_id = $1`, 
+		campaignID).Scan(&expectedCount)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count expected domains: %w", err)
+	}
+
+	// Calculate coverage ratio
+	var coverage float64
+	if expectedCount > 0 {
+		coverage = float64(readyCount) / float64(expectedCount)
+	}
+
+	// Small sample override: campaigns with <5 domains automatically pass coverage
+	if expectedCount < 5 && readyCount > 0 {
+		return &readPathDecision{
+			useNew:    true,
+			coverage:  coverage,
+			threshold: threshold,
+			reason:    "small_sample_override",
+		}, nil
+	}
+
+	// Coverage-based decision
+	if coverage >= threshold {
+		return &readPathDecision{
+			useNew:    true,
+			coverage:  coverage,
+			threshold: threshold,
+			reason:    "coverage_sufficient",
+		}, nil
+	}
+
+	return &readPathDecision{
+		useNew:    false,
+		coverage:  coverage,
+		threshold: threshold,
+		reason:    "below_coverage",
+	}, nil
+}
+
+// fetchFeaturesNewPath reads features from the new domain_extraction_features table via analysis_ready_features view
+func (s *analysisService) fetchFeaturesNewPath(ctx context.Context, campaignID uuid.UUID) (map[string]map[string]any, error) {
 	// TTL-based memoization (simple map + timestamp sidecar); default 30s
 	const ttl = 30 * time.Second
 	// Read lock fast path
@@ -1665,6 +1799,7 @@ func (s *analysisService) FetchAnalysisReadyFeatures(ctx context.Context, campai
 		return data, nil
 	}
 	s.featureCacheMu.RUnlock()
+
 	var dbx *sql.DB
 	switch db := s.deps.DB.(type) {
 	case *sqlx.DB:
@@ -1675,13 +1810,15 @@ func (s *analysisService) FetchAnalysisReadyFeatures(ctx context.Context, campai
 	if dbx == nil {
 		return nil, fmt.Errorf("fetch analysis features: db unavailable")
 	}
+
 	start := time.Now()
-	rows, err := dbx.QueryContext(ctx, `SELECT def.domain_id, gd.domain_name,
-		   def.kw_unique_count, def.kw_total_occurrences AS kw_hits_total, def.kw_weight_sum,
-	   def.content_richness_score, def.microcrawl_gain_ratio, def.feature_vector
-FROM analysis_ready_features def
-JOIN generated_domains gd ON gd.id = def.domain_id AND gd.campaign_id = def.campaign_id
-WHERE def.campaign_id=$1`, campaignID)
+	rows, err := dbx.QueryContext(ctx, `
+		SELECT 
+			def.domain_id, def.domain_name,
+			def.kw_unique_count, def.kw_total_occurrences AS kw_hits_total, def.kw_weight_sum,
+			def.content_richness_score, def.microcrawl_gain_ratio, def.feature_vector
+		FROM analysis_ready_features def
+		WHERE def.campaign_id = $1`, campaignID)
 	if err != nil {
 		return nil, fmt.Errorf("fetch analysis features: %w", err)
 	}
@@ -1689,6 +1826,7 @@ WHERE def.campaign_id=$1`, campaignID)
 		s.mtx.featureCacheMisses.Inc()
 	}
 	defer rows.Close()
+
 	res := make(map[string]map[string]any)
 	for rows.Next() {
 		var domainID string
@@ -1698,56 +1836,187 @@ WHERE def.campaign_id=$1`, campaignID)
 		var weightSum sql.NullFloat64
 		var richness sql.NullFloat64
 		var gain sql.NullFloat64
-		var fvRaw []byte
+		var fvRaw sql.NullString
+
 		if err := rows.Scan(&domainID, &domainName, &kwUnique, &kwHits, &weightSum, &richness, &gain, &fvRaw); err != nil {
-			return res, fmt.Errorf("fetch analysis features scan: %w", err)
+			continue // skip malformed rows
 		}
+
+		// Parse feature vector JSON
+		var fv map[string]any
+		if fvRaw.Valid && fvRaw.String != "" {
+			_ = json.Unmarshal([]byte(fvRaw.String), &fv)
+		}
+		if fv == nil {
+			fv = make(map[string]any)
+		}
+
+		// Build structured feature map compatible with existing analysis logic
+		domainFeatures := map[string]any{
+			"keywords": map[string]any{
+				"unique_count": kwUnique.Int64,
+				"hits_total":   kwHits.Int64,
+				"weight_sum":   weightSum.Float64,
+			},
+			"richness": map[string]any{
+				"score": richness.Float64,
+			},
+			"microcrawl": map[string]any{
+				"gain_ratio": gain.Float64,
+			},
+		}
+
+		// Merge additional data from feature_vector JSON
+		for k, v := range fv {
+			if k == "kw_top3" {
+				if keywords, ok := domainFeatures["keywords"].(map[string]any); ok {
+					keywords["top3"] = v
+				}
+			} else if k == "kw_signal_distribution" {
+				if keywords, ok := domainFeatures["keywords"].(map[string]any); ok {
+					keywords["signal_distribution"] = v
+				}
+			} else if strings.HasPrefix(k, "richness_") {
+				if richness, ok := domainFeatures["richness"].(map[string]any); ok {
+					richness[strings.TrimPrefix(k, "richness_")] = v
+				}
+			}
+		}
+
+		res[domainName] = domainFeatures
+	}
+
+	// Cache the results
+	s.featureCacheMu.Lock()
+	if s._featureCacheTTL == nil {
+		s._featureCacheTTL = make(map[uuid.UUID]struct {
+			at   time.Time
+			data map[string]map[string]any
+		})
+	}
+	s._featureCacheTTL[campaignID] = struct {
+		at   time.Time
+		data map[string]map[string]any
+	}{at: time.Now(), data: res}
+	s.featureCacheMu.Unlock()
+
+	// Record fetch metrics
+	if s.mtx.analysisFeatureFetchDuration != nil {
+		s.mtx.analysisFeatureFetchDuration.Observe(time.Since(start).Seconds())
+	}
+	if s.mtx.analysisFeatureFetchDomains != nil {
+		s.mtx.analysisFeatureFetchDomains.Observe(float64(len(res)))
+	}
+
+	return res, nil
+}
+
+// fetchFeaturesLegacyPath reads features from the legacy feature_vector column in generated_domains table
+func (s *analysisService) fetchFeaturesLegacyPath(ctx context.Context, campaignID uuid.UUID) (map[string]map[string]any, error) {
+	// TTL-based memoization (simple map + timestamp sidecar); default 30s
+	const ttl = 30 * time.Second
+	// Read lock fast path
+	s.featureCacheMu.RLock()
+	if ce, ok := s._featureCacheTTL[campaignID]; ok && time.Since(ce.at) < ttl {
+		data := ce.data
+		if s.mtx.featureCacheHits != nil {
+			s.mtx.featureCacheHits.Inc()
+		}
+		s.featureCacheMu.RUnlock()
+		return data, nil
+	}
+	if cached, ok := s.featureCache[campaignID]; ok {
+		data := cached
+		if s.mtx.featureCacheHits != nil {
+			s.mtx.featureCacheHits.Inc()
+		}
+		s.featureCacheMu.RUnlock()
+		return data, nil
+	}
+	s.featureCacheMu.RUnlock()
+
+	var dbx *sql.DB
+	switch db := s.deps.DB.(type) {
+	case *sqlx.DB:
+		dbx = db.DB
+	case *sql.DB:
+		dbx = db
+	}
+	if dbx == nil {
+		return nil, fmt.Errorf("fetch analysis features: db unavailable")
+	}
+
+	start := time.Now()
+	// Query from legacy feature_vector column
+	rows, err := dbx.QueryContext(ctx, `
+		SELECT 
+			id::text as domain_id, domain_name, feature_vector
+		FROM generated_domains 
+		WHERE campaign_id = $1 AND feature_vector IS NOT NULL`, campaignID)
+	if err != nil {
+		return nil, fmt.Errorf("fetch legacy analysis features: %w", err)
+	}
+	if s.mtx.featureCacheMisses != nil {
+		s.mtx.featureCacheMisses.Inc()
+	}
+	defer rows.Close()
+
+	res := make(map[string]map[string]any)
+	for rows.Next() {
+		var domainID string
+		var domainName string
+		var fvRaw []byte
+
+		if err := rows.Scan(&domainID, &domainName, &fvRaw); err != nil {
+			continue // Skip malformed rows
+		}
+
+		// Parse feature vector JSON
 		fv := map[string]any{}
 		if len(fvRaw) > 0 {
 			if err := json.Unmarshal(fvRaw, &fv); err != nil {
-				return res, fmt.Errorf("fetch analysis features unmarshal %s: %w", domainName, err)
+				continue // Skip malformed JSON
 			}
 		}
-		required := []string{"richness_weights_version", "prominence_norm", "diversity_effective_unique", "diversity_norm", "enrichment_norm", "applied_bonus", "applied_deductions_total", "stuffing_penalty", "repetition_index", "anchor_share", "kw_top3", "kw_signal_distribution"}
-		for _, k := range required {
-			if _, ok := fv[k]; !ok {
-				return res, fmt.Errorf("fetch analysis features missing key %s domain %s", k, domainName)
-			}
-		}
+
+		// Extract values from feature vector and convert to structured format
 		top3 := anyToStringSlice(fv["kw_top3"])
 		sigDist := anyToStringIntMap(fv["kw_signal_distribution"])
+
+		// Build structured feature map compatible with new table format
 		nested := map[string]any{
-			"domain": domainName,
 			"keywords": map[string]any{
-				"unique_count":        nullableInt64(kwUnique),
-				"hits_total":          nullableInt64(kwHits),
-				"weight_sum":          nullableFloat64(weightSum),
+				"unique_count":        getIntFromFV(fv, "kw_unique"),
+				"hits_total":          getIntFromFV(fv, "kw_hits_total"),
+				"weight_sum":          getFloatFromFV(fv, "kw_weight_sum"),
 				"top3":                top3,
 				"signal_distribution": sigDist,
 			},
 			"richness": map[string]any{
-				"score":                      nullableFloat64(richness),
-				"version":                    fv["richness_weights_version"],
-				"prominence_norm":            fv["prominence_norm"],
-				"diversity_effective_unique": fv["diversity_effective_unique"],
-				"diversity_norm":             fv["diversity_norm"],
-				"enrichment_norm":            fv["enrichment_norm"],
-				"applied_bonus":              fv["applied_bonus"],
-				"applied_deductions_total":   fv["applied_deductions_total"],
-				"stuffing_penalty":           fv["stuffing_penalty"],
-				"repetition_index":           fv["repetition_index"],
-				"anchor_share":               fv["anchor_share"],
+				"score":                      getFloatFromFV(fv, "richness"),
+				"version":                    getIntFromFV(fv, "richness_weights_version"),
+				"prominence_norm":            getFloatFromFV(fv, "prominence_norm"),
+				"diversity_effective_unique": getFloatFromFV(fv, "diversity_effective_unique"),
+				"diversity_norm":             getFloatFromFV(fv, "diversity_norm"),
+				"enrichment_norm":            getFloatFromFV(fv, "enrichment_norm"),
+				"applied_bonus":              getFloatFromFV(fv, "applied_bonus"),
+				"applied_deductions_total":   getFloatFromFV(fv, "applied_deductions_total"),
+				"stuffing_penalty":           getFloatFromFV(fv, "stuffing_penalty"),
+				"repetition_index":           getFloatFromFV(fv, "repetition_index"),
+				"anchor_share":               getFloatFromFV(fv, "anchor_share"),
 			},
 			"microcrawl": map[string]any{
-				"gain_ratio": nullableFloat64(gain),
+				"gain_ratio": getFloatFromFV(fv, "microcrawl_gain_ratio"),
 			},
 		}
 		res[domainName] = nested
 	}
+
 	if err := rows.Err(); err != nil {
-		return res, fmt.Errorf("fetch analysis features rows: %w", err)
+		return nil, fmt.Errorf("fetch legacy analysis features rows: %w", err)
 	}
-	// Populate caches with write lock
+
+	// Cache the results
 	s.featureCacheMu.Lock()
 	s.featureCache[campaignID] = res
 	s._featureCacheTTL[campaignID] = struct {
@@ -1755,18 +2024,31 @@ WHERE def.campaign_id=$1`, campaignID)
 		data map[string]map[string]any
 	}{at: time.Now(), data: res}
 	s.featureCacheMu.Unlock()
-	durMs := time.Since(start).Milliseconds()
-	if s.deps.Logger != nil {
-		s.deps.Logger.Debug(ctx, "fetched analysis features", map[string]interface{}{"campaign": campaignID.String(), "domains": len(res), "duration_ms": durMs})
-	}
-	// Metrics emission (best-effort; skip if nil)
+
+	// Record fetch metrics
 	if s.mtx.analysisFeatureFetchDuration != nil {
-		s.mtx.analysisFeatureFetchDuration.Observe(float64(durMs) / 1000.0)
+		s.mtx.analysisFeatureFetchDuration.Observe(time.Since(start).Seconds())
 	}
 	if s.mtx.analysisFeatureFetchDomains != nil {
 		s.mtx.analysisFeatureFetchDomains.Observe(float64(len(res)))
 	}
+
 	return res, nil
+}
+
+// Helper functions to safely extract values from feature vector map
+func getIntFromFV(fv map[string]any, key string) interface{} {
+	if val, ok := fv[key]; ok {
+		return val
+	}
+	return nil
+}
+
+func getFloatFromFV(fv map[string]any, key string) interface{} {
+	if val, ok := fv[key]; ok {
+		return val
+	}
+	return nil
 }
 
 // InvalidateFeatureCache removes cached features for a campaign (called after new analysis results stored)
