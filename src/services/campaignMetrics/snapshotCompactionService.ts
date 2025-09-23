@@ -159,26 +159,43 @@ class SnapshotCompactionService {
       
       if (nextBucketStart < points.length) {
         for (let i = nextBucketStart; i < nextBucketEnd; i++) {
-          avgX += points[i].x;
-          avgY += points[i].y;
+          const point = points[i];
+          if (point) {
+            avgX += point.x;
+            avgY += point.y;
+          }
         }
         avgX /= (nextBucketEnd - nextBucketStart);
         avgY /= (nextBucketEnd - nextBucketStart);
       } else {
         // Use last point if no next bucket
-        avgX = points[points.length - 1].x;
-        avgY = points[points.length - 1].y;
+        const lastPoint = points[points.length - 1];
+        if (lastPoint) {
+          avgX = lastPoint.x;
+          avgY = lastPoint.y;
+        }
       }
 
       // Find point in current bucket that forms largest triangle
       let maxArea = -1;
       let selectedIndex = bucketStart;
       const prevIndex = selectedIndices[selectedIndices.length - 1];
+      
+      if (prevIndex === undefined) {
+        // Fallback if no previous index
+        selectedIndices.push(bucketStart);
+        continue;
+      }
 
       for (let i = bucketStart; i < bucketEnd; i++) {
+        const prevPoint = points[prevIndex];
+        const currentPoint = points[i];
+        
+        if (!prevPoint || !currentPoint) continue;
+        
         const area = Math.abs(
-          (points[prevIndex].x - avgX) * (points[i].y - points[prevIndex].y) -
-          (points[prevIndex].x - points[i].x) * (avgY - points[prevIndex].y)
+          (prevPoint.x - avgX) * (currentPoint.y - prevPoint.y) -
+          (prevPoint.x - currentPoint.x) * (avgY - prevPoint.y)
         );
 
         if (area > maxArea) {
@@ -214,7 +231,7 @@ class SnapshotCompactionService {
     const uniqueIndices = [...new Set(selectedIndices)].sort((a, b) => a - b);
     
     return {
-      compactedSnapshots: uniqueIndices.map(i => snapshots[i]),
+      compactedSnapshots: uniqueIndices.map(i => snapshots[i]).filter((snapshot): snapshot is AggregateSnapshot => snapshot !== undefined),
       preservedIndices: uniqueIndices
     };
   }
@@ -235,8 +252,11 @@ class SnapshotCompactionService {
       const window = snapshots.slice(i, windowEnd);
       
       if (window.length === 1) {
-        compactedSnapshots.push(window[0]);
-        preservedIndices.push(i);
+        const snapshot = window[0];
+        if (snapshot) {
+          compactedSnapshots.push(snapshot);
+          preservedIndices.push(i);
+        }
       } else {
         // Create averaged snapshot
         const avgSnapshot = this.averageSnapshots(window, i, windowEnd - 1);
@@ -250,8 +270,11 @@ class SnapshotCompactionService {
       const recentStart = Math.max(0, snapshots.length - config.preserveRecent);
       for (let i = recentStart; i < snapshots.length; i++) {
         if (!preservedIndices.includes(i)) {
-          compactedSnapshots.push(snapshots[i]);
-          preservedIndices.push(i);
+          const snapshot = snapshots[i];
+          if (snapshot) {
+            compactedSnapshots.push(snapshot);
+            preservedIndices.push(i);
+          }
         }
       }
     }

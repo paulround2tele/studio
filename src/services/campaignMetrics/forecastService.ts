@@ -203,30 +203,38 @@ function computeSimpleExponentialSmoothing(
   horizon: number,
   options: ClientForecastOptions
 ): ForecastPoint[] {
+  if (series.length === 0) {
+    throw new Error('Cannot compute exponential smoothing for empty series');
+  }
+
   const alpha = options.alpha || 0.3;
   const values = series.map(p => p.value);
   
-  // Calculate smoothed values
-  let smoothed = values[0];
+  // Calculate smoothed values - we know values[0] exists after length check
+  let smoothed = values[0]!;
   const smoothedValues = [smoothed];
   
   for (let i = 1; i < values.length; i++) {
-    smoothed = alpha * values[i] + (1 - alpha) * smoothed;
+    // Safe access - we know both values[i] and smoothed exist
+    smoothed = alpha * values[i]! + (1 - alpha) * smoothed;
     smoothedValues.push(smoothed);
   }
   
   // Calculate residuals for confidence intervals
-  const residuals = values.map((val, i) => val - smoothedValues[i]);
+  const residuals = values.map((val, i) => val! - smoothedValues[i]!);
   const residualStdDev = calculateStandardDeviation(residuals);
   
   // Generate forecast points
   const forecasts: ForecastPoint[] = [];
-  const lastTimestamp = series[series.length - 1].timestamp;
+  const lastTimestamp = series[series.length - 1]!.timestamp;
   const timestampInterval = series.length > 1 ? 
-    (series[series.length - 1].timestamp - series[series.length - 2].timestamp) : 
+    (series[series.length - 1]!.timestamp - series[series.length - 2]!.timestamp) : 
     86400000; // Default to 1 day
   
   const lastSmoothed = smoothedValues[smoothedValues.length - 1];
+  if (lastSmoothed === undefined) {
+    throw new Error('No smoothed values available for forecasting');
+  }
   
   for (let i = 1; i <= horizon; i++) {
     const forecastTimestamp = lastTimestamp + (i * timestampInterval);
@@ -261,28 +269,34 @@ function computeHoltWinters(
   const values = series.map(p => p.value);
   const n = values.length;
   
-  // Initialize level, trend, and seasonal components
-  let level = values[0];
-  let trend = (values[seasonLength] - values[0]) / seasonLength;
+  // Ensure we have enough data for Holt-Winters
+  if (n < seasonLength + 1) {
+    throw new Error(`Insufficient data for Holt-Winters: need at least ${seasonLength + 1} points, got ${n}`);
+  }
+  
+  // Initialize level, trend, and seasonal components - safe after length check
+  let level = values[0]!;
+  let trend = (values[seasonLength]! - values[0]!) / seasonLength;
   const seasonal: number[] = new Array(seasonLength).fill(0);
   
   // Initialize seasonal indices
   for (let i = 0; i < seasonLength; i++) {
-    seasonal[i] = values[i] - level;
+    seasonal[i] = values[i]! - level;
   }
   
   const fitted: number[] = [];
   
   // Holt-Winters equations
   for (let i = 0; i < n; i++) {
-    const seasonalIndex = seasonal[i % seasonLength];
+    const seasonalIndex = seasonal[i % seasonLength]!;
     const predicted = level + trend + seasonalIndex;
     fitted.push(predicted);
     
     if (i < n - 1) { // Don't update on last observation
-      const newLevel = alpha * (values[i] - seasonalIndex) + (1 - alpha) * (level + trend);
+      const currentValue = values[i]!; // Safe access within loop bounds
+      const newLevel = alpha * (currentValue - seasonalIndex) + (1 - alpha) * (level + trend);
       const newTrend = beta * (newLevel - level) + (1 - beta) * trend;
-      const newSeasonal = gamma * (values[i] - newLevel) + (1 - gamma) * seasonalIndex;
+      const newSeasonal = gamma * (currentValue - newLevel) + (1 - gamma) * seasonalIndex;
       
       level = newLevel;
       trend = newTrend;
@@ -291,19 +305,19 @@ function computeHoltWinters(
   }
   
   // Calculate residuals for confidence intervals
-  const residuals = values.map((val, i) => val - fitted[i]);
+  const residuals = values.map((val, i) => val! - fitted[i]!);
   const residualStdDev = calculateStandardDeviation(residuals);
   
   // Generate forecast points
   const forecasts: ForecastPoint[] = [];
-  const lastTimestamp = series[series.length - 1].timestamp;
+  const lastTimestamp = series[series.length - 1]!.timestamp;
   const timestampInterval = series.length > 1 ? 
-    (series[series.length - 1].timestamp - series[series.length - 2].timestamp) : 
+    (series[series.length - 1]!.timestamp - series[series.length - 2]!.timestamp) : 
     86400000;
   
   for (let i = 1; i <= horizon; i++) {
     const forecastTimestamp = lastTimestamp + (i * timestampInterval);
-    const seasonalIndex = seasonal[(n + i - 1) % seasonLength];
+    const seasonalIndex = seasonal[(n + i - 1) % seasonLength]!;
     const forecastValue = level + (i * trend) + seasonalIndex;
     const confidenceInterval = 1.96 * residualStdDev * Math.sqrt(i); // Increasing uncertainty
     
@@ -423,8 +437,8 @@ export async function getForecast(
       horizon,
       points: [],
       generatedAt: new Date().toISOString(),
-      method: 'insufficient-data',
-      confidence: 0,
+      method: 'client', // Use valid enum value
+      error: 'Insufficient data: less than 8 data points available',
     };
   }
 
@@ -470,7 +484,6 @@ export async function getForecast(
         points: enhancedPoints,
         generatedAt: serverResponse.generatedAt,
         method: 'server',
-        confidence: 0.95, // Server confidence level
       };
     } catch (error) {
       console.warn('[getForecast] Server forecast failed, falling back to client:', error);
@@ -493,8 +506,8 @@ export async function getForecast(
       horizon,
       points: [],
       generatedAt: new Date().toISOString(),
-      method: 'skipped',
-      confidence: 0,
+      method: 'client', // Use valid enum value
+      error: 'Forecast computation skipped by resolution strategy',
     };
   }
 
@@ -506,8 +519,7 @@ export async function getForecast(
         horizon,
         points: workerPoints,
         generatedAt: new Date().toISOString(),
-        method: 'client-worker',
-        confidence: 0.8,
+        method: 'client', // Use valid enum value - computed on client side via worker
       };
     } catch (error) {
       console.warn('[getForecast] Worker forecast failed, using main thread:', error);
@@ -525,7 +537,6 @@ export async function getForecast(
     points: clientPoints,
     generatedAt: new Date().toISOString(),
     method: 'client',
-    confidence: 0.8,
   };
 }
 
@@ -547,11 +558,11 @@ function computeClientConfidenceBands(
 
   // Simple exponential smoothing to get fitted values
   const alpha = 0.3;
-  let smoothed = timeSeries[0].value;
+  let smoothed = timeSeries[0]!.value;
   const residuals: number[] = [];
 
   for (let i = 1; i < timeSeries.length; i++) {
-    const actual = timeSeries[i].value;
+    const actual = timeSeries[i]!.value;
     residuals.push(actual - smoothed);
     smoothed = alpha * actual + (1 - alpha) * smoothed;
   }
@@ -624,7 +635,7 @@ async function computeForecastInWorker(
 function calculateMAE(actual: number[], predicted: number[]): number {
   if (actual.length !== predicted.length || actual.length === 0) return Infinity;
   
-  const sum = actual.reduce((acc, val, idx) => acc + Math.abs(val - predicted[idx]), 0);
+  const sum = actual.reduce((acc, val, idx) => acc + Math.abs(val - predicted[idx]!), 0);
   return sum / actual.length;
 }
 
@@ -636,7 +647,7 @@ function calculateMAPE(actual: number[], predicted: number[]): number {
   
   const sum = actual.reduce((acc, val, idx) => {
     if (val === 0) return acc; // Skip zero values to avoid division by zero
-    return acc + Math.abs((val - predicted[idx]) / val);
+    return acc + Math.abs((val - predicted[idx]!) / val);
   }, 0);
   
   const validValues = actual.filter(v => v !== 0).length;
@@ -651,7 +662,7 @@ async function performModelArbitration(
   horizon: number,
   metricKey: string,
   campaignId: string,
-  options: ClientForecastOptions = {}
+  options: ClientForecastOptions = { method: 'simpleExp' }
 ): Promise<{
   bestModel: 'server' | 'client_holt_winters' | 'client_exp_smoothing';
   scores: Array<{ model: string; mae: number; mape: number; confidence: number }>;
@@ -677,7 +688,7 @@ async function performModelArbitration(
     const expForecast = computeSimpleExponentialSmoothing(
       trainingData, 
       historicalWindow, 
-      { alpha: options.alpha || 0.3 }
+      { method: 'simpleExp', alpha: options.alpha || 0.3 }
     );
     const expPredicted = expForecast.map(p => p.value);
     const expMAE = calculateMAE(actualValues, expPredicted);
@@ -812,7 +823,7 @@ export async function getMultiModelForecast(
   snapshots: AggregateSnapshot[],
   metricKey: keyof AggregateSnapshot['aggregates'] = 'avgLeadScore',
   customHorizon?: number,
-  options: ClientForecastOptions = {}
+  options: ClientForecastOptions = { method: 'simpleExp' }
 ): Promise<ForecastResult> {
   if (!isForecastsEnabled()) {
     throw new Error('Forecasting feature is disabled');
@@ -833,7 +844,7 @@ export async function getMultiModelForecast(
     };
   }
 
-  let primaryForecast: ForecastResult;
+  let primaryForecast: ForecastResult | undefined;
   let modelArbitration: Awaited<ReturnType<typeof performModelArbitration>> | undefined;
 
   // Perform model arbitration if enabled
@@ -863,10 +874,22 @@ export async function getMultiModelForecast(
         timingMs: Date.now() - startTime,
         modelInfo: {
           selectedModel: 'server',
-          arbitrationScores: modelArbitration.scores.find(s => s.model === 'server'),
-          alternativeModels: modelArbitration.scores.filter(s => s.model !== 'server')
+          arbitrationScores: modelArbitration.scores.find(s => s.model === 'server') ? {
+            mae: modelArbitration.scores.find(s => s.model === 'server')!.mae,
+            mape: modelArbitration.scores.find(s => s.model === 'server')!.mape,
+            confidence: modelArbitration.scores.find(s => s.model === 'server')!.confidence,
+          } : undefined,
+          alternativeModels: modelArbitration.scores.filter(s => s.model !== 'server').map(score => ({
+            name: score.model,
+            mae: score.mae,
+            mape: score.mape
+          }))
         },
-        qualityMetrics: serverResponse.qualityMetrics
+        qualityMetrics: serverResponse.qualityMetrics ? {
+          mae: serverResponse.qualityMetrics.mae,
+          mape: serverResponse.qualityMetrics.mape,
+          residualVariance: (serverResponse.qualityMetrics as any).residualVariance || 0
+        } : undefined
       };
     } catch (error) {
       console.warn('[getMultiModelForecast] Server forecast failed, falling back:', error);
@@ -902,8 +925,16 @@ export async function getMultiModelForecast(
       timingMs: Date.now() - startTime,
       modelInfo: {
         selectedModel: selectedMethod,
-        arbitrationScores: modelArbitration?.scores.find(s => s.model.includes(selectedMethod)),
-        alternativeModels: modelArbitration?.scores.filter(s => !s.model.includes(selectedMethod))
+        arbitrationScores: modelArbitration?.scores.find(s => s.model.includes(selectedMethod)) ? {
+          mae: modelArbitration.scores.find(s => s.model.includes(selectedMethod))!.mae,
+          mape: modelArbitration.scores.find(s => s.model.includes(selectedMethod))!.mape,
+          confidence: modelArbitration.scores.find(s => s.model.includes(selectedMethod))!.confidence,
+        } : undefined,
+        alternativeModels: modelArbitration?.scores.filter(s => !s.model.includes(selectedMethod)).map(score => ({
+          name: score.model,
+          mae: score.mae,
+          mape: score.mape
+        }))
       },
       qualityMetrics: {
         mae: modelArbitration?.scores.find(s => s.model.includes(selectedMethod))?.mae || 0,
@@ -930,6 +961,10 @@ export async function getMultiModelForecast(
     });
   }
 
+  if (!primaryForecast) {
+    throw new Error('Failed to generate any forecast - both server and client methods failed');
+  }
+
   return primaryForecast;
 }
 
@@ -942,7 +977,7 @@ export async function getEnhancedMultiModelForecast(
   snapshots: AggregateSnapshot[],
   metricKey: keyof AggregateSnapshot['aggregates'] = 'avgLeadScore',
   customHorizon?: number,
-  options: ClientForecastOptions = {}
+  options: ClientForecastOptions = { method: 'simpleExp' }
 ): Promise<ForecastResult> {
   if (!isForecastsEnabled()) {
     throw new Error('Forecasting feature is disabled');
@@ -1022,15 +1057,17 @@ async function getBlendedForecast(
     timingMs: Date.now() - startTime,
     modelInfo: {
       selectedModel: 'bayesian_blend',
-      blendMethod: blend.blendMethod,
-      blendQuality: blend.qualityScore,
-      posteriorWeights: Object.fromEntries(blend.posteriorWeights),
-      contributingModels: Array.from(blend.posteriorWeights.keys()),
+      // Note: modelInfo interface doesn't support blendMethod
+      arbitrationScores: {
+        mae: 0,
+        mape: 0,
+        confidence: blend.qualityScore
+      }
     },
     qualityMetrics: {
       mae: 0, // Would be calculated from historical performance
       mape: 0,
-      confidence: blend.qualityScore,
+      residualVariance: 0, // Would be calculated from residuals
     }
   };
 }

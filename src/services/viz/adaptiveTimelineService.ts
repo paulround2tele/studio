@@ -92,7 +92,11 @@ class LTTBDownsampler {
     const downsampled: TimeSeriesPoint[] = [];
     
     // Always include first and last points
-    downsampled.push(points[0]);
+    const firstPoint = points[0];
+    if (!firstPoint) {
+      return []; // Return empty if no first point
+    }
+    downsampled.push(firstPoint);
     
     const bucketSize = (points.length - 2) / (targetCount - 2);
     
@@ -105,6 +109,14 @@ class LTTBDownsampler {
       
       // Previous point for triangle calculation
       const prevPoint = downsampled[downsampled.length - 1];
+      if (!prevPoint) {
+        // Fallback if no previous point
+        selectedPoint = points[bucketStart];
+        if (selectedPoint) {
+          downsampled.push(selectedPoint);
+        }
+        continue;
+      }
       
       // Next bucket average for triangle calculation
       const nextBucketStart = Math.floor((i + 1) * bucketSize) + 1;
@@ -115,9 +127,12 @@ class LTTBDownsampler {
       let nextBucketCount = 0;
       
       for (let j = nextBucketStart; j < nextBucketEnd; j++) {
-        nextAvgTimestamp += points[j].timestamp;
-        nextAvgValue += points[j].value;
-        nextBucketCount++;
+        const point = points[j];
+        if (point) {
+          nextAvgTimestamp += point.timestamp;
+          nextAvgValue += point.value;
+          nextBucketCount++;
+        }
       }
       
       if (nextBucketCount > 0) {
@@ -128,6 +143,7 @@ class LTTBDownsampler {
       // Find point in current bucket that forms largest triangle
       for (let j = bucketStart; j < bucketEnd; j++) {
         const currentPoint = points[j];
+        if (!currentPoint) continue;
         
         // Calculate triangle area
         const area = Math.abs(
@@ -141,7 +157,9 @@ class LTTBDownsampler {
         }
       }
       
-      downsampled.push(selectedPoint);
+      if (selectedPoint) {
+        downsampled.push(selectedPoint);
+      }
     }
     
     // Always include last point

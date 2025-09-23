@@ -376,8 +376,13 @@ class ForecastBlendService {
     horizon: number,
     modelForecasts: Array<{ modelId: string; points: any[] }>
   ): BlendedForecast {
+    // Ensure we have model forecasts
+    if (modelForecasts.length === 0) {
+      throw new Error('No model forecasts available for arbitration');
+    }
+
     // Simple arbitration: pick best performing model or default to first
-    let bestModelId = modelForecasts[0]?.modelId;
+    let bestModelId = modelForecasts[0]!.modelId; // Safe access after length check
     let bestScore = Infinity;
 
     for (const forecast of modelForecasts) {
@@ -454,8 +459,14 @@ class ForecastBlendService {
     
     const confidence = Math.max(0, Math.min(1, 1 - (Math.sqrt(variance) / (rollingMeanActual + 1))));
 
+    const keyParts = key.split(':');
+    const modelId = keyParts[1];
+    if (!modelId) {
+      throw new Error(`Invalid performance stats key format: ${key}. Expected format: "metricKey:modelId"`);
+    }
+
     const stats: ModelPerformanceStats = {
-      modelId: key.split(':')[1],
+      modelId,
       sampleCount: history.length,
       meanAbsoluteError,
       meanAbsolutePercentageError,
