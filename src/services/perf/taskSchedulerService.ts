@@ -269,6 +269,9 @@ class TaskSchedulerService {
     }
 
     const task = availableTasks[0];
+    if (!task) {
+      return; // Safety check - should not happen but provides type safety
+    }
     
     // Check for timeout
     const now = Date.now();

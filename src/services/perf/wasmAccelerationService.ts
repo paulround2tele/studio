@@ -5,7 +5,13 @@
 
 // Feature flag check
 const isWasmAccelEnabled = (): boolean => {
-  return process.env.NEXT_PUBLIC_ENABLE_WASM_ACCEL === 'true';
+  if (typeof window !== 'undefined') {
+    // Browser environment
+    return localStorage.getItem('NEXT_PUBLIC_ENABLE_WASM_ACCEL') === 'true';
+  }
+  // Node environment or build time - use globalThis approach
+  const env = (globalThis as any).process?.env;
+  return env?.NEXT_PUBLIC_ENABLE_WASM_ACCEL === 'true';
 };
 
 // Types for WASM kernels
@@ -107,11 +113,15 @@ class WasmAccelerationService {
       // Convert result back to points
       const downsampledPoints: LttbPoint[] = [];
       for (let i = 0; i < result.length; i += 2) {
-        downsampledPoints.push({
-          x: result[i],
-          y: result[i + 1],
-          timestamp: points[Math.round(result[i])]?.timestamp
-        });
+        const pointIndex = Math.round(result[i] ?? 0);
+        const originalPoint = points[pointIndex];
+        if (originalPoint) {
+          downsampledPoints.push({
+            x: result[i] ?? 0,
+            y: result[i + 1] ?? 0,
+            timestamp: originalPoint.timestamp
+          });
+        }
       }
 
       this.updateKernelPerformance('lttb', performance.now() - startTime);
@@ -143,8 +153,8 @@ class WasmAccelerationService {
       
       // Convert to WASM format
       const modelIds = Object.keys(prevWeights);
-      const weights = new Float64Array(modelIds.map(id => prevWeights[id]));
-      const errorArray = new Float64Array(errors);
+      const weights = new Float64Array(modelIds.map(id => prevWeights[id] ?? 0));
+      const errorArray = new Float64Array(errors.filter(e => e !== undefined));
       
       // Call WASM function
       const newWeights = kernel.module.update_blend_weights(weights, errorArray);
@@ -336,7 +346,7 @@ class WasmAccelerationService {
             for (let i = 0; i < threshold; i++) {
               const index = Math.min(i * step, xValues.length - 1);
               result[i * 2] = index;
-              result[i * 2 + 1] = yValues[index];
+              result[i * 2 + 1] = yValues[index] ?? 0;
             }
             return result;
           }
@@ -349,14 +359,14 @@ class WasmAccelerationService {
             const alpha = 0.1;
             const result = new Float64Array(weights.length);
             for (let i = 0; i < weights.length; i++) {
-              const errorFactor = Math.exp(-errors[i] || 0);
-              result[i] = weights[i] * (1 - alpha) + errorFactor * alpha;
+              const errorFactor = Math.exp(-(errors[i] ?? 0));
+              result[i] = (weights[i] ?? 0) * (1 - alpha) + errorFactor * alpha;
             }
             // Normalize to sum to 1
             const sum = result.reduce((s, w) => s + w, 0);
             if (sum > 0) {
               for (let i = 0; i < result.length; i++) {
-                result[i] /= sum;
+                result[i] = (result[i] ?? 0) / sum;
               }
             }
             return result;
@@ -406,9 +416,13 @@ class WasmAccelerationService {
    */
   private fallbackLttbDownsample(points: LttbPoint[], threshold: number): LttbPoint[] {
     if (points.length <= threshold) return points;
+    if (points.length === 0) return [];
 
     const bucketSize = (points.length - 2) / (threshold - 2);
-    const result: LttbPoint[] = [points[0]]; // Always include first point
+    const firstPoint = points[0];
+    if (!firstPoint) return [];
+    
+    const result: LttbPoint[] = [firstPoint]; // Always include first point
 
     for (let i = 1; i < threshold - 1; i++) {
       const bucketStart = Math.floor(i * bucketSize) + 1;
@@ -416,25 +430,35 @@ class WasmAccelerationService {
       
       let maxArea = -1;
       let selectedPoint = points[bucketStart];
+      if (!selectedPoint) {
+        continue; // Skip if no point available in bucket
+      }
 
       // Calculate area for each point in bucket
       for (let j = bucketStart; j < Math.min(bucketEnd, points.length); j++) {
-        const area = this.calculateTriangleArea(
-          result[result.length - 1],
-          points[j],
-          points[Math.min(bucketEnd, points.length - 1)]
-        );
+        const pointA = result[result.length - 1];
+        const pointB = points[j];
+        const pointC = points[Math.min(bucketEnd, points.length - 1)];
         
-        if (area > maxArea) {
-          maxArea = area;
-          selectedPoint = points[j];
+        if (pointA && pointB && pointC) {
+          const area = this.calculateTriangleArea(pointA, pointB, pointC);
+          
+          if (area > maxArea) {
+            maxArea = area;
+            selectedPoint = pointB;
+          }
         }
       }
 
-      result.push(selectedPoint);
+      if (selectedPoint) {
+        result.push(selectedPoint);
+      }
     }
 
-    result.push(points[points.length - 1]); // Always include last point
+    const lastPoint = points[points.length - 1];
+    if (lastPoint) {
+      result.push(lastPoint); // Always include last point
+    }
     return result;
   }
 
@@ -457,9 +481,9 @@ class WasmAccelerationService {
     let totalWeight = 0;
 
     modelIds.forEach((id, index) => {
-      const error = errors[index] || 0;
+      const error = errors[index] ?? 0;
       const errorFactor = Math.exp(-Math.abs(error));
-      const newWeight = prevWeights[id] * (1 - alpha) + errorFactor * alpha;
+      const newWeight = (prevWeights[id] ?? 0) * (1 - alpha) + errorFactor * alpha;
       newWeights[id] = newWeight;
       totalWeight += newWeight;
     });
@@ -467,7 +491,7 @@ class WasmAccelerationService {
     // Normalize weights to sum to 1
     if (totalWeight > 0) {
       modelIds.forEach(id => {
-        newWeights[id] /= totalWeight;
+        newWeights[id] = (newWeights[id] ?? 0) / totalWeight;
       });
     }
 
