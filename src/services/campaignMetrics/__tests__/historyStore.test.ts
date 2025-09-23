@@ -59,8 +59,8 @@ describe('historyStore', () => {
 
       const snapshots = getSnapshots(campaignId);
       expect(snapshots).toHaveLength(2);
-      expect(snapshots[0].id).toBe('snap-1');
-      expect(snapshots[1].id).toBe('snap-2');
+      expect(snapshots[0]?.id).toBe('snap-1');
+      expect(snapshots[1]?.id).toBe('snap-2');
     });
 
     it('should return latest snapshot', () => {
@@ -107,7 +107,8 @@ describe('historyStore', () => {
       expect(snapshots).toHaveLength(3);
       
       // Should keep the most recent ones
-      expect(snapshots[snapshots.length - 1].id).toBe('snap-5');
+      const lastSnapshot = snapshots[snapshots.length - 1];
+      expect(lastSnapshot?.id).toBe('snap-5');
     });
 
     it('should preserve pinned snapshots during pruning', () => {

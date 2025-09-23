@@ -62,9 +62,9 @@ describe('recommendationScoreService', () => {
       expect(groups).toHaveLength(3);
       
       // Should be sorted by priority (action > warn > info)
-      expect(groups[0].mergedRecommendation.severity).toBe('action');
-      expect(groups[1].mergedRecommendation.severity).toBe('warn');
-      expect(groups[2].mergedRecommendation.severity).toBe('info');
+      expect(groups[0]?.mergedRecommendation.severity).toBe('action');
+      expect(groups[1]?.mergedRecommendation.severity).toBe('warn');
+      expect(groups[2]?.mergedRecommendation.severity).toBe('info');
     });
 
     it('should group similar recommendations by canonical cause', () => {
@@ -97,8 +97,10 @@ describe('recommendationScoreService', () => {
       });
 
       const group = groups[0];
-      expect(group.mergedRecommendation.rationale).toContain('Rationale for charset-optimization');
-      expect(group.mergedRecommendation.rationale).toContain('Rationale for length-optimization');
+      if (group) {
+        expect(group.mergedRecommendation.rationale).toContain('Rationale for charset-optimization');
+        expect(group.mergedRecommendation.rationale).toContain('Rationale for length-optimization');
+      }
     });
 
     it('should filter out low-priority recommendations', () => {
@@ -114,7 +116,7 @@ describe('recommendationScoreService', () => {
 
       // Should include high priority but potentially filter low priority based on threshold
       expect(groups.length).toBeGreaterThan(0);
-      expect(groups[0].totalPriority).toBeGreaterThan(0.08); // Above threshold
+      expect(groups[0]?.totalPriority).toBeGreaterThan(0.08); // Above threshold
     });
   });
 
@@ -127,14 +129,16 @@ describe('recommendationScoreService', () => {
         classification: mockClassification
       });
 
-      const scored = groups[0].mergedRecommendation;
+      const scored = groups[0]?.mergedRecommendation;
       
-      expect(scored.rawScore).toBeGreaterThan(0);
-      expect(scored.severityWeight).toBe(1.0); // action severity
-      expect(scored.recencyFactor).toBeGreaterThan(0);
-      expect(scored.compositePriority).toBe(
-        scored.severityWeight * scored.rawScore * scored.recencyFactor
-      );
+      if (scored) {
+        expect(scored.rawScore).toBeGreaterThan(0);
+        expect(scored.severityWeight).toBe(1.0); // action severity
+        expect(scored.recencyFactor).toBeGreaterThan(0);
+        expect(scored.compositePriority).toBe(
+          scored.severityWeight * scored.rawScore * scored.recencyFactor
+        );
+      }
     });
 
     it('should weight severity correctly', () => {
@@ -166,16 +170,18 @@ describe('recommendationScoreService', () => {
         classification: mockClassification
       });
 
-      const scored = groups[0].mergedRecommendation;
-      const explanation = explainScoring(scored);
+      const scored = groups[0]?.mergedRecommendation;
+      if (scored) {
+        const explanation = explainScoring(scored);
 
-      expect(explanation.breakdown).toEqual(expect.arrayContaining([
-        expect.stringContaining('Raw Score:'),
-        expect.stringContaining('Severity Weight:'),
-        expect.stringContaining('Recency Factor:'),
-        expect.stringContaining('Composite Priority:')
-      ]));
-      expect(explanation.finalScore).toBe(scored.compositePriority);
+        expect(explanation.breakdown).toEqual(expect.arrayContaining([
+          expect.stringContaining('Raw Score:'),
+          expect.stringContaining('Severity Weight:'),
+          expect.stringContaining('Recency Factor:'),
+          expect.stringContaining('Composite Priority:')
+        ]));
+        expect(explanation.finalScore).toBe(scored.compositePriority);
+      }
     });
   });
 
@@ -197,7 +203,7 @@ describe('recommendationScoreService', () => {
 
       // Should still work but use simpler logic
       expect(groups).toHaveLength(2);
-      expect(groups[0].mergedRecommendation).toBeDefined();
+      expect(groups[0]?.mergedRecommendation).toBeDefined();
     });
   });
 
@@ -220,8 +226,8 @@ describe('recommendationScoreService', () => {
       });
 
       expect(groups).toHaveLength(1);
-      expect(groups[0].recommendations).toHaveLength(1);
-      expect(groups[0].mergedRecommendation.id).toBe('single');
+      expect(groups[0]?.recommendations).toHaveLength(1);
+      expect(groups[0]?.mergedRecommendation.id).toBe('single');
     });
   });
 });

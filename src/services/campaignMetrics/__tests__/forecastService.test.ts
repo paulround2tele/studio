@@ -170,8 +170,11 @@ describe('Forecast Service', () => {
       });
 
       // Confidence bands should be properly ordered
-      expect(forecast[0].lower).toBeLessThanOrEqual(forecast[0].value);
-      expect(forecast[0].value).toBeLessThanOrEqual(forecast[0].upper);
+      const firstForecast = forecast[0];
+      if (firstForecast) {
+        expect(firstForecast.lower).toBeLessThanOrEqual(firstForecast.value);
+        expect(firstForecast.value).toBeLessThanOrEqual(firstForecast.upper);
+      }
     });
 
     it('should compute Holt-Winters forecast when conditions are met', () => {
@@ -195,7 +198,7 @@ describe('Forecast Service', () => {
       });
 
       expect(forecast).toHaveLength(7);
-      expect(forecast[0].value).toBeGreaterThan(0);
+      expect(forecast[0]?.value).toBeGreaterThan(0);
     });
 
     it('should fallback to simple exponential smoothing for short seasonal data', () => {

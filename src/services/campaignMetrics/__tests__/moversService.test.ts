@@ -110,10 +110,10 @@ describe('moversService', () => {
     it('should respect minimum thresholds', () => {
       // Create domains with small changes
       const smallChangeDomains = [
-        { ...mockCurrentDomains[0], lead_score: 71 }
+        { ...mockCurrentDomains[0]!, lead_score: 71 } as DomainMetricsInput
       ];
       const previousSmallChange = [
-        { ...mockPreviousDomains[0], lead_score: 70 }
+        { ...mockPreviousDomains[0]!, lead_score: 70 } as DomainMetricsInput
       ];
       
       const movers = extractMovers(smallChangeDomains, previousSmallChange, 10);
@@ -125,10 +125,10 @@ describe('moversService', () => {
     it('should skip domains below minimum baseline', () => {
       // Create domains with low baseline scores
       const lowBaselineDomains = [
-        { ...mockCurrentDomains[0], lead_score: 5 }
+        { ...mockCurrentDomains[0]!, lead_score: 5 } as DomainMetricsInput
       ];
       const previousLowBaseline = [
-        { ...mockPreviousDomains[0], lead_score: 0.5 }
+        { ...mockPreviousDomains[0]!, lead_score: 0.5 } as DomainMetricsInput
       ];
       
       const movers = extractMovers(lowBaselineDomains, previousLowBaseline, 10);
@@ -142,9 +142,13 @@ describe('moversService', () => {
       
       // Movers should be sorted by absolute delta (largest first)
       for (let i = 1; i < movers.length; i++) {
-        expect(Math.abs(movers[i-1].delta)).toBeGreaterThanOrEqual(
-          Math.abs(movers[i].delta)
-        );
+        const prevMover = movers[i-1];
+        const currentMover = movers[i];
+        if (prevMover && currentMover) {
+          expect(Math.abs(prevMover.delta)).toBeGreaterThanOrEqual(
+            Math.abs(currentMover.delta)
+          );
+        }
       }
     });
 
@@ -196,8 +200,8 @@ describe('moversService', () => {
       
       expect(grouped.gainers).toHaveLength(2);
       expect(grouped.decliners).toHaveLength(1);
-      expect(grouped.gainers[0].domain).toBe('gainer1.com');
-      expect(grouped.decliners[0].domain).toBe('decliner1.com');
+      expect(grouped.gainers[0]?.domain).toBe('gainer1.com');
+      expect(grouped.decliners[0]?.domain).toBe('decliner1.com');
     });
 
     it('should handle empty movers array', () => {

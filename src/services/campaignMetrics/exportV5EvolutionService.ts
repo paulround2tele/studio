@@ -476,7 +476,11 @@ class ExportV5EvolutionService {
       warnings: string[];
     };
   }> {
-    const validation = { isValid: true, errors: [], warnings: [] };
+    const validation: { isValid: boolean; errors: string[]; warnings: string[] } = { 
+      isValid: true, 
+      errors: [], 
+      warnings: [] 
+    };
 
     try {
       let bundle: ExportBundleV5;
