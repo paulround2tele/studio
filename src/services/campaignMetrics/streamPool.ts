@@ -4,12 +4,26 @@
  */
 
 // Feature flag for stream pooling
-const isStreamPoolingEnabled = () => 
-  process.env.NEXT_PUBLIC_STREAM_POOLING !== 'false';
+const isStreamPoolingEnabled = () => {
+  if (typeof window !== 'undefined') {
+    // Browser environment - check window/global variables or localStorage
+    return localStorage.getItem('NEXT_PUBLIC_STREAM_POOLING') !== 'false';
+  }
+  // Node environment or build time - use globalThis approach
+  const env = (globalThis as any).process?.env;
+  return env?.NEXT_PUBLIC_STREAM_POOLING !== 'false';
+};
 
 // Feature flag for differential updates (Phase 8)
-const isDifferentialUpdatesEnabled = () =>
-  process.env.NEXT_PUBLIC_STREAM_DIFFERENTIAL_UPDATES !== 'false';
+const isDifferentialUpdatesEnabled = () => {
+  if (typeof window !== 'undefined') {
+    // Browser environment
+    return localStorage.getItem('NEXT_PUBLIC_STREAM_DIFFERENTIAL_UPDATES') !== 'false';
+  }
+  // Node environment or build time
+  const env = (globalThis as any).process?.env;
+  return env?.NEXT_PUBLIC_STREAM_DIFFERENTIAL_UPDATES !== 'false';
+};
 
 /**
  * Stream pool event callback
@@ -122,6 +136,10 @@ class DifferentialPatchProcessor {
     // Navigate to the parent of the target field
     for (let i = 0; i < pathParts.length - 1; i++) {
       const part = pathParts[i];
+      if (!part) {
+        console.warn('[DifferentialPatchProcessor] Invalid path part at index', i);
+        return;
+      }
       if (!(part in current)) {
         current[part] = {};
       }
@@ -129,6 +147,10 @@ class DifferentialPatchProcessor {
     }
     
     const finalKey = pathParts[pathParts.length - 1];
+    if (!finalKey) {
+      console.warn('[DifferentialPatchProcessor] Invalid final key');
+      return;
+    }
     
     switch (change.operation) {
       case 'set':
@@ -360,7 +382,6 @@ class StreamPool {
           // Create enhanced event with computed state
           const computedState = pool.patchProcessor.getCurrentState();
           const enhancedEvent = new MessageEvent('message', {
-            ...event,
             data: JSON.stringify({
               ...messageData,
               computedState,
@@ -523,6 +544,29 @@ class StreamPool {
     this.qualityInterval = setInterval(() => {
       this.updateQualityMetrics();
     }, this.config.qualityThresholdMs);
+  }
+
+  /**
+   * Update quality metrics for all active pools
+   */
+  private updateQualityMetrics(): void {
+    const now = Date.now();
+    
+    this.pools.forEach((pool) => {
+      // Update quality score based on current metrics
+      const newScore = this.calculateQualityScore(pool);
+      pool.qualityMetrics.score = newScore;
+      
+      // Emit telemetry if quality has degraded significantly
+      if (newScore < 50 && pool.qualityMetrics.lastUpdated < now - this.config.qualityThresholdMs) {
+        this.emitTelemetryEvent('stream_quality_degraded', {
+          url: pool.url,
+          score: newScore,
+          latencyMs: pool.qualityMetrics.latencyMs,
+          errorRate: pool.qualityMetrics.errorRate
+        });
+      }
+    });
   }
 
   /**
