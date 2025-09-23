@@ -167,8 +167,13 @@ function computeSimpleExpSmoothingInWorker(
 ): Array<{ timestamp: string; metricKey: string; value: number; lower: number; upper: number }> {
   const values = series.map(p => p.value);
   
+  // Handle empty series
+  if (values.length === 0) {
+    return [];
+  }
+  
   // Calculate smoothed values
-  let smoothed = values[0];
+  let smoothed = values[0] ?? 0; // Ensure smoothed is defined
   const smoothedValues = [smoothed];
   
   for (let i = 1; i < values.length; i++) {
@@ -177,7 +182,7 @@ function computeSimpleExpSmoothingInWorker(
   }
   
   // Calculate residuals for confidence intervals
-  const residuals = values.map((val, i) => val - smoothedValues[i]);
+  const residuals = values.map((val, i) => val - (smoothedValues[i] ?? 0));
   const residualStdDev = calculateStdDev(residuals);
   
   // Generate forecast points
@@ -232,18 +237,18 @@ function computeHoltWintersInWorker(
     seasonal[i] = values[i] - level;
   }
   
-  const fitted = [];
+  const fitted: number[] = [];
   
   // Holt-Winters equations
   for (let i = 0; i < n; i++) {
     const seasonalIndex = seasonal[i % seasonLength];
-    const predicted = level + trend + seasonalIndex;
+    const predicted = (level ?? 0) + (trend ?? 0) + seasonalIndex;
     fitted.push(predicted);
     
     if (i < n - 1) {
-      const newLevel = alpha * (values[i] - seasonalIndex) + (1 - alpha) * (level + trend);
-      const newTrend = beta * (newLevel - level) + (1 - beta) * trend;
-      const newSeasonal = gamma * (values[i] - newLevel) + (1 - gamma) * seasonalIndex;
+      const newLevel = alpha * ((values[i] ?? 0) - seasonalIndex) + (1 - alpha) * ((level ?? 0) + (trend ?? 0));
+      const newTrend = beta * (newLevel - (level ?? 0)) + (1 - beta) * (trend ?? 0);
+      const newSeasonal = gamma * ((values[i] ?? 0) - newLevel) + (1 - gamma) * seasonalIndex;
       
       level = newLevel;
       trend = newTrend;
@@ -252,20 +257,26 @@ function computeHoltWintersInWorker(
   }
   
   // Calculate residuals
-  const residuals = values.map((val, i) => val - fitted[i]);
+  const residuals = values.map((val, i) => val - (fitted[i] ?? 0));
   const residualStdDev = calculateStdDev(residuals);
   
-  // Generate forecasts
+  // Generate forecasts  
   const forecasts = [];
-  const lastTimestamp = series[series.length - 1].timestamp;
+  
+  // Handle empty series case
+  if (series.length === 0) {
+    return [];
+  }
+  
+  const lastTimestamp = series[series.length - 1]?.timestamp ?? 0;
   const timestampInterval = series.length > 1 ? 
-    (series[series.length - 1].timestamp - series[series.length - 2].timestamp) : 
+    ((series[series.length - 1]?.timestamp ?? 0) - (series[series.length - 2]?.timestamp ?? 0)) : 
     86400000;
   
   for (let i = 1; i <= horizon; i++) {
     const forecastTimestamp = lastTimestamp + (i * timestampInterval);
     const seasonalIndex = seasonal[(n + i - 1) % seasonLength];
-    const forecastValue = level + (i * trend) + seasonalIndex;
+    const forecastValue = (level ?? 0) + (i * (trend ?? 0)) + seasonalIndex;
     const confidenceInterval = 1.96 * residualStdDev * Math.sqrt(i);
     
     forecasts.push({
