@@ -909,20 +909,20 @@ export function exportSnapshotsJSONV7(
       exportData.causalGraph = (optionsV7 as any).causalGraphData;
     }
 
-    if (optionsV7.experimentsData) {
-      exportData.experiments = optionsV7.experimentsData;
+    if ((optionsV7 as any).experimentsData) {
+      exportData.experiments = (optionsV7 as any).experimentsData;
     }
 
-    if (optionsV7.semanticSummariesData) {
-      exportData.semanticSummaries = optionsV7.semanticSummariesData;
+    if ((optionsV7 as any).semanticSummariesData) {
+      exportData.semanticSummaries = (optionsV7 as any).semanticSummariesData;
     }
 
-    if (optionsV7.privacyLedgerData) {
-      exportData.privacyLedger = optionsV7.privacyLedgerData;
+    if ((optionsV7 as any).privacyLedgerData) {
+      exportData.privacyLedger = (optionsV7 as any).privacyLedgerData;
     }
 
-    if (optionsV7.perfTracesData) {
-      exportData.perfTraces = optionsV7.perfTracesData;
+    if ((optionsV7 as any).perfTracesData) {
+      exportData.perfTraces = (optionsV7 as any).perfTracesData;
     }
 
     // Phase 11 data
@@ -1047,8 +1047,8 @@ export function createShareBundleV7(
       exportData.forecast = options.forecastData;
     }
 
-    if (options.causalGraphData) {
-      exportData.causalGraph = options.causalGraphData;
+    if ((options as any).causalGraphData) {
+      exportData.causalGraph = (options as any).causalGraphData;
     }
 
     // Add other data as needed...

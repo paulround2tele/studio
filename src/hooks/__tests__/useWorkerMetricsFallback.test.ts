@@ -167,7 +167,7 @@ describe('useWorkerMetricsFallback', () => {
     it('should handle worker computation errors', async () => {
       // Mock worker that returns errors
       class ErrorWorker extends MockWorker {
-        postMessage(message: any) {
+        override postMessage(message: any) {
           setTimeout(() => {
             if (this.onmessage) {
               const response = {

@@ -9,7 +9,7 @@ import {
   formatDeltaValue,
   createBaselineSnapshot 
 } from '../deltasService';
-import { AggregateSnapshot, DeltaMetrics } from '@/types/campaignMetrics';
+import { AggregateSnapshot, DeltaMetrics, ExtendedAggregateMetrics } from '@/types/campaignMetrics';
 
 // Mock snapshots for testing
 const mockCurrentSnapshot: AggregateSnapshot = {
@@ -24,7 +24,7 @@ const mockCurrentSnapshot: AggregateSnapshot = {
     warningRate: 15,
     avgRichness: 65,
     highPotentialCount: 25
-  },
+  } as ExtendedAggregateMetrics,
   classifiedCounts: {
     'High Quality': 30,
     'Medium Quality': 50,
@@ -44,7 +44,7 @@ const mockPreviousSnapshot: AggregateSnapshot = {
     warningRate: 20,
     avgRichness: 60,
     highPotentialCount: 20
-  },
+  } as ExtendedAggregateMetrics,
   classifiedCounts: {
     'High Quality': 25,
     'Medium Quality': 45,
@@ -201,7 +201,7 @@ describe('deltasService', () => {
       const baseline = createBaselineSnapshot(mockCurrentSnapshot);
       
       expect(baseline.id).toContain('baseline-');
-      expect(baseline.timestamp).toBeLessThan(mockCurrentSnapshot.timestamp);
+      expect(new Date(baseline.timestamp).getTime()).toBeLessThan(new Date(mockCurrentSnapshot.timestamp).getTime());
       expect(baseline.classifiedCounts).toEqual(mockCurrentSnapshot.classifiedCounts);
       
       // Values should be reduced but positive

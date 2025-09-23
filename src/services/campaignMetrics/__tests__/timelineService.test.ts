@@ -11,7 +11,7 @@ import {
 import { AggregateSnapshot } from '@/types/campaignMetrics';
 
 // Mock fetch
-const mockFetch = jest.fn();
+const mockFetch = jest.fn() as jest.MockedFunction<typeof fetch>;
 global.fetch = mockFetch;
 
 // Mock environment
@@ -60,7 +60,7 @@ describe('TimelineService', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockResponse)
-      });
+      } as Response);
 
       const result = await fetchServerTimeline('campaign1', undefined, 50);
 
@@ -108,8 +108,8 @@ describe('TimelineService', () => {
       expect(result).toHaveLength(2);
       expect(result.map(s => s.id)).toEqual(['snap1', 'snap2']);
       // Should be sorted by timestamp
-      expect(result[0].id).toBe('snap1'); // Earlier timestamp
-      expect(result[1].id).toBe('snap2'); // Later timestamp
+      expect(result[0]?.id).toBe('snap1'); // Earlier timestamp
+      expect(result[1]?.id).toBe('snap2'); // Later timestamp
     });
 
     it('should handle empty server snapshots', () => {
@@ -128,7 +128,7 @@ describe('TimelineService', () => {
       const result = mergeTimelines([localSnapshot], [serverSnapshot]);
 
       expect(result).toHaveLength(1);
-      expect(result[0].aggregates.totalDomains).toBe(999); // Local version kept
+      expect(result[0]?.aggregates.totalDomains).toBe(999); // Local version kept
     });
   });
 

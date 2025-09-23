@@ -11,7 +11,7 @@ describe('PhaseStepper keyboard navigation', () => {
 
   it('moves focus with arrow keys and activates with Enter', () => {
     const onSelect = jest.fn();
-  render(<PhaseStepper phases={phases} onSelect={onSelect} />);
+  render(<PhaseStepper phases={phases} onPhaseSelect={onSelect} />);
   const first = screen.getByRole('button', { name: /Phase 1: Discovery/i });
   first.focus();
     fireEvent.keyDown(first, { key: 'ArrowRight' });
@@ -24,7 +24,7 @@ describe('PhaseStepper keyboard navigation', () => {
 
   it('wraps focus with End/Home keys', () => {
     const onSelect = jest.fn();
-  render(<PhaseStepper phases={phases} onSelect={onSelect} />);
+  render(<PhaseStepper phases={phases} onPhaseSelect={onSelect} />);
   const first = screen.getByRole('button', { name: /Phase 1: Discovery/i });
   first.focus();
     fireEvent.keyDown(first, { key: 'End' });

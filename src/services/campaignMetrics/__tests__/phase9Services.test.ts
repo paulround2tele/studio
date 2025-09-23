@@ -23,8 +23,8 @@ describe('Phase 9 Services', () => {
       const models = forecastBlendService.getRegisteredModels();
       
       expect(models).toHaveLength(1);
-      expect(models[0].modelId).toBe('test-model');
-      expect(models[0].kind).toBe('client');
+      expect(models[0]?.modelId).toBe('test-model');
+      expect(models[0]?.kind).toBe('client');
     });
 
     it('should update performance stats', () => {
@@ -51,7 +51,7 @@ describe('Phase 9 Services', () => {
       
       expect(blend.blendMethod).toBe('arbitration_fallback'); // Should fallback due to insufficient Bayesian data
       expect(blend.blendedPoints).toHaveLength(1);
-      expect(blend.blendedPoints[0].value).toBe(100);
+      expect(blend.blendedPoints[0]?.value).toBe(100);
     });
   });
 

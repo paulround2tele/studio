@@ -47,9 +47,9 @@ describe('AnomalyService', () => {
       const anomalies = detectAnomalies(snapshots);
 
       expect(anomalies).toHaveLength(1);
-      expect(anomalies[0].metric).toBe('warningRate');
-      expect(anomalies[0].severity).toBe('critical'); // High z-score
-      expect(Math.abs(anomalies[0].zScore)).toBeGreaterThan(2);
+      expect(anomalies[0]?.metric).toBe('warningRate');
+      expect(anomalies[0]?.severity).toBe('critical'); // High z-score
+      expect(Math.abs(anomalies[0]?.zScore ?? 0)).toBeGreaterThan(2);
     });
 
     it('should return empty array when insufficient snapshots', () => {
@@ -96,10 +96,10 @@ describe('AnomalyService', () => {
         rollingWindowSize: 6
       };
 
-      const anomalies = detectAnomalies(snapshots, config);
+      const anomalies = detectAnomalies(snapshots, undefined, config);
 
       expect(anomalies).toHaveLength(1);
-      expect(anomalies[0].metric).toBe('avgRichness');
+      expect(anomalies[0]?.metric).toBe('avgRichness');
     });
 
     it('should not detect anomalies for stable data', () => {
@@ -150,9 +150,9 @@ describe('AnomalyService', () => {
       expect(anomalies).toHaveLength(1);
       
       const anomaly = anomalies[0];
-      if (Math.abs(anomaly.zScore) >= 3.0) {
+      if (anomaly && Math.abs(anomaly.zScore) >= 3.0) {
         expect(anomaly.severity).toBe('critical');
-      } else {
+      } else if (anomaly) {
         expect(anomaly.severity).toBe('warning');
       }
     });

@@ -8,7 +8,7 @@ import {
   createDefaultSnapshot, 
   ServerMetricsResponse 
 } from '../serverAdapter';
-import { AggregateSnapshot } from '@/types/campaignMetrics';
+import { AggregateSnapshot, ExtendedAggregateMetrics } from '@/types/campaignMetrics';
 
 // Mock server responses for testing
 const mockValidServerResponse: ServerMetricsResponse = {
@@ -177,8 +177,8 @@ describe('serverAdapter', () => {
       
       const snapshot = transformServerResponse(responseWithExtended);
       
-      expect(snapshot.aggregates.avgRichness).toBe(42.5);
-      expect(snapshot.aggregates.warningRate).toBe(8.2);
+      expect((snapshot.aggregates as ExtendedAggregateMetrics).avgRichness).toBe(42.5);
+      expect((snapshot.aggregates as ExtendedAggregateMetrics).warningRate).toBe(8.2);
       expect((snapshot.aggregates as any).customField).toBeUndefined();
     });
 
