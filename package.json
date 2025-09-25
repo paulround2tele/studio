@@ -47,6 +47,8 @@
     "test:performance": "playwright test tests/performance",
     "test:campaign": "node scripts/e2e-campaign-test.js",
     "api:regen:quick": "npm run api:bundle && npm run gen:types && npm run gen:clients && bash scripts/post-generate-cleanup.sh",
+    "any:audit": "node scripts/audit-any.mjs",
+    "lint:safe": "npm run lint && npm run any:audit",
     "prepare": "husky"
   },
   "dependencies": {
