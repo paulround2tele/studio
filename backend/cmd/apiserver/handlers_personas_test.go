@@ -118,10 +118,10 @@ func TestPersonasCRUDSmoke(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected 201 response, got %T", crResp)
 	}
-	if cr201.Data == nil || cr201.Data.Name != "http-1" {
+	if cr201.Name != "http-1" {
 		t.Fatalf("unexpected create response: %+v", cr201)
 	}
-	httpID := uuid.UUID(cr201.Data.Id)
+	httpID := uuid.UUID(cr201.Id)
 
 	// Create DNS persona
 	dnsBody := gen.PersonasCreateJSONRequestBody{
@@ -145,7 +145,7 @@ func TestPersonasCRUDSmoke(t *testing.T) {
 		t.Fatalf("list error: %v", err)
 	}
 	l200, ok := lr.(gen.PersonasList200JSONResponse)
-	if !ok || l200.Data == nil || len(*l200.Data) < 2 {
+	if !ok || len(l200) < 2 {
 		t.Fatalf("expected at least 2 personas, got %+v", l200)
 	}
 
@@ -155,7 +155,7 @@ func TestPersonasCRUDSmoke(t *testing.T) {
 		t.Fatalf("get error: %v", err)
 	}
 	g200, ok := gr.(gen.PersonasGet200JSONResponse)
-	if !ok || g200.Data == nil || g200.Data.Name != "http-1" {
+	if !ok || g200.Name != "http-1" {
 		t.Fatalf("unexpected get response: %+v", g200)
 	}
 
@@ -175,7 +175,7 @@ func TestPersonasCRUDSmoke(t *testing.T) {
 		t.Fatalf("update error: %v", err)
 	}
 	u200, ok := ur.(gen.PersonasUpdate200JSONResponse)
-	if !ok || u200.Data == nil || u200.Data.Name != newName {
+	if !ok || u200.Name != newName {
 		t.Fatalf("unexpected update response: %+v", u200)
 	}
 

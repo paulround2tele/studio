@@ -15,7 +15,7 @@ import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 // Use proper API client instead of fictional bridge
 import { personasApi } from "@/lib/api-client/compat";
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
+import { normalizeResponse } from '@/api/normalizeResponse';
 // Import types from proper models
 // Use compat alias to stay stable across client regenerations
 import type { ApiPersonaResponse } from '@/lib/api-client/compat';
@@ -233,7 +233,7 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
       }
 
       if (response.status >= 200 && response.status < 300) {
-        const data = extractResponseData<any>(response);
+        const data = normalizeResponse<any>(response.data);
         toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${data?.name || ''}" has been successfully ${isEditing ? "updated" : "created"}.` });
         router.push("/personas");
         router.refresh();
@@ -577,7 +577,7 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
       }
 
       if (response.status >= 200 && response.status < 300) {
-        const data = extractResponseData<any>(response);
+        const data = normalizeResponse<any>(response.data);
         toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${data?.name || ''}" has been successfully ${isEditing ? "updated" : "created"}.` });
         router.push("/personas");
         router.refresh();
