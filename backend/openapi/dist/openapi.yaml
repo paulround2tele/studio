@@ -2843,17 +2843,17 @@ paths:
       responses:
         '200':
           description: OK
+          headers:
+            X-Request-Id:
+              description: Unique request identifier
+              schema:
+                type: string
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/CampaignResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/CampaignResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':
@@ -2872,15 +2872,15 @@ paths:
       responses:
         '201':
           description: Created
+          headers:
+            X-Request-Id:
+              description: Unique request identifier
+              schema:
+                type: string
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/CampaignResponse'
+                $ref: '#/components/schemas/CampaignResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2907,15 +2907,15 @@ paths:
       responses:
         '200':
           description: OK
+          headers:
+            X-Request-Id:
+              description: Unique request identifier
+              schema:
+                type: string
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/CampaignResponse'
+                $ref: '#/components/schemas/CampaignResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':

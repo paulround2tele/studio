@@ -5811,12 +5811,12 @@ export interface operations {
             /** @description OK */
             200: {
                 headers: {
+                    /** @description Unique request identifier */
+                    "X-Request-Id"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignResponse"][];
-                    };
+                    "application/json": components["schemas"]["CampaignResponse"][];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -5839,12 +5839,12 @@ export interface operations {
             /** @description Created */
             201: {
                 headers: {
+                    /** @description Unique request identifier */
+                    "X-Request-Id"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignResponse"];
-                    };
+                    "application/json": components["schemas"]["CampaignResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -5868,12 +5868,12 @@ export interface operations {
             /** @description OK */
             200: {
                 headers: {
+                    /** @description Unique request identifier */
+                    "X-Request-Id"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignResponse"];
-                    };
+                    "application/json": components["schemas"]["CampaignResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];
