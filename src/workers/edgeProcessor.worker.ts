@@ -97,14 +97,19 @@ function handleCausalRecompute(payload: {
     confidence: number;
   }> = [];
 
-  const metricKeys = Array.from(metricGroups.keys());
+  const metricKeys: string[] = Array.from(metricGroups.keys());
   for (let i = 0; i < metricKeys.length; i++) {
     for (let j = i + 1; j < metricKeys.length; j++) {
       const metricA = metricKeys[i];
       const metricB = metricKeys[j];
       
-      const seriesA = metricGroups.get(metricA)!.map(obs => obs.value);
-      const seriesB = metricGroups.get(metricB)!.map(obs => obs.value);
+      const rawA = metricGroups.get(metricA) || [];
+      const rawB = metricGroups.get(metricB) || [];
+      if (rawA.length === 0 || rawB.length === 0) {
+        continue; // Skip empty series defensively
+      }
+      const seriesA = rawA.map(obs => obs.value ?? 0);
+      const seriesB = rawB.map(obs => obs.value ?? 0);
       
       const correlation = calculateCorrelation(seriesA, seriesB);
       const confidence = Math.min(seriesA.length, seriesB.length) / 100; // Simple confidence based on sample size
@@ -269,25 +274,33 @@ function handleSimulationProjection(payload: {
 function calculateCorrelation(x: number[], y: number[]): number {
   const n = Math.min(x.length, y.length);
   if (n < 2) return 0;
-
-  const meanX = x.slice(0, n).reduce((a, b) => a + b, 0) / n;
-  const meanY = y.slice(0, n).reduce((a, b) => a + b, 0) / n;
-
+  // Fast path: if any NaN present, filter them out
+  const xv: number[] = [];
+  const yv: number[] = [];
+  for (let i = 0; i < n; i++) {
+    const xi = x[i];
+    const yi = y[i];
+    if (Number.isFinite(xi) && Number.isFinite(yi)) {
+      xv.push(xi);
+      yv.push(yi);
+    }
+  }
+  const m = xv.length;
+  if (m < 2) return 0;
+  const meanX = xv.reduce((a, b) => a + b, 0) / m;
+  const meanY = yv.reduce((a, b) => a + b, 0) / m;
   let numerator = 0;
   let sumXSquared = 0;
   let sumYSquared = 0;
-
-  for (let i = 0; i < n; i++) {
-    const deltaX = x[i] - meanX;
-    const deltaY = y[i] - meanY;
-    
-    numerator += deltaX * deltaY;
-    sumXSquared += deltaX * deltaX;
-    sumYSquared += deltaY * deltaY;
+  for (let i = 0; i < m; i++) {
+    const dx = xv[i] - meanX;
+    const dy = yv[i] - meanY;
+    numerator += dx * dy;
+    sumXSquared += dx * dx;
+    sumYSquared += dy * dy;
   }
-
   const denominator = Math.sqrt(sumXSquared * sumYSquared);
-  return denominator === 0 ? 0 : numerator / denominator;
+  return denominator === 0 ? 0; // Avoid division by zero
 }
 
 /**
