@@ -5,10 +5,10 @@
 			operationId: health_check
 			responses:
 				'200':
-					description: OK
+					description: Health status
 					content:
 						application/json:
-          schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+							schema: { $ref: '#/components/schemas/HealthResponse' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }
@@ -20,10 +20,10 @@
 			operationId: ping
 			responses:
 				'200':
-					description: Pong
+					description: Server ping response
 					content:
 						application/json:
-          schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+							schema: { $ref: '#/components/schemas/HealthResponse' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }
@@ -35,10 +35,10 @@
 			operationId: health_ready
 			responses:
 				'200':
-					description: Ready
+					description: Readiness status
 					content:
 						application/json:
-          schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+							schema: { $ref: '#/components/schemas/HealthResponse' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }
@@ -50,10 +50,10 @@
 			operationId: health_live
 			responses:
 				'200':
-					description: Alive
+					description: Liveness status
 					content:
 						application/json:
-          schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+							schema: { $ref: '#/components/schemas/HealthResponse' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }

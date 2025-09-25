@@ -6,6 +6,7 @@ package gen
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -271,6 +272,13 @@ const (
 	ExecutionStatusEnumReady      ExecutionStatusEnum = "ready"
 )
 
+// Defines values for HealthResponseStatus.
+const (
+	HealthResponseStatusDegraded  HealthResponseStatus = "degraded"
+	HealthResponseStatusOk        HealthResponseStatus = "ok"
+	HealthResponseStatusUnhealthy HealthResponseStatus = "unhealthy"
+)
+
 // Defines values for KeywordRuleType.
 const (
 	Regex  KeywordRuleType = "regex"
@@ -288,6 +296,37 @@ const (
 	PatternOffsetRequestPatternTypeBoth   PatternOffsetRequestPatternType = "both"
 	PatternOffsetRequestPatternTypePrefix PatternOffsetRequestPatternType = "prefix"
 	PatternOffsetRequestPatternTypeSuffix PatternOffsetRequestPatternType = "suffix"
+)
+
+// Defines values for PersonaConfigDnsResolverStrategy.
+const (
+	Priority   PersonaConfigDnsResolverStrategy = "priority"
+	Random     PersonaConfigDnsResolverStrategy = "random"
+	RoundRobin PersonaConfigDnsResolverStrategy = "round_robin"
+	Weighted   PersonaConfigDnsResolverStrategy = "weighted"
+)
+
+// Defines values for PersonaConfigHttpCookieHandlingMode.
+const (
+	Custom   PersonaConfigHttpCookieHandlingMode = "custom"
+	Ignore   PersonaConfigHttpCookieHandlingMode = "ignore"
+	Preserve PersonaConfigHttpCookieHandlingMode = "preserve"
+)
+
+// Defines values for PersonaConfigHttpTlsClientHelloMaxVersion.
+const (
+	PersonaConfigHttpTlsClientHelloMaxVersionTLS10 PersonaConfigHttpTlsClientHelloMaxVersion = "TLS10"
+	PersonaConfigHttpTlsClientHelloMaxVersionTLS11 PersonaConfigHttpTlsClientHelloMaxVersion = "TLS11"
+	PersonaConfigHttpTlsClientHelloMaxVersionTLS12 PersonaConfigHttpTlsClientHelloMaxVersion = "TLS12"
+	PersonaConfigHttpTlsClientHelloMaxVersionTLS13 PersonaConfigHttpTlsClientHelloMaxVersion = "TLS13"
+)
+
+// Defines values for PersonaConfigHttpTlsClientHelloMinVersion.
+const (
+	PersonaConfigHttpTlsClientHelloMinVersionTLS10 PersonaConfigHttpTlsClientHelloMinVersion = "TLS10"
+	PersonaConfigHttpTlsClientHelloMinVersionTLS11 PersonaConfigHttpTlsClientHelloMinVersion = "TLS11"
+	PersonaConfigHttpTlsClientHelloMinVersionTLS12 PersonaConfigHttpTlsClientHelloMinVersion = "TLS12"
+	PersonaConfigHttpTlsClientHelloMinVersionTLS13 PersonaConfigHttpTlsClientHelloMinVersion = "TLS13"
 )
 
 // Defines values for PersonaType.
@@ -362,10 +401,10 @@ const (
 
 // Defines values for CampaignsDomainsListParamsHttpStatus.
 const (
-	CampaignsDomainsListParamsHttpStatusError   CampaignsDomainsListParamsHttpStatus = "error"
-	CampaignsDomainsListParamsHttpStatusOk      CampaignsDomainsListParamsHttpStatus = "ok"
-	CampaignsDomainsListParamsHttpStatusPending CampaignsDomainsListParamsHttpStatus = "pending"
-	CampaignsDomainsListParamsHttpStatusTimeout CampaignsDomainsListParamsHttpStatus = "timeout"
+	Error   CampaignsDomainsListParamsHttpStatus = "error"
+	Ok      CampaignsDomainsListParamsHttpStatus = "ok"
+	Pending CampaignsDomainsListParamsHttpStatus = "pending"
+	Timeout CampaignsDomainsListParamsHttpStatus = "timeout"
 )
 
 // Defines values for CampaignsDomainsListParamsSort.
@@ -1124,12 +1163,11 @@ type CreateKeywordSetRequest struct {
 
 // CreatePersonaRequest defines model for CreatePersonaRequest.
 type CreatePersonaRequest struct {
-	// ConfigDetails HTTP or DNS persona configuration object
-	ConfigDetails map[string]interface{} `json:"configDetails"`
-	Description   *string                `json:"description,omitempty"`
-	IsEnabled     *bool                  `json:"isEnabled,omitempty"`
-	Name          string                 `json:"name"`
-	PersonaType   PersonaType            `json:"personaType"`
+	ConfigDetails PersonaConfigDetails `json:"configDetails"`
+	Description   *string              `json:"description,omitempty"`
+	IsEnabled     *bool                `json:"isEnabled,omitempty"`
+	Name          string               `json:"name"`
+	PersonaType   PersonaType          `json:"personaType"`
 }
 
 // CreateProxyRequestAPI defines model for CreateProxyRequestAPI.
@@ -1286,6 +1324,18 @@ type ExecutionStatusEnum string
 // FeatureFlags Feature flags map
 type FeatureFlags map[string]bool
 
+// HealthResponse Health check response - migrated from SuccessEnvelope (Phase A)
+type HealthResponse struct {
+	Status    HealthResponseStatus `json:"status"`
+	Timestamp *time.Time           `json:"timestamp,omitempty"`
+
+	// Version API version
+	Version *string `json:"version,omitempty"`
+}
+
+// HealthResponseStatus defines model for HealthResponse.Status.
+type HealthResponseStatus string
+
 // KeywordRuleDTO defines model for KeywordRuleDTO.
 type KeywordRuleDTO struct {
 	Category        *string             `json:"category,omitempty"`
@@ -1402,6 +1452,65 @@ type PatternOffsetResponse struct {
 	CurrentOffset *int64 `json:"currentOffset,omitempty"`
 }
 
+// PersonaConfigDetails defines model for PersonaConfigDetails.
+type PersonaConfigDetails struct {
+	union json.RawMessage
+}
+
+// PersonaConfigDns DNS persona configuration details
+type PersonaConfigDns struct {
+	ConcurrentQueriesPerDomain int                               `json:"concurrentQueriesPerDomain"`
+	MaxConcurrentGoroutines    *int                              `json:"maxConcurrentGoroutines,omitempty"`
+	MaxDomainsPerRequest       int                               `json:"maxDomainsPerRequest"`
+	QueryDelayMaxMs            *int                              `json:"queryDelayMaxMs,omitempty"`
+	QueryDelayMinMs            *int                              `json:"queryDelayMinMs,omitempty"`
+	QueryTimeoutSeconds        int                               `json:"queryTimeoutSeconds"`
+	RateLimitBurst             *int                              `json:"rateLimitBurst,omitempty"`
+	RateLimitDps               *float32                          `json:"rateLimitDps,omitempty"`
+	ResolverStrategy           *PersonaConfigDnsResolverStrategy `json:"resolverStrategy,omitempty"`
+	Resolvers                  []string                          `json:"resolvers"`
+	ResolversPreferredOrder    *[]string                         `json:"resolversPreferredOrder,omitempty"`
+	ResolversWeighted          *map[string]int                   `json:"resolversWeighted,omitempty"`
+	UseSystemResolvers         *bool                             `json:"useSystemResolvers,omitempty"`
+}
+
+// PersonaConfigDnsResolverStrategy defines model for PersonaConfigDns.ResolverStrategy.
+type PersonaConfigDnsResolverStrategy string
+
+// PersonaConfigHttp HTTP persona configuration details
+type PersonaConfigHttp struct {
+	AllowedStatusCodes *[]int `json:"allowedStatusCodes,omitempty"`
+	CookieHandling     *struct {
+		Mode *PersonaConfigHttpCookieHandlingMode `json:"mode,omitempty"`
+	} `json:"cookieHandling,omitempty"`
+	FollowRedirects *bool              `json:"followRedirects,omitempty"`
+	HeaderOrder     *[]string          `json:"headerOrder,omitempty"`
+	Headers         *map[string]string `json:"headers,omitempty"`
+	Http2Settings   *struct {
+		Enabled *bool `json:"enabled,omitempty"`
+	} `json:"http2Settings,omitempty"`
+	Notes                 *string  `json:"notes,omitempty"`
+	RateLimitBurst        *int     `json:"rateLimitBurst,omitempty"`
+	RateLimitDps          *float32 `json:"rateLimitDps,omitempty"`
+	RequestTimeoutSeconds *int     `json:"requestTimeoutSeconds,omitempty"`
+	TlsClientHello        *struct {
+		CipherSuites     *[]string                                  `json:"cipherSuites,omitempty"`
+		CurvePreferences *[]string                                  `json:"curvePreferences,omitempty"`
+		MaxVersion       *PersonaConfigHttpTlsClientHelloMaxVersion `json:"maxVersion,omitempty"`
+		MinVersion       *PersonaConfigHttpTlsClientHelloMinVersion `json:"minVersion,omitempty"`
+	} `json:"tlsClientHello,omitempty"`
+	UserAgent string `json:"userAgent"`
+}
+
+// PersonaConfigHttpCookieHandlingMode defines model for PersonaConfigHttp.CookieHandling.Mode.
+type PersonaConfigHttpCookieHandlingMode string
+
+// PersonaConfigHttpTlsClientHelloMaxVersion defines model for PersonaConfigHttp.TlsClientHello.MaxVersion.
+type PersonaConfigHttpTlsClientHelloMaxVersion string
+
+// PersonaConfigHttpTlsClientHelloMinVersion defines model for PersonaConfigHttp.TlsClientHello.MinVersion.
+type PersonaConfigHttpTlsClientHelloMinVersion string
+
 // PersonaDeleteResponse defines model for PersonaDeleteResponse.
 type PersonaDeleteResponse struct {
 	Deleted   bool               `json:"deleted"`
@@ -1411,14 +1520,14 @@ type PersonaDeleteResponse struct {
 
 // PersonaResponse defines model for PersonaResponse.
 type PersonaResponse struct {
-	ConfigDetails *map[string]interface{} `json:"configDetails,omitempty"`
-	CreatedAt     time.Time               `json:"createdAt"`
-	Description   *string                 `json:"description,omitempty"`
-	Id            openapi_types.UUID      `json:"id"`
-	IsEnabled     bool                    `json:"isEnabled"`
-	Name          string                  `json:"name"`
-	PersonaType   PersonaType             `json:"personaType"`
-	UpdatedAt     time.Time               `json:"updatedAt"`
+	ConfigDetails *PersonaConfigDetails `json:"configDetails,omitempty"`
+	CreatedAt     time.Time             `json:"createdAt"`
+	Description   *string               `json:"description,omitempty"`
+	Id            openapi_types.UUID    `json:"id"`
+	IsEnabled     bool                  `json:"isEnabled"`
+	Name          string                `json:"name"`
+	PersonaType   PersonaType           `json:"personaType"`
+	UpdatedAt     time.Time             `json:"updatedAt"`
 }
 
 // PersonaTestResponse defines model for PersonaTestResponse.
@@ -1717,10 +1826,10 @@ type UpdateKeywordSetRequest struct {
 
 // UpdatePersonaRequest defines model for UpdatePersonaRequest.
 type UpdatePersonaRequest struct {
-	ConfigDetails *map[string]interface{} `json:"configDetails,omitempty"`
-	Description   *string                 `json:"description,omitempty"`
-	IsEnabled     *bool                   `json:"isEnabled,omitempty"`
-	Name          *string                 `json:"name,omitempty"`
+	ConfigDetails *PersonaConfigDetails `json:"configDetails,omitempty"`
+	Description   *string               `json:"description,omitempty"`
+	IsEnabled     *bool                 `json:"isEnabled,omitempty"`
+	Name          *string               `json:"name,omitempty"`
 }
 
 // UpdateProxyRequestAPI defines model for UpdateProxyRequestAPI.
@@ -2161,6 +2270,95 @@ type ScoringProfilesCreateJSONRequestBody = CreateScoringProfileRequest
 
 // ScoringProfilesUpdateJSONRequestBody defines body for ScoringProfilesUpdate for application/json ContentType.
 type ScoringProfilesUpdateJSONRequestBody = UpdateScoringProfileRequest
+
+// AsPersonaConfigHttp returns the union data inside the PersonaConfigDetails as a PersonaConfigHttp
+func (t PersonaConfigDetails) AsPersonaConfigHttp() (PersonaConfigHttp, error) {
+	var body PersonaConfigHttp
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromPersonaConfigHttp overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigHttp
+func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error {
+	// v.PersonaType = "http"  // TODO: Fix discriminator in OpenAPI spec
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergePersonaConfigHttp performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigHttp
+func (t *PersonaConfigDetails) MergePersonaConfigHttp(v PersonaConfigHttp) error {
+	// v.PersonaType = "http"  // TODO: Fix discriminator in OpenAPI spec
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsPersonaConfigDns returns the union data inside the PersonaConfigDetails as a PersonaConfigDns
+func (t PersonaConfigDetails) AsPersonaConfigDns() (PersonaConfigDns, error) {
+	var body PersonaConfigDns
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromPersonaConfigDns overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigDns
+func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
+	// v.PersonaType = "dns"  // TODO: Fix discriminator in OpenAPI spec
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergePersonaConfigDns performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigDns
+func (t *PersonaConfigDetails) MergePersonaConfigDns(v PersonaConfigDns) error {
+	// v.PersonaType = "dns"  // TODO: Fix discriminator in OpenAPI spec
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t PersonaConfigDetails) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"personaType"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t PersonaConfigDetails) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "dns":
+		return t.AsPersonaConfigDns()
+	case "http":
+		return t.AsPersonaConfigHttp()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
+}
+
+func (t PersonaConfigDetails) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *PersonaConfigDetails) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -12104,7 +12302,7 @@ type HealthCheckResponseObject interface {
 	VisitHealthCheckResponse(w http.ResponseWriter) error
 }
 
-type HealthCheck200JSONResponse SuccessEnvelope
+type HealthCheck200JSONResponse HealthResponse
 
 func (response HealthCheck200JSONResponse) VisitHealthCheckResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -12159,7 +12357,7 @@ type HealthLiveResponseObject interface {
 	VisitHealthLiveResponse(w http.ResponseWriter) error
 }
 
-type HealthLive200JSONResponse SuccessEnvelope
+type HealthLive200JSONResponse HealthResponse
 
 func (response HealthLive200JSONResponse) VisitHealthLiveResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -12214,7 +12412,7 @@ type HealthReadyResponseObject interface {
 	VisitHealthReadyResponse(w http.ResponseWriter) error
 }
 
-type HealthReady200JSONResponse SuccessEnvelope
+type HealthReady200JSONResponse HealthResponse
 
 func (response HealthReady200JSONResponse) VisitHealthReadyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14235,7 +14433,7 @@ type PingResponseObject interface {
 	VisitPingResponse(w http.ResponseWriter) error
 }
 
-type Ping200JSONResponse SuccessEnvelope
+type Ping200JSONResponse HealthResponse
 
 func (response Ping200JSONResponse) VisitPingResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")

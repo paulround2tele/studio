@@ -221,3 +221,22 @@ TableStats:
     rowCount: { type: integer }
     size: { type: string }
     indexes: { type: array, items: { type: string } }
+
+# Health check response
+HealthResponse:
+  type: object
+  description: Health check response - migrated from SuccessEnvelope (Phase A)
+  properties:
+    status:
+      type: string
+      enum: [ok, degraded, unhealthy]
+      example: ok
+    version:
+      type: string
+      description: API version
+      example: "2.0.0"
+    timestamp:
+      type: string
+      format: date-time
+      example: "2025-01-25T14:30:00Z"
+  required: [status]

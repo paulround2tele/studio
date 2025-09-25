@@ -156,6 +156,7 @@ export * from './get-bulk-operation-status200-response-all-of-data';
 export * from './get-bulk-resource-status200-response';
 export * from './get-bulk-resource-status200-response-all-of-data';
 export * from './httpvalidator-config-json';
+export * from './health-response';
 export * from './keyword-extract-batch200-response';
 export * from './keyword-rule-dto';
 export * from './keyword-rule-request';

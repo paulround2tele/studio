@@ -1805,6 +1805,55 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** @description Health check response - migrated from SuccessEnvelope (Phase A) */
+        HealthResponse: {
+            /**
+             * @example ok
+             * @enum {string}
+             */
+            status: "ok" | "degraded" | "unhealthy";
+            /**
+             * @description API version
+             * @example 2.0.0
+             */
+            version?: string;
+            /**
+             * Format: date-time
+             * @example 2025-01-25T14:30:00Z
+             */
+            timestamp?: string;
+        };
+        /**
+         * @description Stable error code space
+         * @enum {string}
+         */
+        ErrorCode: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_ERROR" | "REQUIRED_FIELD" | "RATE_LIMIT_EXCEEDED" | "REQUEST_TIMEOUT" | "NOT_IMPLEMENTED" | "INTERNAL_SERVER_ERROR" | "DATABASE_ERROR" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "CAMPAIGN_IN_PROGRESS" | "QUOTA_EXCEEDED" | "INVALID_STATE";
+        ApiError: {
+            code: components["schemas"]["ErrorCode"];
+            message: string;
+            details?: {
+                /** @description JSON pointer or field path */
+                field?: string;
+                code: components["schemas"]["ErrorCode"];
+                message: string;
+                context?: {
+                    [key: string]: unknown;
+                };
+            }[];
+            /** Format: date-time */
+            timestamp: string;
+            path?: string;
+        };
+        ErrorEnvelope: {
+            /**
+             * @description Always false for error envelopes.
+             * @default false
+             * @example false
+             */
+            readonly success: boolean;
+            error: components["schemas"]["ApiError"];
+            requestId: string;
+        };
         Pagination: {
             current?: number;
             total?: number;
@@ -1848,37 +1897,6 @@ export interface components {
              */
             readonly success: boolean;
             metadata?: components["schemas"]["Metadata"];
-            requestId: string;
-        };
-        /**
-         * @description Stable error code space
-         * @enum {string}
-         */
-        ErrorCode: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_ERROR" | "REQUIRED_FIELD" | "RATE_LIMIT_EXCEEDED" | "REQUEST_TIMEOUT" | "NOT_IMPLEMENTED" | "INTERNAL_SERVER_ERROR" | "DATABASE_ERROR" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "CAMPAIGN_IN_PROGRESS" | "QUOTA_EXCEEDED" | "INVALID_STATE";
-        ApiError: {
-            code: components["schemas"]["ErrorCode"];
-            message: string;
-            details?: {
-                /** @description JSON pointer or field path */
-                field?: string;
-                code: components["schemas"]["ErrorCode"];
-                message: string;
-                context?: {
-                    [key: string]: unknown;
-                };
-            }[];
-            /** Format: date-time */
-            timestamp: string;
-            path?: string;
-        };
-        ErrorEnvelope: {
-            /**
-             * @description Always false for error envelopes.
-             * @default false
-             * @example false
-             */
-            readonly success: boolean;
-            error: components["schemas"]["ApiError"];
             requestId: string;
         };
         /** @enum {string} */
@@ -3325,13 +3343,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
+            /** @description Health status */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"];
+                    "application/json": components["schemas"]["HealthResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -3349,13 +3367,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Pong */
+            /** @description Server ping response */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"];
+                    "application/json": components["schemas"]["HealthResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -3373,13 +3391,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Ready */
+            /** @description Readiness status */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"];
+                    "application/json": components["schemas"]["HealthResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -3397,13 +3415,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Alive */
+            /** @description Liveness status */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"];
+                    "application/json": components["schemas"]["HealthResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];

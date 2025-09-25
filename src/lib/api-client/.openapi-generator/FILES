@@ -182,6 +182,7 @@ docs/GetBulkResourceStatus200Response.md
 docs/GetBulkResourceStatus200ResponseAllOfData.md
 docs/HTTPValidatorConfigJSON.md
 docs/HealthApi.md
+docs/HealthResponse.md
 docs/KeywordExtractBatch200Response.md
 docs/KeywordExtractionApi.md
 docs/KeywordRuleDTO.md
@@ -437,6 +438,7 @@ models/get-bulk-operation-status200-response-all-of-data.ts
 models/get-bulk-operation-status200-response.ts
 models/get-bulk-resource-status200-response-all-of-data.ts
 models/get-bulk-resource-status200-response.ts
+models/health-response.ts
 models/httpvalidator-config-json.ts
 models/index.ts
 models/keyword-extract-batch200-response.ts

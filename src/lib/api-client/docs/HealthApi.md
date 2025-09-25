@@ -10,7 +10,7 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**ping**](#ping) | **GET** /ping | Ping server|
 
 # **healthCheck**
-> SuccessEnvelope healthCheck()
+> HealthResponse healthCheck()
 
 
 ### Example
@@ -33,7 +33,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**SuccessEnvelope**
+**HealthResponse**
 
 ### Authorization
 
@@ -48,7 +48,7 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | OK |  -  |
+|**200** | Health status |  -  |
 |**401** | Unauthorized |  -  |
 |**403** | Forbidden |  -  |
 |**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
@@ -57,7 +57,7 @@ This endpoint does not have any parameters.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **healthLive**
-> SuccessEnvelope healthLive()
+> HealthResponse healthLive()
 
 
 ### Example
@@ -80,7 +80,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**SuccessEnvelope**
+**HealthResponse**
 
 ### Authorization
 
@@ -95,7 +95,7 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Alive |  -  |
+|**200** | Liveness status |  -  |
 |**401** | Unauthorized |  -  |
 |**403** | Forbidden |  -  |
 |**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
@@ -104,7 +104,7 @@ This endpoint does not have any parameters.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **healthReady**
-> SuccessEnvelope healthReady()
+> HealthResponse healthReady()
 
 
 ### Example
@@ -127,7 +127,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**SuccessEnvelope**
+**HealthResponse**
 
 ### Authorization
 
@@ -142,7 +142,7 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Ready |  -  |
+|**200** | Readiness status |  -  |
 |**401** | Unauthorized |  -  |
 |**403** | Forbidden |  -  |
 |**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
@@ -151,7 +151,7 @@ This endpoint does not have any parameters.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **ping**
-> SuccessEnvelope ping()
+> HealthResponse ping()
 
 
 ### Example
@@ -174,7 +174,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**SuccessEnvelope**
+**HealthResponse**
 
 ### Authorization
 
@@ -189,7 +189,7 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Pong |  -  |
+|**200** | Server ping response |  -  |
 |**401** | Unauthorized |  -  |
 |**403** | Forbidden |  -  |
 |**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |

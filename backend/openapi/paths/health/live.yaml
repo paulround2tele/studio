@@ -4,10 +4,10 @@ get:
   operationId: health_live
   responses:
     '200':
-      description: Alive
+      description: Liveness status
       content:
         application/json:
-          schema: { $ref: '../../components/schemas/all.yaml#/SuccessEnvelope' }
+          schema: { $ref: '../../components/schemas/all.yaml#/HealthResponse' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
