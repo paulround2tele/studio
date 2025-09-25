@@ -1,0 +1,1 @@
+export type CampaignData = any;

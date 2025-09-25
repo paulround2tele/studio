@@ -92,11 +92,7 @@ class LTTBDownsampler {
     const downsampled: TimeSeriesPoint[] = [];
     
     // Always include first and last points
-    const firstPoint = points[0];
-    if (!firstPoint) {
-      return []; // Return empty if no first point
-    }
-    downsampled.push(firstPoint);
+    downsampled.push(points[0]);
     
     const bucketSize = (points.length - 2) / (targetCount - 2);
     
@@ -109,14 +105,6 @@ class LTTBDownsampler {
       
       // Previous point for triangle calculation
       const prevPoint = downsampled[downsampled.length - 1];
-      if (!prevPoint) {
-        // Fallback if no previous point
-        selectedPoint = points[bucketStart];
-        if (selectedPoint) {
-          downsampled.push(selectedPoint);
-        }
-        continue;
-      }
       
       // Next bucket average for triangle calculation
       const nextBucketStart = Math.floor((i + 1) * bucketSize) + 1;
@@ -127,12 +115,9 @@ class LTTBDownsampler {
       let nextBucketCount = 0;
       
       for (let j = nextBucketStart; j < nextBucketEnd; j++) {
-        const point = points[j];
-        if (point) {
-          nextAvgTimestamp += point.timestamp;
-          nextAvgValue += point.value;
-          nextBucketCount++;
-        }
+        nextAvgTimestamp += points[j].timestamp;
+        nextAvgValue += points[j].value;
+        nextBucketCount++;
       }
       
       if (nextBucketCount > 0) {
@@ -143,7 +128,6 @@ class LTTBDownsampler {
       // Find point in current bucket that forms largest triangle
       for (let j = bucketStart; j < bucketEnd; j++) {
         const currentPoint = points[j];
-        if (!currentPoint) continue;
         
         // Calculate triangle area
         const area = Math.abs(
@@ -157,16 +141,11 @@ class LTTBDownsampler {
         }
       }
       
-      if (selectedPoint) {
-        downsampled.push(selectedPoint);
-      }
+      downsampled.push(selectedPoint);
     }
     
-    // Always include last point if present
-    if (points.length > 0) {
-      const lastPoint = points[points.length - 1];
-      if (lastPoint) downsampled.push(lastPoint);
-    }
+    // Always include last point
+    downsampled.push(points[points.length - 1]);
     
     return downsampled;
   }
@@ -284,11 +263,7 @@ class AdaptiveTimelineService {
     const optimalPointCount = Math.floor(viewportWidth * pixelDensity * 2.5);
     
     // Find closest resolution level
-    const availableLevels = Array.from(series.resolutions.keys());
-    if (availableLevels.length === 0) {
-      return [];
-    }
-    let bestResolution = availableLevels[0]!;
+    let bestResolution = Array.from(series.resolutions.keys())[0];
     let bestDifference = Math.abs(bestResolution - optimalPointCount);
 
     const resolutionLevels = Array.from(series.resolutions.keys());
@@ -300,7 +275,7 @@ class AdaptiveTimelineService {
       }
     }
 
-  const selectedPoints = series.resolutions.get(bestResolution) || [];
+    const selectedPoints = series.resolutions.get(bestResolution) || [];
 
     // Add preserved extremes if they fall within focus window
     const result = [...selectedPoints];
@@ -378,10 +353,11 @@ class AdaptiveTimelineService {
    */
   private hashPoints(points: TimeSeriesPoint[]): string {
     if (points.length === 0) return '0';
-    if (points.length === 1) return `${points[0]!.timestamp}_single_1`;
-    const first = points[0]!;
-    const last = points[points.length - 1]!;
-    const middle = points[Math.floor(points.length / 2)]!;
+    
+    const first = points[0];
+    const last = points[points.length - 1];
+    const middle = points[Math.floor(points.length / 2)];
+    
     return `${first.timestamp}_${last.timestamp}_${middle.timestamp}_${points.length}`;
   }
 
@@ -410,11 +386,6 @@ class AdaptiveTimelineService {
       const prev = points[i - 1];
       const current = points[i];
       const next = points[i + 1];
-      
-      // Ensure all points are defined
-      if (!prev || !current || !next) {
-        continue;
-      }
       
       // Local maximum
       if (current.value > prev.value && current.value > next.value) {
@@ -460,10 +431,6 @@ class AdaptiveTimelineService {
     for (let i = windowSize; i < points.length; i++) {
       const point = points[i];
       const expected = movingAverage[i - windowSize];
-      // Safety guards – TypeScript flagged potential undefined; also guard NaN cases
-      if (point == null || expected == null || Number.isNaN(expected)) {
-        continue;
-      }
       const deviation = Math.abs(point.value - expected);
       
       if (deviation > 2 * stdDev) {
@@ -485,19 +452,14 @@ class AdaptiveTimelineService {
     // Detect significant trend changes
     const trendWindow = Math.min(5, Math.floor(points.length / 10));
     for (let i = trendWindow * 2; i < points.length - trendWindow; i++) {
-      const beforeSlice = points.slice(i - trendWindow * 2, i - trendWindow);
-      const afterSlice = points.slice(i - trendWindow, i);
-      if (!beforeSlice.length || !afterSlice.length) continue;
-      const beforeTrend = this.calculateTrend(beforeSlice);
-      const afterTrend = this.calculateTrend(afterSlice);
+      const beforeTrend = this.calculateTrend(points.slice(i - trendWindow * 2, i - trendWindow));
+      const afterTrend = this.calculateTrend(points.slice(i - trendWindow, i));
       
       const trendChange = Math.abs(afterTrend - beforeTrend);
       
       if (trendChange > stdDev) {
-        const pivotPoint = points[i];
-        if (!pivotPoint) continue;
         highlights.push({
-          timestamp: pivotPoint.timestamp,
+          timestamp: points[i].timestamp,
           type: 'causal_pivot',
           severity: trendChange > 2 * stdDev ? 'high' : 'medium',
           label: 'Trend change',
