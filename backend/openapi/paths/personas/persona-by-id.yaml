@@ -15,12 +15,7 @@ get:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    $ref: '../../components/schemas/all.yaml#/PersonaResponse'
+            $ref: '../../components/schemas/all.yaml#/PersonaResponse'
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }
@@ -44,16 +39,11 @@ put:
           schema: { $ref: '../../components/schemas/all.yaml#/UpdatePersonaRequest' }
   responses:
     '200':
-      description: Updated
+      description: Updated persona
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    $ref: '../../components/schemas/all.yaml#/PersonaResponse'
+            $ref: '../../components/schemas/all.yaml#/PersonaResponse'
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
@@ -79,12 +69,7 @@ delete:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    $ref: '../../components/schemas/all.yaml#/PersonaDeleteResponse'
+            $ref: '../../components/schemas/all.yaml#/PersonaDeleteResponse'
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }

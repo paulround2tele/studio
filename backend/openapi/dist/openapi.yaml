@@ -234,18 +234,13 @@ paths:
         - $ref: '#/components/parameters/PersonaTypeFilter'
       responses:
         '200':
-          description: List
+          description: List of personas
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/PersonaResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonaResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -269,16 +264,11 @@ paths:
               $ref: '#/components/schemas/CreatePersonaRequest'
       responses:
         '201':
-          description: Created
+          description: Created persona
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/PersonaResponse'
+                $ref: '#/components/schemas/PersonaResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -312,12 +302,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/PersonaResponse'
+                $ref: '#/components/schemas/PersonaResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -350,16 +335,11 @@ paths:
               $ref: '#/components/schemas/UpdatePersonaRequest'
       responses:
         '200':
-          description: Updated
+          description: Updated persona
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/PersonaResponse'
+                $ref: '#/components/schemas/PersonaResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -396,12 +376,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/PersonaDeleteResponse'
+                $ref: '#/components/schemas/PersonaDeleteResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -476,12 +451,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/PersonaResponse'
+                $ref: '#/components/schemas/PersonaResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -513,12 +483,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/PersonaResponse'
+                $ref: '#/components/schemas/PersonaResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':

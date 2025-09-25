@@ -14,7 +14,7 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**personasUpdate**](#personasupdate) | **PUT** /personas/{id} | Update persona|
 
 # **personasCreate**
-> PersonasCreate201Response personasCreate(createPersonaRequest)
+> PersonaResponse personasCreate(createPersonaRequest)
 
 
 ### Example
@@ -45,7 +45,7 @@ const { status, data } = await apiInstance.personasCreate(
 
 ### Return type
 
-**PersonasCreate201Response**
+**PersonaResponse**
 
 ### Authorization
 
@@ -60,7 +60,7 @@ const { status, data } = await apiInstance.personasCreate(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**201** | Created |  -  |
+|**201** | Created persona |  -  |
 |**400** | Bad Request |  -  |
 |**401** | Unauthorized |  -  |
 |**403** | Forbidden |  -  |
@@ -71,7 +71,7 @@ const { status, data } = await apiInstance.personasCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **personasDelete**
-> PersonasDelete200Response personasDelete()
+> PersonaDeleteResponse personasDelete()
 
 
 ### Example
@@ -101,7 +101,7 @@ const { status, data } = await apiInstance.personasDelete(
 
 ### Return type
 
-**PersonasDelete200Response**
+**PersonaDeleteResponse**
 
 ### Authorization
 
@@ -127,7 +127,7 @@ const { status, data } = await apiInstance.personasDelete(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **personasGet**
-> PersonasCreate201Response personasGet()
+> PersonaResponse personasGet()
 
 
 ### Example
@@ -157,7 +157,7 @@ const { status, data } = await apiInstance.personasGet(
 
 ### Return type
 
-**PersonasCreate201Response**
+**PersonaResponse**
 
 ### Authorization
 
@@ -182,7 +182,7 @@ const { status, data } = await apiInstance.personasGet(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **personasGetDns**
-> PersonasCreate201Response personasGetDns()
+> PersonaResponse personasGetDns()
 
 
 ### Example
@@ -212,7 +212,7 @@ const { status, data } = await apiInstance.personasGetDns(
 
 ### Return type
 
-**PersonasCreate201Response**
+**PersonaResponse**
 
 ### Authorization
 
@@ -237,7 +237,7 @@ const { status, data } = await apiInstance.personasGetDns(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **personasGetHttp**
-> PersonasCreate201Response personasGetHttp()
+> PersonaResponse personasGetHttp()
 
 
 ### Example
@@ -267,7 +267,7 @@ const { status, data } = await apiInstance.personasGetHttp(
 
 ### Return type
 
-**PersonasCreate201Response**
+**PersonaResponse**
 
 ### Authorization
 
@@ -292,7 +292,7 @@ const { status, data } = await apiInstance.personasGetHttp(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **personasList**
-> PersonasList200Response personasList()
+> Array<PersonaResponse> personasList()
 
 
 ### Example
@@ -331,7 +331,7 @@ const { status, data } = await apiInstance.personasList(
 
 ### Return type
 
-**PersonasList200Response**
+**Array<PersonaResponse>**
 
 ### Authorization
 
@@ -346,7 +346,7 @@ const { status, data } = await apiInstance.personasList(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | List |  -  |
+|**200** | List of personas |  -  |
 |**401** | Unauthorized |  -  |
 |**403** | Forbidden |  -  |
 |**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
@@ -412,7 +412,7 @@ const { status, data } = await apiInstance.personasTest(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **personasUpdate**
-> PersonasCreate201Response personasUpdate(updatePersonaRequest)
+> PersonaResponse personasUpdate(updatePersonaRequest)
 
 
 ### Example
@@ -446,7 +446,7 @@ const { status, data } = await apiInstance.personasUpdate(
 
 ### Return type
 
-**PersonasCreate201Response**
+**PersonaResponse**
 
 ### Authorization
 
@@ -461,7 +461,7 @@ const { status, data } = await apiInstance.personasUpdate(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Updated |  -  |
+|**200** | Updated persona |  -  |
 |**400** | Bad Request |  -  |
 |**401** | Unauthorized |  -  |
 |**403** | Forbidden |  -  |

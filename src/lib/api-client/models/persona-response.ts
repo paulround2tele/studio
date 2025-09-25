@@ -15,6 +15,9 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
+import type { PersonaConfigDetails } from './persona-config-details';
+// May contain unused imports in some cases
+// @ts-ignore
 import type { PersonaType } from './persona-type';
 
 /**
@@ -49,10 +52,10 @@ export interface PersonaResponse {
     'description'?: string;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {PersonaConfigDetails}
      * @memberof PersonaResponse
      */
-    'configDetails'?: { [key: string]: any; };
+    'configDetails'?: PersonaConfigDetails;
     /**
      * 
      * @type {boolean}

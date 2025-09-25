@@ -133,12 +133,9 @@ function PersonasPageContent() {
     
     try {
   const response = await personasApi.personasList(undefined, undefined, undefined, type as any);
-      
+      // Contract-migrated: response body is now an array of PersonaResponse
       if (response.data) {
-        // Unwrap SuccessEnvelope shape { success, data, metadata }
-        const envelope = response.data as any;
-        const list = envelope?.data ?? [];
-        const personasData = Array.isArray(list) ? list : [];
+        const personasData = Array.isArray(response.data) ? response.data : [];
         // Add missing status property for compatibility
         const personasWithStatus = personasData.map(persona => ({
           ...persona,
@@ -205,9 +202,7 @@ function PersonasPageContent() {
     try {
   const response = await personasApi.personasTest(personaId);
       if (response.status >= 200) {
-        const { extractResponseData } = await import('@/lib/utils/apiResponseHelpers');
-        const testData = extractResponseData<any>(response);
-        const personaName = testData?.personaId || 'Persona';
+        const personaName = (response.data as any)?.personaId || 'Persona';
         toast({ title: "Persona Test Complete", description: `Test for ${personaName} completed.` });
         fetchPersonasData(personaType, false);
       } else {
@@ -232,9 +227,8 @@ function PersonasPageContent() {
       const isEnabled = newStatus === 'Active';
   const response = await personasApi.personasUpdate(personaId, { isEnabled } as any);
       if (response.status >= 200) {
-        const { extractResponseData } = await import('@/lib/utils/apiResponseHelpers');
-        const data = extractResponseData<any>(response);
-        toast({ title: `Persona Status Updated`, description: `${data?.name || 'Persona'} is now ${newStatus}.` });
+        const updated = response.data as any;
+        toast({ title: `Persona Status Updated`, description: `${updated?.name || 'Persona'} is now ${newStatus}.` });
         fetchPersonasData(personaType, false);
       } else {
         toast({ title: "Error Updating Status", description: "Could not update persona status.", variant: "destructive"});

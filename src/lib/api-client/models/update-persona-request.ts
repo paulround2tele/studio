@@ -13,6 +13,9 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { PersonaConfigDetails } from './persona-config-details';
 
 /**
  * 
@@ -34,10 +37,10 @@ export interface UpdatePersonaRequest {
     'description'?: string;
     /**
      * 
-     * @type {{ [key: string]: any; }}
+     * @type {PersonaConfigDetails}
      * @memberof UpdatePersonaRequest
      */
-    'configDetails'?: { [key: string]: any; };
+    'configDetails'?: PersonaConfigDetails;
     /**
      * 
      * @type {boolean}

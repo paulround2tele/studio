@@ -26,13 +26,11 @@ import type { CreatePersonaRequest } from '../models';
 // @ts-ignore
 import type { ErrorEnvelope } from '../models';
 // @ts-ignore
+import type { PersonaDeleteResponse } from '../models';
+// @ts-ignore
+import type { PersonaResponse } from '../models';
+// @ts-ignore
 import type { PersonaType } from '../models';
-// @ts-ignore
-import type { PersonasCreate201Response } from '../models';
-// @ts-ignore
-import type { PersonasDelete200Response } from '../models';
-// @ts-ignore
-import type { PersonasList200Response } from '../models';
 // @ts-ignore
 import type { PersonasTest200Response } from '../models';
 // @ts-ignore
@@ -372,7 +370,7 @@ export const PersonasApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async personasCreate(createPersonaRequest: CreatePersonaRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonasCreate201Response>> {
+        async personasCreate(createPersonaRequest: CreatePersonaRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonaResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.personasCreate(createPersonaRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PersonasApi.personasCreate']?.[localVarOperationServerIndex]?.url;
@@ -385,7 +383,7 @@ export const PersonasApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async personasDelete(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonasDelete200Response>> {
+        async personasDelete(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonaDeleteResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.personasDelete(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PersonasApi.personasDelete']?.[localVarOperationServerIndex]?.url;
@@ -398,7 +396,7 @@ export const PersonasApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async personasGet(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonasCreate201Response>> {
+        async personasGet(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonaResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.personasGet(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PersonasApi.personasGet']?.[localVarOperationServerIndex]?.url;
@@ -411,7 +409,7 @@ export const PersonasApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async personasGetDns(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonasCreate201Response>> {
+        async personasGetDns(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonaResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.personasGetDns(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PersonasApi.personasGetDns']?.[localVarOperationServerIndex]?.url;
@@ -424,7 +422,7 @@ export const PersonasApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async personasGetHttp(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonasCreate201Response>> {
+        async personasGetHttp(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonaResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.personasGetHttp(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PersonasApi.personasGetHttp']?.[localVarOperationServerIndex]?.url;
@@ -440,7 +438,7 @@ export const PersonasApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async personasList(limit?: number, offset?: number, isEnabled?: boolean, personaType?: PersonaType, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonasList200Response>> {
+        async personasList(limit?: number, offset?: number, isEnabled?: boolean, personaType?: PersonaType, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<PersonaResponse>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.personasList(limit, offset, isEnabled, personaType, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PersonasApi.personasList']?.[localVarOperationServerIndex]?.url;
@@ -467,7 +465,7 @@ export const PersonasApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async personasUpdate(id: string, updatePersonaRequest: UpdatePersonaRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonasCreate201Response>> {
+        async personasUpdate(id: string, updatePersonaRequest: UpdatePersonaRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonaResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.personasUpdate(id, updatePersonaRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PersonasApi.personasUpdate']?.[localVarOperationServerIndex]?.url;
@@ -490,7 +488,7 @@ export const PersonasApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        personasCreate(createPersonaRequest: CreatePersonaRequest, options?: RawAxiosRequestConfig): AxiosPromise<PersonasCreate201Response> {
+        personasCreate(createPersonaRequest: CreatePersonaRequest, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse> {
             return localVarFp.personasCreate(createPersonaRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -500,7 +498,7 @@ export const PersonasApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        personasDelete(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonasDelete200Response> {
+        personasDelete(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonaDeleteResponse> {
             return localVarFp.personasDelete(id, options).then((request) => request(axios, basePath));
         },
         /**
@@ -510,7 +508,7 @@ export const PersonasApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        personasGet(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonasCreate201Response> {
+        personasGet(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse> {
             return localVarFp.personasGet(id, options).then((request) => request(axios, basePath));
         },
         /**
@@ -520,7 +518,7 @@ export const PersonasApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        personasGetDns(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonasCreate201Response> {
+        personasGetDns(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse> {
             return localVarFp.personasGetDns(id, options).then((request) => request(axios, basePath));
         },
         /**
@@ -530,7 +528,7 @@ export const PersonasApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        personasGetHttp(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonasCreate201Response> {
+        personasGetHttp(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse> {
             return localVarFp.personasGetHttp(id, options).then((request) => request(axios, basePath));
         },
         /**
@@ -543,7 +541,7 @@ export const PersonasApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        personasList(limit?: number, offset?: number, isEnabled?: boolean, personaType?: PersonaType, options?: RawAxiosRequestConfig): AxiosPromise<PersonasList200Response> {
+        personasList(limit?: number, offset?: number, isEnabled?: boolean, personaType?: PersonaType, options?: RawAxiosRequestConfig): AxiosPromise<Array<PersonaResponse>> {
             return localVarFp.personasList(limit, offset, isEnabled, personaType, options).then((request) => request(axios, basePath));
         },
         /**
@@ -564,7 +562,7 @@ export const PersonasApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        personasUpdate(id: string, updatePersonaRequest: UpdatePersonaRequest, options?: RawAxiosRequestConfig): AxiosPromise<PersonasCreate201Response> {
+        personasUpdate(id: string, updatePersonaRequest: UpdatePersonaRequest, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse> {
             return localVarFp.personasUpdate(id, updatePersonaRequest, options).then((request) => request(axios, basePath));
         },
     };
@@ -584,7 +582,7 @@ export interface PersonasApiInterface {
      * @throws {RequiredError}
      * @memberof PersonasApiInterface
      */
-    personasCreate(createPersonaRequest: CreatePersonaRequest, options?: RawAxiosRequestConfig): AxiosPromise<PersonasCreate201Response>;
+    personasCreate(createPersonaRequest: CreatePersonaRequest, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse>;
 
     /**
      * 
@@ -594,7 +592,7 @@ export interface PersonasApiInterface {
      * @throws {RequiredError}
      * @memberof PersonasApiInterface
      */
-    personasDelete(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonasDelete200Response>;
+    personasDelete(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonaDeleteResponse>;
 
     /**
      * 
@@ -604,7 +602,7 @@ export interface PersonasApiInterface {
      * @throws {RequiredError}
      * @memberof PersonasApiInterface
      */
-    personasGet(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonasCreate201Response>;
+    personasGet(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse>;
 
     /**
      * 
@@ -614,7 +612,7 @@ export interface PersonasApiInterface {
      * @throws {RequiredError}
      * @memberof PersonasApiInterface
      */
-    personasGetDns(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonasCreate201Response>;
+    personasGetDns(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse>;
 
     /**
      * 
@@ -624,7 +622,7 @@ export interface PersonasApiInterface {
      * @throws {RequiredError}
      * @memberof PersonasApiInterface
      */
-    personasGetHttp(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonasCreate201Response>;
+    personasGetHttp(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse>;
 
     /**
      * 
@@ -637,7 +635,7 @@ export interface PersonasApiInterface {
      * @throws {RequiredError}
      * @memberof PersonasApiInterface
      */
-    personasList(limit?: number, offset?: number, isEnabled?: boolean, personaType?: PersonaType, options?: RawAxiosRequestConfig): AxiosPromise<PersonasList200Response>;
+    personasList(limit?: number, offset?: number, isEnabled?: boolean, personaType?: PersonaType, options?: RawAxiosRequestConfig): AxiosPromise<Array<PersonaResponse>>;
 
     /**
      * 
@@ -658,7 +656,7 @@ export interface PersonasApiInterface {
      * @throws {RequiredError}
      * @memberof PersonasApiInterface
      */
-    personasUpdate(id: string, updatePersonaRequest: UpdatePersonaRequest, options?: RawAxiosRequestConfig): AxiosPromise<PersonasCreate201Response>;
+    personasUpdate(id: string, updatePersonaRequest: UpdatePersonaRequest, options?: RawAxiosRequestConfig): AxiosPromise<PersonaResponse>;
 
 }
 

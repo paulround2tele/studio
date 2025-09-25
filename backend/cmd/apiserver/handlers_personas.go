@@ -103,13 +103,7 @@ func (h *strictHandlers) PersonasList(ctx context.Context, r gen.PersonasListReq
 	for _, p := range personas {
 		items = append(items, personaToResponse(p))
 	}
-	resp := gen.PersonasList200JSONResponse{
-		Data:      &items,
-		Metadata:  okMeta(),
-		RequestId: reqID(),
-		Success:   boolPtr(true),
-	}
-	return resp, nil
+	return gen.PersonasList200JSONResponse(items), nil
 }
 
 func (h *strictHandlers) PersonasCreate(ctx context.Context, r gen.PersonasCreateRequestObject) (gen.PersonasCreateResponseObject, error) {
@@ -165,13 +159,7 @@ func (h *strictHandlers) PersonasCreate(ctx context.Context, r gen.PersonasCreat
 	}
 
 	data := personaToResponse(persona)
-	resp := gen.PersonasCreate201JSONResponse{
-		Data:      &data,
-		Metadata:  okMeta(),
-		RequestId: reqID(),
-		Success:   boolPtr(true),
-	}
-	return resp, nil
+	return gen.PersonasCreate201JSONResponse(data), nil
 }
 
 func (h *strictHandlers) PersonasGet(ctx context.Context, r gen.PersonasGetRequestObject) (gen.PersonasGetResponseObject, error) {
@@ -186,7 +174,7 @@ func (h *strictHandlers) PersonasGet(ctx context.Context, r gen.PersonasGetReque
 		return gen.PersonasGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch persona", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	data := personaToResponse(p)
-	return gen.PersonasGet200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.PersonasGet200JSONResponse(data), nil
 }
 
 func (h *strictHandlers) PersonasGetDns(ctx context.Context, r gen.PersonasGetDnsRequestObject) (gen.PersonasGetDnsResponseObject, error) {
@@ -204,7 +192,7 @@ func (h *strictHandlers) PersonasGetDns(ctx context.Context, r gen.PersonasGetDn
 		return gen.PersonasGetDns400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "persona is not DNS type", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	data := personaToResponse(p)
-	return gen.PersonasGetDns200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.PersonasGetDns200JSONResponse(data), nil
 }
 
 func (h *strictHandlers) PersonasGetHttp(ctx context.Context, r gen.PersonasGetHttpRequestObject) (gen.PersonasGetHttpResponseObject, error) {
@@ -222,7 +210,7 @@ func (h *strictHandlers) PersonasGetHttp(ctx context.Context, r gen.PersonasGetH
 		return gen.PersonasGetHttp400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "persona is not HTTP type", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	data := personaToResponse(p)
-	return gen.PersonasGetHttp200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.PersonasGetHttp200JSONResponse(data), nil
 }
 
 func (h *strictHandlers) PersonasUpdate(ctx context.Context, r gen.PersonasUpdateRequestObject) (gen.PersonasUpdateResponseObject, error) {
@@ -275,7 +263,7 @@ func (h *strictHandlers) PersonasUpdate(ctx context.Context, r gen.PersonasUpdat
 	}
 
 	data := personaToResponse(existing)
-	return gen.PersonasUpdate200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.PersonasUpdate200JSONResponse(data), nil
 }
 
 func (h *strictHandlers) PersonasDelete(ctx context.Context, r gen.PersonasDeleteRequestObject) (gen.PersonasDeleteResponseObject, error) {
@@ -297,17 +285,7 @@ func (h *strictHandlers) PersonasDelete(ctx context.Context, r gen.PersonasDelet
 		return gen.PersonasDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to delete persona", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	msg := fmt.Sprintf("persona %s deleted", existing.ID.String())
-	resp := gen.PersonasDelete200JSONResponse{
-		Data: &gen.PersonaDeleteResponse{
-			Deleted:   true,
-			Message:   &msg,
-			PersonaId: openapi_types.UUID(existing.ID),
-		},
-		Metadata:  okMeta(),
-		RequestId: reqID(),
-		Success:   boolPtr(true),
-	}
-	return resp, nil
+	return gen.PersonasDelete200JSONResponse(gen.PersonaDeleteResponse{Deleted: true, Message: &msg, PersonaId: openapi_types.UUID(existing.ID)}), nil
 }
 
 func (h *strictHandlers) PersonasTest(ctx context.Context, r gen.PersonasTestRequestObject) (gen.PersonasTestResponseObject, error) {
@@ -328,7 +306,7 @@ func (h *strictHandlers) PersonasTest(ctx context.Context, r gen.PersonasTestReq
 	ok := true
 	passed := true
 	msg := fmt.Sprintf("%s persona test completed successfully", p.PersonaType)
-	data := gen.PersonasTest200JSONResponse{
+	return gen.PersonasTest200JSONResponse{
 		Data: &gen.PersonaTestResponse{
 			Message:     &msg,
 			PersonaId:   &pid,
@@ -343,6 +321,5 @@ func (h *strictHandlers) PersonasTest(ctx context.Context, r gen.PersonasTestReq
 		Metadata:  okMeta(),
 		RequestId: reqID(),
 		Success:   boolPtr(true),
-	}
-	return data, nil
+	}, nil
 }

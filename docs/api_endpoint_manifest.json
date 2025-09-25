@@ -1,0 +1,13 @@
+{
+  "personas.list": { "path": "/api/v2/personas", "method": "GET", "status": "migrated", "notes": "Direct array body" },
+  "personas.create": { "path": "/api/v2/personas", "method": "POST", "status": "migrated", "notes": "Returns PersonaResponse" },
+  "personas.get": { "path": "/api/v2/personas/{id}", "method": "GET", "status": "migrated", "notes": "Returns PersonaResponse" },
+  "campaigns.list": { "path": "/api/v2/campaigns", "method": "GET", "status": "pending", "notes": "" },
+  "campaigns.detail": { "path": "/api/v2/campaigns/{id}", "method": "GET", "status": "pending", "notes": "" },
+  "campaigns.metrics": { "path": "/api/v2/campaigns/{id}/metrics", "method": "GET", "status": "pending", "notes": "" },
+  "bulk.status": { "path": "/api/v2/campaigns/bulk/operations/{operationId}/status", "method": "GET", "status": "pending", "notes": "" },
+  "auth.login": { "path": "/api/v2/auth/login", "method": "POST", "status": "pending", "notes": "" },
+  "auth.me": { "path": "/api/v2/auth/me", "method": "GET", "status": "pending", "notes": "" },
+  "proxies.pools": { "path": "/api/v2/proxy-pools", "method": "GET", "status": "pending", "notes": "" },
+  "health": { "path": "/api/v2/health", "method": "GET", "status": "pending", "notes": "" }
+}

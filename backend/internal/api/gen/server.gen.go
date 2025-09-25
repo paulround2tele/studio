@@ -13656,14 +13656,7 @@ type PersonasListResponseObject interface {
 	VisitPersonasListResponse(w http.ResponseWriter) error
 }
 
-type PersonasList200JSONResponse struct {
-	Data      *[]PersonaResponse `json:"data,omitempty"`
-	Metadata  *Metadata          `json:"metadata,omitempty"`
-	RequestId string             `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type PersonasList200JSONResponse []PersonaResponse
 
 func (response PersonasList200JSONResponse) VisitPersonasListResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13719,14 +13712,7 @@ type PersonasCreateResponseObject interface {
 	VisitPersonasCreateResponse(w http.ResponseWriter) error
 }
 
-type PersonasCreate201JSONResponse struct {
-	Data      *PersonaResponse `json:"data,omitempty"`
-	Metadata  *Metadata        `json:"metadata,omitempty"`
-	RequestId string           `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type PersonasCreate201JSONResponse PersonaResponse
 
 func (response PersonasCreate201JSONResponse) VisitPersonasCreateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13800,14 +13786,7 @@ type PersonasGetDnsResponseObject interface {
 	VisitPersonasGetDnsResponse(w http.ResponseWriter) error
 }
 
-type PersonasGetDns200JSONResponse struct {
-	Data      *PersonaResponse `json:"data,omitempty"`
-	Metadata  *Metadata        `json:"metadata,omitempty"`
-	RequestId string           `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type PersonasGetDns200JSONResponse PersonaResponse
 
 func (response PersonasGetDns200JSONResponse) VisitPersonasGetDnsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13871,14 +13850,7 @@ type PersonasGetHttpResponseObject interface {
 	VisitPersonasGetHttpResponse(w http.ResponseWriter) error
 }
 
-type PersonasGetHttp200JSONResponse struct {
-	Data      *PersonaResponse `json:"data,omitempty"`
-	Metadata  *Metadata        `json:"metadata,omitempty"`
-	RequestId string           `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type PersonasGetHttp200JSONResponse PersonaResponse
 
 func (response PersonasGetHttp200JSONResponse) VisitPersonasGetHttpResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13942,14 +13914,7 @@ type PersonasDeleteResponseObject interface {
 	VisitPersonasDeleteResponse(w http.ResponseWriter) error
 }
 
-type PersonasDelete200JSONResponse struct {
-	Data      *PersonaDeleteResponse `json:"data,omitempty"`
-	Metadata  *Metadata              `json:"metadata,omitempty"`
-	RequestId string                 `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type PersonasDelete200JSONResponse PersonaDeleteResponse
 
 func (response PersonasDelete200JSONResponse) VisitPersonasDeleteResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14023,14 +13988,7 @@ type PersonasGetResponseObject interface {
 	VisitPersonasGetResponse(w http.ResponseWriter) error
 }
 
-type PersonasGet200JSONResponse struct {
-	Data      *PersonaResponse `json:"data,omitempty"`
-	Metadata  *Metadata        `json:"metadata,omitempty"`
-	RequestId string           `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type PersonasGet200JSONResponse PersonaResponse
 
 func (response PersonasGet200JSONResponse) VisitPersonasGetResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14096,14 +14054,7 @@ type PersonasUpdateResponseObject interface {
 	VisitPersonasUpdateResponse(w http.ResponseWriter) error
 }
 
-type PersonasUpdate200JSONResponse struct {
-	Data      *PersonaResponse `json:"data,omitempty"`
-	Metadata  *Metadata        `json:"metadata,omitempty"`
-	RequestId string           `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type PersonasUpdate200JSONResponse PersonaResponse
 
 func (response PersonasUpdate200JSONResponse) VisitPersonasUpdateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")

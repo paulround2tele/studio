@@ -11,17 +11,12 @@ get:
   - $ref: '../../components/parameters.yaml#/PersonaTypeFilter'
   responses:
     '200':
-      description: List
+      description: List of personas
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    type: array
-                    items: { $ref: '../../components/schemas/all.yaml#/PersonaResponse' }
+            type: array
+            items: { $ref: '../../components/schemas/all.yaml#/PersonaResponse' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
@@ -39,16 +34,11 @@ post:
           schema: { $ref: '../../components/schemas/all.yaml#/CreatePersonaRequest' }
   responses:
     '201':
-      description: Created
+      description: Created persona
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    $ref: '../../components/schemas/all.yaml#/PersonaResponse'
+            $ref: '../../components/schemas/all.yaml#/PersonaResponse'
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }

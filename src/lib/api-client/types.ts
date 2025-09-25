@@ -1883,15 +1883,74 @@ export interface components {
         };
         /** @enum {string} */
         PersonaType: "dns" | "http";
+        /** @description HTTP persona configuration details */
+        PersonaConfigHttp: {
+            userAgent: string;
+            headers?: {
+                [key: string]: string;
+            };
+            headerOrder?: string[];
+            tlsClientHello?: {
+                /** @enum {string} */
+                minVersion?: "TLS10" | "TLS11" | "TLS12" | "TLS13";
+                /** @enum {string} */
+                maxVersion?: "TLS10" | "TLS11" | "TLS12" | "TLS13";
+                cipherSuites?: string[];
+                curvePreferences?: string[];
+            };
+            http2Settings?: {
+                enabled?: boolean;
+            };
+            cookieHandling?: {
+                /** @enum {string} */
+                mode?: "preserve" | "ignore" | "custom";
+            };
+            requestTimeoutSeconds?: number;
+            followRedirects?: boolean;
+            allowedStatusCodes?: number[];
+            /** Format: float */
+            rateLimitDps?: number;
+            rateLimitBurst?: number;
+            notes?: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            personaType: "http";
+        };
+        /** @description DNS persona configuration details */
+        PersonaConfigDns: {
+            resolvers: string[];
+            useSystemResolvers?: boolean;
+            queryTimeoutSeconds: number;
+            maxDomainsPerRequest: number;
+            /** @enum {string} */
+            resolverStrategy?: "round_robin" | "random" | "weighted" | "priority";
+            resolversWeighted?: {
+                [key: string]: number;
+            };
+            resolversPreferredOrder?: string[];
+            concurrentQueriesPerDomain: number;
+            queryDelayMinMs?: number;
+            queryDelayMaxMs?: number;
+            maxConcurrentGoroutines?: number;
+            /** Format: float */
+            rateLimitDps?: number;
+            rateLimitBurst?: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            personaType: "dns";
+        };
+        PersonaConfigDetails: components["schemas"]["PersonaConfigHttp"] | components["schemas"]["PersonaConfigDns"];
         PersonaResponse: {
             /** Format: uuid */
             id: string;
             name: string;
             personaType: components["schemas"]["PersonaType"];
             description?: string;
-            configDetails?: {
-                [key: string]: unknown;
-            };
+            configDetails?: components["schemas"]["PersonaConfigDetails"];
             isEnabled: boolean;
             /** Format: date-time */
             createdAt: string;
@@ -1902,18 +1961,13 @@ export interface components {
             name: string;
             personaType: components["schemas"]["PersonaType"];
             description?: string;
-            /** @description HTTP or DNS persona configuration object */
-            configDetails: {
-                [key: string]: unknown;
-            };
+            configDetails: components["schemas"]["PersonaConfigDetails"];
             isEnabled?: boolean;
         };
         UpdatePersonaRequest: {
             name?: string;
             description?: string;
-            configDetails?: {
-                [key: string]: unknown;
-            };
+            configDetails?: components["schemas"]["PersonaConfigDetails"];
             isEnabled?: boolean;
         };
         PersonaDeleteResponse: {
@@ -3459,15 +3513,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description List */
+            /** @description List of personas */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["PersonaResponse"][];
-                    };
+                    "application/json": components["schemas"]["PersonaResponse"][];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -3489,15 +3541,13 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Created */
+            /** @description Created persona */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["PersonaResponse"];
-                    };
+                    "application/json": components["schemas"]["PersonaResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -3525,9 +3575,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["PersonaResponse"];
-                    };
+                    "application/json": components["schemas"]["PersonaResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -3552,15 +3600,13 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Updated */
+            /** @description Updated persona */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["PersonaResponse"];
-                    };
+                    "application/json": components["schemas"]["PersonaResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -3590,9 +3636,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["PersonaDeleteResponse"];
-                    };
+                    "application/json": components["schemas"]["PersonaDeleteResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -3651,9 +3695,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["PersonaResponse"];
-                    };
+                    "application/json": components["schemas"]["PersonaResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -3680,9 +3722,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["PersonaResponse"];
-                    };
+                    "application/json": components["schemas"]["PersonaResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
