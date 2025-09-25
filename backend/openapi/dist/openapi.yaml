@@ -41,10 +41,15 @@ paths:
       responses:
         '200':
           description: OK
+          headers:
+            X-Request-Id:
+              description: Unique request identifier
+              schema:
+                type: string
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessEnvelope'
+                $ref: '#/components/schemas/HealthResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -62,10 +67,15 @@ paths:
       responses:
         '200':
           description: Pong
+          headers:
+            X-Request-Id:
+              description: Unique request identifier
+              schema:
+                type: string
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessEnvelope'
+                $ref: '#/components/schemas/PingResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -83,10 +93,15 @@ paths:
       responses:
         '200':
           description: Ready
+          headers:
+            X-Request-Id:
+              description: Unique request identifier
+              schema:
+                type: string
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessEnvelope'
+                $ref: '#/components/schemas/HealthResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -104,10 +119,15 @@ paths:
       responses:
         '200':
           description: Alive
+          headers:
+            X-Request-Id:
+              description: Unique request identifier
+              schema:
+                type: string
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SuccessEnvelope'
+                $ref: '#/components/schemas/HealthResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -4708,6 +4728,108 @@ components:
       value: |
         retry: 5000
   schemas:
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - ok
+        version:
+          type: string
+        uptime:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - status
+    ErrorCode:
+      type: string
+      description: Stable error code space
+      enum:
+        - BAD_REQUEST
+        - UNAUTHORIZED
+        - FORBIDDEN
+        - NOT_FOUND
+        - CONFLICT
+        - VALIDATION_ERROR
+        - REQUIRED_FIELD
+        - RATE_LIMIT_EXCEEDED
+        - REQUEST_TIMEOUT
+        - NOT_IMPLEMENTED
+        - INTERNAL_SERVER_ERROR
+        - DATABASE_ERROR
+        - SERVICE_UNAVAILABLE
+        - GATEWAY_TIMEOUT
+        - CAMPAIGN_IN_PROGRESS
+        - QUOTA_EXCEEDED
+        - INVALID_STATE
+    ApiError:
+      type: object
+      properties:
+        code:
+          $ref: '#/components/schemas/ErrorCode'
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: JSON pointer or field path
+              code:
+                $ref: '#/components/schemas/ErrorCode'
+              message:
+                type: string
+              context:
+                type: object
+                additionalProperties: true
+            required:
+              - code
+              - message
+        timestamp:
+          type: string
+          format: date-time
+        path:
+          type: string
+      required:
+        - code
+        - message
+        - timestamp
+    ErrorEnvelope:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Always false for error envelopes.
+          default: false
+          example: false
+          readOnly: true
+        error:
+          $ref: '#/components/schemas/ApiError'
+        requestId:
+          type: string
+      required:
+        - success
+        - error
+        - requestId
+    PingResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          enum:
+            - pong
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+      required:
+        - message
     Pagination:
       type: object
       properties:
@@ -4785,83 +4907,151 @@ components:
       required:
         - success
         - requestId
-    ErrorCode:
-      type: string
-      description: Stable error code space
-      enum:
-        - BAD_REQUEST
-        - UNAUTHORIZED
-        - FORBIDDEN
-        - NOT_FOUND
-        - CONFLICT
-        - VALIDATION_ERROR
-        - REQUIRED_FIELD
-        - RATE_LIMIT_EXCEEDED
-        - REQUEST_TIMEOUT
-        - NOT_IMPLEMENTED
-        - INTERNAL_SERVER_ERROR
-        - DATABASE_ERROR
-        - SERVICE_UNAVAILABLE
-        - GATEWAY_TIMEOUT
-        - CAMPAIGN_IN_PROGRESS
-        - QUOTA_EXCEEDED
-        - INVALID_STATE
-    ApiError:
-      type: object
-      properties:
-        code:
-          $ref: '#/components/schemas/ErrorCode'
-        message:
-          type: string
-        details:
-          type: array
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-                description: JSON pointer or field path
-              code:
-                $ref: '#/components/schemas/ErrorCode'
-              message:
-                type: string
-              context:
-                type: object
-                additionalProperties: true
-            required:
-              - code
-              - message
-        timestamp:
-          type: string
-          format: date-time
-        path:
-          type: string
-      required:
-        - code
-        - message
-        - timestamp
-    ErrorEnvelope:
-      type: object
-      properties:
-        success:
-          type: boolean
-          description: Always false for error envelopes.
-          default: false
-          example: false
-          readOnly: true
-        error:
-          $ref: '#/components/schemas/ApiError'
-        requestId:
-          type: string
-      required:
-        - success
-        - error
-        - requestId
     PersonaType:
       type: string
       enum:
         - dns
         - http
+    PersonaConfigHttp:
+      type: object
+      description: HTTP persona configuration details
+      properties:
+        userAgent:
+          type: string
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        headerOrder:
+          type: array
+          items:
+            type: string
+        tlsClientHello:
+          type: object
+          properties:
+            minVersion:
+              type: string
+              enum:
+                - TLS10
+                - TLS11
+                - TLS12
+                - TLS13
+            maxVersion:
+              type: string
+              enum:
+                - TLS10
+                - TLS11
+                - TLS12
+                - TLS13
+            cipherSuites:
+              type: array
+              items:
+                type: string
+            curvePreferences:
+              type: array
+              items:
+                type: string
+        http2Settings:
+          type: object
+          properties:
+            enabled:
+              type: boolean
+        cookieHandling:
+          type: object
+          properties:
+            mode:
+              type: string
+              enum:
+                - preserve
+                - ignore
+                - custom
+        requestTimeoutSeconds:
+          type: integer
+          minimum: 0
+        followRedirects:
+          type: boolean
+        allowedStatusCodes:
+          type: array
+          items:
+            type: integer
+            minimum: 100
+            maximum: 599
+        rateLimitDps:
+          type: number
+          format: float
+          minimum: 0
+        rateLimitBurst:
+          type: integer
+          minimum: 0
+        notes:
+          type: string
+      required:
+        - userAgent
+    PersonaConfigDns:
+      type: object
+      description: DNS persona configuration details
+      properties:
+        resolvers:
+          type: array
+          items:
+            type: string
+            description: Host:port or URL
+        useSystemResolvers:
+          type: boolean
+        queryTimeoutSeconds:
+          type: integer
+          minimum: 0
+        maxDomainsPerRequest:
+          type: integer
+          minimum: 1
+        resolverStrategy:
+          type: string
+          enum:
+            - round_robin
+            - random
+            - weighted
+            - priority
+        resolversWeighted:
+          type: object
+          additionalProperties:
+            type: integer
+        resolversPreferredOrder:
+          type: array
+          items:
+            type: string
+        concurrentQueriesPerDomain:
+          type: integer
+          minimum: 1
+        queryDelayMinMs:
+          type: integer
+          minimum: 0
+        queryDelayMaxMs:
+          type: integer
+          minimum: 0
+        maxConcurrentGoroutines:
+          type: integer
+          minimum: 1
+        rateLimitDps:
+          type: number
+          format: float
+          minimum: 0
+        rateLimitBurst:
+          type: integer
+          minimum: 0
+      required:
+        - resolvers
+        - queryTimeoutSeconds
+        - maxDomainsPerRequest
+        - concurrentQueriesPerDomain
+    PersonaConfigDetails:
+      oneOf:
+        - $ref: '#/components/schemas/PersonaConfigHttp'
+        - $ref: '#/components/schemas/PersonaConfigDns'
+      discriminator:
+        propertyName: personaType
+        mapping:
+          http: '#/components/schemas/PersonaConfigHttp'
+          dns: '#/components/schemas/PersonaConfigDns'
     PersonaResponse:
       type: object
       properties:
@@ -4875,8 +5065,7 @@ components:
         description:
           type: string
         configDetails:
-          type: object
-          additionalProperties: {}
+          $ref: '#/components/schemas/PersonaConfigDetails'
         isEnabled:
           type: boolean
         createdAt:
@@ -4902,9 +5091,7 @@ components:
         description:
           type: string
         configDetails:
-          description: HTTP or DNS persona configuration object
-          type: object
-          additionalProperties: {}
+          $ref: '#/components/schemas/PersonaConfigDetails'
         isEnabled:
           type: boolean
       required:
@@ -4919,8 +5106,7 @@ components:
         description:
           type: string
         configDetails:
-          type: object
-          additionalProperties: {}
+          $ref: '#/components/schemas/PersonaConfigDetails'
         isEnabled:
           type: boolean
     PersonaDeleteResponse:
