@@ -51,6 +51,11 @@ export default [
         module: 'readonly',
         require: 'readonly',
         console: 'readonly',
+        setImmediate: 'readonly',
+        setTimeout: 'readonly',
+        setInterval: 'readonly',
+        clearTimeout: 'readonly',
+        clearInterval: 'readonly',
         
         // Browser globals
         window: 'readonly',
@@ -58,9 +63,12 @@ export default [
         navigator: 'readonly',
         localStorage: 'readonly',
         sessionStorage: 'readonly',
+        confirm: 'readonly',
+        alert: 'readonly',
         fetch: 'readonly',
         Response: 'readonly',
         Request: 'readonly',
+        RequestInit: 'readonly',
         Headers: 'readonly',
         URL: 'readonly',
         URLSearchParams: 'readonly',
@@ -75,6 +83,17 @@ export default [
         PromiseRejectionEvent: 'readonly',
         BroadcastChannel: 'readonly',
         IntersectionObserver: 'readonly',
+        
+        // Worker and WebAssembly globals
+        Worker: 'readonly',
+        EventSource: 'readonly',
+        WebAssembly: 'readonly',
+        btoa: 'readonly',
+        atob: 'readonly',
+        PerformanceObserver: 'readonly',
+        PerformanceEntry: 'readonly',
+        self: 'readonly',
+        
         performance: 'readonly',
         PerformanceNavigationTiming: 'readonly',
         PerformanceResourceTiming: 'readonly',

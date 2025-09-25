@@ -23,6 +23,7 @@ const config: Config = {
     "/node_modules/",
     "/.next/",
     "<rootDir>/tests/e2e/", // exclude Playwright e2e from Jest
+    "<rootDir>/e2e/", // exclude root-level Playwright tests directory
     '/playwright-report/',
     '/playwright-tests/',
     '/tests/visual/'

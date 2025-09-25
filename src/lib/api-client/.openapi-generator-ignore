@@ -21,6 +21,3 @@
 #docs/*.md
 # Then explicitly reverse the ignore rule for a single file:
 #!docs/README.md
-
-# Prevent legacy WebSocket client from being (re)generated
-apis/websocket-api.ts
