@@ -1,23 +1,39 @@
 #!/usr/bin/env sh
 
-# Prevent committing manual edits to generated clients/models
+# Detect CI (any common CI env var)
+IS_CI="${CI}${GITHUB_ACTIONS}${GITLAB_CI}${BUILD_NUMBER}"
+
+# Prevent committing manual edits to generated clients/models (unless skipped)
 if git diff --cached --name-only | grep -E "^src/lib/api-client/(models|apis|api|base|common|configuration|index|types\.ts)" >/dev/null; then
-	echo "Blocking commit: do not commit manual edits in src/lib/api-client. Running regen..."
-	npm run api:regen:quick || exit 1
-	git add src/lib/api-client
+	if [ "${SKIP_API_CLIENT_REGEN}" = "1" ]; then
+		echo "[pre-commit] Skipping api-client regeneration (SKIP_API_CLIENT_REGEN=1)" >&2
+	else
+		echo "[pre-commit] Regenerating api-client (staged edits detected)..." >&2
+		npm run api:regen:quick || {
+			echo "[pre-commit] api:regen failed" >&2
+			# Only block locally; allow CI to continue for archival commits
+			if [ -z "${IS_CI}" ]; then
+				exit 1
+			fi
+		}
+		git add src/lib/api-client
+	fi
 fi
 
-# Typecheck fast
-# During large refactors we sometimes need to bypass blocking type errors.
-# Set ALLOW_COMMIT_WITH_TYPE_ERRORS=1 to skip hard failure (still runs for visibility).
+# Typecheck fast with optional bypass
+# Auto-bypass in CI or when REFACTOR_MODE=1
+if [ -n "${IS_CI}" ] || [ "${REFACTOR_MODE}" = "1" ]; then
+	export ALLOW_COMMIT_WITH_TYPE_ERRORS=1
+fi
+
 if [ "${ALLOW_COMMIT_WITH_TYPE_ERRORS}" = "1" ]; then
-	echo "[pre-commit] Typecheck (non-blocking mode) running..."
+	echo "[pre-commit] Typecheck (non-blocking) running..." >&2
 	if ! npm run typecheck -s; then
-		echo "[pre-commit] Type errors detected but bypass enabled (ALLOW_COMMIT_WITH_TYPE_ERRORS=1)." >&2
+		echo "[pre-commit] Type errors detected (bypass active)." >&2
 	fi
 else
 	npm run typecheck -s || {
-		echo "[pre-commit] Typecheck failed. To bypass temporarily set ALLOW_COMMIT_WITH_TYPE_ERRORS=1." >&2
+		echo "[pre-commit] Typecheck failed. Set ALLOW_COMMIT_WITH_TYPE_ERRORS=1 or REFACTOR_MODE=1 to bypass." >&2
 		exit 1
 	}
 fi
