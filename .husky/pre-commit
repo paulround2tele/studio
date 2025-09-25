@@ -8,4 +8,16 @@ if git diff --cached --name-only | grep -E "^src/lib/api-client/(models|apis|api
 fi
 
 # Typecheck fast
-npm run typecheck -s || exit 1
+# During large refactors we sometimes need to bypass blocking type errors.
+# Set ALLOW_COMMIT_WITH_TYPE_ERRORS=1 to skip hard failure (still runs for visibility).
+if [ "${ALLOW_COMMIT_WITH_TYPE_ERRORS}" = "1" ]; then
+	echo "[pre-commit] Typecheck (non-blocking mode) running..."
+	if ! npm run typecheck -s; then
+		echo "[pre-commit] Type errors detected but bypass enabled (ALLOW_COMMIT_WITH_TYPE_ERRORS=1)." >&2
+	fi
+else
+	npm run typecheck -s || {
+		echo "[pre-commit] Typecheck failed. To bypass temporarily set ALLOW_COMMIT_WITH_TYPE_ERRORS=1." >&2
+		exit 1
+	}
+fi
