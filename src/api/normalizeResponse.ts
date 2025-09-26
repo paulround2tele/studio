@@ -24,7 +24,7 @@ export function normalizeResponse<T>(raw: unknown): T {
   
   // Pattern 2: SuccessEnvelope (legacy endpoints during transition)
   if (r.success === true && 'data' in r) {
-    // Check for double-wrapped envelope (backend bug)
+    // Intentionally handle double-wrapped envelope (known transitional state during migration)
     if (r.data && r.data.success === true && 'data' in r.data) {
       if (process.env.NODE_ENV !== 'production') {
         console.warn('[contract] double-wrapped response detected – unwrapping');
