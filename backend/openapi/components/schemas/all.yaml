@@ -122,6 +122,35 @@ BulkOperationInfo:
     totalRowsReturned: { type: integer, format: int64 }
     type: { type: string }
 
+# Direct response schemas (Option B - no envelope for 2xx)
+HealthResponse:
+  type: object
+  properties:
+    status:
+      type: string
+      enum: [ok]
+    version:
+      type: string
+    uptime:
+      type: string
+    timestamp:
+      type: string
+      format: date-time
+  required: [status]
+  
+PingResponse:
+  type: object
+  properties:
+    message:
+      type: string
+      enum: [pong]
+    timestamp:
+      type: string
+      format: date-time
+    version:
+      type: string
+  required: [message]
+
 # --- Scoring Profiles ---
 ScoringProfile:
   type: object

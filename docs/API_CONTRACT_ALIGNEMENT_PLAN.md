@@ -74,9 +74,9 @@ GET /api/v2/health               -> { "status": "ok", "version": "x.y.z" }
 ### 3.3 Error Code Enum (Finalize in Phase A)
 `AUTH`, `UNAUTHORIZED`, `FORBIDDEN`, `VALIDATION`, `NOT_FOUND`, `CONFLICT`, `RATE_LIMIT`, `TIMEOUT`, `UPSTREAM`, `UNAVAILABLE`, `INTERNAL`, `UNKNOWN`
 
-### 3.4 Pagination (Decision Needed – Mark One)
+### 3.4 Pagination (Decision: Pattern B Selected)
 - [ ] Pattern A: Link headers (+ `X-Total-Count`)
-- [ ] Pattern B (Recommended): Body wrapper:
+- [x] Pattern B (Recommended): Body wrapper:
   ```
   { "items": T[], "page": 1, "pageSize": 25, "total": 137 }
   ```

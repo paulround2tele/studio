@@ -1805,6 +1805,52 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        HealthResponse: {
+            /** @enum {string} */
+            status: "ok";
+            version?: string;
+            uptime?: string;
+            /** Format: date-time */
+            timestamp?: string;
+        };
+        /**
+         * @description Stable error code space
+         * @enum {string}
+         */
+        ErrorCode: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_ERROR" | "REQUIRED_FIELD" | "RATE_LIMIT_EXCEEDED" | "REQUEST_TIMEOUT" | "NOT_IMPLEMENTED" | "INTERNAL_SERVER_ERROR" | "DATABASE_ERROR" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "CAMPAIGN_IN_PROGRESS" | "QUOTA_EXCEEDED" | "INVALID_STATE";
+        ApiError: {
+            code: components["schemas"]["ErrorCode"];
+            message: string;
+            details?: {
+                /** @description JSON pointer or field path */
+                field?: string;
+                code: components["schemas"]["ErrorCode"];
+                message: string;
+                context?: {
+                    [key: string]: unknown;
+                };
+            }[];
+            /** Format: date-time */
+            timestamp: string;
+            path?: string;
+        };
+        ErrorEnvelope: {
+            /**
+             * @description Always false for error envelopes.
+             * @default false
+             * @example false
+             */
+            readonly success: boolean;
+            error: components["schemas"]["ApiError"];
+            requestId: string;
+        };
+        PingResponse: {
+            /** @enum {string} */
+            message: "pong";
+            /** Format: date-time */
+            timestamp?: string;
+            version?: string;
+        };
         Pagination: {
             current?: number;
             total?: number;
@@ -1848,37 +1894,6 @@ export interface components {
              */
             readonly success: boolean;
             metadata?: components["schemas"]["Metadata"];
-            requestId: string;
-        };
-        /**
-         * @description Stable error code space
-         * @enum {string}
-         */
-        ErrorCode: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_ERROR" | "REQUIRED_FIELD" | "RATE_LIMIT_EXCEEDED" | "REQUEST_TIMEOUT" | "NOT_IMPLEMENTED" | "INTERNAL_SERVER_ERROR" | "DATABASE_ERROR" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "CAMPAIGN_IN_PROGRESS" | "QUOTA_EXCEEDED" | "INVALID_STATE";
-        ApiError: {
-            code: components["schemas"]["ErrorCode"];
-            message: string;
-            details?: {
-                /** @description JSON pointer or field path */
-                field?: string;
-                code: components["schemas"]["ErrorCode"];
-                message: string;
-                context?: {
-                    [key: string]: unknown;
-                };
-            }[];
-            /** Format: date-time */
-            timestamp: string;
-            path?: string;
-        };
-        ErrorEnvelope: {
-            /**
-             * @description Always false for error envelopes.
-             * @default false
-             * @example false
-             */
-            readonly success: boolean;
-            error: components["schemas"]["ApiError"];
             requestId: string;
         };
         /** @enum {string} */
@@ -3328,10 +3343,12 @@ export interface operations {
             /** @description OK */
             200: {
                 headers: {
+                    /** @description Unique request identifier */
+                    "X-Request-Id"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"];
+                    "application/json": components["schemas"]["HealthResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -3352,10 +3369,12 @@ export interface operations {
             /** @description Pong */
             200: {
                 headers: {
+                    /** @description Unique request identifier */
+                    "X-Request-Id"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"];
+                    "application/json": components["schemas"]["PingResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -3376,10 +3395,12 @@ export interface operations {
             /** @description Ready */
             200: {
                 headers: {
+                    /** @description Unique request identifier */
+                    "X-Request-Id"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"];
+                    "application/json": components["schemas"]["HealthResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -3400,10 +3421,12 @@ export interface operations {
             /** @description Alive */
             200: {
                 headers: {
+                    /** @description Unique request identifier */
+                    "X-Request-Id"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"];
+                    "application/json": components["schemas"]["HealthResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -5788,12 +5811,12 @@ export interface operations {
             /** @description OK */
             200: {
                 headers: {
+                    /** @description Unique request identifier */
+                    "X-Request-Id"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignResponse"][];
-                    };
+                    "application/json": components["schemas"]["CampaignResponse"][];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -5816,12 +5839,12 @@ export interface operations {
             /** @description Created */
             201: {
                 headers: {
+                    /** @description Unique request identifier */
+                    "X-Request-Id"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignResponse"];
-                    };
+                    "application/json": components["schemas"]["CampaignResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -5845,12 +5868,12 @@ export interface operations {
             /** @description OK */
             200: {
                 headers: {
+                    /** @description Unique request identifier */
+                    "X-Request-Id"?: string;
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignResponse"];
-                    };
+                    "application/json": components["schemas"]["CampaignResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];

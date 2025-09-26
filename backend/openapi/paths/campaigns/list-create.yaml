@@ -5,16 +5,16 @@ get:
   responses:
     '200':
       description: OK
+      headers:
+        X-Request-Id:
+          description: Unique request identifier
+          schema:
+            type: string
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    type: array
-                    items: { $ref: '../../components/schemas/all.yaml#/CampaignResponse' }
+            type: array
+            items: { $ref: '../../components/schemas/all.yaml#/CampaignResponse' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
 post:
@@ -29,14 +29,14 @@ post:
   responses:
     '201':
       description: Created
+      headers:
+        X-Request-Id:
+          description: Unique request identifier
+          schema:
+            type: string
       content:
         application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/CampaignResponse' }
+          schema: { $ref: '../../components/schemas/all.yaml#/CampaignResponse' }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '409': { $ref: '../../components/responses.yaml#/Conflict' }

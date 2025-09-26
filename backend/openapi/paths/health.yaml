@@ -6,9 +6,15 @@
 			responses:
 				'200':
 					description: OK
+					headers:
+						X-Request-Id:
+							description: Unique request identifier
+							schema:
+								type: string
 					content:
 						application/json:
-          schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+							schema:
+								$ref: '#/components/schemas/HealthResponse'
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }
@@ -21,9 +27,15 @@
 			responses:
 				'200':
 					description: Pong
+					headers:
+						X-Request-Id:
+							description: Unique request identifier
+							schema:
+								type: string
 					content:
 						application/json:
-          schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+							schema:
+								$ref: '#/components/schemas/PingResponse'
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }
@@ -36,9 +48,15 @@
 			responses:
 				'200':
 					description: Ready
+					headers:
+						X-Request-Id:
+							description: Unique request identifier
+							schema:
+								type: string
 					content:
 						application/json:
-          schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+							schema:
+								$ref: '#/components/schemas/HealthResponse'
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }
@@ -51,9 +69,15 @@
 			responses:
 				'200':
 					description: Alive
+					headers:
+						X-Request-Id:
+							description: Unique request identifier
+							schema:
+								type: string
 					content:
 						application/json:
-          schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+							schema:
+								$ref: '#/components/schemas/HealthResponse'
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }
