@@ -5,7 +5,7 @@
  * Tests that migrated health endpoints return direct responses without SuccessEnvelope
  */
 
-const { normalizeResponse, isDirectResponse } = require('../src/api/normalizeResponse.ts');
+const { normalizeResponse, isDirectResponse } = require('../src/api/normalizeResponse.js');
 
 // Test data simulating API responses
 const testCases = [
