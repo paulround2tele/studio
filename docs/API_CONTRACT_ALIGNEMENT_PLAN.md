@@ -1,9 +1,9 @@
 # API Contract Migration Plan (Hybrid Optimized – Option B)
 
-Status: Draft (Ready for Team Review)  
-Owner: (Assign)  
+Status: Phase A Pilot (Personas + Health + Core Campaign CRUD migrated)  
+Owner: API Platform (Contract Migration WG)  
 Created: 2025-01-25  
-Last Updated: (Set on commit)  
+Last Updated: 2025-09-26  
 Decision Reference: Option B (Resource Bodies for 2xx, Error Envelope for non‑2xx)
 
 ---
@@ -71,12 +71,16 @@ GET /api/v2/health               -> { "status": "ok", "version": "x.y.z" }
 }
 ```
 
-### 3.3 Error Code Enum (Finalize in Phase A)
+### 3.3 Error Code Enum (FINAL – Phase A)
 `AUTH`, `UNAUTHORIZED`, `FORBIDDEN`, `VALIDATION`, `NOT_FOUND`, `CONFLICT`, `RATE_LIMIT`, `TIMEOUT`, `UPSTREAM`, `UNAVAILABLE`, `INTERNAL`, `UNKNOWN`
 
-### 3.4 Pagination (Decision: Pattern B Selected)
-- [ ] Pattern A: Link headers (+ `X-Total-Count`)
-- [x] Pattern B (Recommended): Body wrapper:
+Notes:
+- `AUTH` reserved for composite/handshake failures distinct from `UNAUTHORIZED` (invalid credentials) and `FORBIDDEN` (permissions).
+- `UNKNOWN` catch-all; must be monitored (target <1% of errors post Phase C).
+
+### 3.4 Pagination (Decision: Pattern B – CONFIRMED)
+- [ ] Pattern A: Link headers (+ `X-Total-Count`) (Rejected: harder caching & discoverability)
+- [x] Pattern B: Body wrapper:
   ```
   { "items": T[], "page": 1, "pageSize": 25, "total": 137 }
   ```
@@ -86,7 +90,7 @@ GET /api/v2/health               -> { "status": "ok", "version": "x.y.z" }
 
 ## 4. Endpoint Manifest (Source of Truth)
 
-Create file: `docs/api_endpoint_manifest.json` (tracked & updated each PR).
+Create file: `docs/api_endpoint_manifest.json` (tracked & updated each PR) – EXISTS. Next PR will differentiate `migrated` vs `verified` (post contract test).
 
 Structure:
 ```json
@@ -111,7 +115,7 @@ Statuses: `pending | in_progress | migrated | verified | deprecated`.
 
 | Phase | Days | Scope | Key Outputs | Dual-Mode Window |
 |-------|------|-------|-------------|------------------|
-| A | 1–3 | Open questions + Pilot domain + ErrorEnvelope infra | Updated spec, manifest, pilot slice migrated | Only pilot slice |
+| A | 1–3 | Open questions + Pilot domain (Personas) + ErrorEnvelope infra | Updated spec, manifest, pilot slice migrated | Only pilot slice (Personas) |
 | B | 4–8 | Core read domains (campaigns list/detail, metrics, bulk) | Spec & handlers updated; FE slices migrated | ≤ 5 days |
 | C | 9–12 | Auth (login, me), proxies, health | AuthSession stable; legacy casing removed | ≤ 3 days |
 | D | 13–15 | Remove adapter & envelope helpers | Delete transitional code | 0 after Day 15 |
@@ -124,30 +128,34 @@ Hard Stop: After Day 15, any PR introducing envelope logic rejected.
 
 ## 6. Phase A (Detailed)
 
-### Objectives
-- Lock decisions: pagination, error codes, AuthSession structure.
-- Update spec for pilot domain (choose: Personas or Campaigns).
-- Implement ErrorEnvelope + requestId header middleware.
-- Add dev-only response shape logger.
+### Objectives (Phase A Status)
+* Decisions locked: Pagination (Pattern B), Error Code Enum (final), AuthSession (token, expiresAt, user{ id, email, username, isActive }).
+* Pilot domain chosen: Personas (CRUD + specialized get variants) – MIGRATED.
+* Opportunistic migrations: Health endpoints + Campaign list/create/detail.
+* RequestId & ErrorHandling middleware: NOT centralized yet (manual injection ongoing) – schedule Phase B.
+* Dev drift logger: OPTIONAL – deferred unless regression seen.
 
-### Tasks
-- [ ] A.1 Approve pagination & error code enum.
-- [ ] A.2 Add `ErrorEnvelope` schema to OpenAPI.
-- [ ] A.3 Replace `SuccessEnvelope` for pilot domain 200 responses with real schemas.
-- [ ] A.4 Implement `RequestIdMiddleware` (if missing).
-- [ ] A.5 Implement `ErrorHandlingMiddleware`.
-- [ ] A.6 Create `scripts/ci/check-response-aliases.js`.
-- [ ] A.7 Create `scripts/ci/check-success-key-2xx.js`.
-- [ ] A.8 Regenerate client.
-- [ ] A.9 Migrate pilot RTK slice (remove `extractResponseData`).
-- [ ] A.10 Add transitional `normalizeResponse.ts` (used only by next slice if needed).
-- [ ] A.11 Update manifest (pilot status = migrated).
-- [ ] A.12 Add contract checklist to PR template.
+### Tasks (Phase A Completion Matrix)
+- [x] A.1 Approve pagination & error code enum
+- [x] A.2 Add `ErrorEnvelope` schema to OpenAPI (present; consumption centralized later)
+- [x] A.3 Replace `SuccessEnvelope` for pilot domain 200 responses (Personas CRUD complete; test endpoint still partially wrapped → fix Phase B)
+- [ ] A.4 Implement `RequestIdMiddleware` (central) – PENDING
+- [ ] A.5 Implement `ErrorHandlingMiddleware` – PENDING
+- [x] A.6 CI alias check script added
+- [x] A.7 CI success keyword detector (warning mode)
+- [ ] A.8 Client regeneration post further spec pruning – PENDING
+- [x] A.9 Pilot UI refactor (PersonaForm no envelope unwrap now)
+- [x] A.10 Transitional adapter `normalizeResponse.ts` added
+- [x] A.11 Manifest created & populated
+- [ ] A.12 PR template (contract checklist) – PENDING
 
-Exit Criteria:
-- Pilot endpoint working with direct resource response.
-- No remaining `SuccessEnvelope` alias for pilot in generated types.
-- CI alias check passing.
+Exit Criteria (Revised for Phase A Closeout)
+1. Pilot endpoints direct resource: YES.
+2. Central request ID middleware: NO (add Phase B before closing Phase A formally).
+3. Error handling centralized: NO (Phase B).
+4. CI alias check passes: YES.
+5. Contract checklist template: NO (Phase B immediate).
+6. Manifest accurate: PARTIAL (will differentiate verified vs migrated in next PR).
 
 ---
 
@@ -450,29 +458,29 @@ NO reintroduction of envelope wrappers globally after Phase C; rollback invokes 
 
 ---
 
-## 20. Open Questions (Answer in Phase A)
+20. Open Questions (Answered)
 
-| Question | Answer | Owner | Deadline |
-|----------|--------|-------|----------|
-| Pagination pattern (A/B)? | | | Day 2 |
-| Final error code enum text? | | | Day 2 |
-| AuthSession fields (token, expiresAt, refresh?) | | | Day 3 |
-| BulkOpStatus required fields list? | | | Day 3 |
-| Are there streaming endpoints needing exclusion? | | | Day 3 |
-| Need SSE adjustments for metrics endpoints? | | | Day 5 |
-| requestId always present? | | | Day 2 |
+| Question | Answer | Owner | Status |
+|----------|--------|-------|--------|
+| Pagination pattern (A/B)? | Pattern B (body wrapper) | API Platform | CLOSED |
+| Final error code enum text? | Final list in 3.3 | API Platform | CLOSED |
+| AuthSession fields (token, expiresAt, refresh?) | Refresh deferred; token + expiresAt + user object only | API Platform | CLOSED |
+| BulkOpStatus required fields list? | id, status(enum: pending|running|completed|failed), progress(float0-1), startedAt, updatedAt, completedAt? (nullable), error? | Backend Lead | DEFER TO PHASE B |
+| Are there streaming endpoints needing exclusion? | SSE endpoints excluded from schema shape logging & envelope removal | Platform | CLOSED |
+| Need SSE adjustments for metrics endpoints? | Not for Phase B; revisit when metrics endpoint migrated | Platform | DEFER |
+| requestId always present? | Yes in header; absent in 2xx body. For non-2xx error body required. | Platform | CLOSED |
 
 ---
 
-## 21. Next Immediate Actions (Action List)
+21. Next Immediate Actions (Updated)
 
-1. Choose pilot domain (RECOMMEND: Personas if least critical / simpler shape OR Campaigns if more representative).
-2. Answer open questions; commit decisions to doc.
-3. Implement Phase A spec changes + pilot backend changes.
-4. Regenerate client & migrate pilot slice.
-5. Add CI scripts & manifest file.
-6. Schedule adapter removal (calendar invite to team for Day 15).
-7. Start Phase B PR queue preparation (list handlers & FE slices in order).
+1. Add centralized `RequestIdMiddleware` + `ErrorHandlingMiddleware` and remove manual per-handler Success/RequestId fields for migrated endpoints.
+2. Prune residual `SuccessEnvelope` references for personas test & directly migrated campaign endpoints.
+3. Regenerate client (post spec edits) + adapt remaining UI usages referencing envelope helpers.
+4. Introduce shared `baseQueryWithErrors` for consistent FE error mapping.
+5. Add PR template with contract checklist.
+6. Adjust manifest statuses: move stable endpoints to `verified` after contract test; downgrade others if partially migrated.
+7. Begin Phase B: Campaign metrics, bulk status, proxies pools list.
 
 ---
 

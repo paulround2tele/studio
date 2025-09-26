@@ -422,7 +422,7 @@ const { status, data } = await apiInstance.campaignsClassificationsGet(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsCreate**
-> CampaignsCreate201Response campaignsCreate(createCampaignRequest)
+> CampaignResponse campaignsCreate(createCampaignRequest)
 
 
 ### Example
@@ -453,7 +453,7 @@ const { status, data } = await apiInstance.campaignsCreate(
 
 ### Return type
 
-**CampaignsCreate201Response**
+**CampaignResponse**
 
 ### Authorization
 
@@ -468,7 +468,7 @@ const { status, data } = await apiInstance.campaignsCreate(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**201** | Created |  -  |
+|**201** | Created |  * X-Request-Id - Unique request identifier <br>  |
 |**400** | Bad Request |  -  |
 |**401** | Unauthorized |  -  |
 |**409** | Conflict |  -  |
@@ -742,7 +742,7 @@ const { status, data } = await apiInstance.campaignsDomainsList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsDuplicatePost**
-> CampaignsCreate201Response campaignsDuplicatePost()
+> CampaignsUpdate200Response campaignsDuplicatePost()
 
 
 ### Example
@@ -772,7 +772,7 @@ const { status, data } = await apiInstance.campaignsDuplicatePost(
 
 ### Return type
 
-**CampaignsCreate201Response**
+**CampaignsUpdate200Response**
 
 ### Authorization
 
@@ -900,7 +900,7 @@ const { status, data } = await apiInstance.campaignsFunnelGet(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsGet**
-> CampaignsCreate201Response campaignsGet()
+> CampaignResponse campaignsGet()
 
 
 ### Example
@@ -930,7 +930,7 @@ const { status, data } = await apiInstance.campaignsGet(
 
 ### Return type
 
-**CampaignsCreate201Response**
+**CampaignResponse**
 
 ### Authorization
 
@@ -945,7 +945,7 @@ const { status, data } = await apiInstance.campaignsGet(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | OK |  -  |
+|**200** | OK |  * X-Request-Id - Unique request identifier <br>  |
 |**401** | Unauthorized |  -  |
 |**404** | Not Found |  -  |
 |**500** | Internal Server Error |  -  |
@@ -953,7 +953,7 @@ const { status, data } = await apiInstance.campaignsGet(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsList**
-> CampaignsList200Response campaignsList()
+> Array<CampaignResponse> campaignsList()
 
 
 ### Example
@@ -976,7 +976,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**CampaignsList200Response**
+**Array<CampaignResponse>**
 
 ### Authorization
 
@@ -991,7 +991,7 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | OK |  -  |
+|**200** | OK |  * X-Request-Id - Unique request identifier <br>  |
 |**401** | Unauthorized |  -  |
 |**500** | Internal Server Error |  -  |
 
@@ -1986,7 +1986,7 @@ const { status, data } = await apiInstance.campaignsStatusGet(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsUpdate**
-> CampaignsCreate201Response campaignsUpdate(updateCampaignRequest)
+> CampaignsUpdate200Response campaignsUpdate(updateCampaignRequest)
 
 
 ### Example
@@ -2020,7 +2020,7 @@ const { status, data } = await apiInstance.campaignsUpdate(
 
 ### Return type
 
-**CampaignsCreate201Response**
+**CampaignsUpdate200Response**
 
 ### Authorization
 

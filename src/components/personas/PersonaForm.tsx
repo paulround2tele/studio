@@ -15,7 +15,7 @@ import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 // Use proper API client instead of fictional bridge
 import { personasApi } from "@/lib/api-client/compat";
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
+// Contract-aligned: personas endpoints now return direct PersonaResponse objects
 // Import types from proper models
 // Use compat alias to stay stable across client regenerations
 import type { ApiPersonaResponse } from '@/lib/api-client/compat';
@@ -221,7 +221,7 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
         configDetails: httpConfigDetails
       };
 
-      let response;
+  let response;
       if (isEditing && persona && persona.id) {
         const updatePayload = {
           ...commonPayloadData,
@@ -233,7 +233,8 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
       }
 
       if (response.status >= 200 && response.status < 300) {
-        const data = extractResponseData<any>(response);
+        // Direct resource body already returned (no envelope) via axios client
+        const data: any = (response as any).data;
         toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${data?.name || ''}" has been successfully ${isEditing ? "updated" : "created"}.` });
         router.push("/personas");
         router.refresh();

@@ -24,7 +24,9 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 // @ts-ignore
 import type { ErrorEnvelope } from '../models';
 // @ts-ignore
-import type { SuccessEnvelope } from '../models';
+import type { HealthResponse } from '../models';
+// @ts-ignore
+import type { PingResponse } from '../models';
 /**
  * HealthApi - axios parameter creator
  * @export
@@ -175,7 +177,7 @@ export const HealthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async healthCheck(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SuccessEnvelope>> {
+        async healthCheck(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<HealthResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.healthCheck(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['HealthApi.healthCheck']?.[localVarOperationServerIndex]?.url;
@@ -187,7 +189,7 @@ export const HealthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async healthLive(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SuccessEnvelope>> {
+        async healthLive(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<HealthResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.healthLive(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['HealthApi.healthLive']?.[localVarOperationServerIndex]?.url;
@@ -199,7 +201,7 @@ export const HealthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async healthReady(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SuccessEnvelope>> {
+        async healthReady(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<HealthResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.healthReady(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['HealthApi.healthReady']?.[localVarOperationServerIndex]?.url;
@@ -211,7 +213,7 @@ export const HealthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async ping(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SuccessEnvelope>> {
+        async ping(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PingResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.ping(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['HealthApi.ping']?.[localVarOperationServerIndex]?.url;
@@ -233,7 +235,7 @@ export const HealthApiFactory = function (configuration?: Configuration, basePat
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        healthCheck(options?: RawAxiosRequestConfig): AxiosPromise<SuccessEnvelope> {
+        healthCheck(options?: RawAxiosRequestConfig): AxiosPromise<HealthResponse> {
             return localVarFp.healthCheck(options).then((request) => request(axios, basePath));
         },
         /**
@@ -242,7 +244,7 @@ export const HealthApiFactory = function (configuration?: Configuration, basePat
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        healthLive(options?: RawAxiosRequestConfig): AxiosPromise<SuccessEnvelope> {
+        healthLive(options?: RawAxiosRequestConfig): AxiosPromise<HealthResponse> {
             return localVarFp.healthLive(options).then((request) => request(axios, basePath));
         },
         /**
@@ -251,7 +253,7 @@ export const HealthApiFactory = function (configuration?: Configuration, basePat
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        healthReady(options?: RawAxiosRequestConfig): AxiosPromise<SuccessEnvelope> {
+        healthReady(options?: RawAxiosRequestConfig): AxiosPromise<HealthResponse> {
             return localVarFp.healthReady(options).then((request) => request(axios, basePath));
         },
         /**
@@ -260,7 +262,7 @@ export const HealthApiFactory = function (configuration?: Configuration, basePat
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        ping(options?: RawAxiosRequestConfig): AxiosPromise<SuccessEnvelope> {
+        ping(options?: RawAxiosRequestConfig): AxiosPromise<PingResponse> {
             return localVarFp.ping(options).then((request) => request(axios, basePath));
         },
     };
@@ -279,7 +281,7 @@ export interface HealthApiInterface {
      * @throws {RequiredError}
      * @memberof HealthApiInterface
      */
-    healthCheck(options?: RawAxiosRequestConfig): AxiosPromise<SuccessEnvelope>;
+    healthCheck(options?: RawAxiosRequestConfig): AxiosPromise<HealthResponse>;
 
     /**
      * 
@@ -288,7 +290,7 @@ export interface HealthApiInterface {
      * @throws {RequiredError}
      * @memberof HealthApiInterface
      */
-    healthLive(options?: RawAxiosRequestConfig): AxiosPromise<SuccessEnvelope>;
+    healthLive(options?: RawAxiosRequestConfig): AxiosPromise<HealthResponse>;
 
     /**
      * 
@@ -297,7 +299,7 @@ export interface HealthApiInterface {
      * @throws {RequiredError}
      * @memberof HealthApiInterface
      */
-    healthReady(options?: RawAxiosRequestConfig): AxiosPromise<SuccessEnvelope>;
+    healthReady(options?: RawAxiosRequestConfig): AxiosPromise<HealthResponse>;
 
     /**
      * 
@@ -306,7 +308,7 @@ export interface HealthApiInterface {
      * @throws {RequiredError}
      * @memberof HealthApiInterface
      */
-    ping(options?: RawAxiosRequestConfig): AxiosPromise<SuccessEnvelope>;
+    ping(options?: RawAxiosRequestConfig): AxiosPromise<PingResponse>;
 
 }
 

@@ -1,11 +1,4 @@
 #!/usr/bin/env node
-
-/**
- * CI Script: Check Success Key Usage in 2xx Responses
- * Warns about potential success field usage in backend 2xx responses
- * Part of API Contract Migration Plan Phase A
- */
-
 const { execSync } = require('child_process');
 
 function checkBackendSuccessUsage() {

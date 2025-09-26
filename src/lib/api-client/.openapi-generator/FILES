@@ -113,13 +113,11 @@ docs/CampaignsApi.md
 docs/CampaignsBulkOperationsList200Response.md
 docs/CampaignsBulkOperationsList200ResponseAllOfDataInner.md
 docs/CampaignsClassificationsGet200Response.md
-docs/CampaignsCreate201Response.md
 docs/CampaignsDomainGenerationPatternOffset200Response.md
 docs/CampaignsDomainScoreBreakdown200Response.md
 docs/CampaignsDomainsList200Response.md
 docs/CampaignsEnrichedGet200Response.md
 docs/CampaignsFunnelGet200Response.md
-docs/CampaignsList200Response.md
 docs/CampaignsMetricsGet200Response.md
 docs/CampaignsModeUpdate200Response.md
 docs/CampaignsModeUpdate200ResponseAllOfData.md
@@ -135,6 +133,7 @@ docs/CampaignsProgress200Response.md
 docs/CampaignsRecommendationsGet200Response.md
 docs/CampaignsStateGet200Response.md
 docs/CampaignsStatusGet200Response.md
+docs/CampaignsUpdate200Response.md
 docs/CancelBulkOperation200Response.md
 docs/CancelBulkOperation200ResponseAllOfData.md
 docs/ConfigGetAuth200Response.md
@@ -182,6 +181,7 @@ docs/GetBulkResourceStatus200Response.md
 docs/GetBulkResourceStatus200ResponseAllOfData.md
 docs/HTTPValidatorConfigJSON.md
 docs/HealthApi.md
+docs/HealthResponse.md
 docs/KeywordExtractBatch200Response.md
 docs/KeywordExtractionApi.md
 docs/KeywordRuleDTO.md
@@ -223,6 +223,7 @@ docs/PhaseProgressSummary.md
 docs/PhaseStatusResponse.md
 docs/PhaseStatusResponseErrorsInner.md
 docs/PhaseStatusResponseProgress.md
+docs/PingResponse.md
 docs/ProcessingInfo.md
 docs/ProxiesApi.md
 docs/ProxiesBulkTest200Response.md
@@ -372,13 +373,11 @@ models/campaign-state.ts
 models/campaigns-bulk-operations-list200-response-all-of-data-inner.ts
 models/campaigns-bulk-operations-list200-response.ts
 models/campaigns-classifications-get200-response.ts
-models/campaigns-create201-response.ts
 models/campaigns-domain-generation-pattern-offset200-response.ts
 models/campaigns-domain-score-breakdown200-response.ts
 models/campaigns-domains-list200-response.ts
 models/campaigns-enriched-get200-response.ts
 models/campaigns-funnel-get200-response.ts
-models/campaigns-list200-response.ts
 models/campaigns-metrics-get200-response.ts
 models/campaigns-mode-update-request.ts
 models/campaigns-mode-update200-response-all-of-data.ts
@@ -394,6 +393,7 @@ models/campaigns-progress200-response.ts
 models/campaigns-recommendations-get200-response.ts
 models/campaigns-state-get200-response.ts
 models/campaigns-status-get200-response.ts
+models/campaigns-update200-response.ts
 models/cancel-bulk-operation200-response-all-of-data.ts
 models/cancel-bulk-operation200-response.ts
 models/config-get-auth200-response.ts
@@ -437,6 +437,7 @@ models/get-bulk-operation-status200-response-all-of-data.ts
 models/get-bulk-operation-status200-response.ts
 models/get-bulk-resource-status200-response-all-of-data.ts
 models/get-bulk-resource-status200-response.ts
+models/health-response.ts
 models/httpvalidator-config-json.ts
 models/index.ts
 models/keyword-extract-batch200-response.ts
@@ -475,6 +476,7 @@ models/phase-progress-summary.ts
 models/phase-status-response-errors-inner.ts
 models/phase-status-response-progress.ts
 models/phase-status-response.ts
+models/ping-response.ts
 models/processing-info.ts
 models/proxies-bulk-test-request.ts
 models/proxies-bulk-test200-response.ts
