@@ -578,7 +578,8 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
       }
 
       if (response.status >= 200 && response.status < 300) {
-        const data = extractResponseData<any>(response);
+        // Direct resource body already returned (no envelope) via axios client
+        const data: any = (response as any).data;
         toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${data?.name || ''}" has been successfully ${isEditing ? "updated" : "created"}.` });
         router.push("/personas");
         router.refresh();
