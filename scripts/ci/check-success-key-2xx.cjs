@@ -14,10 +14,8 @@ function checkBackendSuccessUsage() {
     const lines = out.split('\n').filter(line => line.trim());
     
     const suspicious = lines.filter(line =>
-      line.includes('success') && 
-      !line.match(/test|deprecated|error|ErrorEnvelope|SuccessEnvelope|comment|\/\/|#/i) &&
-      !line.includes('successfully') && // Exclude adverb usage
-      !line.includes('unsuccessful') &&
+      line.includes('success') &&
+      !line.match(/test|deprecated|error|ErrorEnvelope|SuccessEnvelope|comment|\/\/|#|successfully|unsuccessful/i) &&
       line.includes(':') // Only lines with actual code
     );
     
