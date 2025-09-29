@@ -34,6 +34,12 @@ export interface PersonaConfigHttp {
      * @type {string}
      * @memberof PersonaConfigHttp
      */
+    'personaType'?: PersonaConfigHttpPersonaTypeEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof PersonaConfigHttp
+     */
     'userAgent': string;
     /**
      * 
@@ -102,4 +108,13 @@ export interface PersonaConfigHttp {
      */
     'notes'?: string;
 }
+
+/**
+    * @export
+    * @enum {string}
+    */
+export enum PersonaConfigHttpPersonaTypeEnum {
+    http = 'http'
+}
+
 

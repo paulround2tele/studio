@@ -26,9 +26,9 @@ import type { CreateKeywordSetRequest } from '../models';
 // @ts-ignore
 import type { ErrorEnvelope } from '../models';
 // @ts-ignore
-import type { KeywordSetsCreate201Response } from '../models';
+import type { KeywordSetResponse } from '../models';
 // @ts-ignore
-import type { KeywordSetsList200Response } from '../models';
+import type { KeywordSetsGet200Response } from '../models';
 // @ts-ignore
 import type { KeywordSetsRulesList200Response } from '../models';
 // @ts-ignore
@@ -296,7 +296,7 @@ export const KeywordSetsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async keywordSetsCreate(createKeywordSetRequest: CreateKeywordSetRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<KeywordSetsCreate201Response>> {
+        async keywordSetsCreate(createKeywordSetRequest: CreateKeywordSetRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<KeywordSetResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.keywordSetsCreate(createKeywordSetRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KeywordSetsApi.keywordSetsCreate']?.[localVarOperationServerIndex]?.url;
@@ -322,7 +322,7 @@ export const KeywordSetsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async keywordSetsGet(setId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<KeywordSetsCreate201Response>> {
+        async keywordSetsGet(setId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<KeywordSetsGet200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.keywordSetsGet(setId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KeywordSetsApi.keywordSetsGet']?.[localVarOperationServerIndex]?.url;
@@ -338,7 +338,7 @@ export const KeywordSetsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async keywordSetsList(limit?: number, offset?: number, includeRules?: boolean, isEnabled?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<KeywordSetsList200Response>> {
+        async keywordSetsList(limit?: number, offset?: number, includeRules?: boolean, isEnabled?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<KeywordSetResponse>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.keywordSetsList(limit, offset, includeRules, isEnabled, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KeywordSetsApi.keywordSetsList']?.[localVarOperationServerIndex]?.url;
@@ -365,7 +365,7 @@ export const KeywordSetsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async keywordSetsUpdate(setId: string, updateKeywordSetRequest: UpdateKeywordSetRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<KeywordSetsCreate201Response>> {
+        async keywordSetsUpdate(setId: string, updateKeywordSetRequest: UpdateKeywordSetRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<KeywordSetsGet200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.keywordSetsUpdate(setId, updateKeywordSetRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KeywordSetsApi.keywordSetsUpdate']?.[localVarOperationServerIndex]?.url;
@@ -388,7 +388,7 @@ export const KeywordSetsApiFactory = function (configuration?: Configuration, ba
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        keywordSetsCreate(createKeywordSetRequest: CreateKeywordSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetsCreate201Response> {
+        keywordSetsCreate(createKeywordSetRequest: CreateKeywordSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetResponse> {
             return localVarFp.keywordSetsCreate(createKeywordSetRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -408,7 +408,7 @@ export const KeywordSetsApiFactory = function (configuration?: Configuration, ba
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        keywordSetsGet(setId: string, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetsCreate201Response> {
+        keywordSetsGet(setId: string, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetsGet200Response> {
             return localVarFp.keywordSetsGet(setId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -421,7 +421,7 @@ export const KeywordSetsApiFactory = function (configuration?: Configuration, ba
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        keywordSetsList(limit?: number, offset?: number, includeRules?: boolean, isEnabled?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetsList200Response> {
+        keywordSetsList(limit?: number, offset?: number, includeRules?: boolean, isEnabled?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<Array<KeywordSetResponse>> {
             return localVarFp.keywordSetsList(limit, offset, includeRules, isEnabled, options).then((request) => request(axios, basePath));
         },
         /**
@@ -442,7 +442,7 @@ export const KeywordSetsApiFactory = function (configuration?: Configuration, ba
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        keywordSetsUpdate(setId: string, updateKeywordSetRequest: UpdateKeywordSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetsCreate201Response> {
+        keywordSetsUpdate(setId: string, updateKeywordSetRequest: UpdateKeywordSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetsGet200Response> {
             return localVarFp.keywordSetsUpdate(setId, updateKeywordSetRequest, options).then((request) => request(axios, basePath));
         },
     };
@@ -462,7 +462,7 @@ export interface KeywordSetsApiInterface {
      * @throws {RequiredError}
      * @memberof KeywordSetsApiInterface
      */
-    keywordSetsCreate(createKeywordSetRequest: CreateKeywordSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetsCreate201Response>;
+    keywordSetsCreate(createKeywordSetRequest: CreateKeywordSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetResponse>;
 
     /**
      * 
@@ -482,7 +482,7 @@ export interface KeywordSetsApiInterface {
      * @throws {RequiredError}
      * @memberof KeywordSetsApiInterface
      */
-    keywordSetsGet(setId: string, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetsCreate201Response>;
+    keywordSetsGet(setId: string, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetsGet200Response>;
 
     /**
      * 
@@ -495,7 +495,7 @@ export interface KeywordSetsApiInterface {
      * @throws {RequiredError}
      * @memberof KeywordSetsApiInterface
      */
-    keywordSetsList(limit?: number, offset?: number, includeRules?: boolean, isEnabled?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetsList200Response>;
+    keywordSetsList(limit?: number, offset?: number, includeRules?: boolean, isEnabled?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<Array<KeywordSetResponse>>;
 
     /**
      * 
@@ -516,7 +516,7 @@ export interface KeywordSetsApiInterface {
      * @throws {RequiredError}
      * @memberof KeywordSetsApiInterface
      */
-    keywordSetsUpdate(setId: string, updateKeywordSetRequest: UpdateKeywordSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetsCreate201Response>;
+    keywordSetsUpdate(setId: string, updateKeywordSetRequest: UpdateKeywordSetRequest, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetsGet200Response>;
 
 }
 

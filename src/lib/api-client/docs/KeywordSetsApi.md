@@ -12,7 +12,7 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**keywordSetsUpdate**](#keywordsetsupdate) | **PUT** /keyword-sets/{setId} | Update keyword set|
 
 # **keywordSetsCreate**
-> KeywordSetsCreate201Response keywordSetsCreate(createKeywordSetRequest)
+> KeywordSetResponse keywordSetsCreate(createKeywordSetRequest)
 
 
 ### Example
@@ -43,7 +43,7 @@ const { status, data } = await apiInstance.keywordSetsCreate(
 
 ### Return type
 
-**KeywordSetsCreate201Response**
+**KeywordSetResponse**
 
 ### Authorization
 
@@ -125,7 +125,7 @@ void (empty response body)
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **keywordSetsGet**
-> KeywordSetsCreate201Response keywordSetsGet()
+> KeywordSetsGet200Response keywordSetsGet()
 
 
 ### Example
@@ -155,7 +155,7 @@ const { status, data } = await apiInstance.keywordSetsGet(
 
 ### Return type
 
-**KeywordSetsCreate201Response**
+**KeywordSetsGet200Response**
 
 ### Authorization
 
@@ -180,7 +180,7 @@ const { status, data } = await apiInstance.keywordSetsGet(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **keywordSetsList**
-> KeywordSetsList200Response keywordSetsList()
+> Array<KeywordSetResponse> keywordSetsList()
 
 
 ### Example
@@ -219,7 +219,7 @@ const { status, data } = await apiInstance.keywordSetsList(
 
 ### Return type
 
-**KeywordSetsList200Response**
+**Array<KeywordSetResponse>**
 
 ### Authorization
 
@@ -298,7 +298,7 @@ const { status, data } = await apiInstance.keywordSetsRulesList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **keywordSetsUpdate**
-> KeywordSetsCreate201Response keywordSetsUpdate(updateKeywordSetRequest)
+> KeywordSetsGet200Response keywordSetsUpdate(updateKeywordSetRequest)
 
 
 ### Example
@@ -332,7 +332,7 @@ const { status, data } = await apiInstance.keywordSetsUpdate(
 
 ### Return type
 
-**KeywordSetsCreate201Response**
+**KeywordSetsGet200Response**
 
 ### Authorization
 

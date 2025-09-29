@@ -64,3 +64,37 @@ Follow-ups:
 - Reintroduce updated persona tests aligned with union config contract.
 
 Generated on: 2025-09-29
+
+### Phase D (Current PR)
+Date: 2025-09-29
+Scope: Monitoring performance & dashboard summary, performance-active, cleanup-stats, and keyword set endpoints
+
+Migrated endpoints (now return direct JSON payloads):
+1. `GET /monitoring/performance/summary` -> direct object (envelope removed)
+2. `GET /monitoring/dashboard/summary` -> direct object (envelope removed)
+3. `GET /monitoring/performance/active` -> direct object (envelope removed)
+4. `GET /monitoring/cleanup/stats` -> direct object (envelope removed)
+5. `GET /keyword-sets` -> `KeywordSetResponse[]` (direct array)
+6. `POST /keyword-sets` -> `KeywordSetResponse` (direct object)
+
+Implementation Notes:
+- Backend handlers refactored in `handlers_monitoring.go` and `handlers_keywords.go` to return direct types (removed envelope fields).
+- OpenAPI specs updated to return direct payloads for monitoring endpoints (already updated) and keyword-sets endpoints.
+- Regenerated Go & TypeScript clients after spec changes.
+- TypeScript API client now returns direct types: `AxiosPromise<KeywordSetResponse>`, `AxiosPromise<Array<KeywordSetResponse>>`, etc.
+
+Testing:
+- Added `backend/tests/contract_phase_d_test.go` following Phase B/C contract test patterns.
+- Phase D tests cover all migrated endpoints with direct payload assertions (no `success`/`data` keys).
+- Error responses maintain envelope structure as expected.
+
+Guardrail Status:
+- All targeted endpoints emit direct JSON without legacy envelope keys.
+- Generated TypeScript client reflects direct payload types.
+- Frontend RTK Query endpoints that match migrated paths would require transformation updates (none currently active).
+
+Follow-ups:
+- Monitor any frontend integration that may directly use the migrated endpoints.
+- Complete remaining endpoint migrations in future phases (SSE, remaining personas endpoints).
+
+Generated on: 2025-09-29
