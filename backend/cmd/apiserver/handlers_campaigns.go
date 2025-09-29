@@ -186,7 +186,7 @@ func (h *strictHandlers) CampaignsClassificationsGet(ctx context.Context, r gen.
 	if err != nil {
 		return gen.CampaignsClassificationsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "aggregation failure", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	
+
 	// Map DTO to typed response struct
 	samples := make([]gen.CampaignClassificationBucketSample, len(dto.Samples))
 	for i, sample := range dto.Samples {
@@ -240,7 +240,7 @@ func (h *strictHandlers) CampaignsDuplicatePost(ctx context.Context, r gen.Campa
 	if h.deps == nil || h.deps.DB == nil || h.deps.Stores.Campaign == nil {
 		return gen.CampaignsDuplicatePost500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	
+
 	// Load the original campaign
 	originalCampaign, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
 	if err != nil {
@@ -292,7 +292,7 @@ func (h *strictHandlers) CampaignsMomentumGet(ctx context.Context, r gen.Campaig
 	if err != nil {
 		return gen.CampaignsMomentumGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "aggregation failure", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	
+
 	// Map DTO to typed response struct
 	moversUp := make([]struct {
 		Delta  float32 `json:"delta"`
@@ -307,7 +307,7 @@ func (h *strictHandlers) CampaignsMomentumGet(ctx context.Context, r gen.Campaig
 			Delta:  float32(mover.Delta),
 		}
 	}
-	
+
 	moversDown := make([]struct {
 		Delta  float32 `json:"delta"`
 		Domain string  `json:"domain"`
@@ -321,8 +321,8 @@ func (h *strictHandlers) CampaignsMomentumGet(ctx context.Context, r gen.Campaig
 			Delta:  float32(mover.Delta),
 		}
 	}
-	
-	// Note: The schema shows histogram as []int but our DTO has bucket names, 
+
+	// Note: The schema shows histogram as []int but our DTO has bucket names,
 	// for now return counts only - TODO: align schema with implementation needs
 	histogram := make([]int, len(dto.Histogram))
 	for i, hist := range dto.Histogram {
@@ -356,7 +356,7 @@ func (h *strictHandlers) CampaignsRecommendationsGet(ctx context.Context, r gen.
 	if err != nil {
 		return gen.CampaignsRecommendationsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "aggregation failure", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	
+
 	// Map DTO to typed response struct
 	recommendations := make([]gen.CampaignRecommendation, len(dto.Recommendations))
 	for i, rec := range dto.Recommendations {
@@ -393,23 +393,23 @@ func (h *strictHandlers) CampaignsStatusGet(ctx context.Context, r gen.Campaigns
 	if err != nil {
 		return gen.CampaignsStatusGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "aggregation failure", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	
+
 	// Map DTO to typed response struct
 	phases := make([]struct {
-		CompletedAt         *time.Time `json:"completedAt"`
-		Phase               gen.CampaignPhasesStatusResponsePhasesPhase  `json:"phase"`
-		ProgressPercentage  float32    `json:"progressPercentage"`
-		StartedAt           *time.Time `json:"startedAt"`
-		Status              gen.CampaignPhasesStatusResponsePhasesStatus `json:"status"`
+		CompletedAt        *time.Time                                   `json:"completedAt"`
+		Phase              gen.CampaignPhasesStatusResponsePhasesPhase  `json:"phase"`
+		ProgressPercentage float32                                      `json:"progressPercentage"`
+		StartedAt          *time.Time                                   `json:"startedAt"`
+		Status             gen.CampaignPhasesStatusResponsePhasesStatus `json:"status"`
 	}, len(dto.Phases))
-	
+
 	for i, phase := range dto.Phases {
 		phases[i] = struct {
-			CompletedAt         *time.Time `json:"completedAt"`
-			Phase               gen.CampaignPhasesStatusResponsePhasesPhase  `json:"phase"`
-			ProgressPercentage  float32    `json:"progressPercentage"`
-			StartedAt           *time.Time `json:"startedAt"`
-			Status              gen.CampaignPhasesStatusResponsePhasesStatus `json:"status"`
+			CompletedAt        *time.Time                                   `json:"completedAt"`
+			Phase              gen.CampaignPhasesStatusResponsePhasesPhase  `json:"phase"`
+			ProgressPercentage float32                                      `json:"progressPercentage"`
+			StartedAt          *time.Time                                   `json:"startedAt"`
+			Status             gen.CampaignPhasesStatusResponsePhasesStatus `json:"status"`
 		}{
 			Phase:              gen.CampaignPhasesStatusResponsePhasesPhase(phase.Phase),
 			Status:             gen.CampaignPhasesStatusResponsePhasesStatus(phase.Status),
@@ -430,19 +430,18 @@ func (h *strictHandlers) CampaignsStatusGet(ctx context.Context, r gen.Campaigns
 // CampaignsMetricsGet implements GET /campaigns/{campaignId}/metrics
 func (h *strictHandlers) CampaignsMetricsGet(ctx context.Context, r gen.CampaignsMetricsGetRequestObject) (gen.CampaignsMetricsGetResponseObject, error) {
 	if h.deps == nil || h.deps.DB == nil || h.deps.AggregatesCache == nil {
-		return gen.CampaignsMetricsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsMetricsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}}}, nil
 	}
 	if h.deps.Stores.Campaign != nil {
 		if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
-			return gen.CampaignsMetricsGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.CampaignsMetricsGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}}}, nil
 		}
 	}
 	repo := aggregatesRepo{db: h.deps.DB.DB}
 	dto, err := domainservices.GetCampaignMetrics(ctx, repo, h.deps.AggregatesCache, uuid.UUID(r.CampaignId))
 	if err != nil {
-		return gen.CampaignsMetricsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "aggregation failure", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsMetricsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "aggregation failure", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}}}, nil
 	}
-	// Helper to safely deref *float64 to float32
 	f32 := func(p *float64) float32 {
 		if p == nil {
 			return 0
@@ -461,7 +460,7 @@ func (h *strictHandlers) CampaignsMetricsGet(ctx context.Context, r gen.Campaign
 		Anchor:             int(dto.AnchorCount),
 		TotalAnalyzed:      int(dto.TotalAnalyzed),
 	}
-	return gen.CampaignsMetricsGet200JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true), Data: &data}, nil
+	return gen.CampaignsMetricsGet200JSONResponse(data), nil
 }
 
 // mapToDomainGenerationConfig converts a generic map into the typed DomainGenerationConfig expected by the domain generation service
@@ -586,11 +585,9 @@ func mapToDomainGenerationConfig(in map[string]interface{}) (domainservices.Doma
 // CampaignsList implements GET /campaigns
 func (h *strictHandlers) CampaignsList(ctx context.Context, r gen.CampaignsListRequestObject) (gen.CampaignsListResponseObject, error) {
 	if h.deps == nil || h.deps.DB == nil || h.deps.Stores.Campaign == nil {
-		return gen.CampaignsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}}}, nil
 	}
-	// Basic list with sane defaults; could be extended with query params later
 	filter := store.ListCampaignsFilter{Limit: 50, Offset: 0}
-	// If user_id context present, filter by it
 	if v := ctx.Value("user_id"); v != nil {
 		if s, ok := v.(string); ok && s != "" {
 			filter.UserID = s
@@ -598,16 +595,14 @@ func (h *strictHandlers) CampaignsList(ctx context.Context, r gen.CampaignsListR
 	}
 	rows, err := h.deps.Stores.Campaign.ListCampaigns(ctx, h.deps.DB, filter)
 	if err != nil {
-		// Added diagnostic logging to surface underlying store error while keeping generic API response
 		log.Printf("ERROR CampaignsList: failed to list campaigns filter=%+v err=%v", filter, err)
-		return gen.CampaignsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to list campaigns", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to list campaigns", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}}}, nil
 	}
 	out := make([]gen.CampaignResponse, 0, len(rows))
 	for _, c := range rows {
-		resp := mapCampaignToResponse(c)
-		out = append(out, resp)
+		out = append(out, mapCampaignToResponse(c))
 	}
-	return gen.CampaignsList200JSONResponse{Data: &out, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsList200JSONResponse{Body: out, Headers: gen.CampaignsList200ResponseHeaders{XRequestId: reqID()}}, nil
 }
 
 // CampaignsCreate implements POST /campaigns
@@ -621,7 +616,7 @@ func (h *strictHandlers) CampaignsCreate(ctx context.Context, r gen.CampaignsCre
 
 	// Generate correlation ID for traceability
 	correlationID := uuid.New()
-	
+
 	now := time.Now().UTC()
 	// Default initial phase and status
 	phase := models.PhaseTypeDomainGeneration
@@ -637,7 +632,7 @@ func (h *strictHandlers) CampaignsCreate(ctx context.Context, r gen.CampaignsCre
 	if h.deps.Logger != nil {
 		h.deps.Logger.Info(ctx, "campaign.create.start", map[string]interface{}{
 			"correlation_id": correlationID.String(),
-			"campaign_name": r.Body.Name,
+			"campaign_name":  r.Body.Name,
 			"execution_mode": "manual", // Mode set separately
 		})
 	}
@@ -704,12 +699,12 @@ func (h *strictHandlers) CampaignsCreate(ctx context.Context, r gen.CampaignsCre
 				if h.deps.Logger != nil {
 					h.deps.Logger.Info(ctx, "campaign.create.success", map[string]interface{}{
 						"correlation_id": correlationID.String(),
-						"campaign_id": campaign.ID.String(),
-						"campaign_name": campaign.Name,
+						"campaign_id":    campaign.ID.String(),
+						"campaign_name":  campaign.Name,
 						"execution_mode": "manual",
 					})
 				}
-				return gen.CampaignsCreate201JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+				return gen.CampaignsCreate201JSONResponse{Body: resp, Headers: gen.CampaignsCreate201ResponseHeaders{XRequestId: reqID()}}, nil
 			} else {
 				log.Printf("ERROR CampaignsCreate: retry without user_id failed: %v correlation_id=%s", rerr, correlationID.String())
 			}
@@ -721,30 +716,30 @@ func (h *strictHandlers) CampaignsCreate(ctx context.Context, r gen.CampaignsCre
 	if h.deps.Logger != nil {
 		h.deps.Logger.Info(ctx, "campaign.create.success", map[string]interface{}{
 			"correlation_id": correlationID.String(),
-			"campaign_id": campaign.ID.String(),
-			"campaign_name": campaign.Name,
+			"campaign_id":    campaign.ID.String(),
+			"campaign_name":  campaign.Name,
 			"execution_mode": "manual",
 		})
 	}
 
 	resp := mapCampaignToResponse(campaign)
-	return gen.CampaignsCreate201JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsCreate201JSONResponse{Body: resp, Headers: gen.CampaignsCreate201ResponseHeaders{XRequestId: reqID()}}, nil
 }
 
 // CampaignsGet implements GET /campaigns/{campaignId}
 func (h *strictHandlers) CampaignsGet(ctx context.Context, r gen.CampaignsGetRequestObject) (gen.CampaignsGetResponseObject, error) {
 	if h.deps == nil || h.deps.DB == nil || h.deps.Stores.Campaign == nil {
-		return gen.CampaignsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "dependencies not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}}}, nil
 	}
 	c, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId))
 	if err != nil {
 		if err == store.ErrNotFound {
-			return gen.CampaignsGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+			return gen.CampaignsGet404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found", Code: gen.NOTFOUND, Timestamp: time.Now()}}}, nil
 		}
-		return gen.CampaignsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.CampaignsGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to fetch campaign", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}}}, nil
 	}
 	resp := mapCampaignToResponse(c)
-	return gen.CampaignsGet200JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsGet200JSONResponse{Body: resp, Headers: gen.CampaignsGet200ResponseHeaders{XRequestId: reqID()}}, nil
 }
 
 // CampaignsUpdate implements PATCH /campaigns/{campaignId}
@@ -799,7 +794,7 @@ func (h *strictHandlers) CampaignsUpdate(ctx context.Context, r gen.CampaignsUpd
 	}
 
 	resp := mapCampaignToResponse(existing)
-	return gen.CampaignsUpdate200JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsUpdate200JSONResponse(resp), nil
 }
 
 // CampaignsModeUpdate implements PATCH /campaigns/{campaignId}/mode (strict spec)
@@ -1101,18 +1096,18 @@ func (h *strictHandlers) CampaignsPhaseStart(ctx context.Context, r gen.Campaign
 	if h.deps == nil || h.deps.Orchestrator == nil || h.deps.Stores.Campaign == nil || h.deps.DB == nil {
 		return gen.CampaignsPhaseStart401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "dependencies not ready", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	
+
 	// Track if this is an auto-start (look for correlation ID in context or assume manual for now)
 	// TODO: Implement proper correlation ID tracking via headers or request enhancement
 	isAutoStart := false
 	correlationID := ""
-	
+
 	// Track auto-start attempts
 	startTime := time.Now()
 	if isAutoStart && h.deps.Metrics != nil {
 		h.deps.Metrics.IncAutoStartAttempts()
 	}
-	
+
 	if _, err := h.deps.Stores.Campaign.GetCampaignByID(ctx, h.deps.DB, uuid.UUID(r.CampaignId)); err != nil {
 		// Track failed auto-start attempts
 		if isAutoStart && h.deps.Metrics != nil {
@@ -1136,7 +1131,7 @@ func (h *strictHandlers) CampaignsPhaseStart(ctx context.Context, r gen.Campaign
 		if isAutoStart && h.deps.Metrics != nil {
 			h.deps.Metrics.IncAutoStartFailures()
 		}
-		
+
 		if errors.Is(err, application.ErrMissingPhaseConfigs) {
 			missing := []string{}
 			// Attempt typed extraction using concrete error type
@@ -1150,11 +1145,11 @@ func (h *strictHandlers) CampaignsPhaseStart(ctx context.Context, r gen.Campaign
 			}
 			if h.deps.Logger != nil {
 				h.deps.Logger.Warn(ctx, "campaign.phase.start.blocked_missing_configs", map[string]interface{}{
-					"campaign_id": r.CampaignId, 
-					"phase": phaseModel, 
-					"missing": missing,
+					"campaign_id":    r.CampaignId,
+					"phase":          phaseModel,
+					"missing":        missing,
 					"correlation_id": correlationID,
-					"is_auto_start": isAutoStart,
+					"is_auto_start":  isAutoStart,
 				})
 			}
 			return conflict, nil
@@ -1164,19 +1159,19 @@ func (h *strictHandlers) CampaignsPhaseStart(ctx context.Context, r gen.Campaign
 		}
 		return gen.CampaignsPhaseStart500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to start phase: " + err.Error(), Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	
+
 	// Track successful auto-start and timing
 	if isAutoStart && h.deps.Metrics != nil {
 		h.deps.Metrics.IncAutoStartSuccesses()
 		h.deps.Metrics.RecordAutoStartLatency(time.Since(startTime))
 	}
-	
+
 	if h.deps.Logger != nil {
 		h.deps.Logger.Info(ctx, "campaign.phase.start", map[string]interface{}{
-			"campaign_id": r.CampaignId, 
-			"phase": phaseModel,
+			"campaign_id":    r.CampaignId,
+			"phase":          phaseModel,
 			"correlation_id": correlationID,
-			"is_auto_start": isAutoStart,
+			"is_auto_start":  isAutoStart,
 		})
 	}
 	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, uuid.UUID(r.CampaignId), phaseModel)

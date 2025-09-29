@@ -5902,9 +5902,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignResponse"];
-                    };
+                    "application/json": components["schemas"]["CampaignResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -6534,9 +6532,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignMetricsResponse"];
-                    };
+                    "application/json": components["schemas"]["CampaignMetricsResponse"];
                 };
             };
             404: components["responses"]["NotFound"];
@@ -6699,14 +6695,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: {
-                            /** Format: uuid */
-                            operationId?: string;
-                            type?: string;
-                            status?: string;
-                            progress?: number;
-                        };
+                    "application/json": {
+                        /** Format: uuid */
+                        operationId: string;
+                        type: string;
+                        status: string;
+                        progress: number;
                     };
                 };
             };

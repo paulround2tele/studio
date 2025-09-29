@@ -2946,12 +2946,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/CampaignResponse'
+                $ref: '#/components/schemas/CampaignResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3814,12 +3809,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/CampaignMetricsResponse'
+                $ref: '#/components/schemas/CampaignMetricsResponse'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -4006,24 +3996,24 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          operationId:
-                            type: string
-                            format: uuid
-                          type:
-                            type: string
-                          status:
-                            type: string
-                          progress:
-                            type: number
-                            minimum: 0
-                            maximum: 100
+                type: object
+                required:
+                  - operationId
+                  - type
+                  - status
+                  - progress
+                properties:
+                  operationId:
+                    type: string
+                    format: uuid
+                  type:
+                    type: string
+                  status:
+                    type: string
+                  progress:
+                    type: number
+                    minimum: 0
+                    maximum: 100
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':

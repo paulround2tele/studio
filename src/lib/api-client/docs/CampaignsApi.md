@@ -742,7 +742,7 @@ const { status, data } = await apiInstance.campaignsDomainsList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsDuplicatePost**
-> CampaignsUpdate200Response campaignsDuplicatePost()
+> CampaignsDuplicatePost201Response campaignsDuplicatePost()
 
 
 ### Example
@@ -772,7 +772,7 @@ const { status, data } = await apiInstance.campaignsDuplicatePost(
 
 ### Return type
 
-**CampaignsUpdate200Response**
+**CampaignsDuplicatePost201Response**
 
 ### Authorization
 
@@ -998,7 +998,7 @@ This endpoint does not have any parameters.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsMetricsGet**
-> CampaignsMetricsGet200Response campaignsMetricsGet()
+> CampaignMetricsResponse campaignsMetricsGet()
 
 
 ### Example
@@ -1028,7 +1028,7 @@ const { status, data } = await apiInstance.campaignsMetricsGet(
 
 ### Return type
 
-**CampaignsMetricsGet200Response**
+**CampaignMetricsResponse**
 
 ### Authorization
 
@@ -1986,7 +1986,7 @@ const { status, data } = await apiInstance.campaignsStatusGet(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsUpdate**
-> CampaignsUpdate200Response campaignsUpdate(updateCampaignRequest)
+> CampaignResponse campaignsUpdate(updateCampaignRequest)
 
 
 ### Example
@@ -2020,7 +2020,7 @@ const { status, data } = await apiInstance.campaignsUpdate(
 
 ### Return type
 
-**CampaignsUpdate200Response**
+**CampaignResponse**
 
 ### Authorization
 

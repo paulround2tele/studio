@@ -40,6 +40,8 @@ import type { BulkResourceAllocationRequest } from '../models';
 // @ts-ignore
 import type { BulkValidateDNS200Response } from '../models';
 // @ts-ignore
+import type { CampaignMetricsResponse } from '../models';
+// @ts-ignore
 import type { CampaignResponse } from '../models';
 // @ts-ignore
 import type { CampaignStateUpdate } from '../models';
@@ -54,11 +56,11 @@ import type { CampaignsDomainScoreBreakdown200Response } from '../models';
 // @ts-ignore
 import type { CampaignsDomainsList200Response } from '../models';
 // @ts-ignore
+import type { CampaignsDuplicatePost201Response } from '../models';
+// @ts-ignore
 import type { CampaignsEnrichedGet200Response } from '../models';
 // @ts-ignore
 import type { CampaignsFunnelGet200Response } from '../models';
-// @ts-ignore
-import type { CampaignsMetricsGet200Response } from '../models';
 // @ts-ignore
 import type { CampaignsModeUpdate200Response } from '../models';
 // @ts-ignore
@@ -83,8 +85,6 @@ import type { CampaignsRecommendationsGet200Response } from '../models';
 import type { CampaignsStateGet200Response } from '../models';
 // @ts-ignore
 import type { CampaignsStatusGet200Response } from '../models';
-// @ts-ignore
-import type { CampaignsUpdate200Response } from '../models';
 // @ts-ignore
 import type { CancelBulkOperation200Response } from '../models';
 // @ts-ignore
@@ -1850,7 +1850,7 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsDuplicatePost(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsUpdate200Response>> {
+        async campaignsDuplicatePost(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsDuplicatePost201Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsDuplicatePost(campaignId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsDuplicatePost']?.[localVarOperationServerIndex]?.url;
@@ -1914,7 +1914,7 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsMetricsGet(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsMetricsGet200Response>> {
+        async campaignsMetricsGet(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignMetricsResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsMetricsGet(campaignId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsMetricsGet']?.[localVarOperationServerIndex]?.url;
@@ -2160,7 +2160,7 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsUpdate(campaignId: string, updateCampaignRequest: UpdateCampaignRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsUpdate200Response>> {
+        async campaignsUpdate(campaignId: string, updateCampaignRequest: UpdateCampaignRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsUpdate(campaignId, updateCampaignRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsUpdate']?.[localVarOperationServerIndex]?.url;
@@ -2358,7 +2358,7 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsDuplicatePost(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsUpdate200Response> {
+        campaignsDuplicatePost(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsDuplicatePost201Response> {
             return localVarFp.campaignsDuplicatePost(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2407,7 +2407,7 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsMetricsGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsMetricsGet200Response> {
+        campaignsMetricsGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignMetricsResponse> {
             return localVarFp.campaignsMetricsGet(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2599,7 +2599,7 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsUpdate(campaignId: string, updateCampaignRequest: UpdateCampaignRequest, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsUpdate200Response> {
+        campaignsUpdate(campaignId: string, updateCampaignRequest: UpdateCampaignRequest, options?: RawAxiosRequestConfig): AxiosPromise<CampaignResponse> {
             return localVarFp.campaignsUpdate(campaignId, updateCampaignRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2785,7 +2785,7 @@ export interface CampaignsApiInterface {
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsDuplicatePost(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsUpdate200Response>;
+    campaignsDuplicatePost(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsDuplicatePost201Response>;
 
     /**
      * Returns campaign with state and recent phase executions as a single enriched read model
@@ -2834,7 +2834,7 @@ export interface CampaignsApiInterface {
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsMetricsGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsMetricsGet200Response>;
+    campaignsMetricsGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignMetricsResponse>;
 
     /**
      * 
@@ -3026,7 +3026,7 @@ export interface CampaignsApiInterface {
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsUpdate(campaignId: string, updateCampaignRequest: UpdateCampaignRequest, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsUpdate200Response>;
+    campaignsUpdate(campaignId: string, updateCampaignRequest: UpdateCampaignRequest, options?: RawAxiosRequestConfig): AxiosPromise<CampaignResponse>;
 
     /**
      * 

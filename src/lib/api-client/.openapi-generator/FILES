@@ -116,9 +116,9 @@ docs/CampaignsClassificationsGet200Response.md
 docs/CampaignsDomainGenerationPatternOffset200Response.md
 docs/CampaignsDomainScoreBreakdown200Response.md
 docs/CampaignsDomainsList200Response.md
+docs/CampaignsDuplicatePost201Response.md
 docs/CampaignsEnrichedGet200Response.md
 docs/CampaignsFunnelGet200Response.md
-docs/CampaignsMetricsGet200Response.md
 docs/CampaignsModeUpdate200Response.md
 docs/CampaignsModeUpdate200ResponseAllOfData.md
 docs/CampaignsModeUpdateRequest.md
@@ -133,7 +133,6 @@ docs/CampaignsProgress200Response.md
 docs/CampaignsRecommendationsGet200Response.md
 docs/CampaignsStateGet200Response.md
 docs/CampaignsStatusGet200Response.md
-docs/CampaignsUpdate200Response.md
 docs/CancelBulkOperation200Response.md
 docs/CancelBulkOperation200ResponseAllOfData.md
 docs/ConfigGetAuth200Response.md
@@ -176,7 +175,6 @@ docs/FeatureFlags.md
 docs/FeatureFlagsApi.md
 docs/FeatureFlagsGet200Response.md
 docs/GetBulkOperationStatus200Response.md
-docs/GetBulkOperationStatus200ResponseAllOfData.md
 docs/GetBulkResourceStatus200Response.md
 docs/GetBulkResourceStatus200ResponseAllOfData.md
 docs/HTTPValidatorConfigJSON.md
@@ -376,9 +374,9 @@ models/campaigns-classifications-get200-response.ts
 models/campaigns-domain-generation-pattern-offset200-response.ts
 models/campaigns-domain-score-breakdown200-response.ts
 models/campaigns-domains-list200-response.ts
+models/campaigns-duplicate-post201-response.ts
 models/campaigns-enriched-get200-response.ts
 models/campaigns-funnel-get200-response.ts
-models/campaigns-metrics-get200-response.ts
 models/campaigns-mode-update-request.ts
 models/campaigns-mode-update200-response-all-of-data.ts
 models/campaigns-mode-update200-response.ts
@@ -393,7 +391,6 @@ models/campaigns-progress200-response.ts
 models/campaigns-recommendations-get200-response.ts
 models/campaigns-state-get200-response.ts
 models/campaigns-status-get200-response.ts
-models/campaigns-update200-response.ts
 models/cancel-bulk-operation200-response-all-of-data.ts
 models/cancel-bulk-operation200-response.ts
 models/config-get-auth200-response.ts
@@ -433,7 +430,6 @@ models/error-envelope.ts
 models/execution-status-enum.ts
 models/feature-flags-get200-response.ts
 models/feature-flags.ts
-models/get-bulk-operation-status200-response-all-of-data.ts
 models/get-bulk-operation-status200-response.ts
 models/get-bulk-resource-status200-response-all-of-data.ts
 models/get-bulk-resource-status200-response.ts

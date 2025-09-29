@@ -14,17 +14,13 @@ get:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      operationId: { type: string, format: uuid }
-                      type: { type: string }
-                      status: { type: string }
-                      progress: { type: number, minimum: 0, maximum: 100 }
+            type: object
+            required: [operationId, type, status, progress]
+            properties:
+              operationId: { type: string, format: uuid }
+              type: { type: string }
+              status: { type: string }
+              progress: { type: number, minimum: 0, maximum: 100 }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }

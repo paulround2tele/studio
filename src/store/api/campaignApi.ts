@@ -24,7 +24,7 @@ import type { PatternOffsetResponse } from '@/lib/api-client/models/pattern-offs
 import type { EnrichedCampaignResponse } from '@/lib/api-client/models/enriched-campaign-response';
 import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
 import type { CampaignDomainsListResponse } from '@/lib/api-client/models/campaign-domains-list-response';
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers'; // Still used for legacy (not yet migrated) endpoints
 import { toRtkError } from '@/lib/utils/toRtkError';
 
 // Centralized API configuration targeting /api/v2
@@ -42,9 +42,10 @@ export const campaignApi = createApi({
   createCampaign: builder.mutation<CampaignResponse, ServicesCreateLeadGenerationCampaignRequest>({
       queryFn: async (request) => {
         try {
-          const response = await campaignsApi.campaignsCreate(request);
-          const data = extractResponseData<CampaignResponse>(response);
-          if (!data) return { error: 'Empty campaign response' as any };
+          const resp = await campaignsApi.campaignsCreate(request) as any;
+          // Post-migration: direct CampaignResponse (OR axios response .data during transition)
+          const data: CampaignResponse | undefined = resp?.data ?? resp;
+          if (!data || !data.id) return { error: 'Empty campaign response' as any };
           return { data };
         } catch (error: any) {
           return { error: toRtkError(error) as any };
@@ -75,9 +76,10 @@ export const campaignApi = createApi({
     getCampaignsStandalone: builder.query<CampaignResponse[], void>({
       queryFn: async () => {
         try {
-          const response = await campaignsApi.campaignsList();
-          const data = extractResponseData<CampaignResponse[]>(response) || [];
-          return { data };
+          const resp = await campaignsApi.campaignsList() as any;
+          // Direct array (or axios response wrapper) after envelope removal
+          const list: CampaignResponse[] = Array.isArray(resp?.data) ? resp.data : (Array.isArray(resp) ? resp : []);
+          return { data: list };
         } catch (error: any) {
           return { error: toRtkError(error) as any };
         }
@@ -299,8 +301,8 @@ export const campaignApi = createApi({
     getCampaignMetrics: builder.query<any, string>({
       queryFn: async (campaignId) => {
         try {
-          const response = await campaignsApi.campaignsMetricsGet(campaignId);
-          const data = extractResponseData<any>(response);
+          const resp = await campaignsApi.campaignsMetricsGet(campaignId) as any;
+          const data = resp?.data ?? resp; // Direct object after migration
           return { data };
         } catch (error: any) {
           return { error: toRtkError(error) as any };

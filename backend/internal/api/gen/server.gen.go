@@ -6,6 +6,7 @@ package gen
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -271,6 +272,11 @@ const (
 	ExecutionStatusEnumReady      ExecutionStatusEnum = "ready"
 )
 
+// Defines values for HealthResponseStatus.
+const (
+	HealthResponseStatusOk HealthResponseStatus = "ok"
+)
+
 // Defines values for KeywordRuleType.
 const (
 	Regex  KeywordRuleType = "regex"
@@ -288,6 +294,37 @@ const (
 	PatternOffsetRequestPatternTypeBoth   PatternOffsetRequestPatternType = "both"
 	PatternOffsetRequestPatternTypePrefix PatternOffsetRequestPatternType = "prefix"
 	PatternOffsetRequestPatternTypeSuffix PatternOffsetRequestPatternType = "suffix"
+)
+
+// Defines values for PersonaConfigDnsResolverStrategy.
+const (
+	Priority   PersonaConfigDnsResolverStrategy = "priority"
+	Random     PersonaConfigDnsResolverStrategy = "random"
+	RoundRobin PersonaConfigDnsResolverStrategy = "round_robin"
+	Weighted   PersonaConfigDnsResolverStrategy = "weighted"
+)
+
+// Defines values for PersonaConfigHttpCookieHandlingMode.
+const (
+	Custom   PersonaConfigHttpCookieHandlingMode = "custom"
+	Ignore   PersonaConfigHttpCookieHandlingMode = "ignore"
+	Preserve PersonaConfigHttpCookieHandlingMode = "preserve"
+)
+
+// Defines values for PersonaConfigHttpTlsClientHelloMaxVersion.
+const (
+	PersonaConfigHttpTlsClientHelloMaxVersionTLS10 PersonaConfigHttpTlsClientHelloMaxVersion = "TLS10"
+	PersonaConfigHttpTlsClientHelloMaxVersionTLS11 PersonaConfigHttpTlsClientHelloMaxVersion = "TLS11"
+	PersonaConfigHttpTlsClientHelloMaxVersionTLS12 PersonaConfigHttpTlsClientHelloMaxVersion = "TLS12"
+	PersonaConfigHttpTlsClientHelloMaxVersionTLS13 PersonaConfigHttpTlsClientHelloMaxVersion = "TLS13"
+)
+
+// Defines values for PersonaConfigHttpTlsClientHelloMinVersion.
+const (
+	PersonaConfigHttpTlsClientHelloMinVersionTLS10 PersonaConfigHttpTlsClientHelloMinVersion = "TLS10"
+	PersonaConfigHttpTlsClientHelloMinVersionTLS11 PersonaConfigHttpTlsClientHelloMinVersion = "TLS11"
+	PersonaConfigHttpTlsClientHelloMinVersionTLS12 PersonaConfigHttpTlsClientHelloMinVersion = "TLS12"
+	PersonaConfigHttpTlsClientHelloMinVersionTLS13 PersonaConfigHttpTlsClientHelloMinVersion = "TLS13"
 )
 
 // Defines values for PersonaType.
@@ -332,6 +369,11 @@ const (
 	PhaseStatusResponseStatusRunning    PhaseStatusResponseStatus = "running"
 )
 
+// Defines values for PingResponseMessage.
+const (
+	Pong PingResponseMessage = "pong"
+)
+
 // Defines values for ProxyProtocol.
 const (
 	ProxyProtocolHttp   ProxyProtocol = "http"
@@ -362,10 +404,10 @@ const (
 
 // Defines values for CampaignsDomainsListParamsHttpStatus.
 const (
-	CampaignsDomainsListParamsHttpStatusError   CampaignsDomainsListParamsHttpStatus = "error"
-	CampaignsDomainsListParamsHttpStatusOk      CampaignsDomainsListParamsHttpStatus = "ok"
-	CampaignsDomainsListParamsHttpStatusPending CampaignsDomainsListParamsHttpStatus = "pending"
-	CampaignsDomainsListParamsHttpStatusTimeout CampaignsDomainsListParamsHttpStatus = "timeout"
+	Error   CampaignsDomainsListParamsHttpStatus = "error"
+	Ok      CampaignsDomainsListParamsHttpStatus = "ok"
+	Pending CampaignsDomainsListParamsHttpStatus = "pending"
+	Timeout CampaignsDomainsListParamsHttpStatus = "timeout"
 )
 
 // Defines values for CampaignsDomainsListParamsSort.
@@ -1124,12 +1166,11 @@ type CreateKeywordSetRequest struct {
 
 // CreatePersonaRequest defines model for CreatePersonaRequest.
 type CreatePersonaRequest struct {
-	// ConfigDetails HTTP or DNS persona configuration object
-	ConfigDetails map[string]interface{} `json:"configDetails"`
-	Description   *string                `json:"description,omitempty"`
-	IsEnabled     *bool                  `json:"isEnabled,omitempty"`
-	Name          string                 `json:"name"`
-	PersonaType   PersonaType            `json:"personaType"`
+	ConfigDetails PersonaConfigDetails `json:"configDetails"`
+	Description   *string              `json:"description,omitempty"`
+	IsEnabled     *bool                `json:"isEnabled,omitempty"`
+	Name          string               `json:"name"`
+	PersonaType   PersonaType          `json:"personaType"`
 }
 
 // CreateProxyRequestAPI defines model for CreateProxyRequestAPI.
@@ -1286,6 +1327,17 @@ type ExecutionStatusEnum string
 // FeatureFlags Feature flags map
 type FeatureFlags map[string]bool
 
+// HealthResponse defines model for HealthResponse.
+type HealthResponse struct {
+	Status    HealthResponseStatus `json:"status"`
+	Timestamp *time.Time           `json:"timestamp,omitempty"`
+	Uptime    *string              `json:"uptime,omitempty"`
+	Version   *string              `json:"version,omitempty"`
+}
+
+// HealthResponseStatus defines model for HealthResponse.Status.
+type HealthResponseStatus string
+
 // KeywordRuleDTO defines model for KeywordRuleDTO.
 type KeywordRuleDTO struct {
 	Category        *string             `json:"category,omitempty"`
@@ -1402,6 +1454,65 @@ type PatternOffsetResponse struct {
 	CurrentOffset *int64 `json:"currentOffset,omitempty"`
 }
 
+// PersonaConfigDetails defines model for PersonaConfigDetails.
+type PersonaConfigDetails struct {
+	union json.RawMessage
+}
+
+// PersonaConfigDns DNS persona configuration details
+type PersonaConfigDns struct {
+	ConcurrentQueriesPerDomain int                               `json:"concurrentQueriesPerDomain"`
+	MaxConcurrentGoroutines    *int                              `json:"maxConcurrentGoroutines,omitempty"`
+	MaxDomainsPerRequest       int                               `json:"maxDomainsPerRequest"`
+	QueryDelayMaxMs            *int                              `json:"queryDelayMaxMs,omitempty"`
+	QueryDelayMinMs            *int                              `json:"queryDelayMinMs,omitempty"`
+	QueryTimeoutSeconds        int                               `json:"queryTimeoutSeconds"`
+	RateLimitBurst             *int                              `json:"rateLimitBurst,omitempty"`
+	RateLimitDps               *float32                          `json:"rateLimitDps,omitempty"`
+	ResolverStrategy           *PersonaConfigDnsResolverStrategy `json:"resolverStrategy,omitempty"`
+	Resolvers                  []string                          `json:"resolvers"`
+	ResolversPreferredOrder    *[]string                         `json:"resolversPreferredOrder,omitempty"`
+	ResolversWeighted          *map[string]int                   `json:"resolversWeighted,omitempty"`
+	UseSystemResolvers         *bool                             `json:"useSystemResolvers,omitempty"`
+}
+
+// PersonaConfigDnsResolverStrategy defines model for PersonaConfigDns.ResolverStrategy.
+type PersonaConfigDnsResolverStrategy string
+
+// PersonaConfigHttp HTTP persona configuration details
+type PersonaConfigHttp struct {
+	AllowedStatusCodes *[]int `json:"allowedStatusCodes,omitempty"`
+	CookieHandling     *struct {
+		Mode *PersonaConfigHttpCookieHandlingMode `json:"mode,omitempty"`
+	} `json:"cookieHandling,omitempty"`
+	FollowRedirects *bool              `json:"followRedirects,omitempty"`
+	HeaderOrder     *[]string          `json:"headerOrder,omitempty"`
+	Headers         *map[string]string `json:"headers,omitempty"`
+	Http2Settings   *struct {
+		Enabled *bool `json:"enabled,omitempty"`
+	} `json:"http2Settings,omitempty"`
+	Notes                 *string  `json:"notes,omitempty"`
+	RateLimitBurst        *int     `json:"rateLimitBurst,omitempty"`
+	RateLimitDps          *float32 `json:"rateLimitDps,omitempty"`
+	RequestTimeoutSeconds *int     `json:"requestTimeoutSeconds,omitempty"`
+	TlsClientHello        *struct {
+		CipherSuites     *[]string                                  `json:"cipherSuites,omitempty"`
+		CurvePreferences *[]string                                  `json:"curvePreferences,omitempty"`
+		MaxVersion       *PersonaConfigHttpTlsClientHelloMaxVersion `json:"maxVersion,omitempty"`
+		MinVersion       *PersonaConfigHttpTlsClientHelloMinVersion `json:"minVersion,omitempty"`
+	} `json:"tlsClientHello,omitempty"`
+	UserAgent string `json:"userAgent"`
+}
+
+// PersonaConfigHttpCookieHandlingMode defines model for PersonaConfigHttp.CookieHandling.Mode.
+type PersonaConfigHttpCookieHandlingMode string
+
+// PersonaConfigHttpTlsClientHelloMaxVersion defines model for PersonaConfigHttp.TlsClientHello.MaxVersion.
+type PersonaConfigHttpTlsClientHelloMaxVersion string
+
+// PersonaConfigHttpTlsClientHelloMinVersion defines model for PersonaConfigHttp.TlsClientHello.MinVersion.
+type PersonaConfigHttpTlsClientHelloMinVersion string
+
 // PersonaDeleteResponse defines model for PersonaDeleteResponse.
 type PersonaDeleteResponse struct {
 	Deleted   bool               `json:"deleted"`
@@ -1411,14 +1522,14 @@ type PersonaDeleteResponse struct {
 
 // PersonaResponse defines model for PersonaResponse.
 type PersonaResponse struct {
-	ConfigDetails *map[string]interface{} `json:"configDetails,omitempty"`
-	CreatedAt     time.Time               `json:"createdAt"`
-	Description   *string                 `json:"description,omitempty"`
-	Id            openapi_types.UUID      `json:"id"`
-	IsEnabled     bool                    `json:"isEnabled"`
-	Name          string                  `json:"name"`
-	PersonaType   PersonaType             `json:"personaType"`
-	UpdatedAt     time.Time               `json:"updatedAt"`
+	ConfigDetails *PersonaConfigDetails `json:"configDetails,omitempty"`
+	CreatedAt     time.Time             `json:"createdAt"`
+	Description   *string               `json:"description,omitempty"`
+	Id            openapi_types.UUID    `json:"id"`
+	IsEnabled     bool                  `json:"isEnabled"`
+	Name          string                `json:"name"`
+	PersonaType   PersonaType           `json:"personaType"`
+	UpdatedAt     time.Time             `json:"updatedAt"`
 }
 
 // PersonaTestResponse defines model for PersonaTestResponse.
@@ -1539,6 +1650,16 @@ type PhaseStatusResponsePhase string
 
 // PhaseStatusResponseStatus defines model for PhaseStatusResponse.Status.
 type PhaseStatusResponseStatus string
+
+// PingResponse defines model for PingResponse.
+type PingResponse struct {
+	Message   PingResponseMessage `json:"message"`
+	Timestamp *time.Time          `json:"timestamp,omitempty"`
+	Version   *string             `json:"version,omitempty"`
+}
+
+// PingResponseMessage defines model for PingResponse.Message.
+type PingResponseMessage string
 
 // ProcessingInfo defines model for ProcessingInfo.
 type ProcessingInfo struct {
@@ -1717,10 +1838,10 @@ type UpdateKeywordSetRequest struct {
 
 // UpdatePersonaRequest defines model for UpdatePersonaRequest.
 type UpdatePersonaRequest struct {
-	ConfigDetails *map[string]interface{} `json:"configDetails,omitempty"`
-	Description   *string                 `json:"description,omitempty"`
-	IsEnabled     *bool                   `json:"isEnabled,omitempty"`
-	Name          *string                 `json:"name,omitempty"`
+	ConfigDetails *PersonaConfigDetails `json:"configDetails,omitempty"`
+	Description   *string               `json:"description,omitempty"`
+	IsEnabled     *bool                 `json:"isEnabled,omitempty"`
+	Name          *string               `json:"name,omitempty"`
 }
 
 // UpdateProxyRequestAPI defines model for UpdateProxyRequestAPI.
@@ -2161,6 +2282,91 @@ type ScoringProfilesCreateJSONRequestBody = CreateScoringProfileRequest
 
 // ScoringProfilesUpdateJSONRequestBody defines body for ScoringProfilesUpdate for application/json ContentType.
 type ScoringProfilesUpdateJSONRequestBody = UpdateScoringProfileRequest
+
+// AsPersonaConfigHttp returns the union data inside the PersonaConfigDetails as a PersonaConfigHttp
+func (t PersonaConfigDetails) AsPersonaConfigHttp() (PersonaConfigHttp, error) {
+	var body PersonaConfigHttp
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromPersonaConfigHttp overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigHttp
+func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergePersonaConfigHttp performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigHttp
+func (t *PersonaConfigDetails) MergePersonaConfigHttp(v PersonaConfigHttp) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsPersonaConfigDns returns the union data inside the PersonaConfigDetails as a PersonaConfigDns
+func (t PersonaConfigDetails) AsPersonaConfigDns() (PersonaConfigDns, error) {
+	var body PersonaConfigDns
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromPersonaConfigDns overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigDns
+func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergePersonaConfigDns performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigDns
+func (t *PersonaConfigDetails) MergePersonaConfigDns(v PersonaConfigDns) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t PersonaConfigDetails) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"personaType"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t PersonaConfigDetails) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "dns":
+		return t.AsPersonaConfigDns()
+	case "http":
+		return t.AsPersonaConfigHttp()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
+}
+
+func (t PersonaConfigDetails) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *PersonaConfigDetails) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -8018,20 +8224,21 @@ type CampaignsListResponseObject interface {
 	VisitCampaignsListResponse(w http.ResponseWriter) error
 }
 
-type CampaignsList200JSONResponse struct {
-	Data      *[]CampaignResponse `json:"data,omitempty"`
-	Metadata  *Metadata           `json:"metadata,omitempty"`
-	RequestId string              `json:"requestId"`
+type CampaignsList200ResponseHeaders struct {
+	XRequestId string
+}
 
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
+type CampaignsList200JSONResponse struct {
+	Body    []CampaignResponse
+	Headers CampaignsList200ResponseHeaders
 }
 
 func (response CampaignsList200JSONResponse) VisitCampaignsListResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-Id", fmt.Sprint(response.Headers.XRequestId))
 	w.WriteHeader(200)
 
-	return json.NewEncoder(w).Encode(response)
+	return json.NewEncoder(w).Encode(response.Body)
 }
 
 type CampaignsList401JSONResponse struct{ UnauthorizedJSONResponse }
@@ -8062,20 +8269,21 @@ type CampaignsCreateResponseObject interface {
 	VisitCampaignsCreateResponse(w http.ResponseWriter) error
 }
 
-type CampaignsCreate201JSONResponse struct {
-	Data      *CampaignResponse `json:"data,omitempty"`
-	Metadata  *Metadata         `json:"metadata,omitempty"`
-	RequestId string            `json:"requestId"`
+type CampaignsCreate201ResponseHeaders struct {
+	XRequestId string
+}
 
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
+type CampaignsCreate201JSONResponse struct {
+	Body    CampaignResponse
+	Headers CampaignsCreate201ResponseHeaders
 }
 
 func (response CampaignsCreate201JSONResponse) VisitCampaignsCreateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-Id", fmt.Sprint(response.Headers.XRequestId))
 	w.WriteHeader(201)
 
-	return json.NewEncoder(w).Encode(response)
+	return json.NewEncoder(w).Encode(response.Body)
 }
 
 type CampaignsCreate400JSONResponse struct{ BadRequestJSONResponse }
@@ -8536,17 +8744,10 @@ type GetBulkOperationStatusResponseObject interface {
 }
 
 type GetBulkOperationStatus200JSONResponse struct {
-	Data *struct {
-		OperationId *openapi_types.UUID `json:"operationId,omitempty"`
-		Progress    *float32            `json:"progress,omitempty"`
-		Status      *string             `json:"status,omitempty"`
-		Type        *string             `json:"type,omitempty"`
-	} `json:"data,omitempty"`
-	Metadata  *Metadata `json:"metadata,omitempty"`
-	RequestId string    `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
+	OperationId openapi_types.UUID `json:"operationId"`
+	Progress    float32            `json:"progress"`
+	Status      string             `json:"status"`
+	Type        string             `json:"type"`
 }
 
 func (response GetBulkOperationStatus200JSONResponse) VisitGetBulkOperationStatusResponse(w http.ResponseWriter) error {
@@ -8857,20 +9058,21 @@ type CampaignsGetResponseObject interface {
 	VisitCampaignsGetResponse(w http.ResponseWriter) error
 }
 
-type CampaignsGet200JSONResponse struct {
-	Data      *CampaignResponse `json:"data,omitempty"`
-	Metadata  *Metadata         `json:"metadata,omitempty"`
-	RequestId string            `json:"requestId"`
+type CampaignsGet200ResponseHeaders struct {
+	XRequestId string
+}
 
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
+type CampaignsGet200JSONResponse struct {
+	Body    CampaignResponse
+	Headers CampaignsGet200ResponseHeaders
 }
 
 func (response CampaignsGet200JSONResponse) VisitCampaignsGetResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-Id", fmt.Sprint(response.Headers.XRequestId))
 	w.WriteHeader(200)
 
-	return json.NewEncoder(w).Encode(response)
+	return json.NewEncoder(w).Encode(response.Body)
 }
 
 type CampaignsGet401JSONResponse struct{ UnauthorizedJSONResponse }
@@ -8911,14 +9113,7 @@ type CampaignsUpdateResponseObject interface {
 	VisitCampaignsUpdateResponse(w http.ResponseWriter) error
 }
 
-type CampaignsUpdate200JSONResponse struct {
-	Data      *CampaignResponse `json:"data,omitempty"`
-	Metadata  *Metadata         `json:"metadata,omitempty"`
-	RequestId string            `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsUpdate200JSONResponse CampaignResponse
 
 func (response CampaignsUpdate200JSONResponse) VisitCampaignsUpdateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -9388,15 +9583,7 @@ type CampaignsMetricsGetResponseObject interface {
 	VisitCampaignsMetricsGetResponse(w http.ResponseWriter) error
 }
 
-type CampaignsMetricsGet200JSONResponse struct {
-	// Data KPI and warning component metrics for a campaign
-	Data      *CampaignMetricsResponse `json:"data,omitempty"`
-	Metadata  *Metadata                `json:"metadata,omitempty"`
-	RequestId string                   `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsMetricsGet200JSONResponse CampaignMetricsResponse
 
 func (response CampaignsMetricsGet200JSONResponse) VisitCampaignsMetricsGetResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -12104,13 +12291,21 @@ type HealthCheckResponseObject interface {
 	VisitHealthCheckResponse(w http.ResponseWriter) error
 }
 
-type HealthCheck200JSONResponse SuccessEnvelope
+type HealthCheck200ResponseHeaders struct {
+	XRequestId string
+}
+
+type HealthCheck200JSONResponse struct {
+	Body    HealthResponse
+	Headers HealthCheck200ResponseHeaders
+}
 
 func (response HealthCheck200JSONResponse) VisitHealthCheckResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-Id", fmt.Sprint(response.Headers.XRequestId))
 	w.WriteHeader(200)
 
-	return json.NewEncoder(w).Encode(response)
+	return json.NewEncoder(w).Encode(response.Body)
 }
 
 type HealthCheck401JSONResponse struct{ UnauthorizedJSONResponse }
@@ -12159,13 +12354,21 @@ type HealthLiveResponseObject interface {
 	VisitHealthLiveResponse(w http.ResponseWriter) error
 }
 
-type HealthLive200JSONResponse SuccessEnvelope
+type HealthLive200ResponseHeaders struct {
+	XRequestId string
+}
+
+type HealthLive200JSONResponse struct {
+	Body    HealthResponse
+	Headers HealthLive200ResponseHeaders
+}
 
 func (response HealthLive200JSONResponse) VisitHealthLiveResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-Id", fmt.Sprint(response.Headers.XRequestId))
 	w.WriteHeader(200)
 
-	return json.NewEncoder(w).Encode(response)
+	return json.NewEncoder(w).Encode(response.Body)
 }
 
 type HealthLive401JSONResponse struct{ UnauthorizedJSONResponse }
@@ -12214,13 +12417,21 @@ type HealthReadyResponseObject interface {
 	VisitHealthReadyResponse(w http.ResponseWriter) error
 }
 
-type HealthReady200JSONResponse SuccessEnvelope
+type HealthReady200ResponseHeaders struct {
+	XRequestId string
+}
+
+type HealthReady200JSONResponse struct {
+	Body    HealthResponse
+	Headers HealthReady200ResponseHeaders
+}
 
 func (response HealthReady200JSONResponse) VisitHealthReadyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-Id", fmt.Sprint(response.Headers.XRequestId))
 	w.WriteHeader(200)
 
-	return json.NewEncoder(w).Encode(response)
+	return json.NewEncoder(w).Encode(response.Body)
 }
 
 type HealthReady401JSONResponse struct{ UnauthorizedJSONResponse }
@@ -14235,13 +14446,21 @@ type PingResponseObject interface {
 	VisitPingResponse(w http.ResponseWriter) error
 }
 
-type Ping200JSONResponse SuccessEnvelope
+type Ping200ResponseHeaders struct {
+	XRequestId string
+}
+
+type Ping200JSONResponse struct {
+	Body    PingResponse
+	Headers Ping200ResponseHeaders
+}
 
 func (response Ping200JSONResponse) VisitPingResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("X-Request-Id", fmt.Sprint(response.Headers.XRequestId))
 	w.WriteHeader(200)
 
-	return json.NewEncoder(w).Encode(response)
+	return json.NewEncoder(w).Encode(response.Body)
 }
 
 type Ping401JSONResponse struct{ UnauthorizedJSONResponse }

@@ -13,20 +13,36 @@
  */
 
 
-// May contain unused imports in some cases
-// @ts-ignore
-import type { GetBulkOperationStatus200ResponseAllOfData } from './get-bulk-operation-status200-response-all-of-data';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { Metadata } from './metadata';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { SuccessEnvelope } from './success-envelope';
 
 /**
- * @type GetBulkOperationStatus200Response
+ * 
  * @export
+ * @interface GetBulkOperationStatus200Response
  */
-export type GetBulkOperationStatus200Response = SuccessEnvelope;
-
+export interface GetBulkOperationStatus200Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof GetBulkOperationStatus200Response
+     */
+    'operationId': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof GetBulkOperationStatus200Response
+     */
+    'type': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof GetBulkOperationStatus200Response
+     */
+    'status': string;
+    /**
+     * 
+     * @type {number}
+     * @memberof GetBulkOperationStatus200Response
+     */
+    'progress': number;
+}
 

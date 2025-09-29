@@ -38,15 +38,5 @@ func (h *strictHandlers) GetBulkOperationStatus(ctx context.Context, r gen.GetBu
 		typ = t
 		status = string(st)
 	}
-	return gen.GetBulkOperationStatus200JSONResponse{
-		Data: &struct {
-			OperationId *openapi_types.UUID `json:"operationId,omitempty"`
-			Progress    *float32            `json:"progress,omitempty"`
-			Status      *string             `json:"status,omitempty"`
-			Type        *string             `json:"type,omitempty"`
-		}{OperationId: &r.OperationId, Progress: &processed, Status: &status, Type: &typ},
-		Metadata:  okMeta(),
-		RequestId: reqID(),
-		Success:   boolPtr(true),
-	}, nil
+	return gen.GetBulkOperationStatus200JSONResponse{OperationId: r.OperationId, Progress: processed, Status: status, Type: typ}, nil
 }

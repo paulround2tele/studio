@@ -31,7 +31,7 @@ import type {
   GetBulkResourceStatus200Response,
 } from '@/lib/api-client/models';
 import type { ModelsBulkOperationStatus } from '@/lib/api-client/models/models-bulk-operation-status';
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
+import { extractResponseData } from '@/lib/utils/apiResponseHelpers'; // Kept for endpoints still using envelopes
 
 // Create instance of the generated API client for bulk operations using centralized config
 const bulkOperationsApiClient = new BulkOperationsApi(apiConfiguration);
@@ -163,13 +163,20 @@ export const bulkOperationsApi = createApi({
   getBulkOperationStatus: builder.query<ModelsBulkOperationStatus, { operationId: string }>({
       queryFn: async ({ operationId }) => {
         try {
-          const response = await bulkOperationsApiClient.getBulkOperationStatus(operationId);
-          // Unwrap SuccessEnvelope -> ModelsBulkOperationStatus using centralized helper
-          const data = extractResponseData<ModelsBulkOperationStatus>(response);
-          if (!data) {
+          const resp = await bulkOperationsApiClient.getBulkOperationStatus(operationId) as any;
+          // After migration this is a direct object (or axios response wrapper)
+          const direct = resp?.data ?? resp;
+          if (!direct || !direct.operationId) {
             return { error: { status: 500, data: 'Empty bulk operation status' } as any };
           }
-          return { data };
+            // Map to legacy ModelsBulkOperationStatus shape if types diverge
+          const mapped: ModelsBulkOperationStatus = {
+            operationId: direct.operationId,
+            progress: direct.progress ?? 0,
+            status: direct.status ?? 'pending',
+            type: direct.type ?? '',
+          } as ModelsBulkOperationStatus;
+          return { data: mapped };
         } catch (error: any) {
           return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
         }
