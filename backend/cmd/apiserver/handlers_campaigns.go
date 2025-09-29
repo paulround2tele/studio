@@ -164,7 +164,7 @@ func (h *strictHandlers) CampaignsFunnelGet(ctx context.Context, r gen.Campaigns
 		HighPotential: int(dto.HighPotential),
 		Leads:         int(dto.Leads),
 	}
-	return gen.CampaignsFunnelGet200JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true), Data: &data}, nil
+	return gen.CampaignsFunnelGet200JSONResponse(data), nil
 }
 
 // CampaignsClassificationsGet implements GET /campaigns/{campaignId}/classifications
@@ -232,7 +232,7 @@ func (h *strictHandlers) CampaignsClassificationsGet(ctx context.Context, r gen.
 		},
 		Samples: &samples,
 	}
-	return gen.CampaignsClassificationsGet200JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true), Data: &data}, nil
+	return gen.CampaignsClassificationsGet200JSONResponse(data), nil
 }
 
 // CampaignsDuplicatePost implements POST /campaigns/{campaignId}/duplicate
@@ -334,7 +334,7 @@ func (h *strictHandlers) CampaignsMomentumGet(ctx context.Context, r gen.Campaig
 		MoversDown: moversDown,
 		Histogram:  histogram,
 	}
-	return gen.CampaignsMomentumGet200JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true), Data: &data}, nil
+	return gen.CampaignsMomentumGet200JSONResponse(data), nil
 }
 
 // CampaignsRecommendationsGet implements GET /campaigns/{campaignId}/insights/recommendations
@@ -371,7 +371,7 @@ func (h *strictHandlers) CampaignsRecommendationsGet(ctx context.Context, r gen.
 	data := gen.CampaignRecommendationsResponse{
 		Recommendations: recommendations,
 	}
-	return gen.CampaignsRecommendationsGet200JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true), Data: &data}, nil
+	return gen.CampaignsRecommendationsGet200JSONResponse(data), nil
 }
 
 // CampaignsStatusGet implements GET /campaigns/{campaignId}/status
@@ -424,7 +424,7 @@ func (h *strictHandlers) CampaignsStatusGet(ctx context.Context, r gen.Campaigns
 		OverallProgressPercentage: float32(dto.OverallProgressPercentage),
 		Phases:                    phases,
 	}
-	return gen.CampaignsStatusGet200JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true), Data: &data}, nil
+	return gen.CampaignsStatusGet200JSONResponse(data), nil
 }
 
 // CampaignsMetricsGet implements GET /campaigns/{campaignId}/metrics
@@ -1436,7 +1436,7 @@ func (h *strictHandlers) CampaignsProgress(ctx context.Context, r gen.CampaignsP
 	resp.Timeline.CreatedAt = &c.CreatedAt
 	resp.Timeline.EstimatedCompletionAt = c.EstimatedCompletionAt
 	resp.Timeline.CompletedAt = c.CompletedAt
-	return gen.CampaignsProgress200JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsProgress200JSONResponse(resp), nil
 }
 
 // CampaignsDomainsList implements GET /campaigns/{campaignId}/domains

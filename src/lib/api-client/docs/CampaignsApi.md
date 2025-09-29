@@ -367,7 +367,7 @@ This endpoint does not have any parameters.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsClassificationsGet**
-> CampaignsClassificationsGet200Response campaignsClassificationsGet()
+> CampaignClassificationsResponse campaignsClassificationsGet()
 
 
 ### Example
@@ -400,7 +400,7 @@ const { status, data } = await apiInstance.campaignsClassificationsGet(
 
 ### Return type
 
-**CampaignsClassificationsGet200Response**
+**CampaignClassificationsResponse**
 
 ### Authorization
 
@@ -848,7 +848,7 @@ const { status, data } = await apiInstance.campaignsEnrichedGet(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsFunnelGet**
-> CampaignsFunnelGet200Response campaignsFunnelGet()
+> CampaignFunnelResponse campaignsFunnelGet()
 
 
 ### Example
@@ -878,7 +878,7 @@ const { status, data } = await apiInstance.campaignsFunnelGet(
 
 ### Return type
 
-**CampaignsFunnelGet200Response**
+**CampaignFunnelResponse**
 
 ### Authorization
 
@@ -1108,7 +1108,7 @@ const { status, data } = await apiInstance.campaignsModeUpdate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsMomentumGet**
-> CampaignsMomentumGet200Response campaignsMomentumGet()
+> CampaignMomentumResponse campaignsMomentumGet()
 
 
 ### Example
@@ -1138,7 +1138,7 @@ const { status, data } = await apiInstance.campaignsMomentumGet(
 
 ### Return type
 
-**CampaignsMomentumGet200Response**
+**CampaignMomentumResponse**
 
 ### Authorization
 
@@ -1668,7 +1668,7 @@ const { status, data } = await apiInstance.campaignsPhaseStop(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsProgress**
-> CampaignsProgress200Response campaignsProgress()
+> CampaignProgressResponse campaignsProgress()
 
 
 ### Example
@@ -1698,7 +1698,7 @@ const { status, data } = await apiInstance.campaignsProgress(
 
 ### Return type
 
-**CampaignsProgress200Response**
+**CampaignProgressResponse**
 
 ### Authorization
 
@@ -1721,7 +1721,7 @@ const { status, data } = await apiInstance.campaignsProgress(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsRecommendationsGet**
-> CampaignsRecommendationsGet200Response campaignsRecommendationsGet()
+> CampaignRecommendationsResponse campaignsRecommendationsGet()
 
 
 ### Example
@@ -1751,7 +1751,7 @@ const { status, data } = await apiInstance.campaignsRecommendationsGet(
 
 ### Return type
 
-**CampaignsRecommendationsGet200Response**
+**CampaignRecommendationsResponse**
 
 ### Authorization
 
@@ -1934,7 +1934,7 @@ const { status, data } = await apiInstance.campaignsStatePut(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsStatusGet**
-> CampaignsStatusGet200Response campaignsStatusGet()
+> CampaignPhasesStatusResponse campaignsStatusGet()
 
 
 ### Example
@@ -1964,7 +1964,7 @@ const { status, data } = await apiInstance.campaignsStatusGet(
 
 ### Return type
 
-**CampaignsStatusGet200Response**
+**CampaignPhasesStatusResponse**
 
 ### Authorization
 

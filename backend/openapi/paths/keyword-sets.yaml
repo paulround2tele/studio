@@ -15,14 +15,9 @@
 					description: OK
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												type: array
-												items: { $ref: '#/components/schemas/KeywordSetResponse' }
+							schema:
+								type: array
+								items: { $ref: '#/components/schemas/KeywordSetResponse' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }
@@ -43,13 +38,7 @@
 					description: Created
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												$ref: '#/components/schemas/KeywordSetResponse'
+							schema: { $ref: '#/components/schemas/KeywordSetResponse' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
@@ -76,13 +65,7 @@
 					description: OK
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												$ref: '#/components/schemas/KeywordSetResponse'
+							schema: { $ref: '#/components/schemas/KeywordSetResponse' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'404': { $ref: '#/components/responses/NotFound' }
@@ -111,13 +94,7 @@
 					description: OK
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												$ref: '#/components/schemas/KeywordSetResponse'
+							schema: { $ref: '#/components/schemas/KeywordSetResponse' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
@@ -165,13 +142,7 @@
 					description: OK
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												$ref: '#/components/schemas/KeywordSetWithRulesResponse'
+							schema: { $ref: '#/components/schemas/KeywordSetWithRulesResponse' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'404': { $ref: '#/components/responses/NotFound' }

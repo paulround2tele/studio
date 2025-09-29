@@ -2240,12 +2240,8 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
+                type: object
+                description: Direct performance summary payload (envelope removed)
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':
@@ -2306,12 +2302,8 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
+                type: object
+                description: Direct performance active payload (envelope removed)
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':
@@ -2473,12 +2465,8 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
+                type: object
+                description: Direct cleanup stats payload (envelope removed)
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':
@@ -2614,12 +2602,8 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
+                type: object
+                description: Direct dashboard summary payload (envelope removed)
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':
@@ -2995,12 +2979,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/CampaignProgressResponse'
+                $ref: '#/components/schemas/CampaignProgressResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -3751,12 +3730,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/CampaignPhasesStatusResponse'
+                $ref: '#/components/schemas/CampaignPhasesStatusResponse'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -3780,12 +3754,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/CampaignFunnelResponse'
+                $ref: '#/components/schemas/CampaignFunnelResponse'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -3841,12 +3810,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/CampaignClassificationsResponse'
+                $ref: '#/components/schemas/CampaignClassificationsResponse'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -3870,12 +3834,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/CampaignMomentumResponse'
+                $ref: '#/components/schemas/CampaignMomentumResponse'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -3899,12 +3858,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/CampaignRecommendationsResponse'
+                $ref: '#/components/schemas/CampaignRecommendationsResponse'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -3952,22 +3906,17 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            operationId:
-                              type: string
-                              format: uuid
-                            type:
-                              type: string
-                            status:
-                              type: string
+                type: array
+                items:
+                  type: object
+                  properties:
+                    operationId:
+                      type: string
+                      format: uuid
+                    type:
+                      type: string
+                    status:
+                      type: string
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':

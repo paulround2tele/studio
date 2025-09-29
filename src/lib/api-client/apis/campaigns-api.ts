@@ -40,15 +40,25 @@ import type { BulkResourceAllocationRequest } from '../models';
 // @ts-ignore
 import type { BulkValidateDNS200Response } from '../models';
 // @ts-ignore
+import type { CampaignClassificationsResponse } from '../models';
+// @ts-ignore
+import type { CampaignFunnelResponse } from '../models';
+// @ts-ignore
 import type { CampaignMetricsResponse } from '../models';
+// @ts-ignore
+import type { CampaignMomentumResponse } from '../models';
+// @ts-ignore
+import type { CampaignPhasesStatusResponse } from '../models';
+// @ts-ignore
+import type { CampaignProgressResponse } from '../models';
+// @ts-ignore
+import type { CampaignRecommendationsResponse } from '../models';
 // @ts-ignore
 import type { CampaignResponse } from '../models';
 // @ts-ignore
 import type { CampaignStateUpdate } from '../models';
 // @ts-ignore
 import type { CampaignsBulkOperationsList200Response } from '../models';
-// @ts-ignore
-import type { CampaignsClassificationsGet200Response } from '../models';
 // @ts-ignore
 import type { CampaignsDomainGenerationPatternOffset200Response } from '../models';
 // @ts-ignore
@@ -60,13 +70,9 @@ import type { CampaignsDuplicatePost201Response } from '../models';
 // @ts-ignore
 import type { CampaignsEnrichedGet200Response } from '../models';
 // @ts-ignore
-import type { CampaignsFunnelGet200Response } from '../models';
-// @ts-ignore
 import type { CampaignsModeUpdate200Response } from '../models';
 // @ts-ignore
 import type { CampaignsModeUpdateRequest } from '../models';
-// @ts-ignore
-import type { CampaignsMomentumGet200Response } from '../models';
 // @ts-ignore
 import type { CampaignsPhaseConfigsList200Response } from '../models';
 // @ts-ignore
@@ -78,13 +84,7 @@ import type { CampaignsPhaseStart409Response } from '../models';
 // @ts-ignore
 import type { CampaignsPhaseStatus200Response } from '../models';
 // @ts-ignore
-import type { CampaignsProgress200Response } from '../models';
-// @ts-ignore
-import type { CampaignsRecommendationsGet200Response } from '../models';
-// @ts-ignore
 import type { CampaignsStateGet200Response } from '../models';
-// @ts-ignore
-import type { CampaignsStatusGet200Response } from '../models';
 // @ts-ignore
 import type { CancelBulkOperation200Response } from '../models';
 // @ts-ignore
@@ -1756,7 +1756,7 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsClassificationsGet(campaignId: string, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsClassificationsGet200Response>> {
+        async campaignsClassificationsGet(campaignId: string, limit?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignClassificationsResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsClassificationsGet(campaignId, limit, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsClassificationsGet']?.[localVarOperationServerIndex]?.url;
@@ -1876,7 +1876,7 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsFunnelGet(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsFunnelGet200Response>> {
+        async campaignsFunnelGet(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignFunnelResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsFunnelGet(campaignId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsFunnelGet']?.[localVarOperationServerIndex]?.url;
@@ -1941,7 +1941,7 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsMomentumGet(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsMomentumGet200Response>> {
+        async campaignsMomentumGet(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignMomentumResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsMomentumGet(campaignId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsMomentumGet']?.[localVarOperationServerIndex]?.url;
@@ -2080,7 +2080,7 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsProgress(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsProgress200Response>> {
+        async campaignsProgress(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignProgressResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsProgress(campaignId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsProgress']?.[localVarOperationServerIndex]?.url;
@@ -2093,7 +2093,7 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsRecommendationsGet(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsRecommendationsGet200Response>> {
+        async campaignsRecommendationsGet(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignRecommendationsResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsRecommendationsGet(campaignId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsRecommendationsGet']?.[localVarOperationServerIndex]?.url;
@@ -2146,7 +2146,7 @@ export const CampaignsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsStatusGet(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignsStatusGet200Response>> {
+        async campaignsStatusGet(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignPhasesStatusResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsStatusGet(campaignId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['CampaignsApi.campaignsStatusGet']?.[localVarOperationServerIndex]?.url;
@@ -2282,7 +2282,7 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsClassificationsGet(campaignId: string, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsClassificationsGet200Response> {
+        campaignsClassificationsGet(campaignId: string, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<CampaignClassificationsResponse> {
             return localVarFp.campaignsClassificationsGet(campaignId, limit, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2378,7 +2378,7 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsFunnelGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsFunnelGet200Response> {
+        campaignsFunnelGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignFunnelResponse> {
             return localVarFp.campaignsFunnelGet(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2428,7 +2428,7 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsMomentumGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsMomentumGet200Response> {
+        campaignsMomentumGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignMomentumResponse> {
             return localVarFp.campaignsMomentumGet(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2537,7 +2537,7 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsProgress(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsProgress200Response> {
+        campaignsProgress(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignProgressResponse> {
             return localVarFp.campaignsProgress(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2547,7 +2547,7 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsRecommendationsGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsRecommendationsGet200Response> {
+        campaignsRecommendationsGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignRecommendationsResponse> {
             return localVarFp.campaignsRecommendationsGet(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2588,7 +2588,7 @@ export const CampaignsApiFactory = function (configuration?: Configuration, base
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsStatusGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsStatusGet200Response> {
+        campaignsStatusGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignPhasesStatusResponse> {
             return localVarFp.campaignsStatusGet(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -2709,7 +2709,7 @@ export interface CampaignsApiInterface {
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsClassificationsGet(campaignId: string, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsClassificationsGet200Response>;
+    campaignsClassificationsGet(campaignId: string, limit?: number, options?: RawAxiosRequestConfig): AxiosPromise<CampaignClassificationsResponse>;
 
     /**
      * 
@@ -2805,7 +2805,7 @@ export interface CampaignsApiInterface {
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsFunnelGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsFunnelGet200Response>;
+    campaignsFunnelGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignFunnelResponse>;
 
     /**
      * 
@@ -2855,7 +2855,7 @@ export interface CampaignsApiInterface {
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsMomentumGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsMomentumGet200Response>;
+    campaignsMomentumGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignMomentumResponse>;
 
     /**
      * 
@@ -2964,7 +2964,7 @@ export interface CampaignsApiInterface {
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsProgress(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsProgress200Response>;
+    campaignsProgress(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignProgressResponse>;
 
     /**
      * 
@@ -2974,7 +2974,7 @@ export interface CampaignsApiInterface {
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsRecommendationsGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsRecommendationsGet200Response>;
+    campaignsRecommendationsGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignRecommendationsResponse>;
 
     /**
      * 
@@ -3015,7 +3015,7 @@ export interface CampaignsApiInterface {
      * @throws {RequiredError}
      * @memberof CampaignsApiInterface
      */
-    campaignsStatusGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignsStatusGet200Response>;
+    campaignsStatusGet(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignPhasesStatusResponse>;
 
     /**
      * 

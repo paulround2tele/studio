@@ -16,19 +16,33 @@ import (
 
 // ---- Personas helpers ----
 func personaToResponse(p *models.Persona) gen.PersonaResponse {
-	// Convert json.RawMessage to map[string]interface{}
-	var cfg map[string]interface{}
+	var configDetails *gen.PersonaConfigDetails
 	if len(p.ConfigDetails) > 0 {
-		_ = json.Unmarshal(p.ConfigDetails, &cfg)
+		// Determine persona type and build union
+		var raw map[string]interface{}
+		if err := json.Unmarshal(p.ConfigDetails, &raw); err == nil {
+			// Re-marshal into appropriate struct for discriminator
+			b, _ := json.Marshal(raw)
+			union := &gen.PersonaConfigDetails{}
+			switch p.PersonaType {
+			case models.PersonaTypeHTTP:
+				var httpCfg gen.PersonaConfigHttp
+				if err := json.Unmarshal(b, &httpCfg); err == nil {
+					_ = union.FromPersonaConfigHttp(httpCfg)
+					configDetails = union
+				}
+			case models.PersonaTypeDNS:
+				var dnsCfg gen.PersonaConfigDns
+				if err := json.Unmarshal(b, &dnsCfg); err == nil {
+					_ = union.FromPersonaConfigDns(dnsCfg)
+					configDetails = union
+				}
+			}
+		}
 	}
 	return gen.PersonaResponse{
-		ConfigDetails: func() *map[string]interface{} {
-			if cfg == nil {
-				return nil
-			}
-			return &cfg
-		}(),
-		CreatedAt: p.CreatedAt,
+		ConfigDetails: configDetails,
+		CreatedAt:     p.CreatedAt,
 		Description: func() *string {
 			if p.Description.Valid {
 				s := p.Description.String
@@ -120,16 +134,12 @@ func (h *strictHandlers) PersonasCreate(ctx context.Context, r gen.PersonasCreat
 		return gen.PersonasCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid personaType (dns|http)", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 
-	// Marshal configDetails
-	var raw json.RawMessage
-	if r.Body.ConfigDetails != nil {
-		b, err := json.Marshal(r.Body.ConfigDetails)
-		if err != nil {
-			return gen.PersonasCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid configDetails", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
-		}
-		raw = b
+	// Marshal configDetails union (always present as value). We treat empty struct as empty JSON {}
+	bCfg, err := json.Marshal(r.Body.ConfigDetails)
+	if err != nil {
+		return gen.PersonasCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid configDetails", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	parsed, err := parsePersonaConfig(pt, raw)
+	parsed, err := parsePersonaConfig(pt, bCfg)
 	if err != nil {
 		return gen.PersonasCreate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid configuration details", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
@@ -236,7 +246,7 @@ func (h *strictHandlers) PersonasUpdate(ctx context.Context, r gen.PersonasUpdat
 	if r.Body.Description != nil {
 		existing.Description = sql.NullString{String: *r.Body.Description, Valid: *r.Body.Description != ""}
 	}
-	if r.Body.ConfigDetails != nil {
+	if r.Body.ConfigDetails != nil { // pointer to union provided
 		b, err := json.Marshal(r.Body.ConfigDetails)
 		if err != nil {
 			return gen.PersonasUpdate400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "invalid configDetails", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil

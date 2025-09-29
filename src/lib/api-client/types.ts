@@ -5951,9 +5951,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignProgressResponse"];
-                    };
+                    "application/json": components["schemas"]["CampaignProgressResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -6480,9 +6478,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignPhasesStatusResponse"];
-                    };
+                    "application/json": components["schemas"]["CampaignPhasesStatusResponse"];
                 };
             };
             404: components["responses"]["NotFound"];
@@ -6506,9 +6502,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignFunnelResponse"];
-                    };
+                    "application/json": components["schemas"]["CampaignFunnelResponse"];
                 };
             };
             404: components["responses"]["NotFound"];
@@ -6558,9 +6552,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignClassificationsResponse"];
-                    };
+                    "application/json": components["schemas"]["CampaignClassificationsResponse"];
                 };
             };
             404: components["responses"]["NotFound"];
@@ -6584,9 +6576,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignMomentumResponse"];
-                    };
+                    "application/json": components["schemas"]["CampaignMomentumResponse"];
                 };
             };
             404: components["responses"]["NotFound"];
@@ -6610,9 +6600,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignRecommendationsResponse"];
-                    };
+                    "application/json": components["schemas"]["CampaignRecommendationsResponse"];
                 };
             };
             404: components["responses"]["NotFound"];
