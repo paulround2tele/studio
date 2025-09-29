@@ -1131,14 +1131,10 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/KeywordSetResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/KeywordSetResponse'
+                description: Direct array of keyword sets (envelope removed)
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1166,12 +1162,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/KeywordSetResponse'
+                $ref: '#/components/schemas/KeywordSetResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':

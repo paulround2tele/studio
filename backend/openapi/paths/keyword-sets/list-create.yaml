@@ -15,13 +15,9 @@ get:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    type: array
-                    items: { $ref: '../../components/schemas/all.yaml#/KeywordSetResponse' }
+            type: array
+            items: { $ref: '../../components/schemas/all.yaml#/KeywordSetResponse' }
+            description: Direct array of keyword sets (envelope removed)
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
@@ -43,11 +39,7 @@ post:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/KeywordSetResponse' }
+            $ref: '../../components/schemas/all.yaml#/KeywordSetResponse'
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }

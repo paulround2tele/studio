@@ -120,7 +120,7 @@ func (h *strictHandlers) MonitoringCleanupStats(ctx context.Context, r gen.Monit
 	}
 	stats := h.deps.Cleanup.GetCleanupStats()
 	data := toMap(stats)
-	return gen.MonitoringCleanupStats200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.MonitoringCleanupStats200JSONResponse(data), nil
 }
 
 func (h *strictHandlers) MonitoringDashboardSummary(ctx context.Context, r gen.MonitoringDashboardSummaryRequestObject) (gen.MonitoringDashboardSummaryResponseObject, error) {
@@ -130,7 +130,7 @@ func (h *strictHandlers) MonitoringDashboardSummary(ctx context.Context, r gen.M
 	}
 	sum := integ.GetSystemHealthSummary()
 	data := toMap(sum)
-	return gen.MonitoringDashboardSummary200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.MonitoringDashboardSummary200JSONResponse(data), nil
 }
 
 func (h *strictHandlers) MonitoringPerformanceTrends(ctx context.Context, r gen.MonitoringPerformanceTrendsRequestObject) (gen.MonitoringPerformanceTrendsResponseObject, error) {
@@ -157,7 +157,7 @@ func (h *strictHandlers) MonitoringPerformanceActive(ctx context.Context, r gen.
 	}
 	ops := h.deps.Monitoring.PerformanceTracker.GetActiveOperations()
 	data := toMap(ops)
-	return gen.MonitoringPerformanceActive200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.MonitoringPerformanceActive200JSONResponse(data), nil
 }
 
 func (h *strictHandlers) MonitoringPerformanceFailed(ctx context.Context, r gen.MonitoringPerformanceFailedRequestObject) (gen.MonitoringPerformanceFailedResponseObject, error) {
@@ -193,7 +193,7 @@ func (h *strictHandlers) MonitoringPerformanceSummary(ctx context.Context, r gen
 	}
 	summaries := h.deps.Monitoring.PerformanceTracker.GetAllSummaries()
 	data := toMap(summaries)
-	return gen.MonitoringPerformanceSummary200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.MonitoringPerformanceSummary200JSONResponse(data), nil
 }
 
 func (h *strictHandlers) MonitoringResourcesAlerts(ctx context.Context, r gen.MonitoringResourcesAlertsRequestObject) (gen.MonitoringResourcesAlertsResponseObject, error) {

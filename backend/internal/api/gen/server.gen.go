@@ -12520,14 +12520,7 @@ type KeywordSetsListResponseObject interface {
 	VisitKeywordSetsListResponse(w http.ResponseWriter) error
 }
 
-type KeywordSetsList200JSONResponse struct {
-	Data      *[]KeywordSetResponse `json:"data,omitempty"`
-	Metadata  *Metadata             `json:"metadata,omitempty"`
-	RequestId string                `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type KeywordSetsList200JSONResponse []KeywordSetResponse
 
 func (response KeywordSetsList200JSONResponse) VisitKeywordSetsListResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -12583,14 +12576,7 @@ type KeywordSetsCreateResponseObject interface {
 	VisitKeywordSetsCreateResponse(w http.ResponseWriter) error
 }
 
-type KeywordSetsCreate201JSONResponse struct {
-	Data      *KeywordSetResponse `json:"data,omitempty"`
-	Metadata  *Metadata           `json:"metadata,omitempty"`
-	RequestId string              `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type KeywordSetsCreate201JSONResponse KeywordSetResponse
 
 func (response KeywordSetsCreate201JSONResponse) VisitKeywordSetsCreateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
