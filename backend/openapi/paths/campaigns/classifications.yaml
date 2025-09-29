@@ -16,11 +16,6 @@ get:
       description: OK
       content:
         application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/CampaignClassificationsResponse' }
+          schema: { $ref: '../../components/schemas/all.yaml#/CampaignClassificationsResponse' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

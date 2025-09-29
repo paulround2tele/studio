@@ -8,11 +8,7 @@ get:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    type: object
+            type: object
+            description: Direct performance summary payload (envelope removed)
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

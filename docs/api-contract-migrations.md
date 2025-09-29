@@ -32,3 +32,35 @@ Guardrail Metrics (approximate):
 
 ---
 Generated on: 2025-09-26
+
+### Phase C (Current PR)
+Date: 2025-09-29
+Scope: Campaign auxiliary read endpoints & bulk operations list
+
+Migrated endpoints (now direct payloads, no `success`/`data` envelope on 2xx):
+1. `GET /campaigns/{campaignId}/funnel` -> `CampaignFunnelResponse`
+2. `GET /campaigns/{campaignId}/classifications` -> `CampaignClassificationsResponse`
+3. `GET /campaigns/{campaignId}/momentum` -> `CampaignMomentumResponse`
+4. `GET /campaigns/{campaignId}/insights/recommendations` -> `CampaignRecommendationsResponse`
+5. `GET /campaigns/{campaignId}/status` -> `CampaignPhasesStatusResponse`
+6. `GET /campaigns/{campaignId}/progress` -> `CampaignProgressResponse`
+7. `GET /campaigns/bulk/operations` -> array of `{ operationId, type, status }`
+
+Implementation Notes:
+- Backend handlers refactored to return alias/object types directly (see `handlers_campaigns.go`, `handlers_bulk_operations_list.go`).
+- Bulk operations list path spec updated (`openapi/paths/campaigns/bulk.yaml`) removing SuccessEnvelope `allOf` usage.
+- Regenerated Go & TypeScript clients after spec changes.
+- Health & persona handlers adjusted to new response type shapes (Health direct body; persona config union helpers patched).
+
+Testing:
+- Added `backend/tests/contract_phase_c_campaigns_test.go` mirroring Phase B style (direct struct encoding) asserting absence of legacy envelope keys.
+- Phase C tests cover: funnel, classifications, momentum, recommendations, status, progress, bulk operations list, and a negative 404 case (still envelope for errors).
+
+Guardrail Snapshot (qualitative):
+- All targeted endpoints emit direct JSON; remaining `Success:` occurrences now isolated to non-migrated or error envelope contexts (monitoring, SSE, personas test placeholders, and error responses).
+
+Follow-ups:
+- Migrate remaining domains (monitoring, SSE) if included in future phases.
+- Reintroduce updated persona tests aligned with union config contract.
+
+Generated on: 2025-09-29

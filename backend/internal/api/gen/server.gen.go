@@ -2292,6 +2292,7 @@ func (t PersonaConfigDetails) AsPersonaConfigHttp() (PersonaConfigHttp, error) {
 
 // FromPersonaConfigHttp overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigHttp
 func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error {
+	v.PersonaType = "http"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -2299,6 +2300,7 @@ func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error 
 
 // MergePersonaConfigHttp performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigHttp
 func (t *PersonaConfigDetails) MergePersonaConfigHttp(v PersonaConfigHttp) error {
+	v.PersonaType = "http"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2318,6 +2320,7 @@ func (t PersonaConfigDetails) AsPersonaConfigDns() (PersonaConfigDns, error) {
 
 // FromPersonaConfigDns overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigDns
 func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
+	v.PersonaType = "dns"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -2325,6 +2328,7 @@ func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
 
 // MergePersonaConfigDns performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigDns
 func (t *PersonaConfigDetails) MergePersonaConfigDns(v PersonaConfigDns) error {
+	v.PersonaType = "dns"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -8592,17 +8596,10 @@ type CampaignsBulkOperationsListResponseObject interface {
 	VisitCampaignsBulkOperationsListResponse(w http.ResponseWriter) error
 }
 
-type CampaignsBulkOperationsList200JSONResponse struct {
-	Data *[]struct {
-		OperationId *openapi_types.UUID `json:"operationId,omitempty"`
-		Status      *string             `json:"status,omitempty"`
-		Type        *string             `json:"type,omitempty"`
-	} `json:"data,omitempty"`
-	Metadata  *Metadata `json:"metadata,omitempty"`
-	RequestId string    `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
+type CampaignsBulkOperationsList200JSONResponse []struct {
+	OperationId *openapi_types.UUID `json:"operationId,omitempty"`
+	Status      *string             `json:"status,omitempty"`
+	Type        *string             `json:"type,omitempty"`
 }
 
 func (response CampaignsBulkOperationsList200JSONResponse) VisitCampaignsBulkOperationsListResponse(w http.ResponseWriter) error {
@@ -9169,14 +9166,7 @@ type CampaignsClassificationsGetResponseObject interface {
 	VisitCampaignsClassificationsGetResponse(w http.ResponseWriter) error
 }
 
-type CampaignsClassificationsGet200JSONResponse struct {
-	Data      *CampaignClassificationsResponse `json:"data,omitempty"`
-	Metadata  *Metadata                        `json:"metadata,omitempty"`
-	RequestId string                           `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsClassificationsGet200JSONResponse CampaignClassificationsResponse
 
 func (response CampaignsClassificationsGet200JSONResponse) VisitCampaignsClassificationsGetResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -9495,14 +9485,7 @@ type CampaignsFunnelGetResponseObject interface {
 	VisitCampaignsFunnelGetResponse(w http.ResponseWriter) error
 }
 
-type CampaignsFunnelGet200JSONResponse struct {
-	Data      *CampaignFunnelResponse `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsFunnelGet200JSONResponse CampaignFunnelResponse
 
 func (response CampaignsFunnelGet200JSONResponse) VisitCampaignsFunnelGetResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -9539,14 +9522,7 @@ type CampaignsRecommendationsGetResponseObject interface {
 	VisitCampaignsRecommendationsGetResponse(w http.ResponseWriter) error
 }
 
-type CampaignsRecommendationsGet200JSONResponse struct {
-	Data      *CampaignRecommendationsResponse `json:"data,omitempty"`
-	Metadata  *Metadata                        `json:"metadata,omitempty"`
-	RequestId string                           `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsRecommendationsGet200JSONResponse CampaignRecommendationsResponse
 
 func (response CampaignsRecommendationsGet200JSONResponse) VisitCampaignsRecommendationsGetResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -9685,14 +9661,7 @@ type CampaignsMomentumGetResponseObject interface {
 	VisitCampaignsMomentumGetResponse(w http.ResponseWriter) error
 }
 
-type CampaignsMomentumGet200JSONResponse struct {
-	Data      *CampaignMomentumResponse `json:"data,omitempty"`
-	Metadata  *Metadata                 `json:"metadata,omitempty"`
-	RequestId string                    `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsMomentumGet200JSONResponse CampaignMomentumResponse
 
 func (response CampaignsMomentumGet200JSONResponse) VisitCampaignsMomentumGetResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -10172,14 +10141,7 @@ type CampaignsProgressResponseObject interface {
 	VisitCampaignsProgressResponse(w http.ResponseWriter) error
 }
 
-type CampaignsProgress200JSONResponse struct {
-	Data      *CampaignProgressResponse `json:"data,omitempty"`
-	Metadata  *Metadata                 `json:"metadata,omitempty"`
-	RequestId string                    `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsProgress200JSONResponse CampaignProgressResponse
 
 func (response CampaignsProgress200JSONResponse) VisitCampaignsProgressResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -10498,15 +10460,7 @@ type CampaignsStatusGetResponseObject interface {
 	VisitCampaignsStatusGetResponse(w http.ResponseWriter) error
 }
 
-type CampaignsStatusGet200JSONResponse struct {
-	// Data Consolidated phase status list plus overall progress
-	Data      *CampaignPhasesStatusResponse `json:"data,omitempty"`
-	Metadata  *Metadata                     `json:"metadata,omitempty"`
-	RequestId string                        `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsStatusGet200JSONResponse CampaignPhasesStatusResponse
 
 func (response CampaignsStatusGet200JSONResponse) VisitCampaignsStatusGetResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13307,14 +13261,7 @@ type MonitoringCleanupStatsResponseObject interface {
 	VisitMonitoringCleanupStatsResponse(w http.ResponseWriter) error
 }
 
-type MonitoringCleanupStats200JSONResponse struct {
-	Data      *map[string]interface{} `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type MonitoringCleanupStats200JSONResponse map[string]interface{}
 
 func (response MonitoringCleanupStats200JSONResponse) VisitMonitoringCleanupStatsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13350,14 +13297,7 @@ type MonitoringDashboardSummaryResponseObject interface {
 	VisitMonitoringDashboardSummaryResponse(w http.ResponseWriter) error
 }
 
-type MonitoringDashboardSummary200JSONResponse struct {
-	Data      *map[string]interface{} `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type MonitoringDashboardSummary200JSONResponse map[string]interface{}
 
 func (response MonitoringDashboardSummary200JSONResponse) VisitMonitoringDashboardSummaryResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13479,14 +13419,7 @@ type MonitoringPerformanceActiveResponseObject interface {
 	VisitMonitoringPerformanceActiveResponse(w http.ResponseWriter) error
 }
 
-type MonitoringPerformanceActive200JSONResponse struct {
-	Data      *map[string]interface{} `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type MonitoringPerformanceActive200JSONResponse map[string]interface{}
 
 func (response MonitoringPerformanceActive200JSONResponse) VisitMonitoringPerformanceActiveResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13651,14 +13584,7 @@ type MonitoringPerformanceSummaryResponseObject interface {
 	VisitMonitoringPerformanceSummaryResponse(w http.ResponseWriter) error
 }
 
-type MonitoringPerformanceSummary200JSONResponse struct {
-	Data      *map[string]interface{} `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type MonitoringPerformanceSummary200JSONResponse map[string]interface{}
 
 func (response MonitoringPerformanceSummary200JSONResponse) VisitMonitoringPerformanceSummaryResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")

@@ -26,11 +26,6 @@ func (h *strictHandlers) CampaignsBulkOperationsList(ctx context.Context, r gen.
 			}{OperationId: &id, Status: &st, Type: &typ})
 		}
 	}
-	return gen.CampaignsBulkOperationsList200JSONResponse{
-		Data:      &ops,
-		Metadata:  okMeta(),
-		RequestId: reqID(),
-		Success:   boolPtr(true),
-	}, nil
+	return gen.CampaignsBulkOperationsList200JSONResponse(ops), nil
 }
 func strPtr(s string) *string { return &s }
