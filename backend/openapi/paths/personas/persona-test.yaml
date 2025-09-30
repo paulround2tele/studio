@@ -14,13 +14,7 @@ post:
       description: Test result
       content:
         application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    $ref: '../../components/schemas/all.yaml#/PersonaTestResponse'
+          schema: { $ref: '../../components/schemas/all.yaml#/PersonaTestResponse' }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }

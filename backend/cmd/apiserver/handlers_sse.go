@@ -90,9 +90,10 @@ func (h *strictHandlers) SseEventsStats(ctx context.Context, r gen.SseEventsStat
 	active := h.deps.SSE.GetClientCount()
 	total := h.deps.SSE.GetTotalEvents()
 	up := h.deps.SSE.GetUptime().Round(time.Second).String()
-	return gen.SseEventsStats200JSONResponse{Data: &struct {
+	stats := struct {
 		ActiveConnections *int    `json:"activeConnections,omitempty"`
 		TotalEventsSent   *int    `json:"totalEventsSent,omitempty"`
 		Uptime            *string `json:"uptime,omitempty"`
-	}{ActiveConnections: &active, TotalEventsSent: &total, Uptime: &up}, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	}{ActiveConnections: &active, TotalEventsSent: &total, Uptime: &up}
+	return gen.SseEventsStats200JSONResponse(stats), nil
 }

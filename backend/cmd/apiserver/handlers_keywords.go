@@ -161,7 +161,7 @@ func (h *strictHandlers) KeywordExtractBatch(ctx context.Context, r gen.KeywordE
 	}
 
 	data := gen.BatchKeywordExtractionResponse{Results: &results}
-	resp := gen.KeywordExtractBatch200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}
+	resp := gen.KeywordExtractBatch200JSONResponse(data)
 	return resp, nil
 }
 
@@ -322,7 +322,7 @@ func (h *strictHandlers) KeywordRulesQuery(ctx context.Context, r gen.KeywordRul
 			UpdatedAt:    &rr.UpdatedAt,
 		})
 	}
-	resp := gen.KeywordRulesQuery200JSONResponse{Data: &dtos, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}
+	resp := gen.KeywordRulesQuery200JSONResponse(dtos)
 	return resp, nil
 }
 

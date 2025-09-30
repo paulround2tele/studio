@@ -15,11 +15,8 @@ post:
       application/json:
         schema: { $ref: '../../components/schemas/all.yaml#/RescoreCampaignRequest' }
   responses:
-    '200':
+    '204':
       description: Rescore initiated
-      content:
-        application/json:
-          schema: { $ref: '../../components/schemas/all.yaml#/SuccessEnvelope' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }

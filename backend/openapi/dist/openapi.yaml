@@ -215,22 +215,17 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          activeConnections:
-                            type: integer
-                            description: Number of active SSE connections
-                          totalEventsSent:
-                            type: integer
-                            description: Total events sent since server start
-                          uptime:
-                            type: string
-                            description: Server uptime
+                type: object
+                properties:
+                  activeConnections:
+                    type: integer
+                    description: Number of active SSE connections
+                  totalEventsSent:
+                    type: integer
+                    description: Total events sent since server start
+                  uptime:
+                    type: string
+                    description: Server uptime
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -391,12 +386,8 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        '204':
           description: Deleted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PersonaDeleteResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -430,12 +421,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/PersonaTestResponse'
+                $ref: '#/components/schemas/PersonaTestResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -535,14 +521,9 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/ProxyDetailsResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProxyDetailsResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -570,12 +551,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyDetailsResponse'
+                $ref: '#/components/schemas/ProxyDetailsResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -617,12 +593,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyDetailsResponse'
+                $ref: '#/components/schemas/ProxyDetailsResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -648,12 +619,8 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        '204':
           description: Deleted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessEnvelope'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -683,12 +650,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyTestResponse'
+                $ref: '#/components/schemas/ProxyTestResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -717,14 +679,9 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/ProxyStatusResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProxyStatusResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -754,12 +711,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyHealthCheckResponse'
+                $ref: '#/components/schemas/ProxyHealthCheckResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -792,12 +744,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkHealthCheckResponse'
+                $ref: '#/components/schemas/BulkHealthCheckResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -822,12 +769,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkProxyOperationResponse'
+                $ref: '#/components/schemas/BulkProxyOperationResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -847,17 +789,8 @@ paths:
             schema:
               $ref: '#/components/schemas/BulkDeleteProxiesRequest'
       responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkProxyOperationResponse'
+        '204':
+          description: Deleted
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -890,12 +823,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkProxyTestResponse'
+                $ref: '#/components/schemas/BulkProxyTestResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -1372,14 +1300,9 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/KeywordRuleDTO'
+                type: array
+                items:
+                  $ref: '#/components/schemas/KeywordRuleDTO'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1410,12 +1333,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkDatabaseQueryResponse'
+                $ref: '#/components/schemas/BulkDatabaseQueryResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1451,12 +1369,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkDatabaseStatsResponse'
+                $ref: '#/components/schemas/BulkDatabaseStatsResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1489,12 +1402,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BatchKeywordExtractionResponse'
+                $ref: '#/components/schemas/BatchKeywordExtractionResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -4442,12 +4350,8 @@ paths:
             schema:
               $ref: '#/components/schemas/AssociateScoringProfileRequest'
       responses:
-        '200':
+        '204':
           description: Associated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessEnvelope'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -4482,12 +4386,8 @@ paths:
             schema:
               $ref: '#/components/schemas/RescoreCampaignRequest'
       responses:
-        '200':
+        '204':
           description: Rescore initiated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessEnvelope'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -4760,83 +4660,6 @@ components:
           type: string
       required:
         - message
-    Pagination:
-      type: object
-      properties:
-        current:
-          type: integer
-        total:
-          type: integer
-        pageSize:
-          type: integer
-        count:
-          type: integer
-    RateLimitInfo:
-      type: object
-      properties:
-        limit:
-          type: integer
-        remaining:
-          type: integer
-        reset:
-          type: string
-          format: date-time
-    ProcessingInfo:
-      type: object
-      properties:
-        duration:
-          type: string
-        version:
-          type: string
-    BulkOperationInfo:
-      type: object
-      properties:
-        processedItems:
-          type: integer
-        skippedItems:
-          type: integer
-        failedItems:
-          type: array
-          items:
-            type: string
-        processingTimeMs:
-          type: integer
-          format: int64
-        totalRowsReturned:
-          type: integer
-          format: int64
-        type:
-          type: string
-    Metadata:
-      type: object
-      properties:
-        page:
-          $ref: '#/components/schemas/Pagination'
-        rateLimit:
-          $ref: '#/components/schemas/RateLimitInfo'
-        processing:
-          $ref: '#/components/schemas/ProcessingInfo'
-        bulk:
-          $ref: '#/components/schemas/BulkOperationInfo'
-        extra:
-          type: object
-          additionalProperties: {}
-    SuccessEnvelope:
-      type: object
-      properties:
-        success:
-          type: boolean
-          description: Always true for success envelopes.
-          default: true
-          example: true
-          readOnly: true
-        metadata:
-          $ref: '#/components/schemas/Metadata'
-        requestId:
-          type: string
-      required:
-        - success
-        - requestId
     PersonaType:
       type: string
       enum:
@@ -5049,19 +4872,6 @@ components:
           $ref: '#/components/schemas/PersonaConfigDetails'
         isEnabled:
           type: boolean
-    PersonaDeleteResponse:
-      type: object
-      properties:
-        personaId:
-          type: string
-          format: uuid
-        deleted:
-          type: boolean
-        message:
-          type: string
-      required:
-        - personaId
-        - deleted
     PersonaTestResponse:
       type: object
       properties:
@@ -5277,6 +5087,83 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ProxyTestResponse'
+    Pagination:
+      type: object
+      properties:
+        current:
+          type: integer
+        total:
+          type: integer
+        pageSize:
+          type: integer
+        count:
+          type: integer
+    RateLimitInfo:
+      type: object
+      properties:
+        limit:
+          type: integer
+        remaining:
+          type: integer
+        reset:
+          type: string
+          format: date-time
+    ProcessingInfo:
+      type: object
+      properties:
+        duration:
+          type: string
+        version:
+          type: string
+    BulkOperationInfo:
+      type: object
+      properties:
+        processedItems:
+          type: integer
+        skippedItems:
+          type: integer
+        failedItems:
+          type: array
+          items:
+            type: string
+        processingTimeMs:
+          type: integer
+          format: int64
+        totalRowsReturned:
+          type: integer
+          format: int64
+        type:
+          type: string
+    Metadata:
+      type: object
+      properties:
+        page:
+          $ref: '#/components/schemas/Pagination'
+        rateLimit:
+          $ref: '#/components/schemas/RateLimitInfo'
+        processing:
+          $ref: '#/components/schemas/ProcessingInfo'
+        bulk:
+          $ref: '#/components/schemas/BulkOperationInfo'
+        extra:
+          type: object
+          additionalProperties: {}
+    SuccessEnvelope:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Always true for success envelopes.
+          default: true
+          example: true
+          readOnly: true
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+        requestId:
+          type: string
+      required:
+        - success
+        - requestId
     ProxyPool:
       type: object
       properties:
@@ -7542,6 +7429,19 @@ components:
     RescoreCampaignRequest:
       type: object
       description: Optional body for future rescore parameters (currently unused)
+    PersonaDeleteResponse:
+      type: object
+      properties:
+        personaId:
+          type: string
+          format: uuid
+        deleted:
+          type: boolean
+        message:
+          type: string
+      required:
+        - personaId
+        - deleted
     KeywordSetWithRulesResponse:
       type: object
       properties:

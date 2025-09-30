@@ -157,7 +157,7 @@ func (h *strictHandlers) DbBulkQuery(ctx context.Context, r gen.DbBulkQueryReque
 	}
 
 	totalCount := totalRows
-	resp := gen.DbBulkQuery200JSONResponse{Data: &gen.BulkDatabaseQueryResponse{Results: &results, TotalCount: &totalCount}, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}
+	resp := gen.DbBulkQuery200JSONResponse(gen.BulkDatabaseQueryResponse{Results: &results, TotalCount: &totalCount})
 	return resp, nil
 }
 
@@ -170,7 +170,7 @@ func (h *strictHandlers) DbBulkStats(ctx context.Context, r gen.DbBulkStatsReque
 	}
 	if r.Body == nil {
 		empty := gen.BulkDatabaseStatsResponse{}
-		return gen.DbBulkStats200JSONResponse{Data: &empty, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+		return gen.DbBulkStats200JSONResponse(empty), nil
 	}
 
 	qctx, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -304,6 +304,6 @@ func (h *strictHandlers) DbBulkStats(ctx context.Context, r gen.DbBulkStatsReque
 		totalCount += len(schemaStats)
 	}
 
-	resp := gen.DbBulkStats200JSONResponse{Data: &gen.BulkDatabaseStatsResponse{DatabaseStats: dbStats, SchemaStats: &schemaStats, TableStats: &tableStats, TotalCount: &totalCount}, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}
+	resp := gen.DbBulkStats200JSONResponse(gen.BulkDatabaseStatsResponse{DatabaseStats: dbStats, SchemaStats: &schemaStats, TableStats: &tableStats, TotalCount: &totalCount})
 	return resp, nil
 }

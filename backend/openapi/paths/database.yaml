@@ -17,13 +17,7 @@
 					description: OK
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												$ref: '#/components/schemas/BulkDatabaseQueryResponse'
+          schema: { $ref: '#/components/schemas/BulkDatabaseQueryResponse' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
@@ -50,13 +44,7 @@
 					description: OK
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												$ref: '#/components/schemas/BulkDatabaseStatsResponse'
+          schema: { $ref: '#/components/schemas/BulkDatabaseStatsResponse' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
