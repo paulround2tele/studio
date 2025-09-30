@@ -268,7 +268,7 @@ func (h *strictHandlers) CampaignsScoringProfileAssociate(ctx context.Context, r
 	} else {
 		return gen.CampaignsScoringProfileAssociate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "associate not supported", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	return gen.CampaignsScoringProfileAssociate200JSONResponse{Success: boolPtr(true), RequestId: reqID(), Metadata: okMeta()}, nil
+	return gen.CampaignsScoringProfileAssociate204Response{}, nil
 }
 
 func (h *strictHandlers) CampaignsRescore(ctx context.Context, r gen.CampaignsRescoreRequestObject) (gen.CampaignsRescoreResponseObject, error) {
@@ -277,5 +277,5 @@ func (h *strictHandlers) CampaignsRescore(ctx context.Context, r gen.CampaignsRe
 	}
 	campaignID := uuid.UUID(r.CampaignId)
 	go func(id uuid.UUID) { _ = h.deps.Orchestrator.RescoreCampaign(context.Background(), id) }(campaignID)
-	return gen.CampaignsRescore200JSONResponse{Success: boolPtr(true), RequestId: reqID(), Metadata: okMeta()}, nil
+	return gen.CampaignsRescore204Response{}, nil
 }

@@ -2303,8 +2303,7 @@ func (t PersonaConfigDetails) AsPersonaConfigHttp() (PersonaConfigHttp, error) {
 
 // FromPersonaConfigHttp overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigHttp
 func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error {
-	httpType := PersonaConfigHttpPersonaType("http")
-	v.PersonaType = &httpType
+	httpType := PersonaConfigHttpPersonaType("http"); v.PersonaType = &httpType
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -2312,8 +2311,7 @@ func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error 
 
 // MergePersonaConfigHttp performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigHttp
 func (t *PersonaConfigDetails) MergePersonaConfigHttp(v PersonaConfigHttp) error {
-	httpType := PersonaConfigHttpPersonaType("http")
-	v.PersonaType = &httpType
+	httpType := PersonaConfigHttpPersonaType("http"); v.PersonaType = &httpType
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2333,8 +2331,7 @@ func (t PersonaConfigDetails) AsPersonaConfigDns() (PersonaConfigDns, error) {
 
 // FromPersonaConfigDns overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigDns
 func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
-	dnsType := PersonaConfigDnsPersonaType("dns")
-	v.PersonaType = &dnsType
+	dnsType := PersonaConfigDnsPersonaType("dns"); v.PersonaType = &dnsType
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -2342,8 +2339,7 @@ func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
 
 // MergePersonaConfigDns performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigDns
 func (t *PersonaConfigDetails) MergePersonaConfigDns(v PersonaConfigDns) error {
-	dnsType := PersonaConfigDnsPersonaType("dns")
-	v.PersonaType = &dnsType
+	dnsType := PersonaConfigDnsPersonaType("dns"); v.PersonaType = &dnsType
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -10203,13 +10199,12 @@ type CampaignsRescoreResponseObject interface {
 	VisitCampaignsRescoreResponse(w http.ResponseWriter) error
 }
 
-type CampaignsRescore200JSONResponse SuccessEnvelope
+type CampaignsRescore204Response struct {
+}
 
-func (response CampaignsRescore200JSONResponse) VisitCampaignsRescoreResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
+func (response CampaignsRescore204Response) VisitCampaignsRescoreResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
 }
 
 type CampaignsRescore401JSONResponse struct{ UnauthorizedJSONResponse }
@@ -10268,13 +10263,12 @@ type CampaignsScoringProfileAssociateResponseObject interface {
 	VisitCampaignsScoringProfileAssociateResponse(w http.ResponseWriter) error
 }
 
-type CampaignsScoringProfileAssociate200JSONResponse SuccessEnvelope
+type CampaignsScoringProfileAssociate204Response struct {
+}
 
-func (response CampaignsScoringProfileAssociate200JSONResponse) VisitCampaignsScoringProfileAssociateResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
+func (response CampaignsScoringProfileAssociate204Response) VisitCampaignsScoringProfileAssociateResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
 }
 
 type CampaignsScoringProfileAssociate400JSONResponse struct{ BadRequestJSONResponse }
@@ -11951,14 +11945,7 @@ type DbBulkQueryResponseObject interface {
 	VisitDbBulkQueryResponse(w http.ResponseWriter) error
 }
 
-type DbBulkQuery200JSONResponse struct {
-	Data      *BulkDatabaseQueryResponse `json:"data,omitempty"`
-	Metadata  *Metadata                  `json:"metadata,omitempty"`
-	RequestId string                     `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type DbBulkQuery200JSONResponse BulkDatabaseQueryResponse
 
 func (response DbBulkQuery200JSONResponse) VisitDbBulkQueryResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -12033,14 +12020,7 @@ type DbBulkStatsResponseObject interface {
 	VisitDbBulkStatsResponse(w http.ResponseWriter) error
 }
 
-type DbBulkStats200JSONResponse struct {
-	Data      *BulkDatabaseStatsResponse `json:"data,omitempty"`
-	Metadata  *Metadata                  `json:"metadata,omitempty"`
-	RequestId string                     `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type DbBulkStats200JSONResponse BulkDatabaseStatsResponse
 
 func (response DbBulkStats200JSONResponse) VisitDbBulkStatsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -12114,14 +12094,7 @@ type KeywordExtractBatchResponseObject interface {
 	VisitKeywordExtractBatchResponse(w http.ResponseWriter) error
 }
 
-type KeywordExtractBatch200JSONResponse struct {
-	Data      *BatchKeywordExtractionResponse `json:"data,omitempty"`
-	Metadata  *Metadata                       `json:"metadata,omitempty"`
-	RequestId string                          `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type KeywordExtractBatch200JSONResponse BatchKeywordExtractionResponse
 
 func (response KeywordExtractBatch200JSONResponse) VisitKeywordExtractBatchResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -12450,14 +12423,7 @@ type KeywordRulesQueryResponseObject interface {
 	VisitKeywordRulesQueryResponse(w http.ResponseWriter) error
 }
 
-type KeywordRulesQuery200JSONResponse struct {
-	Data      *[]KeywordRuleDTO `json:"data,omitempty"`
-	Metadata  *Metadata         `json:"metadata,omitempty"`
-	RequestId string            `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type KeywordRulesQuery200JSONResponse []KeywordRuleDTO
 
 func (response KeywordRulesQuery200JSONResponse) VisitKeywordRulesQueryResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -15790,21 +15756,14 @@ type SseEventsStatsResponseObject interface {
 }
 
 type SseEventsStats200JSONResponse struct {
-	Data *struct {
-		// ActiveConnections Number of active SSE connections
-		ActiveConnections *int `json:"activeConnections,omitempty"`
+	// ActiveConnections Number of active SSE connections
+	ActiveConnections *int `json:"activeConnections,omitempty"`
 
-		// TotalEventsSent Total events sent since server start
-		TotalEventsSent *int `json:"totalEventsSent,omitempty"`
+	// TotalEventsSent Total events sent since server start
+	TotalEventsSent *int `json:"totalEventsSent,omitempty"`
 
-		// Uptime Server uptime
-		Uptime *string `json:"uptime,omitempty"`
-	} `json:"data,omitempty"`
-	Metadata  *Metadata `json:"metadata,omitempty"`
-	RequestId string    `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
+	// Uptime Server uptime
+	Uptime *string `json:"uptime,omitempty"`
 }
 
 func (response SseEventsStats200JSONResponse) VisitSseEventsStatsResponse(w http.ResponseWriter) error {

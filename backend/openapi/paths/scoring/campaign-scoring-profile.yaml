@@ -15,11 +15,8 @@ post:
       application/json:
         schema: { $ref: '../../components/schemas/all.yaml#/AssociateScoringProfileRequest' }
   responses:
-    '200':
+    '204':
       description: Associated
-      content:
-        application/json:
-          schema: { $ref: '../../components/schemas/all.yaml#/SuccessEnvelope' }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }

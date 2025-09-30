@@ -456,6 +456,197 @@ func TestPersonasDelete_NoContent(t *testing.T) {
 	}
 }
 
+// Database endpoints tests
+
+// TestDbBulkQuery_DirectObject verifies database bulk query returns direct object (no envelope)
+func TestDbBulkQuery_DirectObject(t *testing.T) {
+	totalCount := 2
+	sampleData := gen.BulkDatabaseQueryResponse{
+		TotalCount: &totalCount,
+	}
+	resp := gen.DbBulkQuery200JSONResponse(sampleData)
+	rr := httptest.NewRecorder()
+	if err := resp.VisitDbBulkQueryResponse(rr); err != nil {
+		t.Fatalf("encode: %v", err)
+	}
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200 got %d", rr.Code)
+	}
+	var raw map[string]any
+	if err := json.Unmarshal(rr.Body.Bytes(), &raw); err != nil {
+		t.Fatalf("json decode: %v", err)
+	}
+	if _, ok := raw["success"]; ok {
+		t.Fatalf("found legacy success key")
+	}
+	if _, ok := raw["data"]; ok {
+		t.Fatalf("found legacy data key")
+	}
+	if raw["totalCount"] != float64(2) {
+		t.Fatalf("expected direct totalCount field got %+v", raw)
+	}
+}
+
+// TestDbBulkStats_DirectObject verifies database bulk stats returns direct object (no envelope)
+func TestDbBulkStats_DirectObject(t *testing.T) {
+	totalCount := 10
+	sampleData := gen.BulkDatabaseStatsResponse{
+		TotalCount: &totalCount,
+	}
+	resp := gen.DbBulkStats200JSONResponse(sampleData)
+	rr := httptest.NewRecorder()
+	if err := resp.VisitDbBulkStatsResponse(rr); err != nil {
+		t.Fatalf("encode: %v", err)
+	}
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200 got %d", rr.Code)
+	}
+	var raw map[string]any
+	if err := json.Unmarshal(rr.Body.Bytes(), &raw); err != nil {
+		t.Fatalf("json decode: %v", err)
+	}
+	if _, ok := raw["success"]; ok {
+		t.Fatalf("found legacy success key")
+	}
+	if _, ok := raw["data"]; ok {
+		t.Fatalf("found legacy data key")
+	}
+	if raw["totalCount"] != float64(10) {
+		t.Fatalf("expected direct totalCount field got %+v", raw)
+	}
+}
+
+// Campaign adjunct endpoints tests
+
+// TestCampaignsRescore_NoContent verifies campaign rescore returns 204 No Content
+func TestCampaignsRescore_NoContent(t *testing.T) {
+	resp := gen.CampaignsRescore204Response{}
+	rr := httptest.NewRecorder()
+	if err := resp.VisitCampaignsRescoreResponse(rr); err != nil {
+		t.Fatalf("encode: %v", err)
+	}
+	if rr.Code != http.StatusNoContent {
+		t.Fatalf("expected 204 got %d", rr.Code)
+	}
+	if rr.Body.Len() != 0 {
+		t.Fatalf("expected empty body for 204, got %s", rr.Body.String())
+	}
+}
+
+// TestCampaignsScoringProfileAssociate_NoContent verifies scoring profile association returns 204 No Content
+func TestCampaignsScoringProfileAssociate_NoContent(t *testing.T) {
+	resp := gen.CampaignsScoringProfileAssociate204Response{}
+	rr := httptest.NewRecorder()
+	if err := resp.VisitCampaignsScoringProfileAssociateResponse(rr); err != nil {
+		t.Fatalf("encode: %v", err)
+	}
+	if rr.Code != http.StatusNoContent {
+		t.Fatalf("expected 204 got %d", rr.Code)
+	}
+	if rr.Body.Len() != 0 {
+		t.Fatalf("expected empty body for 204, got %s", rr.Body.String())
+	}
+}
+
+// SSE endpoints tests
+
+// TestSseEventsStats_DirectObject verifies SSE stats returns direct object (no envelope)
+func TestSseEventsStats_DirectObject(t *testing.T) {
+	active := 5
+	total := 100
+	uptime := "2h30m15s"
+	sampleData := struct {
+		ActiveConnections *int    `json:"activeConnections,omitempty"`
+		TotalEventsSent   *int    `json:"totalEventsSent,omitempty"`
+		Uptime            *string `json:"uptime,omitempty"`
+	}{
+		ActiveConnections: &active,
+		TotalEventsSent:   &total,
+		Uptime:            &uptime,
+	}
+	resp := gen.SseEventsStats200JSONResponse(sampleData)
+	rr := httptest.NewRecorder()
+	if err := resp.VisitSseEventsStatsResponse(rr); err != nil {
+		t.Fatalf("encode: %v", err)
+	}
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200 got %d", rr.Code)
+	}
+	var raw map[string]any
+	if err := json.Unmarshal(rr.Body.Bytes(), &raw); err != nil {
+		t.Fatalf("json decode: %v", err)
+	} 
+	if _, ok := raw["success"]; ok {
+		t.Fatalf("found legacy success key")
+	}
+	if _, ok := raw["data"]; ok {
+		t.Fatalf("found legacy data key")
+	}
+	if raw["activeConnections"] != float64(5) {
+		t.Fatalf("expected direct activeConnections field got %+v", raw)
+	}
+}
+
+// Extraction endpoints tests
+
+// TestKeywordExtractBatch_DirectObject verifies keyword extraction batch returns direct object (no envelope)
+func TestKeywordExtractBatch_DirectObject(t *testing.T) {
+	// Use the generated response type constructor directly to test encoding
+	sampleData := gen.BatchKeywordExtractionResponse{}
+	resp := gen.KeywordExtractBatch200JSONResponse(sampleData)
+	rr := httptest.NewRecorder()
+	if err := resp.VisitKeywordExtractBatchResponse(rr); err != nil {
+		t.Fatalf("encode: %v", err)
+	}
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200 got %d", rr.Code)
+	}
+	var raw map[string]any
+	if err := json.Unmarshal(rr.Body.Bytes(), &raw); err != nil {
+		t.Fatalf("json decode: %v", err)
+	}
+	if _, ok := raw["success"]; ok {
+		t.Fatalf("found legacy success key")
+	}
+	if _, ok := raw["data"]; ok {
+		t.Fatalf("found legacy data key")
+	}
+	// The response should be a direct object with results field
+	if _, hasResults := raw["results"]; hasResults {
+		t.Logf("Response correctly has direct results field")
+	}
+}
+
+// Keyword rules endpoints tests
+
+// TestKeywordRulesQuery_DirectArray verifies keyword rules query returns direct array (no envelope)
+func TestKeywordRulesQuery_DirectArray(t *testing.T) {
+	sampleData := []gen.KeywordRuleDTO{
+		// Mock data structure - actual structure depends on KeywordRuleDTO schema
+	}
+	resp := gen.KeywordRulesQuery200JSONResponse(sampleData)
+	rr := httptest.NewRecorder()
+	if err := resp.VisitKeywordRulesQueryResponse(rr); err != nil {
+		t.Fatalf("encode: %v", err)
+	}
+	if rr.Code != http.StatusOK {
+		t.Fatalf("expected 200 got %d", rr.Code)
+	}
+	var raw []map[string]any
+	if err := json.Unmarshal(rr.Body.Bytes(), &raw); err != nil {
+		t.Fatalf("json decode: %v", err)
+	}
+	// Check that individual items don't have envelope fields
+	for i, item := range raw {
+		if _, ok := item["success"]; ok {
+			t.Fatalf("found legacy success key in item %d", i)
+		}
+		if _, ok := item["data"]; ok {
+			t.Fatalf("found legacy data key in item %d", i)
+		}
+	}
+}
+
 // Helper functions
 func stringPtr(s string) *string { return &s }
 func intPtr(i int) *int         { return &i }
