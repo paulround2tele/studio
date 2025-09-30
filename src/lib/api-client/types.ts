@@ -3148,15 +3148,6 @@ export interface components {
         };
         /** @description Optional body for future rescore parameters (currently unused) */
         RescoreCampaignRequest: Record<string, never>;
-        ProxyPoolMembershipResponse: {
-            /** Format: uuid */
-            poolId?: string;
-            /** Format: uuid */
-            proxyId?: string;
-            added?: boolean;
-            removed?: boolean;
-            message?: string;
-        };
         ProxyPoolDeleteResponse: {
             deleted?: boolean;
             /** Format: uuid */
