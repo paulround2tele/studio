@@ -15,14 +15,9 @@
 					description: List
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												type: array
-												items: { $ref: '#/components/schemas/PersonaResponse' }
+							schema:
+								type: array  
+								items: { $ref: '#/components/schemas/PersonaResponse' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }
@@ -43,13 +38,7 @@
 					description: Created
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												$ref: '#/components/schemas/PersonaResponse'
+							schema: { $ref: '#/components/schemas/PersonaResponse' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
@@ -73,13 +62,7 @@
 					description: Persona
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												$ref: '#/components/schemas/PersonaResponse'
+							schema: { $ref: '#/components/schemas/PersonaResponse' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'404': { $ref: '#/components/responses/NotFound' }
@@ -106,13 +89,7 @@
 					description: Updated
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												$ref: '#/components/schemas/PersonaResponse'
+							schema: { $ref: '#/components/schemas/PersonaResponse' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
@@ -133,17 +110,8 @@
 					required: true
 					schema: { type: string, format: uuid }
 			responses:
-				'200':
+				'204':
 					description: Deleted
-					content:
-						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												$ref: '#/components/schemas/PersonaDeleteResponse'
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'404': { $ref: '#/components/responses/NotFound' }
@@ -167,13 +135,7 @@
 					description: Test result
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												$ref: '#/components/schemas/PersonaTestResponse'
+							schema: { $ref: '#/components/schemas/PersonaTestResponse' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }

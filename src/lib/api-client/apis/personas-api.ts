@@ -26,13 +26,11 @@ import type { CreatePersonaRequest } from '../models';
 // @ts-ignore
 import type { ErrorEnvelope } from '../models';
 // @ts-ignore
-import type { PersonaDeleteResponse } from '../models';
-// @ts-ignore
 import type { PersonaResponse } from '../models';
 // @ts-ignore
-import type { PersonaType } from '../models';
+import type { PersonaTestResponse } from '../models';
 // @ts-ignore
-import type { PersonasTest200Response } from '../models';
+import type { PersonaType } from '../models';
 // @ts-ignore
 import type { UpdatePersonaRequest } from '../models';
 /**
@@ -383,7 +381,7 @@ export const PersonasApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async personasDelete(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonaDeleteResponse>> {
+        async personasDelete(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.personasDelete(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PersonasApi.personasDelete']?.[localVarOperationServerIndex]?.url;
@@ -451,7 +449,7 @@ export const PersonasApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async personasTest(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonasTest200Response>> {
+        async personasTest(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<PersonaTestResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.personasTest(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['PersonasApi.personasTest']?.[localVarOperationServerIndex]?.url;
@@ -498,7 +496,7 @@ export const PersonasApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        personasDelete(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonaDeleteResponse> {
+        personasDelete(id: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.personasDelete(id, options).then((request) => request(axios, basePath));
         },
         /**
@@ -551,7 +549,7 @@ export const PersonasApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        personasTest(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonasTest200Response> {
+        personasTest(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonaTestResponse> {
             return localVarFp.personasTest(id, options).then((request) => request(axios, basePath));
         },
         /**
@@ -592,7 +590,7 @@ export interface PersonasApiInterface {
      * @throws {RequiredError}
      * @memberof PersonasApiInterface
      */
-    personasDelete(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonaDeleteResponse>;
+    personasDelete(id: string, options?: RawAxiosRequestConfig): AxiosPromise<void>;
 
     /**
      * 
@@ -645,7 +643,7 @@ export interface PersonasApiInterface {
      * @throws {RequiredError}
      * @memberof PersonasApiInterface
      */
-    personasTest(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonasTest200Response>;
+    personasTest(id: string, options?: RawAxiosRequestConfig): AxiosPromise<PersonaTestResponse>;
 
     /**
      * 

@@ -204,7 +204,6 @@ docs/PersonaResponse.md
 docs/PersonaTestResponse.md
 docs/PersonaType.md
 docs/PersonasApi.md
-docs/PersonasTest200Response.md
 docs/PhaseConfigurationRequest.md
 docs/PhaseConfigurationRequestPersonaIds.md
 docs/PhaseExecution.md
@@ -447,7 +446,6 @@ models/persona-delete-response.ts
 models/persona-response.ts
 models/persona-test-response.ts
 models/persona-type.ts
-models/personas-test200-response.ts
 models/phase-configuration-request-persona-ids.ts
 models/phase-configuration-request.ts
 models/phase-execution-update.ts

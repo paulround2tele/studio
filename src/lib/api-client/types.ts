@@ -1985,12 +1985,6 @@ export interface components {
             configDetails?: components["schemas"]["PersonaConfigDetails"];
             isEnabled?: boolean;
         };
-        PersonaDeleteResponse: {
-            /** Format: uuid */
-            personaId: string;
-            deleted: boolean;
-            message?: string;
-        };
         PersonaTestResponse: {
             personaId?: string;
             personaType?: string;
@@ -3169,6 +3163,12 @@ export interface components {
         };
         /** @description Optional body for future rescore parameters (currently unused) */
         RescoreCampaignRequest: Record<string, never>;
+        PersonaDeleteResponse: {
+            /** Format: uuid */
+            personaId: string;
+            deleted: boolean;
+            message?: string;
+        };
         KeywordSetWithRulesResponse: {
             /** Format: uuid */
             id: string;
@@ -3654,13 +3654,11 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Deleted */
-            200: {
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["PersonaDeleteResponse"];
-                };
+                content?: never;
             };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
@@ -3687,9 +3685,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["PersonaTestResponse"];
-                    };
+                    "application/json": components["schemas"]["PersonaTestResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];

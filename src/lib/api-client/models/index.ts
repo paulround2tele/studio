@@ -173,7 +173,6 @@ export * from './persona-delete-response';
 export * from './persona-response';
 export * from './persona-test-response';
 export * from './persona-type';
-export * from './personas-test200-response';
 export * from './phase-configuration-request';
 export * from './phase-configuration-request-persona-ids';
 export * from './phase-execution';

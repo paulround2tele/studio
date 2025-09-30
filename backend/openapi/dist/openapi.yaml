@@ -391,12 +391,8 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        '204':
           description: Deleted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PersonaDeleteResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -430,12 +426,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/PersonaTestResponse'
+                $ref: '#/components/schemas/PersonaTestResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -5049,19 +5040,6 @@ components:
           $ref: '#/components/schemas/PersonaConfigDetails'
         isEnabled:
           type: boolean
-    PersonaDeleteResponse:
-      type: object
-      properties:
-        personaId:
-          type: string
-          format: uuid
-        deleted:
-          type: boolean
-        message:
-          type: string
-      required:
-        - personaId
-        - deleted
     PersonaTestResponse:
       type: object
       properties:
@@ -7542,6 +7520,19 @@ components:
     RescoreCampaignRequest:
       type: object
       description: Optional body for future rescore parameters (currently unused)
+    PersonaDeleteResponse:
+      type: object
+      properties:
+        personaId:
+          type: string
+          format: uuid
+        deleted:
+          type: boolean
+        message:
+          type: string
+      required:
+        - personaId
+        - deleted
     KeywordSetWithRulesResponse:
       type: object
       properties:
