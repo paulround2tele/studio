@@ -151,8 +151,6 @@ docs/DNSValidatorConfigJSON.md
 docs/DatabaseApi.md
 docs/DatabaseStats.md
 docs/DatabaseValue.md
-docs/DbBulkQuery200Response.md
-docs/DbBulkStats200Response.md
 docs/DomainAnalysisFeatures.md
 docs/DomainAnalysisFeaturesKeywords.md
 docs/DomainAnalysisFeaturesMicrocrawl.md
@@ -173,7 +171,6 @@ docs/GetBulkResourceStatus200ResponseAllOfData.md
 docs/HTTPValidatorConfigJSON.md
 docs/HealthApi.md
 docs/HealthResponse.md
-docs/KeywordExtractBatch200Response.md
 docs/KeywordExtractionApi.md
 docs/KeywordRuleDTO.md
 docs/KeywordRuleRequest.md
@@ -182,8 +179,6 @@ docs/KeywordRulesApi.md
 docs/KeywordSetResponse.md
 docs/KeywordSetWithRulesResponse.md
 docs/KeywordSetsApi.md
-docs/KeywordSetsGet200Response.md
-docs/KeywordSetsRulesList200Response.md
 docs/LoggingConfig.md
 docs/LoginRequest.md
 docs/Metadata.md
@@ -385,8 +380,6 @@ models/create-proxy-request-api.ts
 models/create-scoring-profile-request.ts
 models/database-stats.ts
 models/database-value.ts
-models/db-bulk-query200-response.ts
-models/db-bulk-stats200-response.ts
 models/dnsvalidator-config-json.ts
 models/domain-analysis-features-keywords.ts
 models/domain-analysis-features-microcrawl.ts
@@ -407,14 +400,11 @@ models/get-bulk-resource-status200-response.ts
 models/health-response.ts
 models/httpvalidator-config-json.ts
 models/index.ts
-models/keyword-extract-batch200-response.ts
 models/keyword-rule-dto.ts
 models/keyword-rule-request.ts
 models/keyword-rule-type.ts
 models/keyword-set-response.ts
 models/keyword-set-with-rules-response.ts
-models/keyword-sets-get200-response.ts
-models/keyword-sets-rules-list200-response.ts
 models/logging-config.ts
 models/login-request.ts
 models/metadata.ts

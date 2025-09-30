@@ -4296,9 +4296,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["KeywordSetResponse"];
-                    };
+                    "application/json": components["schemas"]["KeywordSetResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -4329,9 +4327,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["KeywordSetResponse"];
-                    };
+                    "application/json": components["schemas"]["KeywordSetResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -4385,9 +4381,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["KeywordRuleDTO"][];
-                    };
+                    "application/json": components["schemas"]["KeywordRuleDTO"][];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -4420,9 +4414,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["KeywordRuleDTO"][];
-                    };
+                    "application/json": components["schemas"]["KeywordRuleDTO"][];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -4453,9 +4445,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["BulkDatabaseQueryResponse"];
-                    };
+                    "application/json": components["schemas"]["BulkDatabaseQueryResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -4488,9 +4478,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["BulkDatabaseStatsResponse"];
-                    };
+                    "application/json": components["schemas"]["BulkDatabaseStatsResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -4520,9 +4508,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["BatchKeywordExtractionResponse"];
-                    };
+                    "application/json": components["schemas"]["BatchKeywordExtractionResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];

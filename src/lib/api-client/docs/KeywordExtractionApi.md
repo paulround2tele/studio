@@ -8,7 +8,7 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**keywordExtractStream**](#keywordextractstream) | **GET** /extract/keywords/stream | Stream keyword extraction|
 
 # **keywordExtractBatch**
-> KeywordExtractBatch200Response keywordExtractBatch(batchKeywordExtractionRequest)
+> BatchKeywordExtractionResponse keywordExtractBatch(batchKeywordExtractionRequest)
 
 
 ### Example
@@ -39,7 +39,7 @@ const { status, data } = await apiInstance.keywordExtractBatch(
 
 ### Return type
 
-**KeywordExtractBatch200Response**
+**BatchKeywordExtractionResponse**
 
 ### Authorization
 

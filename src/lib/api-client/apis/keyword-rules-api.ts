@@ -24,9 +24,9 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 // @ts-ignore
 import type { ErrorEnvelope } from '../models';
 // @ts-ignore
-import type { KeywordRuleType } from '../models';
+import type { KeywordRuleDTO } from '../models';
 // @ts-ignore
-import type { KeywordSetsRulesList200Response } from '../models';
+import type { KeywordRuleType } from '../models';
 /**
  * KeywordRulesApi - axios parameter creator
  * @export
@@ -123,7 +123,7 @@ export const KeywordRulesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async keywordRulesQuery(limit?: number, offset?: number, keywordSetId?: string, ruleType?: KeywordRuleType, category?: string, isCaseSensitive?: boolean, pattern?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<KeywordSetsRulesList200Response>> {
+        async keywordRulesQuery(limit?: number, offset?: number, keywordSetId?: string, ruleType?: KeywordRuleType, category?: string, isCaseSensitive?: boolean, pattern?: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<KeywordRuleDTO>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.keywordRulesQuery(limit, offset, keywordSetId, ruleType, category, isCaseSensitive, pattern, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KeywordRulesApi.keywordRulesQuery']?.[localVarOperationServerIndex]?.url;
@@ -152,7 +152,7 @@ export const KeywordRulesApiFactory = function (configuration?: Configuration, b
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        keywordRulesQuery(limit?: number, offset?: number, keywordSetId?: string, ruleType?: KeywordRuleType, category?: string, isCaseSensitive?: boolean, pattern?: string, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetsRulesList200Response> {
+        keywordRulesQuery(limit?: number, offset?: number, keywordSetId?: string, ruleType?: KeywordRuleType, category?: string, isCaseSensitive?: boolean, pattern?: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<KeywordRuleDTO>> {
             return localVarFp.keywordRulesQuery(limit, offset, keywordSetId, ruleType, category, isCaseSensitive, pattern, options).then((request) => request(axios, basePath));
         },
     };
@@ -178,7 +178,7 @@ export interface KeywordRulesApiInterface {
      * @throws {RequiredError}
      * @memberof KeywordRulesApiInterface
      */
-    keywordRulesQuery(limit?: number, offset?: number, keywordSetId?: string, ruleType?: KeywordRuleType, category?: string, isCaseSensitive?: boolean, pattern?: string, options?: RawAxiosRequestConfig): AxiosPromise<KeywordSetsRulesList200Response>;
+    keywordRulesQuery(limit?: number, offset?: number, keywordSetId?: string, ruleType?: KeywordRuleType, category?: string, isCaseSensitive?: boolean, pattern?: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<KeywordRuleDTO>>;
 
 }
 

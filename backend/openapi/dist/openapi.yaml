@@ -1093,12 +1093,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/KeywordSetResponse'
+                $ref: '#/components/schemas/KeywordSetResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1135,12 +1130,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/KeywordSetResponse'
+                $ref: '#/components/schemas/KeywordSetResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1203,14 +1193,9 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/KeywordRuleDTO'
+                type: array
+                items:
+                  $ref: '#/components/schemas/KeywordRuleDTO'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1267,14 +1252,9 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/KeywordRuleDTO'
+                type: array
+                items:
+                  $ref: '#/components/schemas/KeywordRuleDTO'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1305,12 +1285,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkDatabaseQueryResponse'
+                $ref: '#/components/schemas/BulkDatabaseQueryResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1346,12 +1321,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkDatabaseStatsResponse'
+                $ref: '#/components/schemas/BulkDatabaseStatsResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1384,12 +1354,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BatchKeywordExtractionResponse'
+                $ref: '#/components/schemas/BatchKeywordExtractionResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
