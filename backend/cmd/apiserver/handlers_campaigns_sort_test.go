@@ -8,8 +8,33 @@ import (
 
 func TestSortMetricValue(t *testing.T) {
 	toF := func(f float32) *float32 { return &f }
-	toI := func(i int64) *int64 { return &i }
-	item := gen.DomainListItem{Features: &gen.DomainAnalysisFeatures{Richness: &gen.DomainAnalysisFeaturesRichness{Score: toF(12.5)}, Microcrawl: &gen.DomainAnalysisFeaturesMicrocrawl{GainRatio: toF(0.42)}, Keywords: &gen.DomainAnalysisFeaturesKeywords{UniqueCount: toI(7)}}}
+	toInt := func(i int) *int { return &i }
+
+	item := gen.DomainListItem{Features: &gen.DomainAnalysisFeatures{
+		Richness: &struct {
+			AnchorShare              *float32 `json:"anchor_share"`
+			AppliedBonus             *float32 `json:"applied_bonus"`
+			AppliedDeductionsTotal   *float32 `json:"applied_deductions_total"`
+			DiversityEffectiveUnique *float32 `json:"diversity_effective_unique"`
+			DiversityNorm            *float32 `json:"diversity_norm"`
+			EnrichmentNorm           *float32 `json:"enrichment_norm"`
+			ProminenceNorm           *float32 `json:"prominence_norm"`
+			RepetitionIndex          *float32 `json:"repetition_index"`
+			Score                    *float32 `json:"score"`
+			StuffingPenalty          *float32 `json:"stuffing_penalty"`
+			Version                  *int     `json:"version"`
+		}{Score: toF(12.5)},
+		Microcrawl: &struct {
+			GainRatio *float32 `json:"gain_ratio"`
+		}{GainRatio: toF(0.42)},
+		Keywords: &struct {
+			HitsTotal          *int                `json:"hits_total"`
+			SignalDistribution *map[string]float32 `json:"signal_distribution,omitempty"`
+			Top3               *[]string           `json:"top3,omitempty"`
+			UniqueCount        *int                `json:"unique_count"`
+			WeightSum          *float32            `json:"weight_sum"`
+		}{UniqueCount: toInt(7)},
+	}}
 	if v := sortMetricValue(item, "richness_score"); v != 12.5 {
 		t.Fatalf("expected 12.5 got %v", v)
 	}
@@ -28,7 +53,21 @@ func TestSortMetricValue(t *testing.T) {
 func TestWarningsFilterLogic(t *testing.T) {
 	toF := func(f float32) *float32 { return &f }
 	mk := func(stuff, rep, anchor float32) gen.DomainListItem {
-		return gen.DomainListItem{Features: &gen.DomainAnalysisFeatures{Richness: &gen.DomainAnalysisFeaturesRichness{StuffingPenalty: toF(stuff), RepetitionIndex: toF(rep), AnchorShare: toF(anchor)}}}
+		return gen.DomainListItem{Features: &gen.DomainAnalysisFeatures{
+			Richness: &struct {
+				AnchorShare              *float32 `json:"anchor_share"`
+				AppliedBonus             *float32 `json:"applied_bonus"`
+				AppliedDeductionsTotal   *float32 `json:"applied_deductions_total"`
+				DiversityEffectiveUnique *float32 `json:"diversity_effective_unique"`
+				DiversityNorm            *float32 `json:"diversity_norm"`
+				EnrichmentNorm           *float32 `json:"enrichment_norm"`
+				ProminenceNorm           *float32 `json:"prominence_norm"`
+				RepetitionIndex          *float32 `json:"repetition_index"`
+				Score                    *float32 `json:"score"`
+				StuffingPenalty          *float32 `json:"stuffing_penalty"`
+				Version                  *int     `json:"version"`
+			}{StuffingPenalty: toF(stuff), RepetitionIndex: toF(rep), AnchorShare: toF(anchor)},
+		}}
 	}
 	cases := []struct {
 		it         gen.DomainListItem
