@@ -98,3 +98,47 @@ Follow-ups:
 - Complete remaining endpoint migrations in future phases (SSE, remaining personas endpoints).
 
 Generated on: 2025-09-29
+
+### Phase F (Current PR - Cleanup and Audit)
+Date: 2025-01-27
+Scope: Post-migration cleanup and frontend audit
+
+**Phase F Task Analysis**:
+
+1. **Contract Test Implementation**: ✅ Added `backend/tests/contract_phase_f_test.go` to validate SuccessEnvelope absence in 2xx responses
+   - **Result**: Found 88 endpoints still using SuccessEnvelope in 2xx responses
+   - **Impact**: Confirms Phase E was NOT completed as expected
+
+2. **OpenAPI Spec vs Backend Implementation Mismatch**: ❌ Critical Issue Identified
+   - Backend handlers from Phases A-D return direct payloads
+   - OpenAPI specs still define these endpoints as returning SuccessEnvelope
+   - Generated TypeScript clients are incorrect due to spec discrepancy
+   - **Example**: `personas_list` handler returns direct array, but spec defines SuccessEnvelope
+
+3. **Frontend extractResponseData Usage**: ⚠️ Cannot Remove Yet
+   - Found ~50+ files using extractResponseData helpers
+   - Cannot safely remove until OpenAPI specs are corrected
+   - Frontend code is defensive, working around spec/implementation mismatch
+
+4. **Persona Discriminator Generation**: ✅ Working Correctly
+   - PersonaConfigDns/Http enums properly generated
+   - No manual patches needed
+
+**Critical Findings**:
+- **Root Cause**: OpenAPI specifications were not updated during Phases A-D migrations
+- **Impact**: Frontend must use extractResponseData as workaround for spec/implementation mismatch
+- **Scope**: 88 endpoints need spec correction to match backend implementations
+
+**Immediate Actions Required**:
+1. Update OpenAPI path specifications to remove SuccessEnvelope from 2xx responses for migrated endpoints
+2. Regenerate clients after spec corrections
+3. Remove extractResponseData usage for corrected endpoints
+4. Update frontend RTK Query endpoints to handle direct payloads
+
+**Phase F Status**: ⚠️ **Blocked** - Cannot complete cleanup until OpenAPI specs are corrected
+
+**Next Steps**:
+- Complete OpenAPI spec corrections for Phases A-D endpoints
+- OR update issue scope to focus on spec alignment rather than cleanup
+
+Generated on: 2025-01-27
