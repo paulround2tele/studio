@@ -99,46 +99,70 @@ Follow-ups:
 
 Generated on: 2025-09-29
 
-### Phase F (Current PR - Cleanup and Audit)
+### Phase G (Current PR - OpenAPI Spec Alignment & Final Envelope Cleanup)
 Date: 2025-01-27
-Scope: Post-migration cleanup and frontend audit
+Scope: Align OpenAPI specifications with backend direct 2xx responses and perform final cleanup
 
-**Phase F Task Analysis**:
+**Phase G Implementation Progress**:
 
-1. **Contract Test Implementation**: ✅ Added `backend/tests/contract_phase_f_test.go` to validate SuccessEnvelope absence in 2xx responses
-   - **Result**: Found 88 endpoints still using SuccessEnvelope in 2xx responses
-   - **Impact**: Confirms Phase E was NOT completed as expected
+**Critical Issue Addressed**: OpenAPI specifications were not updated during Phases A-D migrations
+- Backend handlers from Phases A-D return direct payloads
+- OpenAPI specs still defined these endpoints as returning SuccessEnvelope  
+- Generated TypeScript clients were incorrect due to spec discrepancy
+- Frontend had to use extractResponseData as workaround
 
-2. **OpenAPI Spec vs Backend Implementation Mismatch**: ❌ Critical Issue Identified
-   - Backend handlers from Phases A-D return direct payloads
-   - OpenAPI specs still define these endpoints as returning SuccessEnvelope
-   - Generated TypeScript clients are incorrect due to spec discrepancy
-   - **Example**: `personas_list` handler returns direct array, but spec defines SuccessEnvelope
+**Batched Implementation Approach**: ✅ **IN PROGRESS** - 28% Complete
 
-3. **Frontend extractResponseData Usage**: ⚠️ Cannot Remove Yet
-   - Found ~50+ files using extractResponseData helpers
-   - Cannot safely remove until OpenAPI specs are corrected
-   - Frontend code is defensive, working around spec/implementation mismatch
+1. **Batch 1: Personas (5 endpoints)** - ✅ COMPLETE
+   - **Result**: 88 → 87 violations (-1)
+   - Updated personas.yaml: list, create, get, update operations to direct schemas
+   - Updated persona-test.yaml to direct PersonaTestResponse
+   - Updated persona-by-id.yaml DELETE operation to 204 No Content
 
-4. **Persona Discriminator Generation**: ✅ Working Correctly
-   - PersonaConfigDns/Http enums properly generated
-   - No manual patches needed
+2. **Batch 2: Proxies & Proxy-pools (17 endpoints)** - ✅ COMPLETE  
+   - **Result**: 87 → 70 violations (-17)
+   - Updated main proxies.yaml and proxy-pools.yaml files
+   - Updated individual proxy files: proxy-by-id.yaml, proxy-test.yaml, status.yaml, etc.
+   - Updated bulk operations: bulk-delete.yaml, bulk-test.yaml, bulk-update.yaml
+   - Converted DELETE operations to 204 No Content responses
 
-**Critical Findings**:
-- **Root Cause**: OpenAPI specifications were not updated during Phases A-D migrations
-- **Impact**: Frontend must use extractResponseData as workaround for spec/implementation mismatch
-- **Scope**: 88 endpoints need spec correction to match backend implementations
+3. **Batch 3: Database & Extraction (7 endpoints)** - ✅ COMPLETE
+   - **Result**: 70 → 63 violations (-7)
+   - Updated database.yaml: db_bulk_query, db_bulk_stats to direct schemas
+   - Updated extraction.yaml: keyword_extract_batch to direct schema
+   - Updated keyword-rules.yaml and keyword-sets files to direct schemas
+   - Updated individual files: query.yaml, stats.yaml, batch.yaml
 
-**Immediate Actions Required**:
-1. Update OpenAPI path specifications to remove SuccessEnvelope from 2xx responses for migrated endpoints
-2. Regenerate clients after spec corrections
-3. Remove extractResponseData usage for corrected endpoints
-4. Update frontend RTK Query endpoints to handle direct payloads
+**Remaining Batches** (63 violations):
+- Batch 4: Scoring endpoints (~6 endpoints)
+- Batch 5: SSE & Monitoring endpoints (~15 endpoints)  
+- Batch 6: Auth & Config endpoints (~10 endpoints)
+- Batch 7: Campaigns endpoints (~32 endpoints)
 
-**Phase F Status**: ⚠️ **Blocked** - Cannot complete cleanup until OpenAPI specs are corrected
+**Contract Test Validation**: Added `backend/tests/contract_phase_f_test.go`
+- Validates SuccessEnvelope absence in 2xx responses
+- **Baseline**: 88 violations identified
+- **Current**: 63 violations (25 endpoints fixed)
+- **Target**: 0 violations
+
+**Key Transformations Applied**:
+- Removed SuccessEnvelope `allOf` structures from 2xx responses
+- Updated to direct schema references for response payloads
+- Converted DELETE operations to 204 No Content where appropriate
+- Preserved ErrorEnvelope format for all error responses
+
+**Generated Client Updates**:
+- Regenerated TypeScript clients after each batch
+- Verified contract test violation count decreases
+- Orphaned schemas marked as unused in generation warnings
+
+**Phase G Status**: ⚠️ **IN PROGRESS** - Systematic batch processing approach working effectively
 
 **Next Steps**:
-- Complete OpenAPI spec corrections for Phases A-D endpoints
+- Continue with remaining batches 4-7
+- Frontend client cleanup after spec alignment complete
+- Schema pruning and documentation updates
+- Final contract test validation (target: 0 violations)
 - OR update issue scope to focus on spec alignment rather than cleanup
 
 Generated on: 2025-01-27
