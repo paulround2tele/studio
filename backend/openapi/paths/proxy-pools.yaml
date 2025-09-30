@@ -10,14 +10,9 @@
 					description: OK
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												type: array
-												items: { $ref: '#/components/schemas/ProxyPool' }
+							schema:
+								type: array
+								items: { $ref: '#/components/schemas/ProxyPool' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
@@ -37,12 +32,7 @@
 					description: Created
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data: { $ref: '#/components/schemas/ProxyPool' }
+							schema: { $ref: '#/components/schemas/ProxyPool' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
 
@@ -68,12 +58,7 @@
 					description: OK
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data: { $ref: '#/components/schemas/ProxyPool' }
+							schema: { $ref: '#/components/schemas/ProxyPool' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'404': { $ref: '#/components/responses/NotFound' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
@@ -89,16 +74,8 @@
 					required: true
 					schema: { type: string, format: uuid }
 			responses:
-				'200':
-					description: OK
-					content:
-						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data: { $ref: '#/components/schemas/ProxyPoolDeleteResponse' }
+				'204':
+					description: Deleted
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'404': { $ref: '#/components/responses/NotFound' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
@@ -130,12 +107,7 @@
 					description: Created
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data: { $ref: '#/components/schemas/ProxyPoolMembership' }
+							schema: { $ref: '#/components/schemas/ProxyPoolMembership' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
 
@@ -156,13 +128,5 @@
 					required: true
 					schema: { type: string, format: uuid }
 			responses:
-				'200':
-					description: OK
-					content:
-						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data: { $ref: '#/components/schemas/ProxyPoolMembershipResponse' }
+				'204':
+					description: Removed

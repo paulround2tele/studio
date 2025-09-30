@@ -2119,12 +2119,6 @@ export interface components {
             maxRetries?: number;
             timeoutSeconds?: number;
         };
-        ProxyPoolDeleteResponse: {
-            deleted?: boolean;
-            /** Format: uuid */
-            poolId?: string;
-            message?: string;
-        };
         ProxyPoolMembership: {
             /** Format: uuid */
             poolId?: string;
@@ -2134,15 +2128,6 @@ export interface components {
             isActive?: boolean;
             /** Format: date-time */
             addedAt?: string;
-        };
-        ProxyPoolMembershipResponse: {
-            /** Format: uuid */
-            poolId?: string;
-            /** Format: uuid */
-            proxyId?: string;
-            added?: boolean;
-            removed?: boolean;
-            message?: string;
         };
         KeywordRuleDTO: {
             /** Format: uuid */
@@ -3169,6 +3154,21 @@ export interface components {
             deleted: boolean;
             message?: string;
         };
+        ProxyPoolMembershipResponse: {
+            /** Format: uuid */
+            poolId?: string;
+            /** Format: uuid */
+            proxyId?: string;
+            added?: boolean;
+            removed?: boolean;
+            message?: string;
+        };
+        ProxyPoolDeleteResponse: {
+            deleted?: boolean;
+            /** Format: uuid */
+            poolId?: string;
+            message?: string;
+        };
         KeywordSetWithRulesResponse: {
             /** Format: uuid */
             id: string;
@@ -3779,9 +3779,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["ProxyDetailsResponse"][];
-                    };
+                    "application/json": components["schemas"]["ProxyDetailsResponse"][];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -3809,9 +3807,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["ProxyDetailsResponse"];
-                    };
+                    "application/json": components["schemas"]["ProxyDetailsResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -3844,9 +3840,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["ProxyDetailsResponse"];
-                    };
+                    "application/json": components["schemas"]["ProxyDetailsResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -3868,13 +3862,11 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Deleted */
-            200: {
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"];
-                };
+                content?: never;
             };
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
@@ -3899,9 +3891,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["ProxyTestResponse"];
-                    };
+                    "application/json": components["schemas"]["ProxyTestResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -3928,9 +3918,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["ProxyStatusResponse"][];
-                    };
+                    "application/json": components["schemas"]["ProxyStatusResponse"][];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -3956,9 +3944,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["ProxyHealthCheckResponse"];
-                    };
+                    "application/json": components["schemas"]["ProxyHealthCheckResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -3987,9 +3973,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["BulkHealthCheckResponse"];
-                    };
+                    "application/json": components["schemas"]["BulkHealthCheckResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -4015,9 +3999,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["BulkProxyOperationResponse"];
-                    };
+                    "application/json": components["schemas"]["BulkProxyOperationResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -4037,16 +4019,12 @@ export interface operations {
             };
         };
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Deleted */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["BulkProxyOperationResponse"];
-                    };
-                };
+                content?: never;
             };
             400: components["responses"]["BadRequest"];
             500: components["responses"]["InternalServerError"];
@@ -4073,9 +4051,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["BulkProxyTestResponse"];
-                    };
+                    "application/json": components["schemas"]["BulkProxyTestResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -4097,9 +4073,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["ProxyPool"][];
-                    };
+                    "application/json": components["schemas"]["ProxyPool"][];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -4126,9 +4100,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["ProxyPool"];
-                    };
+                    "application/json": components["schemas"]["ProxyPool"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -4156,9 +4128,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["ProxyPool"];
-                    };
+                    "application/json": components["schemas"]["ProxyPool"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -4177,16 +4147,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Deleted */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["ProxyPoolDeleteResponse"];
-                    };
-                };
+                content?: never;
             };
             400: components["responses"]["BadRequest"];
             404: components["responses"]["NotFound"];
@@ -4218,9 +4184,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["ProxyPoolMembership"];
-                    };
+                    "application/json": components["schemas"]["ProxyPoolMembership"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -4239,16 +4203,12 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
+            /** @description Removed */
+            204: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["ProxyPoolMembershipResponse"];
-                    };
-                };
+                content?: never;
             };
             400: components["responses"]["BadRequest"];
             404: components["responses"]["NotFound"];

@@ -526,14 +526,9 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/ProxyDetailsResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProxyDetailsResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -561,12 +556,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyDetailsResponse'
+                $ref: '#/components/schemas/ProxyDetailsResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -608,12 +598,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyDetailsResponse'
+                $ref: '#/components/schemas/ProxyDetailsResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -639,12 +624,8 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
+        '204':
           description: Deleted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessEnvelope'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -674,12 +655,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyTestResponse'
+                $ref: '#/components/schemas/ProxyTestResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -708,14 +684,9 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/ProxyStatusResponse'
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProxyStatusResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -745,12 +716,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyHealthCheckResponse'
+                $ref: '#/components/schemas/ProxyHealthCheckResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -783,12 +749,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkHealthCheckResponse'
+                $ref: '#/components/schemas/BulkHealthCheckResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -813,12 +774,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkProxyOperationResponse'
+                $ref: '#/components/schemas/BulkProxyOperationResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -838,17 +794,8 @@ paths:
             schema:
               $ref: '#/components/schemas/BulkDeleteProxiesRequest'
       responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkProxyOperationResponse'
+        '204':
+          description: Deleted
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -881,12 +828,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkProxyTestResponse'
+                $ref: '#/components/schemas/BulkProxyTestResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -905,14 +847,9 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/ProxyPool'
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProxyPool'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -938,12 +875,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyPool'
+                $ref: '#/components/schemas/ProxyPool'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -975,12 +907,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyPool'
+                $ref: '#/components/schemas/ProxyPool'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -1002,17 +929,8 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyPoolDeleteResponse'
+        '204':
+          description: Deleted
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -1054,12 +972,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyPoolMembership'
+                $ref: '#/components/schemas/ProxyPoolMembership'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -1086,17 +999,8 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyPoolMembershipResponse'
+        '204':
+          description: Removed
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -5309,16 +5213,6 @@ components:
           type: integer
       required:
         - name
-    ProxyPoolDeleteResponse:
-      type: object
-      properties:
-        deleted:
-          type: boolean
-        poolId:
-          type: string
-          format: uuid
-        message:
-          type: string
     ProxyPoolMembership:
       type: object
       properties:
@@ -5335,21 +5229,6 @@ components:
         addedAt:
           type: string
           format: date-time
-    ProxyPoolMembershipResponse:
-      type: object
-      properties:
-        poolId:
-          type: string
-          format: uuid
-        proxyId:
-          type: string
-          format: uuid
-        added:
-          type: boolean
-        removed:
-          type: boolean
-        message:
-          type: string
     KeywordRuleDTO:
       type: object
       properties:
@@ -7533,6 +7412,31 @@ components:
       required:
         - personaId
         - deleted
+    ProxyPoolMembershipResponse:
+      type: object
+      properties:
+        poolId:
+          type: string
+          format: uuid
+        proxyId:
+          type: string
+          format: uuid
+        added:
+          type: boolean
+        removed:
+          type: boolean
+        message:
+          type: string
+    ProxyPoolDeleteResponse:
+      type: object
+      properties:
+        deleted:
+          type: boolean
+        poolId:
+          type: string
+          format: uuid
+        message:
+          type: string
     KeywordSetWithRulesResponse:
       type: object
       properties:

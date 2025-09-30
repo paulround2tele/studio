@@ -24,35 +24,31 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 // @ts-ignore
 import type { BulkDeleteProxiesRequest } from '../models';
 // @ts-ignore
+import type { BulkHealthCheckResponse } from '../models';
+// @ts-ignore
+import type { BulkProxyOperationResponse } from '../models';
+// @ts-ignore
+import type { BulkProxyTestResponse } from '../models';
+// @ts-ignore
 import type { BulkUpdateProxiesRequest } from '../models';
 // @ts-ignore
 import type { CreateProxyRequestAPI } from '../models';
 // @ts-ignore
 import type { ErrorEnvelope } from '../models';
 // @ts-ignore
-import type { ProxiesBulkTest200Response } from '../models';
-// @ts-ignore
 import type { ProxiesBulkTestRequest } from '../models';
-// @ts-ignore
-import type { ProxiesBulkUpdate200Response } from '../models';
-// @ts-ignore
-import type { ProxiesCreate201Response } from '../models';
-// @ts-ignore
-import type { ProxiesHealthCheckAll202Response } from '../models';
 // @ts-ignore
 import type { ProxiesHealthCheckAllRequest } from '../models';
 // @ts-ignore
-import type { ProxiesHealthCheckSingle200Response } from '../models';
+import type { ProxyDetailsResponse } from '../models';
 // @ts-ignore
-import type { ProxiesList200Response } from '../models';
-// @ts-ignore
-import type { ProxiesStatus200Response } from '../models';
-// @ts-ignore
-import type { ProxiesTest200Response } from '../models';
+import type { ProxyHealthCheckResponse } from '../models';
 // @ts-ignore
 import type { ProxyProtocol } from '../models';
 // @ts-ignore
-import type { SuccessEnvelope } from '../models';
+import type { ProxyStatusResponse } from '../models';
+// @ts-ignore
+import type { ProxyTestResponse } from '../models';
 // @ts-ignore
 import type { UpdateProxyRequestAPI } from '../models';
 /**
@@ -510,7 +506,7 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesBulkDelete(bulkDeleteProxiesRequest: BulkDeleteProxiesRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProxiesBulkUpdate200Response>> {
+        async proxiesBulkDelete(bulkDeleteProxiesRequest: BulkDeleteProxiesRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesBulkDelete(bulkDeleteProxiesRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesBulkDelete']?.[localVarOperationServerIndex]?.url;
@@ -523,7 +519,7 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesBulkTest(proxiesBulkTestRequest: ProxiesBulkTestRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProxiesBulkTest200Response>> {
+        async proxiesBulkTest(proxiesBulkTestRequest: ProxiesBulkTestRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkProxyTestResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesBulkTest(proxiesBulkTestRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesBulkTest']?.[localVarOperationServerIndex]?.url;
@@ -536,7 +532,7 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesBulkUpdate(bulkUpdateProxiesRequest: BulkUpdateProxiesRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProxiesBulkUpdate200Response>> {
+        async proxiesBulkUpdate(bulkUpdateProxiesRequest: BulkUpdateProxiesRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkProxyOperationResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesBulkUpdate(bulkUpdateProxiesRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesBulkUpdate']?.[localVarOperationServerIndex]?.url;
@@ -549,7 +545,7 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesCreate(createProxyRequestAPI: CreateProxyRequestAPI, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProxiesCreate201Response>> {
+        async proxiesCreate(createProxyRequestAPI: CreateProxyRequestAPI, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProxyDetailsResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesCreate(createProxyRequestAPI, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesCreate']?.[localVarOperationServerIndex]?.url;
@@ -562,7 +558,7 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesDelete(proxyId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SuccessEnvelope>> {
+        async proxiesDelete(proxyId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesDelete(proxyId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesDelete']?.[localVarOperationServerIndex]?.url;
@@ -575,7 +571,7 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesHealthCheckAll(proxiesHealthCheckAllRequest?: ProxiesHealthCheckAllRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProxiesHealthCheckAll202Response>> {
+        async proxiesHealthCheckAll(proxiesHealthCheckAllRequest?: ProxiesHealthCheckAllRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkHealthCheckResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesHealthCheckAll(proxiesHealthCheckAllRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesHealthCheckAll']?.[localVarOperationServerIndex]?.url;
@@ -588,7 +584,7 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesHealthCheckSingle(proxyId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProxiesHealthCheckSingle200Response>> {
+        async proxiesHealthCheckSingle(proxyId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProxyHealthCheckResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesHealthCheckSingle(proxyId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesHealthCheckSingle']?.[localVarOperationServerIndex]?.url;
@@ -606,7 +602,7 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesList(limit?: number, offset?: number, protocol?: ProxyProtocol, countryCode?: string, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProxiesList200Response>> {
+        async proxiesList(limit?: number, offset?: number, protocol?: ProxyProtocol, countryCode?: string, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ProxyDetailsResponse>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesList(limit, offset, protocol, countryCode, isEnabled, isHealthy, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesList']?.[localVarOperationServerIndex]?.url;
@@ -618,7 +614,7 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesStatus(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProxiesStatus200Response>> {
+        async proxiesStatus(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ProxyStatusResponse>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesStatus(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesStatus']?.[localVarOperationServerIndex]?.url;
@@ -631,7 +627,7 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesTest(proxyId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProxiesTest200Response>> {
+        async proxiesTest(proxyId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProxyTestResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesTest(proxyId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesTest']?.[localVarOperationServerIndex]?.url;
@@ -645,7 +641,7 @@ export const ProxiesApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async proxiesUpdate(proxyId: string, updateProxyRequestAPI: UpdateProxyRequestAPI, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProxiesCreate201Response>> {
+        async proxiesUpdate(proxyId: string, updateProxyRequestAPI: UpdateProxyRequestAPI, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ProxyDetailsResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.proxiesUpdate(proxyId, updateProxyRequestAPI, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ProxiesApi.proxiesUpdate']?.[localVarOperationServerIndex]?.url;
@@ -668,7 +664,7 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesBulkDelete(bulkDeleteProxiesRequest: BulkDeleteProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<ProxiesBulkUpdate200Response> {
+        proxiesBulkDelete(bulkDeleteProxiesRequest: BulkDeleteProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.proxiesBulkDelete(bulkDeleteProxiesRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -678,7 +674,7 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesBulkTest(proxiesBulkTestRequest: ProxiesBulkTestRequest, options?: RawAxiosRequestConfig): AxiosPromise<ProxiesBulkTest200Response> {
+        proxiesBulkTest(proxiesBulkTestRequest: ProxiesBulkTestRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkProxyTestResponse> {
             return localVarFp.proxiesBulkTest(proxiesBulkTestRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -688,7 +684,7 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesBulkUpdate(bulkUpdateProxiesRequest: BulkUpdateProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<ProxiesBulkUpdate200Response> {
+        proxiesBulkUpdate(bulkUpdateProxiesRequest: BulkUpdateProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkProxyOperationResponse> {
             return localVarFp.proxiesBulkUpdate(bulkUpdateProxiesRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -698,7 +694,7 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesCreate(createProxyRequestAPI: CreateProxyRequestAPI, options?: RawAxiosRequestConfig): AxiosPromise<ProxiesCreate201Response> {
+        proxiesCreate(createProxyRequestAPI: CreateProxyRequestAPI, options?: RawAxiosRequestConfig): AxiosPromise<ProxyDetailsResponse> {
             return localVarFp.proxiesCreate(createProxyRequestAPI, options).then((request) => request(axios, basePath));
         },
         /**
@@ -708,7 +704,7 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesDelete(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<SuccessEnvelope> {
+        proxiesDelete(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.proxiesDelete(proxyId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -718,7 +714,7 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesHealthCheckAll(proxiesHealthCheckAllRequest?: ProxiesHealthCheckAllRequest, options?: RawAxiosRequestConfig): AxiosPromise<ProxiesHealthCheckAll202Response> {
+        proxiesHealthCheckAll(proxiesHealthCheckAllRequest?: ProxiesHealthCheckAllRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkHealthCheckResponse> {
             return localVarFp.proxiesHealthCheckAll(proxiesHealthCheckAllRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -728,7 +724,7 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesHealthCheckSingle(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<ProxiesHealthCheckSingle200Response> {
+        proxiesHealthCheckSingle(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<ProxyHealthCheckResponse> {
             return localVarFp.proxiesHealthCheckSingle(proxyId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -743,7 +739,7 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesList(limit?: number, offset?: number, protocol?: ProxyProtocol, countryCode?: string, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<ProxiesList200Response> {
+        proxiesList(limit?: number, offset?: number, protocol?: ProxyProtocol, countryCode?: string, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<Array<ProxyDetailsResponse>> {
             return localVarFp.proxiesList(limit, offset, protocol, countryCode, isEnabled, isHealthy, options).then((request) => request(axios, basePath));
         },
         /**
@@ -752,7 +748,7 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesStatus(options?: RawAxiosRequestConfig): AxiosPromise<ProxiesStatus200Response> {
+        proxiesStatus(options?: RawAxiosRequestConfig): AxiosPromise<Array<ProxyStatusResponse>> {
             return localVarFp.proxiesStatus(options).then((request) => request(axios, basePath));
         },
         /**
@@ -762,7 +758,7 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesTest(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<ProxiesTest200Response> {
+        proxiesTest(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<ProxyTestResponse> {
             return localVarFp.proxiesTest(proxyId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -773,7 +769,7 @@ export const ProxiesApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        proxiesUpdate(proxyId: string, updateProxyRequestAPI: UpdateProxyRequestAPI, options?: RawAxiosRequestConfig): AxiosPromise<ProxiesCreate201Response> {
+        proxiesUpdate(proxyId: string, updateProxyRequestAPI: UpdateProxyRequestAPI, options?: RawAxiosRequestConfig): AxiosPromise<ProxyDetailsResponse> {
             return localVarFp.proxiesUpdate(proxyId, updateProxyRequestAPI, options).then((request) => request(axios, basePath));
         },
     };
@@ -793,7 +789,7 @@ export interface ProxiesApiInterface {
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesBulkDelete(bulkDeleteProxiesRequest: BulkDeleteProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<ProxiesBulkUpdate200Response>;
+    proxiesBulkDelete(bulkDeleteProxiesRequest: BulkDeleteProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<void>;
 
     /**
      * 
@@ -803,7 +799,7 @@ export interface ProxiesApiInterface {
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesBulkTest(proxiesBulkTestRequest: ProxiesBulkTestRequest, options?: RawAxiosRequestConfig): AxiosPromise<ProxiesBulkTest200Response>;
+    proxiesBulkTest(proxiesBulkTestRequest: ProxiesBulkTestRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkProxyTestResponse>;
 
     /**
      * 
@@ -813,7 +809,7 @@ export interface ProxiesApiInterface {
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesBulkUpdate(bulkUpdateProxiesRequest: BulkUpdateProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<ProxiesBulkUpdate200Response>;
+    proxiesBulkUpdate(bulkUpdateProxiesRequest: BulkUpdateProxiesRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkProxyOperationResponse>;
 
     /**
      * 
@@ -823,7 +819,7 @@ export interface ProxiesApiInterface {
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesCreate(createProxyRequestAPI: CreateProxyRequestAPI, options?: RawAxiosRequestConfig): AxiosPromise<ProxiesCreate201Response>;
+    proxiesCreate(createProxyRequestAPI: CreateProxyRequestAPI, options?: RawAxiosRequestConfig): AxiosPromise<ProxyDetailsResponse>;
 
     /**
      * 
@@ -833,7 +829,7 @@ export interface ProxiesApiInterface {
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesDelete(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<SuccessEnvelope>;
+    proxiesDelete(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<void>;
 
     /**
      * 
@@ -843,7 +839,7 @@ export interface ProxiesApiInterface {
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesHealthCheckAll(proxiesHealthCheckAllRequest?: ProxiesHealthCheckAllRequest, options?: RawAxiosRequestConfig): AxiosPromise<ProxiesHealthCheckAll202Response>;
+    proxiesHealthCheckAll(proxiesHealthCheckAllRequest?: ProxiesHealthCheckAllRequest, options?: RawAxiosRequestConfig): AxiosPromise<BulkHealthCheckResponse>;
 
     /**
      * 
@@ -853,7 +849,7 @@ export interface ProxiesApiInterface {
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesHealthCheckSingle(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<ProxiesHealthCheckSingle200Response>;
+    proxiesHealthCheckSingle(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<ProxyHealthCheckResponse>;
 
     /**
      * 
@@ -868,7 +864,7 @@ export interface ProxiesApiInterface {
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesList(limit?: number, offset?: number, protocol?: ProxyProtocol, countryCode?: string, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<ProxiesList200Response>;
+    proxiesList(limit?: number, offset?: number, protocol?: ProxyProtocol, countryCode?: string, isEnabled?: boolean, isHealthy?: boolean, options?: RawAxiosRequestConfig): AxiosPromise<Array<ProxyDetailsResponse>>;
 
     /**
      * 
@@ -877,7 +873,7 @@ export interface ProxiesApiInterface {
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesStatus(options?: RawAxiosRequestConfig): AxiosPromise<ProxiesStatus200Response>;
+    proxiesStatus(options?: RawAxiosRequestConfig): AxiosPromise<Array<ProxyStatusResponse>>;
 
     /**
      * 
@@ -887,7 +883,7 @@ export interface ProxiesApiInterface {
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesTest(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<ProxiesTest200Response>;
+    proxiesTest(proxyId: string, options?: RawAxiosRequestConfig): AxiosPromise<ProxyTestResponse>;
 
     /**
      * 
@@ -898,7 +894,7 @@ export interface ProxiesApiInterface {
      * @throws {RequiredError}
      * @memberof ProxiesApiInterface
      */
-    proxiesUpdate(proxyId: string, updateProxyRequestAPI: UpdateProxyRequestAPI, options?: RawAxiosRequestConfig): AxiosPromise<ProxiesCreate201Response>;
+    proxiesUpdate(proxyId: string, updateProxyRequestAPI: UpdateProxyRequestAPI, options?: RawAxiosRequestConfig): AxiosPromise<ProxyDetailsResponse>;
 
 }
 

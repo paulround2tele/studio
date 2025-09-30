@@ -17,14 +17,9 @@
 					description: OK
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												type: array
-												items: { $ref: '#/components/schemas/ProxyDetailsResponse' }
+							schema:
+								type: array
+								items: { $ref: '#/components/schemas/ProxyDetailsResponse' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }
@@ -45,13 +40,7 @@
 					description: Created
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												$ref: '#/components/schemas/ProxyDetailsResponse'
+							schema: { $ref: '#/components/schemas/ProxyDetailsResponse' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
@@ -76,13 +65,7 @@
 					description: OK
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												$ref: '#/components/schemas/ProxyTestResponse'
+							schema: { $ref: '#/components/schemas/ProxyTestResponse' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
@@ -112,12 +95,7 @@
 					description: Updated
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data: { $ref: '#/components/schemas/ProxyDetailsResponse' }
+							schema: { $ref: '#/components/schemas/ProxyDetailsResponse' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
@@ -135,11 +113,8 @@
 					required: true
 					schema: { type: string, format: uuid }
 			responses:
-				'200':
+				'204':
 					description: Deleted
-					content:
-						application/json:
-          schema: { $ref: '#/components/schemas/SuccessEnvelope' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'404': { $ref: '#/components/responses/NotFound' }
@@ -156,14 +131,9 @@
 					description: OK
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												type: array
-												items: { $ref: '#/components/schemas/ProxyStatusResponse' }
+							schema:
+								type: array
+								items: { $ref: '#/components/schemas/ProxyStatusResponse' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
@@ -185,13 +155,7 @@
 					description: OK
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												$ref: '#/components/schemas/ProxyHealthCheckResponse'
+							schema: { $ref: '#/components/schemas/ProxyHealthCheckResponse' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }

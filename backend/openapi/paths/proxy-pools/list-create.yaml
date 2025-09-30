@@ -10,13 +10,8 @@ get:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    type: array
-                    items: { $ref: '../../components/schemas/all.yaml#/ProxyPool' }
+            type: array
+            items: { $ref: '../../components/schemas/all.yaml#/ProxyPool' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
@@ -36,11 +31,6 @@ post:
       description: Created
       content:
         application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/ProxyPool' }
+          schema: { $ref: '../../components/schemas/all.yaml#/ProxyPool' }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
