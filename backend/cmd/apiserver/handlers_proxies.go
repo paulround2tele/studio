@@ -55,7 +55,7 @@ func (h *strictHandlers) ProxiesList(ctx context.Context, r gen.ProxiesListReque
 		}
 		items = append(items, gen.ProxyDetailsResponse{Host: host, Port: port, Protocol: protoStr, Username: username})
 	}
-	return gen.ProxiesList200JSONResponse{Data: &items, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesList200JSONResponse(items), nil
 }
 
 func (h *strictHandlers) ProxiesCreate(ctx context.Context, r gen.ProxiesCreateRequestObject) (gen.ProxiesCreateResponseObject, error) {
@@ -110,7 +110,7 @@ func (h *strictHandlers) ProxiesCreate(ctx context.Context, r gen.ProxiesCreateR
 		username = &s
 	}
 	data := gen.ProxyDetailsResponse{Host: host, Port: port, Protocol: protoStr, Username: username}
-	return gen.ProxiesCreate201JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesCreate201JSONResponse(data), nil
 }
 
 func (h *strictHandlers) ProxiesBulkDelete(ctx context.Context, r gen.ProxiesBulkDeleteRequestObject) (gen.ProxiesBulkDeleteResponseObject, error) {
@@ -129,9 +129,7 @@ func (h *strictHandlers) ProxiesBulkDelete(ctx context.Context, r gen.ProxiesBul
 			success++
 		}
 	}
-	total := len(r.Body.ProxyIds)
-	data := gen.BulkProxyOperationResponse{SuccessCount: &success, ErrorCount: &errors, TotalRequested: &total}
-	return gen.ProxiesBulkDelete200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesBulkDelete204Response{}, nil
 }
 
 func (h *strictHandlers) ProxiesBulkTest(ctx context.Context, r gen.ProxiesBulkTestRequestObject) (gen.ProxiesBulkTestResponseObject, error) {
@@ -147,7 +145,7 @@ func (h *strictHandlers) ProxiesBulkTest(ctx context.Context, r gen.ProxiesBulkT
 		results = append(results, gen.ProxyTestResponse{ProxyId: &pid, Success: &ok, StatusCode: &status, ResponseTime: &rt})
 	}
 	data := gen.BulkProxyTestResponse{Results: &results}
-	return gen.ProxiesBulkTest200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesBulkTest200JSONResponse(data), nil
 }
 
 func (h *strictHandlers) ProxiesBulkUpdate(ctx context.Context, r gen.ProxiesBulkUpdateRequestObject) (gen.ProxiesBulkUpdateResponseObject, error) {
@@ -192,7 +190,7 @@ func (h *strictHandlers) ProxiesBulkUpdate(ctx context.Context, r gen.ProxiesBul
 		success++
 	}
 	data := gen.BulkProxyOperationResponse{SuccessCount: &success, ErrorCount: &errors}
-	return gen.ProxiesBulkUpdate200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesBulkUpdate200JSONResponse(data), nil
 }
 
 func (h *strictHandlers) ProxiesHealthCheckAll(ctx context.Context, r gen.ProxiesHealthCheckAllRequestObject) (gen.ProxiesHealthCheckAllResponseObject, error) {
@@ -210,7 +208,7 @@ func (h *strictHandlers) ProxiesHealthCheckAll(ctx context.Context, r gen.Proxie
 	}
 	total := len(ids)
 	data := gen.BulkHealthCheckResponse{TotalProxies: &total}
-	return gen.ProxiesHealthCheckAll202JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesHealthCheckAll202JSONResponse(data), nil
 }
 
 func (h *strictHandlers) ProxiesStatus(ctx context.Context, r gen.ProxiesStatusRequestObject) (gen.ProxiesStatusResponseObject, error) {
@@ -262,7 +260,7 @@ func (h *strictHandlers) ProxiesStatus(ctx context.Context, r gen.ProxiesStatusR
 	} else {
 		out = []gen.ProxyStatusResponse{}
 	}
-	return gen.ProxiesStatus200JSONResponse{Data: &out, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesStatus200JSONResponse(out), nil
 }
 
 func (h *strictHandlers) ProxiesDelete(ctx context.Context, r gen.ProxiesDeleteRequestObject) (gen.ProxiesDeleteResponseObject, error) {
@@ -275,7 +273,7 @@ func (h *strictHandlers) ProxiesDelete(ctx context.Context, r gen.ProxiesDeleteR
 		}
 		return gen.ProxiesDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to delete proxy", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	return gen.ProxiesDelete200JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesDelete204Response{}, nil
 }
 
 func (h *strictHandlers) ProxiesUpdate(ctx context.Context, r gen.ProxiesUpdateRequestObject) (gen.ProxiesUpdateResponseObject, error) {
@@ -340,7 +338,7 @@ func (h *strictHandlers) ProxiesUpdate(ctx context.Context, r gen.ProxiesUpdateR
 		username = &s
 	}
 	data := gen.ProxyDetailsResponse{Host: host, Port: port, Protocol: protoStr, Username: username}
-	return gen.ProxiesUpdate200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesUpdate200JSONResponse(data), nil
 }
 
 func (h *strictHandlers) ProxiesHealthCheckSingle(ctx context.Context, r gen.ProxiesHealthCheckSingleRequestObject) (gen.ProxiesHealthCheckSingleResponseObject, error) {
@@ -370,7 +368,7 @@ func (h *strictHandlers) ProxiesHealthCheckSingle(ctx context.Context, r gen.Pro
 		ok := true
 		res = gen.ProxyHealthCheckResponse{ProxyId: &id, Success: &ok, Status: func() *string { s := "ok"; return &s }(), Timestamp: &now}
 	}
-	return gen.ProxiesHealthCheckSingle200JSONResponse{Data: &res, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesHealthCheckSingle200JSONResponse(res), nil
 }
 
 func (h *strictHandlers) ProxiesTest(ctx context.Context, r gen.ProxiesTestRequestObject) (gen.ProxiesTestResponseObject, error) {
@@ -380,5 +378,5 @@ func (h *strictHandlers) ProxiesTest(ctx context.Context, r gen.ProxiesTestReque
 	status := 200
 	var rt int64 = 0
 	data := gen.ProxyTestResponse{ProxyId: &pid, Success: &ok, StatusCode: &status, ResponseTime: &rt}
-	return gen.ProxiesTest200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesTest200JSONResponse(data), nil
 }

@@ -294,8 +294,7 @@ func (h *strictHandlers) PersonasDelete(ctx context.Context, r gen.PersonasDelet
 		}
 		return gen.PersonasDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to delete persona", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	msg := fmt.Sprintf("persona %s deleted", existing.ID.String())
-	return gen.PersonasDelete200JSONResponse(gen.PersonaDeleteResponse{Deleted: true, Message: &msg, PersonaId: openapi_types.UUID(existing.ID)}), nil
+	return gen.PersonasDelete204Response{}, nil
 }
 
 func (h *strictHandlers) PersonasTest(ctx context.Context, r gen.PersonasTestRequestObject) (gen.PersonasTestResponseObject, error) {
@@ -316,20 +315,16 @@ func (h *strictHandlers) PersonasTest(ctx context.Context, r gen.PersonasTestReq
 	ok := true
 	passed := true
 	msg := fmt.Sprintf("%s persona test completed successfully", p.PersonaType)
-	return gen.PersonasTest200JSONResponse{
-		Data: &gen.PersonaTestResponse{
-			Message:     &msg,
-			PersonaId:   &pid,
-			PersonaName: &name,
-			PersonaType: &ptype,
-			Success:     &ok,
-			TestPassed:  &passed,
-			TestResults: &map[string]interface{}{"details": "Mock test data - will be replaced with actual test results", "duration": 100, "requestCount": 1, "successCount": 1, "errorCount": 0},
-			Results:     &map[string]interface{}{},
-			Timestamp:   &now,
-		},
-		Metadata:  okMeta(),
-		RequestId: reqID(),
-		Success:   boolPtr(true),
-	}, nil
+	data := gen.PersonaTestResponse{
+		Message:     &msg,
+		PersonaId:   &pid,
+		PersonaName: &name,
+		PersonaType: &ptype,
+		Success:     &ok,
+		TestPassed:  &passed,
+		TestResults: &map[string]interface{}{"details": "Mock test data - will be replaced with actual test results", "duration": 100, "requestCount": 1, "successCount": 1, "errorCount": 0},
+		Results:     &map[string]interface{}{},
+		Timestamp:   &now,
+	}
+	return gen.PersonasTest200JSONResponse(data), nil
 }

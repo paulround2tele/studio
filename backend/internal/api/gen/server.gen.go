@@ -1531,13 +1531,6 @@ type PersonaConfigHttpTlsClientHelloMaxVersion string
 // PersonaConfigHttpTlsClientHelloMinVersion defines model for PersonaConfigHttp.TlsClientHello.MinVersion.
 type PersonaConfigHttpTlsClientHelloMinVersion string
 
-// PersonaDeleteResponse defines model for PersonaDeleteResponse.
-type PersonaDeleteResponse struct {
-	Deleted   bool               `json:"deleted"`
-	Message   *string            `json:"message,omitempty"`
-	PersonaId openapi_types.UUID `json:"personaId"`
-}
-
 // PersonaResponse defines model for PersonaResponse.
 type PersonaResponse struct {
 	ConfigDetails *PersonaConfigDetails `json:"configDetails,omitempty"`
@@ -2310,7 +2303,7 @@ func (t PersonaConfigDetails) AsPersonaConfigHttp() (PersonaConfigHttp, error) {
 
 // FromPersonaConfigHttp overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigHttp
 func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error {
-	httpType := PersonaConfigHttpPersonaTypeHttp
+	httpType := PersonaConfigHttpPersonaType("http")
 	v.PersonaType = &httpType
 	b, err := json.Marshal(v)
 	t.union = b
@@ -2319,7 +2312,7 @@ func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error 
 
 // MergePersonaConfigHttp performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigHttp
 func (t *PersonaConfigDetails) MergePersonaConfigHttp(v PersonaConfigHttp) error {
-	httpType := PersonaConfigHttpPersonaTypeHttp
+	httpType := PersonaConfigHttpPersonaType("http")
 	v.PersonaType = &httpType
 	b, err := json.Marshal(v)
 	if err != nil {
@@ -2340,7 +2333,7 @@ func (t PersonaConfigDetails) AsPersonaConfigDns() (PersonaConfigDns, error) {
 
 // FromPersonaConfigDns overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigDns
 func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
-	dnsType := PersonaConfigDnsPersonaTypeDns
+	dnsType := PersonaConfigDnsPersonaType("dns")
 	v.PersonaType = &dnsType
 	b, err := json.Marshal(v)
 	t.union = b
@@ -2349,7 +2342,7 @@ func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
 
 // MergePersonaConfigDns performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigDns
 func (t *PersonaConfigDetails) MergePersonaConfigDns(v PersonaConfigDns) error {
-	dnsType := PersonaConfigDnsPersonaTypeDns
+	dnsType := PersonaConfigDnsPersonaType("dns")
 	v.PersonaType = &dnsType
 	b, err := json.Marshal(v)
 	if err != nil {
@@ -14059,13 +14052,12 @@ type PersonasDeleteResponseObject interface {
 	VisitPersonasDeleteResponse(w http.ResponseWriter) error
 }
 
-type PersonasDelete200JSONResponse PersonaDeleteResponse
+type PersonasDelete204Response struct {
+}
 
-func (response PersonasDelete200JSONResponse) VisitPersonasDeleteResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
+func (response PersonasDelete204Response) VisitPersonasDeleteResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
 }
 
 type PersonasDelete401JSONResponse struct{ UnauthorizedJSONResponse }
@@ -14291,14 +14283,7 @@ type PersonasTestResponseObject interface {
 	VisitPersonasTestResponse(w http.ResponseWriter) error
 }
 
-type PersonasTest200JSONResponse struct {
-	Data      *PersonaTestResponse `json:"data,omitempty"`
-	Metadata  *Metadata            `json:"metadata,omitempty"`
-	RequestId string               `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type PersonasTest200JSONResponse PersonaTestResponse
 
 func (response PersonasTest200JSONResponse) VisitPersonasTestResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14444,14 +14429,7 @@ type ProxiesListResponseObject interface {
 	VisitProxiesListResponse(w http.ResponseWriter) error
 }
 
-type ProxiesList200JSONResponse struct {
-	Data      *[]ProxyDetailsResponse `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesList200JSONResponse []ProxyDetailsResponse
 
 func (response ProxiesList200JSONResponse) VisitProxiesListResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14507,14 +14485,7 @@ type ProxiesCreateResponseObject interface {
 	VisitProxiesCreateResponse(w http.ResponseWriter) error
 }
 
-type ProxiesCreate201JSONResponse struct {
-	Data      *ProxyDetailsResponse `json:"data,omitempty"`
-	Metadata  *Metadata             `json:"metadata,omitempty"`
-	RequestId string                `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesCreate201JSONResponse ProxyDetailsResponse
 
 func (response ProxiesCreate201JSONResponse) VisitProxiesCreateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14597,20 +14568,12 @@ type ProxiesBulkDeleteResponseObject interface {
 	VisitProxiesBulkDeleteResponse(w http.ResponseWriter) error
 }
 
-type ProxiesBulkDelete200JSONResponse struct {
-	Data      *BulkProxyOperationResponse `json:"data,omitempty"`
-	Metadata  *Metadata                   `json:"metadata,omitempty"`
-	RequestId string                      `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
+type ProxiesBulkDelete204Response struct {
 }
 
-func (response ProxiesBulkDelete200JSONResponse) VisitProxiesBulkDeleteResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
+func (response ProxiesBulkDelete204Response) VisitProxiesBulkDeleteResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
 }
 
 type ProxiesBulkDelete400JSONResponse struct{ BadRequestJSONResponse }
@@ -14641,14 +14604,7 @@ type ProxiesBulkTestResponseObject interface {
 	VisitProxiesBulkTestResponse(w http.ResponseWriter) error
 }
 
-type ProxiesBulkTest200JSONResponse struct {
-	Data      *BulkProxyTestResponse `json:"data,omitempty"`
-	Metadata  *Metadata              `json:"metadata,omitempty"`
-	RequestId string                 `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesBulkTest200JSONResponse BulkProxyTestResponse
 
 func (response ProxiesBulkTest200JSONResponse) VisitProxiesBulkTestResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14685,14 +14641,7 @@ type ProxiesBulkUpdateResponseObject interface {
 	VisitProxiesBulkUpdateResponse(w http.ResponseWriter) error
 }
 
-type ProxiesBulkUpdate200JSONResponse struct {
-	Data      *BulkProxyOperationResponse `json:"data,omitempty"`
-	Metadata  *Metadata                   `json:"metadata,omitempty"`
-	RequestId string                      `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesBulkUpdate200JSONResponse BulkProxyOperationResponse
 
 func (response ProxiesBulkUpdate200JSONResponse) VisitProxiesBulkUpdateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14729,14 +14678,7 @@ type ProxiesHealthCheckAllResponseObject interface {
 	VisitProxiesHealthCheckAllResponse(w http.ResponseWriter) error
 }
 
-type ProxiesHealthCheckAll202JSONResponse struct {
-	Data      *BulkHealthCheckResponse `json:"data,omitempty"`
-	Metadata  *Metadata                `json:"metadata,omitempty"`
-	RequestId string                   `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesHealthCheckAll202JSONResponse BulkHealthCheckResponse
 
 func (response ProxiesHealthCheckAll202JSONResponse) VisitProxiesHealthCheckAllResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14772,14 +14714,7 @@ type ProxiesStatusResponseObject interface {
 	VisitProxiesStatusResponse(w http.ResponseWriter) error
 }
 
-type ProxiesStatus200JSONResponse struct {
-	Data      *[]ProxyStatusResponse `json:"data,omitempty"`
-	Metadata  *Metadata              `json:"metadata,omitempty"`
-	RequestId string                 `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesStatus200JSONResponse []ProxyStatusResponse
 
 func (response ProxiesStatus200JSONResponse) VisitProxiesStatusResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14834,13 +14769,12 @@ type ProxiesDeleteResponseObject interface {
 	VisitProxiesDeleteResponse(w http.ResponseWriter) error
 }
 
-type ProxiesDelete200JSONResponse SuccessEnvelope
+type ProxiesDelete204Response struct {
+}
 
-func (response ProxiesDelete200JSONResponse) VisitProxiesDeleteResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
+func (response ProxiesDelete204Response) VisitProxiesDeleteResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
 }
 
 type ProxiesDelete401JSONResponse struct{ UnauthorizedJSONResponse }
@@ -14890,14 +14824,7 @@ type ProxiesUpdateResponseObject interface {
 	VisitProxiesUpdateResponse(w http.ResponseWriter) error
 }
 
-type ProxiesUpdate200JSONResponse struct {
-	Data      *ProxyDetailsResponse `json:"data,omitempty"`
-	Metadata  *Metadata             `json:"metadata,omitempty"`
-	RequestId string                `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesUpdate200JSONResponse ProxyDetailsResponse
 
 func (response ProxiesUpdate200JSONResponse) VisitProxiesUpdateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14961,14 +14888,7 @@ type ProxiesHealthCheckSingleResponseObject interface {
 	VisitProxiesHealthCheckSingleResponse(w http.ResponseWriter) error
 }
 
-type ProxiesHealthCheckSingle200JSONResponse struct {
-	Data      *ProxyHealthCheckResponse `json:"data,omitempty"`
-	Metadata  *Metadata                 `json:"metadata,omitempty"`
-	RequestId string                    `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesHealthCheckSingle200JSONResponse ProxyHealthCheckResponse
 
 func (response ProxiesHealthCheckSingle200JSONResponse) VisitProxiesHealthCheckSingleResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -15014,14 +14934,7 @@ type ProxiesTestResponseObject interface {
 	VisitProxiesTestResponse(w http.ResponseWriter) error
 }
 
-type ProxiesTest200JSONResponse struct {
-	Data      *ProxyTestResponse `json:"data,omitempty"`
-	Metadata  *Metadata          `json:"metadata,omitempty"`
-	RequestId string             `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesTest200JSONResponse ProxyTestResponse
 
 func (response ProxiesTest200JSONResponse) VisitProxiesTestResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
