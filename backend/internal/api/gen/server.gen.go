@@ -296,6 +296,11 @@ const (
 	PatternOffsetRequestPatternTypeSuffix PatternOffsetRequestPatternType = "suffix"
 )
 
+// Defines values for PersonaConfigDnsPersonaType.
+const (
+	PersonaConfigDnsPersonaTypeDns PersonaConfigDnsPersonaType = "dns"
+)
+
 // Defines values for PersonaConfigDnsResolverStrategy.
 const (
 	Priority   PersonaConfigDnsResolverStrategy = "priority"
@@ -309,6 +314,11 @@ const (
 	Custom   PersonaConfigHttpCookieHandlingMode = "custom"
 	Ignore   PersonaConfigHttpCookieHandlingMode = "ignore"
 	Preserve PersonaConfigHttpCookieHandlingMode = "preserve"
+)
+
+// Defines values for PersonaConfigHttpPersonaType.
+const (
+	PersonaConfigHttpPersonaTypeHttp PersonaConfigHttpPersonaType = "http"
 )
 
 // Defines values for PersonaConfigHttpTlsClientHelloMaxVersion.
@@ -1464,6 +1474,7 @@ type PersonaConfigDns struct {
 	ConcurrentQueriesPerDomain int                               `json:"concurrentQueriesPerDomain"`
 	MaxConcurrentGoroutines    *int                              `json:"maxConcurrentGoroutines,omitempty"`
 	MaxDomainsPerRequest       int                               `json:"maxDomainsPerRequest"`
+	PersonaType                *PersonaConfigDnsPersonaType      `json:"personaType,omitempty"`
 	QueryDelayMaxMs            *int                              `json:"queryDelayMaxMs,omitempty"`
 	QueryDelayMinMs            *int                              `json:"queryDelayMinMs,omitempty"`
 	QueryTimeoutSeconds        int                               `json:"queryTimeoutSeconds"`
@@ -1475,6 +1486,9 @@ type PersonaConfigDns struct {
 	ResolversWeighted          *map[string]int                   `json:"resolversWeighted,omitempty"`
 	UseSystemResolvers         *bool                             `json:"useSystemResolvers,omitempty"`
 }
+
+// PersonaConfigDnsPersonaType defines model for PersonaConfigDns.PersonaType.
+type PersonaConfigDnsPersonaType string
 
 // PersonaConfigDnsResolverStrategy defines model for PersonaConfigDns.ResolverStrategy.
 type PersonaConfigDnsResolverStrategy string
@@ -1491,10 +1505,11 @@ type PersonaConfigHttp struct {
 	Http2Settings   *struct {
 		Enabled *bool `json:"enabled,omitempty"`
 	} `json:"http2Settings,omitempty"`
-	Notes                 *string  `json:"notes,omitempty"`
-	RateLimitBurst        *int     `json:"rateLimitBurst,omitempty"`
-	RateLimitDps          *float32 `json:"rateLimitDps,omitempty"`
-	RequestTimeoutSeconds *int     `json:"requestTimeoutSeconds,omitempty"`
+	Notes                 *string                       `json:"notes,omitempty"`
+	PersonaType           *PersonaConfigHttpPersonaType `json:"personaType,omitempty"`
+	RateLimitBurst        *int                          `json:"rateLimitBurst,omitempty"`
+	RateLimitDps          *float32                      `json:"rateLimitDps,omitempty"`
+	RequestTimeoutSeconds *int                          `json:"requestTimeoutSeconds,omitempty"`
 	TlsClientHello        *struct {
 		CipherSuites     *[]string                                  `json:"cipherSuites,omitempty"`
 		CurvePreferences *[]string                                  `json:"curvePreferences,omitempty"`
@@ -1506,6 +1521,9 @@ type PersonaConfigHttp struct {
 
 // PersonaConfigHttpCookieHandlingMode defines model for PersonaConfigHttp.CookieHandling.Mode.
 type PersonaConfigHttpCookieHandlingMode string
+
+// PersonaConfigHttpPersonaType defines model for PersonaConfigHttp.PersonaType.
+type PersonaConfigHttpPersonaType string
 
 // PersonaConfigHttpTlsClientHelloMaxVersion defines model for PersonaConfigHttp.TlsClientHello.MaxVersion.
 type PersonaConfigHttpTlsClientHelloMaxVersion string
@@ -2292,7 +2310,8 @@ func (t PersonaConfigDetails) AsPersonaConfigHttp() (PersonaConfigHttp, error) {
 
 // FromPersonaConfigHttp overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigHttp
 func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error {
-	v.PersonaType = "http"
+	httpType := PersonaConfigHttpPersonaTypeHttp
+	v.PersonaType = &httpType
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -2300,7 +2319,8 @@ func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error 
 
 // MergePersonaConfigHttp performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigHttp
 func (t *PersonaConfigDetails) MergePersonaConfigHttp(v PersonaConfigHttp) error {
-	v.PersonaType = "http"
+	httpType := PersonaConfigHttpPersonaTypeHttp
+	v.PersonaType = &httpType
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2320,7 +2340,8 @@ func (t PersonaConfigDetails) AsPersonaConfigDns() (PersonaConfigDns, error) {
 
 // FromPersonaConfigDns overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigDns
 func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
-	v.PersonaType = "dns"
+	dnsType := PersonaConfigDnsPersonaTypeDns
+	v.PersonaType = &dnsType
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -2328,7 +2349,8 @@ func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
 
 // MergePersonaConfigDns performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigDns
 func (t *PersonaConfigDetails) MergePersonaConfigDns(v PersonaConfigDns) error {
-	v.PersonaType = "dns"
+	dnsType := PersonaConfigDnsPersonaTypeDns
+	v.PersonaType = &dnsType
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -12498,14 +12520,7 @@ type KeywordSetsListResponseObject interface {
 	VisitKeywordSetsListResponse(w http.ResponseWriter) error
 }
 
-type KeywordSetsList200JSONResponse struct {
-	Data      *[]KeywordSetResponse `json:"data,omitempty"`
-	Metadata  *Metadata             `json:"metadata,omitempty"`
-	RequestId string                `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type KeywordSetsList200JSONResponse []KeywordSetResponse
 
 func (response KeywordSetsList200JSONResponse) VisitKeywordSetsListResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -12561,14 +12576,7 @@ type KeywordSetsCreateResponseObject interface {
 	VisitKeywordSetsCreateResponse(w http.ResponseWriter) error
 }
 
-type KeywordSetsCreate201JSONResponse struct {
-	Data      *KeywordSetResponse `json:"data,omitempty"`
-	Metadata  *Metadata           `json:"metadata,omitempty"`
-	RequestId string              `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type KeywordSetsCreate201JSONResponse KeywordSetResponse
 
 func (response KeywordSetsCreate201JSONResponse) VisitKeywordSetsCreateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")

@@ -1900,6 +1900,11 @@ export interface components {
         PersonaType: "dns" | "http";
         /** @description HTTP persona configuration details */
         PersonaConfigHttp: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            personaType: "http";
             userAgent: string;
             headers?: {
                 [key: string]: string;
@@ -1927,14 +1932,14 @@ export interface components {
             rateLimitDps?: number;
             rateLimitBurst?: number;
             notes?: string;
+        };
+        /** @description DNS persona configuration details */
+        PersonaConfigDns: {
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
              */
-            personaType: "http";
-        };
-        /** @description DNS persona configuration details */
-        PersonaConfigDns: {
+            personaType: "dns";
             resolvers: string[];
             useSystemResolvers?: boolean;
             queryTimeoutSeconds: number;
@@ -1952,11 +1957,6 @@ export interface components {
             /** Format: float */
             rateLimitDps?: number;
             rateLimitBurst?: number;
-            /**
-             * @description discriminator enum property added by openapi-typescript
-             * @enum {string}
-             */
-            personaType: "dns";
         };
         PersonaConfigDetails: components["schemas"]["PersonaConfigHttp"] | components["schemas"]["PersonaConfigDns"];
         PersonaResponse: {
@@ -4283,9 +4283,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["KeywordSetResponse"][];
-                    };
+                    "application/json": components["schemas"]["KeywordSetResponse"][];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -4313,9 +4311,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["KeywordSetResponse"];
-                    };
+                    "application/json": components["schemas"]["KeywordSetResponse"];
                 };
             };
             400: components["responses"]["BadRequest"];
@@ -5203,9 +5199,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: Record<string, never>;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -5275,9 +5269,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: Record<string, never>;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -5432,9 +5424,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: Record<string, never>;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -5578,9 +5568,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: Record<string, never>;
-                    };
+                    "application/json": Record<string, never>;
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -5951,9 +5939,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignProgressResponse"];
-                    };
+                    "application/json": components["schemas"]["CampaignProgressResponse"];
                 };
             };
             401: components["responses"]["Unauthorized"];
@@ -6480,9 +6466,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignPhasesStatusResponse"];
-                    };
+                    "application/json": components["schemas"]["CampaignPhasesStatusResponse"];
                 };
             };
             404: components["responses"]["NotFound"];
@@ -6506,9 +6490,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignFunnelResponse"];
-                    };
+                    "application/json": components["schemas"]["CampaignFunnelResponse"];
                 };
             };
             404: components["responses"]["NotFound"];
@@ -6558,9 +6540,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignClassificationsResponse"];
-                    };
+                    "application/json": components["schemas"]["CampaignClassificationsResponse"];
                 };
             };
             404: components["responses"]["NotFound"];
@@ -6584,9 +6564,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignMomentumResponse"];
-                    };
+                    "application/json": components["schemas"]["CampaignMomentumResponse"];
                 };
             };
             404: components["responses"]["NotFound"];
@@ -6610,9 +6588,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: components["schemas"]["CampaignRecommendationsResponse"];
-                    };
+                    "application/json": components["schemas"]["CampaignRecommendationsResponse"];
                 };
             };
             404: components["responses"]["NotFound"];
@@ -6661,14 +6637,12 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SuccessEnvelope"] & {
-                        data?: {
-                            /** Format: uuid */
-                            operationId?: string;
-                            type?: string;
-                            status?: string;
-                        }[];
-                    };
+                    "application/json": {
+                        /** Format: uuid */
+                        operationId?: string;
+                        type?: string;
+                        status?: string;
+                    }[];
                 };
             };
             400: components["responses"]["BadRequest"];

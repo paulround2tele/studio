@@ -22,6 +22,12 @@
 export interface PersonaConfigDns {
     /**
      * 
+     * @type {string}
+     * @memberof PersonaConfigDns
+     */
+    'personaType'?: PersonaConfigDnsPersonaTypeEnum;
+    /**
+     * 
      * @type {Array<string>}
      * @memberof PersonaConfigDns
      */
@@ -100,6 +106,13 @@ export interface PersonaConfigDns {
     'rateLimitBurst'?: number;
 }
 
+/**
+    * @export
+    * @enum {string}
+    */
+export enum PersonaConfigDnsPersonaTypeEnum {
+    dns = 'dns'
+}
 /**
     * @export
     * @enum {string}

@@ -422,7 +422,7 @@ func (h *strictHandlers) KeywordSetsList(ctx context.Context, r gen.KeywordSetsL
 			Rules:       rulesDTO,
 		})
 	}
-	resp := gen.KeywordSetsList200JSONResponse{Data: &items, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}
+	resp := gen.KeywordSetsList200JSONResponse(items)
 	return resp, nil
 }
 
@@ -509,20 +509,15 @@ func (h *strictHandlers) KeywordSetsCreate(ctx context.Context, r gen.KeywordSet
 	if r.Body.Rules != nil {
 		count = len(*r.Body.Rules)
 	}
-	resp := gen.KeywordSetsCreate201JSONResponse{
-		Data: &gen.KeywordSetResponse{
-			Id:          openapi_types.UUID(ks.ID),
-			Name:        ks.Name,
-			Description: desc,
-			IsEnabled:   ks.IsEnabled,
-			CreatedAt:   ks.CreatedAt,
-			UpdatedAt:   ks.UpdatedAt,
-			RuleCount:   count,
-		},
-		Metadata:  okMeta(),
-		RequestId: reqID(),
-		Success:   boolPtr(true),
-	}
+	resp := gen.KeywordSetsCreate201JSONResponse(gen.KeywordSetResponse{
+		Id:          openapi_types.UUID(ks.ID),
+		Name:        ks.Name,
+		Description: desc,
+		IsEnabled:   ks.IsEnabled,
+		CreatedAt:   ks.CreatedAt,
+		UpdatedAt:   ks.UpdatedAt,
+		RuleCount:   count,
+	})
 	// Broadcast SSE event to the current user listeners
 	if h.deps != nil && h.deps.SSE != nil {
 		var userID *uuid.UUID

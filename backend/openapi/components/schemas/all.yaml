@@ -459,6 +459,10 @@ PersonaConfigHttp:
   type: object
   description: HTTP persona configuration details
   properties:
+    personaType: 
+      type: string
+      enum: [http]
+      default: http
     userAgent: { type: string }
     headers:
       type: object
@@ -498,6 +502,10 @@ PersonaConfigDns:
   type: object
   description: DNS persona configuration details
   properties:
+    personaType: 
+      type: string
+      enum: [dns]
+      default: dns
     resolvers:
       type: array
       items: { type: string, description: Host:port or URL }
