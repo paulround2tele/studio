@@ -280,7 +280,10 @@ class SnapshotCompactionService {
     }
 
     // Sort by timestamp
-    const combined = compactedSnapshots.map((snapshot, idx) => ({ snapshot, originalIndex: preservedIndices[idx] }));
+    const combined = compactedSnapshots.map((snapshot, idx) => {
+      const originalIndex = safeAt(preservedIndices, idx);
+      return { snapshot, originalIndex: originalIndex ?? idx };
+    });
     combined.sort((a, b) => new Date(a.snapshot.timestamp).getTime() - new Date(b.snapshot.timestamp).getTime());
 
     return {
@@ -300,8 +303,15 @@ class SnapshotCompactionService {
       return { compactedSnapshots: [], preservedIndices: [] };
     }
 
-    const startTime = new Date(snapshots[0].timestamp).getTime();
-    const endTime = new Date(snapshots[snapshots.length - 1].timestamp).getTime();
+    const firstSnapshot = safeFirst(snapshots);
+    const lastSnapshot = safeLast(snapshots);
+    
+    if (!firstSnapshot || !lastSnapshot) {
+      return { compactedSnapshots: [], preservedIndices: [] };
+    }
+
+    const startTime = new Date(firstSnapshot.timestamp).getTime();
+    const endTime = new Date(lastSnapshot.timestamp).getTime();
     const interval = (endTime - startTime) / config.targetPoints;
 
     const compactedSnapshots: AggregateSnapshot[] = [];
@@ -312,18 +322,22 @@ class SnapshotCompactionService {
       
       // Find closest snapshot to target time
       let closestIndex = 0;
-      let closestDistance = Math.abs(new Date(snapshots[0].timestamp).getTime() - targetTime);
+      let closestDistance = Math.abs(new Date(firstSnapshot.timestamp).getTime() - targetTime);
 
       for (let j = 1; j < snapshots.length; j++) {
-        const distance = Math.abs(new Date(snapshots[j].timestamp).getTime() - targetTime);
+        const currentSnapshot = safeAt(snapshots, j);
+        if (!currentSnapshot) continue;
+        
+        const distance = Math.abs(new Date(currentSnapshot.timestamp).getTime() - targetTime);
         if (distance < closestDistance) {
           closestDistance = distance;
           closestIndex = j;
         }
       }
-
-      if (!preservedIndices.includes(closestIndex)) {
-        compactedSnapshots.push(snapshots[closestIndex]);
+      
+      const selectedSnapshot = safeAt(snapshots, closestIndex);
+      if (selectedSnapshot && !preservedIndices.includes(closestIndex)) {
+        compactedSnapshots.push(selectedSnapshot);
         preservedIndices.push(closestIndex);
       }
     }
