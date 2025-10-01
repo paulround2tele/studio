@@ -20,7 +20,7 @@ put:
   security:
     - cookieAuth: []
   summary: Update DNS validator configuration
-  operationId: config_update_DNS validator
+  operationId: config_update_dns_validator
   requestBody:
     required: true
     content:
