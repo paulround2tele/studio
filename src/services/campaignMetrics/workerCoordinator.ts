@@ -7,7 +7,7 @@ import { DomainMetricsInput } from '@/types/campaignMetrics';
 
 // Feature flag from Phase 4
 const isWorkerEnabled = () => 
-  process.env.NEXT_PUBLIC_ENABLE_WORKER_METRICS !== 'false';
+  typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_ENABLE_WORKER_METRICS !== 'false';
 
 /**
  * Extended worker message types for Phase 5
@@ -31,7 +31,7 @@ export interface ExtendedWorkerMessage {
 }
 
 /**
- * Worker task queue item
+ * Worker task queue item with improved type safety
  */
 interface WorkerTask {
   id: string;
@@ -40,7 +40,15 @@ interface WorkerTask {
   reject: (error: Error) => void;
   queuedAt: number;
   startedAt?: number;
+  timeout?: number;
 }
+
+/**
+ * Result wrapper for safe worker operations
+ */
+type WorkerResult<T> = 
+  | { success: true; data: T }
+  | { success: false; error: string };
 
 /**
  * Worker coordinator class
@@ -51,6 +59,29 @@ class WorkerCoordinator {
   private currentTask: WorkerTask | null = null;
   private isProcessing = false;
   private requestIdCounter = 0;
+
+  /**
+   * Safe task retrieval with null checking
+   */
+  private safeGetCurrentTask(): WorkerTask | null {
+    return this.currentTask;
+  }
+
+  /**
+   * Safe task queue operations
+   */
+  private safeDequeue(): WorkerTask | null {
+    return this.taskQueue.shift() ?? null;
+  }
+
+  /**
+   * Runtime assert for task operations
+   */
+  private assertTaskExists(task: WorkerTask | null, context: string): asserts task is WorkerTask {
+    if (task === null) {
+      throw new Error(`Task not found in ${context}`);
+    }
+  }
 
   /**
    * Initialize the worker
@@ -75,12 +106,13 @@ class WorkerCoordinator {
   private handleWorkerMessage(event: MessageEvent<ExtendedWorkerMessage>): void {
     const { type, id, error, ...result } = event.data;
 
-    if (!this.currentTask || this.currentTask.id !== id) {
+    const currentTask = this.safeGetCurrentTask();
+    if (currentTask === null || currentTask.id !== id) {
       console.warn('[WorkerCoordinator] Received message for unknown task:', id);
       return;
     }
 
-    const task = this.currentTask;
+    const task = currentTask;
     this.currentTask = null;
 
     // Calculate timing
@@ -111,8 +143,9 @@ class WorkerCoordinator {
   private handleWorkerError(error: ErrorEvent): void {
     console.error('[WorkerCoordinator] Worker error:', error);
     
-    if (this.currentTask) {
-      this.currentTask.reject(new Error('Worker encountered an error'));
+    const currentTask = this.safeGetCurrentTask();
+    if (currentTask !== null) {
+      currentTask.reject(new Error('Worker encountered an error'));
       this.currentTask = null;
     }
 
@@ -148,7 +181,12 @@ class WorkerCoordinator {
     }
 
     this.isProcessing = true;
-    const task = this.taskQueue.shift()!;
+    const task = this.safeDequeue();
+    if (task === null) {
+      this.isProcessing = false;
+      return;
+    }
+
     this.currentTask = task;
     task.startedAt = Date.now();
 

@@ -178,7 +178,7 @@ class PerformanceGuardrailsService {
     maxPerformanceMetrics: 1000,
     maxMemoryStats: 500,
     gcTriggerThreshold: 0.9, // Trigger cleanup at 90% memory
-    enableIncrementalCleanup: process.env.NEXT_PUBLIC_ENABLE_INCREMENTAL_CLEANUP !== 'false',
+    enableIncrementalCleanup: typeof process === 'undefined' || process.env?.NEXT_PUBLIC_ENABLE_INCREMENTAL_CLEANUP !== 'false',
   };
 
   constructor() {

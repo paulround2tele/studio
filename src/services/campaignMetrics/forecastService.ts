@@ -11,13 +11,19 @@ import { forecastBlendService } from './forecastBlendService';
 import { fetchWithPolicy } from '@/lib/utils/fetchWithPolicy';
 import { useBackendCanonical, useForecastCustomHorizon } from '@/lib/feature-flags-simple';
 import { safeAt, safeLast, safeFirst, hasMinElements, NonEmptyArray, isNonEmptyArray } from '@/lib/utils/arrayUtils';
+import { 
+  ForecastPoint, 
+  NormalizedForecastResult,
+  normalizeForecastResult,
+  createForecastPoint 
+} from '@/types/forecasting';
 
 // Feature flags
 const isForecastsEnabled = () => 
-  process.env.NEXT_PUBLIC_ENABLE_FORECASTS !== 'false';
+  typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_ENABLE_FORECASTS !== 'false';
 
 const getForecastHorizon = () => 
-  parseInt(process.env.NEXT_PUBLIC_FORECAST_HORIZON_DAYS || '7', 10);
+  parseInt((typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_FORECAST_HORIZON_DAYS) || '7', 10);
 
 // Phase 9: Bayesian blending feature flag
 const isBayesianBlendingEnabled = () =>

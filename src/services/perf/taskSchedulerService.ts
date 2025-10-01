@@ -22,12 +22,32 @@ export type TaskPriority = 'high' | 'medium' | 'low';
 export type TaskKind = 'causal_recompute' | 'forecast_blend' | 'simulation_projection';
 
 /**
- * Task definition
+ * Timer handle for ownership tracking
+ */
+export type TimerHandle = ReturnType<typeof setTimeout>;
+
+/**
+ * Discriminated union for task descriptors
+ */
+export type TaskDescriptor = 
+  | { kind: 'forecast'; payload: { modelForecasts: any[]; metricKey: string; horizon: number } }
+  | { kind: 'metric'; payload: { aggregates: any; classifiedCounts: any } }
+  | { kind: 'aggregate'; payload: { baselineMetrics: Record<string, any> } };
+
+/**
+ * Result wrapper for safe operations
+ */
+export type Result<T, E = Error> = 
+  | { success: true; data: T }
+  | { success: false; error: E };
+
+/**
+ * Task definition with improved type safety
  */
 export interface ScheduledTask {
   id: string;
   kind: TaskKind;
-  payload: any;
+  payload: any; // TODO: Replace with TaskDescriptor payload when fully typed
   priority: TaskPriority;
   queuedAt: number;
   timeoutMs: number;
@@ -69,10 +89,66 @@ class TaskSchedulerService {
   private lastWorkerResponse = 0;
   private readonly WORKER_TIMEOUT_MS = 5000;
   private readonly HEARTBEAT_INTERVAL_MS = 10000;
+  private activeTimers = new Set<TimerHandle>();
   
   constructor() {
     this.initializeWorker();
     this.startHealthCheck();
+  }
+
+  /**
+   * Safe queue task retrieval with null checking
+   */
+  private safeGetTask(taskId: string): ScheduledTask | null {
+    const task = this.taskQueue.get(taskId);
+    return task ?? null;
+  }
+
+  /**
+   * Dequeue operation that returns null for empty queue
+   */
+  private dequeue(): ScheduledTask | null {
+    // Find highest priority task that's not currently pending
+    const availableTasks = Array.from(this.taskQueue.values())
+      .filter(task => !this.pendingTasks.has(task.id))
+      .sort((a, b) => {
+        const priorityOrder = { high: 3, medium: 2, low: 1 };
+        return priorityOrder[b.priority] - priorityOrder[a.priority] || a.queuedAt - b.queuedAt;
+      });
+
+    return availableTasks.length > 0 ? availableTasks[0] : null;
+  }
+
+  /**
+   * Runtime assert for task operations
+   */
+  private assertTaskExists(task: ScheduledTask | null, context: string): asserts task is ScheduledTask {
+    if (task === null) {
+      throw new Error(`Task not found in ${context}`);
+    }
+  }
+
+  /**
+   * Safe timer creation with ownership tracking
+   */
+  private createTimer(callback: () => void, delayMs: number): TimerHandle {
+    const timer = setTimeout(() => {
+      this.activeTimers.delete(timer);
+      callback();
+    }, delayMs);
+    
+    this.activeTimers.add(timer);
+    return timer;
+  }
+
+  /**
+   * Clear all active timers
+   */
+  private clearAllTimers(): void {
+    for (const timer of this.activeTimers) {
+      clearTimeout(timer);
+    }
+    this.activeTimers.clear();
   }
 
   /**
@@ -137,6 +213,22 @@ class TaskSchedulerService {
     }
     this.taskQueue.clear();
     this.pendingTasks.clear();
+    this.clearAllTimers();
+  }
+
+  /**
+   * Cleanup service and release resources
+   */
+  destroy(): void {
+    this.clearQueue();
+    
+    if (this.worker) {
+      this.worker.terminate();
+      this.worker = undefined;
+    }
+    
+    this.workerInitialized = false;
+    this.workerHealthy = false;
   }
 
   /**
@@ -187,8 +279,8 @@ class TaskSchedulerService {
       return;
     }
 
-    const task = this.taskQueue.get(response.taskId);
-    if (!task) {
+    const task = this.safeGetTask(response.taskId);
+    if (task === null) {
       console.warn('[TaskScheduler] Received response for unknown task:', response.taskId);
       return;
     }
@@ -223,8 +315,8 @@ class TaskSchedulerService {
     // Reject all pending tasks and fallback to inline execution
     const pendingTaskIds = Array.from(this.pendingTasks);
     for (const taskId of pendingTaskIds) {
-      const task = this.taskQueue.get(taskId);
-      if (task) {
+      const task = this.safeGetTask(taskId);
+      if (task !== null) {
         this.executeInlineFallback(task);
       }
     }
@@ -251,24 +343,15 @@ class TaskSchedulerService {
       return;
     }
 
-    // Find highest priority task that's not currently pending
-    const availableTasks = Array.from(this.taskQueue.values())
-      .filter(task => !this.pendingTasks.has(task.id))
-      .sort((a, b) => {
-        const priorityOrder = { high: 3, medium: 2, low: 1 };
-        return priorityOrder[b.priority] - priorityOrder[a.priority] || a.queuedAt - b.queuedAt;
-      });
-
-    if (availableTasks.length === 0) {
-      return; // No available tasks
-    }
-
     // Check if worker is currently busy (has pending tasks)
     if (this.pendingTasks.size > 0) {
       return; // Worker is busy
     }
 
-    const task = availableTasks[0];
+    const task = this.dequeue();
+    if (task === null) {
+      return; // No available tasks
+    }
     
     // Check for timeout
     const now = Date.now();
@@ -292,12 +375,12 @@ class TaskSchedulerService {
 
     this.worker.postMessage(workerTask);
 
-    // Set task timeout
-    setTimeout(() => {
+    // Set task timeout using safe timer creation
+    this.createTimer(() => {
       if (this.pendingTasks.has(task.id)) {
         this.pendingTasks.delete(task.id);
-        const queuedTask = this.taskQueue.get(task.id);
-        if (queuedTask) {
+        const queuedTask = this.safeGetTask(task.id);
+        if (queuedTask !== null) {
           this.executeInlineFallback(queuedTask);
         }
       }

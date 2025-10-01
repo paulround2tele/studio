@@ -443,7 +443,7 @@ class OfflineResilienceService {
    */
   private async executeGovernanceEvent(action: DeferredAction): Promise<ReplayResult> {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const apiUrl = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL;
       if (!apiUrl) {
         throw new Error('API URL not configured');
       }
@@ -478,7 +478,7 @@ class OfflineResilienceService {
    */
   private async executeAuditLog(action: DeferredAction): Promise<ReplayResult> {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const apiUrl = typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL;
       if (!apiUrl) {
         throw new Error('API URL not configured');
       }
