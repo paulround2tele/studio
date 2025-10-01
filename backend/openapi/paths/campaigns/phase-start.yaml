@@ -16,12 +16,7 @@ post:
       description: Started
       content:
         application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/PhaseStatusResponse' }
+          schema: { $ref: '../../components/schemas/all.yaml#/PhaseStatusResponse' }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }

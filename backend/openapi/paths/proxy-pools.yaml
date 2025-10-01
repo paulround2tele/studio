@@ -11,13 +11,8 @@
 					content:
 						application/json:
           schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												type: array
-												items: { $ref: '#/components/schemas/ProxyPool' }
+								type: array
+          items: { $ref: '#/components/schemas/ProxyPool' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
@@ -31,21 +26,15 @@
 				required: true
 				content:
 					application/json:
-          schema: { $ref: '#/components/schemas/ProxyPoolRequest' }
+        schema: { $ref: '#/components/schemas/ProxyPoolRequest' }
 			responses:
 				'201':
 					description: Created
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data: { $ref: '#/components/schemas/ProxyPool' }
+        schema: { $ref: '#/components/schemas/ProxyPool' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
-
 	/proxy-pools/{poolId}:
 		put:
 			tags: [proxy-pools]
@@ -62,18 +51,13 @@
 				required: true
 				content:
 					application/json:
-          schema: { $ref: '#/components/schemas/ProxyPoolRequest' }
+        schema: { $ref: '#/components/schemas/ProxyPoolRequest' }
 			responses:
 				'200':
 					description: OK
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data: { $ref: '#/components/schemas/ProxyPool' }
+        schema: { $ref: '#/components/schemas/ProxyPool' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'404': { $ref: '#/components/responses/NotFound' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
@@ -93,16 +77,10 @@
 					description: OK
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data: { $ref: '#/components/schemas/ProxyPoolDeleteResponse' }
+        schema: { $ref: '#/components/schemas/ProxyPoolDeleteResponse' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'404': { $ref: '#/components/responses/NotFound' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
-
 	/proxy-pools/{poolId}/proxies:
 		post:
 			tags: [proxy-pools]
@@ -119,7 +97,7 @@
 				required: true
 				content:
 					application/json:
-          schema:
+        schema:
 							type: object
 							properties:
 								proxyId: { type: string, format: uuid }
@@ -130,15 +108,9 @@
 					description: Created
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data: { $ref: '#/components/schemas/ProxyPoolMembership' }
+        schema: { $ref: '#/components/schemas/ProxyPoolMembership' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
-
 	/proxy-pools/{poolId}/proxies/{proxyId}:
 		delete:
 			tags: [proxy-pools]
@@ -160,9 +132,4 @@
 					description: OK
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data: { $ref: '#/components/schemas/ProxyPoolMembershipResponse' }
+        schema: { $ref: '#/components/schemas/ProxyPoolMembershipResponse' }

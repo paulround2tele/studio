@@ -12,12 +12,7 @@ post:
       description: Bulk resources allocated successfully
       content:
         application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/BulkResourceAllocationResponse' }
+          schema: { $ref: '../../components/schemas/all.yaml#/BulkResourceAllocationResponse' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }

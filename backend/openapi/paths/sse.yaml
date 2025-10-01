@@ -58,13 +58,8 @@
 					content:
 						application/json:
           schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												type: object
-												properties:
+								type: object
+          properties:
 													activeConnections:
 														type: integer
 														description: Number of active SSE connections

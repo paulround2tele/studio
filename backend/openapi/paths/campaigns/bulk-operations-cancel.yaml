@@ -1,32 +1,24 @@
 post:
   tags: [campaigns]
-  summary: Cancel bulk operation
+  summary: Cancel a bulk operation
   operationId: cancelBulkOperation
   parameters:
     - name: operationId
       in: path
       required: true
       schema: { type: string, format: uuid }
-      description: Bulk operation ID to cancel
   responses:
     '200':
-      description: Bulk operation cancelled successfully
+      description: Bulk operation cancellation status
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      operationId: { type: string, format: uuid }
-                      status:
-                        $ref: '../../components/schemas/all.yaml#/BulkOperationCancelStatus'
+            type: object
+            properties:
+              operationId: { type: string, format: uuid }
+              status:
+                $ref: '../../components/schemas/all.yaml#/BulkOperationCancelStatus'
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }
-    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

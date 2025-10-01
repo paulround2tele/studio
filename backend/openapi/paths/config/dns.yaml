@@ -2,20 +2,15 @@ get:
   tags: [server-settings]
   security:
     - cookieAuth: []
-  summary: Get DNS configuration
-  operationId: config_get_dns
+  summary: Get DNS validator configuration
+  operationId: config_get_DNS validator
   responses:
     '200':
-      description: DNS config
+      description: DNS validator config
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    $ref: '../../components/schemas/all.yaml#/DNSValidatorConfigJSON'
+            $ref: '../../components/schemas/all.yaml#/DNSValidatorConfigJSON'
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
@@ -24,8 +19,8 @@ put:
   tags: [server-settings]
   security:
     - cookieAuth: []
-  summary: Update DNS configuration
-  operationId: config_update_dns
+  summary: Update DNS validator configuration
+  operationId: config_update_dns_validator
   requestBody:
     required: true
     content:
@@ -38,12 +33,7 @@ put:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    $ref: '../../components/schemas/all.yaml#/DNSValidatorConfigJSON'
+            $ref: '../../components/schemas/all.yaml#/DNSValidatorConfigJSON'
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }

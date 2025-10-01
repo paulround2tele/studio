@@ -10,23 +10,18 @@ get:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      activeConnections:
-                        type: integer
-                        description: Number of active SSE connections
-                      totalEventsSent:
-                        type: integer
-                        description: Total events sent since server start
-                      uptime:
-                        type: string
-                        description: Server uptime
-    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
-    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
-    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+            type: object
+            properties:
+              activeConnections:
+                type: integer
+                description: Number of active SSE connections
+              totalEventsSent:
+                type: integer
+                description: Total events sent since server start
+              uptime:
+                type: string
+                description: Server uptime
+  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+  '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

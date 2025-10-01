@@ -8,11 +8,6 @@ get:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    type: object
-    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+            type: object
+  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

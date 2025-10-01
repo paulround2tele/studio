@@ -18,13 +18,8 @@
 					content:
 						application/json:
           schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												type: array
-												items: { $ref: '#/components/schemas/ProxyDetailsResponse' }
+								type: array
+          items: { $ref: '#/components/schemas/ProxyDetailsResponse' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }
@@ -39,13 +34,13 @@
 				required: true
 				content:
 					application/json:
-          schema: { $ref: '#/components/schemas/CreateProxyRequestAPI' }
+        schema: { $ref: '#/components/schemas/CreateProxyRequestAPI' }
 			responses:
 				'201':
 					description: Created
 					content:
 						application/json:
-          schema:
+        schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object
@@ -76,7 +71,7 @@
 					description: OK
 					content:
 						application/json:
-          schema:
+        schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object
@@ -106,18 +101,13 @@
 				required: true
 				content:
 					application/json:
-          schema: { $ref: '#/components/schemas/UpdateProxyRequestAPI' }
+        schema: { $ref: '#/components/schemas/UpdateProxyRequestAPI' }
 			responses:
 				'200':
 					description: Updated
 					content:
 						application/json:
-          schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data: { $ref: '#/components/schemas/ProxyDetailsResponse' }
+        schema: { $ref: '#/components/schemas/ProxyDetailsResponse' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
@@ -139,7 +129,7 @@
 					description: Deleted
 					content:
 						application/json:
-          schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+        schema: { $ref: '#/components/schemas/SuccessEnvelope' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'404': { $ref: '#/components/responses/NotFound' }
@@ -156,7 +146,7 @@
 					description: OK
 					content:
 						application/json:
-          schema:
+        schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object
@@ -185,7 +175,7 @@
 					description: OK
 					content:
 						application/json:
-          schema:
+        schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object

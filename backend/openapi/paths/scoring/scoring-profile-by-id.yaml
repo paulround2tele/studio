@@ -14,12 +14,7 @@ get:
       description: OK
       content:
         application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/ScoringProfile' }
+          schema: { $ref: '../../components/schemas/all.yaml#/ScoringProfile' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }
@@ -45,12 +40,7 @@ put:
       description: Updated
       content:
         application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/ScoringProfile' }
+          schema: { $ref: '../../components/schemas/all.yaml#/ScoringProfile' }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
@@ -70,11 +60,8 @@ delete:
       required: true
       schema: { type: string, format: uuid }
   responses:
-    '200':
-      description: Deleted
-      content:
-        application/json:
-          schema: { $ref: '../../components/schemas/all.yaml#/SuccessEnvelope' }
+    '204':
+      description: No Content
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }

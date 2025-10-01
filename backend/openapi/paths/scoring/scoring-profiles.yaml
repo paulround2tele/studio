@@ -13,41 +13,31 @@ get:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    type: array
-                    items: { $ref: '../../components/schemas/all.yaml#/ScoringProfile' }
-    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
-    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+            type: array
+            items: { $ref: '../../components/schemas/all.yaml#/ScoringProfile' }
+  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
 post:
-  tags: [scoring]
-  security:
-    - cookieAuth: []
-  summary: Create scoring profile
-  operationId: scoring_profiles_create
-  requestBody:
-    required: true
+tags: [scoring]
+security:
+  - cookieAuth: []
+summary: Create scoring profile
+operationId: scoring_profiles_create
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema: { $ref: '../../components/schemas/all.yaml#/CreateScoringProfileRequest' }
+responses:
+  '201':
+    description: Created
     content:
       application/json:
-        schema: { $ref: '../../components/schemas/all.yaml#/CreateScoringProfileRequest' }
-  responses:
-    '201':
-      description: Created
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/ScoringProfile' }
-    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
-    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
-    '409': { $ref: '../../components/responses.yaml#/Conflict' }
-    '422': { $ref: '../../components/responses.yaml#/ValidationError' }
-    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+        schema: { $ref: '../../components/schemas/all.yaml#/ScoringProfile' }
+  '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+  '409': { $ref: '../../components/responses.yaml#/Conflict' }
+  '422': { $ref: '../../components/responses.yaml#/ValidationError' }
+  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

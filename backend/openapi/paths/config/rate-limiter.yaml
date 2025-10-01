@@ -3,19 +3,14 @@ get:
   security:
     - cookieAuth: []
   summary: Get rate limiter configuration
-  operationId: config_get_rate_limiter
+  operationId: config_get_rate limiter
   responses:
     '200':
       description: rate limiter config
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    $ref: '../../components/schemas/all.yaml#/RateLimiterConfig'
+            $ref: '../../components/schemas/all.yaml#/RateLimiterConfig'
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
@@ -38,12 +33,7 @@ put:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    $ref: '../../components/schemas/all.yaml#/RateLimiterConfig'
+            $ref: '../../components/schemas/all.yaml#/RateLimiterConfig'
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }

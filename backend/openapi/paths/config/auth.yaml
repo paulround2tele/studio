@@ -3,19 +3,14 @@ get:
   security:
     - cookieAuth: []
   summary: Get authentication configuration
-  operationId: config_get_auth
+  operationId: config_get_authentication
   responses:
     '200':
       description: authentication config
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    $ref: '../../components/schemas/all.yaml#/AuthConfig'
+            $ref: '../../components/schemas/all.yaml#/AuthConfig'
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
@@ -25,7 +20,7 @@ put:
   security:
     - cookieAuth: []
   summary: Update authentication configuration
-  operationId: config_update_auth
+  operationId: config_update_authentication
   requestBody:
     required: true
     content:
@@ -38,12 +33,7 @@ put:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    $ref: '../../components/schemas/all.yaml#/AuthConfig'
+            $ref: '../../components/schemas/all.yaml#/AuthConfig'
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }

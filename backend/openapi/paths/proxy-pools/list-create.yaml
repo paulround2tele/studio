@@ -10,37 +10,27 @@ get:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    type: array
-                    items: { $ref: '../../components/schemas/all.yaml#/ProxyPool' }
-    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
-    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+            type: array
+            items: { $ref: '../../components/schemas/all.yaml#/ProxyPool' }
+  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
 post:
-  tags: [proxy-pools]
-  security:
-    - cookieAuth: []
-  summary: Create proxy pool
-  operationId: proxy_pools_create
-  requestBody:
-    required: true
+tags: [proxy-pools]
+security:
+  - cookieAuth: []
+summary: Create proxy pool
+operationId: proxy_pools_create
+requestBody:
+  required: true
+  content:
+    application/json:
+        schema: { $ref: '../../components/schemas/all.yaml#/ProxyPoolRequest' }
+responses:
+  '201':
+    description: Created
     content:
       application/json:
-          schema: { $ref: '../../components/schemas/all.yaml#/ProxyPoolRequest' }
-  responses:
-    '201':
-      description: Created
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/ProxyPool' }
-    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
-    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+        schema: { $ref: '../../components/schemas/all.yaml#/ProxyPool' }
+  '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

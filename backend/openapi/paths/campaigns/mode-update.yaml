@@ -1,4 +1,4 @@
-patch:
+put:
   tags: [campaigns]
   summary: Update campaign execution mode
   operationId: campaigns_mode_update
@@ -22,14 +22,9 @@ patch:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      mode: { $ref: '../../components/schemas/all.yaml#/CampaignModeEnum' }
+            type: object
+            properties:
+              mode: { $ref: '../../components/schemas/all.yaml#/CampaignModeEnum' }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }
