@@ -40,20 +40,5 @@ export function handleApiError(error: unknown, context: string = 'API call'): ne
   throw new Error(`${context}: ${message}`);
 }
 
-// ===================================================================
-// LEGACY ENVELOPE UTILITIES (ARCHIVED - NO LONGER USED)
-// ===================================================================
-
-// The following functions were used during the envelope-based API era
-// and are kept for reference but should not be used in new code.
-// All new API endpoints return direct payloads.
-
-/*
-// ARCHIVED: extractResponseData - no longer needed for direct responses
-export function extractResponseData<T>(response: unknown): T | null {
-  // This function was used to unwrap SuccessEnvelope responses
-  // All 2xx responses now return direct payloads
-  console.warn('[DEPRECATED] extractResponseData is no longer needed - API returns direct payloads');
-  return null;
-}
-*/
+// Legacy envelope utilities were completely removed (extractResponseData, etc.).
+// Any attempt to reintroduce them should fail drift tests / spectral rules.

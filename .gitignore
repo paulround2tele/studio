@@ -100,6 +100,9 @@ accessibility-audit-report.json
 test-logs/
 debug-logs/
 scripts/test-logs/
+lint_output.txt
+*.spectral-report.json
+spectral-report.*.json
 
 # Downloaded JAR files and binaries
 *.jar

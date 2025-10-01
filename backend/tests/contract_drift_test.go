@@ -193,23 +193,21 @@ func checkErrorResponsesUseEnvelope(spec map[string]interface{}) []string {
 				responseCodeStr := fmt.Sprintf("%v", responseCode)
 				if strings.HasPrefix(responseCodeStr, "4") || strings.HasPrefix(responseCodeStr, "5") {
 					errorResponsesChecked++
-					if !hasSchemaRef(responseItem, "ErrorEnvelope") {
+					if !responseItemUsesErrorEnvelope(spec, responseItem) {
 						errorResponsesWithoutEnvelope++
-						// Note: We could add this as a warning in the future
-						_ = fmt.Sprintf("INFO: %s %s (operationId: %s) response %s could use ErrorEnvelope",
-							strings.ToUpper(methodName), pathName, operationId, responseCode)
+						violations = append(violations, fmt.Sprintf("DRIFT VIOLATION: %s %s (operationId: %s) response %s missing ErrorEnvelope",
+							strings.ToUpper(methodName), pathName, operationId, responseCode))
 					}
 				}
 			}
 		}
 	}
 
-	// Log statistics as info (not violations)
-	if errorResponsesChecked > 0 {
+	// Append a summary if there were any missing occurrences to aid debugging
+	if errorResponsesWithoutEnvelope > 0 {
 		consistency := float64(errorResponsesChecked-errorResponsesWithoutEnvelope) / float64(errorResponsesChecked) * 100
-		// This is informational, not a violation - don't add to violations slice
-		_ = fmt.Sprintf("INFO: Error response consistency: %.1f%% (%d/%d use ErrorEnvelope)",
-			consistency, errorResponsesChecked-errorResponsesWithoutEnvelope, errorResponsesChecked)
+		violations = append(violations, fmt.Sprintf("SUMMARY: Error response consistency %.1f%% (%d/%d use ErrorEnvelope)",
+			consistency, errorResponsesChecked-errorResponsesWithoutEnvelope, errorResponsesChecked))
 	}
 
 	return violations
@@ -221,9 +219,45 @@ func TestContractDrift_SyntheticViolation(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping synthetic violation test in short mode")
 	}
-	
+
 	// This test is designed to fail if run - it validates that our drift detection works
 	t.Skip("Synthetic test - enable manually to test drift detection")
-	
+
 	// If enabled, this would create a synthetic spec with violations to test detection
+}
+
+// responseItemUsesErrorEnvelope determines if a response item (which may be a response object or a $ref
+// to a component response) ultimately references the ErrorEnvelope schema.
+func responseItemUsesErrorEnvelope(spec map[string]interface{}, responseItem interface{}) bool {
+	// Direct schema reference inside the inline response object
+	if hasSchemaRef(responseItem, "ErrorEnvelope") {
+		return true
+	}
+
+	// If this is a $ref to a component response, resolve and inspect
+	m, ok := responseItem.(map[string]interface{})
+	if !ok {
+		return false
+	}
+	ref, ok := m["$ref"].(string)
+	if !ok {
+		return false
+	}
+	if !strings.HasPrefix(ref, "#/components/responses/") {
+		return false
+	}
+	responseName := strings.TrimPrefix(ref, "#/components/responses/")
+	components, ok := spec["components"].(map[string]interface{})
+	if !ok {
+		return false
+	}
+	responses, ok := components["responses"].(map[string]interface{})
+	if !ok {
+		return false
+	}
+	resolved, ok := responses[responseName]
+	if !ok {
+		return false
+	}
+	return hasSchemaRef(resolved, "ErrorEnvelope")
 }

@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { useGetCampaignEnrichedQuery } from '@/store/api/campaignApi';
+import { useGetCampaignEnrichedQuery, useGetCampaignDomainsQuery } from '@/store/api/campaignApi';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -24,10 +24,11 @@ import LiveProgressStatus from './LiveProgressStatus';
 import { MetricsProvider, useMetricsContext } from '@/hooks/useMetricsContext';
 import type { 
   CampaignKpi, 
-  ClassificationBucket, 
   CampaignDomain 
 } from '../types';
 import type { DomainMetricsInput } from '@/types/campaignMetrics';
+import type { EnrichedCampaignResponse } from '@/lib/api-client/models/enriched-campaign-response';
+import type { CampaignDomainsListResponse } from '@/lib/api-client/models/campaign-domains-list-response';
 
 interface CampaignOverviewV2Props {
   campaignId: string;
@@ -35,13 +36,14 @@ interface CampaignOverviewV2Props {
 }
 
 // Convert API domains to our lightweight interface
-function convertDomains(apiDomains: any[]): CampaignDomain[] {
+function convertDomains(apiDomains: any[] | undefined | null): CampaignDomain[] {
+  if (!apiDomains || !Array.isArray(apiDomains)) return [];
   return apiDomains.map(domain => ({
     id: domain.id,
-    domain_name: domain.domain_name || domain.domainName || '',
-    dns_status: domain.dns_status || 'pending',
-    http_status: domain.http_status || 'pending', 
-    lead_score: domain.lead_score || 0,
+    domain_name: domain.domain_name || domain.domainName || domain.domain || '',
+    dns_status: domain.dns_status || domain.dnsStatus || 'pending',
+    http_status: domain.http_status || domain.httpStatus || 'pending', 
+    lead_score: domain.lead_score ?? domain.leadScore ?? 0,
     created_at: domain.created_at || domain.createdAt || new Date().toISOString(),
     updated_at: domain.updated_at || domain.updatedAt || new Date().toISOString()
   }));
@@ -193,7 +195,15 @@ function CampaignOverviewV2Inner({ className }: { className?: string }) {
  * Main Campaign Overview V2 Component with Metrics Provider
  */
 export function CampaignOverviewV2({ campaignId, className }: CampaignOverviewV2Props) {
-  const { data: enriched, isLoading, error } = useGetCampaignEnrichedQuery(campaignId);
+  const { data: enriched, isLoading: enrichedLoading, error: enrichedError } = useGetCampaignEnrichedQuery(campaignId);
+  // Domains list (paged) - we request a large first page for overview metrics (could paginate later)
+  const { data: domainsList, isLoading: domainsLoading, error: domainsError } = useGetCampaignDomainsQuery(
+    { campaignId, limit: 500, offset: 0 },
+    { skip: !campaignId }
+  );
+
+  const isLoading = enrichedLoading || domainsLoading;
+  const error = enrichedError || domainsError;
   
   if (isLoading) {
     return (
@@ -217,15 +227,18 @@ export function CampaignOverviewV2({ campaignId, className }: CampaignOverviewV2
     );
   }
 
-  // Use real campaign domains data when available
-  const domains = convertDomains([]);
-  const metricsInput = convertToMetricsInput(domains);
+  // Prefer domains from dedicated list endpoint; fall back to enriched domains if present
+  const enrichedObj = enriched as EnrichedCampaignResponse | undefined;
+  const listObj = domainsList as CampaignDomainsListResponse | undefined;
+  const rawDomains = listObj?.items || (enrichedObj as any)?.domains || [];
+  const domains = convertDomains(rawDomains);
+  const metricsInput: DomainMetricsInput[] = convertToMetricsInput(domains);
   
   return (
-    <MetricsProvider 
-      campaignId={campaignId} 
+    <MetricsProvider
+      campaignId={campaignId}
       domains={metricsInput}
-      previousDomains={[]} // Future: Add previous domains support when needed
+      previousDomains={[]}
     >
       <CampaignOverviewV2Inner className={className} />
     </MetricsProvider>
