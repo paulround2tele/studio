@@ -434,7 +434,16 @@ class PolicyEngineService {
 
     // Validate actions
     for (let i = 0; i < (policy.actions?.length || 0); i++) {
-      const action = policy.actions[i];
+      const action = policy.actions?.[i];
+      
+      if (!action) {
+        errors.push({
+          field: `actions[${i}]`,
+          message: 'Action is undefined',
+          severity: 'error'
+        });
+        continue;
+      }
       
       if (!this.isValidActionType(action.type)) {
         errors.push({
