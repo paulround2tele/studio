@@ -20,7 +20,7 @@ put:
   security:
     - cookieAuth: []
   summary: Update rate limiter configuration
-  operationId: config_update_rate limiter
+  operationId: config_update_rate_limiter
   requestBody:
     required: true
     content:
