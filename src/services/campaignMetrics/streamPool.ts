@@ -3,6 +3,8 @@
  * EventSource pooling/multiplexing with differential updates and optimistic queue
  */
 
+import { safeAt, safeLast } from '@/lib/utils/arrayUtils';
+
 // Feature flag for stream pooling
 const isStreamPoolingEnabled = () => 
   process.env.NEXT_PUBLIC_STREAM_POOLING !== 'false';
@@ -121,14 +123,20 @@ class DifferentialPatchProcessor {
     
     // Navigate to the parent of the target field
     for (let i = 0; i < pathParts.length - 1; i++) {
-      const part = pathParts[i];
+      const part = safeAt(pathParts, i);
+      if (!part) continue;
+      
       if (!(part in current)) {
         current[part] = {};
       }
       current = current[part];
     }
     
-    const finalKey = pathParts[pathParts.length - 1];
+    const finalKey = safeLast(pathParts);
+    if (!finalKey) {
+      console.warn('[DifferentialPatchProcessor] Invalid path:', change.path);
+      return;
+    }
     
     switch (change.operation) {
       case 'set':
@@ -360,7 +368,6 @@ class StreamPool {
           // Create enhanced event with computed state
           const computedState = pool.patchProcessor.getCurrentState();
           const enhancedEvent = new MessageEvent('message', {
-            ...event,
             data: JSON.stringify({
               ...messageData,
               computedState,
@@ -577,6 +584,28 @@ class StreamPool {
       } catch (error) {
         // Silent fail for telemetry
       }
+    }
+  }
+
+  /**
+   * Update quality metrics for stream monitoring
+   */
+  private updateQualityMetrics(): void {
+    for (const [url, pool] of this.pools.entries()) {
+      const now = Date.now();
+      const timeSinceLastMessage = now - pool.lastMessageTime;
+      
+      // Calculate quality score based on message frequency and missed heartbeats
+      const qualityScore = Math.max(0, 100 - (pool.missedHeartbeats * 10) - Math.min(50, timeSinceLastMessage / 1000));
+      
+      // Emit telemetry for quality monitoring
+      this.emitTelemetryEvent('stream_quality_update', {
+        streamId: url,
+        qualityScore,
+        metricsCount: pool.lastSequenceNumber,
+        latencyMs: timeSinceLastMessage,
+        errorRate: pool.missedHeartbeats / Math.max(1, pool.lastSequenceNumber)
+      });
     }
   }
 

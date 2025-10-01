@@ -57,6 +57,10 @@ firebase-debug.log
 *.bak
 *.tmp
 
+# Type safety reports (generated)
+type-safety-report.json
+type-safety-report.txt
+
 # Build artifacts and binaries
 /bin/
 *.jar

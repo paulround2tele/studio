@@ -10,6 +10,7 @@ import { telemetryService } from './telemetryService';
 import { forecastBlendService } from './forecastBlendService';
 import { fetchWithPolicy } from '@/lib/utils/fetchWithPolicy';
 import { useBackendCanonical, useForecastCustomHorizon } from '@/lib/feature-flags-simple';
+import { safeAt, safeLast, safeFirst, hasMinElements, NonEmptyArray, isNonEmptyArray } from '@/lib/utils/arrayUtils';
 
 // Feature flags
 const isForecastsEnabled = () => 
@@ -91,7 +92,7 @@ export interface ClientForecastOptions {
 export interface ForecastResult {
   horizon: number;
   generatedAt: string;
-  method: 'server' | 'client';
+  method: 'server' | 'client' | 'insufficient-data' | 'skipped' | 'client-worker';
   points: ForecastPoint[];
   timingMs?: number;
   error?: string;
@@ -203,30 +204,61 @@ function computeSimpleExponentialSmoothing(
   horizon: number,
   options: ClientForecastOptions
 ): ForecastPoint[] {
+  // Early return for insufficient data
+  if (!hasMinElements(series, 1)) {
+    return [];
+  }
+  
   const alpha = options.alpha || 0.3;
   const values = series.map(p => p.value);
   
+  // Safe first value access
+  const firstValue = safeFirst(values);
+  if (firstValue === undefined) {
+    return [];
+  }
+  
   // Calculate smoothed values
-  let smoothed = values[0];
+  let smoothed = firstValue;
   const smoothedValues = [smoothed];
   
   for (let i = 1; i < values.length; i++) {
-    smoothed = alpha * values[i] + (1 - alpha) * smoothed;
+    const currentValue = safeAt(values, i);
+    if (currentValue === undefined) continue;
+    
+    smoothed = alpha * currentValue + (1 - alpha) * smoothed;
     smoothedValues.push(smoothed);
   }
   
   // Calculate residuals for confidence intervals
-  const residuals = values.map((val, i) => val - smoothedValues[i]);
+  const residuals = values.map((val, i) => {
+    const smoothedVal = safeAt(smoothedValues, i);
+    return smoothedVal !== undefined ? val - smoothedVal : 0;
+  });
   const residualStdDev = calculateStandardDeviation(residuals);
   
   // Generate forecast points
   const forecasts: ForecastPoint[] = [];
-  const lastTimestamp = series[series.length - 1].timestamp;
-  const timestampInterval = series.length > 1 ? 
-    (series[series.length - 1].timestamp - series[series.length - 2].timestamp) : 
-    86400000; // Default to 1 day
+  const lastPoint = safeLast(series);
+  if (!lastPoint) {
+    return [];
+  }
   
-  const lastSmoothed = smoothedValues[smoothedValues.length - 1];
+  const lastTimestamp = lastPoint.timestamp;
+  
+  // Calculate timestamp interval safely
+  let timestampInterval = 86400000; // Default to 1 day
+  if (series.length > 1) {
+    const secondLastPoint = safeAt(series, series.length - 2);
+    if (secondLastPoint) {
+      timestampInterval = lastTimestamp - secondLastPoint.timestamp;
+    }
+  }
+  
+  const lastSmoothed = safeLast(smoothedValues);
+  if (lastSmoothed === undefined) {
+    return [];
+  }
   
   for (let i = 1; i <= horizon; i++) {
     const forecastTimestamp = lastTimestamp + (i * timestampInterval);
@@ -258,59 +290,95 @@ function computeHoltWinters(
   const gamma = options.gamma || 0.1;
   const seasonLength = options.seasonLength || 7;
   
+  // Early return for insufficient data
+  if (!hasMinElements(series, seasonLength * 2)) {
+    return [];
+  }
+  
   const values = series.map(p => p.value);
   const n = values.length;
   
+  // Safe initialization of level and trend
+  const firstValue = safeFirst(values);
+  const seasonValue = safeAt(values, seasonLength);
+  
+  if (firstValue === undefined || seasonValue === undefined) {
+    return [];
+  }
+  
   // Initialize level, trend, and seasonal components
-  let level = values[0];
-  let trend = (values[seasonLength] - values[0]) / seasonLength;
+  let level = firstValue;
+  let trend = (seasonValue - firstValue) / seasonLength;
   const seasonal: number[] = new Array(seasonLength).fill(0);
   
-  // Initialize seasonal indices
+  // Initialize seasonal indices safely
   for (let i = 0; i < seasonLength; i++) {
-    seasonal[i] = values[i] - level;
+    const valueAtI = safeAt(values, i);
+    if (valueAtI !== undefined) {
+      seasonal[i] = valueAtI - level;
+    }
   }
   
   const fitted: number[] = [];
   
   // Holt-Winters equations
   for (let i = 0; i < n; i++) {
-    const seasonalIndex = seasonal[i % seasonLength];
+    const seasonalIndex = safeAt(seasonal, i % seasonLength) ?? 0;
     const predicted = level + trend + seasonalIndex;
     fitted.push(predicted);
     
     if (i < n - 1) { // Don't update on last observation
-      const newLevel = alpha * (values[i] - seasonalIndex) + (1 - alpha) * (level + trend);
-      const newTrend = beta * (newLevel - level) + (1 - beta) * trend;
-      const newSeasonal = gamma * (values[i] - newLevel) + (1 - gamma) * seasonalIndex;
-      
-      level = newLevel;
-      trend = newTrend;
-      seasonal[i % seasonLength] = newSeasonal;
+      const currentValue = safeAt(values, i);
+      if (currentValue !== undefined) {
+        const newLevel = alpha * (currentValue - seasonalIndex) + (1 - alpha) * (level + trend);
+        const newTrend = beta * (newLevel - level) + (1 - beta) * trend;
+        const newSeasonal = gamma * (currentValue - newLevel) + (1 - gamma) * seasonalIndex;
+        
+        level = newLevel;
+        trend = newTrend;
+        const seasonalIdx = i % seasonLength;
+        if (seasonalIdx < seasonal.length) {
+          seasonal[seasonalIdx] = newSeasonal;
+        }
+      }
     }
   }
   
   // Calculate residuals for confidence intervals
-  const residuals = values.map((val, i) => val - fitted[i]);
+  const residuals = values.map((val, i) => {
+    const fittedVal = safeAt(fitted, i);
+    return fittedVal !== undefined ? val - fittedVal : 0;
+  });
   const residualStdDev = calculateStandardDeviation(residuals);
   
   // Generate forecast points
   const forecasts: ForecastPoint[] = [];
-  const lastTimestamp = series[series.length - 1].timestamp;
-  const timestampInterval = series.length > 1 ? 
-    (series[series.length - 1].timestamp - series[series.length - 2].timestamp) : 
-    86400000;
+  const lastPoint = safeLast(series);
+  if (!lastPoint) {
+    return [];
+  }
+  
+  const lastTimestamp = lastPoint.timestamp;
+  
+  // Calculate timestamp interval safely
+  let timestampInterval = 86400000; // Default to 1 day
+  if (series.length > 1) {
+    const secondLastPoint = safeAt(series, series.length - 2);
+    if (secondLastPoint) {
+      timestampInterval = lastTimestamp - secondLastPoint.timestamp;
+    }
+  }
   
   for (let i = 1; i <= horizon; i++) {
     const forecastTimestamp = lastTimestamp + (i * timestampInterval);
-    const seasonalIndex = seasonal[(n + i - 1) % seasonLength];
+    const seasonalIndex = safeAt(seasonal, (n + i - 1) % seasonLength) ?? 0;
     const forecastValue = level + (i * trend) + seasonalIndex;
     const confidenceInterval = 1.96 * residualStdDev * Math.sqrt(i); // Increasing uncertainty
     
     forecasts.push({
       timestamp: new Date(forecastTimestamp).toISOString(),
       metricKey: 'forecast',
-      value: Math.max(0, forecastValue), // Ensure non-negative
+      value: forecastValue,
       lower: Math.max(0, forecastValue - confidenceInterval),
       upper: forecastValue + confidenceInterval
     });
@@ -323,9 +391,11 @@ function computeHoltWinters(
  * Calculate standard deviation of residuals
  */
 function calculateStandardDeviation(values: number[]): number {
+  if (values.length === 0) return 0;
+  
   const mean = values.reduce((sum, val) => sum + val, 0) / values.length;
   const squaredDiffs = values.map(val => Math.pow(val - mean, 2));
-  const variance = squaredDiffs.reduce((sum, diff) => sum + diff, 0) / (values.length - 1);
+  const variance = squaredDiffs.reduce((sum, diff) => sum + diff, 0) / Math.max(1, values.length - 1);
   return Math.sqrt(variance);
 }
 
@@ -424,7 +494,6 @@ export async function getForecast(
       points: [],
       generatedAt: new Date().toISOString(),
       method: 'insufficient-data',
-      confidence: 0,
     };
   }
 
@@ -470,7 +539,14 @@ export async function getForecast(
         points: enhancedPoints,
         generatedAt: serverResponse.generatedAt,
         method: 'server',
-        confidence: 0.95, // Server confidence level
+        modelInfo: {
+          selectedModel: 'server',
+          arbitrationScores: {
+            mae: 0,
+            mape: 0,
+            confidence: 0.95
+          }
+        }
       };
     } catch (error) {
       console.warn('[getForecast] Server forecast failed, falling back to client:', error);
@@ -494,7 +570,6 @@ export async function getForecast(
       points: [],
       generatedAt: new Date().toISOString(),
       method: 'skipped',
-      confidence: 0,
     };
   }
 
@@ -507,7 +582,6 @@ export async function getForecast(
         points: workerPoints,
         generatedAt: new Date().toISOString(),
         method: 'client-worker',
-        confidence: 0.8,
       };
     } catch (error) {
       console.warn('[getForecast] Worker forecast failed, using main thread:', error);
@@ -525,7 +599,14 @@ export async function getForecast(
     points: clientPoints,
     generatedAt: new Date().toISOString(),
     method: 'client',
-    confidence: 0.8,
+    modelInfo: {
+      selectedModel: 'simpleExp',
+      arbitrationScores: {
+        mae: 0,
+        mape: 0,
+        confidence: 0.8
+      }
+    }
   };
 }
 
@@ -547,11 +628,23 @@ function computeClientConfidenceBands(
 
   // Simple exponential smoothing to get fitted values
   const alpha = 0.3;
-  let smoothed = timeSeries[0].value;
+  const firstValue = safeFirst(timeSeries);
+  if (!firstValue) {
+    const margin = forecastValue * 0.1;
+    return {
+      lower: Math.max(0, forecastValue - margin),
+      upper: forecastValue + margin,
+    };
+  }
+  
+  let smoothed = firstValue.value;
   const residuals: number[] = [];
 
   for (let i = 1; i < timeSeries.length; i++) {
-    const actual = timeSeries[i].value;
+    const currentPoint = safeAt(timeSeries, i);
+    if (!currentPoint) continue;
+    
+    const actual = currentPoint.value;
     residuals.push(actual - smoothed);
     smoothed = alpha * actual + (1 - alpha) * smoothed;
   }
@@ -624,7 +717,10 @@ async function computeForecastInWorker(
 function calculateMAE(actual: number[], predicted: number[]): number {
   if (actual.length !== predicted.length || actual.length === 0) return Infinity;
   
-  const sum = actual.reduce((acc, val, idx) => acc + Math.abs(val - predicted[idx]), 0);
+  const sum = actual.reduce((acc, val, idx) => {
+    const predictedVal = safeAt(predicted, idx);
+    return predictedVal !== undefined ? acc + Math.abs(val - predictedVal) : acc;
+  }, 0);
   return sum / actual.length;
 }
 
@@ -636,7 +732,8 @@ function calculateMAPE(actual: number[], predicted: number[]): number {
   
   const sum = actual.reduce((acc, val, idx) => {
     if (val === 0) return acc; // Skip zero values to avoid division by zero
-    return acc + Math.abs((val - predicted[idx]) / val);
+    const predictedVal = safeAt(predicted, idx);
+    return predictedVal !== undefined ? acc + Math.abs((val - predictedVal) / val) : acc;
   }, 0);
   
   const validValues = actual.filter(v => v !== 0).length;
@@ -651,7 +748,7 @@ async function performModelArbitration(
   horizon: number,
   metricKey: string,
   campaignId: string,
-  options: ClientForecastOptions = {}
+  options: ClientForecastOptions = { method: 'simpleExp' }
 ): Promise<{
   bestModel: 'server' | 'client_holt_winters' | 'client_exp_smoothing';
   scores: Array<{ model: string; mae: number; mape: number; confidence: number }>;
@@ -677,7 +774,7 @@ async function performModelArbitration(
     const expForecast = computeSimpleExponentialSmoothing(
       trainingData, 
       historicalWindow, 
-      { alpha: options.alpha || 0.3 }
+      { method: 'simpleExp', alpha: options.alpha || 0.3 }
     );
     const expPredicted = expForecast.map(p => p.value);
     const expMAE = calculateMAE(actualValues, expPredicted);
@@ -812,7 +909,7 @@ export async function getMultiModelForecast(
   snapshots: AggregateSnapshot[],
   metricKey: keyof AggregateSnapshot['aggregates'] = 'avgLeadScore',
   customHorizon?: number,
-  options: ClientForecastOptions = {}
+  options: ClientForecastOptions = { method: 'simpleExp' }
 ): Promise<ForecastResult> {
   if (!isForecastsEnabled()) {
     throw new Error('Forecasting feature is disabled');
@@ -942,7 +1039,7 @@ export async function getEnhancedMultiModelForecast(
   snapshots: AggregateSnapshot[],
   metricKey: keyof AggregateSnapshot['aggregates'] = 'avgLeadScore',
   customHorizon?: number,
-  options: ClientForecastOptions = {}
+  options: ClientForecastOptions = { method: 'simpleExp' }
 ): Promise<ForecastResult> {
   if (!isForecastsEnabled()) {
     throw new Error('Forecasting feature is disabled');
