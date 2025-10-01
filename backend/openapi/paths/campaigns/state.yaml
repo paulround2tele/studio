@@ -12,12 +12,7 @@ get:
       description: OK
       content:
         application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/CampaignState' }
+          schema: { $ref: '../../components/schemas/all.yaml#/CampaignState' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
 put:
@@ -39,12 +34,7 @@ put:
       description: OK
       content:
         application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/CampaignState' }
+          schema: { $ref: '../../components/schemas/all.yaml#/CampaignState' }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

@@ -20,11 +20,6 @@ post:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    $ref: '../../components/schemas/all.yaml#/BulkHealthCheckResponse'
-    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
-    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+            $ref: '../../components/schemas/all.yaml#/BulkHealthCheckResponse'
+  '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

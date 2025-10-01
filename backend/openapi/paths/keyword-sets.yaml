@@ -17,7 +17,7 @@
 						application/json:
 							schema:
 								type: array
-								items: { $ref: '#/components/schemas/KeywordSetResponse' }
+          items: { $ref: '#/components/schemas/KeywordSetResponse' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }

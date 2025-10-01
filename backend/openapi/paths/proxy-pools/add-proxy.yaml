@@ -24,11 +24,6 @@ post:
       description: Created
       content:
         application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/ProxyPoolMembership' }
+          schema: { $ref: '../../components/schemas/all.yaml#/ProxyPoolMembership' }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

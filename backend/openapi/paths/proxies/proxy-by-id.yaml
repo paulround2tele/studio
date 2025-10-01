@@ -19,12 +19,7 @@ put:
       description: Updated
       content:
         application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/ProxyDetailsResponse' }
+          schema: { $ref: '../../components/schemas/all.yaml#/ProxyDetailsResponse' }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }

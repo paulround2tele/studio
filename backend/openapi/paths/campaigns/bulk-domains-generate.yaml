@@ -12,12 +12,7 @@ post:
       description: Bulk domain generation initiated successfully
       content:
         application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/BulkGenerationResponse' }
+          schema: { $ref: '../../components/schemas/all.yaml#/BulkGenerationResponse' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }

@@ -10,44 +10,39 @@ get:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    $ref: '../../components/schemas/all.yaml#/AuthConfig'
-    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+            $ref: '../../components/schemas/all.yaml#/AuthConfig'
+  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
-    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+  '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
 put:
-  tags: [server-settings]
-  security:
-    - cookieAuth: []
-  summary: Update authentication configuration
-  operationId: config_update_auth
-  requestBody:
-    required: true
+tags: [server-settings]
+security:
+  - cookieAuth: []
+summary: Update authentication configuration
+operationId: config_update_auth
+requestBody:
+  required: true
+  content:
+    application/json:
+      schema:
+        $ref: '../../components/schemas/all.yaml#/AuthConfig'
+responses:
+  '200':
+    description: Updated
     content:
       application/json:
         schema:
-          $ref: '../../components/schemas/all.yaml#/AuthConfig'
-  responses:
-    '200':
-      description: Updated
-      content:
-        application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    $ref: '../../components/schemas/all.yaml#/AuthConfig'
-    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+          allOf:
+            - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
+            - type: object
+              properties:
+                data:
+                  $ref: '../../components/schemas/all.yaml#/AuthConfig'
+  '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '409': { $ref: '../../components/responses.yaml#/Conflict' }
-    '422': { $ref: '../../components/responses.yaml#/ValidationError' }
+  '422': { $ref: '../../components/responses.yaml#/ValidationError' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

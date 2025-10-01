@@ -16,13 +16,8 @@
 					content:
 						application/json:
           schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												type: array
-												items: { $ref: '#/components/schemas/PersonaResponse' }
+								type: array
+          items: { $ref: '#/components/schemas/PersonaResponse' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }
@@ -37,13 +32,13 @@
 				required: true
 				content:
 					application/json:
-          schema: { $ref: '#/components/schemas/CreatePersonaRequest' }
+        schema: { $ref: '#/components/schemas/CreatePersonaRequest' }
 			responses:
 				'201':
 					description: Created
 					content:
 						application/json:
-          schema:
+        schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object
@@ -73,7 +68,7 @@
 					description: Persona
 					content:
 						application/json:
-          schema:
+        schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object
@@ -100,13 +95,13 @@
 				required: true
 				content:
 					application/json:
-          schema: { $ref: '#/components/schemas/UpdatePersonaRequest' }
+        schema: { $ref: '#/components/schemas/UpdatePersonaRequest' }
 			responses:
 				'200':
 					description: Updated
 					content:
 						application/json:
-          schema:
+        schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object
@@ -137,7 +132,7 @@
 					description: Deleted
 					content:
 						application/json:
-          schema:
+        schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object
@@ -167,7 +162,7 @@
 					description: Test result
 					content:
 						application/json:
-          schema:
+        schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object

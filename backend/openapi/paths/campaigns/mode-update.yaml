@@ -13,8 +13,8 @@ patch:
       application/json:
         schema:
           type: object
-          properties:
-            mode: { $ref: '../../components/schemas/all.yaml#/CampaignModeEnum' }
+            properties:
+              mode: { $ref: '../../components/schemas/all.yaml#/CampaignModeEnum' }
           required: [mode]
   responses:
     '200':
@@ -22,15 +22,10 @@ patch:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      mode: { $ref: '../../components/schemas/all.yaml#/CampaignModeEnum' }
-    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
-    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-    '404': { $ref: '../../components/responses.yaml#/NotFound' }
-    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+            type: object
+            properties:
+              mode: { $ref: '../../components/schemas/all.yaml#/CampaignModeEnum' }
+  '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+  '404': { $ref: '../../components/responses.yaml#/NotFound' }
+  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

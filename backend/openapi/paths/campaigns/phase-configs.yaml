@@ -13,21 +13,16 @@ get:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      campaignId: { type: string, format: uuid }
-                      configsPresent:
-                        type: object
-                        additionalProperties: { type: boolean }
-                      configs:
-                        type: object
-                        additionalProperties: { type: object }
-    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
-    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-    '404': { $ref: '../../components/responses.yaml#/NotFound' }
-    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+            type: object
+            properties:
+              campaignId: { type: string, format: uuid }
+              configsPresent:
+                type: object
+                additionalProperties: { type: boolean }
+              configs:
+                type: object
+                additionalProperties: { type: object }
+  '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+  '404': { $ref: '../../components/responses.yaml#/NotFound' }
+  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

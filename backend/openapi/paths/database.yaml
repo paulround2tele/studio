@@ -18,12 +18,7 @@
 					content:
 						application/json:
           schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												$ref: '#/components/schemas/BulkDatabaseQueryResponse'
+								$ref: '#/components/schemas/BulkDatabaseQueryResponse'
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
@@ -44,13 +39,13 @@
 				required: true
 				content:
 					application/json:
-          schema: { $ref: '#/components/schemas/BulkDatabaseStatsRequest' }
+        schema: { $ref: '#/components/schemas/BulkDatabaseStatsRequest' }
 			responses:
 				'200':
 					description: OK
 					content:
 						application/json:
-          schema:
+        schema:
 								allOf:
 									- $ref: '#/components/schemas/SuccessEnvelope'
 									- type: object

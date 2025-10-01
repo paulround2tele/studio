@@ -14,17 +14,12 @@ get:
       content:
         application/json:
           schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      allocationId: { type: string, format: uuid }
-                      status: { type: string }
-    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
-    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-    '404': { $ref: '../../components/responses.yaml#/NotFound' }
-    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
-    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+            type: object
+            properties:
+              allocationId: { type: string, format: uuid }
+              status: { type: string }
+  '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+  '404': { $ref: '../../components/responses.yaml#/NotFound' }
+  '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

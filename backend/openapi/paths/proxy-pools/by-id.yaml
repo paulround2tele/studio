@@ -19,12 +19,7 @@ put:
       description: OK
       content:
         application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/ProxyPool' }
+          schema: { $ref: '../../components/schemas/all.yaml#/ProxyPool' }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
@@ -44,12 +39,7 @@ delete:
       description: OK
       content:
         application/json:
-          schema:
-            allOf:
-              - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-              - type: object
-                properties:
-                  data: { $ref: '../../components/schemas/all.yaml#/ProxyPoolDeleteResponse' }
+          schema: { $ref: '../../components/schemas/all.yaml#/ProxyPoolDeleteResponse' }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
