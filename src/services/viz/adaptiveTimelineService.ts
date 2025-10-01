@@ -5,6 +5,7 @@
 
 import { useAdaptiveVisualization } from '../../lib/feature-flags-simple';
 import { telemetryService } from '../campaignMetrics/telemetryService';
+import { safeAt, safeFirst, safeLast, hasMinElements, isNonEmptyArray } from '@/lib/utils/arrayUtils';
 
 // Feature flag check
 const isAdaptiveVizEnabled = (): boolean => {
@@ -81,6 +82,11 @@ class LTTBDownsampler {
    * Downsample time series using LTTB algorithm
    */
   static downsample(points: TimeSeriesPoint[], targetCount: number): TimeSeriesPoint[] {
+    // Early return for insufficient data
+    if (!hasMinElements(points, 1)) {
+      return [];
+    }
+    
     if (points.length <= targetCount) {
       return [...points];
     }
@@ -91,8 +97,12 @@ class LTTBDownsampler {
 
     const downsampled: TimeSeriesPoint[] = [];
     
-    // Always include first and last points
-    downsampled.push(points[0]);
+    // Always include first point (safe access)
+    const firstPoint = safeFirst(points);
+    if (!firstPoint) {
+      return [];
+    }
+    downsampled.push(firstPoint);
     
     const bucketSize = (points.length - 2) / (targetCount - 2);
     
@@ -101,10 +111,13 @@ class LTTBDownsampler {
       const bucketEnd = Math.floor((i + 1) * bucketSize) + 1;
       
       let maxTriangleArea = 0;
-      let selectedPoint = points[bucketStart];
+      let selectedPoint = safeAt(points, bucketStart);
       
-      // Previous point for triangle calculation
-      const prevPoint = downsampled[downsampled.length - 1];
+      // Previous point for triangle calculation (safe access)
+      const prevPoint = safeLast(downsampled);
+      if (!prevPoint || !selectedPoint) {
+        continue;
+      }
       
       // Next bucket average for triangle calculation
       const nextBucketStart = Math.floor((i + 1) * bucketSize) + 1;
@@ -115,9 +128,12 @@ class LTTBDownsampler {
       let nextBucketCount = 0;
       
       for (let j = nextBucketStart; j < nextBucketEnd; j++) {
-        nextAvgTimestamp += points[j].timestamp;
-        nextAvgValue += points[j].value;
-        nextBucketCount++;
+        const point = safeAt(points, j);
+        if (point) {
+          nextAvgTimestamp += point.timestamp;
+          nextAvgValue += point.value;
+          nextBucketCount++;
+        }
       }
       
       if (nextBucketCount > 0) {
@@ -127,7 +143,8 @@ class LTTBDownsampler {
       
       // Find point in current bucket that forms largest triangle
       for (let j = bucketStart; j < bucketEnd; j++) {
-        const currentPoint = points[j];
+        const currentPoint = safeAt(points, j);
+        if (!currentPoint) continue;
         
         // Calculate triangle area
         const area = Math.abs(
@@ -141,11 +158,16 @@ class LTTBDownsampler {
         }
       }
       
-      downsampled.push(selectedPoint);
+      if (selectedPoint) {
+        downsampled.push(selectedPoint);
+      }
     }
     
-    // Always include last point
-    downsampled.push(points[points.length - 1]);
+    // Always include last point (safe access)
+    const lastPoint = safeLast(points);
+    if (lastPoint) {
+      downsampled.push(lastPoint);
+    }
     
     return downsampled;
   }
@@ -263,10 +285,14 @@ class AdaptiveTimelineService {
     const optimalPointCount = Math.floor(viewportWidth * pixelDensity * 2.5);
     
     // Find closest resolution level
-    let bestResolution = Array.from(series.resolutions.keys())[0];
+    const resolutionLevels = Array.from(series.resolutions.keys());
+    if (resolutionLevels.length === 0) {
+      return [];
+    }
+    
+    let bestResolution = resolutionLevels[0];
     let bestDifference = Math.abs(bestResolution - optimalPointCount);
 
-    const resolutionLevels = Array.from(series.resolutions.keys());
     for (const level of resolutionLevels) {
       const difference = Math.abs(level - optimalPointCount);
       if (difference < bestDifference) {
@@ -354,9 +380,13 @@ class AdaptiveTimelineService {
   private hashPoints(points: TimeSeriesPoint[]): string {
     if (points.length === 0) return '0';
     
-    const first = points[0];
-    const last = points[points.length - 1];
-    const middle = points[Math.floor(points.length / 2)];
+    const first = safeFirst(points);
+    const last = safeLast(points);
+    const middle = safeAt(points, Math.floor(points.length / 2));
+    
+    if (!first || !last || !middle) {
+      return `${points.length}`;
+    }
     
     return `${first.timestamp}_${last.timestamp}_${middle.timestamp}_${points.length}`;
   }
@@ -383,9 +413,11 @@ class AdaptiveTimelineService {
     const extremes: TimeSeriesPoint[] = [];
     
     for (let i = 1; i < points.length - 1; i++) {
-      const prev = points[i - 1];
-      const current = points[i];
-      const next = points[i + 1];
+      const prev = safeAt(points, i - 1);
+      const current = safeAt(points, i);
+      const next = safeAt(points, i + 1);
+      
+      if (!prev || !current || !next) continue;
       
       // Local maximum
       if (current.value > prev.value && current.value > next.value) {
