@@ -1,0 +1,219 @@
+
+> domainflow-frontend@1.0.0 api:lint
+> spectral lint backend/openapi/dist/openapi.yaml
+
+
+/home/runner/work/studio/studio/backend/openapi/dist/openapi.yaml
+   2:6    warning  info-contact                         Info object must have "contact" object.                        info
+   2:6    warning  info-description                     Info "description" must be present and non-empty string.       info
+   36:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./health.get
+   62:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./ping.get
+   88:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./health/ready.get
+  114:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./health/live.get
+  140:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./sse/events.get
+  169:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./sse/campaigns/{campaignId}/events.get
+  205:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./sse/events/stats.get
+  238:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./personas.get
+  267:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./personas.post
+  300:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./personas/{id}.get
+  331:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./personas/{id}.put
+  374:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./personas/{id}.delete
+  388:17  warning  delete-operations-should-return-204  DELETE operations should return 204 No Content                 paths./personas/{id}.delete.responses
+  408:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./personas/{id}/test.post
+  444:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./personas/http/{id}.get
+  476:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./personas/dns/{id}.get
+  508:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies.get
+  539:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies.post
+  574:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies/{proxyId}.put
+  611:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies/{proxyId}.delete
+  637:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies/{proxyId}/test.post
+  673:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies/status.get
+  698:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies/{proxyId}/health-check.post
+  726:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies/health-check.post
+  757:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies/bulk/update.put
+  782:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies/bulk/delete.delete
+  795:17  warning  delete-operations-should-return-204  DELETE operations should return 204 No Content                 paths./proxies/bulk/delete.delete.responses
+  807:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxies/bulk/test.post
+  840:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxy-pools.get
+  862:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxy-pools.post
+  887:9   warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxy-pools/{poolId}.put
+  920:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxy-pools/{poolId}.delete
+  934:17  warning  delete-operations-should-return-204  DELETE operations should return 204 No Content                 paths./proxy-pools/{poolId}.delete.responses
+  948:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxy-pools/{poolId}/proxies.post
+  988:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./proxy-pools/{poolId}/proxies/{proxyId}.delete
+ 1008:17  warning  delete-operations-should-return-204  DELETE operations should return 204 No Content                 paths./proxy-pools/{poolId}/proxies/{proxyId}.delete.responses
+  1022:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./keyword-sets.get
+ 1051:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./keyword-sets.post
+  1086:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./keyword-sets/{setId}.get
+  1117:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./keyword-sets/{setId}.put
+ 1158:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./keyword-sets/{setId}.delete
+  1186:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./keyword-sets/{setId}/rules.get
+  1220:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./keyword-rules.get
+ 1222:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./keyword-rules.get.tags[0]
+ 1277:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./database/query.post
+ 1348:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./extract/keywords.post
+ 1350:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./extract/keywords.post.tags[0]
+ 1383:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./extract/keywords/stream.get.tags[0]
+  1447:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/auth.get
+  1469:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/auth.put
+  1504:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/dns.get
+  1526:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/dns.put
+  1561:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/http.get
+  1584:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/http.put
+  1621:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/logging.get
+  1643:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/logging.put
+  1678:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/worker.get
+  1700:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/worker.put
+  1735:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/proxy-manager.get
+  1758:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/proxy-manager.put
+  1795:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/rate-limit.get
+  1817:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/rate-limit.put
+  1852:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/server.get
+  1875:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/server.put
+  1912:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/features.get
+  1941:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/stealth.get
+  1962:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./config/stealth.put
+  2005:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/performance/summary.get
+ 2007:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/performance/summary.get.tags[0]
+  2023:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/performance/slow.get
+ 2025:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/performance/slow.get.tags[0]
+  2040:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/performance/metrics.get
+ 2042:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/performance/metrics.get.tags[0]
+  2057:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/performance/active.get
+ 2059:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/performance/active.get.tags[0]
+  2075:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/performance/failed.get
+ 2077:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/performance/failed.get.tags[0]
+  2092:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/campaigns/{campaignId}/resources.get
+ 2094:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/campaigns/{campaignId}/resources.get.tags[0]
+  2118:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/campaigns/{campaignId}/performance.get
+ 2120:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/campaigns/{campaignId}/performance.get.tags[0]
+  2144:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/campaigns/{campaignId}/health.get
+ 2146:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/campaigns/{campaignId}/health.get.tags[0]
+ 2170:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/campaigns/{campaignId}/limits.post
+ 2172:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/campaigns/{campaignId}/limits.post.tags[0]
+  2200:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/cleanup/stats.get
+ 2202:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/cleanup/stats.get.tags[0]
+  2218:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/cleanup/campaigns/{campaignId}.get
+ 2220:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/cleanup/campaigns/{campaignId}.get.tags[0]
+ 2244:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/cleanup/campaigns/{campaignId}/force.post
+ 2246:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/cleanup/campaigns/{campaignId}/force.post.tags[0]
+  2266:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/resources/system.get
+ 2268:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/resources/system.get.tags[0]
+  2283:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/resources/history.get
+ 2285:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/resources/history.get.tags[0]
+  2300:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/resources/alerts.get
+ 2302:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/resources/alerts.get.tags[0]
+  2317:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/dashboard/summary.get
+ 2319:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/dashboard/summary.get.tags[0]
+  2335:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/dashboard/trends.get
+ 2337:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/dashboard/trends.get.tags[0]
+  2352:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/health.get
+ 2354:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/health.get.tags[0]
+  2369:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./monitoring/stats.get
+ 2371:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./monitoring/stats.get.tags[0]
+ 2386:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./auth/login.post
+ 2388:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./auth/login.post.tags[0]
+ 2413:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./auth/logout.post
+ 2415:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./auth/logout.post.tags[0]
+ 2426:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./auth/refresh.post
+ 2428:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./auth/refresh.post.tags[0]
+  2443:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./auth/me.get
+ 2445:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./auth/me.get.tags[0]
+ 2460:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./auth/change-password.post
+ 2462:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./auth/change-password.post.tags[0]
+  2498:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns.get
+ 2500:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns.get.tags[0]
+ 2521:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns.post
+ 2523:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns.post.tags[0]
+  2555:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}.get
+ 2557:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}.get.tags[0]
+  2585:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}.put
+ 2587:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}.put.tags[0]
+ 2618:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}.delete
+ 2620:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}.delete.tags[0]
+  2640:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/progress.get
+ 2642:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/progress.get.tags[0]
+  2666:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/domains.get
+ 2668:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/domains.get.tags[0]
+  2808:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/domains/{domain}/score-breakdown.get
+ 2810:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/domains/{domain}/score-breakdown.get.tags[0]
+  2841:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/state.get
+ 2843:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/state.get.tags[0]
+  2864:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/state.put
+ 2866:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/state.put.tags[0]
+ 2895:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/state.delete
+ 2897:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/state.delete.tags[0]
+  2915:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/phase-executions.get
+ 2917:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/phase-executions.get.tags[0]
+  2939:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/phase-executions/{phaseType}.get
+ 2941:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/phase-executions/{phaseType}.get.tags[0]
+  2972:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/phase-executions/{phaseType}.put
+ 2974:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/phase-executions/{phaseType}.put.tags[0]
+ 3013:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/phase-executions/{phaseType}.delete
+ 3015:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/phase-executions/{phaseType}.delete.tags[0]
+ 3045:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/enriched.get.tags[0]
+  3068:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/phases/{phase}/status.get
+ 3070:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/phases/{phase}/status.get.tags[0]
+ 3104:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/phases/{phase}/configure.post
+ 3106:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/phases/{phase}/configure.post.tags[0]
+ 3148:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/phases/{phase}/start.post
+ 3150:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/phases/{phase}/start.post.tags[0]
+  3200:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/mode.put
+ 3202:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/mode.put.tags[0]
+  3242:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/configs.get
+ 3244:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/configs.get.tags[0]
+ 3282:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/phases/{phase}/stop.post
+ 3284:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/phases/{phase}/stop.post.tags[0]
+  3320:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/status.get
+ 3322:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/status.get.tags[0]
+  3344:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/funnel.get
+ 3346:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/funnel.get.tags[0]
+  3368:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/metrics.get
+ 3370:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/metrics.get.tags[0]
+  3392:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/classifications.get
+ 3394:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/classifications.get.tags[0]
+  3424:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/momentum.get
+ 3426:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/momentum.get.tags[0]
+  3448:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/insights/recommendations.get
+ 3450:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/insights/recommendations.get.tags[0]
+ 3472:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/duplicate.post
+ 3474:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/{campaignId}/duplicate.post.tags[0]
+  3498:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/bulk/operations.get
+ 3500:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/bulk/operations.get.tags[0]
+  3529:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/bulk/operations/{operationId}/status.get
+ 3531:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/bulk/operations/{operationId}/status.get.tags[0]
+ 3577:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/bulk/domains/generate.post
+ 3579:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/bulk/domains/generate.post.tags[0]
+ 3604:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/bulk/domains/analyze.post
+ 3606:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/bulk/domains/analyze.post.tags[0]
+ 3631:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/bulk/domains/validate-dns.post
+ 3633:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/bulk/domains/validate-dns.post.tags[0]
+ 3658:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/bulk/domains/validate-http.post
+ 3660:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/bulk/domains/validate-http.post.tags[0]
+  3685:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/bulk/resources/status/{allocationId}.get
+ 3687:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/bulk/resources/status/{allocationId}.get.tags[0]
+ 3719:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/bulk/resources/allocate.post
+ 3721:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/bulk/resources/allocate.post.tags[0]
+ 3746:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/bulk/operations/{operationId}/cancel.post
+ 3748:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/bulk/operations/{operationId}/cancel.post.tags[0]
+ 3780:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/domain-generation/pattern-offset.post
+ 3782:11  warning  operation-tag-defined                Operation tags must be defined in global tags.                 paths./campaigns/domain-generation/pattern-offset.post.tags[0]
+  3807:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./scoring-profiles.get
+ 3832:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./scoring-profiles.post
+  3865:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./scoring-profiles/{profileId}.get
+  3894:9  warning  operation-description                Operation "description" must be present and non-empty string.  paths./scoring-profiles/{profileId}.put
+ 3935:12  warning  operation-description                Operation "description" must be present and non-empty string.  paths./scoring-profiles/{profileId}.delete
+ 3961:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/scoring-profile.post
+ 3997:10  warning  operation-description                Operation "description" must be present and non-empty string.  paths./campaigns/{campaignId}/rescore.post
+ 4156:17  warning  oas3-unused-component                Potentially unused component has been detected.                components.parameters.PersonaType
+ 4175:13  warning  oas3-unused-component                Potentially unused component has been detected.                components.examples.message
+ 4180:15  warning  oas3-unused-component                Potentially unused component has been detected.                components.examples.heartbeat
+ 4185:11  warning  oas3-unused-component                Potentially unused component has been detected.                components.examples.retry
+ 7045:33  warning  oas3-unused-component                Potentially unused component has been detected.                components.schemas.KeywordSetWithRulesResponse
+ 7077:29  warning  oas3-unused-component                Potentially unused component has been detected.                components.schemas.HTTPValidatorConfigJSON
+ 7081:24  warning  oas3-unused-component                Potentially unused component has been detected.                components.schemas.WorkerConfigUpdate
+ 7139:28  warning  oas3-unused-component                Potentially unused component has been detected.                components.schemas.ProxyManagerConfigJSON
+ 7143:26  warning  oas3-unused-component                Potentially unused component has been detected.                components.schemas.ServerConfigResponse
+ 7147:31  warning  oas3-unused-component                Potentially unused component has been detected.                components.schemas.ServerConfigUpdateRequest
+
+✖ 211 problems (0 errors, 211 warnings, 0 infos, 0 hints)

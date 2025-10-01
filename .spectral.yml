@@ -1,0 +1,40 @@
+extends: spectral:oas
+
+rules:
+  # Prevent reintroduction of SuccessEnvelope in 2xx responses
+  no-success-envelope-in-2xx:
+    description: "2xx responses must not reference SuccessEnvelope (API contract modernization)"
+    given: "$.paths.*.*.responses[?(@property.match(/^2/))].content.application/json.schema"
+    then:
+      - function: pattern
+        functionOptions:
+          notMatch: ".*SuccessEnvelope.*"
+    severity: error
+
+  # Prevent reintroduction of ProxyDetailsResponse schema
+  no-proxy-details-response:
+    description: "ProxyDetailsResponse schema was removed in favor of Proxy schema"
+    given: "$.components.schemas"
+    then:
+      - function: falsy
+        field: "ProxyDetailsResponse"
+    severity: error
+
+  # Ensure delete endpoints return 204 No Content
+  delete-operations-should-return-204:
+    description: "DELETE operations should return 204 No Content"
+    given: "$.paths.*.delete.responses"
+    then:
+      - function: truthy
+        field: "204"
+    severity: warn
+
+  # Ensure error responses use ErrorEnvelope consistently
+  error-responses-use-envelope:
+    description: "4xx/5xx responses should use ErrorEnvelope for consistency"
+    given: "$.paths.*.*.responses[?(@property.match(/^[45]/))].content.application/json.schema"
+    then:
+      - function: pattern
+        functionOptions:
+          match: ".*ErrorEnvelope.*"
+    severity: warn

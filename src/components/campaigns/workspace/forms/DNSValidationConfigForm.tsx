@@ -11,7 +11,6 @@ import { useToast } from '@/hooks/use-toast';
 import { PersonasApi, ProxiesApi, ProxyPoolsApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
 import { PersonaType } from '@/lib/api-client/models/persona-type';
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 import type { ModelsProxy } from '@/lib/api-client/models/models-proxy';
 import type { ModelsProxyPool } from '@/lib/api-client/models/models-proxy-pool';
@@ -45,10 +44,12 @@ export const DNSValidationConfigForm: React.FC<Props> = ({ campaignId, onConfigu
       personasApi.personasList(undefined, undefined, true, PersonaType.dns),
       proxyPoolsApi.proxyPoolsList(),
     ]);
-    const personasEnvelope = extractResponseData<any>(personasResponse);
-    const poolsEnvelope = extractResponseData<any>(poolsResponse);
-    const personasRaw = Array.isArray(personasEnvelope?.items) ? personasEnvelope.items : Array.isArray(personasEnvelope?.data) ? personasEnvelope.data : Array.isArray(personasEnvelope) ? personasEnvelope : [];
-    const poolsRaw = Array.isArray(poolsEnvelope?.items) ? poolsEnvelope.items : Array.isArray(poolsEnvelope?.data) ? poolsEnvelope.data : Array.isArray(poolsEnvelope) ? poolsEnvelope : [];
+    // API now returns direct arrays
+    const personasData = personasResponse.data || [];
+    const poolsData = poolsResponse.data || [];
+    // Since APIs return direct arrays, we can use them directly
+    const personasRaw = Array.isArray(personasData) ? personasData : [];
+    const poolsRaw = Array.isArray(poolsData) ? poolsData : [];
     const enabledPools = poolsRaw.filter((p: any)=>p.isEnabled!==false);
     const activeDns = personasRaw.filter((p: any)=> (p.personaType==='dns' || p.personaType==='DNS' ) && (p.isEnabled===true || p.isEnabled===undefined));
     setDnsPersonas(activeDns);

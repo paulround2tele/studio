@@ -22,7 +22,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 export default function ProxyPoolList() {
   const [pools, setPools] = useState<ProxyPoolType[]>([]);
@@ -33,7 +32,8 @@ export default function ProxyPoolList() {
   const loadPools = async () => {
     try {
       const resp = await proxyPoolsApi.proxyPoolsList();
-      const data = extractResponseData<any[]>(resp) || [];
+      // API now returns direct array of ProxyPool objects
+      const data = resp.data || [];
       setPools(data.filter((pool: { id?: unknown }) => pool.id) as ProxyPoolType[]);
     } catch (error) {
       console.error('Failed to load proxy pools:', error);

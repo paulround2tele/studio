@@ -11,7 +11,6 @@ import { useToast } from '@/hooks/use-toast';
 import { PersonasApi, KeywordSetsApi, ProxyPoolsApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
 import { PersonaType } from '@/lib/api-client/models/persona-type';
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 import type { ModelsProxyPool } from '@/lib/api-client/models/models-proxy-pool';
 import type { KeywordSetResponse as ApiKeywordSet } from '@/lib/api-client/models/keyword-set-response';
@@ -50,13 +49,14 @@ export const HTTPValidationConfigForm: React.FC<Props> = ({ campaignId, onConfig
       keywordSetsApi.keywordSetsList(),
       proxyPoolsApi.proxyPoolsList(),
     ]);
-    // Robust envelope unwrapping (items | data | raw array) mirroring DNS form logic
-    const personasEnvelope = extractResponseData<any>(personasResponse);
-    const poolsEnvelope = extractResponseData<any>(poolsResponse);
-    const setsEnvelope = extractResponseData<any>(setsResponse);
-    const personasRaw = Array.isArray(personasEnvelope?.items) ? personasEnvelope.items : Array.isArray(personasEnvelope?.data) ? personasEnvelope.data : Array.isArray(personasEnvelope) ? personasEnvelope : [];
-    const poolsRaw = Array.isArray(poolsEnvelope?.items) ? poolsEnvelope.items : Array.isArray(poolsEnvelope?.data) ? poolsEnvelope.data : Array.isArray(poolsEnvelope) ? poolsEnvelope : [];
-    const setsRaw = Array.isArray(setsEnvelope?.items) ? setsEnvelope.items : Array.isArray(setsEnvelope?.data) ? setsEnvelope.data : Array.isArray(setsEnvelope) ? setsEnvelope : [];
+    // API now returns direct arrays
+    const personasData = personasResponse.data || [];
+    const poolsData = poolsResponse.data || [];
+    const setsData = setsResponse.data || [];
+    // Since APIs return direct arrays, we can use them directly
+    const personasRaw = Array.isArray(personasData) ? personasData : [];
+    const poolsRaw = Array.isArray(poolsData) ? poolsData : [];
+    const setsRaw = Array.isArray(setsData) ? setsData : [];
     const activeHttp = personasRaw.filter((p: any)=> (p.personaType==='http' || p.personaType==='HTTP') && (p.isEnabled===true || p.isEnabled===undefined));
     setHttpPersonas(activeHttp);
     setKeywordSets(setsRaw||[]);

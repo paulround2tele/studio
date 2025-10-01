@@ -11,14 +11,8 @@ CreateProxyRequestAPI:
     isEnabled: { type: boolean }
     notes: { type: string }
   required: [name, address]
-ProxyDetailsResponse:
-  type: object
-  properties:
-    host: { type: string }
-    port: { type: integer }
-    protocol: { type: string }
-    username: { type: string }
-  description: "(LEGACY) Minimal proxy details shape retained for backward compatibility. New integrations should use the full Proxy schema."
+# Note: ProxyDetailsResponse was removed as part of API contract modernization
+# All proxy endpoints now use the full Proxy schema for consistency
 
 # Full proxy resource exposed to frontend (all fields optional until backend handlers upgraded)
 Proxy:

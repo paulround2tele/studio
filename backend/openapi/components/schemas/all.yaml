@@ -543,13 +543,8 @@ CreateProxyRequestAPI:
     isEnabled: { type: boolean }
     notes: { type: string }
   required: [name, address]
-ProxyDetailsResponse:
-  type: object
-  properties:
-    host: { type: string }
-    port: { type: integer }
-    protocol: { type: string }
-    username: { type: string }
+# Note: ProxyDetailsResponse was removed as part of API contract modernization
+# All proxy endpoints now use the full Proxy schema for consistency
 Proxy:
   type: object
   description: Full proxy resource representation returned by list/detail operations.

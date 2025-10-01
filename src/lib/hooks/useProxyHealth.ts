@@ -69,7 +69,7 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     // Ensure proxyData is always an array
     const safeProxyData = Array.isArray(proxyData) ? proxyData : [];
     const totalProxies = safeProxyData.length;
-  // Generated ProxyDetailsResponse does not include health fields; assume enrichment upstream.
+    // Using the comprehensive Proxy schema with all health fields directly available
     const activeProxies = safeProxyData.filter((p: any) => p?.isEnabled && p?.isHealthy).length;
     const failedProxies = safeProxyData.filter((p: any) => p?.isEnabled && !p?.isHealthy).length;
   const testingProxies = 0;

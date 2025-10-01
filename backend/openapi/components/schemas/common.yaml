@@ -1,14 +1,6 @@
-SuccessEnvelope:
-  type: object
-  properties:
-    success:
-      type: boolean
-      enum: [true]
-    metadata:
-      $ref: '#/components/schemas/Metadata'
-    requestId:
-      type: string
-  required: [success, requestId]
+# Note: SuccessEnvelope was removed as part of API contract modernization
+# All 2xx responses now return direct payloads without envelope wrappers
+
 ErrorEnvelope:
   type: object
   properties:

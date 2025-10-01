@@ -2024,6 +2024,7 @@ export interface components {
             /** Format: int64 */
             responseTime?: number;
             isHealthy?: boolean;
+            proxyDetails?: components["schemas"]["Proxy"];
         };
         ProxyHealthCheckResponse: {
             /** Format: uuid */
@@ -3142,12 +3143,6 @@ export interface components {
         };
         /** @description Optional body for future rescore parameters (currently unused) */
         RescoreCampaignRequest: Record<string, never>;
-        ProxyDetailsResponse: {
-            host?: string;
-            port?: number;
-            protocol?: string;
-            username?: string;
-        };
         KeywordSetWithRulesResponse: {
             /** Format: uuid */
             id: string;

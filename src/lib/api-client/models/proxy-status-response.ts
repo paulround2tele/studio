@@ -13,6 +13,9 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { Proxy } from './proxy';
 
 /**
  * 
@@ -50,5 +53,11 @@ export interface ProxyStatusResponse {
      * @memberof ProxyStatusResponse
      */
     'isHealthy'?: boolean;
+    /**
+     * 
+     * @type {Proxy}
+     * @memberof ProxyStatusResponse
+     */
+    'proxyDetails'?: Proxy;
 }
 
