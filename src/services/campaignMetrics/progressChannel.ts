@@ -6,7 +6,9 @@
 import { ProgressUpdate } from '@/types/campaignMetrics';
 
 // Feature flags
-const PROGRESS_HEARTBEAT_SECS = parseInt(process.env.NEXT_PUBLIC_PROGRESS_HEARTBEAT_SECS || '45');
+const PROGRESS_HEARTBEAT_SECS = typeof process !== 'undefined' 
+  ? parseInt(process.env?.NEXT_PUBLIC_PROGRESS_HEARTBEAT_SECS || '45')
+  : 45;
 const MAX_RECONNECT_ATTEMPTS = 5;
 const BASE_RECONNECT_DELAY = 1000; // 1s
 const MAX_RECONNECT_DELAY = 60000; // 60s
@@ -39,8 +41,8 @@ export interface ProgressChannelMetrics {
 export class ProgressChannel {
   private options: ProgressChannelOptions;
   private eventSource: EventSource | null = null;
-  private heartbeatTimer: NodeJS.Timeout | null = null;
-  private reconnectTimer: NodeJS.Timeout | null = null;
+  private heartbeatTimer: ReturnType<typeof setTimeout> | null = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   
   private state: ConnectionState = 'disconnected';
   private metrics: ProgressChannelMetrics = {
@@ -79,6 +81,33 @@ export class ProgressChannel {
     } catch (error) {
       this.handleError(error instanceof Error ? error : new Error('Failed to start SSE connection'));
     }
+  }
+
+  /**
+   * Start mock progress for development/testing
+   */
+  private async startMockProgress(): Promise<void> {
+    // Mock implementation - simulate progress updates
+    this.setState('connected');
+    
+    const mockProgressTimer = setInterval(() => {
+      if (this.isDestroyed) {
+        clearInterval(mockProgressTimer);
+        return;
+      }
+      
+      const mockUpdate: ProgressUpdate = {
+        phase: 'running',
+        analyzedDomains: Math.floor(Math.random() * 100),
+        totalDomains: 100,
+        status: 'active',
+        updatedAt: new Date().toISOString()
+      };
+      
+      if (this.options.onProgress) {
+        this.options.onProgress(mockUpdate);
+      }
+    }, 1000);
   }
 
   /**
@@ -273,7 +302,9 @@ export class ProgressChannel {
    * Build SSE URL
    */
   private buildSSEUrl(): string {
-    const baseUrl = process.env.NEXT_PUBLIC_WS_URL?.replace('ws://', 'http://').replace('wss://', 'https://');
+    const baseUrl = typeof process !== 'undefined' 
+      ? process.env?.NEXT_PUBLIC_WS_URL?.replace('ws://', 'http://').replace('wss://', 'https://')
+      : 'http://localhost:8080';
     return `${baseUrl}/campaigns/${this.options.campaignId}/progress/stream`;
   }
 
@@ -281,7 +312,9 @@ export class ProgressChannel {
    * Build polling URL
    */
   private buildPollingUrl(): string {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+    const baseUrl = typeof process !== 'undefined' 
+      ? process.env?.NEXT_PUBLIC_API_URL
+      : 'http://localhost:8080/api/v2';
     return `${baseUrl}/campaigns/${this.options.campaignId}/progress`;
   }
 

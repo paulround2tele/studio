@@ -4,14 +4,15 @@
  */
 
 import { safeAt, safeLast } from '@/lib/utils/arrayUtils';
+import { StreamPatchOp, applyPatchOp, createMessageEvent } from '@/lib/utils/typeSafetyPrimitives';
 
 // Feature flag for stream pooling
 const isStreamPoolingEnabled = () => 
-  process.env.NEXT_PUBLIC_STREAM_POOLING !== 'false';
+  typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_STREAM_POOLING !== 'false';
 
 // Feature flag for differential updates (Phase 8)
 const isDifferentialUpdatesEnabled = () =>
-  process.env.NEXT_PUBLIC_STREAM_DIFFERENTIAL_UPDATES !== 'false';
+  typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_STREAM_DIFFERENTIAL_UPDATES !== 'false';
 
 /**
  * Stream pool event callback
@@ -24,12 +25,7 @@ export type StreamEventCallback = (event: MessageEvent) => void;
 export interface DifferentialPatch {
   type: 'delta' | 'full_snapshot';
   timestamp: string;
-  changes: Array<{
-    path: string; // JSONPath-style path to the changed field
-    operation: 'set' | 'delete' | 'increment' | 'push';
-    value?: any;
-    previousValue?: any;
-  }>;
+  changes: StreamPatchOp[];
   sequenceNumber?: number;
   campaignId?: string;
 }
@@ -66,6 +62,7 @@ interface PooledStream {
   callbacks: Map<string, StreamEventCallback>;
   url: string;
   lastHeartbeat: number;
+  lastMessageTime: number; // Added missing property
   missedHeartbeats: number;
   failureCount: number;
   // Phase 8: Enhanced state
@@ -117,45 +114,10 @@ class DifferentialPatchProcessor {
   /**
    * Apply a single change operation
    */
-  private applyChange(target: any, change: { path: string; operation: string; value?: any }): void {
-    const pathParts = change.path.split('.');
-    let current = target;
-    
-    // Navigate to the parent of the target field
-    for (let i = 0; i < pathParts.length - 1; i++) {
-      const part = safeAt(pathParts, i);
-      if (!part) continue;
-      
-      if (!(part in current)) {
-        current[part] = {};
-      }
-      current = current[part];
-    }
-    
-    const finalKey = safeLast(pathParts);
-    if (!finalKey) {
-      console.warn('[DifferentialPatchProcessor] Invalid path:', change.path);
-      return;
-    }
-    
-    switch (change.operation) {
-      case 'set':
-        current[finalKey] = change.value;
-        break;
-      case 'delete':
-        delete current[finalKey];
-        break;
-      case 'increment':
-        current[finalKey] = (current[finalKey] || 0) + (change.value || 1);
-        break;
-      case 'push':
-        if (!Array.isArray(current[finalKey])) {
-          current[finalKey] = [];
-        }
-        current[finalKey].push(change.value);
-        break;
-      default:
-        console.warn('[DifferentialPatchProcessor] Unknown operation:', change.operation);
+  private applyChange(target: any, change: StreamPatchOp): void {
+    const result = applyPatchOp(target, change);
+    if (!result.ok) {
+      console.warn('[DifferentialPatchProcessor] Failed to apply change:', change, result.error);
     }
   }
 
@@ -269,6 +231,7 @@ class StreamPool {
       callbacks: new Map(),
       url,
       lastHeartbeat: Date.now(),
+      lastMessageTime: Date.now(), // Initialize missing property
       missedHeartbeats: 0,
       failureCount: 0,
       // Phase 8: Initialize enhanced state
@@ -312,6 +275,7 @@ class StreamPool {
     // Update heartbeat tracking
     const now = Date.now();
     pool.lastHeartbeat = now;
+    pool.lastMessageTime = now; // Update message time tracking
     pool.missedHeartbeats = 0;
     pool.qualityMetrics.updateCount++;
 
@@ -367,12 +331,10 @@ class StreamPool {
           
           // Create enhanced event with computed state
           const computedState = pool.patchProcessor.getCurrentState();
-          const enhancedEvent = new MessageEvent('message', {
-            data: JSON.stringify({
-              ...messageData,
-              computedState,
-              isOptimistic: true
-            })
+          const enhancedEvent = createMessageEvent({
+            ...messageData,
+            computedState,
+            isOptimistic: true
           });
           
           // Forward enhanced message to callbacks

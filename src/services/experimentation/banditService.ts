@@ -1,3 +1,5 @@
+import { NonEmptyArray, selectRandom, normalizeArmStats } from '@/lib/utils/typeSafetyPrimitives';
+
 /**
  * Adaptive Experimentation Service (Phase 10)
  * Contextual bandit implementation with UCB/Thompson sampling
@@ -5,7 +7,7 @@
 
 // Feature flag check
 const isBanditExperimentsEnabled = (): boolean => {
-  return process.env.NEXT_PUBLIC_ENABLE_BANDIT_EXPERIMENTS === 'true';
+  return typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_ENABLE_BANDIT_EXPERIMENTS === 'true';
 };
 
 // Types for bandit arms and context
@@ -178,7 +180,12 @@ class BanditService {
 
     // Use deterministic cycle if insufficient samples
     if (this.totalPulls < this.config.minSampleSize * this.arms.size) {
+      const armIds = Array.from(this.arms.keys());
       const selectedArmId = armIds[this.totalPulls % armIds.length];
+      if (!selectedArmId) {
+        throw new Error('No arms available in deterministic cycle');
+      }
+      
       const decision: BanditDecision = {
         armId: selectedArmId,
         estimatedReward: 0.5,
@@ -389,7 +396,11 @@ class BanditService {
     if (Math.random() < epsilon) {
       // Explore: select random arm
       const arms = Array.from(this.arms.values());
-      const randomArm = arms[Math.floor(Math.random() * arms.length)];
+      const randomArm = selectRandom(arms);
+      
+      if (!randomArm) {
+        throw new Error('No arms available for random selection');
+      }
       
       return {
         armId: randomArm.id,
@@ -401,6 +412,10 @@ class BanditService {
     } else {
       // Exploit: select best arm
       const arms = Array.from(this.arms.values());
+      if (arms.length === 0) {
+        throw new Error('No arms available for exploitation');
+      }
+      
       const bestArm = arms.reduce((best, arm) => 
         arm.stats.averageReward > best.stats.averageReward ? arm : best
       );

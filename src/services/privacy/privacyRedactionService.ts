@@ -5,7 +5,7 @@
 
 // Feature flag check
 const isPrivacyRedactionEnabled = (): boolean => {
-  return process.env.NEXT_PUBLIC_ENABLE_PRIVACY_REDACTION === 'true';
+  return typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_ENABLE_PRIVACY_REDACTION === 'true';
 };
 
 // Types for privacy policies and redaction
@@ -180,7 +180,7 @@ class PrivacyRedactionService {
   }
 
   /**
-   * Redact a single value
+   * Redact a single value - consolidated implementation
    */
   redactValue(value: any, fieldPath: string, level: PrivacyLevel = 'public'): { redacted: any; applied: boolean } {
     if (!this.isAvailable()) {
@@ -297,7 +297,7 @@ class PrivacyRedactionService {
   private applyRedactionRule(value: any, rule: PrivacyRule): any {
     switch (rule.action) {
       case 'redact':
-        return this.redactValue(value, rule);
+        return this.performRedaction(value, rule);
       case 'hash':
         return this.hashValue(value, rule.hashSalt);
       case 'mask':
@@ -312,9 +312,9 @@ class PrivacyRedactionService {
   }
 
   /**
-   * Redact a value (replace with placeholder)
+   * Perform redaction operation (internal helper)
    */
-  private redactValue(value: any, rule: PrivacyRule): string {
+  private performRedaction(value: any, rule: PrivacyRule): string {
     if (rule.preserveFormat && typeof value === 'string') {
       // Preserve format but redact content
       return value.replace(/[a-zA-Z0-9]/g, rule.maskCharacter || '*');
