@@ -150,7 +150,6 @@ export * from './ping-response';
 export * from './proxies-bulk-test-request';
 export * from './proxies-health-check-all-request';
 export * from './proxy';
-export * from './proxy-details-response';
 export * from './proxy-health-check-response';
 export * from './proxy-manager-config-json';
 export * from './proxy-pool';

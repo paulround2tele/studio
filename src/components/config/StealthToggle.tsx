@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { ServerSettingsApi } from '@/lib/api-client/apis/server-settings-api';
 import { apiConfiguration } from '@/lib/api/config';
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 type Props = {
   className?: string;
@@ -23,7 +22,8 @@ export function StealthToggle({ className }: Props) {
     try {
       setLoading(true);
       const res = await api.configGetStealth();
-      const data = extractResponseData<{ enabled?: boolean }>(res);
+      // API now returns direct payload: { enabled: boolean }
+      const data = res.data;
       setEnabled(Boolean(data?.enabled));
     } catch (e) {
       toast({ title: 'Failed to load stealth setting', variant: 'destructive' });

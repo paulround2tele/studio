@@ -7042,17 +7042,6 @@ components:
     RescoreCampaignRequest:
       type: object
       description: Optional body for future rescore parameters (currently unused)
-    ProxyDetailsResponse:
-      type: object
-      properties:
-        host:
-          type: string
-        port:
-          type: integer
-        protocol:
-          type: string
-        username:
-          type: string
     KeywordSetWithRulesResponse:
       type: object
       properties:

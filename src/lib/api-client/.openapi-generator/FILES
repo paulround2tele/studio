@@ -180,7 +180,6 @@ docs/ProxiesApi.md
 docs/ProxiesBulkTestRequest.md
 docs/ProxiesHealthCheckAllRequest.md
 docs/Proxy.md
-docs/ProxyDetailsResponse.md
 docs/ProxyHealthCheckResponse.md
 docs/ProxyManagerConfigJSON.md
 docs/ProxyPool.md
@@ -367,7 +366,6 @@ models/phase-status-response.ts
 models/ping-response.ts
 models/proxies-bulk-test-request.ts
 models/proxies-health-check-all-request.ts
-models/proxy-details-response.ts
 models/proxy-health-check-response.ts
 models/proxy-manager-config-json.ts
 models/proxy-pool-delete-response.ts
