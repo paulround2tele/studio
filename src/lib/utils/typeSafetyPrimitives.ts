@@ -73,14 +73,17 @@ export function isNonEmptyArray<T>(arr: T[]): arr is NonEmptyArray<T> {
  */
 export function selectRandom<T>(arr: T[]): T | null {
   if (arr.length === 0) return null;
-  return arr[Math.floor(Math.random() * arr.length)];
+  const index = Math.floor(Math.random() * arr.length);
+  // Index is safe because we just verified length > 0
+  return arr[index]!;
 }
 
 /**
  * Safe random selection from non-empty array
  */
 export function selectRandomNonEmpty<T>(arr: NonEmptyArray<T>): T {
-  return arr[Math.floor(Math.random() * arr.length)];
+  const index = Math.floor(Math.random() * arr.length);
+  return arr[index]!;
 }
 
 /**
