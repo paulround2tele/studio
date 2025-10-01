@@ -203,6 +203,14 @@ paths:
           $ref: '#/components/responses/InternalServerError'
   /sse/events/stats:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '403':
+        $ref: ../../components/responses.yaml#/Forbidden
+      '429':
+        $ref: ../../components/responses.yaml#/RateLimitExceeded
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - sse
       security:
@@ -215,30 +223,17 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          activeConnections:
-                            type: integer
-                            description: Number of active SSE connections
-                          totalEventsSent:
-                            type: integer
-                            description: Total events sent since server start
-                          uptime:
-                            type: string
-                            description: Server uptime
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '429':
-          $ref: '#/components/responses/RateLimitExceeded'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: object
+                properties:
+                  activeConnections:
+                    type: integer
+                    description: Number of active SSE connections
+                  totalEventsSent:
+                    type: integer
+                    description: Total events sent since server start
+                  uptime:
+                    type: string
+                    description: Server uptime
   /personas:
     get:
       tags:
@@ -259,8 +254,8 @@ paths:
             application/json:
               schema:
                 type: array
-                items:
-                  $ref: '#/components/schemas/PersonaResponse'
+              items:
+                $ref: ../../components/schemas/all.yaml#/PersonaResponse
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -411,6 +406,20 @@ paths:
           $ref: '#/components/responses/InternalServerError'
   /personas/{id}/test:
     post:
+      '400':
+        $ref: ../../components/responses.yaml#/BadRequest
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '403':
+        $ref: ../../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../../components/responses.yaml#/ValidationError
+      '429':
+        $ref: ../../components/responses.yaml#/RateLimitExceeded
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - personas
       security:
@@ -430,26 +439,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/PersonaTestResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/ValidationError'
-        '429':
-          $ref: '#/components/responses/RateLimitExceeded'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: '#/components/schemas/PersonaTestResponse'
   /personas/http/{id}:
     get:
       tags:
@@ -516,6 +506,14 @@ paths:
           $ref: '#/components/responses/InternalServerError'
   /proxies:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '403':
+        $ref: ../../components/responses.yaml#/Forbidden
+      '429':
+        $ref: ../../components/responses.yaml#/RateLimitExceeded
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - proxies
       security:
@@ -535,61 +533,43 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/ProxyDetailsResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '429':
-          $ref: '#/components/responses/RateLimitExceeded'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    post:
-      tags:
-        - proxies
-      security:
-        - cookieAuth: []
-      summary: Create proxy
-      operationId: proxies_create
-      requestBody:
-        required: true
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProxyDetailsResponse'
+    post: null
+    tags:
+      - proxies
+    security:
+      - cookieAuth: []
+    summary: Create proxy
+    operationId: proxies_create
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/all.yaml#/CreateProxyRequestAPI
+    responses:
+      '201':
+        description: Created
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateProxyRequestAPI'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyDetailsResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '422':
-          $ref: '#/components/responses/ValidationError'
-        '429':
-          $ref: '#/components/responses/RateLimitExceeded'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+              $ref: ../../components/schemas/all.yaml#/ProxyDetailsResponse
+      '400':
+        $ref: ../../components/responses.yaml#/BadRequest
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '403':
+        $ref: ../../components/responses.yaml#/Forbidden
+      '409':
+        $ref: ../../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../../components/responses.yaml#/ValidationError
+      '429':
+        $ref: ../../components/responses.yaml#/RateLimitExceeded
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
   /proxies/{proxyId}:
     put:
       tags:
@@ -617,12 +597,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyDetailsResponse'
+                $ref: '#/components/schemas/ProxyDetailsResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -648,12 +623,8 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
-          description: Deleted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessEnvelope'
+        '204':
+          description: No Content
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -664,6 +635,20 @@ paths:
           $ref: '#/components/responses/InternalServerError'
   /proxies/{proxyId}/test:
     post:
+      '400':
+        $ref: ../../components/responses.yaml#/BadRequest
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '403':
+        $ref: ../../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../../components/responses.yaml#/NotFound
+      '422':
+        $ref: ../../components/responses.yaml#/ValidationError
+      '429':
+        $ref: ../../components/responses.yaml#/RateLimitExceeded
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - proxies
       security:
@@ -683,28 +668,17 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyTestResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '422':
-          $ref: '#/components/responses/ValidationError'
-        '429':
-          $ref: '#/components/responses/RateLimitExceeded'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: '#/components/schemas/ProxyTestResponse'
   /proxies/status:
     get:
+      '400':
+        $ref: ../../components/responses.yaml#/BadRequest
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '403':
+        $ref: ../../components/responses.yaml#/Forbidden
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - proxies
       security:
@@ -717,24 +691,17 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/ProxyStatusResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProxyStatusResponse'
   /proxies/{proxyId}/health-check:
     post:
+      '400':
+        $ref: ../../components/responses.yaml#/BadRequest
+      '404':
+        $ref: ../../components/responses.yaml#/NotFound
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - proxies
       security:
@@ -754,20 +721,13 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyHealthCheckResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: '#/components/schemas/ProxyHealthCheckResponse'
   /proxies/health-check:
     post:
+      '400':
+        $ref: ../../components/responses.yaml#/BadRequest
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - proxies
       security:
@@ -792,16 +752,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkHealthCheckResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: '#/components/schemas/BulkHealthCheckResponse'
   /proxies/bulk/update:
     put:
       tags:
@@ -822,12 +773,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkProxyOperationResponse'
+                $ref: '#/components/schemas/BulkProxyOperationResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -852,12 +798,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkProxyOperationResponse'
+                $ref: '#/components/schemas/BulkProxyOperationResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -890,18 +831,19 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkProxyTestResponse'
+                $ref: '#/components/schemas/BulkProxyTestResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /proxy-pools:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '403':
+        $ref: ../../components/responses.yaml#/Forbidden
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - proxy-pools
       security:
@@ -914,49 +856,33 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/ProxyPool'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    post:
-      tags:
-        - proxy-pools
-      security:
-        - cookieAuth: []
-      summary: Create proxy pool
-      operationId: proxy_pools_create
-      requestBody:
-        required: true
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProxyPool'
+    post: null
+    tags:
+      - proxy-pools
+    security:
+      - cookieAuth: []
+    summary: Create proxy pool
+    operationId: proxy_pools_create
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/all.yaml#/ProxyPoolRequest
+    responses:
+      '201':
+        description: Created
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ProxyPoolRequest'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyPool'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+              $ref: ../../components/schemas/all.yaml#/ProxyPool
+      '400':
+        $ref: ../../components/responses.yaml#/BadRequest
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
   /proxy-pools/{poolId}:
     put:
       tags:
@@ -984,12 +910,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyPool'
+                $ref: '#/components/schemas/ProxyPool'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -1016,12 +937,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyPoolDeleteResponse'
+                $ref: '#/components/schemas/ProxyPoolDeleteResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -1063,12 +979,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyPoolMembership'
+                $ref: '#/components/schemas/ProxyPoolMembership'
         '400':
           $ref: '#/components/responses/BadRequest'
         '500':
@@ -1100,12 +1011,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ProxyPoolMembershipResponse'
+                $ref: '#/components/schemas/ProxyPoolMembershipResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -1132,9 +1038,8 @@ paths:
             application/json:
               schema:
                 type: array
-                items:
-                  $ref: '#/components/schemas/KeywordSetResponse'
-                description: Direct array of keyword sets (envelope removed)
+              items:
+                $ref: ../../components/schemas/all.yaml#/KeywordSetResponse
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1198,12 +1103,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/KeywordSetResponse'
+                $ref: '#/components/schemas/KeywordSetResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1240,12 +1140,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/KeywordSetResponse'
+                $ref: '#/components/schemas/KeywordSetResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1289,6 +1184,16 @@ paths:
           $ref: '#/components/responses/InternalServerError'
   /keyword-sets/{setId}/rules:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '403':
+        $ref: ../../components/responses.yaml#/Forbidden
+      '404':
+        $ref: ../../components/responses.yaml#/NotFound
+      '429':
+        $ref: ../../components/responses.yaml#/RateLimitExceeded
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - keyword-sets
       security:
@@ -1308,26 +1213,19 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/KeywordRuleDTO'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/RateLimitExceeded'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: array
+                items:
+                  $ref: '#/components/schemas/KeywordRuleDTO'
   /keyword-rules:
     get:
+      '401':
+        $ref: ../components/responses.yaml#/Unauthorized
+      '403':
+        $ref: ../components/responses.yaml#/Forbidden
+      '429':
+        $ref: ../components/responses.yaml#/RateLimitExceeded
+      '500':
+        $ref: ../components/responses.yaml#/InternalServerError
       tags:
         - keyword-rules
       security:
@@ -1372,22 +1270,9 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/KeywordRuleDTO'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '429':
-          $ref: '#/components/responses/RateLimitExceeded'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: array
+                items:
+                  $ref: '#/components/schemas/KeywordRuleDTO'
   /database/query:
     post:
       tags:
@@ -1410,12 +1295,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkDatabaseQueryResponse'
+                $ref: '#/components/schemas/BulkDatabaseQueryResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1451,12 +1331,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkDatabaseStatsResponse'
+                $ref: '#/components/schemas/BulkDatabaseStatsResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1489,12 +1364,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BatchKeywordExtractionResponse'
+                $ref: '#/components/schemas/BatchKeywordExtractionResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1580,19 +1450,14 @@ paths:
       security:
         - cookieAuth: []
       summary: Get authentication configuration
-      operationId: config_get_auth
+      operationId: config_get_authentication
       responses:
         '200':
           description: authentication config
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/AuthConfig'
+                $ref: '#/components/schemas/AuthConfig'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1607,7 +1472,7 @@ paths:
       security:
         - cookieAuth: []
       summary: Update authentication configuration
-      operationId: config_update_auth
+      operationId: config_update_authentication
       requestBody:
         required: true
         content:
@@ -1620,12 +1485,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/AuthConfig'
+                $ref: '#/components/schemas/AuthConfig'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1646,20 +1506,15 @@ paths:
         - server-settings
       security:
         - cookieAuth: []
-      summary: Get DNS configuration
-      operationId: config_get_dns
+      summary: Get DNS validator configuration
+      operationId: config_get_DNS validator
       responses:
         '200':
-          description: DNS config
+          description: DNS validator config
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/DNSValidatorConfigJSON'
+                $ref: '#/components/schemas/DNSValidatorConfigJSON'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1673,8 +1528,8 @@ paths:
         - server-settings
       security:
         - cookieAuth: []
-      summary: Update DNS configuration
-      operationId: config_update_dns
+      summary: Update DNS validator configuration
+      operationId: config_update_DNS validator
       requestBody:
         required: true
         content:
@@ -1687,12 +1542,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/DNSValidatorConfigJSON'
+                $ref: '#/components/schemas/DNSValidatorConfigJSON'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1781,12 +1631,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/LoggingConfig'
+                $ref: '#/components/schemas/LoggingConfig'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1814,12 +1659,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/LoggingConfig'
+                $ref: '#/components/schemas/LoggingConfig'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1848,12 +1688,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/WorkerConfig'
+                $ref: '#/components/schemas/WorkerConfig'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1881,12 +1716,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/WorkerConfig'
+                $ref: '#/components/schemas/WorkerConfig'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1968,19 +1798,14 @@ paths:
       security:
         - cookieAuth: []
       summary: Get rate limiter configuration
-      operationId: config_get_rate_limiter
+      operationId: config_get_rate limiter
       responses:
         '200':
           description: rate limiter config
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/RateLimiterConfig'
+                $ref: '#/components/schemas/RateLimiterConfig'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1995,7 +1820,7 @@ paths:
       security:
         - cookieAuth: []
       summary: Update rate limiter configuration
-      operationId: config_update_rate_limiter
+      operationId: config_update_rate limiter
       requestBody:
         required: true
         content:
@@ -2008,12 +1833,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/RateLimiterConfig'
+                $ref: '#/components/schemas/RateLimiterConfig'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2091,56 +1911,18 @@ paths:
   /config/features:
     get:
       tags:
-        - feature-flags
+        - server-settings
       security:
         - cookieAuth: []
-      summary: Get feature flags
-      operationId: feature_flags_get
+      summary: Get feature flags configuration
+      operationId: config_get_features
       responses:
         '200':
-          description: Feature flags
+          description: feature flags config
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/FeatureFlags'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '429':
-          $ref: '#/components/responses/RateLimitExceeded'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    put:
-      tags:
-        - feature-flags
-      security:
-        - cookieAuth: []
-      summary: Update feature flags
-      operationId: feature_flags_update
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/FeatureFlags'
-      responses:
-        '200':
-          description: Updated
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/FeatureFlags'
+                $ref: '#/components/schemas/FeatureFlags'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2161,23 +1943,18 @@ paths:
         - server-settings
       security:
         - cookieAuth: []
-      summary: Get stealth configuration
+      summary: Get stealth mode configuration
       operationId: config_get_stealth
       responses:
         '200':
-          description: OK
+          description: stealth config
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          enabled:
-                            type: boolean
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':
@@ -2187,7 +1964,7 @@ paths:
         - server-settings
       security:
         - cookieAuth: []
-      summary: Update stealth configuration
+      summary: Update stealth mode configuration
       operationId: config_update_stealth
       requestBody:
         required: true
@@ -2198,25 +1975,30 @@ paths:
               properties:
                 enabled:
                   type: boolean
+              required:
+                - enabled
       responses:
         '200':
-          description: OK
+          description: Updated
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          enabled:
-                            type: boolean
+                type: object
+                properties:
+                  enabled:
+                    type: boolean
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /monitoring/performance/summary:
@@ -2239,6 +2021,10 @@ paths:
           $ref: '#/components/responses/InternalServerError'
   /monitoring/performance/slow:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - monitoring
       summary: Monitoring performance slow
@@ -2249,18 +2035,13 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: object
   /monitoring/performance/metrics:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - monitoring
       summary: Monitoring performance metrics
@@ -2271,16 +2052,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: object
   /monitoring/performance/active:
     get:
       tags:
@@ -2301,6 +2073,10 @@ paths:
           $ref: '#/components/responses/InternalServerError'
   /monitoring/performance/failed:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - monitoring
       summary: Monitoring performance failed
@@ -2311,18 +2087,15 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: object
   /monitoring/campaigns/{campaignId}/resources:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '404':
+        $ref: ../../components/responses.yaml#/NotFound
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - monitoring
       summary: Monitoring campaign resources
@@ -2340,20 +2113,15 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: object
   /monitoring/campaigns/{campaignId}/performance:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '404':
+        $ref: ../../components/responses.yaml#/NotFound
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - monitoring
       summary: Monitoring campaign performance
@@ -2371,20 +2139,15 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: object
   /monitoring/campaigns/{campaignId}/health:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '404':
+        $ref: ../../components/responses.yaml#/NotFound
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - monitoring
       summary: Monitoring campaign health
@@ -2402,18 +2165,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: object
   /monitoring/campaigns/{campaignId}/limits:
     post:
       tags:
@@ -2464,6 +2216,12 @@ paths:
           $ref: '#/components/responses/InternalServerError'
   /monitoring/cleanup/campaigns/{campaignId}:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '404':
+        $ref: ../../components/responses.yaml#/NotFound
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - monitoring
       summary: Monitoring campaign-specific endpoint
@@ -2481,18 +2239,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: object
   /monitoring/cleanup/campaigns/{campaignId}/force:
     post:
       tags:
@@ -2517,6 +2264,10 @@ paths:
           $ref: '#/components/responses/InternalServerError'
   /monitoring/resources/system:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - monitoring
       summary: System resources
@@ -2527,18 +2278,13 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: object
   /monitoring/resources/history:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - monitoring
       summary: System resources history
@@ -2549,18 +2295,13 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: object
   /monitoring/resources/alerts:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - monitoring
       summary: System resources alerts
@@ -2571,16 +2312,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: object
   /monitoring/dashboard/summary:
     get:
       tags:
@@ -2601,6 +2333,10 @@ paths:
           $ref: '#/components/responses/InternalServerError'
   /monitoring/dashboard/trends:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - monitoring
       summary: Monitoring performance trends
@@ -2611,18 +2347,13 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: object
   /monitoring/health:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - monitoring
       summary: Monitoring health
@@ -2633,18 +2364,13 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: object
   /monitoring/stats:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - monitoring
       summary: Monitoring stats
@@ -2655,16 +2381,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: object
   /auth/login:
     post:
       tags:
@@ -2683,12 +2400,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/SessionResponse'
+                $ref: '#/components/schemas/SessionResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2704,26 +2416,18 @@ paths:
       summary: User logout
       operationId: auth_logout
       responses:
-        '200':
-          description: Logout successful
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          message:
-                            type: string
+        '204':
+          description: No Content
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /auth/refresh:
     post:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - auth
       summary: Refresh session
@@ -2734,18 +2438,13 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/SessionResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: '#/components/schemas/SessionResponse'
   /auth/me:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - auth
       summary: Get current user
@@ -2756,16 +2455,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/UserPublicResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: '#/components/schemas/UserPublicResponse'
   /auth/change-password:
     post:
       tags:
@@ -2794,15 +2484,10 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          message:
-                            type: string
+                type: object
+                properties:
+                  message:
+                    type: string
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2827,8 +2512,8 @@ paths:
             application/json:
               schema:
                 type: array
-                items:
-                  $ref: '#/components/schemas/CampaignResponse'
+              items:
+                $ref: ../../components/schemas/all.yaml#/CampaignResponse
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':
@@ -2979,6 +2664,12 @@ paths:
           $ref: '#/components/responses/InternalServerError'
   /campaigns/{campaignId}/domains:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '404':
+        $ref: ../../components/responses.yaml#/NotFound
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - campaigns
       summary: List generated domains for a campaign
@@ -3112,24 +2803,12 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/CampaignDomainsListResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: '#/components/schemas/CampaignDomainsListResponse'
   /campaigns/{campaignId}/domains/{domain}/score-breakdown:
     get:
       tags:
         - campaigns
-      summary: Get component score breakdown for a single domain
-      description: Recomputes the scoring component values for the specified domain using the stored feature vector and current (or default) scoring profile weights. Does not persist anything; purely diagnostic / transparency surface. If experimental tf-lite scoring is disabled the `tf_lite` key will still be present with value 0.
+      summary: Get detailed score breakdown for a specific domain in a campaign
       operationId: campaigns_domain_score_breakdown
       parameters:
         - name: campaignId
@@ -3145,16 +2824,11 @@ paths:
             type: string
       responses:
         '200':
-          description: OK
+          description: Domain score breakdown
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/DomainScoreBreakdownResponse'
+                $ref: '#/components/schemas/DomainScoreBreakdownResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3182,12 +2856,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/CampaignState'
+                $ref: '#/components/schemas/CampaignState'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -3216,12 +2885,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/CampaignState'
+                $ref: '#/components/schemas/CampaignState'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -3251,7 +2915,7 @@ paths:
     get:
       tags:
         - campaigns
-      summary: Get campaign state and phase executions
+      summary: List phase executions for a campaign
       operationId: campaigns_phase_executions_list
       parameters:
         - name: campaignId
@@ -3262,16 +2926,11 @@ paths:
             format: uuid
       responses:
         '200':
-          description: OK
+          description: Campaign state with executions
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/CampaignStateWithExecutions'
+                $ref: '#/components/schemas/CampaignStateWithExecutions'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -3305,12 +2964,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/PhaseExecution'
+                $ref: '#/components/schemas/PhaseExecution'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -3349,12 +3003,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/PhaseExecution'
+                $ref: '#/components/schemas/PhaseExecution'
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
@@ -3392,6 +3041,10 @@ paths:
           $ref: '#/components/responses/InternalServerError'
   /campaigns/{campaignId}/enriched:
     get:
+      '404':
+        $ref: ../../components/responses.yaml#/NotFound
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - campaigns
       summary: Get enriched campaign details
@@ -3410,16 +3063,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/EnrichedCampaignResponse'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: '#/components/schemas/EnrichedCampaignResponse'
   /campaigns/{campaignId}/phases/{phase}/status:
     get:
       tags:
@@ -3449,12 +3093,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/PhaseStatusResponse'
+                $ref: '#/components/schemas/PhaseStatusResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
@@ -3496,12 +3135,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/PhaseStatusResponse'
+                $ref: '#/components/schemas/PhaseStatusResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3539,12 +3173,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/PhaseStatusResponse'
+                $ref: '#/components/schemas/PhaseStatusResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3568,7 +3197,7 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
   /campaigns/{campaignId}/mode:
-    patch:
+    put:
       tags:
         - campaigns
       summary: Update campaign execution mode
@@ -3597,15 +3226,10 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          mode:
-                            $ref: '#/components/schemas/CampaignModeEnum'
+                type: object
+                properties:
+                  mode:
+                    $ref: '#/components/schemas/CampaignModeEnum'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3616,6 +3240,14 @@ paths:
           $ref: '#/components/responses/InternalServerError'
   /campaigns/{campaignId}/configs:
     get:
+      '400':
+        $ref: ../../components/responses.yaml#/BadRequest
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '404':
+        $ref: ../../components/responses.yaml#/NotFound
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - campaigns
       summary: List stored phase configurations for a campaign
@@ -3633,32 +3265,19 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          campaignId:
-                            type: string
-                            format: uuid
-                          configsPresent:
-                            type: object
-                            additionalProperties:
-                              type: boolean
-                          configs:
-                            type: object
-                            additionalProperties:
-                              type: object
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                type: object
+                properties:
+                  campaignId:
+                    type: string
+                    format: uuid
+                  configsPresent:
+                    type: object
+                    additionalProperties:
+                      type: boolean
+                  configs:
+                    type: object
+                    additionalProperties:
+                      type: object
   /campaigns/{campaignId}/phases/{phase}/stop:
     post:
       tags:
@@ -3688,12 +3307,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/PhaseStatusResponse'
+                $ref: '#/components/schemas/PhaseStatusResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3873,12 +3487,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/CampaignResponse'
+                $ref: '#/components/schemas/CampaignResponse'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
@@ -3898,16 +3507,16 @@ paths:
             application/json:
               schema:
                 type: array
-                items:
-                  type: object
-                  properties:
-                    operationId:
-                      type: string
-                      format: uuid
-                    type:
-                      type: string
-                    status:
-                      type: string
+              items:
+                type: object
+                properties:
+                  operationId:
+                    type: string
+                    format: uuid
+                  type:
+                    type: string
+                  status:
+                    type: string
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3982,12 +3591,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkGenerationResponse'
+                $ref: '#/components/schemas/BulkGenerationResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -4014,12 +3618,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkAnalyticsResponse'
+                $ref: '#/components/schemas/BulkAnalyticsResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -4046,12 +3645,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkValidationResponse'
+                $ref: '#/components/schemas/BulkValidationResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -4078,12 +3672,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkValidationResponse'
+                $ref: '#/components/schemas/BulkValidationResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -4096,7 +3685,7 @@ paths:
     get:
       tags:
         - campaigns
-      summary: Get bulk resource allocation status
+      summary: Get status of bulk resource allocation
       operationId: getBulkResourceStatus
       parameters:
         - name: allocationId
@@ -4105,33 +3694,25 @@ paths:
           schema:
             type: string
             format: uuid
-          description: Resource allocation ID
       responses:
         '200':
-          description: Resource allocation status retrieved successfully
+          description: Bulk resource allocation status
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          allocationId:
-                            type: string
-                            format: uuid
-                          status:
-                            type: string
+                type: object
+                properties:
+                  allocationId:
+                    type: string
+                    format: uuid
+                  status:
+                    type: string
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /campaigns/bulk/resources/allocate:
@@ -4152,12 +3733,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/BulkResourceAllocationResponse'
+                $ref: '#/components/schemas/BulkResourceAllocationResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -4170,7 +3746,7 @@ paths:
     post:
       tags:
         - campaigns
-      summary: Cancel bulk operation
+      summary: Cancel a bulk operation
       operationId: cancelBulkOperation
       parameters:
         - name: operationId
@@ -4179,39 +3755,37 @@ paths:
           schema:
             type: string
             format: uuid
-          description: Bulk operation ID to cancel
       responses:
         '200':
-          description: Bulk operation cancelled successfully
+          description: Bulk operation cancellation status
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: object
-                        properties:
-                          operationId:
-                            type: string
-                            format: uuid
-                          status:
-                            $ref: '#/components/schemas/BulkOperationCancelStatus'
+                type: object
+                properties:
+                  operationId:
+                    type: string
+                    format: uuid
+                  status:
+                    $ref: '#/components/schemas/BulkOperationCancelStatus'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-        '429':
-          $ref: '#/components/responses/RateLimitExceeded'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /campaigns/domain-generation/pattern-offset:
     post:
+      '400':
+        $ref: ../../components/responses.yaml#/BadRequest
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '404':
+        $ref: ../../components/responses.yaml#/NotFound
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - campaigns
       summary: Get current global pattern offset for domain generation config
@@ -4228,22 +3802,15 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/PatternOffsetResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+                $ref: '#/components/schemas/PatternOffsetResponse'
   /scoring-profiles:
     get:
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '403':
+        $ref: ../../components/responses.yaml#/Forbidden
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
       tags:
         - scoring
       security:
@@ -4259,57 +3826,41 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/ScoringProfile'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
-    post:
-      tags:
-        - scoring
-      security:
-        - cookieAuth: []
-      summary: Create scoring profile
-      operationId: scoring_profiles_create
-      requestBody:
-        required: true
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScoringProfile'
+    post: null
+    tags:
+      - scoring
+    security:
+      - cookieAuth: []
+    summary: Create scoring profile
+    operationId: scoring_profiles_create
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../../components/schemas/all.yaml#/CreateScoringProfileRequest
+    responses:
+      '201':
+        description: Created
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateScoringProfileRequest'
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ScoringProfile'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '409':
-          $ref: '#/components/responses/Conflict'
-        '422':
-          $ref: '#/components/responses/ValidationError'
-        '500':
-          $ref: '#/components/responses/InternalServerError'
+              $ref: ../../components/schemas/all.yaml#/ScoringProfile
+      '400':
+        $ref: ../../components/responses.yaml#/BadRequest
+      '401':
+        $ref: ../../components/responses.yaml#/Unauthorized
+      '403':
+        $ref: ../../components/responses.yaml#/Forbidden
+      '409':
+        $ref: ../../components/responses.yaml#/Conflict
+      '422':
+        $ref: ../../components/responses.yaml#/ValidationError
+      '500':
+        $ref: ../../components/responses.yaml#/InternalServerError
   /scoring-profiles/{profileId}:
     get:
       tags:
@@ -4331,12 +3882,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ScoringProfile'
+                $ref: '#/components/schemas/ScoringProfile'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -4371,12 +3917,7 @@ paths:
           content:
             application/json:
               schema:
-                allOf:
-                  - $ref: '#/components/schemas/SuccessEnvelope'
-                  - type: object
-                    properties:
-                      data:
-                        $ref: '#/components/schemas/ScoringProfile'
+                $ref: '#/components/schemas/ScoringProfile'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -4406,12 +3947,8 @@ paths:
             type: string
             format: uuid
       responses:
-        '200':
-          description: Deleted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessEnvelope'
+        '204':
+          description: No Content
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -4442,12 +3979,8 @@ paths:
             schema:
               $ref: '#/components/schemas/AssociateScoringProfileRequest'
       responses:
-        '200':
-          description: Associated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessEnvelope'
+        '204':
+          description: No Content
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -4482,12 +4015,8 @@ paths:
             schema:
               $ref: '#/components/schemas/RescoreCampaignRequest'
       responses:
-        '200':
-          description: Rescore initiated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SuccessEnvelope'
+        '204':
+          description: No Content
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -4760,83 +4289,6 @@ components:
           type: string
       required:
         - message
-    Pagination:
-      type: object
-      properties:
-        current:
-          type: integer
-        total:
-          type: integer
-        pageSize:
-          type: integer
-        count:
-          type: integer
-    RateLimitInfo:
-      type: object
-      properties:
-        limit:
-          type: integer
-        remaining:
-          type: integer
-        reset:
-          type: string
-          format: date-time
-    ProcessingInfo:
-      type: object
-      properties:
-        duration:
-          type: string
-        version:
-          type: string
-    BulkOperationInfo:
-      type: object
-      properties:
-        processedItems:
-          type: integer
-        skippedItems:
-          type: integer
-        failedItems:
-          type: array
-          items:
-            type: string
-        processingTimeMs:
-          type: integer
-          format: int64
-        totalRowsReturned:
-          type: integer
-          format: int64
-        type:
-          type: string
-    Metadata:
-      type: object
-      properties:
-        page:
-          $ref: '#/components/schemas/Pagination'
-        rateLimit:
-          $ref: '#/components/schemas/RateLimitInfo'
-        processing:
-          $ref: '#/components/schemas/ProcessingInfo'
-        bulk:
-          $ref: '#/components/schemas/BulkOperationInfo'
-        extra:
-          type: object
-          additionalProperties: {}
-    SuccessEnvelope:
-      type: object
-      properties:
-        success:
-          type: boolean
-          description: Always true for success envelopes.
-          default: true
-          example: true
-          readOnly: true
-        metadata:
-          $ref: '#/components/schemas/Metadata'
-        requestId:
-          type: string
-      required:
-        - success
-        - requestId
     PersonaType:
       type: string
       enum:
@@ -4992,6 +4444,23 @@ components:
         mapping:
           http: '#/components/schemas/PersonaConfigHttp'
           dns: '#/components/schemas/PersonaConfigDns'
+    CreatePersonaRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        personaType:
+          $ref: '#/components/schemas/PersonaType'
+        description:
+          type: string
+        configDetails:
+          $ref: '#/components/schemas/PersonaConfigDetails'
+        isEnabled:
+          type: boolean
+      required:
+        - name
+        - personaType
+        - configDetails
     PersonaResponse:
       type: object
       properties:
@@ -5021,23 +4490,6 @@ components:
         - isEnabled
         - createdAt
         - updatedAt
-    CreatePersonaRequest:
-      type: object
-      properties:
-        name:
-          type: string
-        personaType:
-          $ref: '#/components/schemas/PersonaType'
-        description:
-          type: string
-        configDetails:
-          $ref: '#/components/schemas/PersonaConfigDetails'
-        isEnabled:
-          type: boolean
-      required:
-        - name
-        - personaType
-        - configDetails
     UpdatePersonaRequest:
       type: object
       properties:
@@ -5101,30 +4553,6 @@ components:
           type: string
         username:
           type: string
-    CreateProxyRequestAPI:
-      type: object
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        address:
-          type: string
-        protocol:
-          $ref: '#/components/schemas/ProxyProtocol'
-        username:
-          type: string
-        password:
-          type: string
-        countryCode:
-          type: string
-        isEnabled:
-          type: boolean
-        notes:
-          type: string
-      required:
-        - name
-        - address
     UpdateProxyRequestAPI:
       type: object
       properties:
@@ -5372,6 +4800,42 @@ components:
           type: boolean
         message:
           type: string
+    KeywordRuleType:
+      type: string
+      enum:
+        - string
+        - regex
+    KeywordRuleRequest:
+      type: object
+      properties:
+        pattern:
+          type: string
+        ruleType:
+          $ref: '#/components/schemas/KeywordRuleType'
+        isCaseSensitive:
+          type: boolean
+        category:
+          type: string
+        contextChars:
+          type: integer
+      required:
+        - pattern
+        - ruleType
+    CreateKeywordSetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        isEnabled:
+          type: boolean
+        rules:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeywordRuleRequest'
+      required:
+        - name
     KeywordRuleDTO:
       type: object
       properties:
@@ -5428,42 +4892,6 @@ components:
         - createdAt
         - updatedAt
         - ruleCount
-    KeywordRuleType:
-      type: string
-      enum:
-        - string
-        - regex
-    KeywordRuleRequest:
-      type: object
-      properties:
-        pattern:
-          type: string
-        ruleType:
-          $ref: '#/components/schemas/KeywordRuleType'
-        isCaseSensitive:
-          type: boolean
-        category:
-          type: string
-        contextChars:
-          type: integer
-      required:
-        - pattern
-        - ruleType
-    CreateKeywordSetRequest:
-      type: object
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        isEnabled:
-          type: boolean
-        rules:
-          type: array
-          items:
-            $ref: '#/components/schemas/KeywordRuleRequest'
-      required:
-        - name
     UpdateKeywordSetRequest:
       type: object
       properties:
@@ -5790,72 +5218,6 @@ components:
         - user
         - token
         - expiresAt
-    CampaignResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        name:
-          type: string
-        description:
-          type: string
-        status:
-          type: string
-          enum:
-            - draft
-            - running
-            - paused
-            - completed
-            - failed
-            - cancelled
-        configuration:
-          type: object
-          description: Campaign configuration
-        currentPhase:
-          type: string
-          enum:
-            - discovery
-            - validation
-            - extraction
-            - analysis
-          nullable: true
-        progress:
-          type: object
-          properties:
-            totalDomains:
-              type: integer
-            processedDomains:
-              type: integer
-            successfulDomains:
-              type: integer
-            failedDomains:
-              type: integer
-            percentComplete:
-              type: number
-              format: float
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        startedAt:
-          type: string
-          format: date-time
-          nullable: true
-        completedAt:
-          type: string
-          format: date-time
-          nullable: true
-      required:
-        - id
-        - name
-        - status
-        - configuration
-        - progress
-        - createdAt
-        - updatedAt
     CreateCampaignRequest:
       type: object
       properties:
@@ -5964,6 +5326,72 @@ components:
                 - type
       required:
         - name
+    CampaignResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum:
+            - draft
+            - running
+            - paused
+            - completed
+            - failed
+            - cancelled
+        configuration:
+          type: object
+          description: Campaign configuration
+        currentPhase:
+          type: string
+          enum:
+            - discovery
+            - validation
+            - extraction
+            - analysis
+          nullable: true
+        progress:
+          type: object
+          properties:
+            totalDomains:
+              type: integer
+            processedDomains:
+              type: integer
+            successfulDomains:
+              type: integer
+            failedDomains:
+              type: integer
+            percentComplete:
+              type: number
+              format: float
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - name
+        - status
+        - configuration
+        - progress
+        - createdAt
+        - updatedAt
     UpdateCampaignRequest:
       type: object
       properties:
@@ -7499,24 +6927,6 @@ components:
         - version
         - createdAt
         - updatedAt
-    CreateScoringProfileRequest:
-      type: object
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        weights:
-          type: object
-          additionalProperties:
-            type: number
-            format: float
-        version:
-          type: integer
-          description: Optional explicit version; defaults to 1 if omitted
-      required:
-        - name
-        - weights
     UpdateScoringProfileRequest:
       type: object
       properties:
@@ -7542,6 +6952,48 @@ components:
     RescoreCampaignRequest:
       type: object
       description: Optional body for future rescore parameters (currently unused)
+    CreateScoringProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        weights:
+          type: object
+          additionalProperties:
+            type: number
+            format: float
+        version:
+          type: integer
+          description: Optional explicit version; defaults to 1 if omitted
+      required:
+        - name
+        - weights
+    CreateProxyRequestAPI:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        address:
+          type: string
+        protocol:
+          $ref: '#/components/schemas/ProxyProtocol'
+        username:
+          type: string
+        password:
+          type: string
+        countryCode:
+          type: string
+        isEnabled:
+          type: boolean
+        notes:
+          type: string
+      required:
+        - name
+        - address
     KeywordSetWithRulesResponse:
       type: object
       properties:

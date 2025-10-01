@@ -1,6 +1,6 @@
 get:
   tags: [campaigns]
-  summary: Get campaign state and phase executions
+  summary: List phase executions for a campaign
   operationId: campaigns_phase_executions_list
   parameters:
     - name: campaignId
@@ -9,10 +9,10 @@ get:
       schema: { type: string, format: uuid }
   responses:
     '200':
-      description: OK
+      description: Campaign state with executions
       content:
         application/json:
           schema:
             $ref: '../../components/schemas/all.yaml#/CampaignStateWithExecutions'
-  '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

@@ -1,11 +1,6 @@
 get:
   tags: [campaigns]
-  summary: Get component score breakdown for a single domain
-  description: >-
-    Recomputes the scoring component values for the specified domain using the stored
-    feature vector and current (or default) scoring profile weights. Does not persist
-    anything; purely diagnostic / transparency surface. If experimental tf-lite scoring
-    is disabled the `tf_lite` key will still be present with value 0.
+  summary: Get detailed score breakdown for a specific domain in a campaign
   operationId: campaigns_domain_score_breakdown
   parameters:
     - name: campaignId
@@ -18,12 +13,12 @@ get:
       schema: { type: string }
   responses:
     '200':
-      description: OK
+      description: Domain score breakdown
       content:
         application/json:
           schema:
             $ref: '../../components/schemas/all.yaml#/DomainScoreBreakdownResponse'
-  '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-  '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

@@ -3,7 +3,7 @@ get:
   security:
     - cookieAuth: []
   summary: Get rate limiter configuration
-  operationId: config_get_rate_limiter
+  operationId: config_get_rate limiter
   responses:
     '200':
       description: rate limiter config
@@ -11,38 +11,33 @@ get:
         application/json:
           schema:
             $ref: '../../components/schemas/all.yaml#/RateLimiterConfig'
-  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
-  '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
 put:
-tags: [server-settings]
-security:
-  - cookieAuth: []
-summary: Update rate limiter configuration
-operationId: config_update_rate_limiter
-requestBody:
-  required: true
-  content:
-    application/json:
-      schema:
-        $ref: '../../components/schemas/all.yaml#/RateLimiterConfig'
-responses:
-  '200':
-    description: Updated
+  tags: [server-settings]
+  security:
+    - cookieAuth: []
+  summary: Update rate limiter configuration
+  operationId: config_update_rate limiter
+  requestBody:
+    required: true
     content:
       application/json:
         schema:
-          allOf:
-            - $ref: '../../components/schemas/all.yaml#/SuccessEnvelope'
-            - type: object
-              properties:
-                data:
-                  $ref: '../../components/schemas/all.yaml#/RateLimiterConfig'
-  '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+          $ref: '../../components/schemas/all.yaml#/RateLimiterConfig'
+  responses:
+    '200':
+      description: Updated
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/all.yaml#/RateLimiterConfig'
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '409': { $ref: '../../components/responses.yaml#/Conflict' }
-  '422': { $ref: '../../components/responses.yaml#/ValidationError' }
+    '422': { $ref: '../../components/responses.yaml#/ValidationError' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

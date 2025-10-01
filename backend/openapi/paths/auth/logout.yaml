@@ -3,13 +3,7 @@ post:
   summary: User logout
   operationId: auth_logout
   responses:
-    '200':
-      description: Logout successful
-      content:
-        application/json:
-          schema:
-            type: object
-          properties:
-                    message: { type: string }
-  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+    '204':
+      description: No Content
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

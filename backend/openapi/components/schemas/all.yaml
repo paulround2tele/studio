@@ -1,19 +1,5 @@
 # Aggregated component schemas for modular spec bundling
 # This file consolidates all schema definitions so components.schemas can $ref here.
-SuccessEnvelope:
-  type: object
-  properties:
-    success:
-      type: boolean
-      description: Always true for success envelopes.
-      default: true
-      example: true
-      readOnly: true
-    metadata:
-      $ref: '#/Metadata'
-    requestId:
-      type: string
-  required: [success, requestId]
 ErrorEnvelope:
   type: object
   properties:
@@ -78,49 +64,6 @@ ApiError:
     path:
       type: string
   required: [code, message, timestamp]
-Metadata:
-  type: object
-  properties:
-    page:
-      $ref: '#/Pagination'
-    rateLimit:
-      $ref: '#/RateLimitInfo'
-    processing:
-      $ref: '#/ProcessingInfo'
-    bulk:
-      $ref: '#/BulkOperationInfo'
-    extra:
-      type: object
-      additionalProperties: {}
-Pagination:
-  type: object
-  properties:
-    current: { type: integer }
-    total: { type: integer }
-    pageSize: { type: integer }
-    count: { type: integer }
-RateLimitInfo:
-  type: object
-  properties:
-    limit: { type: integer }
-    remaining: { type: integer }
-    reset: { type: string, format: date-time }
-ProcessingInfo:
-  type: object
-  properties:
-    duration: { type: string }
-    version: { type: string }
-BulkOperationInfo:
-  type: object
-  properties:
-    processedItems: { type: integer }
-    skippedItems: { type: integer }
-    failedItems:
-      type: array
-      items: { type: string }
-    processingTimeMs: { type: integer, format: int64 }
-    totalRowsReturned: { type: integer, format: int64 }
-    type: { type: string }
 
 # Direct response schemas (Option B - no envelope for 2xx)
 HealthResponse:
