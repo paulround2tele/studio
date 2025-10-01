@@ -5,16 +5,14 @@
  */
 
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { CampaignsApi } from '@/lib/api-client';
+import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
 import {
   CampaignsPhaseConfigurePhaseEnum,
   CampaignsPhaseStartPhaseEnum,
   CampaignsPhaseStatusPhaseEnum,
 } from '@/lib/api-client/apis/campaigns-api';
 import { apiConfiguration } from '@/lib/api/config';
-import type {
-  ServicesCreateLeadGenerationCampaignRequest,
-} from '@/lib/api-client';
+import type { CreateCampaignRequest } from '@/lib/api-client/models/create-campaign-request';
 import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
 import type { CampaignResponse } from '@/lib/api-client/models/campaign-response';
 import type { CampaignProgressResponse } from '@/lib/api-client/models/campaign-progress-response';
@@ -24,7 +22,6 @@ import type { PatternOffsetResponse } from '@/lib/api-client/models/pattern-offs
 import type { EnrichedCampaignResponse } from '@/lib/api-client/models/enriched-campaign-response';
 import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
 import type { CampaignDomainsListResponse } from '@/lib/api-client/models/campaign-domains-list-response';
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers'; // Still used for legacy (not yet migrated) endpoints
 import { toRtkError } from '@/lib/utils/toRtkError';
 
 // Centralized API configuration targeting /api/v2
@@ -39,7 +36,7 @@ export const campaignApi = createApi({
   tagTypes: ['Campaign', 'CampaignList', 'CampaignProgress', 'CampaignDomains', 'CampaignPhase'],
   endpoints: (builder) => ({
     // Campaign CRUD operations
-  createCampaign: builder.mutation<CampaignResponse, ServicesCreateLeadGenerationCampaignRequest>({
+  createCampaign: builder.mutation<CampaignResponse, CreateCampaignRequest>({
       queryFn: async (request) => {
         try {
           const resp = await campaignsApi.campaignsCreate(request) as any;
@@ -59,7 +56,7 @@ export const campaignApi = createApi({
       queryFn: async (campaignId) => {
         try {
           const response = await campaignsApi.campaignsEnrichedGet(campaignId);
-          const data = extractResponseData<EnrichedCampaignResponse>(response);
+          const data = (response as any)?.data ?? response;
           if (!data) return { error: 'Empty enriched campaign response' as any };
           return { data };
         } catch (error: any) {
@@ -92,7 +89,7 @@ export const campaignApi = createApi({
       queryFn: async ({ campaignId, limit, offset }) => {
         try {
           const response = await campaignsApi.campaignsDomainsList(campaignId, limit, offset);
-          const data = extractResponseData<CampaignDomainsListResponse>(response);
+          const data = (response as any)?.data ?? response;
           if (!data) return { error: 'Empty domains list response' as any };
           return { data };
         } catch (error: any) {
@@ -109,7 +106,7 @@ export const campaignApi = createApi({
       queryFn: async (campaignId) => {
         try {
           const response = await campaignsApi.campaignsProgress(campaignId);
-          const data = extractResponseData<CampaignProgressResponse>(response);
+          const data = (response as any)?.data ?? response;
           if (!data) return { error: 'Empty progress response' as any };
           return { data };
         } catch (error: any) {
@@ -130,7 +127,7 @@ export const campaignApi = createApi({
         try {
           const phaseEnum: CampaignsPhaseConfigurePhaseEnum = (phase as CampaignsPhaseConfigurePhaseEnum);
           const response = await campaignsApi.campaignsPhaseConfigure(campaignId, phaseEnum, config);
-          const data = extractResponseData<PhaseStatusResponse>(response);
+          const data = (response as any)?.data ?? response;
           if (!data) return { error: 'Empty phase configure response' as any };
           return { data };
         } catch (error: any) {
@@ -153,7 +150,7 @@ export const campaignApi = createApi({
         try {
           const phaseEnum: CampaignsPhaseStartPhaseEnum = (phase as CampaignsPhaseStartPhaseEnum);
           const response = await campaignsApi.campaignsPhaseStart(campaignId, phaseEnum);
-          const data = extractResponseData<PhaseStatusResponse>(response);
+          const data = (response as any)?.data ?? response;
           if (!data) return { error: 'Empty phase start response' as any };
           return { data };
         } catch (error: any) {
@@ -178,7 +175,7 @@ export const campaignApi = createApi({
         try {
           const phaseEnum: CampaignsPhaseStatusPhaseEnum = (phase as CampaignsPhaseStatusPhaseEnum);
           const response = await campaignsApi.campaignsPhaseStatus(campaignId, phaseEnum);
-          const data = extractResponseData<PhaseStatusResponse>(response);
+          const data = (response as any)?.data ?? response;
           if (!data) return { error: 'Empty phase status response' as any };
           return { data };
         } catch (error: any) {
@@ -199,7 +196,7 @@ export const campaignApi = createApi({
       queryFn: async (request) => {
         try {
           const response = await campaignsApi.campaignsDomainGenerationPatternOffset(request);
-          const data = extractResponseData<PatternOffsetResponse>(response);
+          const data = (response as any)?.data ?? response;
           if (!data) return { error: 'Empty pattern offset response' as any };
           return { data };
         } catch (error: any) {
@@ -221,7 +218,7 @@ export const campaignApi = createApi({
           let pages = 0;
           while (all.length < total && pages < MAX_PAGES) {
             const resp = await campaignsApi.campaignsDomainsList(campaignId, limit, offset);
-            const payload = extractResponseData<CampaignDomainsListResponse>(resp);
+            const payload = (resp as any)?.data ?? resp;
             if (!payload) break;
             const items = payload.items || [];
             total = payload.total || items.length;
@@ -246,8 +243,8 @@ export const campaignApi = createApi({
       queryFn: async ({ campaignId, mode }) => {
         try {
           const response = await (campaignsApi as any).campaignsModeUpdate(campaignId, { mode });
-          const extracted = extractResponseData<{ mode?: string }>(response) || { mode };
-            return { data: { mode: extracted.mode || mode } };
+          const extracted = ((response as any)?.data ?? response) || { mode };
+          return { data: { mode: (extracted as any).mode || mode } };
         } catch (error: any) {
           return { error: toRtkError(error) as any };
         }
@@ -270,7 +267,7 @@ export const campaignApi = createApi({
           const fn: any = (campaignsApi as any).campaignsDomainScoreBreakdown;
           if (!fn) return { error: 'Domain score breakdown endpoint missing in client' as any };
           const response = await fn(campaignId, domain);
-          const data = extractResponseData<any>(response);
+          const data = (response as any)?.data ?? response;
           if (!data) return { error: 'Empty score breakdown' as any };
           return { data };
         } catch (error: any) {
@@ -287,7 +284,7 @@ export const campaignApi = createApi({
       queryFn: async (campaignId) => {
         try {
           const response = await campaignsApi.campaignsFunnelGet(campaignId);
-          const data = extractResponseData<any>(response);
+          const data = (response as any)?.data ?? response;
           return { data };
         } catch (error: any) {
           return { error: toRtkError(error) as any };
@@ -317,7 +314,7 @@ export const campaignApi = createApi({
       queryFn: async ({ campaignId, limit }) => {
         try {
           const response = await campaignsApi.campaignsClassificationsGet(campaignId, limit);
-          const data = extractResponseData<any>(response);
+          const data = (response as any)?.data ?? response;
           return { data };
         } catch (error: any) {
           return { error: toRtkError(error) as any };
@@ -332,7 +329,7 @@ export const campaignApi = createApi({
       queryFn: async (campaignId) => {
         try {
           const response = await campaignsApi.campaignsMomentumGet(campaignId);
-          const data = extractResponseData<any>(response);
+          const data = (response as any)?.data ?? response;
           return { data };
         } catch (error: any) {
           return { error: toRtkError(error) as any };
@@ -347,7 +344,7 @@ export const campaignApi = createApi({
       queryFn: async (campaignId) => {
         try {
           const response = await campaignsApi.campaignsRecommendationsGet(campaignId);
-          const data = extractResponseData<any>(response);
+          const data = (response as any)?.data ?? response;
           return { data };
         } catch (error: any) {
           return { error: toRtkError(error) as any };
@@ -362,7 +359,7 @@ export const campaignApi = createApi({
       queryFn: async (campaignId) => {
         try {
           const response = await campaignsApi.campaignsStatusGet(campaignId);
-          const data = extractResponseData<any>(response);
+          const data = (response as any)?.data ?? response;
           return { data };
         } catch (error: any) {
           return { error: toRtkError(error) as any };
@@ -377,7 +374,7 @@ export const campaignApi = createApi({
       queryFn: async (campaignId) => {
         try {
           const response = await campaignsApi.campaignsDuplicatePost(campaignId);
-          const data = extractResponseData<any>(response);
+          const data = (response as any)?.data ?? response;
           return { data };
         } catch (error: any) {
           return { error: toRtkError(error) as any };

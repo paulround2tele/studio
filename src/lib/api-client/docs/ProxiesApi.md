@@ -17,7 +17,7 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**proxiesUpdate**](#proxiesupdate) | **PUT** /proxies/{proxyId} | Update proxy|
 
 # **proxiesBulkDelete**
-> ProxiesBulkUpdate200Response proxiesBulkDelete(bulkDeleteProxiesRequest)
+> BulkProxyOperationResponse proxiesBulkDelete(bulkDeleteProxiesRequest)
 
 
 ### Example
@@ -48,7 +48,7 @@ const { status, data } = await apiInstance.proxiesBulkDelete(
 
 ### Return type
 
-**ProxiesBulkUpdate200Response**
+**BulkProxyOperationResponse**
 
 ### Authorization
 
@@ -70,7 +70,7 @@ const { status, data } = await apiInstance.proxiesBulkDelete(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesBulkTest**
-> ProxiesBulkTest200Response proxiesBulkTest(proxiesBulkTestRequest)
+> BulkProxyTestResponse proxiesBulkTest(proxiesBulkTestRequest)
 
 
 ### Example
@@ -101,7 +101,7 @@ const { status, data } = await apiInstance.proxiesBulkTest(
 
 ### Return type
 
-**ProxiesBulkTest200Response**
+**BulkProxyTestResponse**
 
 ### Authorization
 
@@ -123,7 +123,7 @@ const { status, data } = await apiInstance.proxiesBulkTest(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesBulkUpdate**
-> ProxiesBulkUpdate200Response proxiesBulkUpdate(bulkUpdateProxiesRequest)
+> BulkProxyOperationResponse proxiesBulkUpdate(bulkUpdateProxiesRequest)
 
 
 ### Example
@@ -154,7 +154,7 @@ const { status, data } = await apiInstance.proxiesBulkUpdate(
 
 ### Return type
 
-**ProxiesBulkUpdate200Response**
+**BulkProxyOperationResponse**
 
 ### Authorization
 
@@ -176,7 +176,7 @@ const { status, data } = await apiInstance.proxiesBulkUpdate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesCreate**
-> ProxiesCreate201Response proxiesCreate(createProxyRequestAPI)
+> Proxy proxiesCreate(createProxyRequestAPI)
 
 
 ### Example
@@ -207,7 +207,7 @@ const { status, data } = await apiInstance.proxiesCreate(
 
 ### Return type
 
-**ProxiesCreate201Response**
+**Proxy**
 
 ### Authorization
 
@@ -234,7 +234,7 @@ const { status, data } = await apiInstance.proxiesCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesDelete**
-> SuccessEnvelope proxiesDelete()
+> proxiesDelete()
 
 
 ### Example
@@ -264,7 +264,7 @@ const { status, data } = await apiInstance.proxiesDelete(
 
 ### Return type
 
-**SuccessEnvelope**
+void (empty response body)
 
 ### Authorization
 
@@ -279,7 +279,7 @@ const { status, data } = await apiInstance.proxiesDelete(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Deleted |  -  |
+|**204** | No Content |  -  |
 |**401** | Unauthorized |  -  |
 |**403** | Forbidden |  -  |
 |**404** | Not Found |  -  |
@@ -288,7 +288,7 @@ const { status, data } = await apiInstance.proxiesDelete(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesHealthCheckAll**
-> ProxiesHealthCheckAll202Response proxiesHealthCheckAll()
+> BulkHealthCheckResponse proxiesHealthCheckAll()
 
 
 ### Example
@@ -319,7 +319,7 @@ const { status, data } = await apiInstance.proxiesHealthCheckAll(
 
 ### Return type
 
-**ProxiesHealthCheckAll202Response**
+**BulkHealthCheckResponse**
 
 ### Authorization
 
@@ -341,7 +341,7 @@ const { status, data } = await apiInstance.proxiesHealthCheckAll(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesHealthCheckSingle**
-> ProxiesHealthCheckSingle200Response proxiesHealthCheckSingle()
+> ProxyHealthCheckResponse proxiesHealthCheckSingle()
 
 
 ### Example
@@ -371,7 +371,7 @@ const { status, data } = await apiInstance.proxiesHealthCheckSingle(
 
 ### Return type
 
-**ProxiesHealthCheckSingle200Response**
+**ProxyHealthCheckResponse**
 
 ### Authorization
 
@@ -394,7 +394,7 @@ const { status, data } = await apiInstance.proxiesHealthCheckSingle(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesList**
-> ProxiesList200Response proxiesList()
+> Array<Proxy> proxiesList()
 
 
 ### Example
@@ -439,7 +439,7 @@ const { status, data } = await apiInstance.proxiesList(
 
 ### Return type
 
-**ProxiesList200Response**
+**Array<Proxy>**
 
 ### Authorization
 
@@ -463,7 +463,7 @@ const { status, data } = await apiInstance.proxiesList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesStatus**
-> ProxiesStatus200Response proxiesStatus()
+> Array<ProxyStatusResponse> proxiesStatus()
 
 
 ### Example
@@ -486,7 +486,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ProxiesStatus200Response**
+**Array<ProxyStatusResponse>**
 
 ### Authorization
 
@@ -510,7 +510,7 @@ This endpoint does not have any parameters.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesTest**
-> ProxiesTest200Response proxiesTest()
+> ProxyTestResponse proxiesTest()
 
 
 ### Example
@@ -540,7 +540,7 @@ const { status, data } = await apiInstance.proxiesTest(
 
 ### Return type
 
-**ProxiesTest200Response**
+**ProxyTestResponse**
 
 ### Authorization
 
@@ -567,7 +567,7 @@ const { status, data } = await apiInstance.proxiesTest(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxiesUpdate**
-> ProxiesCreate201Response proxiesUpdate(updateProxyRequestAPI)
+> Proxy proxiesUpdate(updateProxyRequestAPI)
 
 
 ### Example
@@ -601,7 +601,7 @@ const { status, data } = await apiInstance.proxiesUpdate(
 
 ### Return type
 
-**ProxiesCreate201Response**
+**Proxy**
 
 ### Authorization
 

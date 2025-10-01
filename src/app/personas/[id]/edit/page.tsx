@@ -9,9 +9,8 @@ import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { PersonasApi } from '@/lib/api-client';
+import { PersonasApi } from '@/lib/api-client/apis/personas-api';
 import { apiConfiguration } from '@/lib/api/config';
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 import { useToast } from '@/hooks/use-toast';
 
 // Professional API client initialization
@@ -60,7 +59,7 @@ function EditPersonaPageContent() {
           response = await personasApi.personasGet(personaId);
         }
         
-        const data = extractResponseData<any>(response);
+  const data = (response as any)?.data ?? response;
         if (data) {
           // Check if the returned persona matches the expected type
           if (data.personaType !== type) {

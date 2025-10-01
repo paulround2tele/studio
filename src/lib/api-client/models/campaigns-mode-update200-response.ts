@@ -15,18 +15,21 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { CampaignsModeUpdate200ResponseAllOfData } from './campaigns-mode-update200-response-all-of-data';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { Metadata } from './metadata';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { SuccessEnvelope } from './success-envelope';
+import type { CampaignModeEnum } from './campaign-mode-enum';
 
 /**
- * @type CampaignsModeUpdate200Response
+ * 
  * @export
+ * @interface CampaignsModeUpdate200Response
  */
-export type CampaignsModeUpdate200Response = SuccessEnvelope;
+export interface CampaignsModeUpdate200Response {
+    /**
+     * 
+     * @type {CampaignModeEnum}
+     * @memberof CampaignsModeUpdate200Response
+     */
+    'mode'?: CampaignModeEnum;
+}
+
 
 

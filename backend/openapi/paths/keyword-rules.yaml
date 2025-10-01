@@ -34,7 +34,7 @@ get:
           schema:
             type: array
             items: { $ref: '../components/schemas/all.yaml#/KeywordRuleDTO' }
-  '401': { $ref: '../components/responses.yaml#/Unauthorized' }
-  '403': { $ref: '../components/responses.yaml#/Forbidden' }
-  '429': { $ref: '../components/responses.yaml#/RateLimitExceeded' }
-  '500': { $ref: '../components/responses.yaml#/InternalServerError' }
+    '401': { $ref: '../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../components/responses.yaml#/Forbidden' }
+    '429': { $ref: '../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../components/responses.yaml#/InternalServerError' }

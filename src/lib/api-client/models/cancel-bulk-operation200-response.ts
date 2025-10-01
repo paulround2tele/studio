@@ -15,18 +15,27 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { CancelBulkOperation200ResponseAllOfData } from './cancel-bulk-operation200-response-all-of-data';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { Metadata } from './metadata';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { SuccessEnvelope } from './success-envelope';
+import type { BulkOperationCancelStatus } from './bulk-operation-cancel-status';
 
 /**
- * @type CancelBulkOperation200Response
+ * 
  * @export
+ * @interface CancelBulkOperation200Response
  */
-export type CancelBulkOperation200Response = SuccessEnvelope;
+export interface CancelBulkOperation200Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof CancelBulkOperation200Response
+     */
+    'operationId'?: string;
+    /**
+     * 
+     * @type {BulkOperationCancelStatus}
+     * @memberof CancelBulkOperation200Response
+     */
+    'status'?: BulkOperationCancelStatus;
+}
+
 
 

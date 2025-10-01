@@ -773,16 +773,6 @@ type BulkHealthCheckResponse struct {
 // BulkOperationCancelStatus defines model for BulkOperationCancelStatus.
 type BulkOperationCancelStatus string
 
-// BulkOperationInfo defines model for BulkOperationInfo.
-type BulkOperationInfo struct {
-	FailedItems       *[]string `json:"failedItems,omitempty"`
-	ProcessedItems    *int      `json:"processedItems,omitempty"`
-	ProcessingTimeMs  *int64    `json:"processingTimeMs,omitempty"`
-	SkippedItems      *int      `json:"skippedItems,omitempty"`
-	TotalRowsReturned *int64    `json:"totalRowsReturned,omitempty"`
-	Type              *string   `json:"type,omitempty"`
-}
-
 // BulkProxyOperationResponse defines model for BulkProxyOperationResponse.
 type BulkProxyOperationResponse struct {
 	ErrorCount    *int `json:"errorCount,omitempty"`
@@ -1394,15 +1384,6 @@ type LoginRequest struct {
 	Password string              `json:"password"`
 }
 
-// Metadata defines model for Metadata.
-type Metadata struct {
-	Bulk       *BulkOperationInfo      `json:"bulk,omitempty"`
-	Extra      *map[string]interface{} `json:"extra,omitempty"`
-	Page       *Pagination             `json:"page,omitempty"`
-	Processing *ProcessingInfo         `json:"processing,omitempty"`
-	RateLimit  *RateLimitInfo          `json:"rateLimit,omitempty"`
-}
-
 // MonitoringCampaignLimitsRequest defines model for MonitoringCampaignLimitsRequest.
 type MonitoringCampaignLimitsRequest struct {
 	// MaxCPUPercent Max CPU percent usable by campaign workers
@@ -1436,14 +1417,6 @@ type PageInfo struct {
 
 // PageInfoSortOrder defines model for PageInfo.SortOrder.
 type PageInfoSortOrder string
-
-// Pagination defines model for Pagination.
-type Pagination struct {
-	Count    *int `json:"count,omitempty"`
-	Current  *int `json:"current,omitempty"`
-	PageSize *int `json:"pageSize,omitempty"`
-	Total    *int `json:"total,omitempty"`
-}
 
 // PatternOffsetRequest defines model for PatternOffsetRequest.
 type PatternOffsetRequest struct {
@@ -1679,18 +1652,29 @@ type PingResponse struct {
 // PingResponseMessage defines model for PingResponse.Message.
 type PingResponseMessage string
 
-// ProcessingInfo defines model for ProcessingInfo.
-type ProcessingInfo struct {
-	Duration *string `json:"duration,omitempty"`
-	Version  *string `json:"version,omitempty"`
-}
-
-// ProxyDetailsResponse defines model for ProxyDetailsResponse.
-type ProxyDetailsResponse struct {
-	Host     *string `json:"host,omitempty"`
-	Port     *int    `json:"port,omitempty"`
-	Protocol *string `json:"protocol,omitempty"`
-	Username *string `json:"username,omitempty"`
+// Proxy Full proxy resource representation returned by list/detail operations.
+type Proxy struct {
+	Address       string             `json:"address"`
+	CountryCode   *string            `json:"countryCode,omitempty"`
+	CreatedAt     time.Time          `json:"createdAt"`
+	Description   *string            `json:"description,omitempty"`
+	FailureCount  *int               `json:"failureCount,omitempty"`
+	Host          *string            `json:"host,omitempty"`
+	Id            openapi_types.UUID `json:"id"`
+	IsEnabled     bool               `json:"isEnabled"`
+	IsHealthy     bool               `json:"isHealthy"`
+	LastCheckedAt *time.Time         `json:"lastCheckedAt,omitempty"`
+	LastError     *string            `json:"lastError,omitempty"`
+	LastStatus    *string            `json:"lastStatus,omitempty"`
+	LastTested    *time.Time         `json:"lastTested,omitempty"`
+	LatencyMs     *int               `json:"latencyMs,omitempty"`
+	Name          string             `json:"name"`
+	Notes         *string            `json:"notes,omitempty"`
+	Port          *int               `json:"port,omitempty"`
+	Protocol      *ProxyProtocol     `json:"protocol,omitempty"`
+	SuccessCount  *int               `json:"successCount,omitempty"`
+	UpdatedAt     time.Time          `json:"updatedAt"`
+	Username      *string            `json:"username,omitempty"`
 }
 
 // ProxyHealthCheckResponse defines model for ProxyHealthCheckResponse.
@@ -1761,12 +1745,14 @@ type ProxyProtocol string
 
 // ProxyStatusResponse defines model for ProxyStatusResponse.
 type ProxyStatusResponse struct {
-	IsHealthy    *bool                 `json:"isHealthy,omitempty"`
-	LastChecked  *time.Time            `json:"lastChecked,omitempty"`
-	ProxyDetails *ProxyDetailsResponse `json:"proxyDetails,omitempty"`
-	ProxyId      *openapi_types.UUID   `json:"proxyId,omitempty"`
-	ResponseTime *int64                `json:"responseTime,omitempty"`
-	Status       *string               `json:"status,omitempty"`
+	IsHealthy   *bool      `json:"isHealthy,omitempty"`
+	LastChecked *time.Time `json:"lastChecked,omitempty"`
+
+	// ProxyDetails Full proxy resource representation returned by list/detail operations.
+	ProxyDetails *Proxy              `json:"proxyDetails,omitempty"`
+	ProxyId      *openapi_types.UUID `json:"proxyId,omitempty"`
+	ResponseTime *int64              `json:"responseTime,omitempty"`
+	Status       *string             `json:"status,omitempty"`
 }
 
 // ProxyTestResponse defines model for ProxyTestResponse.
@@ -1776,13 +1762,6 @@ type ProxyTestResponse struct {
 	ResponseTime *int64              `json:"responseTime,omitempty"`
 	StatusCode   *int                `json:"statusCode,omitempty"`
 	Success      *bool               `json:"success,omitempty"`
-}
-
-// RateLimitInfo defines model for RateLimitInfo.
-type RateLimitInfo struct {
-	Limit     *int       `json:"limit,omitempty"`
-	Remaining *int       `json:"remaining,omitempty"`
-	Reset     *time.Time `json:"reset,omitempty"`
 }
 
 // RateLimiterConfig Rate limiter configuration
@@ -1819,15 +1798,6 @@ type SessionResponse struct {
 	RefreshToken *string            `json:"refreshToken,omitempty"`
 	Token        string             `json:"token"`
 	User         UserPublicResponse `json:"user"`
-}
-
-// SuccessEnvelope defines model for SuccessEnvelope.
-type SuccessEnvelope struct {
-	Metadata  *Metadata `json:"metadata,omitempty"`
-	RequestId string    `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
 }
 
 // TableStats Statistics for a specific table
@@ -2050,7 +2020,7 @@ type ConfigUpdateServerJSONBody = map[string]interface{}
 
 // ConfigUpdateStealthJSONBody defines parameters for ConfigUpdateStealth.
 type ConfigUpdateStealthJSONBody struct {
-	Enabled *bool `json:"enabled,omitempty"`
+	Enabled bool `json:"enabled"`
 }
 
 // DbBulkQueryParams defines parameters for DbBulkQuery.
@@ -2214,14 +2184,11 @@ type CampaignsScoringProfileAssociateJSONRequestBody = AssociateScoringProfileRe
 // CampaignsStatePutJSONRequestBody defines body for CampaignsStatePut for application/json ContentType.
 type CampaignsStatePutJSONRequestBody = CampaignStateUpdate
 
-// ConfigUpdateAuthJSONRequestBody defines body for ConfigUpdateAuth for application/json ContentType.
-type ConfigUpdateAuthJSONRequestBody = AuthConfig
+// ConfigUpdateAuthenticationJSONRequestBody defines body for ConfigUpdateAuthentication for application/json ContentType.
+type ConfigUpdateAuthenticationJSONRequestBody = AuthConfig
 
-// ConfigUpdateDnsJSONRequestBody defines body for ConfigUpdateDns for application/json ContentType.
-type ConfigUpdateDnsJSONRequestBody = DNSValidatorConfigJSON
-
-// FeatureFlagsUpdateJSONRequestBody defines body for FeatureFlagsUpdate for application/json ContentType.
-type FeatureFlagsUpdateJSONRequestBody = FeatureFlags
+// ConfigUpdateDnsValidatorJSONRequestBody defines body for ConfigUpdateDnsValidator for application/json ContentType.
+type ConfigUpdateDnsValidatorJSONRequestBody = DNSValidatorConfigJSON
 
 // ConfigUpdateHttpJSONRequestBody defines body for ConfigUpdateHttp for application/json ContentType.
 type ConfigUpdateHttpJSONRequestBody = ConfigUpdateHttpJSONBody
@@ -2310,8 +2277,7 @@ func (t PersonaConfigDetails) AsPersonaConfigHttp() (PersonaConfigHttp, error) {
 
 // FromPersonaConfigHttp overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigHttp
 func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error {
-	httpType := PersonaConfigHttpPersonaTypeHttp
-	v.PersonaType = &httpType
+	v.PersonaType = "http"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -2319,8 +2285,7 @@ func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error 
 
 // MergePersonaConfigHttp performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigHttp
 func (t *PersonaConfigDetails) MergePersonaConfigHttp(v PersonaConfigHttp) error {
-	httpType := PersonaConfigHttpPersonaTypeHttp
-	v.PersonaType = &httpType
+	v.PersonaType = "http"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2340,8 +2305,7 @@ func (t PersonaConfigDetails) AsPersonaConfigDns() (PersonaConfigDns, error) {
 
 // FromPersonaConfigDns overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigDns
 func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
-	dnsType := PersonaConfigDnsPersonaTypeDns
-	v.PersonaType = &dnsType
+	v.PersonaType = "dns"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -2349,8 +2313,7 @@ func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
 
 // MergePersonaConfigDns performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigDns
 func (t *PersonaConfigDetails) MergePersonaConfigDns(v PersonaConfigDns) error {
-	dnsType := PersonaConfigDnsPersonaTypeDns
-	v.PersonaType = &dnsType
+	v.PersonaType = "dns"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2432,7 +2395,7 @@ type ServerInterface interface {
 	// List bulk operations
 	// (GET /campaigns/bulk/operations)
 	CampaignsBulkOperationsList(w http.ResponseWriter, r *http.Request)
-	// Cancel bulk operation
+	// Cancel a bulk operation
 	// (POST /campaigns/bulk/operations/{operationId}/cancel)
 	CancelBulkOperation(w http.ResponseWriter, r *http.Request, operationId openapi_types.UUID)
 	// Get bulk operation status
@@ -2441,7 +2404,7 @@ type ServerInterface interface {
 	// Allocate bulk operation resources
 	// (POST /campaigns/bulk/resources/allocate)
 	AllocateBulkResources(w http.ResponseWriter, r *http.Request)
-	// Get bulk resource allocation status
+	// Get status of bulk resource allocation
 	// (GET /campaigns/bulk/resources/status/{allocationId})
 	GetBulkResourceStatus(w http.ResponseWriter, r *http.Request, allocationId openapi_types.UUID)
 	// Get current global pattern offset for domain generation config
@@ -2465,7 +2428,7 @@ type ServerInterface interface {
 	// List generated domains for a campaign
 	// (GET /campaigns/{campaignId}/domains)
 	CampaignsDomainsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, params CampaignsDomainsListParams)
-	// Get component score breakdown for a single domain
+	// Get detailed score breakdown for a specific domain in a campaign
 	// (GET /campaigns/{campaignId}/domains/{domain}/score-breakdown)
 	CampaignsDomainScoreBreakdown(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, domain string)
 	// Duplicate campaign
@@ -2484,12 +2447,12 @@ type ServerInterface interface {
 	// (GET /campaigns/{campaignId}/metrics)
 	CampaignsMetricsGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
 	// Update campaign execution mode
-	// (PATCH /campaigns/{campaignId}/mode)
+	// (PUT /campaigns/{campaignId}/mode)
 	CampaignsModeUpdate(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
 	// Get campaign momentum & movers
 	// (GET /campaigns/{campaignId}/momentum)
 	CampaignsMomentumGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
-	// Get campaign state and phase executions
+	// List phase executions for a campaign
 	// (GET /campaigns/{campaignId}/phase-executions)
 	CampaignsPhaseExecutionsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
 	// Delete phase execution by phase type
@@ -2536,22 +2499,19 @@ type ServerInterface interface {
 	CampaignsStatusGet(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
 	// Get authentication configuration
 	// (GET /config/auth)
-	ConfigGetAuth(w http.ResponseWriter, r *http.Request)
+	ConfigGetAuthentication(w http.ResponseWriter, r *http.Request)
 	// Update authentication configuration
 	// (PUT /config/auth)
-	ConfigUpdateAuth(w http.ResponseWriter, r *http.Request)
-	// Get DNS configuration
+	ConfigUpdateAuthentication(w http.ResponseWriter, r *http.Request)
+	// Get DNS validator configuration
 	// (GET /config/dns)
-	ConfigGetDns(w http.ResponseWriter, r *http.Request)
-	// Update DNS configuration
+	ConfigGetDnsValidator(w http.ResponseWriter, r *http.Request)
+	// Update DNS validator configuration
 	// (PUT /config/dns)
-	ConfigUpdateDns(w http.ResponseWriter, r *http.Request)
-	// Get feature flags
+	ConfigUpdateDnsValidator(w http.ResponseWriter, r *http.Request)
+	// Get feature flags configuration
 	// (GET /config/features)
-	FeatureFlagsGet(w http.ResponseWriter, r *http.Request)
-	// Update feature flags
-	// (PUT /config/features)
-	FeatureFlagsUpdate(w http.ResponseWriter, r *http.Request)
+	ConfigGetFeatures(w http.ResponseWriter, r *http.Request)
 	// Get HTTP configuration
 	// (GET /config/http)
 	ConfigGetHttp(w http.ResponseWriter, r *http.Request)
@@ -2582,10 +2542,10 @@ type ServerInterface interface {
 	// Update server configuration
 	// (PUT /config/server)
 	ConfigUpdateServer(w http.ResponseWriter, r *http.Request)
-	// Get stealth configuration
+	// Get stealth mode configuration
 	// (GET /config/stealth)
 	ConfigGetStealth(w http.ResponseWriter, r *http.Request)
-	// Update stealth configuration
+	// Update stealth mode configuration
 	// (PUT /config/stealth)
 	ConfigUpdateStealth(w http.ResponseWriter, r *http.Request)
 	// Get worker configuration
@@ -2873,7 +2833,7 @@ func (_ Unimplemented) CampaignsBulkOperationsList(w http.ResponseWriter, r *htt
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Cancel bulk operation
+// Cancel a bulk operation
 // (POST /campaigns/bulk/operations/{operationId}/cancel)
 func (_ Unimplemented) CancelBulkOperation(w http.ResponseWriter, r *http.Request, operationId openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
@@ -2891,7 +2851,7 @@ func (_ Unimplemented) AllocateBulkResources(w http.ResponseWriter, r *http.Requ
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Get bulk resource allocation status
+// Get status of bulk resource allocation
 // (GET /campaigns/bulk/resources/status/{allocationId})
 func (_ Unimplemented) GetBulkResourceStatus(w http.ResponseWriter, r *http.Request, allocationId openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
@@ -2939,7 +2899,7 @@ func (_ Unimplemented) CampaignsDomainsList(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Get component score breakdown for a single domain
+// Get detailed score breakdown for a specific domain in a campaign
 // (GET /campaigns/{campaignId}/domains/{domain}/score-breakdown)
 func (_ Unimplemented) CampaignsDomainScoreBreakdown(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, domain string) {
 	w.WriteHeader(http.StatusNotImplemented)
@@ -2976,7 +2936,7 @@ func (_ Unimplemented) CampaignsMetricsGet(w http.ResponseWriter, r *http.Reques
 }
 
 // Update campaign execution mode
-// (PATCH /campaigns/{campaignId}/mode)
+// (PUT /campaigns/{campaignId}/mode)
 func (_ Unimplemented) CampaignsModeUpdate(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
@@ -2987,7 +2947,7 @@ func (_ Unimplemented) CampaignsMomentumGet(w http.ResponseWriter, r *http.Reque
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Get campaign state and phase executions
+// List phase executions for a campaign
 // (GET /campaigns/{campaignId}/phase-executions)
 func (_ Unimplemented) CampaignsPhaseExecutionsList(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
@@ -3079,37 +3039,31 @@ func (_ Unimplemented) CampaignsStatusGet(w http.ResponseWriter, r *http.Request
 
 // Get authentication configuration
 // (GET /config/auth)
-func (_ Unimplemented) ConfigGetAuth(w http.ResponseWriter, r *http.Request) {
+func (_ Unimplemented) ConfigGetAuthentication(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Update authentication configuration
 // (PUT /config/auth)
-func (_ Unimplemented) ConfigUpdateAuth(w http.ResponseWriter, r *http.Request) {
+func (_ Unimplemented) ConfigUpdateAuthentication(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Get DNS configuration
+// Get DNS validator configuration
 // (GET /config/dns)
-func (_ Unimplemented) ConfigGetDns(w http.ResponseWriter, r *http.Request) {
+func (_ Unimplemented) ConfigGetDnsValidator(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Update DNS configuration
+// Update DNS validator configuration
 // (PUT /config/dns)
-func (_ Unimplemented) ConfigUpdateDns(w http.ResponseWriter, r *http.Request) {
+func (_ Unimplemented) ConfigUpdateDnsValidator(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Get feature flags
+// Get feature flags configuration
 // (GET /config/features)
-func (_ Unimplemented) FeatureFlagsGet(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusNotImplemented)
-}
-
-// Update feature flags
-// (PUT /config/features)
-func (_ Unimplemented) FeatureFlagsUpdate(w http.ResponseWriter, r *http.Request) {
+func (_ Unimplemented) ConfigGetFeatures(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -3173,13 +3127,13 @@ func (_ Unimplemented) ConfigUpdateServer(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Get stealth configuration
+// Get stealth mode configuration
 // (GET /config/stealth)
 func (_ Unimplemented) ConfigGetStealth(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
-// Update stealth configuration
+// Update stealth mode configuration
 // (PUT /config/stealth)
 func (_ Unimplemented) ConfigUpdateStealth(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
@@ -5086,8 +5040,8 @@ func (siw *ServerInterfaceWrapper) CampaignsStatusGet(w http.ResponseWriter, r *
 	handler.ServeHTTP(w, r)
 }
 
-// ConfigGetAuth operation middleware
-func (siw *ServerInterfaceWrapper) ConfigGetAuth(w http.ResponseWriter, r *http.Request) {
+// ConfigGetAuthentication operation middleware
+func (siw *ServerInterfaceWrapper) ConfigGetAuthentication(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
@@ -5096,7 +5050,7 @@ func (siw *ServerInterfaceWrapper) ConfigGetAuth(w http.ResponseWriter, r *http.
 	r = r.WithContext(ctx)
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.ConfigGetAuth(w, r)
+		siw.Handler.ConfigGetAuthentication(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5106,8 +5060,8 @@ func (siw *ServerInterfaceWrapper) ConfigGetAuth(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
-// ConfigUpdateAuth operation middleware
-func (siw *ServerInterfaceWrapper) ConfigUpdateAuth(w http.ResponseWriter, r *http.Request) {
+// ConfigUpdateAuthentication operation middleware
+func (siw *ServerInterfaceWrapper) ConfigUpdateAuthentication(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
@@ -5116,7 +5070,7 @@ func (siw *ServerInterfaceWrapper) ConfigUpdateAuth(w http.ResponseWriter, r *ht
 	r = r.WithContext(ctx)
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.ConfigUpdateAuth(w, r)
+		siw.Handler.ConfigUpdateAuthentication(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5126,8 +5080,8 @@ func (siw *ServerInterfaceWrapper) ConfigUpdateAuth(w http.ResponseWriter, r *ht
 	handler.ServeHTTP(w, r)
 }
 
-// ConfigGetDns operation middleware
-func (siw *ServerInterfaceWrapper) ConfigGetDns(w http.ResponseWriter, r *http.Request) {
+// ConfigGetDnsValidator operation middleware
+func (siw *ServerInterfaceWrapper) ConfigGetDnsValidator(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
@@ -5136,7 +5090,7 @@ func (siw *ServerInterfaceWrapper) ConfigGetDns(w http.ResponseWriter, r *http.R
 	r = r.WithContext(ctx)
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.ConfigGetDns(w, r)
+		siw.Handler.ConfigGetDnsValidator(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5146,8 +5100,8 @@ func (siw *ServerInterfaceWrapper) ConfigGetDns(w http.ResponseWriter, r *http.R
 	handler.ServeHTTP(w, r)
 }
 
-// ConfigUpdateDns operation middleware
-func (siw *ServerInterfaceWrapper) ConfigUpdateDns(w http.ResponseWriter, r *http.Request) {
+// ConfigUpdateDnsValidator operation middleware
+func (siw *ServerInterfaceWrapper) ConfigUpdateDnsValidator(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
@@ -5156,7 +5110,7 @@ func (siw *ServerInterfaceWrapper) ConfigUpdateDns(w http.ResponseWriter, r *htt
 	r = r.WithContext(ctx)
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.ConfigUpdateDns(w, r)
+		siw.Handler.ConfigUpdateDnsValidator(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -5166,8 +5120,8 @@ func (siw *ServerInterfaceWrapper) ConfigUpdateDns(w http.ResponseWriter, r *htt
 	handler.ServeHTTP(w, r)
 }
 
-// FeatureFlagsGet operation middleware
-func (siw *ServerInterfaceWrapper) FeatureFlagsGet(w http.ResponseWriter, r *http.Request) {
+// ConfigGetFeatures operation middleware
+func (siw *ServerInterfaceWrapper) ConfigGetFeatures(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
@@ -5176,27 +5130,7 @@ func (siw *ServerInterfaceWrapper) FeatureFlagsGet(w http.ResponseWriter, r *htt
 	r = r.WithContext(ctx)
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.FeatureFlagsGet(w, r)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
-// FeatureFlagsUpdate operation middleware
-func (siw *ServerInterfaceWrapper) FeatureFlagsUpdate(w http.ResponseWriter, r *http.Request) {
-
-	ctx := r.Context()
-
-	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
-
-	r = r.WithContext(ctx)
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.FeatureFlagsUpdate(w, r)
+		siw.Handler.ConfigGetFeatures(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -7656,7 +7590,7 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/campaigns/{campaignId}/metrics", wrapper.CampaignsMetricsGet)
 	})
 	r.Group(func(r chi.Router) {
-		r.Patch(options.BaseURL+"/campaigns/{campaignId}/mode", wrapper.CampaignsModeUpdate)
+		r.Put(options.BaseURL+"/campaigns/{campaignId}/mode", wrapper.CampaignsModeUpdate)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/campaigns/{campaignId}/momentum", wrapper.CampaignsMomentumGet)
@@ -7707,22 +7641,19 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/campaigns/{campaignId}/status", wrapper.CampaignsStatusGet)
 	})
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/config/auth", wrapper.ConfigGetAuth)
+		r.Get(options.BaseURL+"/config/auth", wrapper.ConfigGetAuthentication)
 	})
 	r.Group(func(r chi.Router) {
-		r.Put(options.BaseURL+"/config/auth", wrapper.ConfigUpdateAuth)
+		r.Put(options.BaseURL+"/config/auth", wrapper.ConfigUpdateAuthentication)
 	})
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/config/dns", wrapper.ConfigGetDns)
+		r.Get(options.BaseURL+"/config/dns", wrapper.ConfigGetDnsValidator)
 	})
 	r.Group(func(r chi.Router) {
-		r.Put(options.BaseURL+"/config/dns", wrapper.ConfigUpdateDns)
+		r.Put(options.BaseURL+"/config/dns", wrapper.ConfigUpdateDnsValidator)
 	})
 	r.Group(func(r chi.Router) {
-		r.Get(options.BaseURL+"/config/features", wrapper.FeatureFlagsGet)
-	})
-	r.Group(func(r chi.Router) {
-		r.Put(options.BaseURL+"/config/features", wrapper.FeatureFlagsUpdate)
+		r.Get(options.BaseURL+"/config/features", wrapper.ConfigGetFeatures)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/config/http", wrapper.ConfigGetHttp)
@@ -8003,14 +7934,7 @@ type AuthChangePasswordResponseObject interface {
 }
 
 type AuthChangePassword200JSONResponse struct {
-	Data *struct {
-		Message *string `json:"message,omitempty"`
-	} `json:"data,omitempty"`
-	Metadata  *Metadata `json:"metadata,omitempty"`
-	RequestId string    `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
+	Message *string `json:"message,omitempty"`
 }
 
 func (response AuthChangePassword200JSONResponse) VisitAuthChangePasswordResponse(w http.ResponseWriter) error {
@@ -8057,14 +7981,7 @@ type AuthLoginResponseObject interface {
 	VisitAuthLoginResponse(w http.ResponseWriter) error
 }
 
-type AuthLogin200JSONResponse struct {
-	Data      *SessionResponse `json:"data,omitempty"`
-	Metadata  *Metadata        `json:"metadata,omitempty"`
-	RequestId string           `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type AuthLogin200JSONResponse SessionResponse
 
 func (response AuthLogin200JSONResponse) VisitAuthLoginResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -8119,22 +8036,12 @@ type AuthLogoutResponseObject interface {
 	VisitAuthLogoutResponse(w http.ResponseWriter) error
 }
 
-type AuthLogout200JSONResponse struct {
-	Data *struct {
-		Message *string `json:"message,omitempty"`
-	} `json:"data,omitempty"`
-	Metadata  *Metadata `json:"metadata,omitempty"`
-	RequestId string    `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
+type AuthLogout204Response struct {
 }
 
-func (response AuthLogout200JSONResponse) VisitAuthLogoutResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
+func (response AuthLogout204Response) VisitAuthLogoutResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
 }
 
 type AuthLogout401JSONResponse struct{ UnauthorizedJSONResponse }
@@ -8164,14 +8071,7 @@ type AuthMeResponseObject interface {
 	VisitAuthMeResponse(w http.ResponseWriter) error
 }
 
-type AuthMe200JSONResponse struct {
-	Data      *UserPublicResponse `json:"data,omitempty"`
-	Metadata  *Metadata           `json:"metadata,omitempty"`
-	RequestId string              `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type AuthMe200JSONResponse UserPublicResponse
 
 func (response AuthMe200JSONResponse) VisitAuthMeResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -8207,14 +8107,7 @@ type AuthRefreshResponseObject interface {
 	VisitAuthRefreshResponse(w http.ResponseWriter) error
 }
 
-type AuthRefresh200JSONResponse struct {
-	Data      *SessionResponse `json:"data,omitempty"`
-	Metadata  *Metadata        `json:"metadata,omitempty"`
-	RequestId string           `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type AuthRefresh200JSONResponse SessionResponse
 
 func (response AuthRefresh200JSONResponse) VisitAuthRefreshResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -8367,14 +8260,7 @@ type BulkAnalyzeDomainsResponseObject interface {
 	VisitBulkAnalyzeDomainsResponse(w http.ResponseWriter) error
 }
 
-type BulkAnalyzeDomains200JSONResponse struct {
-	Data      *BulkAnalyticsResponse `json:"data,omitempty"`
-	Metadata  *Metadata              `json:"metadata,omitempty"`
-	RequestId string                 `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type BulkAnalyzeDomains200JSONResponse BulkAnalyticsResponse
 
 func (response BulkAnalyzeDomains200JSONResponse) VisitBulkAnalyzeDomainsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -8430,14 +8316,7 @@ type BulkGenerateDomainsResponseObject interface {
 	VisitBulkGenerateDomainsResponse(w http.ResponseWriter) error
 }
 
-type BulkGenerateDomains200JSONResponse struct {
-	Data      *BulkGenerationResponse `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type BulkGenerateDomains200JSONResponse BulkGenerationResponse
 
 func (response BulkGenerateDomains200JSONResponse) VisitBulkGenerateDomainsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -8493,14 +8372,7 @@ type BulkValidateDNSResponseObject interface {
 	VisitBulkValidateDNSResponse(w http.ResponseWriter) error
 }
 
-type BulkValidateDNS200JSONResponse struct {
-	Data      *BulkValidationResponse `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type BulkValidateDNS200JSONResponse BulkValidationResponse
 
 func (response BulkValidateDNS200JSONResponse) VisitBulkValidateDNSResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -8556,14 +8428,7 @@ type BulkValidateHTTPResponseObject interface {
 	VisitBulkValidateHTTPResponse(w http.ResponseWriter) error
 }
 
-type BulkValidateHTTP200JSONResponse struct {
-	Data      *BulkValidationResponse `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type BulkValidateHTTP200JSONResponse BulkValidationResponse
 
 func (response BulkValidateHTTP200JSONResponse) VisitBulkValidateHTTPResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -8679,15 +8544,8 @@ type CancelBulkOperationResponseObject interface {
 }
 
 type CancelBulkOperation200JSONResponse struct {
-	Data *struct {
-		OperationId *openapi_types.UUID        `json:"operationId,omitempty"`
-		Status      *BulkOperationCancelStatus `json:"status,omitempty"`
-	} `json:"data,omitempty"`
-	Metadata  *Metadata `json:"metadata,omitempty"`
-	RequestId string    `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
+	OperationId *openapi_types.UUID        `json:"operationId,omitempty"`
+	Status      *BulkOperationCancelStatus `json:"status,omitempty"`
 }
 
 func (response CancelBulkOperation200JSONResponse) VisitCancelBulkOperationResponse(w http.ResponseWriter) error {
@@ -8715,15 +8573,6 @@ func (response CancelBulkOperation401JSONResponse) VisitCancelBulkOperationRespo
 	return json.NewEncoder(w).Encode(response)
 }
 
-type CancelBulkOperation403JSONResponse struct{ ForbiddenJSONResponse }
-
-func (response CancelBulkOperation403JSONResponse) VisitCancelBulkOperationResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
 type CancelBulkOperation404JSONResponse struct{ NotFoundJSONResponse }
 
 func (response CancelBulkOperation404JSONResponse) VisitCancelBulkOperationResponse(w http.ResponseWriter) error {
@@ -8731,16 +8580,6 @@ func (response CancelBulkOperation404JSONResponse) VisitCancelBulkOperationRespo
 	w.WriteHeader(404)
 
 	return json.NewEncoder(w).Encode(response)
-}
-
-type CancelBulkOperation429JSONResponse struct{ RateLimitExceededJSONResponse }
-
-func (response CancelBulkOperation429JSONResponse) VisitCancelBulkOperationResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Retry-After", fmt.Sprint(response.Headers.RetryAfter))
-	w.WriteHeader(429)
-
-	return json.NewEncoder(w).Encode(response.Body)
 }
 
 type CancelBulkOperation500JSONResponse struct {
@@ -8832,14 +8671,7 @@ type AllocateBulkResourcesResponseObject interface {
 	VisitAllocateBulkResourcesResponse(w http.ResponseWriter) error
 }
 
-type AllocateBulkResources200JSONResponse struct {
-	Data      *BulkResourceAllocationResponse `json:"data,omitempty"`
-	Metadata  *Metadata                       `json:"metadata,omitempty"`
-	RequestId string                          `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type AllocateBulkResources200JSONResponse BulkResourceAllocationResponse
 
 func (response AllocateBulkResources200JSONResponse) VisitAllocateBulkResourcesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -8896,15 +8728,8 @@ type GetBulkResourceStatusResponseObject interface {
 }
 
 type GetBulkResourceStatus200JSONResponse struct {
-	Data *struct {
-		AllocationId *openapi_types.UUID `json:"allocationId,omitempty"`
-		Status       *string             `json:"status,omitempty"`
-	} `json:"data,omitempty"`
-	Metadata  *Metadata `json:"metadata,omitempty"`
-	RequestId string    `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
+	AllocationId *openapi_types.UUID `json:"allocationId,omitempty"`
+	Status       *string             `json:"status,omitempty"`
 }
 
 func (response GetBulkResourceStatus200JSONResponse) VisitGetBulkResourceStatusResponse(w http.ResponseWriter) error {
@@ -8941,16 +8766,6 @@ func (response GetBulkResourceStatus404JSONResponse) VisitGetBulkResourceStatusR
 	return json.NewEncoder(w).Encode(response)
 }
 
-type GetBulkResourceStatus429JSONResponse struct{ RateLimitExceededJSONResponse }
-
-func (response GetBulkResourceStatus429JSONResponse) VisitGetBulkResourceStatusResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Retry-After", fmt.Sprint(response.Headers.RetryAfter))
-	w.WriteHeader(429)
-
-	return json.NewEncoder(w).Encode(response.Body)
-}
-
 type GetBulkResourceStatus500JSONResponse struct {
 	InternalServerErrorJSONResponse
 }
@@ -8970,14 +8785,7 @@ type CampaignsDomainGenerationPatternOffsetResponseObject interface {
 	VisitCampaignsDomainGenerationPatternOffsetResponse(w http.ResponseWriter) error
 }
 
-type CampaignsDomainGenerationPatternOffset200JSONResponse struct {
-	Data      *PatternOffsetResponse `json:"data,omitempty"`
-	Metadata  *Metadata              `json:"metadata,omitempty"`
-	RequestId string                 `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsDomainGenerationPatternOffset200JSONResponse PatternOffsetResponse
 
 func (response CampaignsDomainGenerationPatternOffset200JSONResponse) VisitCampaignsDomainGenerationPatternOffsetResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -9226,16 +9034,9 @@ type CampaignsPhaseConfigsListResponseObject interface {
 }
 
 type CampaignsPhaseConfigsList200JSONResponse struct {
-	Data *struct {
-		CampaignId     *openapi_types.UUID                `json:"campaignId,omitempty"`
-		Configs        *map[string]map[string]interface{} `json:"configs,omitempty"`
-		ConfigsPresent *map[string]bool                   `json:"configsPresent,omitempty"`
-	} `json:"data,omitempty"`
-	Metadata  *Metadata `json:"metadata,omitempty"`
-	RequestId string    `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
+	CampaignId     *openapi_types.UUID                `json:"campaignId,omitempty"`
+	Configs        *map[string]map[string]interface{} `json:"configs,omitempty"`
+	ConfigsPresent *map[string]bool                   `json:"configsPresent,omitempty"`
 }
 
 func (response CampaignsPhaseConfigsList200JSONResponse) VisitCampaignsPhaseConfigsListResponse(w http.ResponseWriter) error {
@@ -9292,14 +9093,7 @@ type CampaignsDomainsListResponseObject interface {
 	VisitCampaignsDomainsListResponse(w http.ResponseWriter) error
 }
 
-type CampaignsDomainsList200JSONResponse struct {
-	Data      *CampaignDomainsListResponse `json:"data,omitempty"`
-	Metadata  *Metadata                    `json:"metadata,omitempty"`
-	RequestId string                       `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsDomainsList200JSONResponse CampaignDomainsListResponse
 
 func (response CampaignsDomainsList200JSONResponse) VisitCampaignsDomainsListResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -9346,15 +9140,7 @@ type CampaignsDomainScoreBreakdownResponseObject interface {
 	VisitCampaignsDomainScoreBreakdownResponse(w http.ResponseWriter) error
 }
 
-type CampaignsDomainScoreBreakdown200JSONResponse struct {
-	// Data Component scores contributing to the final relevance score for a domain.
-	Data      *DomainScoreBreakdownResponse `json:"data,omitempty"`
-	Metadata  *Metadata                     `json:"metadata,omitempty"`
-	RequestId string                        `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsDomainScoreBreakdown200JSONResponse DomainScoreBreakdownResponse
 
 func (response CampaignsDomainScoreBreakdown200JSONResponse) VisitCampaignsDomainScoreBreakdownResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -9409,14 +9195,7 @@ type CampaignsDuplicatePostResponseObject interface {
 	VisitCampaignsDuplicatePostResponse(w http.ResponseWriter) error
 }
 
-type CampaignsDuplicatePost201JSONResponse struct {
-	Data      *CampaignResponse `json:"data,omitempty"`
-	Metadata  *Metadata         `json:"metadata,omitempty"`
-	RequestId string            `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsDuplicatePost201JSONResponse CampaignResponse
 
 func (response CampaignsDuplicatePost201JSONResponse) VisitCampaignsDuplicatePostResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -9462,15 +9241,7 @@ type CampaignsEnrichedGetResponseObject interface {
 	VisitCampaignsEnrichedGetResponse(w http.ResponseWriter) error
 }
 
-type CampaignsEnrichedGet200JSONResponse struct {
-	// Data Read-optimized composite model for campaign detail pages
-	Data      *EnrichedCampaignResponse `json:"data,omitempty"`
-	Metadata  *Metadata                 `json:"metadata,omitempty"`
-	RequestId string                    `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsEnrichedGet200JSONResponse EnrichedCampaignResponse
 
 func (response CampaignsEnrichedGet200JSONResponse) VisitCampaignsEnrichedGetResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -9620,14 +9391,7 @@ type CampaignsModeUpdateResponseObject interface {
 }
 
 type CampaignsModeUpdate200JSONResponse struct {
-	Data *struct {
-		Mode *CampaignModeEnum `json:"mode,omitempty"`
-	} `json:"data,omitempty"`
-	Metadata  *Metadata `json:"metadata,omitempty"`
-	RequestId string    `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
+	Mode *CampaignModeEnum `json:"mode,omitempty"`
 }
 
 func (response CampaignsModeUpdate200JSONResponse) VisitCampaignsModeUpdateResponse(w http.ResponseWriter) error {
@@ -9720,14 +9484,7 @@ type CampaignsPhaseExecutionsListResponseObject interface {
 	VisitCampaignsPhaseExecutionsListResponse(w http.ResponseWriter) error
 }
 
-type CampaignsPhaseExecutionsList200JSONResponse struct {
-	Data      *CampaignStateWithExecutions `json:"data,omitempty"`
-	Metadata  *Metadata                    `json:"metadata,omitempty"`
-	RequestId string                       `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsPhaseExecutionsList200JSONResponse CampaignStateWithExecutions
 
 func (response CampaignsPhaseExecutionsList200JSONResponse) VisitCampaignsPhaseExecutionsListResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -9802,14 +9559,7 @@ type CampaignsPhaseExecutionGetResponseObject interface {
 	VisitCampaignsPhaseExecutionGetResponse(w http.ResponseWriter) error
 }
 
-type CampaignsPhaseExecutionGet200JSONResponse struct {
-	Data      *PhaseExecution `json:"data,omitempty"`
-	Metadata  *Metadata       `json:"metadata,omitempty"`
-	RequestId string          `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsPhaseExecutionGet200JSONResponse PhaseExecution
 
 func (response CampaignsPhaseExecutionGet200JSONResponse) VisitCampaignsPhaseExecutionGetResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -9848,14 +9598,7 @@ type CampaignsPhaseExecutionPutResponseObject interface {
 	VisitCampaignsPhaseExecutionPutResponse(w http.ResponseWriter) error
 }
 
-type CampaignsPhaseExecutionPut200JSONResponse struct {
-	Data      *PhaseExecution `json:"data,omitempty"`
-	Metadata  *Metadata       `json:"metadata,omitempty"`
-	RequestId string          `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsPhaseExecutionPut200JSONResponse PhaseExecution
 
 func (response CampaignsPhaseExecutionPut200JSONResponse) VisitCampaignsPhaseExecutionPutResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -9903,14 +9646,7 @@ type CampaignsPhaseConfigureResponseObject interface {
 	VisitCampaignsPhaseConfigureResponse(w http.ResponseWriter) error
 }
 
-type CampaignsPhaseConfigure200JSONResponse struct {
-	Data      *PhaseStatusResponse `json:"data,omitempty"`
-	Metadata  *Metadata            `json:"metadata,omitempty"`
-	RequestId string               `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsPhaseConfigure200JSONResponse PhaseStatusResponse
 
 func (response CampaignsPhaseConfigure200JSONResponse) VisitCampaignsPhaseConfigureResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -9966,14 +9702,7 @@ type CampaignsPhaseStartResponseObject interface {
 	VisitCampaignsPhaseStartResponse(w http.ResponseWriter) error
 }
 
-type CampaignsPhaseStart200JSONResponse struct {
-	Data      *PhaseStatusResponse `json:"data,omitempty"`
-	Metadata  *Metadata            `json:"metadata,omitempty"`
-	RequestId string               `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsPhaseStart200JSONResponse PhaseStatusResponse
 
 func (response CampaignsPhaseStart200JSONResponse) VisitCampaignsPhaseStartResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -10047,14 +9776,7 @@ type CampaignsPhaseStatusResponseObject interface {
 	VisitCampaignsPhaseStatusResponse(w http.ResponseWriter) error
 }
 
-type CampaignsPhaseStatus200JSONResponse struct {
-	Data      *PhaseStatusResponse `json:"data,omitempty"`
-	Metadata  *Metadata            `json:"metadata,omitempty"`
-	RequestId string               `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsPhaseStatus200JSONResponse PhaseStatusResponse
 
 func (response CampaignsPhaseStatus200JSONResponse) VisitCampaignsPhaseStatusResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -10101,14 +9823,7 @@ type CampaignsPhaseStopResponseObject interface {
 	VisitCampaignsPhaseStopResponse(w http.ResponseWriter) error
 }
 
-type CampaignsPhaseStop200JSONResponse struct {
-	Data      *PhaseStatusResponse `json:"data,omitempty"`
-	Metadata  *Metadata            `json:"metadata,omitempty"`
-	RequestId string               `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsPhaseStop200JSONResponse PhaseStatusResponse
 
 func (response CampaignsPhaseStop200JSONResponse) VisitCampaignsPhaseStopResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -10210,13 +9925,12 @@ type CampaignsRescoreResponseObject interface {
 	VisitCampaignsRescoreResponse(w http.ResponseWriter) error
 }
 
-type CampaignsRescore200JSONResponse SuccessEnvelope
+type CampaignsRescore204Response struct {
+}
 
-func (response CampaignsRescore200JSONResponse) VisitCampaignsRescoreResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
+func (response CampaignsRescore204Response) VisitCampaignsRescoreResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
 }
 
 type CampaignsRescore401JSONResponse struct{ UnauthorizedJSONResponse }
@@ -10275,13 +9989,12 @@ type CampaignsScoringProfileAssociateResponseObject interface {
 	VisitCampaignsScoringProfileAssociateResponse(w http.ResponseWriter) error
 }
 
-type CampaignsScoringProfileAssociate200JSONResponse SuccessEnvelope
+type CampaignsScoringProfileAssociate204Response struct {
+}
 
-func (response CampaignsScoringProfileAssociate200JSONResponse) VisitCampaignsScoringProfileAssociateResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
+func (response CampaignsScoringProfileAssociate204Response) VisitCampaignsScoringProfileAssociateResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
 }
 
 type CampaignsScoringProfileAssociate400JSONResponse struct{ BadRequestJSONResponse }
@@ -10384,14 +10097,7 @@ type CampaignsStateGetResponseObject interface {
 	VisitCampaignsStateGetResponse(w http.ResponseWriter) error
 }
 
-type CampaignsStateGet200JSONResponse struct {
-	Data      *CampaignState `json:"data,omitempty"`
-	Metadata  *Metadata      `json:"metadata,omitempty"`
-	RequestId string         `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsStateGet200JSONResponse CampaignState
 
 func (response CampaignsStateGet200JSONResponse) VisitCampaignsStateGetResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -10429,14 +10135,7 @@ type CampaignsStatePutResponseObject interface {
 	VisitCampaignsStatePutResponse(w http.ResponseWriter) error
 }
 
-type CampaignsStatePut200JSONResponse struct {
-	Data      *CampaignState `json:"data,omitempty"`
-	Metadata  *Metadata      `json:"metadata,omitempty"`
-	RequestId string         `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type CampaignsStatePut200JSONResponse CampaignState
 
 func (response CampaignsStatePut200JSONResponse) VisitCampaignsStatePutResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -10511,51 +10210,43 @@ func (response CampaignsStatusGet500JSONResponse) VisitCampaignsStatusGetRespons
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigGetAuthRequestObject struct {
+type ConfigGetAuthenticationRequestObject struct {
 }
 
-type ConfigGetAuthResponseObject interface {
-	VisitConfigGetAuthResponse(w http.ResponseWriter) error
+type ConfigGetAuthenticationResponseObject interface {
+	VisitConfigGetAuthenticationResponse(w http.ResponseWriter) error
 }
 
-type ConfigGetAuth200JSONResponse struct {
-	// Data Authentication configuration
-	Data      *AuthConfig `json:"data,omitempty"`
-	Metadata  *Metadata   `json:"metadata,omitempty"`
-	RequestId string      `json:"requestId"`
+type ConfigGetAuthentication200JSONResponse AuthConfig
 
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
-
-func (response ConfigGetAuth200JSONResponse) VisitConfigGetAuthResponse(w http.ResponseWriter) error {
+func (response ConfigGetAuthentication200JSONResponse) VisitConfigGetAuthenticationResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigGetAuth401JSONResponse struct{ UnauthorizedJSONResponse }
+type ConfigGetAuthentication401JSONResponse struct{ UnauthorizedJSONResponse }
 
-func (response ConfigGetAuth401JSONResponse) VisitConfigGetAuthResponse(w http.ResponseWriter) error {
+func (response ConfigGetAuthentication401JSONResponse) VisitConfigGetAuthenticationResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigGetAuth403JSONResponse struct{ ForbiddenJSONResponse }
+type ConfigGetAuthentication403JSONResponse struct{ ForbiddenJSONResponse }
 
-func (response ConfigGetAuth403JSONResponse) VisitConfigGetAuthResponse(w http.ResponseWriter) error {
+func (response ConfigGetAuthentication403JSONResponse) VisitConfigGetAuthenticationResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(403)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigGetAuth429JSONResponse struct{ RateLimitExceededJSONResponse }
+type ConfigGetAuthentication429JSONResponse struct{ RateLimitExceededJSONResponse }
 
-func (response ConfigGetAuth429JSONResponse) VisitConfigGetAuthResponse(w http.ResponseWriter) error {
+func (response ConfigGetAuthentication429JSONResponse) VisitConfigGetAuthenticationResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Retry-After", fmt.Sprint(response.Headers.RetryAfter))
 	w.WriteHeader(429)
@@ -10563,90 +10254,82 @@ func (response ConfigGetAuth429JSONResponse) VisitConfigGetAuthResponse(w http.R
 	return json.NewEncoder(w).Encode(response.Body)
 }
 
-type ConfigGetAuth500JSONResponse struct {
+type ConfigGetAuthentication500JSONResponse struct {
 	InternalServerErrorJSONResponse
 }
 
-func (response ConfigGetAuth500JSONResponse) VisitConfigGetAuthResponse(w http.ResponseWriter) error {
+func (response ConfigGetAuthentication500JSONResponse) VisitConfigGetAuthenticationResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigUpdateAuthRequestObject struct {
-	Body *ConfigUpdateAuthJSONRequestBody
+type ConfigUpdateAuthenticationRequestObject struct {
+	Body *ConfigUpdateAuthenticationJSONRequestBody
 }
 
-type ConfigUpdateAuthResponseObject interface {
-	VisitConfigUpdateAuthResponse(w http.ResponseWriter) error
+type ConfigUpdateAuthenticationResponseObject interface {
+	VisitConfigUpdateAuthenticationResponse(w http.ResponseWriter) error
 }
 
-type ConfigUpdateAuth200JSONResponse struct {
-	// Data Authentication configuration
-	Data      *AuthConfig `json:"data,omitempty"`
-	Metadata  *Metadata   `json:"metadata,omitempty"`
-	RequestId string      `json:"requestId"`
+type ConfigUpdateAuthentication200JSONResponse AuthConfig
 
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
-
-func (response ConfigUpdateAuth200JSONResponse) VisitConfigUpdateAuthResponse(w http.ResponseWriter) error {
+func (response ConfigUpdateAuthentication200JSONResponse) VisitConfigUpdateAuthenticationResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigUpdateAuth400JSONResponse struct{ BadRequestJSONResponse }
+type ConfigUpdateAuthentication400JSONResponse struct{ BadRequestJSONResponse }
 
-func (response ConfigUpdateAuth400JSONResponse) VisitConfigUpdateAuthResponse(w http.ResponseWriter) error {
+func (response ConfigUpdateAuthentication400JSONResponse) VisitConfigUpdateAuthenticationResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigUpdateAuth401JSONResponse struct{ UnauthorizedJSONResponse }
+type ConfigUpdateAuthentication401JSONResponse struct{ UnauthorizedJSONResponse }
 
-func (response ConfigUpdateAuth401JSONResponse) VisitConfigUpdateAuthResponse(w http.ResponseWriter) error {
+func (response ConfigUpdateAuthentication401JSONResponse) VisitConfigUpdateAuthenticationResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigUpdateAuth403JSONResponse struct{ ForbiddenJSONResponse }
+type ConfigUpdateAuthentication403JSONResponse struct{ ForbiddenJSONResponse }
 
-func (response ConfigUpdateAuth403JSONResponse) VisitConfigUpdateAuthResponse(w http.ResponseWriter) error {
+func (response ConfigUpdateAuthentication403JSONResponse) VisitConfigUpdateAuthenticationResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(403)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigUpdateAuth409JSONResponse struct{ ConflictJSONResponse }
+type ConfigUpdateAuthentication409JSONResponse struct{ ConflictJSONResponse }
 
-func (response ConfigUpdateAuth409JSONResponse) VisitConfigUpdateAuthResponse(w http.ResponseWriter) error {
+func (response ConfigUpdateAuthentication409JSONResponse) VisitConfigUpdateAuthenticationResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(409)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigUpdateAuth422JSONResponse struct{ ValidationErrorJSONResponse }
+type ConfigUpdateAuthentication422JSONResponse struct{ ValidationErrorJSONResponse }
 
-func (response ConfigUpdateAuth422JSONResponse) VisitConfigUpdateAuthResponse(w http.ResponseWriter) error {
+func (response ConfigUpdateAuthentication422JSONResponse) VisitConfigUpdateAuthenticationResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(422)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigUpdateAuth429JSONResponse struct{ RateLimitExceededJSONResponse }
+type ConfigUpdateAuthentication429JSONResponse struct{ RateLimitExceededJSONResponse }
 
-func (response ConfigUpdateAuth429JSONResponse) VisitConfigUpdateAuthResponse(w http.ResponseWriter) error {
+func (response ConfigUpdateAuthentication429JSONResponse) VisitConfigUpdateAuthenticationResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Retry-After", fmt.Sprint(response.Headers.RetryAfter))
 	w.WriteHeader(429)
@@ -10654,62 +10337,54 @@ func (response ConfigUpdateAuth429JSONResponse) VisitConfigUpdateAuthResponse(w 
 	return json.NewEncoder(w).Encode(response.Body)
 }
 
-type ConfigUpdateAuth500JSONResponse struct {
+type ConfigUpdateAuthentication500JSONResponse struct {
 	InternalServerErrorJSONResponse
 }
 
-func (response ConfigUpdateAuth500JSONResponse) VisitConfigUpdateAuthResponse(w http.ResponseWriter) error {
+func (response ConfigUpdateAuthentication500JSONResponse) VisitConfigUpdateAuthenticationResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigGetDnsRequestObject struct {
+type ConfigGetDnsValidatorRequestObject struct {
 }
 
-type ConfigGetDnsResponseObject interface {
-	VisitConfigGetDnsResponse(w http.ResponseWriter) error
+type ConfigGetDnsValidatorResponseObject interface {
+	VisitConfigGetDnsValidatorResponse(w http.ResponseWriter) error
 }
 
-type ConfigGetDns200JSONResponse struct {
-	// Data DNS validator configuration
-	Data      *DNSValidatorConfigJSON `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
+type ConfigGetDnsValidator200JSONResponse DNSValidatorConfigJSON
 
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
-
-func (response ConfigGetDns200JSONResponse) VisitConfigGetDnsResponse(w http.ResponseWriter) error {
+func (response ConfigGetDnsValidator200JSONResponse) VisitConfigGetDnsValidatorResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigGetDns401JSONResponse struct{ UnauthorizedJSONResponse }
+type ConfigGetDnsValidator401JSONResponse struct{ UnauthorizedJSONResponse }
 
-func (response ConfigGetDns401JSONResponse) VisitConfigGetDnsResponse(w http.ResponseWriter) error {
+func (response ConfigGetDnsValidator401JSONResponse) VisitConfigGetDnsValidatorResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigGetDns403JSONResponse struct{ ForbiddenJSONResponse }
+type ConfigGetDnsValidator403JSONResponse struct{ ForbiddenJSONResponse }
 
-func (response ConfigGetDns403JSONResponse) VisitConfigGetDnsResponse(w http.ResponseWriter) error {
+func (response ConfigGetDnsValidator403JSONResponse) VisitConfigGetDnsValidatorResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(403)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigGetDns429JSONResponse struct{ RateLimitExceededJSONResponse }
+type ConfigGetDnsValidator429JSONResponse struct{ RateLimitExceededJSONResponse }
 
-func (response ConfigGetDns429JSONResponse) VisitConfigGetDnsResponse(w http.ResponseWriter) error {
+func (response ConfigGetDnsValidator429JSONResponse) VisitConfigGetDnsValidatorResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Retry-After", fmt.Sprint(response.Headers.RetryAfter))
 	w.WriteHeader(429)
@@ -10717,90 +10392,82 @@ func (response ConfigGetDns429JSONResponse) VisitConfigGetDnsResponse(w http.Res
 	return json.NewEncoder(w).Encode(response.Body)
 }
 
-type ConfigGetDns500JSONResponse struct {
+type ConfigGetDnsValidator500JSONResponse struct {
 	InternalServerErrorJSONResponse
 }
 
-func (response ConfigGetDns500JSONResponse) VisitConfigGetDnsResponse(w http.ResponseWriter) error {
+func (response ConfigGetDnsValidator500JSONResponse) VisitConfigGetDnsValidatorResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigUpdateDnsRequestObject struct {
-	Body *ConfigUpdateDnsJSONRequestBody
+type ConfigUpdateDnsValidatorRequestObject struct {
+	Body *ConfigUpdateDnsValidatorJSONRequestBody
 }
 
-type ConfigUpdateDnsResponseObject interface {
-	VisitConfigUpdateDnsResponse(w http.ResponseWriter) error
+type ConfigUpdateDnsValidatorResponseObject interface {
+	VisitConfigUpdateDnsValidatorResponse(w http.ResponseWriter) error
 }
 
-type ConfigUpdateDns200JSONResponse struct {
-	// Data DNS validator configuration
-	Data      *DNSValidatorConfigJSON `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
+type ConfigUpdateDnsValidator200JSONResponse DNSValidatorConfigJSON
 
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
-
-func (response ConfigUpdateDns200JSONResponse) VisitConfigUpdateDnsResponse(w http.ResponseWriter) error {
+func (response ConfigUpdateDnsValidator200JSONResponse) VisitConfigUpdateDnsValidatorResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigUpdateDns400JSONResponse struct{ BadRequestJSONResponse }
+type ConfigUpdateDnsValidator400JSONResponse struct{ BadRequestJSONResponse }
 
-func (response ConfigUpdateDns400JSONResponse) VisitConfigUpdateDnsResponse(w http.ResponseWriter) error {
+func (response ConfigUpdateDnsValidator400JSONResponse) VisitConfigUpdateDnsValidatorResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigUpdateDns401JSONResponse struct{ UnauthorizedJSONResponse }
+type ConfigUpdateDnsValidator401JSONResponse struct{ UnauthorizedJSONResponse }
 
-func (response ConfigUpdateDns401JSONResponse) VisitConfigUpdateDnsResponse(w http.ResponseWriter) error {
+func (response ConfigUpdateDnsValidator401JSONResponse) VisitConfigUpdateDnsValidatorResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigUpdateDns403JSONResponse struct{ ForbiddenJSONResponse }
+type ConfigUpdateDnsValidator403JSONResponse struct{ ForbiddenJSONResponse }
 
-func (response ConfigUpdateDns403JSONResponse) VisitConfigUpdateDnsResponse(w http.ResponseWriter) error {
+func (response ConfigUpdateDnsValidator403JSONResponse) VisitConfigUpdateDnsValidatorResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(403)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigUpdateDns409JSONResponse struct{ ConflictJSONResponse }
+type ConfigUpdateDnsValidator409JSONResponse struct{ ConflictJSONResponse }
 
-func (response ConfigUpdateDns409JSONResponse) VisitConfigUpdateDnsResponse(w http.ResponseWriter) error {
+func (response ConfigUpdateDnsValidator409JSONResponse) VisitConfigUpdateDnsValidatorResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(409)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigUpdateDns422JSONResponse struct{ ValidationErrorJSONResponse }
+type ConfigUpdateDnsValidator422JSONResponse struct{ ValidationErrorJSONResponse }
 
-func (response ConfigUpdateDns422JSONResponse) VisitConfigUpdateDnsResponse(w http.ResponseWriter) error {
+func (response ConfigUpdateDnsValidator422JSONResponse) VisitConfigUpdateDnsValidatorResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(422)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type ConfigUpdateDns429JSONResponse struct{ RateLimitExceededJSONResponse }
+type ConfigUpdateDnsValidator429JSONResponse struct{ RateLimitExceededJSONResponse }
 
-func (response ConfigUpdateDns429JSONResponse) VisitConfigUpdateDnsResponse(w http.ResponseWriter) error {
+func (response ConfigUpdateDnsValidator429JSONResponse) VisitConfigUpdateDnsValidatorResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Retry-After", fmt.Sprint(response.Headers.RetryAfter))
 	w.WriteHeader(429)
@@ -10808,153 +10475,81 @@ func (response ConfigUpdateDns429JSONResponse) VisitConfigUpdateDnsResponse(w ht
 	return json.NewEncoder(w).Encode(response.Body)
 }
 
-type ConfigUpdateDns500JSONResponse struct {
+type ConfigUpdateDnsValidator500JSONResponse struct {
 	InternalServerErrorJSONResponse
 }
 
-func (response ConfigUpdateDns500JSONResponse) VisitConfigUpdateDnsResponse(w http.ResponseWriter) error {
+func (response ConfigUpdateDnsValidator500JSONResponse) VisitConfigUpdateDnsValidatorResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type FeatureFlagsGetRequestObject struct {
+type ConfigGetFeaturesRequestObject struct {
 }
 
-type FeatureFlagsGetResponseObject interface {
-	VisitFeatureFlagsGetResponse(w http.ResponseWriter) error
+type ConfigGetFeaturesResponseObject interface {
+	VisitConfigGetFeaturesResponse(w http.ResponseWriter) error
 }
 
-type FeatureFlagsGet200JSONResponse struct {
-	// Data Feature flags map
-	Data      *FeatureFlags `json:"data,omitempty"`
-	Metadata  *Metadata     `json:"metadata,omitempty"`
-	RequestId string        `json:"requestId"`
+type ConfigGetFeatures200JSONResponse FeatureFlags
 
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
-
-func (response FeatureFlagsGet200JSONResponse) VisitFeatureFlagsGetResponse(w http.ResponseWriter) error {
+func (response ConfigGetFeatures200JSONResponse) VisitConfigGetFeaturesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type FeatureFlagsGet401JSONResponse struct{ UnauthorizedJSONResponse }
+type ConfigGetFeatures400JSONResponse struct{ BadRequestJSONResponse }
 
-func (response FeatureFlagsGet401JSONResponse) VisitFeatureFlagsGetResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type FeatureFlagsGet403JSONResponse struct{ ForbiddenJSONResponse }
-
-func (response FeatureFlagsGet403JSONResponse) VisitFeatureFlagsGetResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(403)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type FeatureFlagsGet429JSONResponse struct{ RateLimitExceededJSONResponse }
-
-func (response FeatureFlagsGet429JSONResponse) VisitFeatureFlagsGetResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Retry-After", fmt.Sprint(response.Headers.RetryAfter))
-	w.WriteHeader(429)
-
-	return json.NewEncoder(w).Encode(response.Body)
-}
-
-type FeatureFlagsGet500JSONResponse struct {
-	InternalServerErrorJSONResponse
-}
-
-func (response FeatureFlagsGet500JSONResponse) VisitFeatureFlagsGetResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(500)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type FeatureFlagsUpdateRequestObject struct {
-	Body *FeatureFlagsUpdateJSONRequestBody
-}
-
-type FeatureFlagsUpdateResponseObject interface {
-	VisitFeatureFlagsUpdateResponse(w http.ResponseWriter) error
-}
-
-type FeatureFlagsUpdate200JSONResponse struct {
-	// Data Feature flags map
-	Data      *FeatureFlags `json:"data,omitempty"`
-	Metadata  *Metadata     `json:"metadata,omitempty"`
-	RequestId string        `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
-
-func (response FeatureFlagsUpdate200JSONResponse) VisitFeatureFlagsUpdateResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type FeatureFlagsUpdate400JSONResponse struct{ BadRequestJSONResponse }
-
-func (response FeatureFlagsUpdate400JSONResponse) VisitFeatureFlagsUpdateResponse(w http.ResponseWriter) error {
+func (response ConfigGetFeatures400JSONResponse) VisitConfigGetFeaturesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(400)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type FeatureFlagsUpdate401JSONResponse struct{ UnauthorizedJSONResponse }
+type ConfigGetFeatures401JSONResponse struct{ UnauthorizedJSONResponse }
 
-func (response FeatureFlagsUpdate401JSONResponse) VisitFeatureFlagsUpdateResponse(w http.ResponseWriter) error {
+func (response ConfigGetFeatures401JSONResponse) VisitConfigGetFeaturesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type FeatureFlagsUpdate403JSONResponse struct{ ForbiddenJSONResponse }
+type ConfigGetFeatures403JSONResponse struct{ ForbiddenJSONResponse }
 
-func (response FeatureFlagsUpdate403JSONResponse) VisitFeatureFlagsUpdateResponse(w http.ResponseWriter) error {
+func (response ConfigGetFeatures403JSONResponse) VisitConfigGetFeaturesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(403)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type FeatureFlagsUpdate409JSONResponse struct{ ConflictJSONResponse }
+type ConfigGetFeatures409JSONResponse struct{ ConflictJSONResponse }
 
-func (response FeatureFlagsUpdate409JSONResponse) VisitFeatureFlagsUpdateResponse(w http.ResponseWriter) error {
+func (response ConfigGetFeatures409JSONResponse) VisitConfigGetFeaturesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(409)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type FeatureFlagsUpdate422JSONResponse struct{ ValidationErrorJSONResponse }
+type ConfigGetFeatures422JSONResponse struct{ ValidationErrorJSONResponse }
 
-func (response FeatureFlagsUpdate422JSONResponse) VisitFeatureFlagsUpdateResponse(w http.ResponseWriter) error {
+func (response ConfigGetFeatures422JSONResponse) VisitConfigGetFeaturesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(422)
 
 	return json.NewEncoder(w).Encode(response)
 }
 
-type FeatureFlagsUpdate429JSONResponse struct{ RateLimitExceededJSONResponse }
+type ConfigGetFeatures429JSONResponse struct{ RateLimitExceededJSONResponse }
 
-func (response FeatureFlagsUpdate429JSONResponse) VisitFeatureFlagsUpdateResponse(w http.ResponseWriter) error {
+func (response ConfigGetFeatures429JSONResponse) VisitConfigGetFeaturesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Retry-After", fmt.Sprint(response.Headers.RetryAfter))
 	w.WriteHeader(429)
@@ -10962,11 +10557,11 @@ func (response FeatureFlagsUpdate429JSONResponse) VisitFeatureFlagsUpdateRespons
 	return json.NewEncoder(w).Encode(response.Body)
 }
 
-type FeatureFlagsUpdate500JSONResponse struct {
+type ConfigGetFeatures500JSONResponse struct {
 	InternalServerErrorJSONResponse
 }
 
-func (response FeatureFlagsUpdate500JSONResponse) VisitFeatureFlagsUpdateResponse(w http.ResponseWriter) error {
+func (response ConfigGetFeatures500JSONResponse) VisitConfigGetFeaturesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(500)
 
@@ -11118,15 +10713,7 @@ type ConfigGetLoggingResponseObject interface {
 	VisitConfigGetLoggingResponse(w http.ResponseWriter) error
 }
 
-type ConfigGetLogging200JSONResponse struct {
-	// Data Logging configuration
-	Data      *LoggingConfig `json:"data,omitempty"`
-	Metadata  *Metadata      `json:"metadata,omitempty"`
-	RequestId string         `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ConfigGetLogging200JSONResponse LoggingConfig
 
 func (response ConfigGetLogging200JSONResponse) VisitConfigGetLoggingResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -11182,15 +10769,7 @@ type ConfigUpdateLoggingResponseObject interface {
 	VisitConfigUpdateLoggingResponse(w http.ResponseWriter) error
 }
 
-type ConfigUpdateLogging200JSONResponse struct {
-	// Data Logging configuration
-	Data      *LoggingConfig `json:"data,omitempty"`
-	Metadata  *Metadata      `json:"metadata,omitempty"`
-	RequestId string         `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ConfigUpdateLogging200JSONResponse LoggingConfig
 
 func (response ConfigUpdateLogging200JSONResponse) VisitConfigUpdateLoggingResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -11410,15 +10989,7 @@ type ConfigGetRateLimiterResponseObject interface {
 	VisitConfigGetRateLimiterResponse(w http.ResponseWriter) error
 }
 
-type ConfigGetRateLimiter200JSONResponse struct {
-	// Data Rate limiter configuration
-	Data      *RateLimiterConfig `json:"data,omitempty"`
-	Metadata  *Metadata          `json:"metadata,omitempty"`
-	RequestId string             `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ConfigGetRateLimiter200JSONResponse RateLimiterConfig
 
 func (response ConfigGetRateLimiter200JSONResponse) VisitConfigGetRateLimiterResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -11474,15 +11045,7 @@ type ConfigUpdateRateLimiterResponseObject interface {
 	VisitConfigUpdateRateLimiterResponse(w http.ResponseWriter) error
 }
 
-type ConfigUpdateRateLimiter200JSONResponse struct {
-	// Data Rate limiter configuration
-	Data      *RateLimiterConfig `json:"data,omitempty"`
-	Metadata  *Metadata          `json:"metadata,omitempty"`
-	RequestId string             `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ConfigUpdateRateLimiter200JSONResponse RateLimiterConfig
 
 func (response ConfigUpdateRateLimiter200JSONResponse) VisitConfigUpdateRateLimiterResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -11703,14 +11266,7 @@ type ConfigGetStealthResponseObject interface {
 }
 
 type ConfigGetStealth200JSONResponse struct {
-	Data *struct {
-		Enabled *bool `json:"enabled,omitempty"`
-	} `json:"data,omitempty"`
-	Metadata  *Metadata `json:"metadata,omitempty"`
-	RequestId string    `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
+	Enabled *bool `json:"enabled,omitempty"`
 }
 
 func (response ConfigGetStealth200JSONResponse) VisitConfigGetStealthResponse(w http.ResponseWriter) error {
@@ -11749,14 +11305,7 @@ type ConfigUpdateStealthResponseObject interface {
 }
 
 type ConfigUpdateStealth200JSONResponse struct {
-	Data *struct {
-		Enabled *bool `json:"enabled,omitempty"`
-	} `json:"data,omitempty"`
-	Metadata  *Metadata `json:"metadata,omitempty"`
-	RequestId string    `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
+	Enabled *bool `json:"enabled,omitempty"`
 }
 
 func (response ConfigUpdateStealth200JSONResponse) VisitConfigUpdateStealthResponse(w http.ResponseWriter) error {
@@ -11784,6 +11333,43 @@ func (response ConfigUpdateStealth401JSONResponse) VisitConfigUpdateStealthRespo
 	return json.NewEncoder(w).Encode(response)
 }
 
+type ConfigUpdateStealth403JSONResponse struct{ ForbiddenJSONResponse }
+
+func (response ConfigUpdateStealth403JSONResponse) VisitConfigUpdateStealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(403)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ConfigUpdateStealth409JSONResponse struct{ ConflictJSONResponse }
+
+func (response ConfigUpdateStealth409JSONResponse) VisitConfigUpdateStealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ConfigUpdateStealth422JSONResponse struct{ ValidationErrorJSONResponse }
+
+func (response ConfigUpdateStealth422JSONResponse) VisitConfigUpdateStealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(422)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type ConfigUpdateStealth429JSONResponse struct{ RateLimitExceededJSONResponse }
+
+func (response ConfigUpdateStealth429JSONResponse) VisitConfigUpdateStealthResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Retry-After", fmt.Sprint(response.Headers.RetryAfter))
+	w.WriteHeader(429)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
 type ConfigUpdateStealth500JSONResponse struct {
 	InternalServerErrorJSONResponse
 }
@@ -11802,15 +11388,7 @@ type ConfigGetWorkerResponseObject interface {
 	VisitConfigGetWorkerResponse(w http.ResponseWriter) error
 }
 
-type ConfigGetWorker200JSONResponse struct {
-	// Data Worker configuration
-	Data      *WorkerConfig `json:"data,omitempty"`
-	Metadata  *Metadata     `json:"metadata,omitempty"`
-	RequestId string        `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ConfigGetWorker200JSONResponse WorkerConfig
 
 func (response ConfigGetWorker200JSONResponse) VisitConfigGetWorkerResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -11866,15 +11444,7 @@ type ConfigUpdateWorkerResponseObject interface {
 	VisitConfigUpdateWorkerResponse(w http.ResponseWriter) error
 }
 
-type ConfigUpdateWorker200JSONResponse struct {
-	// Data Worker configuration
-	Data      *WorkerConfig `json:"data,omitempty"`
-	Metadata  *Metadata     `json:"metadata,omitempty"`
-	RequestId string        `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ConfigUpdateWorker200JSONResponse WorkerConfig
 
 func (response ConfigUpdateWorker200JSONResponse) VisitConfigUpdateWorkerResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -11958,14 +11528,7 @@ type DbBulkQueryResponseObject interface {
 	VisitDbBulkQueryResponse(w http.ResponseWriter) error
 }
 
-type DbBulkQuery200JSONResponse struct {
-	Data      *BulkDatabaseQueryResponse `json:"data,omitempty"`
-	Metadata  *Metadata                  `json:"metadata,omitempty"`
-	RequestId string                     `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type DbBulkQuery200JSONResponse BulkDatabaseQueryResponse
 
 func (response DbBulkQuery200JSONResponse) VisitDbBulkQueryResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -12040,14 +11603,7 @@ type DbBulkStatsResponseObject interface {
 	VisitDbBulkStatsResponse(w http.ResponseWriter) error
 }
 
-type DbBulkStats200JSONResponse struct {
-	Data      *BulkDatabaseStatsResponse `json:"data,omitempty"`
-	Metadata  *Metadata                  `json:"metadata,omitempty"`
-	RequestId string                     `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type DbBulkStats200JSONResponse BulkDatabaseStatsResponse
 
 func (response DbBulkStats200JSONResponse) VisitDbBulkStatsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -12121,14 +11677,7 @@ type KeywordExtractBatchResponseObject interface {
 	VisitKeywordExtractBatchResponse(w http.ResponseWriter) error
 }
 
-type KeywordExtractBatch200JSONResponse struct {
-	Data      *BatchKeywordExtractionResponse `json:"data,omitempty"`
-	Metadata  *Metadata                       `json:"metadata,omitempty"`
-	RequestId string                          `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type KeywordExtractBatch200JSONResponse BatchKeywordExtractionResponse
 
 func (response KeywordExtractBatch200JSONResponse) VisitKeywordExtractBatchResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -12457,14 +12006,7 @@ type KeywordRulesQueryResponseObject interface {
 	VisitKeywordRulesQueryResponse(w http.ResponseWriter) error
 }
 
-type KeywordRulesQuery200JSONResponse struct {
-	Data      *[]KeywordRuleDTO `json:"data,omitempty"`
-	Metadata  *Metadata         `json:"metadata,omitempty"`
-	RequestId string            `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type KeywordRulesQuery200JSONResponse []KeywordRuleDTO
 
 func (response KeywordRulesQuery200JSONResponse) VisitKeywordRulesQueryResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -12723,14 +12265,7 @@ type KeywordSetsGetResponseObject interface {
 	VisitKeywordSetsGetResponse(w http.ResponseWriter) error
 }
 
-type KeywordSetsGet200JSONResponse struct {
-	Data      *KeywordSetResponse `json:"data,omitempty"`
-	Metadata  *Metadata           `json:"metadata,omitempty"`
-	RequestId string              `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type KeywordSetsGet200JSONResponse KeywordSetResponse
 
 func (response KeywordSetsGet200JSONResponse) VisitKeywordSetsGetResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -12796,14 +12331,7 @@ type KeywordSetsUpdateResponseObject interface {
 	VisitKeywordSetsUpdateResponse(w http.ResponseWriter) error
 }
 
-type KeywordSetsUpdate200JSONResponse struct {
-	Data      *KeywordSetResponse `json:"data,omitempty"`
-	Metadata  *Metadata           `json:"metadata,omitempty"`
-	RequestId string              `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type KeywordSetsUpdate200JSONResponse KeywordSetResponse
 
 func (response KeywordSetsUpdate200JSONResponse) VisitKeywordSetsUpdateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -12886,14 +12414,7 @@ type KeywordSetsRulesListResponseObject interface {
 	VisitKeywordSetsRulesListResponse(w http.ResponseWriter) error
 }
 
-type KeywordSetsRulesList200JSONResponse struct {
-	Data      *[]KeywordRuleDTO `json:"data,omitempty"`
-	Metadata  *Metadata         `json:"metadata,omitempty"`
-	RequestId string            `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type KeywordSetsRulesList200JSONResponse []KeywordRuleDTO
 
 func (response KeywordSetsRulesList200JSONResponse) VisitKeywordSetsRulesListResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -12958,14 +12479,7 @@ type MonitoringCampaignHealthResponseObject interface {
 	VisitMonitoringCampaignHealthResponse(w http.ResponseWriter) error
 }
 
-type MonitoringCampaignHealth200JSONResponse struct {
-	Data      *map[string]interface{} `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type MonitoringCampaignHealth200JSONResponse map[string]interface{}
 
 func (response MonitoringCampaignHealth200JSONResponse) VisitMonitoringCampaignHealthResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13066,14 +12580,7 @@ type MonitoringCampaignPerformanceResponseObject interface {
 	VisitMonitoringCampaignPerformanceResponse(w http.ResponseWriter) error
 }
 
-type MonitoringCampaignPerformance200JSONResponse struct {
-	Data      *map[string]interface{} `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type MonitoringCampaignPerformance200JSONResponse map[string]interface{}
 
 func (response MonitoringCampaignPerformance200JSONResponse) VisitMonitoringCampaignPerformanceResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13119,14 +12626,7 @@ type MonitoringCampaignResourcesResponseObject interface {
 	VisitMonitoringCampaignResourcesResponse(w http.ResponseWriter) error
 }
 
-type MonitoringCampaignResources200JSONResponse struct {
-	Data      *map[string]interface{} `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type MonitoringCampaignResources200JSONResponse map[string]interface{}
 
 func (response MonitoringCampaignResources200JSONResponse) VisitMonitoringCampaignResourcesResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13172,14 +12672,7 @@ type MonitoringCampaignGenericResponseObject interface {
 	VisitMonitoringCampaignGenericResponse(w http.ResponseWriter) error
 }
 
-type MonitoringCampaignGeneric200JSONResponse struct {
-	Data      *map[string]interface{} `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type MonitoringCampaignGeneric200JSONResponse map[string]interface{}
 
 func (response MonitoringCampaignGeneric200JSONResponse) VisitMonitoringCampaignGenericResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13341,14 +12834,7 @@ type MonitoringPerformanceTrendsResponseObject interface {
 	VisitMonitoringPerformanceTrendsResponse(w http.ResponseWriter) error
 }
 
-type MonitoringPerformanceTrends200JSONResponse struct {
-	Data      *map[string]interface{} `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type MonitoringPerformanceTrends200JSONResponse map[string]interface{}
 
 func (response MonitoringPerformanceTrends200JSONResponse) VisitMonitoringPerformanceTrendsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13384,14 +12870,7 @@ type MonitoringHealthResponseObject interface {
 	VisitMonitoringHealthResponse(w http.ResponseWriter) error
 }
 
-type MonitoringHealth200JSONResponse struct {
-	Data      *map[string]interface{} `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type MonitoringHealth200JSONResponse map[string]interface{}
 
 func (response MonitoringHealth200JSONResponse) VisitMonitoringHealthResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13463,14 +12942,7 @@ type MonitoringPerformanceFailedResponseObject interface {
 	VisitMonitoringPerformanceFailedResponse(w http.ResponseWriter) error
 }
 
-type MonitoringPerformanceFailed200JSONResponse struct {
-	Data      *map[string]interface{} `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type MonitoringPerformanceFailed200JSONResponse map[string]interface{}
 
 func (response MonitoringPerformanceFailed200JSONResponse) VisitMonitoringPerformanceFailedResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13506,14 +12978,7 @@ type MonitoringPerformanceMetricsResponseObject interface {
 	VisitMonitoringPerformanceMetricsResponse(w http.ResponseWriter) error
 }
 
-type MonitoringPerformanceMetrics200JSONResponse struct {
-	Data      *map[string]interface{} `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type MonitoringPerformanceMetrics200JSONResponse map[string]interface{}
 
 func (response MonitoringPerformanceMetrics200JSONResponse) VisitMonitoringPerformanceMetricsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13549,14 +13014,7 @@ type MonitoringPerformanceSlowResponseObject interface {
 	VisitMonitoringPerformanceSlowResponse(w http.ResponseWriter) error
 }
 
-type MonitoringPerformanceSlow200JSONResponse struct {
-	Data      *map[string]interface{} `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type MonitoringPerformanceSlow200JSONResponse map[string]interface{}
 
 func (response MonitoringPerformanceSlow200JSONResponse) VisitMonitoringPerformanceSlowResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13628,14 +13086,7 @@ type MonitoringResourcesAlertsResponseObject interface {
 	VisitMonitoringResourcesAlertsResponse(w http.ResponseWriter) error
 }
 
-type MonitoringResourcesAlerts200JSONResponse struct {
-	Data      *map[string]interface{} `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type MonitoringResourcesAlerts200JSONResponse map[string]interface{}
 
 func (response MonitoringResourcesAlerts200JSONResponse) VisitMonitoringResourcesAlertsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13671,14 +13122,7 @@ type MonitoringResourcesHistoryResponseObject interface {
 	VisitMonitoringResourcesHistoryResponse(w http.ResponseWriter) error
 }
 
-type MonitoringResourcesHistory200JSONResponse struct {
-	Data      *map[string]interface{} `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type MonitoringResourcesHistory200JSONResponse map[string]interface{}
 
 func (response MonitoringResourcesHistory200JSONResponse) VisitMonitoringResourcesHistoryResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13714,14 +13158,7 @@ type MonitoringResourcesSystemResponseObject interface {
 	VisitMonitoringResourcesSystemResponse(w http.ResponseWriter) error
 }
 
-type MonitoringResourcesSystem200JSONResponse struct {
-	Data      *map[string]interface{} `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type MonitoringResourcesSystem200JSONResponse map[string]interface{}
 
 func (response MonitoringResourcesSystem200JSONResponse) VisitMonitoringResourcesSystemResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -13757,14 +13194,7 @@ type MonitoringStatsResponseObject interface {
 	VisitMonitoringStatsResponse(w http.ResponseWriter) error
 }
 
-type MonitoringStats200JSONResponse struct {
-	Data      *map[string]interface{} `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type MonitoringStats200JSONResponse map[string]interface{}
 
 func (response MonitoringStats200JSONResponse) VisitMonitoringStatsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14291,14 +13721,7 @@ type PersonasTestResponseObject interface {
 	VisitPersonasTestResponse(w http.ResponseWriter) error
 }
 
-type PersonasTest200JSONResponse struct {
-	Data      *PersonaTestResponse `json:"data,omitempty"`
-	Metadata  *Metadata            `json:"metadata,omitempty"`
-	RequestId string               `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type PersonasTest200JSONResponse PersonaTestResponse
 
 func (response PersonasTest200JSONResponse) VisitPersonasTestResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14444,14 +13867,7 @@ type ProxiesListResponseObject interface {
 	VisitProxiesListResponse(w http.ResponseWriter) error
 }
 
-type ProxiesList200JSONResponse struct {
-	Data      *[]ProxyDetailsResponse `json:"data,omitempty"`
-	Metadata  *Metadata               `json:"metadata,omitempty"`
-	RequestId string                  `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesList200JSONResponse []Proxy
 
 func (response ProxiesList200JSONResponse) VisitProxiesListResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14507,14 +13923,7 @@ type ProxiesCreateResponseObject interface {
 	VisitProxiesCreateResponse(w http.ResponseWriter) error
 }
 
-type ProxiesCreate201JSONResponse struct {
-	Data      *ProxyDetailsResponse `json:"data,omitempty"`
-	Metadata  *Metadata             `json:"metadata,omitempty"`
-	RequestId string                `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesCreate201JSONResponse Proxy
 
 func (response ProxiesCreate201JSONResponse) VisitProxiesCreateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14597,14 +14006,7 @@ type ProxiesBulkDeleteResponseObject interface {
 	VisitProxiesBulkDeleteResponse(w http.ResponseWriter) error
 }
 
-type ProxiesBulkDelete200JSONResponse struct {
-	Data      *BulkProxyOperationResponse `json:"data,omitempty"`
-	Metadata  *Metadata                   `json:"metadata,omitempty"`
-	RequestId string                      `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesBulkDelete200JSONResponse BulkProxyOperationResponse
 
 func (response ProxiesBulkDelete200JSONResponse) VisitProxiesBulkDeleteResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14641,14 +14043,7 @@ type ProxiesBulkTestResponseObject interface {
 	VisitProxiesBulkTestResponse(w http.ResponseWriter) error
 }
 
-type ProxiesBulkTest200JSONResponse struct {
-	Data      *BulkProxyTestResponse `json:"data,omitempty"`
-	Metadata  *Metadata              `json:"metadata,omitempty"`
-	RequestId string                 `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesBulkTest200JSONResponse BulkProxyTestResponse
 
 func (response ProxiesBulkTest200JSONResponse) VisitProxiesBulkTestResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14685,14 +14080,7 @@ type ProxiesBulkUpdateResponseObject interface {
 	VisitProxiesBulkUpdateResponse(w http.ResponseWriter) error
 }
 
-type ProxiesBulkUpdate200JSONResponse struct {
-	Data      *BulkProxyOperationResponse `json:"data,omitempty"`
-	Metadata  *Metadata                   `json:"metadata,omitempty"`
-	RequestId string                      `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesBulkUpdate200JSONResponse BulkProxyOperationResponse
 
 func (response ProxiesBulkUpdate200JSONResponse) VisitProxiesBulkUpdateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14729,14 +14117,7 @@ type ProxiesHealthCheckAllResponseObject interface {
 	VisitProxiesHealthCheckAllResponse(w http.ResponseWriter) error
 }
 
-type ProxiesHealthCheckAll202JSONResponse struct {
-	Data      *BulkHealthCheckResponse `json:"data,omitempty"`
-	Metadata  *Metadata                `json:"metadata,omitempty"`
-	RequestId string                   `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesHealthCheckAll202JSONResponse BulkHealthCheckResponse
 
 func (response ProxiesHealthCheckAll202JSONResponse) VisitProxiesHealthCheckAllResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14772,14 +14153,7 @@ type ProxiesStatusResponseObject interface {
 	VisitProxiesStatusResponse(w http.ResponseWriter) error
 }
 
-type ProxiesStatus200JSONResponse struct {
-	Data      *[]ProxyStatusResponse `json:"data,omitempty"`
-	Metadata  *Metadata              `json:"metadata,omitempty"`
-	RequestId string                 `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesStatus200JSONResponse []ProxyStatusResponse
 
 func (response ProxiesStatus200JSONResponse) VisitProxiesStatusResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14834,13 +14208,12 @@ type ProxiesDeleteResponseObject interface {
 	VisitProxiesDeleteResponse(w http.ResponseWriter) error
 }
 
-type ProxiesDelete200JSONResponse SuccessEnvelope
+type ProxiesDelete204Response struct {
+}
 
-func (response ProxiesDelete200JSONResponse) VisitProxiesDeleteResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
+func (response ProxiesDelete204Response) VisitProxiesDeleteResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
 }
 
 type ProxiesDelete401JSONResponse struct{ UnauthorizedJSONResponse }
@@ -14890,14 +14263,7 @@ type ProxiesUpdateResponseObject interface {
 	VisitProxiesUpdateResponse(w http.ResponseWriter) error
 }
 
-type ProxiesUpdate200JSONResponse struct {
-	Data      *ProxyDetailsResponse `json:"data,omitempty"`
-	Metadata  *Metadata             `json:"metadata,omitempty"`
-	RequestId string                `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesUpdate200JSONResponse Proxy
 
 func (response ProxiesUpdate200JSONResponse) VisitProxiesUpdateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -14961,14 +14327,7 @@ type ProxiesHealthCheckSingleResponseObject interface {
 	VisitProxiesHealthCheckSingleResponse(w http.ResponseWriter) error
 }
 
-type ProxiesHealthCheckSingle200JSONResponse struct {
-	Data      *ProxyHealthCheckResponse `json:"data,omitempty"`
-	Metadata  *Metadata                 `json:"metadata,omitempty"`
-	RequestId string                    `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesHealthCheckSingle200JSONResponse ProxyHealthCheckResponse
 
 func (response ProxiesHealthCheckSingle200JSONResponse) VisitProxiesHealthCheckSingleResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -15014,14 +14373,7 @@ type ProxiesTestResponseObject interface {
 	VisitProxiesTestResponse(w http.ResponseWriter) error
 }
 
-type ProxiesTest200JSONResponse struct {
-	Data      *ProxyTestResponse `json:"data,omitempty"`
-	Metadata  *Metadata          `json:"metadata,omitempty"`
-	RequestId string             `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxiesTest200JSONResponse ProxyTestResponse
 
 func (response ProxiesTest200JSONResponse) VisitProxiesTestResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -15103,14 +14455,7 @@ type ProxyPoolsListResponseObject interface {
 	VisitProxyPoolsListResponse(w http.ResponseWriter) error
 }
 
-type ProxyPoolsList200JSONResponse struct {
-	Data      *[]ProxyPool `json:"data,omitempty"`
-	Metadata  *Metadata    `json:"metadata,omitempty"`
-	RequestId string       `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxyPoolsList200JSONResponse []ProxyPool
 
 func (response ProxyPoolsList200JSONResponse) VisitProxyPoolsListResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -15156,14 +14501,7 @@ type ProxyPoolsCreateResponseObject interface {
 	VisitProxyPoolsCreateResponse(w http.ResponseWriter) error
 }
 
-type ProxyPoolsCreate201JSONResponse struct {
-	Data      *ProxyPool `json:"data,omitempty"`
-	Metadata  *Metadata  `json:"metadata,omitempty"`
-	RequestId string     `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxyPoolsCreate201JSONResponse ProxyPool
 
 func (response ProxyPoolsCreate201JSONResponse) VisitProxyPoolsCreateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -15200,14 +14538,7 @@ type ProxyPoolsDeleteResponseObject interface {
 	VisitProxyPoolsDeleteResponse(w http.ResponseWriter) error
 }
 
-type ProxyPoolsDelete200JSONResponse struct {
-	Data      *ProxyPoolDeleteResponse `json:"data,omitempty"`
-	Metadata  *Metadata                `json:"metadata,omitempty"`
-	RequestId string                   `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxyPoolsDelete200JSONResponse ProxyPoolDeleteResponse
 
 func (response ProxyPoolsDelete200JSONResponse) VisitProxyPoolsDeleteResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -15254,14 +14585,7 @@ type ProxyPoolsUpdateResponseObject interface {
 	VisitProxyPoolsUpdateResponse(w http.ResponseWriter) error
 }
 
-type ProxyPoolsUpdate200JSONResponse struct {
-	Data      *ProxyPool `json:"data,omitempty"`
-	Metadata  *Metadata  `json:"metadata,omitempty"`
-	RequestId string     `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxyPoolsUpdate200JSONResponse ProxyPool
 
 func (response ProxyPoolsUpdate200JSONResponse) VisitProxyPoolsUpdateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -15308,14 +14632,7 @@ type ProxyPoolsAddProxyResponseObject interface {
 	VisitProxyPoolsAddProxyResponse(w http.ResponseWriter) error
 }
 
-type ProxyPoolsAddProxy201JSONResponse struct {
-	Data      *ProxyPoolMembership `json:"data,omitempty"`
-	Metadata  *Metadata            `json:"metadata,omitempty"`
-	RequestId string               `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxyPoolsAddProxy201JSONResponse ProxyPoolMembership
 
 func (response ProxyPoolsAddProxy201JSONResponse) VisitProxyPoolsAddProxyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -15353,14 +14670,7 @@ type ProxyPoolsRemoveProxyResponseObject interface {
 	VisitProxyPoolsRemoveProxyResponse(w http.ResponseWriter) error
 }
 
-type ProxyPoolsRemoveProxy200JSONResponse struct {
-	Data      *ProxyPoolMembershipResponse `json:"data,omitempty"`
-	Metadata  *Metadata                    `json:"metadata,omitempty"`
-	RequestId string                       `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ProxyPoolsRemoveProxy200JSONResponse ProxyPoolMembershipResponse
 
 func (response ProxyPoolsRemoveProxy200JSONResponse) VisitProxyPoolsRemoveProxyResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -15406,14 +14716,7 @@ type ScoringProfilesListResponseObject interface {
 	VisitScoringProfilesListResponse(w http.ResponseWriter) error
 }
 
-type ScoringProfilesList200JSONResponse struct {
-	Data      *[]ScoringProfile `json:"data,omitempty"`
-	Metadata  *Metadata         `json:"metadata,omitempty"`
-	RequestId string            `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ScoringProfilesList200JSONResponse []ScoringProfile
 
 func (response ScoringProfilesList200JSONResponse) VisitScoringProfilesListResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -15459,14 +14762,7 @@ type ScoringProfilesCreateResponseObject interface {
 	VisitScoringProfilesCreateResponse(w http.ResponseWriter) error
 }
 
-type ScoringProfilesCreate201JSONResponse struct {
-	Data      *ScoringProfile `json:"data,omitempty"`
-	Metadata  *Metadata       `json:"metadata,omitempty"`
-	RequestId string          `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ScoringProfilesCreate201JSONResponse ScoringProfile
 
 func (response ScoringProfilesCreate201JSONResponse) VisitScoringProfilesCreateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -15539,13 +14835,12 @@ type ScoringProfilesDeleteResponseObject interface {
 	VisitScoringProfilesDeleteResponse(w http.ResponseWriter) error
 }
 
-type ScoringProfilesDelete200JSONResponse SuccessEnvelope
+type ScoringProfilesDelete204Response struct {
+}
 
-func (response ScoringProfilesDelete200JSONResponse) VisitScoringProfilesDeleteResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
+func (response ScoringProfilesDelete204Response) VisitScoringProfilesDeleteResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
 }
 
 type ScoringProfilesDelete401JSONResponse struct{ UnauthorizedJSONResponse }
@@ -15594,14 +14889,7 @@ type ScoringProfilesGetResponseObject interface {
 	VisitScoringProfilesGetResponse(w http.ResponseWriter) error
 }
 
-type ScoringProfilesGet200JSONResponse struct {
-	Data      *ScoringProfile `json:"data,omitempty"`
-	Metadata  *Metadata       `json:"metadata,omitempty"`
-	RequestId string          `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ScoringProfilesGet200JSONResponse ScoringProfile
 
 func (response ScoringProfilesGet200JSONResponse) VisitScoringProfilesGetResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -15657,14 +14945,7 @@ type ScoringProfilesUpdateResponseObject interface {
 	VisitScoringProfilesUpdateResponse(w http.ResponseWriter) error
 }
 
-type ScoringProfilesUpdate200JSONResponse struct {
-	Data      *ScoringProfile `json:"data,omitempty"`
-	Metadata  *Metadata       `json:"metadata,omitempty"`
-	RequestId string          `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
-}
+type ScoringProfilesUpdate200JSONResponse ScoringProfile
 
 func (response ScoringProfilesUpdate200JSONResponse) VisitScoringProfilesUpdateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -15877,21 +15158,14 @@ type SseEventsStatsResponseObject interface {
 }
 
 type SseEventsStats200JSONResponse struct {
-	Data *struct {
-		// ActiveConnections Number of active SSE connections
-		ActiveConnections *int `json:"activeConnections,omitempty"`
+	// ActiveConnections Number of active SSE connections
+	ActiveConnections *int `json:"activeConnections,omitempty"`
 
-		// TotalEventsSent Total events sent since server start
-		TotalEventsSent *int `json:"totalEventsSent,omitempty"`
+	// TotalEventsSent Total events sent since server start
+	TotalEventsSent *int `json:"totalEventsSent,omitempty"`
 
-		// Uptime Server uptime
-		Uptime *string `json:"uptime,omitempty"`
-	} `json:"data,omitempty"`
-	Metadata  *Metadata `json:"metadata,omitempty"`
-	RequestId string    `json:"requestId"`
-
-	// Success Always true for success envelopes.
-	Success *bool `json:"success,omitempty"`
+	// Uptime Server uptime
+	Uptime *string `json:"uptime,omitempty"`
 }
 
 func (response SseEventsStats200JSONResponse) VisitSseEventsStatsResponse(w http.ResponseWriter) error {
@@ -15978,7 +15252,7 @@ type StrictServerInterface interface {
 	// List bulk operations
 	// (GET /campaigns/bulk/operations)
 	CampaignsBulkOperationsList(ctx context.Context, request CampaignsBulkOperationsListRequestObject) (CampaignsBulkOperationsListResponseObject, error)
-	// Cancel bulk operation
+	// Cancel a bulk operation
 	// (POST /campaigns/bulk/operations/{operationId}/cancel)
 	CancelBulkOperation(ctx context.Context, request CancelBulkOperationRequestObject) (CancelBulkOperationResponseObject, error)
 	// Get bulk operation status
@@ -15987,7 +15261,7 @@ type StrictServerInterface interface {
 	// Allocate bulk operation resources
 	// (POST /campaigns/bulk/resources/allocate)
 	AllocateBulkResources(ctx context.Context, request AllocateBulkResourcesRequestObject) (AllocateBulkResourcesResponseObject, error)
-	// Get bulk resource allocation status
+	// Get status of bulk resource allocation
 	// (GET /campaigns/bulk/resources/status/{allocationId})
 	GetBulkResourceStatus(ctx context.Context, request GetBulkResourceStatusRequestObject) (GetBulkResourceStatusResponseObject, error)
 	// Get current global pattern offset for domain generation config
@@ -16011,7 +15285,7 @@ type StrictServerInterface interface {
 	// List generated domains for a campaign
 	// (GET /campaigns/{campaignId}/domains)
 	CampaignsDomainsList(ctx context.Context, request CampaignsDomainsListRequestObject) (CampaignsDomainsListResponseObject, error)
-	// Get component score breakdown for a single domain
+	// Get detailed score breakdown for a specific domain in a campaign
 	// (GET /campaigns/{campaignId}/domains/{domain}/score-breakdown)
 	CampaignsDomainScoreBreakdown(ctx context.Context, request CampaignsDomainScoreBreakdownRequestObject) (CampaignsDomainScoreBreakdownResponseObject, error)
 	// Duplicate campaign
@@ -16030,12 +15304,12 @@ type StrictServerInterface interface {
 	// (GET /campaigns/{campaignId}/metrics)
 	CampaignsMetricsGet(ctx context.Context, request CampaignsMetricsGetRequestObject) (CampaignsMetricsGetResponseObject, error)
 	// Update campaign execution mode
-	// (PATCH /campaigns/{campaignId}/mode)
+	// (PUT /campaigns/{campaignId}/mode)
 	CampaignsModeUpdate(ctx context.Context, request CampaignsModeUpdateRequestObject) (CampaignsModeUpdateResponseObject, error)
 	// Get campaign momentum & movers
 	// (GET /campaigns/{campaignId}/momentum)
 	CampaignsMomentumGet(ctx context.Context, request CampaignsMomentumGetRequestObject) (CampaignsMomentumGetResponseObject, error)
-	// Get campaign state and phase executions
+	// List phase executions for a campaign
 	// (GET /campaigns/{campaignId}/phase-executions)
 	CampaignsPhaseExecutionsList(ctx context.Context, request CampaignsPhaseExecutionsListRequestObject) (CampaignsPhaseExecutionsListResponseObject, error)
 	// Delete phase execution by phase type
@@ -16082,22 +15356,19 @@ type StrictServerInterface interface {
 	CampaignsStatusGet(ctx context.Context, request CampaignsStatusGetRequestObject) (CampaignsStatusGetResponseObject, error)
 	// Get authentication configuration
 	// (GET /config/auth)
-	ConfigGetAuth(ctx context.Context, request ConfigGetAuthRequestObject) (ConfigGetAuthResponseObject, error)
+	ConfigGetAuthentication(ctx context.Context, request ConfigGetAuthenticationRequestObject) (ConfigGetAuthenticationResponseObject, error)
 	// Update authentication configuration
 	// (PUT /config/auth)
-	ConfigUpdateAuth(ctx context.Context, request ConfigUpdateAuthRequestObject) (ConfigUpdateAuthResponseObject, error)
-	// Get DNS configuration
+	ConfigUpdateAuthentication(ctx context.Context, request ConfigUpdateAuthenticationRequestObject) (ConfigUpdateAuthenticationResponseObject, error)
+	// Get DNS validator configuration
 	// (GET /config/dns)
-	ConfigGetDns(ctx context.Context, request ConfigGetDnsRequestObject) (ConfigGetDnsResponseObject, error)
-	// Update DNS configuration
+	ConfigGetDnsValidator(ctx context.Context, request ConfigGetDnsValidatorRequestObject) (ConfigGetDnsValidatorResponseObject, error)
+	// Update DNS validator configuration
 	// (PUT /config/dns)
-	ConfigUpdateDns(ctx context.Context, request ConfigUpdateDnsRequestObject) (ConfigUpdateDnsResponseObject, error)
-	// Get feature flags
+	ConfigUpdateDnsValidator(ctx context.Context, request ConfigUpdateDnsValidatorRequestObject) (ConfigUpdateDnsValidatorResponseObject, error)
+	// Get feature flags configuration
 	// (GET /config/features)
-	FeatureFlagsGet(ctx context.Context, request FeatureFlagsGetRequestObject) (FeatureFlagsGetResponseObject, error)
-	// Update feature flags
-	// (PUT /config/features)
-	FeatureFlagsUpdate(ctx context.Context, request FeatureFlagsUpdateRequestObject) (FeatureFlagsUpdateResponseObject, error)
+	ConfigGetFeatures(ctx context.Context, request ConfigGetFeaturesRequestObject) (ConfigGetFeaturesResponseObject, error)
 	// Get HTTP configuration
 	// (GET /config/http)
 	ConfigGetHttp(ctx context.Context, request ConfigGetHttpRequestObject) (ConfigGetHttpResponseObject, error)
@@ -16128,10 +15399,10 @@ type StrictServerInterface interface {
 	// Update server configuration
 	// (PUT /config/server)
 	ConfigUpdateServer(ctx context.Context, request ConfigUpdateServerRequestObject) (ConfigUpdateServerResponseObject, error)
-	// Get stealth configuration
+	// Get stealth mode configuration
 	// (GET /config/stealth)
 	ConfigGetStealth(ctx context.Context, request ConfigGetStealthRequestObject) (ConfigGetStealthResponseObject, error)
-	// Update stealth configuration
+	// Update stealth mode configuration
 	// (PUT /config/stealth)
 	ConfigUpdateStealth(ctx context.Context, request ConfigUpdateStealthRequestObject) (ConfigUpdateStealthResponseObject, error)
 	// Get worker configuration
@@ -17662,23 +16933,23 @@ func (sh *strictHandler) CampaignsStatusGet(w http.ResponseWriter, r *http.Reque
 	}
 }
 
-// ConfigGetAuth operation middleware
-func (sh *strictHandler) ConfigGetAuth(w http.ResponseWriter, r *http.Request) {
-	var request ConfigGetAuthRequestObject
+// ConfigGetAuthentication operation middleware
+func (sh *strictHandler) ConfigGetAuthentication(w http.ResponseWriter, r *http.Request) {
+	var request ConfigGetAuthenticationRequestObject
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.ConfigGetAuth(ctx, request.(ConfigGetAuthRequestObject))
+		return sh.ssi.ConfigGetAuthentication(ctx, request.(ConfigGetAuthenticationRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "ConfigGetAuth")
+		handler = middleware(handler, "ConfigGetAuthentication")
 	}
 
 	response, err := handler(r.Context(), w, r, request)
 
 	if err != nil {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(ConfigGetAuthResponseObject); ok {
-		if err := validResponse.VisitConfigGetAuthResponse(w); err != nil {
+	} else if validResponse, ok := response.(ConfigGetAuthenticationResponseObject); ok {
+		if err := validResponse.VisitConfigGetAuthenticationResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -17686,11 +16957,11 @@ func (sh *strictHandler) ConfigGetAuth(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ConfigUpdateAuth operation middleware
-func (sh *strictHandler) ConfigUpdateAuth(w http.ResponseWriter, r *http.Request) {
-	var request ConfigUpdateAuthRequestObject
+// ConfigUpdateAuthentication operation middleware
+func (sh *strictHandler) ConfigUpdateAuthentication(w http.ResponseWriter, r *http.Request) {
+	var request ConfigUpdateAuthenticationRequestObject
 
-	var body ConfigUpdateAuthJSONRequestBody
+	var body ConfigUpdateAuthenticationJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
 		return
@@ -17698,18 +16969,18 @@ func (sh *strictHandler) ConfigUpdateAuth(w http.ResponseWriter, r *http.Request
 	request.Body = &body
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.ConfigUpdateAuth(ctx, request.(ConfigUpdateAuthRequestObject))
+		return sh.ssi.ConfigUpdateAuthentication(ctx, request.(ConfigUpdateAuthenticationRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "ConfigUpdateAuth")
+		handler = middleware(handler, "ConfigUpdateAuthentication")
 	}
 
 	response, err := handler(r.Context(), w, r, request)
 
 	if err != nil {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(ConfigUpdateAuthResponseObject); ok {
-		if err := validResponse.VisitConfigUpdateAuthResponse(w); err != nil {
+	} else if validResponse, ok := response.(ConfigUpdateAuthenticationResponseObject); ok {
+		if err := validResponse.VisitConfigUpdateAuthenticationResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -17717,23 +16988,23 @@ func (sh *strictHandler) ConfigUpdateAuth(w http.ResponseWriter, r *http.Request
 	}
 }
 
-// ConfigGetDns operation middleware
-func (sh *strictHandler) ConfigGetDns(w http.ResponseWriter, r *http.Request) {
-	var request ConfigGetDnsRequestObject
+// ConfigGetDnsValidator operation middleware
+func (sh *strictHandler) ConfigGetDnsValidator(w http.ResponseWriter, r *http.Request) {
+	var request ConfigGetDnsValidatorRequestObject
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.ConfigGetDns(ctx, request.(ConfigGetDnsRequestObject))
+		return sh.ssi.ConfigGetDnsValidator(ctx, request.(ConfigGetDnsValidatorRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "ConfigGetDns")
+		handler = middleware(handler, "ConfigGetDnsValidator")
 	}
 
 	response, err := handler(r.Context(), w, r, request)
 
 	if err != nil {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(ConfigGetDnsResponseObject); ok {
-		if err := validResponse.VisitConfigGetDnsResponse(w); err != nil {
+	} else if validResponse, ok := response.(ConfigGetDnsValidatorResponseObject); ok {
+		if err := validResponse.VisitConfigGetDnsValidatorResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -17741,11 +17012,11 @@ func (sh *strictHandler) ConfigGetDns(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// ConfigUpdateDns operation middleware
-func (sh *strictHandler) ConfigUpdateDns(w http.ResponseWriter, r *http.Request) {
-	var request ConfigUpdateDnsRequestObject
+// ConfigUpdateDnsValidator operation middleware
+func (sh *strictHandler) ConfigUpdateDnsValidator(w http.ResponseWriter, r *http.Request) {
+	var request ConfigUpdateDnsValidatorRequestObject
 
-	var body ConfigUpdateDnsJSONRequestBody
+	var body ConfigUpdateDnsValidatorJSONRequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
 		return
@@ -17753,18 +17024,18 @@ func (sh *strictHandler) ConfigUpdateDns(w http.ResponseWriter, r *http.Request)
 	request.Body = &body
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.ConfigUpdateDns(ctx, request.(ConfigUpdateDnsRequestObject))
+		return sh.ssi.ConfigUpdateDnsValidator(ctx, request.(ConfigUpdateDnsValidatorRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "ConfigUpdateDns")
+		handler = middleware(handler, "ConfigUpdateDnsValidator")
 	}
 
 	response, err := handler(r.Context(), w, r, request)
 
 	if err != nil {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(ConfigUpdateDnsResponseObject); ok {
-		if err := validResponse.VisitConfigUpdateDnsResponse(w); err != nil {
+	} else if validResponse, ok := response.(ConfigUpdateDnsValidatorResponseObject); ok {
+		if err := validResponse.VisitConfigUpdateDnsValidatorResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -17772,54 +17043,23 @@ func (sh *strictHandler) ConfigUpdateDns(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-// FeatureFlagsGet operation middleware
-func (sh *strictHandler) FeatureFlagsGet(w http.ResponseWriter, r *http.Request) {
-	var request FeatureFlagsGetRequestObject
+// ConfigGetFeatures operation middleware
+func (sh *strictHandler) ConfigGetFeatures(w http.ResponseWriter, r *http.Request) {
+	var request ConfigGetFeaturesRequestObject
 
 	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.FeatureFlagsGet(ctx, request.(FeatureFlagsGetRequestObject))
+		return sh.ssi.ConfigGetFeatures(ctx, request.(ConfigGetFeaturesRequestObject))
 	}
 	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "FeatureFlagsGet")
+		handler = middleware(handler, "ConfigGetFeatures")
 	}
 
 	response, err := handler(r.Context(), w, r, request)
 
 	if err != nil {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(FeatureFlagsGetResponseObject); ok {
-		if err := validResponse.VisitFeatureFlagsGetResponse(w); err != nil {
-			sh.options.ResponseErrorHandlerFunc(w, r, err)
-		}
-	} else if response != nil {
-		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
-	}
-}
-
-// FeatureFlagsUpdate operation middleware
-func (sh *strictHandler) FeatureFlagsUpdate(w http.ResponseWriter, r *http.Request) {
-	var request FeatureFlagsUpdateRequestObject
-
-	var body FeatureFlagsUpdateJSONRequestBody
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
-		return
-	}
-	request.Body = &body
-
-	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
-		return sh.ssi.FeatureFlagsUpdate(ctx, request.(FeatureFlagsUpdateRequestObject))
-	}
-	for _, middleware := range sh.middlewares {
-		handler = middleware(handler, "FeatureFlagsUpdate")
-	}
-
-	response, err := handler(r.Context(), w, r, request)
-
-	if err != nil {
-		sh.options.ResponseErrorHandlerFunc(w, r, err)
-	} else if validResponse, ok := response.(FeatureFlagsUpdateResponseObject); ok {
-		if err := validResponse.VisitFeatureFlagsUpdateResponse(w); err != nil {
+	} else if validResponse, ok := response.(ConfigGetFeaturesResponseObject); ok {
+		if err := validResponse.VisitConfigGetFeaturesResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

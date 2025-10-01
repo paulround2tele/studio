@@ -28,11 +28,7 @@ import type { CreateScoringProfileRequest } from '../models';
 // @ts-ignore
 import type { ErrorEnvelope } from '../models';
 // @ts-ignore
-import type { ScoringProfilesCreate201Response } from '../models';
-// @ts-ignore
-import type { ScoringProfilesList200Response } from '../models';
-// @ts-ignore
-import type { SuccessEnvelope } from '../models';
+import type { ScoringProfile } from '../models';
 // @ts-ignore
 import type { UpdateScoringProfileRequest } from '../models';
 /**
@@ -335,7 +331,7 @@ export const ScoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsRescore(campaignId: string, body?: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SuccessEnvelope>> {
+        async campaignsRescore(campaignId: string, body?: object, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsRescore(campaignId, body, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ScoringApi.campaignsRescore']?.[localVarOperationServerIndex]?.url;
@@ -349,7 +345,7 @@ export const ScoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async campaignsScoringProfileAssociate(campaignId: string, associateScoringProfileRequest: AssociateScoringProfileRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SuccessEnvelope>> {
+        async campaignsScoringProfileAssociate(campaignId: string, associateScoringProfileRequest: AssociateScoringProfileRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.campaignsScoringProfileAssociate(campaignId, associateScoringProfileRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ScoringApi.campaignsScoringProfileAssociate']?.[localVarOperationServerIndex]?.url;
@@ -362,7 +358,7 @@ export const ScoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async scoringProfilesCreate(createScoringProfileRequest: CreateScoringProfileRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ScoringProfilesCreate201Response>> {
+        async scoringProfilesCreate(createScoringProfileRequest: CreateScoringProfileRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ScoringProfile>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.scoringProfilesCreate(createScoringProfileRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ScoringApi.scoringProfilesCreate']?.[localVarOperationServerIndex]?.url;
@@ -375,7 +371,7 @@ export const ScoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async scoringProfilesDelete(profileId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SuccessEnvelope>> {
+        async scoringProfilesDelete(profileId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.scoringProfilesDelete(profileId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ScoringApi.scoringProfilesDelete']?.[localVarOperationServerIndex]?.url;
@@ -388,7 +384,7 @@ export const ScoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async scoringProfilesGet(profileId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ScoringProfilesCreate201Response>> {
+        async scoringProfilesGet(profileId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ScoringProfile>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.scoringProfilesGet(profileId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ScoringApi.scoringProfilesGet']?.[localVarOperationServerIndex]?.url;
@@ -402,7 +398,7 @@ export const ScoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async scoringProfilesList(limit?: number, offset?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ScoringProfilesList200Response>> {
+        async scoringProfilesList(limit?: number, offset?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<ScoringProfile>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.scoringProfilesList(limit, offset, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ScoringApi.scoringProfilesList']?.[localVarOperationServerIndex]?.url;
@@ -416,7 +412,7 @@ export const ScoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async scoringProfilesUpdate(profileId: string, updateScoringProfileRequest: UpdateScoringProfileRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ScoringProfilesCreate201Response>> {
+        async scoringProfilesUpdate(profileId: string, updateScoringProfileRequest: UpdateScoringProfileRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ScoringProfile>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.scoringProfilesUpdate(profileId, updateScoringProfileRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ScoringApi.scoringProfilesUpdate']?.[localVarOperationServerIndex]?.url;
@@ -440,7 +436,7 @@ export const ScoringApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsRescore(campaignId: string, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<SuccessEnvelope> {
+        campaignsRescore(campaignId: string, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.campaignsRescore(campaignId, body, options).then((request) => request(axios, basePath));
         },
         /**
@@ -451,7 +447,7 @@ export const ScoringApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        campaignsScoringProfileAssociate(campaignId: string, associateScoringProfileRequest: AssociateScoringProfileRequest, options?: RawAxiosRequestConfig): AxiosPromise<SuccessEnvelope> {
+        campaignsScoringProfileAssociate(campaignId: string, associateScoringProfileRequest: AssociateScoringProfileRequest, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.campaignsScoringProfileAssociate(campaignId, associateScoringProfileRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -461,7 +457,7 @@ export const ScoringApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        scoringProfilesCreate(createScoringProfileRequest: CreateScoringProfileRequest, options?: RawAxiosRequestConfig): AxiosPromise<ScoringProfilesCreate201Response> {
+        scoringProfilesCreate(createScoringProfileRequest: CreateScoringProfileRequest, options?: RawAxiosRequestConfig): AxiosPromise<ScoringProfile> {
             return localVarFp.scoringProfilesCreate(createScoringProfileRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -471,7 +467,7 @@ export const ScoringApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        scoringProfilesDelete(profileId: string, options?: RawAxiosRequestConfig): AxiosPromise<SuccessEnvelope> {
+        scoringProfilesDelete(profileId: string, options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.scoringProfilesDelete(profileId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -481,7 +477,7 @@ export const ScoringApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        scoringProfilesGet(profileId: string, options?: RawAxiosRequestConfig): AxiosPromise<ScoringProfilesCreate201Response> {
+        scoringProfilesGet(profileId: string, options?: RawAxiosRequestConfig): AxiosPromise<ScoringProfile> {
             return localVarFp.scoringProfilesGet(profileId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -492,7 +488,7 @@ export const ScoringApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        scoringProfilesList(limit?: number, offset?: number, options?: RawAxiosRequestConfig): AxiosPromise<ScoringProfilesList200Response> {
+        scoringProfilesList(limit?: number, offset?: number, options?: RawAxiosRequestConfig): AxiosPromise<Array<ScoringProfile>> {
             return localVarFp.scoringProfilesList(limit, offset, options).then((request) => request(axios, basePath));
         },
         /**
@@ -503,7 +499,7 @@ export const ScoringApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        scoringProfilesUpdate(profileId: string, updateScoringProfileRequest: UpdateScoringProfileRequest, options?: RawAxiosRequestConfig): AxiosPromise<ScoringProfilesCreate201Response> {
+        scoringProfilesUpdate(profileId: string, updateScoringProfileRequest: UpdateScoringProfileRequest, options?: RawAxiosRequestConfig): AxiosPromise<ScoringProfile> {
             return localVarFp.scoringProfilesUpdate(profileId, updateScoringProfileRequest, options).then((request) => request(axios, basePath));
         },
     };
@@ -524,7 +520,7 @@ export interface ScoringApiInterface {
      * @throws {RequiredError}
      * @memberof ScoringApiInterface
      */
-    campaignsRescore(campaignId: string, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<SuccessEnvelope>;
+    campaignsRescore(campaignId: string, body?: object, options?: RawAxiosRequestConfig): AxiosPromise<void>;
 
     /**
      * 
@@ -535,7 +531,7 @@ export interface ScoringApiInterface {
      * @throws {RequiredError}
      * @memberof ScoringApiInterface
      */
-    campaignsScoringProfileAssociate(campaignId: string, associateScoringProfileRequest: AssociateScoringProfileRequest, options?: RawAxiosRequestConfig): AxiosPromise<SuccessEnvelope>;
+    campaignsScoringProfileAssociate(campaignId: string, associateScoringProfileRequest: AssociateScoringProfileRequest, options?: RawAxiosRequestConfig): AxiosPromise<void>;
 
     /**
      * 
@@ -545,7 +541,7 @@ export interface ScoringApiInterface {
      * @throws {RequiredError}
      * @memberof ScoringApiInterface
      */
-    scoringProfilesCreate(createScoringProfileRequest: CreateScoringProfileRequest, options?: RawAxiosRequestConfig): AxiosPromise<ScoringProfilesCreate201Response>;
+    scoringProfilesCreate(createScoringProfileRequest: CreateScoringProfileRequest, options?: RawAxiosRequestConfig): AxiosPromise<ScoringProfile>;
 
     /**
      * 
@@ -555,7 +551,7 @@ export interface ScoringApiInterface {
      * @throws {RequiredError}
      * @memberof ScoringApiInterface
      */
-    scoringProfilesDelete(profileId: string, options?: RawAxiosRequestConfig): AxiosPromise<SuccessEnvelope>;
+    scoringProfilesDelete(profileId: string, options?: RawAxiosRequestConfig): AxiosPromise<void>;
 
     /**
      * 
@@ -565,7 +561,7 @@ export interface ScoringApiInterface {
      * @throws {RequiredError}
      * @memberof ScoringApiInterface
      */
-    scoringProfilesGet(profileId: string, options?: RawAxiosRequestConfig): AxiosPromise<ScoringProfilesCreate201Response>;
+    scoringProfilesGet(profileId: string, options?: RawAxiosRequestConfig): AxiosPromise<ScoringProfile>;
 
     /**
      * 
@@ -576,7 +572,7 @@ export interface ScoringApiInterface {
      * @throws {RequiredError}
      * @memberof ScoringApiInterface
      */
-    scoringProfilesList(limit?: number, offset?: number, options?: RawAxiosRequestConfig): AxiosPromise<ScoringProfilesList200Response>;
+    scoringProfilesList(limit?: number, offset?: number, options?: RawAxiosRequestConfig): AxiosPromise<Array<ScoringProfile>>;
 
     /**
      * 
@@ -587,7 +583,7 @@ export interface ScoringApiInterface {
      * @throws {RequiredError}
      * @memberof ScoringApiInterface
      */
-    scoringProfilesUpdate(profileId: string, updateScoringProfileRequest: UpdateScoringProfileRequest, options?: RawAxiosRequestConfig): AxiosPromise<ScoringProfilesCreate201Response>;
+    scoringProfilesUpdate(profileId: string, updateScoringProfileRequest: UpdateScoringProfileRequest, options?: RawAxiosRequestConfig): AxiosPromise<ScoringProfile>;
 
 }
 

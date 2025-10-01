@@ -24,23 +24,15 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 // @ts-ignore
 import type { AuthConfig } from '../models';
 // @ts-ignore
-import type { ConfigGetAuth200Response } from '../models';
-// @ts-ignore
-import type { ConfigGetDns200Response } from '../models';
-// @ts-ignore
-import type { ConfigGetLogging200Response } from '../models';
-// @ts-ignore
-import type { ConfigGetRateLimiter200Response } from '../models';
-// @ts-ignore
 import type { ConfigGetStealth200Response } from '../models';
 // @ts-ignore
-import type { ConfigGetStealth200ResponseAllOfData } from '../models';
-// @ts-ignore
-import type { ConfigGetWorker200Response } from '../models';
+import type { ConfigUpdateStealthRequest } from '../models';
 // @ts-ignore
 import type { DNSValidatorConfigJSON } from '../models';
 // @ts-ignore
 import type { ErrorEnvelope } from '../models';
+// @ts-ignore
+import type { FeatureFlags } from '../models';
 // @ts-ignore
 import type { LoggingConfig } from '../models';
 // @ts-ignore
@@ -59,7 +51,7 @@ export const ServerSettingsApiAxiosParamCreator = function (configuration?: Conf
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        configGetAuth: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        configGetAuthentication: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/config/auth`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -87,12 +79,44 @@ export const ServerSettingsApiAxiosParamCreator = function (configuration?: Conf
         },
         /**
          * 
-         * @summary Get DNS configuration
+         * @summary Get DNS validator configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        configGetDns: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        configGetDnsValidator: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/config/dns`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication cookieAuth required
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary Get feature flags configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        configGetFeatures: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/config/features`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -279,7 +303,7 @@ export const ServerSettingsApiAxiosParamCreator = function (configuration?: Conf
         },
         /**
          * 
-         * @summary Get stealth configuration
+         * @summary Get stealth mode configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -348,9 +372,9 @@ export const ServerSettingsApiAxiosParamCreator = function (configuration?: Conf
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        configUpdateAuth: async (authConfig: AuthConfig, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        configUpdateAuthentication: async (authConfig: AuthConfig, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'authConfig' is not null or undefined
-            assertParamExists('configUpdateAuth', 'authConfig', authConfig)
+            assertParamExists('configUpdateAuthentication', 'authConfig', authConfig)
             const localVarPath = `/config/auth`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -381,14 +405,14 @@ export const ServerSettingsApiAxiosParamCreator = function (configuration?: Conf
         },
         /**
          * 
-         * @summary Update DNS configuration
+         * @summary Update DNS validator configuration
          * @param {DNSValidatorConfigJSON} dNSValidatorConfigJSON 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        configUpdateDns: async (dNSValidatorConfigJSON: DNSValidatorConfigJSON, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        configUpdateDnsValidator: async (dNSValidatorConfigJSON: DNSValidatorConfigJSON, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'dNSValidatorConfigJSON' is not null or undefined
-            assertParamExists('configUpdateDns', 'dNSValidatorConfigJSON', dNSValidatorConfigJSON)
+            assertParamExists('configUpdateDnsValidator', 'dNSValidatorConfigJSON', dNSValidatorConfigJSON)
             const localVarPath = `/config/dns`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -609,14 +633,14 @@ export const ServerSettingsApiAxiosParamCreator = function (configuration?: Conf
         },
         /**
          * 
-         * @summary Update stealth configuration
-         * @param {ConfigGetStealth200ResponseAllOfData} configGetStealth200ResponseAllOfData 
+         * @summary Update stealth mode configuration
+         * @param {ConfigUpdateStealthRequest} configUpdateStealthRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        configUpdateStealth: async (configGetStealth200ResponseAllOfData: ConfigGetStealth200ResponseAllOfData, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'configGetStealth200ResponseAllOfData' is not null or undefined
-            assertParamExists('configUpdateStealth', 'configGetStealth200ResponseAllOfData', configGetStealth200ResponseAllOfData)
+        configUpdateStealth: async (configUpdateStealthRequest: ConfigUpdateStealthRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'configUpdateStealthRequest' is not null or undefined
+            assertParamExists('configUpdateStealth', 'configUpdateStealthRequest', configUpdateStealthRequest)
             const localVarPath = `/config/stealth`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -638,7 +662,7 @@ export const ServerSettingsApiAxiosParamCreator = function (configuration?: Conf
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(configGetStealth200ResponseAllOfData, localVarRequestOptions, configuration)
+            localVarRequestOptions.data = serializeDataIfNeeded(configUpdateStealthRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -699,22 +723,34 @@ export const ServerSettingsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async configGetAuth(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigGetAuth200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.configGetAuth(options);
+        async configGetAuthentication(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthConfig>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.configGetAuthentication(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.configGetAuth']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.configGetAuthentication']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @summary Get DNS configuration
+         * @summary Get DNS validator configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async configGetDns(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigGetDns200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.configGetDns(options);
+        async configGetDnsValidator(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DNSValidatorConfigJSON>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.configGetDnsValidator(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.configGetDns']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.configGetDnsValidator']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary Get feature flags configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async configGetFeatures(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<FeatureFlags>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.configGetFeatures(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.configGetFeatures']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -735,7 +771,7 @@ export const ServerSettingsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async configGetLogging(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigGetLogging200Response>> {
+        async configGetLogging(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LoggingConfig>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.configGetLogging(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.configGetLogging']?.[localVarOperationServerIndex]?.url;
@@ -759,7 +795,7 @@ export const ServerSettingsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async configGetRateLimiter(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigGetRateLimiter200Response>> {
+        async configGetRateLimiter(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<RateLimiterConfig>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.configGetRateLimiter(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.configGetRateLimiter']?.[localVarOperationServerIndex]?.url;
@@ -779,7 +815,7 @@ export const ServerSettingsApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @summary Get stealth configuration
+         * @summary Get stealth mode configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -795,7 +831,7 @@ export const ServerSettingsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async configGetWorker(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigGetWorker200Response>> {
+        async configGetWorker(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<WorkerConfig>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.configGetWorker(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.configGetWorker']?.[localVarOperationServerIndex]?.url;
@@ -808,23 +844,23 @@ export const ServerSettingsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async configUpdateAuth(authConfig: AuthConfig, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigGetAuth200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.configUpdateAuth(authConfig, options);
+        async configUpdateAuthentication(authConfig: AuthConfig, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthConfig>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.configUpdateAuthentication(authConfig, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.configUpdateAuth']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.configUpdateAuthentication']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @summary Update DNS configuration
+         * @summary Update DNS validator configuration
          * @param {DNSValidatorConfigJSON} dNSValidatorConfigJSON 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async configUpdateDns(dNSValidatorConfigJSON: DNSValidatorConfigJSON, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigGetDns200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.configUpdateDns(dNSValidatorConfigJSON, options);
+        async configUpdateDnsValidator(dNSValidatorConfigJSON: DNSValidatorConfigJSON, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DNSValidatorConfigJSON>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.configUpdateDnsValidator(dNSValidatorConfigJSON, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.configUpdateDns']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.configUpdateDnsValidator']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -847,7 +883,7 @@ export const ServerSettingsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async configUpdateLogging(loggingConfig: LoggingConfig, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigGetLogging200Response>> {
+        async configUpdateLogging(loggingConfig: LoggingConfig, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<LoggingConfig>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.configUpdateLogging(loggingConfig, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.configUpdateLogging']?.[localVarOperationServerIndex]?.url;
@@ -873,7 +909,7 @@ export const ServerSettingsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async configUpdateRateLimiter(rateLimiterConfig: RateLimiterConfig, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigGetRateLimiter200Response>> {
+        async configUpdateRateLimiter(rateLimiterConfig: RateLimiterConfig, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<RateLimiterConfig>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.configUpdateRateLimiter(rateLimiterConfig, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.configUpdateRateLimiter']?.[localVarOperationServerIndex]?.url;
@@ -894,13 +930,13 @@ export const ServerSettingsApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
-         * @summary Update stealth configuration
-         * @param {ConfigGetStealth200ResponseAllOfData} configGetStealth200ResponseAllOfData 
+         * @summary Update stealth mode configuration
+         * @param {ConfigUpdateStealthRequest} configUpdateStealthRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async configUpdateStealth(configGetStealth200ResponseAllOfData: ConfigGetStealth200ResponseAllOfData, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigGetStealth200Response>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.configUpdateStealth(configGetStealth200ResponseAllOfData, options);
+        async configUpdateStealth(configUpdateStealthRequest: ConfigUpdateStealthRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigGetStealth200Response>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.configUpdateStealth(configUpdateStealthRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.configUpdateStealth']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
@@ -912,7 +948,7 @@ export const ServerSettingsApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async configUpdateWorker(workerConfig: WorkerConfig, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ConfigGetWorker200Response>> {
+        async configUpdateWorker(workerConfig: WorkerConfig, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<WorkerConfig>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.configUpdateWorker(workerConfig, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['ServerSettingsApi.configUpdateWorker']?.[localVarOperationServerIndex]?.url;
@@ -934,17 +970,26 @@ export const ServerSettingsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        configGetAuth(options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetAuth200Response> {
-            return localVarFp.configGetAuth(options).then((request) => request(axios, basePath));
+        configGetAuthentication(options?: RawAxiosRequestConfig): AxiosPromise<AuthConfig> {
+            return localVarFp.configGetAuthentication(options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @summary Get DNS configuration
+         * @summary Get DNS validator configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        configGetDns(options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetDns200Response> {
-            return localVarFp.configGetDns(options).then((request) => request(axios, basePath));
+        configGetDnsValidator(options?: RawAxiosRequestConfig): AxiosPromise<DNSValidatorConfigJSON> {
+            return localVarFp.configGetDnsValidator(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary Get feature flags configuration
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        configGetFeatures(options?: RawAxiosRequestConfig): AxiosPromise<FeatureFlags> {
+            return localVarFp.configGetFeatures(options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -961,7 +1006,7 @@ export const ServerSettingsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        configGetLogging(options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetLogging200Response> {
+        configGetLogging(options?: RawAxiosRequestConfig): AxiosPromise<LoggingConfig> {
             return localVarFp.configGetLogging(options).then((request) => request(axios, basePath));
         },
         /**
@@ -979,7 +1024,7 @@ export const ServerSettingsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        configGetRateLimiter(options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetRateLimiter200Response> {
+        configGetRateLimiter(options?: RawAxiosRequestConfig): AxiosPromise<RateLimiterConfig> {
             return localVarFp.configGetRateLimiter(options).then((request) => request(axios, basePath));
         },
         /**
@@ -993,7 +1038,7 @@ export const ServerSettingsApiFactory = function (configuration?: Configuration,
         },
         /**
          * 
-         * @summary Get stealth configuration
+         * @summary Get stealth mode configuration
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
@@ -1006,7 +1051,7 @@ export const ServerSettingsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        configGetWorker(options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetWorker200Response> {
+        configGetWorker(options?: RawAxiosRequestConfig): AxiosPromise<WorkerConfig> {
             return localVarFp.configGetWorker(options).then((request) => request(axios, basePath));
         },
         /**
@@ -1016,18 +1061,18 @@ export const ServerSettingsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        configUpdateAuth(authConfig: AuthConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetAuth200Response> {
-            return localVarFp.configUpdateAuth(authConfig, options).then((request) => request(axios, basePath));
+        configUpdateAuthentication(authConfig: AuthConfig, options?: RawAxiosRequestConfig): AxiosPromise<AuthConfig> {
+            return localVarFp.configUpdateAuthentication(authConfig, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @summary Update DNS configuration
+         * @summary Update DNS validator configuration
          * @param {DNSValidatorConfigJSON} dNSValidatorConfigJSON 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        configUpdateDns(dNSValidatorConfigJSON: DNSValidatorConfigJSON, options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetDns200Response> {
-            return localVarFp.configUpdateDns(dNSValidatorConfigJSON, options).then((request) => request(axios, basePath));
+        configUpdateDnsValidator(dNSValidatorConfigJSON: DNSValidatorConfigJSON, options?: RawAxiosRequestConfig): AxiosPromise<DNSValidatorConfigJSON> {
+            return localVarFp.configUpdateDnsValidator(dNSValidatorConfigJSON, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1046,7 +1091,7 @@ export const ServerSettingsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        configUpdateLogging(loggingConfig: LoggingConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetLogging200Response> {
+        configUpdateLogging(loggingConfig: LoggingConfig, options?: RawAxiosRequestConfig): AxiosPromise<LoggingConfig> {
             return localVarFp.configUpdateLogging(loggingConfig, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1066,7 +1111,7 @@ export const ServerSettingsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        configUpdateRateLimiter(rateLimiterConfig: RateLimiterConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetRateLimiter200Response> {
+        configUpdateRateLimiter(rateLimiterConfig: RateLimiterConfig, options?: RawAxiosRequestConfig): AxiosPromise<RateLimiterConfig> {
             return localVarFp.configUpdateRateLimiter(rateLimiterConfig, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1081,13 +1126,13 @@ export const ServerSettingsApiFactory = function (configuration?: Configuration,
         },
         /**
          * 
-         * @summary Update stealth configuration
-         * @param {ConfigGetStealth200ResponseAllOfData} configGetStealth200ResponseAllOfData 
+         * @summary Update stealth mode configuration
+         * @param {ConfigUpdateStealthRequest} configUpdateStealthRequest 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        configUpdateStealth(configGetStealth200ResponseAllOfData: ConfigGetStealth200ResponseAllOfData, options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetStealth200Response> {
-            return localVarFp.configUpdateStealth(configGetStealth200ResponseAllOfData, options).then((request) => request(axios, basePath));
+        configUpdateStealth(configUpdateStealthRequest: ConfigUpdateStealthRequest, options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetStealth200Response> {
+            return localVarFp.configUpdateStealth(configUpdateStealthRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1096,7 +1141,7 @@ export const ServerSettingsApiFactory = function (configuration?: Configuration,
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        configUpdateWorker(workerConfig: WorkerConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetWorker200Response> {
+        configUpdateWorker(workerConfig: WorkerConfig, options?: RawAxiosRequestConfig): AxiosPromise<WorkerConfig> {
             return localVarFp.configUpdateWorker(workerConfig, options).then((request) => request(axios, basePath));
         },
     };
@@ -1115,16 +1160,25 @@ export interface ServerSettingsApiInterface {
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    configGetAuth(options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetAuth200Response>;
+    configGetAuthentication(options?: RawAxiosRequestConfig): AxiosPromise<AuthConfig>;
 
     /**
      * 
-     * @summary Get DNS configuration
+     * @summary Get DNS validator configuration
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    configGetDns(options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetDns200Response>;
+    configGetDnsValidator(options?: RawAxiosRequestConfig): AxiosPromise<DNSValidatorConfigJSON>;
+
+    /**
+     * 
+     * @summary Get feature flags configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ServerSettingsApiInterface
+     */
+    configGetFeatures(options?: RawAxiosRequestConfig): AxiosPromise<FeatureFlags>;
 
     /**
      * 
@@ -1142,7 +1196,7 @@ export interface ServerSettingsApiInterface {
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    configGetLogging(options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetLogging200Response>;
+    configGetLogging(options?: RawAxiosRequestConfig): AxiosPromise<LoggingConfig>;
 
     /**
      * 
@@ -1160,7 +1214,7 @@ export interface ServerSettingsApiInterface {
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    configGetRateLimiter(options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetRateLimiter200Response>;
+    configGetRateLimiter(options?: RawAxiosRequestConfig): AxiosPromise<RateLimiterConfig>;
 
     /**
      * 
@@ -1173,7 +1227,7 @@ export interface ServerSettingsApiInterface {
 
     /**
      * 
-     * @summary Get stealth configuration
+     * @summary Get stealth mode configuration
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
@@ -1187,7 +1241,7 @@ export interface ServerSettingsApiInterface {
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    configGetWorker(options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetWorker200Response>;
+    configGetWorker(options?: RawAxiosRequestConfig): AxiosPromise<WorkerConfig>;
 
     /**
      * 
@@ -1197,17 +1251,17 @@ export interface ServerSettingsApiInterface {
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    configUpdateAuth(authConfig: AuthConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetAuth200Response>;
+    configUpdateAuthentication(authConfig: AuthConfig, options?: RawAxiosRequestConfig): AxiosPromise<AuthConfig>;
 
     /**
      * 
-     * @summary Update DNS configuration
+     * @summary Update DNS validator configuration
      * @param {DNSValidatorConfigJSON} dNSValidatorConfigJSON 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    configUpdateDns(dNSValidatorConfigJSON: DNSValidatorConfigJSON, options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetDns200Response>;
+    configUpdateDnsValidator(dNSValidatorConfigJSON: DNSValidatorConfigJSON, options?: RawAxiosRequestConfig): AxiosPromise<DNSValidatorConfigJSON>;
 
     /**
      * 
@@ -1227,7 +1281,7 @@ export interface ServerSettingsApiInterface {
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    configUpdateLogging(loggingConfig: LoggingConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetLogging200Response>;
+    configUpdateLogging(loggingConfig: LoggingConfig, options?: RawAxiosRequestConfig): AxiosPromise<LoggingConfig>;
 
     /**
      * 
@@ -1247,7 +1301,7 @@ export interface ServerSettingsApiInterface {
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    configUpdateRateLimiter(rateLimiterConfig: RateLimiterConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetRateLimiter200Response>;
+    configUpdateRateLimiter(rateLimiterConfig: RateLimiterConfig, options?: RawAxiosRequestConfig): AxiosPromise<RateLimiterConfig>;
 
     /**
      * 
@@ -1261,13 +1315,13 @@ export interface ServerSettingsApiInterface {
 
     /**
      * 
-     * @summary Update stealth configuration
-     * @param {ConfigGetStealth200ResponseAllOfData} configGetStealth200ResponseAllOfData 
+     * @summary Update stealth mode configuration
+     * @param {ConfigUpdateStealthRequest} configUpdateStealthRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    configUpdateStealth(configGetStealth200ResponseAllOfData: ConfigGetStealth200ResponseAllOfData, options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetStealth200Response>;
+    configUpdateStealth(configUpdateStealthRequest: ConfigUpdateStealthRequest, options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetStealth200Response>;
 
     /**
      * 
@@ -1277,7 +1331,7 @@ export interface ServerSettingsApiInterface {
      * @throws {RequiredError}
      * @memberof ServerSettingsApiInterface
      */
-    configUpdateWorker(workerConfig: WorkerConfig, options?: RawAxiosRequestConfig): AxiosPromise<ConfigGetWorker200Response>;
+    configUpdateWorker(workerConfig: WorkerConfig, options?: RawAxiosRequestConfig): AxiosPromise<WorkerConfig>;
 
 }
 
@@ -1295,19 +1349,30 @@ export class ServerSettingsApi extends BaseAPI implements ServerSettingsApiInter
      * @throws {RequiredError}
      * @memberof ServerSettingsApi
      */
-    public configGetAuth(options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).configGetAuth(options).then((request) => request(this.axios, this.basePath));
+    public configGetAuthentication(options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).configGetAuthentication(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @summary Get DNS configuration
+     * @summary Get DNS validator configuration
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ServerSettingsApi
      */
-    public configGetDns(options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).configGetDns(options).then((request) => request(this.axios, this.basePath));
+    public configGetDnsValidator(options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).configGetDnsValidator(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary Get feature flags configuration
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof ServerSettingsApi
+     */
+    public configGetFeatures(options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).configGetFeatures(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1367,7 +1432,7 @@ export class ServerSettingsApi extends BaseAPI implements ServerSettingsApiInter
 
     /**
      * 
-     * @summary Get stealth configuration
+     * @summary Get stealth mode configuration
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ServerSettingsApi
@@ -1395,20 +1460,20 @@ export class ServerSettingsApi extends BaseAPI implements ServerSettingsApiInter
      * @throws {RequiredError}
      * @memberof ServerSettingsApi
      */
-    public configUpdateAuth(authConfig: AuthConfig, options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).configUpdateAuth(authConfig, options).then((request) => request(this.axios, this.basePath));
+    public configUpdateAuthentication(authConfig: AuthConfig, options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).configUpdateAuthentication(authConfig, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @summary Update DNS configuration
+     * @summary Update DNS validator configuration
      * @param {DNSValidatorConfigJSON} dNSValidatorConfigJSON 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ServerSettingsApi
      */
-    public configUpdateDns(dNSValidatorConfigJSON: DNSValidatorConfigJSON, options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).configUpdateDns(dNSValidatorConfigJSON, options).then((request) => request(this.axios, this.basePath));
+    public configUpdateDnsValidator(dNSValidatorConfigJSON: DNSValidatorConfigJSON, options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).configUpdateDnsValidator(dNSValidatorConfigJSON, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1473,14 +1538,14 @@ export class ServerSettingsApi extends BaseAPI implements ServerSettingsApiInter
 
     /**
      * 
-     * @summary Update stealth configuration
-     * @param {ConfigGetStealth200ResponseAllOfData} configGetStealth200ResponseAllOfData 
+     * @summary Update stealth mode configuration
+     * @param {ConfigUpdateStealthRequest} configUpdateStealthRequest 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof ServerSettingsApi
      */
-    public configUpdateStealth(configGetStealth200ResponseAllOfData: ConfigGetStealth200ResponseAllOfData, options?: RawAxiosRequestConfig) {
-        return ServerSettingsApiFp(this.configuration).configUpdateStealth(configGetStealth200ResponseAllOfData, options).then((request) => request(this.axios, this.basePath));
+    public configUpdateStealth(configUpdateStealthRequest: ConfigUpdateStealthRequest, options?: RawAxiosRequestConfig) {
+        return ServerSettingsApiFp(this.configuration).configUpdateStealth(configUpdateStealthRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

@@ -1,5 +1,4 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { extractResponseData } from '../../lib/utils/apiResponseHelpers';
 
 // Types for the monitoring system we just built
 export interface ResourceMetrics {
@@ -65,20 +64,14 @@ export const monitoringApi = createApi({
     // Health endpoint - matches /api/v2/monitoring/health
     getSystemHealth: builder.query<SystemHealth, void>({
       query: () => '/health',
-      transformResponse: (response: any) => {
-        const data = extractResponseData<SystemHealth>(response);
-        return data as SystemHealth;
-      },
+      transformResponse: (response: any) => (response?.data ?? response) as SystemHealth,
       providesTags: ['MonitoringHealth'],
     }),
 
     // Resource stats - matches /api/v2/monitoring/stats
     getResourceMetrics: builder.query<ResourceMetrics, void>({
       query: () => '/stats',
-      transformResponse: (response: any) => {
-        const data = extractResponseData<ResourceMetrics>(response);
-        return data as ResourceMetrics;
-      },
+      transformResponse: (response: any) => (response?.data ?? response) as ResourceMetrics,
       providesTags: ['ResourceMetrics'],
     }),
 
@@ -95,10 +88,7 @@ export const monitoringApi = createApi({
     // Campaign-specific monitoring - matches /api/v2/monitoring/campaigns/:id
     getCampaignMetrics: builder.query<CampaignResourceMetrics, string>({
       query: (campaignId) => `/campaigns/${campaignId}`,
-      transformResponse: (response: any) => {
-        const data = extractResponseData<CampaignResourceMetrics>(response);
-        return data as CampaignResourceMetrics;
-      },
+      transformResponse: (response: any) => (response?.data ?? response) as CampaignResourceMetrics,
       providesTags: (_result, _error, campaignId) => [
         { type: 'ResourceMetrics', id: campaignId }
       ],
@@ -107,10 +97,7 @@ export const monitoringApi = createApi({
     // Cleanup status - matches /api/v2/monitoring/cleanup/status
     getCleanupStatus: builder.query<CleanupStatus, void>({
       query: () => '/cleanup/status',
-      transformResponse: (response: any) => {
-        const data = extractResponseData<CleanupStatus>(response);
-        return data as CleanupStatus;
-      },
+      transformResponse: (response: any) => (response?.data ?? response) as CleanupStatus,
       providesTags: ['CleanupStatus'],
     }),
 
@@ -120,10 +107,7 @@ export const monitoringApi = createApi({
         url: `/cleanup/force/${campaignId}`,
         method: 'POST',
       }),
-      transformResponse: (response: any) => {
-        const data = extractResponseData<{ message: string }>(response);
-        return (data || { message: 'OK' }) as { message: string };
-      },
+      transformResponse: (response: any) => ((response?.data ?? response) || { message: 'OK' }) as { message: string },
       invalidatesTags: ['CleanupStatus'],
     }),
 

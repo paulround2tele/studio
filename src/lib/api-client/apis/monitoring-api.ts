@@ -25,8 +25,6 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 import type { ErrorEnvelope } from '../models';
 // @ts-ignore
 import type { MonitoringCampaignLimitsRequest } from '../models';
-// @ts-ignore
-import type { MonitoringPerformanceSlow200Response } from '../models';
 /**
  * MonitoringApi - axios parameter creator
  * @export
@@ -688,7 +686,7 @@ export const MonitoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async monitoringCampaignGeneric(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MonitoringPerformanceSlow200Response>> {
+        async monitoringCampaignGeneric(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.monitoringCampaignGeneric(campaignId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['MonitoringApi.monitoringCampaignGeneric']?.[localVarOperationServerIndex]?.url;
@@ -701,7 +699,7 @@ export const MonitoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async monitoringCampaignHealth(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MonitoringPerformanceSlow200Response>> {
+        async monitoringCampaignHealth(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.monitoringCampaignHealth(campaignId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['MonitoringApi.monitoringCampaignHealth']?.[localVarOperationServerIndex]?.url;
@@ -728,7 +726,7 @@ export const MonitoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async monitoringCampaignPerformance(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MonitoringPerformanceSlow200Response>> {
+        async monitoringCampaignPerformance(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.monitoringCampaignPerformance(campaignId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['MonitoringApi.monitoringCampaignPerformance']?.[localVarOperationServerIndex]?.url;
@@ -741,7 +739,7 @@ export const MonitoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async monitoringCampaignResources(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MonitoringPerformanceSlow200Response>> {
+        async monitoringCampaignResources(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.monitoringCampaignResources(campaignId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['MonitoringApi.monitoringCampaignResources']?.[localVarOperationServerIndex]?.url;
@@ -790,7 +788,7 @@ export const MonitoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async monitoringHealth(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MonitoringPerformanceSlow200Response>> {
+        async monitoringHealth(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.monitoringHealth(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['MonitoringApi.monitoringHealth']?.[localVarOperationServerIndex]?.url;
@@ -814,7 +812,7 @@ export const MonitoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async monitoringPerformanceFailed(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MonitoringPerformanceSlow200Response>> {
+        async monitoringPerformanceFailed(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.monitoringPerformanceFailed(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['MonitoringApi.monitoringPerformanceFailed']?.[localVarOperationServerIndex]?.url;
@@ -826,7 +824,7 @@ export const MonitoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async monitoringPerformanceMetrics(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MonitoringPerformanceSlow200Response>> {
+        async monitoringPerformanceMetrics(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.monitoringPerformanceMetrics(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['MonitoringApi.monitoringPerformanceMetrics']?.[localVarOperationServerIndex]?.url;
@@ -838,7 +836,7 @@ export const MonitoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async monitoringPerformanceSlow(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MonitoringPerformanceSlow200Response>> {
+        async monitoringPerformanceSlow(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.monitoringPerformanceSlow(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['MonitoringApi.monitoringPerformanceSlow']?.[localVarOperationServerIndex]?.url;
@@ -862,7 +860,7 @@ export const MonitoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async monitoringPerformanceTrends(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MonitoringPerformanceSlow200Response>> {
+        async monitoringPerformanceTrends(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.monitoringPerformanceTrends(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['MonitoringApi.monitoringPerformanceTrends']?.[localVarOperationServerIndex]?.url;
@@ -874,7 +872,7 @@ export const MonitoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async monitoringResourcesAlerts(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MonitoringPerformanceSlow200Response>> {
+        async monitoringResourcesAlerts(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.monitoringResourcesAlerts(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['MonitoringApi.monitoringResourcesAlerts']?.[localVarOperationServerIndex]?.url;
@@ -886,7 +884,7 @@ export const MonitoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async monitoringResourcesHistory(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MonitoringPerformanceSlow200Response>> {
+        async monitoringResourcesHistory(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.monitoringResourcesHistory(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['MonitoringApi.monitoringResourcesHistory']?.[localVarOperationServerIndex]?.url;
@@ -898,7 +896,7 @@ export const MonitoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async monitoringResourcesSystem(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MonitoringPerformanceSlow200Response>> {
+        async monitoringResourcesSystem(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.monitoringResourcesSystem(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['MonitoringApi.monitoringResourcesSystem']?.[localVarOperationServerIndex]?.url;
@@ -910,7 +908,7 @@ export const MonitoringApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async monitoringStats(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MonitoringPerformanceSlow200Response>> {
+        async monitoringStats(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<object>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.monitoringStats(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['MonitoringApi.monitoringStats']?.[localVarOperationServerIndex]?.url;
@@ -933,7 +931,7 @@ export const MonitoringApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        monitoringCampaignGeneric(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response> {
+        monitoringCampaignGeneric(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<object> {
             return localVarFp.monitoringCampaignGeneric(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -943,7 +941,7 @@ export const MonitoringApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        monitoringCampaignHealth(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response> {
+        monitoringCampaignHealth(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<object> {
             return localVarFp.monitoringCampaignHealth(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -964,7 +962,7 @@ export const MonitoringApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        monitoringCampaignPerformance(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response> {
+        monitoringCampaignPerformance(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<object> {
             return localVarFp.monitoringCampaignPerformance(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -974,7 +972,7 @@ export const MonitoringApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        monitoringCampaignResources(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response> {
+        monitoringCampaignResources(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<object> {
             return localVarFp.monitoringCampaignResources(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1011,7 +1009,7 @@ export const MonitoringApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        monitoringHealth(options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response> {
+        monitoringHealth(options?: RawAxiosRequestConfig): AxiosPromise<object> {
             return localVarFp.monitoringHealth(options).then((request) => request(axios, basePath));
         },
         /**
@@ -1029,7 +1027,7 @@ export const MonitoringApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        monitoringPerformanceFailed(options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response> {
+        monitoringPerformanceFailed(options?: RawAxiosRequestConfig): AxiosPromise<object> {
             return localVarFp.monitoringPerformanceFailed(options).then((request) => request(axios, basePath));
         },
         /**
@@ -1038,7 +1036,7 @@ export const MonitoringApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        monitoringPerformanceMetrics(options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response> {
+        monitoringPerformanceMetrics(options?: RawAxiosRequestConfig): AxiosPromise<object> {
             return localVarFp.monitoringPerformanceMetrics(options).then((request) => request(axios, basePath));
         },
         /**
@@ -1047,7 +1045,7 @@ export const MonitoringApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        monitoringPerformanceSlow(options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response> {
+        monitoringPerformanceSlow(options?: RawAxiosRequestConfig): AxiosPromise<object> {
             return localVarFp.monitoringPerformanceSlow(options).then((request) => request(axios, basePath));
         },
         /**
@@ -1065,7 +1063,7 @@ export const MonitoringApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        monitoringPerformanceTrends(options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response> {
+        monitoringPerformanceTrends(options?: RawAxiosRequestConfig): AxiosPromise<object> {
             return localVarFp.monitoringPerformanceTrends(options).then((request) => request(axios, basePath));
         },
         /**
@@ -1074,7 +1072,7 @@ export const MonitoringApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        monitoringResourcesAlerts(options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response> {
+        monitoringResourcesAlerts(options?: RawAxiosRequestConfig): AxiosPromise<object> {
             return localVarFp.monitoringResourcesAlerts(options).then((request) => request(axios, basePath));
         },
         /**
@@ -1083,7 +1081,7 @@ export const MonitoringApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        monitoringResourcesHistory(options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response> {
+        monitoringResourcesHistory(options?: RawAxiosRequestConfig): AxiosPromise<object> {
             return localVarFp.monitoringResourcesHistory(options).then((request) => request(axios, basePath));
         },
         /**
@@ -1092,7 +1090,7 @@ export const MonitoringApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        monitoringResourcesSystem(options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response> {
+        monitoringResourcesSystem(options?: RawAxiosRequestConfig): AxiosPromise<object> {
             return localVarFp.monitoringResourcesSystem(options).then((request) => request(axios, basePath));
         },
         /**
@@ -1101,7 +1099,7 @@ export const MonitoringApiFactory = function (configuration?: Configuration, bas
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        monitoringStats(options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response> {
+        monitoringStats(options?: RawAxiosRequestConfig): AxiosPromise<object> {
             return localVarFp.monitoringStats(options).then((request) => request(axios, basePath));
         },
     };
@@ -1121,7 +1119,7 @@ export interface MonitoringApiInterface {
      * @throws {RequiredError}
      * @memberof MonitoringApiInterface
      */
-    monitoringCampaignGeneric(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response>;
+    monitoringCampaignGeneric(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<object>;
 
     /**
      * 
@@ -1131,7 +1129,7 @@ export interface MonitoringApiInterface {
      * @throws {RequiredError}
      * @memberof MonitoringApiInterface
      */
-    monitoringCampaignHealth(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response>;
+    monitoringCampaignHealth(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<object>;
 
     /**
      * 
@@ -1152,7 +1150,7 @@ export interface MonitoringApiInterface {
      * @throws {RequiredError}
      * @memberof MonitoringApiInterface
      */
-    monitoringCampaignPerformance(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response>;
+    monitoringCampaignPerformance(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<object>;
 
     /**
      * 
@@ -1162,7 +1160,7 @@ export interface MonitoringApiInterface {
      * @throws {RequiredError}
      * @memberof MonitoringApiInterface
      */
-    monitoringCampaignResources(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response>;
+    monitoringCampaignResources(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<object>;
 
     /**
      * 
@@ -1199,7 +1197,7 @@ export interface MonitoringApiInterface {
      * @throws {RequiredError}
      * @memberof MonitoringApiInterface
      */
-    monitoringHealth(options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response>;
+    monitoringHealth(options?: RawAxiosRequestConfig): AxiosPromise<object>;
 
     /**
      * 
@@ -1217,7 +1215,7 @@ export interface MonitoringApiInterface {
      * @throws {RequiredError}
      * @memberof MonitoringApiInterface
      */
-    monitoringPerformanceFailed(options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response>;
+    monitoringPerformanceFailed(options?: RawAxiosRequestConfig): AxiosPromise<object>;
 
     /**
      * 
@@ -1226,7 +1224,7 @@ export interface MonitoringApiInterface {
      * @throws {RequiredError}
      * @memberof MonitoringApiInterface
      */
-    monitoringPerformanceMetrics(options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response>;
+    monitoringPerformanceMetrics(options?: RawAxiosRequestConfig): AxiosPromise<object>;
 
     /**
      * 
@@ -1235,7 +1233,7 @@ export interface MonitoringApiInterface {
      * @throws {RequiredError}
      * @memberof MonitoringApiInterface
      */
-    monitoringPerformanceSlow(options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response>;
+    monitoringPerformanceSlow(options?: RawAxiosRequestConfig): AxiosPromise<object>;
 
     /**
      * 
@@ -1253,7 +1251,7 @@ export interface MonitoringApiInterface {
      * @throws {RequiredError}
      * @memberof MonitoringApiInterface
      */
-    monitoringPerformanceTrends(options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response>;
+    monitoringPerformanceTrends(options?: RawAxiosRequestConfig): AxiosPromise<object>;
 
     /**
      * 
@@ -1262,7 +1260,7 @@ export interface MonitoringApiInterface {
      * @throws {RequiredError}
      * @memberof MonitoringApiInterface
      */
-    monitoringResourcesAlerts(options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response>;
+    monitoringResourcesAlerts(options?: RawAxiosRequestConfig): AxiosPromise<object>;
 
     /**
      * 
@@ -1271,7 +1269,7 @@ export interface MonitoringApiInterface {
      * @throws {RequiredError}
      * @memberof MonitoringApiInterface
      */
-    monitoringResourcesHistory(options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response>;
+    monitoringResourcesHistory(options?: RawAxiosRequestConfig): AxiosPromise<object>;
 
     /**
      * 
@@ -1280,7 +1278,7 @@ export interface MonitoringApiInterface {
      * @throws {RequiredError}
      * @memberof MonitoringApiInterface
      */
-    monitoringResourcesSystem(options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response>;
+    monitoringResourcesSystem(options?: RawAxiosRequestConfig): AxiosPromise<object>;
 
     /**
      * 
@@ -1289,7 +1287,7 @@ export interface MonitoringApiInterface {
      * @throws {RequiredError}
      * @memberof MonitoringApiInterface
      */
-    monitoringStats(options?: RawAxiosRequestConfig): AxiosPromise<MonitoringPerformanceSlow200Response>;
+    monitoringStats(options?: RawAxiosRequestConfig): AxiosPromise<object>;
 
 }
 

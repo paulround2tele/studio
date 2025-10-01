@@ -1,7 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { ScoringApi } from '@/lib/api-client/apis/scoring-api';
 import { apiConfiguration } from '@/lib/api/config';
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 import { toRtkError } from '@/lib/utils/toRtkError';
 
 // Instantiate generated client
@@ -16,8 +15,8 @@ export const scoringApi = createApi({
       queryFn: async () => {
         try {
           const resp = await (scoringClient as any).scoringProfilesList();
-          const data = extractResponseData<any>(resp) || { items: [] };
-          return { data };
+          const data = (resp?.data ?? resp) || { items: [] };
+          return { data: data || { items: [] } };
         } catch (e: any) { return { error: toRtkError(e) as any }; }
       },
       providesTags: ['ScoringProfiles']
@@ -26,7 +25,7 @@ export const scoringApi = createApi({
       queryFn: async (profileId) => {
         try {
           const resp = await (scoringClient as any).scoringProfilesGet(profileId);
-          const data = extractResponseData<any>(resp);
+          const data = resp?.data ?? resp;
           if (!data) return { error: 'Profile not found' as any };
           return { data };
         } catch (e: any) { return { error: toRtkError(e) as any }; }
@@ -37,7 +36,7 @@ export const scoringApi = createApi({
       queryFn: async (payload) => {
         try {
           const resp = await (scoringClient as any).scoringProfilesCreate(payload);
-          const data = extractResponseData<any>(resp);
+          const data = resp?.data ?? resp;
           if (!data) return { error: 'Create failed' as any };
           return { data };
         } catch (e: any) { return { error: toRtkError(e) as any }; }
@@ -48,7 +47,7 @@ export const scoringApi = createApi({
       queryFn: async ({ profileId, body }) => {
         try {
           const resp = await (scoringClient as any).scoringProfilesUpdate(profileId, body);
-          const data = extractResponseData<any>(resp);
+          const data = resp?.data ?? resp;
           if (!data) return { error: 'Update failed' as any };
           return { data };
         } catch (e: any) { return { error: toRtkError(e) as any }; }
@@ -58,8 +57,7 @@ export const scoringApi = createApi({
     deleteScoringProfile: builder.mutation<any, string>({
       queryFn: async (profileId) => {
         try {
-          const resp = await (scoringClient as any).scoringProfilesDelete(profileId);
-          extractResponseData<any>(resp); // no data required
+          await (scoringClient as any).scoringProfilesDelete(profileId);
           return { data: { ok: true } };
         } catch (e: any) { return { error: toRtkError(e) as any }; }
       },
@@ -69,7 +67,7 @@ export const scoringApi = createApi({
       queryFn: async ({ campaignId, profileId }) => {
         try {
           const resp = await (scoringClient as any).campaignsScoringProfileAssociate(campaignId, { profileId });
-          const data = extractResponseData<any>(resp) || { profileId };
+          const data = (resp?.data ?? resp) || { profileId };
           return { data };
         } catch (e: any) { return { error: toRtkError(e) as any }; }
       },
@@ -82,7 +80,7 @@ export const scoringApi = createApi({
       queryFn: async ({ campaignId }) => {
         try {
           const resp = await (scoringClient as any).campaignsRescore(campaignId);
-          const data = extractResponseData<any>(resp) || { status: 'scheduled' };
+          const data = (resp?.data ?? resp) || { status: 'scheduled' };
           return { data };
         } catch (e: any) { return { error: toRtkError(e) as any }; }
       },

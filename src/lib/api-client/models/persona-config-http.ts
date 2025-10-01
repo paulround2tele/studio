@@ -15,7 +15,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { ConfigGetStealth200ResponseAllOfData } from './config-get-stealth200-response-all-of-data';
+import type { ConfigGetStealth200Response } from './config-get-stealth200-response';
 // May contain unused imports in some cases
 // @ts-ignore
 import type { PersonaConfigHttpCookieHandling } from './persona-config-http-cookie-handling';
@@ -61,10 +61,10 @@ export interface PersonaConfigHttp {
     'tlsClientHello'?: PersonaConfigHttpTlsClientHello;
     /**
      * 
-     * @type {ConfigGetStealth200ResponseAllOfData}
+     * @type {ConfigGetStealth200Response}
      * @memberof PersonaConfigHttp
      */
-    'http2Settings'?: ConfigGetStealth200ResponseAllOfData;
+    'http2Settings'?: ConfigGetStealth200Response;
     /**
      * 
      * @type {PersonaConfigHttpCookieHandling}

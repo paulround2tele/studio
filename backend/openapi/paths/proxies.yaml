@@ -1,52 +1,46 @@
-	/proxies:
-		get:
-			tags: [proxies]
-			security:
-				- cookieAuth: []
-			summary: List proxies
-			operationId: proxies_list
-			parameters:
-				- $ref: '#/components/parameters/Limit'
-				- $ref: '#/components/parameters/Offset'
-				- $ref: '#/components/parameters/ProxyProtocol'
-				- $ref: '#/components/parameters/ProxyCountry'
-				- $ref: '#/components/parameters/IsEnabled'
-				- $ref: '#/components/parameters/IsHealthy'
-			responses:
-				'200':
-					description: OK
-					content:
-						application/json:
-          schema:
-								type: array
-          items: { $ref: '#/components/schemas/ProxyDetailsResponse' }
+/proxies:
+  get:
+    tags: [proxies]
+    security:
+      - cookieAuth: []
+    summary: List proxies
+    operationId: proxies_list
+    parameters:
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Offset'
+      - $ref: '#/components/parameters/ProxyProtocol'
+      - $ref: '#/components/parameters/ProxyCountry'
+      - $ref: '#/components/parameters/IsEnabled'
+      - $ref: '#/components/parameters/IsHealthy'
+    responses:
+      '200':
+        description: OK
+        content:
+          application/json:
+						schema:
+							type: array
+							items: { $ref: '#/components/schemas/Proxy' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
-		post:
-			tags: [proxies]
-			security:
-				- cookieAuth: []
-			summary: Create proxy
-			operationId: proxies_create
-			requestBody:
-				required: true
-				content:
-					application/json:
-        schema: { $ref: '#/components/schemas/CreateProxyRequestAPI' }
-			responses:
-				'201':
-					description: Created
-					content:
-						application/json:
-        schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												$ref: '#/components/schemas/ProxyDetailsResponse'
+  post:
+    tags: [proxies]
+    security:
+      - cookieAuth: []
+    summary: Create proxy
+    operationId: proxies_create
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/CreateProxyRequestAPI' }
+    responses:
+      '201':
+        description: Created
+        content:
+          application/json:
+			schema: { $ref: '#/components/schemas/Proxy' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
@@ -55,29 +49,23 @@
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
 	/proxies/{proxyId}/test:
-		post:
-			tags: [proxies]
-			security:
-				- cookieAuth: []
-			summary: Test proxy
-			operationId: proxies_test
-			parameters:
-				- name: proxyId
-					in: path
-					required: true
-					schema: { type: string, format: uuid }
-			responses:
-				'200':
-					description: OK
-					content:
-						application/json:
-        schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												$ref: '#/components/schemas/ProxyTestResponse'
+	  post:
+	    tags: [proxies]
+	    security:
+	      - cookieAuth: []
+	    summary: Test proxy
+	    operationId: proxies_test
+	    parameters:
+	      - name: proxyId
+	        in: path
+	        required: true
+	        schema: { type: string, format: uuid }
+	    responses:
+	      '200':
+	        description: OK
+	        content:
+	          application/json:
+	            schema: { $ref: '#/components/schemas/ProxyTestResponse' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
@@ -85,103 +73,89 @@
 				'422': { $ref: '#/components/responses/ValidationError' }
 				'429': { $ref: '#/components/responses/RateLimitExceeded' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
-	/proxies/{proxyId}:
-		put:
-			tags: [proxies]
-			security:
-				- cookieAuth: []
-			summary: Update proxy
-			operationId: proxies_update
-			parameters:
-				- name: proxyId
-					in: path
-					required: true
-					schema: { type: string, format: uuid }
-			requestBody:
-				required: true
-				content:
-					application/json:
-        schema: { $ref: '#/components/schemas/UpdateProxyRequestAPI' }
-			responses:
-				'200':
-					description: Updated
-					content:
-						application/json:
-        schema: { $ref: '#/components/schemas/ProxyDetailsResponse' }
+	 /proxies/{proxyId}:
+	  put:
+	    tags: [proxies]
+	    security:
+	      - cookieAuth: []
+	    summary: Update proxy
+	    operationId: proxies_update
+	    parameters:
+	      - name: proxyId
+	        in: path
+	        required: true
+	        schema: { type: string, format: uuid }
+	    requestBody:
+	      required: true
+	      content:
+	        application/json:
+	          schema: { $ref: '#/components/schemas/UpdateProxyRequestAPI' }
+	    responses:
+	      '200':
+	        description: Updated
+	        content:
+	          application/json:
+				schema: { $ref: '#/components/schemas/Proxy' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'404': { $ref: '#/components/responses/NotFound' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
-		delete:
-			tags: [proxies]
-			security:
-				- cookieAuth: []
-			summary: Delete proxy
-			operationId: proxies_delete
-			parameters:
-				- name: proxyId
-					in: path
-					required: true
-					schema: { type: string, format: uuid }
-			responses:
-				'200':
-					description: Deleted
-					content:
-						application/json:
-        schema: { $ref: '#/components/schemas/SuccessEnvelope' }
+  delete:
+    tags: [proxies]
+    security:
+      - cookieAuth: []
+    summary: Delete proxy
+    operationId: proxies_delete
+    parameters:
+      - name: proxyId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    responses:
+      '204':
+        description: No Content
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'404': { $ref: '#/components/responses/NotFound' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
 	/proxies/status:
-		get:
-			tags: [proxies]
-			security:
-				- cookieAuth: []
-			summary: Get proxy statuses
-			operationId: proxies_status
-			responses:
-				'200':
-					description: OK
-					content:
-						application/json:
-        schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												type: array
-												items: { $ref: '#/components/schemas/ProxyStatusResponse' }
+	  get:
+	    tags: [proxies]
+	    security:
+	      - cookieAuth: []
+	    summary: Get proxy statuses
+	    operationId: proxies_status
+	    responses:
+	      '200':
+	        description: OK
+	        content:
+	          application/json:
+	            schema:
+	              type: array
+	              items: { $ref: '#/components/schemas/ProxyStatusResponse' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }
 				'500': { $ref: '#/components/responses/InternalServerError' }
 	/proxies/{proxyId}/health-check:
-		post:
-			tags: [proxies]
-			security:
-				- cookieAuth: []
-			summary: Health check single proxy
-			operationId: proxies_health_check_single
-			parameters:
-				- name: proxyId
-					in: path
-					required: true
-					schema: { type: string, format: uuid }
-			responses:
-				'200':
-					description: OK
-					content:
-						application/json:
-        schema:
-								allOf:
-									- $ref: '#/components/schemas/SuccessEnvelope'
-									- type: object
-										properties:
-											data:
-												$ref: '#/components/schemas/ProxyHealthCheckResponse'
+	  post:
+	    tags: [proxies]
+	    security:
+	      - cookieAuth: []
+	    summary: Health check single proxy
+	    operationId: proxies_health_check_single
+	    parameters:
+	      - name: proxyId
+	        in: path
+	        required: true
+	        schema: { type: string, format: uuid }
+	    responses:
+	      '200':
+	        description: OK
+	        content:
+	          application/json:
+	            schema: { $ref: '#/components/schemas/ProxyHealthCheckResponse' }
 				'400': { $ref: '#/components/responses/BadRequest' }
 				'401': { $ref: '#/components/responses/Unauthorized' }
 				'403': { $ref: '#/components/responses/Forbidden' }

@@ -13,20 +13,18 @@
  */
 
 
-// May contain unused imports in some cases
-// @ts-ignore
-import type { ConfigGetStealth200ResponseAllOfData } from './config-get-stealth200-response-all-of-data';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { Metadata } from './metadata';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { SuccessEnvelope } from './success-envelope';
 
 /**
- * @type ConfigGetStealth200Response
+ * 
  * @export
+ * @interface ConfigGetStealth200Response
  */
-export type ConfigGetStealth200Response = SuccessEnvelope;
-
+export interface ConfigGetStealth200Response {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ConfigGetStealth200Response
+     */
+    'enabled'?: boolean;
+}
 

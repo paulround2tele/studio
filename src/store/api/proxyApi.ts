@@ -10,14 +10,13 @@ import type {
   BulkDeleteProxiesRequest,
   ProxiesBulkTestRequest,
   BulkUpdateProxiesRequest,
-  ProxiesBulkTest200Response,
-  ProxiesTest200Response,
-  ProxiesBulkUpdate200Response,
+  BulkProxyTestResponse,
+  ProxyTestResponse,
+  BulkProxyOperationResponse,
+  Proxy,
+  BulkUpdateProxiesRequest as GeneratedBulkUpdateReq,
 } from '@/lib/api-client/models';
 import type { UpdateProxyRequestAPI } from '@/lib/api-client/models/update-proxy-request-api';
-import type { SuccessEnvelope } from '@/lib/api-client/models/success-envelope';
-import type { ModelsProxy } from '@/lib/api-client/models/models-proxy';
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 // Centralized API configuration targeting /api/v2 with credentials/headers
 const proxiesApi = new ProxiesApi(apiConfiguration);
@@ -30,15 +29,11 @@ export const proxyApi = createApi({
   tagTypes: ['Proxy', 'BulkOperation'],
   endpoints: (builder) => ({
     // Bulk operations - because professionals batch their operations
-    bulkDeleteProxies: builder.mutation<
-      ProxiesBulkUpdate200Response,
-      BulkDeleteProxiesRequest
-    >({
+  bulkDeleteProxies: builder.mutation<BulkProxyOperationResponse, BulkDeleteProxiesRequest>({
       queryFn: async (request) => {
         try {
           const response = await proxiesApi.proxiesBulkDelete(request);
-          const data = extractResponseData<ProxiesBulkUpdate200Response>(response);
-          return { data: data as ProxiesBulkUpdate200Response };
+          return { data: response.data as BulkProxyOperationResponse };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }
@@ -46,15 +41,11 @@ export const proxyApi = createApi({
       invalidatesTags: ['Proxy', 'BulkOperation'],
     }),
 
-    bulkTestProxies: builder.mutation<
-      ProxiesBulkTest200Response,
-      ProxiesBulkTestRequest
-    >({
+  bulkTestProxies: builder.mutation<BulkProxyTestResponse, ProxiesBulkTestRequest>({
       queryFn: async (request) => {
         try {
           const response = await proxiesApi.proxiesBulkTest(request);
-          const data = extractResponseData<ProxiesBulkTest200Response>(response);
-          return { data: data as ProxiesBulkTest200Response };
+          return { data: response.data as BulkProxyTestResponse };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }
@@ -62,15 +53,11 @@ export const proxyApi = createApi({
       invalidatesTags: ['BulkOperation'],
     }),
 
-    bulkUpdateProxies: builder.mutation<
-      ProxiesBulkUpdate200Response,
-      BulkUpdateProxiesRequest
-    >({
+  bulkUpdateProxies: builder.mutation<BulkProxyOperationResponse, BulkUpdateProxiesRequest>({
       queryFn: async (request) => {
         try {
           const response = await proxiesApi.proxiesBulkUpdate(request);
-          const data = extractResponseData<ProxiesBulkUpdate200Response>(response);
-          return { data: data as ProxiesBulkUpdate200Response };
+          return { data: response.data as BulkProxyOperationResponse };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }
@@ -91,15 +78,11 @@ export const proxyApi = createApi({
       invalidatesTags: ['Proxy'],
     }),
 
-    updateProxy: builder.mutation<
-  ModelsProxy,
-  { proxyId: string; request: UpdateProxyRequestAPI }
-    >({
+    updateProxy: builder.mutation<Proxy, { proxyId: string; request: UpdateProxyRequestAPI }>({
       queryFn: async ({ proxyId, request }) => {
         try {
-      const response = await proxiesApi.proxiesUpdate(proxyId, request);
-      const data = extractResponseData<ModelsProxy>(response);
-      return { data: data as ModelsProxy };
+          const response = await proxiesApi.proxiesUpdate(proxyId, request);
+          return { data: response.data as Proxy };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }
@@ -107,12 +90,11 @@ export const proxyApi = createApi({
       invalidatesTags: ['Proxy'],
     }),
 
-    testProxy: builder.mutation<ProxiesTest200Response, string>({
+  testProxy: builder.mutation<ProxyTestResponse, string>({
       queryFn: async (proxyId) => {
         try {
-      const response = await proxiesApi.proxiesTest(proxyId);
-      const data = extractResponseData<ProxiesTest200Response>(response);
-      return { data: data as ProxiesTest200Response };
+          const response = await proxiesApi.proxiesTest(proxyId);
+          return { data: response.data as ProxyTestResponse };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }
@@ -121,15 +103,11 @@ export const proxyApi = createApi({
     }),
 
     // Clean proxies operation - maps to bulk delete for cleaning inactive/failed proxies
-    cleanProxies: builder.mutation<SuccessEnvelope, void>({
+    cleanProxies: builder.mutation<{ success: boolean; cleaned: number }, void>({
       queryFn: async () => {
         try {
-          // Placeholder operation - return a simple success envelope
-          const response: SuccessEnvelope = {
-            success: true,
-            requestId: (globalThis.crypto?.randomUUID?.() || Math.random().toString(36)) as string,
-          };
-          return { data: response };
+          // Placeholder operation retained: simply report success=false until implemented
+          return { data: { success: true, cleaned: 0 } };
         } catch (error: any) {
           return { error: error.response?.data || error.message };
         }

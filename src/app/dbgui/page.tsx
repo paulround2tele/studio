@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 // Only import icons that are actually used in the component
 import { Database, Server } from 'lucide-react';
 import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
-import { DatabaseApi } from '@/lib/api-client';
+import { DatabaseApi } from '@/lib/api-client/apis/database-api';
 import { apiConfiguration } from '@/lib/api/config';
 import type {
   BulkDatabaseStatsRequest,
@@ -91,9 +91,7 @@ export default function DatabaseGUI() {
         // X-Requested-With header sentinel
         'XMLHttpRequest' as any
       );
-      // unwrap SuccessEnvelope -> data
-      const { extractResponseData } = await import('@/lib/utils/apiResponseHelpers');
-      const data = extractResponseData<BulkDatabaseStatsResponse>(response);
+      const data = (response as any)?.data ?? response;
       if (data && (data as BulkDatabaseStatsResponse).databaseStats) {
         setDbStats((data as BulkDatabaseStatsResponse).databaseStats || null);
       }
@@ -128,11 +126,9 @@ export default function DatabaseGUI() {
         // X-Requested-With header sentinel
         'XMLHttpRequest' as any
       );
-  const { extractResponseData } = await import('@/lib/utils/apiResponseHelpers');
-  const data = extractResponseData<BulkDatabaseQueryResponse>(response);
+  const data = (response as any)?.data ?? response;
   if (data && (data as BulkDatabaseQueryResponse).results) {
     const resultsMap = (data as BulkDatabaseQueryResponse).results!;
-    // pick the first/only result
     const first = Object.values(resultsMap)[0] as BulkDatabaseQueryResponseResultsValue | undefined;
     if (first) setQueryResult(first);
   }

@@ -13,20 +13,30 @@
  */
 
 
-// May contain unused imports in some cases
-// @ts-ignore
-import type { Metadata } from './metadata';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { SseEventsStats200ResponseAllOfData } from './sse-events-stats200-response-all-of-data';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { SuccessEnvelope } from './success-envelope';
 
 /**
- * @type SseEventsStats200Response
+ * 
  * @export
+ * @interface SseEventsStats200Response
  */
-export type SseEventsStats200Response = SuccessEnvelope;
-
+export interface SseEventsStats200Response {
+    /**
+     * Number of active SSE connections
+     * @type {number}
+     * @memberof SseEventsStats200Response
+     */
+    'activeConnections'?: number;
+    /**
+     * Total events sent since server start
+     * @type {number}
+     * @memberof SseEventsStats200Response
+     */
+    'totalEventsSent'?: number;
+    /**
+     * Server uptime
+     * @type {string}
+     * @memberof SseEventsStats200Response
+     */
+    'uptime'?: string;
+}
 

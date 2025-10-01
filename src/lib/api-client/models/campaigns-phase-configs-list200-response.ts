@@ -13,20 +13,30 @@
  */
 
 
-// May contain unused imports in some cases
-// @ts-ignore
-import type { CampaignsPhaseConfigsList200ResponseAllOfData } from './campaigns-phase-configs-list200-response-all-of-data';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { Metadata } from './metadata';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { SuccessEnvelope } from './success-envelope';
 
 /**
- * @type CampaignsPhaseConfigsList200Response
+ * 
  * @export
+ * @interface CampaignsPhaseConfigsList200Response
  */
-export type CampaignsPhaseConfigsList200Response = SuccessEnvelope;
-
+export interface CampaignsPhaseConfigsList200Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof CampaignsPhaseConfigsList200Response
+     */
+    'campaignId'?: string;
+    /**
+     * 
+     * @type {{ [key: string]: boolean; }}
+     * @memberof CampaignsPhaseConfigsList200Response
+     */
+    'configsPresent'?: { [key: string]: boolean; };
+    /**
+     * 
+     * @type {{ [key: string]: object; }}
+     * @memberof CampaignsPhaseConfigsList200Response
+     */
+    'configs'?: { [key: string]: object; };
+}
 

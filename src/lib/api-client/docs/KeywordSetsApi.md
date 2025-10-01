@@ -125,7 +125,7 @@ void (empty response body)
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **keywordSetsGet**
-> KeywordSetsGet200Response keywordSetsGet()
+> KeywordSetResponse keywordSetsGet()
 
 
 ### Example
@@ -155,7 +155,7 @@ const { status, data } = await apiInstance.keywordSetsGet(
 
 ### Return type
 
-**KeywordSetsGet200Response**
+**KeywordSetResponse**
 
 ### Authorization
 
@@ -243,7 +243,7 @@ const { status, data } = await apiInstance.keywordSetsList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **keywordSetsRulesList**
-> KeywordSetsRulesList200Response keywordSetsRulesList()
+> Array<KeywordRuleDTO> keywordSetsRulesList()
 
 
 ### Example
@@ -273,7 +273,7 @@ const { status, data } = await apiInstance.keywordSetsRulesList(
 
 ### Return type
 
-**KeywordSetsRulesList200Response**
+**Array<KeywordRuleDTO>**
 
 ### Authorization
 
@@ -298,7 +298,7 @@ const { status, data } = await apiInstance.keywordSetsRulesList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **keywordSetsUpdate**
-> KeywordSetsGet200Response keywordSetsUpdate(updateKeywordSetRequest)
+> KeywordSetResponse keywordSetsUpdate(updateKeywordSetRequest)
 
 
 ### Example
@@ -332,7 +332,7 @@ const { status, data } = await apiInstance.keywordSetsUpdate(
 
 ### Return type
 
-**KeywordSetsGet200Response**
+**KeywordSetResponse**
 
 ### Authorization
 

@@ -1,150 +1,152 @@
-	/keyword-sets:
-		get:
-			tags: [keyword-sets]
-			security:
-				- cookieAuth: []
-			summary: List keyword sets
-			operationId: keyword_sets_list
-			parameters:
-				- $ref: '#/components/parameters/Limit'
-				- $ref: '#/components/parameters/Offset'
-				- $ref: '#/components/parameters/IncludeRules'
-				- $ref: '#/components/parameters/IsEnabled'
-			responses:
-				'200':
-					description: OK
-					content:
-						application/json:
-							schema:
-								type: array
-          items: { $ref: '#/components/schemas/KeywordSetResponse' }
-				'401': { $ref: '#/components/responses/Unauthorized' }
-				'403': { $ref: '#/components/responses/Forbidden' }
-				'429': { $ref: '#/components/responses/RateLimitExceeded' }
-				'500': { $ref: '#/components/responses/InternalServerError' }
-		post:
-			tags: [keyword-sets]
-			security:
-				- cookieAuth: []
-			summary: Create keyword set
-			operationId: keyword_sets_create
-			requestBody:
-				required: true
-				content:
-					application/json:
-          schema: { $ref: '#/components/schemas/CreateKeywordSetRequest' }
-			responses:
-				'201':
-					description: Created
-					content:
-						application/json:
-							schema: { $ref: '#/components/schemas/KeywordSetResponse' }
-				'400': { $ref: '#/components/responses/BadRequest' }
-				'401': { $ref: '#/components/responses/Unauthorized' }
-				'403': { $ref: '#/components/responses/Forbidden' }
-				'409': { $ref: '#/components/responses/Conflict' }
-				'422': { $ref: '#/components/responses/ValidationError' }
-				'429': { $ref: '#/components/responses/RateLimitExceeded' }
-				'500': { $ref: '#/components/responses/InternalServerError' }
-	/keyword-sets/{setId}:
-		get:
-			tags: [keyword-sets]
-			security:
-				- cookieAuth: []
-			summary: Get keyword set
-			operationId: keyword_sets_get
-			parameters:
-				- name: setId
-					in: path
-					required: true
-					schema:
-						type: string
-						format: uuid
-			responses:
-				'200':
-					description: OK
-					content:
-						application/json:
-							schema: { $ref: '#/components/schemas/KeywordSetResponse' }
-				'401': { $ref: '#/components/responses/Unauthorized' }
-				'403': { $ref: '#/components/responses/Forbidden' }
-				'404': { $ref: '#/components/responses/NotFound' }
-				'429': { $ref: '#/components/responses/RateLimitExceeded' }
-				'500': { $ref: '#/components/responses/InternalServerError' }
-		put:
-			tags: [keyword-sets]
-			security:
-				- cookieAuth: []
-			summary: Update keyword set
-			operationId: keyword_sets_update
-			parameters:
-				- name: setId
-					in: path
-					required: true
-					schema:
-						type: string
-						format: uuid
-			requestBody:
-				required: true
-				content:
-					application/json:
-          schema: { $ref: '#/components/schemas/UpdateKeywordSetRequest' }
-			responses:
-				'200':
-					description: OK
-					content:
-						application/json:
-							schema: { $ref: '#/components/schemas/KeywordSetResponse' }
-				'400': { $ref: '#/components/responses/BadRequest' }
-				'401': { $ref: '#/components/responses/Unauthorized' }
-				'403': { $ref: '#/components/responses/Forbidden' }
-				'404': { $ref: '#/components/responses/NotFound' }
-				'422': { $ref: '#/components/responses/ValidationError' }
-				'429': { $ref: '#/components/responses/RateLimitExceeded' }
-				'500': { $ref: '#/components/responses/InternalServerError' }
-		delete:
-			tags: [keyword-sets]
-			security:
-				- cookieAuth: []
-			summary: Delete keyword set
-			operationId: keyword_sets_delete
-			parameters:
-				- name: setId
-					in: path
-					required: true
-					schema:
-						type: string
-						format: uuid
-			responses:
-				'204':
-					description: No Content
-				'401': { $ref: '#/components/responses/Unauthorized' }
-				'403': { $ref: '#/components/responses/Forbidden' }
-				'404': { $ref: '#/components/responses/NotFound' }
-				'429': { $ref: '#/components/responses/RateLimitExceeded' }
-				'500': { $ref: '#/components/responses/InternalServerError' }
-	/keyword-sets/{setId}/rules:
-		get:
-			tags: [keyword-sets]
-			security:
-				- cookieAuth: []
-			summary: Get keyword set with rules
-			operationId: keyword_sets_get_with_rules
-			parameters:
-				- name: setId
-					in: path
-					required: true
-					schema:
-						type: string
-						format: uuid
-			responses:
-				'200':
-					description: OK
-					content:
-						application/json:
-							schema: { $ref: '#/components/schemas/KeywordSetWithRulesResponse' }
-				'401': { $ref: '#/components/responses/Unauthorized' }
-				'403': { $ref: '#/components/responses/Forbidden' }
-				'404': { $ref: '#/components/responses/NotFound' }
-				'429': { $ref: '#/components/responses/RateLimitExceeded' }
-				'500': { $ref: '#/components/responses/InternalServerError' }
+get:
+  tags: [keyword-sets]
+  security:
+    - cookieAuth: []
+  summary: List keyword sets
+  operationId: keyword_sets_list
+  parameters:
+    - $ref: '#/components/parameters/Limit'
+    - $ref: '#/components/parameters/Offset'
+    - $ref: '#/components/parameters/IncludeRules'
+    - $ref: '#/components/parameters/IsEnabled'
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: array
+            items: { $ref: '#/components/schemas/KeywordSetResponse' }
+    '401': { $ref: '#/components/responses/Unauthorized' }
+    '403': { $ref: '#/components/responses/Forbidden' }
+    '429': { $ref: '#/components/responses/RateLimitExceeded' }
+    '500': { $ref: '#/components/responses/InternalServerError' }
+
+post:
+  tags: [keyword-sets]
+  security:
+    - cookieAuth: []
+  summary: Create keyword set
+  operationId: keyword_sets_create
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema: { $ref: '#/components/schemas/CreateKeywordSetRequest' }
+  responses:
+    '201':
+      description: Created
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/KeywordSetResponse' }
+    '400': { $ref: '#/components/responses/BadRequest' }
+    '401': { $ref: '#/components/responses/Unauthorized' }
+    '403': { $ref: '#/components/responses/Forbidden' }
+    '409': { $ref: '#/components/responses/Conflict' }
+    '422': { $ref: '#/components/responses/ValidationError' }
+    '429': { $ref: '#/components/responses/RateLimitExceeded' }
+    '500': { $ref: '#/components/responses/InternalServerError' }
+
+get@by-id:
+  tags: [keyword-sets]
+  security:
+    - cookieAuth: []
+  summary: Get keyword set
+  operationId: keyword_sets_get
+  parameters:
+    - name: setId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/KeywordSetResponse' }
+    '401': { $ref: '#/components/responses/Unauthorized' }
+    '403': { $ref: '#/components/responses/Forbidden' }
+    '404': { $ref: '#/components/responses/NotFound' }
+    '429': { $ref: '#/components/responses/RateLimitExceeded' }
+    '500': { $ref: '#/components/responses/InternalServerError' }
+
+put:
+  tags: [keyword-sets]
+  security:
+    - cookieAuth: []
+  summary: Update keyword set
+  operationId: keyword_sets_update
+  parameters:
+    - name: setId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema: { $ref: '#/components/schemas/UpdateKeywordSetRequest' }
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/KeywordSetResponse' }
+    '400': { $ref: '#/components/responses/BadRequest' }
+    '401': { $ref: '#/components/responses/Unauthorized' }
+    '403': { $ref: '#/components/responses/Forbidden' }
+    '404': { $ref: '#/components/responses/NotFound' }
+    '422': { $ref: '#/components/responses/ValidationError' }
+    '429': { $ref: '#/components/responses/RateLimitExceeded' }
+    '500': { $ref: '#/components/responses/InternalServerError' }
+
+delete:
+  tags: [keyword-sets]
+  security:
+    - cookieAuth: []
+  summary: Delete keyword set
+  operationId: keyword_sets_delete
+  parameters:
+    - name: setId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    '204':
+      description: No Content
+    '401': { $ref: '#/components/responses/Unauthorized' }
+    '403': { $ref: '#/components/responses/Forbidden' }
+    '404': { $ref: '#/components/responses/NotFound' }
+    '429': { $ref: '#/components/responses/RateLimitExceeded' }
+    '500': { $ref: '#/components/responses/InternalServerError' }
+
+get@with-rules:
+  tags: [keyword-sets]
+  security:
+    - cookieAuth: []
+  summary: Get keyword set with rules
+  operationId: keyword_sets_get_with_rules
+  parameters:
+    - name: setId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    '200':
+      description: OK
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/KeywordSetWithRulesResponse' }
+    '401': { $ref: '#/components/responses/Unauthorized' }
+    '403': { $ref: '#/components/responses/Forbidden' }
+    '404': { $ref: '#/components/responses/NotFound' }
+    '429': { $ref: '#/components/responses/RateLimitExceeded' }
+    '500': { $ref: '#/components/responses/InternalServerError' }

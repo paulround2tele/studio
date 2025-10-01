@@ -12,7 +12,7 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**proxyPoolsUpdate**](#proxypoolsupdate) | **PUT** /proxy-pools/{poolId} | Update proxy pool|
 
 # **proxyPoolsAddProxy**
-> ProxyPoolsAddProxy201Response proxyPoolsAddProxy(proxyPoolsAddProxyRequest)
+> ProxyPoolMembership proxyPoolsAddProxy(proxyPoolsAddProxyRequest)
 
 
 ### Example
@@ -46,7 +46,7 @@ const { status, data } = await apiInstance.proxyPoolsAddProxy(
 
 ### Return type
 
-**ProxyPoolsAddProxy201Response**
+**ProxyPoolMembership**
 
 ### Authorization
 
@@ -68,7 +68,7 @@ const { status, data } = await apiInstance.proxyPoolsAddProxy(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxyPoolsCreate**
-> ProxyPoolsCreate201Response proxyPoolsCreate(proxyPoolRequest)
+> ProxyPool proxyPoolsCreate(proxyPoolRequest)
 
 
 ### Example
@@ -99,7 +99,7 @@ const { status, data } = await apiInstance.proxyPoolsCreate(
 
 ### Return type
 
-**ProxyPoolsCreate201Response**
+**ProxyPool**
 
 ### Authorization
 
@@ -121,7 +121,7 @@ const { status, data } = await apiInstance.proxyPoolsCreate(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxyPoolsDelete**
-> ProxyPoolsDelete200Response proxyPoolsDelete()
+> ProxyPoolDeleteResponse proxyPoolsDelete()
 
 
 ### Example
@@ -151,7 +151,7 @@ const { status, data } = await apiInstance.proxyPoolsDelete(
 
 ### Return type
 
-**ProxyPoolsDelete200Response**
+**ProxyPoolDeleteResponse**
 
 ### Authorization
 
@@ -174,7 +174,7 @@ const { status, data } = await apiInstance.proxyPoolsDelete(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxyPoolsList**
-> ProxyPoolsList200Response proxyPoolsList()
+> Array<ProxyPool> proxyPoolsList()
 
 
 ### Example
@@ -197,7 +197,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ProxyPoolsList200Response**
+**Array<ProxyPool>**
 
 ### Authorization
 
@@ -220,7 +220,7 @@ This endpoint does not have any parameters.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxyPoolsRemoveProxy**
-> ProxyPoolsRemoveProxy200Response proxyPoolsRemoveProxy()
+> ProxyPoolMembershipResponse proxyPoolsRemoveProxy()
 
 
 ### Example
@@ -253,7 +253,7 @@ const { status, data } = await apiInstance.proxyPoolsRemoveProxy(
 
 ### Return type
 
-**ProxyPoolsRemoveProxy200Response**
+**ProxyPoolMembershipResponse**
 
 ### Authorization
 
@@ -276,7 +276,7 @@ const { status, data } = await apiInstance.proxyPoolsRemoveProxy(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **proxyPoolsUpdate**
-> ProxyPoolsCreate201Response proxyPoolsUpdate(proxyPoolRequest)
+> ProxyPool proxyPoolsUpdate(proxyPoolRequest)
 
 
 ### Example
@@ -310,7 +310,7 @@ const { status, data } = await apiInstance.proxyPoolsUpdate(
 
 ### Return type
 
-**ProxyPoolsCreate201Response**
+**ProxyPool**
 
 ### Authorization
 

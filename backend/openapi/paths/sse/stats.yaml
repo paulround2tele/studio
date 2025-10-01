@@ -21,7 +21,7 @@ get:
               uptime:
                 type: string
                 description: Server uptime
-  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
-  '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
-  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

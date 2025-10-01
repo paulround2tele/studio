@@ -115,4 +115,42 @@ Authoritative historical log of the unified multi‑phase campaign pipeline refa
 - Pause / resume semantics (future design)
 
 ---
+
+## API Contract Modernization – Proxy Resource & Envelope Removal (October 2025)
+### Summary
+Refactored OpenAPI contract to eliminate the legacy SuccessEnvelope pattern for 2xx responses and introduced a first-class `Proxy` resource model replacing the narrow `ProxyDetailsResponse`. Frontend and backend now operate on rich proxy objects directly.
+
+### Changes
+- 🔥 Removed: SuccessEnvelope wrapping for proxy endpoints (list, create, update, status, bulk operations, health/test). Responses now return raw alias types (e.g., `[]Proxy`, `Proxy`, `BulkProxyOperationResponse`).
+- ✨ Added: Comprehensive `Proxy` schema with operational, health, and metadata fields (id, name, address, protocol, isEnabled, isHealthy, latencyMs, lastCheckedAt, success/failure counts, notes, timestamps, etc.).
+- ♻️ Updated: `ProxyStatusResponse` now references `Proxy` (indirectly via top-level status items) after schema consolidation; removed redundant duplicate schema definitions causing bundler validation errors.
+- ♻️ Backend: `handlers_proxies.go` refactored to emit `gen.Proxy` objects (value fields rather than pointer envelope). 204 used for delete per spec.
+- ♻️ Frontend: Replaced all imports of `ProxyDetailsResponse` with `Proxy`; updated hooks (`useCampaignFormData`, `useProxyHealth`) and RTK query slices to consume new model.
+- ♻️ Regenerated: TypeScript client & Go server stubs after spec adjustments (OpenAPI 3.1 bundle, oapi-codegen v2).
+
+### Rationale
+- Removes redundant envelope boilerplate; simplifies client code (direct array / object handling, less unwrapping logic).
+- Provides forward-compatible surface for advanced proxy health metrics & pooling features without further breaking changes.
+- Aligns proxy endpoints with emerging resource consistency standards set in earlier campaign/domain refactors.
+
+### Implementation Notes
+- Transitional legacy `ProxyDetailsResponse` schema retained only for backward compatibility in spec components but no longer referenced by active proxy paths.
+- Validation issues encountered (duplicate `ProxyStatusResponse`, incorrect $ref scope) resolved by:
+  1. Consolidating `ProxyStatusResponse` into `all.yaml`.
+  2. Correcting `$ref` paths in `status.yaml` and internal self-reference for `proxyDetails`.
+- Handlers switched from constructing pointer-heavy minimal structs to full `Proxy` value initialization; optional DB NullString / nullable fields mapped via conditional assignment.
+
+### Impact / Migration Guide
+- Client code expecting `{ data, metadata }` must be updated to handle raw return types. A temporary compatibility extraction helper was removed—update call sites accordingly.
+- Delete endpoint now returns 204 (no body). Ensure frontend ignores body parsing for delete.
+- Status endpoint currently returns status metadata without embedding full proxy details; can be extended later using the same `Proxy` shape.
+
+### Follow-Ups
+- Add automated contract drift CI check to enforce absence of envelope regression.
+- Populate additional health metrics fields (successCount, failureCount, latencyMs) once collection pipeline is finalized.
+- Evaluate pruning of the legacy `ProxyDetailsResponse` component in a subsequent breaking change window.
+
+*Logged October 2025.*
+
+---
 *End of changelog (updated through Phase 9 active edits).*

@@ -14,7 +14,7 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**campaignsCreate**](#campaignscreate) | **POST** /campaigns | Create campaign|
 |[**campaignsDelete**](#campaignsdelete) | **DELETE** /campaigns/{campaignId} | Delete campaign|
 |[**campaignsDomainGenerationPatternOffset**](#campaignsdomaingenerationpatternoffset) | **POST** /campaigns/domain-generation/pattern-offset | Get current global pattern offset for domain generation config|
-|[**campaignsDomainScoreBreakdown**](#campaignsdomainscorebreakdown) | **GET** /campaigns/{campaignId}/domains/{domain}/score-breakdown | Get component score breakdown for a single domain|
+|[**campaignsDomainScoreBreakdown**](#campaignsdomainscorebreakdown) | **GET** /campaigns/{campaignId}/domains/{domain}/score-breakdown | Get detailed score breakdown for a specific domain in a campaign|
 |[**campaignsDomainsList**](#campaignsdomainslist) | **GET** /campaigns/{campaignId}/domains | List generated domains for a campaign|
 |[**campaignsDuplicatePost**](#campaignsduplicatepost) | **POST** /campaigns/{campaignId}/duplicate | Duplicate campaign|
 |[**campaignsEnrichedGet**](#campaignsenrichedget) | **GET** /campaigns/{campaignId}/enriched | Get enriched campaign details|
@@ -22,14 +22,14 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**campaignsGet**](#campaignsget) | **GET** /campaigns/{campaignId} | Get campaign|
 |[**campaignsList**](#campaignslist) | **GET** /campaigns | List campaigns|
 |[**campaignsMetricsGet**](#campaignsmetricsget) | **GET** /campaigns/{campaignId}/metrics | Get campaign KPI &amp; warning metrics|
-|[**campaignsModeUpdate**](#campaignsmodeupdate) | **PATCH** /campaigns/{campaignId}/mode | Update campaign execution mode|
+|[**campaignsModeUpdate**](#campaignsmodeupdate) | **PUT** /campaigns/{campaignId}/mode | Update campaign execution mode|
 |[**campaignsMomentumGet**](#campaignsmomentumget) | **GET** /campaigns/{campaignId}/momentum | Get campaign momentum &amp; movers|
 |[**campaignsPhaseConfigsList**](#campaignsphaseconfigslist) | **GET** /campaigns/{campaignId}/configs | List stored phase configurations for a campaign|
 |[**campaignsPhaseConfigure**](#campaignsphaseconfigure) | **POST** /campaigns/{campaignId}/phases/{phase}/configure | Configure campaign phase|
 |[**campaignsPhaseExecutionDelete**](#campaignsphaseexecutiondelete) | **DELETE** /campaigns/{campaignId}/phase-executions/{phaseType} | Delete phase execution by phase type|
 |[**campaignsPhaseExecutionGet**](#campaignsphaseexecutionget) | **GET** /campaigns/{campaignId}/phase-executions/{phaseType} | Get phase execution by phase type|
 |[**campaignsPhaseExecutionPut**](#campaignsphaseexecutionput) | **PUT** /campaigns/{campaignId}/phase-executions/{phaseType} | Update phase execution by phase type|
-|[**campaignsPhaseExecutionsList**](#campaignsphaseexecutionslist) | **GET** /campaigns/{campaignId}/phase-executions | Get campaign state and phase executions|
+|[**campaignsPhaseExecutionsList**](#campaignsphaseexecutionslist) | **GET** /campaigns/{campaignId}/phase-executions | List phase executions for a campaign|
 |[**campaignsPhaseStart**](#campaignsphasestart) | **POST** /campaigns/{campaignId}/phases/{phase}/start | Start campaign phase|
 |[**campaignsPhaseStatus**](#campaignsphasestatus) | **GET** /campaigns/{campaignId}/phases/{phase}/status | Get phase status|
 |[**campaignsPhaseStop**](#campaignsphasestop) | **POST** /campaigns/{campaignId}/phases/{phase}/stop | Stop campaign phase|
@@ -40,12 +40,12 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 |[**campaignsStatePut**](#campaignsstateput) | **PUT** /campaigns/{campaignId}/state | Update campaign state|
 |[**campaignsStatusGet**](#campaignsstatusget) | **GET** /campaigns/{campaignId}/status | Get consolidated campaign phase statuses|
 |[**campaignsUpdate**](#campaignsupdate) | **PUT** /campaigns/{campaignId} | Update campaign|
-|[**cancelBulkOperation**](#cancelbulkoperation) | **POST** /campaigns/bulk/operations/{operationId}/cancel | Cancel bulk operation|
+|[**cancelBulkOperation**](#cancelbulkoperation) | **POST** /campaigns/bulk/operations/{operationId}/cancel | Cancel a bulk operation|
 |[**getBulkOperationStatus**](#getbulkoperationstatus) | **GET** /campaigns/bulk/operations/{operationId}/status | Get bulk operation status|
-|[**getBulkResourceStatus**](#getbulkresourcestatus) | **GET** /campaigns/bulk/resources/status/{allocationId} | Get bulk resource allocation status|
+|[**getBulkResourceStatus**](#getbulkresourcestatus) | **GET** /campaigns/bulk/resources/status/{allocationId} | Get status of bulk resource allocation|
 
 # **allocateBulkResources**
-> AllocateBulkResources200Response allocateBulkResources(bulkResourceAllocationRequest)
+> BulkResourceAllocationResponse allocateBulkResources(bulkResourceAllocationRequest)
 
 
 ### Example
@@ -76,7 +76,7 @@ const { status, data } = await apiInstance.allocateBulkResources(
 
 ### Return type
 
-**AllocateBulkResources200Response**
+**BulkResourceAllocationResponse**
 
 ### Authorization
 
@@ -100,7 +100,7 @@ const { status, data } = await apiInstance.allocateBulkResources(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **bulkAnalyzeDomains**
-> BulkAnalyzeDomains200Response bulkAnalyzeDomains(bulkAnalyticsRequest)
+> BulkAnalyticsResponse bulkAnalyzeDomains(bulkAnalyticsRequest)
 
 
 ### Example
@@ -131,7 +131,7 @@ const { status, data } = await apiInstance.bulkAnalyzeDomains(
 
 ### Return type
 
-**BulkAnalyzeDomains200Response**
+**BulkAnalyticsResponse**
 
 ### Authorization
 
@@ -155,7 +155,7 @@ const { status, data } = await apiInstance.bulkAnalyzeDomains(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **bulkGenerateDomains**
-> BulkGenerateDomains200Response bulkGenerateDomains(bulkDomainGenerationRequest)
+> BulkGenerationResponse bulkGenerateDomains(bulkDomainGenerationRequest)
 
 
 ### Example
@@ -186,7 +186,7 @@ const { status, data } = await apiInstance.bulkGenerateDomains(
 
 ### Return type
 
-**BulkGenerateDomains200Response**
+**BulkGenerationResponse**
 
 ### Authorization
 
@@ -210,7 +210,7 @@ const { status, data } = await apiInstance.bulkGenerateDomains(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **bulkValidateDNS**
-> BulkValidateDNS200Response bulkValidateDNS(bulkDNSValidationRequest)
+> BulkValidationResponse bulkValidateDNS(bulkDNSValidationRequest)
 
 
 ### Example
@@ -241,7 +241,7 @@ const { status, data } = await apiInstance.bulkValidateDNS(
 
 ### Return type
 
-**BulkValidateDNS200Response**
+**BulkValidationResponse**
 
 ### Authorization
 
@@ -265,7 +265,7 @@ const { status, data } = await apiInstance.bulkValidateDNS(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **bulkValidateHTTP**
-> BulkValidateDNS200Response bulkValidateHTTP(bulkHTTPValidationRequest)
+> BulkValidationResponse bulkValidateHTTP(bulkHTTPValidationRequest)
 
 
 ### Example
@@ -296,7 +296,7 @@ const { status, data } = await apiInstance.bulkValidateHTTP(
 
 ### Return type
 
-**BulkValidateDNS200Response**
+**BulkValidationResponse**
 
 ### Authorization
 
@@ -531,7 +531,7 @@ void (empty response body)
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsDomainGenerationPatternOffset**
-> CampaignsDomainGenerationPatternOffset200Response campaignsDomainGenerationPatternOffset(patternOffsetRequest)
+> PatternOffsetResponse campaignsDomainGenerationPatternOffset(patternOffsetRequest)
 
 
 ### Example
@@ -562,7 +562,7 @@ const { status, data } = await apiInstance.campaignsDomainGenerationPatternOffse
 
 ### Return type
 
-**CampaignsDomainGenerationPatternOffset200Response**
+**PatternOffsetResponse**
 
 ### Authorization
 
@@ -586,9 +586,8 @@ const { status, data } = await apiInstance.campaignsDomainGenerationPatternOffse
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsDomainScoreBreakdown**
-> CampaignsDomainScoreBreakdown200Response campaignsDomainScoreBreakdown()
+> DomainScoreBreakdownResponse campaignsDomainScoreBreakdown()
 
-Recomputes the scoring component values for the specified domain using the stored feature vector and current (or default) scoring profile weights. Does not persist anything; purely diagnostic / transparency surface. If experimental tf-lite scoring is disabled the `tf_lite` key will still be present with value 0.
 
 ### Example
 
@@ -620,7 +619,7 @@ const { status, data } = await apiInstance.campaignsDomainScoreBreakdown(
 
 ### Return type
 
-**CampaignsDomainScoreBreakdown200Response**
+**DomainScoreBreakdownResponse**
 
 ### Authorization
 
@@ -635,7 +634,7 @@ const { status, data } = await apiInstance.campaignsDomainScoreBreakdown(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | OK |  -  |
+|**200** | Domain score breakdown |  -  |
 |**400** | Bad Request |  -  |
 |**401** | Unauthorized |  -  |
 |**404** | Not Found |  -  |
@@ -644,7 +643,7 @@ const { status, data } = await apiInstance.campaignsDomainScoreBreakdown(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsDomainsList**
-> CampaignsDomainsList200Response campaignsDomainsList()
+> CampaignDomainsListResponse campaignsDomainsList()
 
 
 ### Example
@@ -719,7 +718,7 @@ const { status, data } = await apiInstance.campaignsDomainsList(
 
 ### Return type
 
-**CampaignsDomainsList200Response**
+**CampaignDomainsListResponse**
 
 ### Authorization
 
@@ -742,7 +741,7 @@ const { status, data } = await apiInstance.campaignsDomainsList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsDuplicatePost**
-> CampaignsDuplicatePost201Response campaignsDuplicatePost()
+> CampaignResponse campaignsDuplicatePost()
 
 
 ### Example
@@ -772,7 +771,7 @@ const { status, data } = await apiInstance.campaignsDuplicatePost(
 
 ### Return type
 
-**CampaignsDuplicatePost201Response**
+**CampaignResponse**
 
 ### Authorization
 
@@ -795,7 +794,7 @@ const { status, data } = await apiInstance.campaignsDuplicatePost(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsEnrichedGet**
-> CampaignsEnrichedGet200Response campaignsEnrichedGet()
+> EnrichedCampaignResponse campaignsEnrichedGet()
 
 Returns campaign with state and recent phase executions as a single enriched read model
 
@@ -826,7 +825,7 @@ const { status, data } = await apiInstance.campaignsEnrichedGet(
 
 ### Return type
 
-**CampaignsEnrichedGet200Response**
+**EnrichedCampaignResponse**
 
 ### Authorization
 
@@ -1214,7 +1213,7 @@ const { status, data } = await apiInstance.campaignsPhaseConfigsList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsPhaseConfigure**
-> CampaignsPhaseStatus200Response campaignsPhaseConfigure(phaseConfigurationRequest)
+> PhaseStatusResponse campaignsPhaseConfigure(phaseConfigurationRequest)
 
 
 ### Example
@@ -1251,7 +1250,7 @@ const { status, data } = await apiInstance.campaignsPhaseConfigure(
 
 ### Return type
 
-**CampaignsPhaseStatus200Response**
+**PhaseStatusResponse**
 
 ### Authorization
 
@@ -1330,7 +1329,7 @@ void (empty response body)
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsPhaseExecutionGet**
-> CampaignsPhaseExecutionGet200Response campaignsPhaseExecutionGet()
+> PhaseExecution campaignsPhaseExecutionGet()
 
 
 ### Example
@@ -1363,7 +1362,7 @@ const { status, data } = await apiInstance.campaignsPhaseExecutionGet(
 
 ### Return type
 
-**CampaignsPhaseExecutionGet200Response**
+**PhaseExecution**
 
 ### Authorization
 
@@ -1385,7 +1384,7 @@ const { status, data } = await apiInstance.campaignsPhaseExecutionGet(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsPhaseExecutionPut**
-> CampaignsPhaseExecutionGet200Response campaignsPhaseExecutionPut(phaseExecutionUpdate)
+> PhaseExecution campaignsPhaseExecutionPut(phaseExecutionUpdate)
 
 
 ### Example
@@ -1422,7 +1421,7 @@ const { status, data } = await apiInstance.campaignsPhaseExecutionPut(
 
 ### Return type
 
-**CampaignsPhaseExecutionGet200Response**
+**PhaseExecution**
 
 ### Authorization
 
@@ -1445,7 +1444,7 @@ const { status, data } = await apiInstance.campaignsPhaseExecutionPut(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsPhaseExecutionsList**
-> CampaignsPhaseExecutionsList200Response campaignsPhaseExecutionsList()
+> CampaignStateWithExecutions campaignsPhaseExecutionsList()
 
 
 ### Example
@@ -1475,7 +1474,7 @@ const { status, data } = await apiInstance.campaignsPhaseExecutionsList(
 
 ### Return type
 
-**CampaignsPhaseExecutionsList200Response**
+**CampaignStateWithExecutions**
 
 ### Authorization
 
@@ -1490,14 +1489,14 @@ const { status, data } = await apiInstance.campaignsPhaseExecutionsList(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | OK |  -  |
+|**200** | Campaign state with executions |  -  |
 |**404** | Not Found |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsPhaseStart**
-> CampaignsPhaseStatus200Response campaignsPhaseStart()
+> PhaseStatusResponse campaignsPhaseStart()
 
 
 ### Example
@@ -1530,7 +1529,7 @@ const { status, data } = await apiInstance.campaignsPhaseStart(
 
 ### Return type
 
-**CampaignsPhaseStatus200Response**
+**PhaseStatusResponse**
 
 ### Authorization
 
@@ -1555,7 +1554,7 @@ const { status, data } = await apiInstance.campaignsPhaseStart(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsPhaseStatus**
-> CampaignsPhaseStatus200Response campaignsPhaseStatus()
+> PhaseStatusResponse campaignsPhaseStatus()
 
 
 ### Example
@@ -1588,7 +1587,7 @@ const { status, data } = await apiInstance.campaignsPhaseStatus(
 
 ### Return type
 
-**CampaignsPhaseStatus200Response**
+**PhaseStatusResponse**
 
 ### Authorization
 
@@ -1611,7 +1610,7 @@ const { status, data } = await apiInstance.campaignsPhaseStatus(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsPhaseStop**
-> CampaignsPhaseStatus200Response campaignsPhaseStop()
+> PhaseStatusResponse campaignsPhaseStop()
 
 
 ### Example
@@ -1644,7 +1643,7 @@ const { status, data } = await apiInstance.campaignsPhaseStop(
 
 ### Return type
 
-**CampaignsPhaseStatus200Response**
+**PhaseStatusResponse**
 
 ### Authorization
 
@@ -1825,7 +1824,7 @@ void (empty response body)
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsStateGet**
-> CampaignsStateGet200Response campaignsStateGet()
+> CampaignState campaignsStateGet()
 
 
 ### Example
@@ -1855,7 +1854,7 @@ const { status, data } = await apiInstance.campaignsStateGet(
 
 ### Return type
 
-**CampaignsStateGet200Response**
+**CampaignState**
 
 ### Authorization
 
@@ -1877,7 +1876,7 @@ const { status, data } = await apiInstance.campaignsStateGet(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **campaignsStatePut**
-> CampaignsStateGet200Response campaignsStatePut(campaignStateUpdate)
+> CampaignState campaignsStatePut(campaignStateUpdate)
 
 
 ### Example
@@ -1911,7 +1910,7 @@ const { status, data } = await apiInstance.campaignsStatePut(
 
 ### Return type
 
-**CampaignsStateGet200Response**
+**CampaignState**
 
 ### Authorization
 
@@ -2058,7 +2057,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let operationId: string; //Bulk operation ID to cancel (default to undefined)
+let operationId: string; // (default to undefined)
 
 const { status, data } = await apiInstance.cancelBulkOperation(
     operationId
@@ -2069,7 +2068,7 @@ const { status, data } = await apiInstance.cancelBulkOperation(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **operationId** | [**string**] | Bulk operation ID to cancel | defaults to undefined|
+| **operationId** | [**string**] |  | defaults to undefined|
 
 
 ### Return type
@@ -2089,12 +2088,10 @@ const { status, data } = await apiInstance.cancelBulkOperation(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Bulk operation cancelled successfully |  -  |
+|**200** | Bulk operation cancellation status |  -  |
 |**400** | Bad Request |  -  |
 |**401** | Unauthorized |  -  |
-|**403** | Forbidden |  -  |
 |**404** | Not Found |  -  |
-|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
@@ -2169,7 +2166,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new CampaignsApi(configuration);
 
-let allocationId: string; //Resource allocation ID (default to undefined)
+let allocationId: string; // (default to undefined)
 
 const { status, data } = await apiInstance.getBulkResourceStatus(
     allocationId
@@ -2180,7 +2177,7 @@ const { status, data } = await apiInstance.getBulkResourceStatus(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **allocationId** | [**string**] | Resource allocation ID | defaults to undefined|
+| **allocationId** | [**string**] |  | defaults to undefined|
 
 
 ### Return type
@@ -2200,11 +2197,10 @@ const { status, data } = await apiInstance.getBulkResourceStatus(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | Resource allocation status retrieved successfully |  -  |
+|**200** | Bulk resource allocation status |  -  |
 |**400** | Bad Request |  -  |
 |**401** | Unauthorized |  -  |
 |**404** | Not Found |  -  |
-|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)

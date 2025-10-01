@@ -9,5 +9,5 @@ post:
         application/json:
           schema:
             $ref: '../../components/schemas/all.yaml#/SessionResponse'
-  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

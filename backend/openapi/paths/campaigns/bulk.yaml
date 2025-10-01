@@ -9,7 +9,7 @@ get:
         application/json:
           schema:
             type: array
-          items:
+            items:
               type: object
               properties:
                 operationId:

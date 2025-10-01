@@ -4,27 +4,28 @@ All URIs are relative to *https://api.domainflow.dev/api/v2*
 
 |Method | HTTP request | Description|
 |------------- | ------------- | -------------|
-|[**configGetAuth**](#configgetauth) | **GET** /config/auth | Get authentication configuration|
-|[**configGetDns**](#configgetdns) | **GET** /config/dns | Get DNS configuration|
+|[**configGetAuthentication**](#configgetauthentication) | **GET** /config/auth | Get authentication configuration|
+|[**configGetDnsValidator**](#configgetdnsvalidator) | **GET** /config/dns | Get DNS validator configuration|
+|[**configGetFeatures**](#configgetfeatures) | **GET** /config/features | Get feature flags configuration|
 |[**configGetHttp**](#configgethttp) | **GET** /config/http | Get HTTP configuration|
 |[**configGetLogging**](#configgetlogging) | **GET** /config/logging | Get logging configuration|
 |[**configGetProxyManager**](#configgetproxymanager) | **GET** /config/proxy-manager | Get proxy manager configuration|
 |[**configGetRateLimiter**](#configgetratelimiter) | **GET** /config/rate-limit | Get rate limiter configuration|
 |[**configGetServer**](#configgetserver) | **GET** /config/server | Get server configuration|
-|[**configGetStealth**](#configgetstealth) | **GET** /config/stealth | Get stealth configuration|
+|[**configGetStealth**](#configgetstealth) | **GET** /config/stealth | Get stealth mode configuration|
 |[**configGetWorker**](#configgetworker) | **GET** /config/worker | Get worker configuration|
-|[**configUpdateAuth**](#configupdateauth) | **PUT** /config/auth | Update authentication configuration|
-|[**configUpdateDns**](#configupdatedns) | **PUT** /config/dns | Update DNS configuration|
+|[**configUpdateAuthentication**](#configupdateauthentication) | **PUT** /config/auth | Update authentication configuration|
+|[**configUpdateDnsValidator**](#configupdatednsvalidator) | **PUT** /config/dns | Update DNS validator configuration|
 |[**configUpdateHttp**](#configupdatehttp) | **PUT** /config/http | Update HTTP configuration|
 |[**configUpdateLogging**](#configupdatelogging) | **PUT** /config/logging | Update logging configuration|
 |[**configUpdateProxyManager**](#configupdateproxymanager) | **PUT** /config/proxy-manager | Update proxy manager configuration|
 |[**configUpdateRateLimiter**](#configupdateratelimiter) | **PUT** /config/rate-limit | Update rate limiter configuration|
 |[**configUpdateServer**](#configupdateserver) | **PUT** /config/server | Update server configuration|
-|[**configUpdateStealth**](#configupdatestealth) | **PUT** /config/stealth | Update stealth configuration|
+|[**configUpdateStealth**](#configupdatestealth) | **PUT** /config/stealth | Update stealth mode configuration|
 |[**configUpdateWorker**](#configupdateworker) | **PUT** /config/worker | Update worker configuration|
 
-# **configGetAuth**
-> ConfigGetAuth200Response configGetAuth()
+# **configGetAuthentication**
+> AuthConfig configGetAuthentication()
 
 
 ### Example
@@ -38,7 +39,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-const { status, data } = await apiInstance.configGetAuth();
+const { status, data } = await apiInstance.configGetAuthentication();
 ```
 
 ### Parameters
@@ -47,7 +48,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ConfigGetAuth200Response**
+**AuthConfig**
 
 ### Authorization
 
@@ -70,8 +71,8 @@ This endpoint does not have any parameters.
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **configGetDns**
-> ConfigGetDns200Response configGetDns()
+# **configGetDnsValidator**
+> DNSValidatorConfigJSON configGetDnsValidator()
 
 
 ### Example
@@ -85,7 +86,7 @@ import {
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-const { status, data } = await apiInstance.configGetDns();
+const { status, data } = await apiInstance.configGetDnsValidator();
 ```
 
 ### Parameters
@@ -94,7 +95,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ConfigGetDns200Response**
+**DNSValidatorConfigJSON**
 
 ### Authorization
 
@@ -109,9 +110,59 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | DNS config |  -  |
+|**200** | DNS validator config |  -  |
 |**401** | Unauthorized |  -  |
 |**403** | Forbidden |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
+|**500** | Internal Server Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **configGetFeatures**
+> FeatureFlags configGetFeatures()
+
+
+### Example
+
+```typescript
+import {
+    ServerSettingsApi,
+    Configuration
+} from './api';
+
+const configuration = new Configuration();
+const apiInstance = new ServerSettingsApi(configuration);
+
+const { status, data } = await apiInstance.configGetFeatures();
+```
+
+### Parameters
+This endpoint does not have any parameters.
+
+
+### Return type
+
+**FeatureFlags**
+
+### Authorization
+
+[cookieAuth](../README.md#cookieAuth)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
+
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+|**200** | feature flags config |  -  |
+|**400** | Bad Request |  -  |
+|**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**409** | Conflict |  -  |
+|**422** | Validation Error |  -  |
 |**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
@@ -165,7 +216,7 @@ This endpoint does not have any parameters.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **configGetLogging**
-> ConfigGetLogging200Response configGetLogging()
+> LoggingConfig configGetLogging()
 
 
 ### Example
@@ -188,7 +239,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ConfigGetLogging200Response**
+**LoggingConfig**
 
 ### Authorization
 
@@ -259,7 +310,7 @@ This endpoint does not have any parameters.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **configGetRateLimiter**
-> ConfigGetRateLimiter200Response configGetRateLimiter()
+> RateLimiterConfig configGetRateLimiter()
 
 
 ### Example
@@ -282,7 +333,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ConfigGetRateLimiter200Response**
+**RateLimiterConfig**
 
 ### Authorization
 
@@ -391,14 +442,14 @@ This endpoint does not have any parameters.
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | OK |  -  |
+|**200** | stealth config |  -  |
 |**401** | Unauthorized |  -  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **configGetWorker**
-> ConfigGetWorker200Response configGetWorker()
+> WorkerConfig configGetWorker()
 
 
 ### Example
@@ -421,7 +472,7 @@ This endpoint does not have any parameters.
 
 ### Return type
 
-**ConfigGetWorker200Response**
+**WorkerConfig**
 
 ### Authorization
 
@@ -444,8 +495,8 @@ This endpoint does not have any parameters.
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **configUpdateAuth**
-> ConfigGetAuth200Response configUpdateAuth(authConfig)
+# **configUpdateAuthentication**
+> AuthConfig configUpdateAuthentication(authConfig)
 
 
 ### Example
@@ -462,7 +513,7 @@ const apiInstance = new ServerSettingsApi(configuration);
 
 let authConfig: AuthConfig; //
 
-const { status, data } = await apiInstance.configUpdateAuth(
+const { status, data } = await apiInstance.configUpdateAuthentication(
     authConfig
 );
 ```
@@ -476,7 +527,7 @@ const { status, data } = await apiInstance.configUpdateAuth(
 
 ### Return type
 
-**ConfigGetAuth200Response**
+**AuthConfig**
 
 ### Authorization
 
@@ -502,8 +553,8 @@ const { status, data } = await apiInstance.configUpdateAuth(
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
-# **configUpdateDns**
-> ConfigGetDns200Response configUpdateDns(dNSValidatorConfigJSON)
+# **configUpdateDnsValidator**
+> DNSValidatorConfigJSON configUpdateDnsValidator(dNSValidatorConfigJSON)
 
 
 ### Example
@@ -520,7 +571,7 @@ const apiInstance = new ServerSettingsApi(configuration);
 
 let dNSValidatorConfigJSON: DNSValidatorConfigJSON; //
 
-const { status, data } = await apiInstance.configUpdateDns(
+const { status, data } = await apiInstance.configUpdateDnsValidator(
     dNSValidatorConfigJSON
 );
 ```
@@ -534,7 +585,7 @@ const { status, data } = await apiInstance.configUpdateDns(
 
 ### Return type
 
-**ConfigGetDns200Response**
+**DNSValidatorConfigJSON**
 
 ### Authorization
 
@@ -618,7 +669,7 @@ const { status, data } = await apiInstance.configUpdateHttp(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **configUpdateLogging**
-> ConfigGetLogging200Response configUpdateLogging(loggingConfig)
+> LoggingConfig configUpdateLogging(loggingConfig)
 
 
 ### Example
@@ -649,7 +700,7 @@ const { status, data } = await apiInstance.configUpdateLogging(
 
 ### Return type
 
-**ConfigGetLogging200Response**
+**LoggingConfig**
 
 ### Authorization
 
@@ -733,7 +784,7 @@ const { status, data } = await apiInstance.configUpdateProxyManager(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **configUpdateRateLimiter**
-> ConfigGetRateLimiter200Response configUpdateRateLimiter(rateLimiterConfig)
+> RateLimiterConfig configUpdateRateLimiter(rateLimiterConfig)
 
 
 ### Example
@@ -764,7 +815,7 @@ const { status, data } = await apiInstance.configUpdateRateLimiter(
 
 ### Return type
 
-**ConfigGetRateLimiter200Response**
+**RateLimiterConfig**
 
 ### Authorization
 
@@ -848,7 +899,7 @@ const { status, data } = await apiInstance.configUpdateServer(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **configUpdateStealth**
-> ConfigGetStealth200Response configUpdateStealth(configGetStealth200ResponseAllOfData)
+> ConfigGetStealth200Response configUpdateStealth(configUpdateStealthRequest)
 
 
 ### Example
@@ -857,16 +908,16 @@ const { status, data } = await apiInstance.configUpdateServer(
 import {
     ServerSettingsApi,
     Configuration,
-    ConfigGetStealth200ResponseAllOfData
+    ConfigUpdateStealthRequest
 } from './api';
 
 const configuration = new Configuration();
 const apiInstance = new ServerSettingsApi(configuration);
 
-let configGetStealth200ResponseAllOfData: ConfigGetStealth200ResponseAllOfData; //
+let configUpdateStealthRequest: ConfigUpdateStealthRequest; //
 
 const { status, data } = await apiInstance.configUpdateStealth(
-    configGetStealth200ResponseAllOfData
+    configUpdateStealthRequest
 );
 ```
 
@@ -874,7 +925,7 @@ const { status, data } = await apiInstance.configUpdateStealth(
 
 |Name | Type | Description  | Notes|
 |------------- | ------------- | ------------- | -------------|
-| **configGetStealth200ResponseAllOfData** | **ConfigGetStealth200ResponseAllOfData**|  | |
+| **configUpdateStealthRequest** | **ConfigUpdateStealthRequest**|  | |
 
 
 ### Return type
@@ -894,15 +945,19 @@ const { status, data } = await apiInstance.configUpdateStealth(
 ### HTTP response details
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
-|**200** | OK |  -  |
+|**200** | Updated |  -  |
 |**400** | Bad Request |  -  |
 |**401** | Unauthorized |  -  |
+|**403** | Forbidden |  -  |
+|**409** | Conflict |  -  |
+|**422** | Validation Error |  -  |
+|**429** | Rate limit exceeded |  * Retry-After - Seconds to wait before retrying <br>  |
 |**500** | Internal Server Error |  -  |
 
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **configUpdateWorker**
-> ConfigGetWorker200Response configUpdateWorker(workerConfig)
+> WorkerConfig configUpdateWorker(workerConfig)
 
 
 ### Example
@@ -933,7 +988,7 @@ const { status, data } = await apiInstance.configUpdateWorker(
 
 ### Return type
 
-**ConfigGetWorker200Response**
+**WorkerConfig**
 
 ### Authorization
 

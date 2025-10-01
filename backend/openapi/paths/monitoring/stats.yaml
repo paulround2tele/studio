@@ -9,5 +9,5 @@ get:
         application/json:
           schema:
             type: object
-  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

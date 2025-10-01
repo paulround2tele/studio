@@ -15,7 +15,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { ConfigGetStealth200ResponseAllOfData } from './config-get-stealth200-response-all-of-data';
+import type { ConfigGetStealth200Response } from './config-get-stealth200-response';
 // May contain unused imports in some cases
 // @ts-ignore
 import type { PersonaConfigDns } from './persona-config-dns';

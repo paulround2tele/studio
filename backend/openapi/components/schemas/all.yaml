@@ -550,6 +550,32 @@ ProxyDetailsResponse:
     port: { type: integer }
     protocol: { type: string }
     username: { type: string }
+Proxy:
+  type: object
+  description: Full proxy resource representation returned by list/detail operations.
+  properties:
+    id: { type: string, format: uuid }
+    name: { type: string }
+    description: { type: string }
+    address: { type: string }
+    protocol: { $ref: '#/ProxyProtocol' }
+    username: { type: string }
+    host: { type: string }
+    port: { type: integer }
+    isEnabled: { type: boolean }
+    isHealthy: { type: boolean }
+    lastStatus: { type: string }
+    lastCheckedAt: { type: string, format: date-time }
+    latencyMs: { type: integer }
+    countryCode: { type: string }
+    successCount: { type: integer }
+    failureCount: { type: integer }
+    lastTested: { type: string, format: date-time }
+    lastError: { type: string }
+    notes: { type: string }
+    createdAt: { type: string, format: date-time }
+    updatedAt: { type: string, format: date-time }
+  required: [id, name, address, isEnabled, isHealthy, createdAt, updatedAt]
 ProxyTestResponse:
   type: object
   properties:
@@ -570,15 +596,6 @@ UpdateProxyRequestAPI:
     countryCode: { type: string }
     isEnabled: { type: boolean }
     notes: { type: string }
-ProxyStatusResponse:
-  type: object
-  properties:
-    proxyId: { type: string, format: uuid }
-    status: { type: string }
-    lastChecked: { type: string, format: date-time }
-    responseTime: { type: integer, format: int64 }
-    isHealthy: { type: boolean }
-    proxyDetails: { $ref: '#/ProxyDetailsResponse' }
 ProxyHealthCheckResponse:
   type: object
   properties:
@@ -644,6 +661,16 @@ BulkProxyTestResponse:
     results:
       type: array
       items: { $ref: '#/ProxyTestResponse' }
+
+ProxyStatusResponse:
+  type: object
+  properties:
+    proxyId: { type: string, format: uuid }
+    status: { type: string }
+    lastChecked: { type: string, format: date-time }
+    responseTime: { type: integer, format: int64 }
+    isHealthy: { type: boolean }
+    proxyDetails: { $ref: '#/Proxy' }
 
 # Proxy pools
 ProxyPool:

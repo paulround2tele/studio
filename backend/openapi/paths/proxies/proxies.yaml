@@ -18,32 +18,32 @@ get:
         application/json:
           schema:
             type: array
-            items: { $ref: '../../components/schemas/all.yaml#/ProxyDetailsResponse' }
-  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
-  '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
-  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+            items: { $ref: '../../components/schemas/all.yaml#/Proxy' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
 post:
-tags: [proxies]
-security:
-  - cookieAuth: []
-summary: Create proxy
-operationId: proxies_create
-requestBody:
-  required: true
-  content:
-    application/json:
-        schema: { $ref: '../../components/schemas/all.yaml#/CreateProxyRequestAPI' }
-responses:
-  '201':
-    description: Created
+  tags: [proxies]
+  security:
+    - cookieAuth: []
+  summary: Create proxy
+  operationId: proxies_create
+  requestBody:
+    required: true
     content:
       application/json:
-        schema: { $ref: '../../components/schemas/all.yaml#/ProxyDetailsResponse' }
-  '400': { $ref: '../../components/responses.yaml#/BadRequest' }
-  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
-  '409': { $ref: '../../components/responses.yaml#/Conflict' }
-  '422': { $ref: '../../components/responses.yaml#/ValidationError' }
-  '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
-  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+        schema: { $ref: '../../components/schemas/all.yaml#/CreateProxyRequestAPI' }
+  responses:
+    '201':
+      description: Created
+      content:
+        application/json:
+          schema: { $ref: '../../components/schemas/all.yaml#/Proxy' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '409': { $ref: '../../components/responses.yaml#/Conflict' }
+    '422': { $ref: '../../components/responses.yaml#/ValidationError' }
+    '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

@@ -24,11 +24,11 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 // @ts-ignore
 import type { BulkDatabaseQueryRequest } from '../models';
 // @ts-ignore
+import type { BulkDatabaseQueryResponse } from '../models';
+// @ts-ignore
 import type { BulkDatabaseStatsRequest } from '../models';
 // @ts-ignore
-import type { DbBulkQuery200Response } from '../models';
-// @ts-ignore
-import type { DbBulkStats200Response } from '../models';
+import type { BulkDatabaseStatsResponse } from '../models';
 // @ts-ignore
 import type { ErrorEnvelope } from '../models';
 /**
@@ -139,7 +139,7 @@ export const DatabaseApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async dbBulkQuery(bulkDatabaseQueryRequest: BulkDatabaseQueryRequest, xRequestedWith?: DbBulkQueryXRequestedWithEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DbBulkQuery200Response>> {
+        async dbBulkQuery(bulkDatabaseQueryRequest: BulkDatabaseQueryRequest, xRequestedWith?: DbBulkQueryXRequestedWithEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkDatabaseQueryResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.dbBulkQuery(bulkDatabaseQueryRequest, xRequestedWith, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DatabaseApi.dbBulkQuery']?.[localVarOperationServerIndex]?.url;
@@ -153,7 +153,7 @@ export const DatabaseApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async dbBulkStats(bulkDatabaseStatsRequest: BulkDatabaseStatsRequest, xRequestedWith?: DbBulkStatsXRequestedWithEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<DbBulkStats200Response>> {
+        async dbBulkStats(bulkDatabaseStatsRequest: BulkDatabaseStatsRequest, xRequestedWith?: DbBulkStatsXRequestedWithEnum, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BulkDatabaseStatsResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.dbBulkStats(bulkDatabaseStatsRequest, xRequestedWith, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DatabaseApi.dbBulkStats']?.[localVarOperationServerIndex]?.url;
@@ -177,7 +177,7 @@ export const DatabaseApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        dbBulkQuery(bulkDatabaseQueryRequest: BulkDatabaseQueryRequest, xRequestedWith?: DbBulkQueryXRequestedWithEnum, options?: RawAxiosRequestConfig): AxiosPromise<DbBulkQuery200Response> {
+        dbBulkQuery(bulkDatabaseQueryRequest: BulkDatabaseQueryRequest, xRequestedWith?: DbBulkQueryXRequestedWithEnum, options?: RawAxiosRequestConfig): AxiosPromise<BulkDatabaseQueryResponse> {
             return localVarFp.dbBulkQuery(bulkDatabaseQueryRequest, xRequestedWith, options).then((request) => request(axios, basePath));
         },
         /**
@@ -188,7 +188,7 @@ export const DatabaseApiFactory = function (configuration?: Configuration, baseP
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        dbBulkStats(bulkDatabaseStatsRequest: BulkDatabaseStatsRequest, xRequestedWith?: DbBulkStatsXRequestedWithEnum, options?: RawAxiosRequestConfig): AxiosPromise<DbBulkStats200Response> {
+        dbBulkStats(bulkDatabaseStatsRequest: BulkDatabaseStatsRequest, xRequestedWith?: DbBulkStatsXRequestedWithEnum, options?: RawAxiosRequestConfig): AxiosPromise<BulkDatabaseStatsResponse> {
             return localVarFp.dbBulkStats(bulkDatabaseStatsRequest, xRequestedWith, options).then((request) => request(axios, basePath));
         },
     };
@@ -209,7 +209,7 @@ export interface DatabaseApiInterface {
      * @throws {RequiredError}
      * @memberof DatabaseApiInterface
      */
-    dbBulkQuery(bulkDatabaseQueryRequest: BulkDatabaseQueryRequest, xRequestedWith?: DbBulkQueryXRequestedWithEnum, options?: RawAxiosRequestConfig): AxiosPromise<DbBulkQuery200Response>;
+    dbBulkQuery(bulkDatabaseQueryRequest: BulkDatabaseQueryRequest, xRequestedWith?: DbBulkQueryXRequestedWithEnum, options?: RawAxiosRequestConfig): AxiosPromise<BulkDatabaseQueryResponse>;
 
     /**
      * Retrieve comprehensive database statistics including schema and table-level details
@@ -220,7 +220,7 @@ export interface DatabaseApiInterface {
      * @throws {RequiredError}
      * @memberof DatabaseApiInterface
      */
-    dbBulkStats(bulkDatabaseStatsRequest: BulkDatabaseStatsRequest, xRequestedWith?: DbBulkStatsXRequestedWithEnum, options?: RawAxiosRequestConfig): AxiosPromise<DbBulkStats200Response>;
+    dbBulkStats(bulkDatabaseStatsRequest: BulkDatabaseStatsRequest, xRequestedWith?: DbBulkStatsXRequestedWithEnum, options?: RawAxiosRequestConfig): AxiosPromise<BulkDatabaseStatsResponse>;
 
 }
 

@@ -2,8 +2,10 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { PersonaResponse as Persona } from '@/lib/api-client/models';
 import { PersonaType } from '@/lib/api-client/models/persona-type';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
-import type { ModelsProxy as ProxyType } from '@/lib/api-client/models/models-proxy';
-import { PersonasApi, ProxiesApi, CampaignsApi } from '@/lib/api-client';
+import type { Proxy as ProxyType } from '@/lib/api-client/models/proxy';
+import { PersonasApi } from '@/lib/api-client/apis/personas-api';
+import { ProxiesApi } from '@/lib/api-client/apis/proxies-api';
+import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
 import { apiConfiguration as config } from '@/lib/api/config';
 
 type HttpPersona = Persona;
@@ -43,20 +45,20 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
 
   // Load personas and filter by type using generated enum
   const personasResp = await personasApi.personasList();
-  const personasData = (await import('@/lib/utils/apiResponseHelpers')).extractResponseData<Persona[]>(personasResp) || [];
+  const personasData: Persona[] = (personasResp as any)?.data ?? personasResp ?? [];
   const httpPs = personasData.filter(p => p.personaType === PersonaType.http);
   const dnsPs = personasData.filter(p => p.personaType === PersonaType.dns);
       setHttpPersonas(httpPs);
       setDnsPersonas(dnsPs);
 
       // Load proxies
-      const proxiesResp = await proxiesApi.proxiesList();
-      const proxiesData = (await import('@/lib/utils/apiResponseHelpers')).extractResponseData<ProxyType[]>(proxiesResp) || [];
+  const proxiesResp = await proxiesApi.proxiesList();
+  const proxiesData: ProxyType[] = (proxiesResp as any)?.data ?? proxiesResp ?? [];
       setProxies(proxiesData);
 
       // Load source campaigns (simple list)
-      const campaignsResp = await campaignsApi.campaignsList();
-      const campaignsData = (await import('@/lib/utils/apiResponseHelpers')).extractResponseData<Campaign[]>(campaignsResp) || [];
+  const campaignsResp = await campaignsApi.campaignsList();
+  const campaignsData: Campaign[] = (campaignsResp as any)?.data ?? campaignsResp ?? [];
       setSourceCampaigns(campaignsData);
     } catch (error) {
       console.error('Error loading form data:', error);

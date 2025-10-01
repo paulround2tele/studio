@@ -2,8 +2,8 @@
 
 import { useCallback, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { authApi } from '@/lib/api-client/compat';
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
+import { AuthApi } from '@/lib/api-client/apis/auth-api';
+import { apiConfiguration } from '@/lib/api/config';
 import type { LoginRequest, UserPublicResponse as User } from '@/lib/api-client/models';
 
 // Using generated model types
@@ -48,6 +48,7 @@ const DEFAULT_CONFIG: CachedAuthConfig = {
  */
 export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
   const router = useRouter();
+  const authApi = new AuthApi(apiConfiguration);
   const finalConfig = { ...DEFAULT_CONFIG, ...config };
   
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -127,9 +128,9 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
         authApi.authMe(),
         timeoutPromise
       ]);
-      
       console.log('[useCachedAuth] 🔍 DEBUGGING: API call completed, response:', response);
-  const userData = extractResponseData<User>(response);
+      // Generated client returns AxiosResponse<User>
+      const userData: User | null = (response as any)?.data ?? (response as any) ?? null;
       console.log('[useCachedAuth] 🔍 DEBUGGING: Extracted user data:', userData);
       
       if (userData?.id && userData?.email) {
@@ -222,7 +223,7 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
       };
       
   const response = await authApi.authLogin(loginRequest);
-      const loginData = extractResponseData(response);
+  const loginData: any = (response as any)?.data ?? response;
       
       if (loginData) {
         console.log('[useCachedAuth] Login successful');

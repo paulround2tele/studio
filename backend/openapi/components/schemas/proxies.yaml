@@ -18,6 +18,39 @@ ProxyDetailsResponse:
     port: { type: integer }
     protocol: { type: string }
     username: { type: string }
+  description: "(LEGACY) Minimal proxy details shape retained for backward compatibility. New integrations should use the full Proxy schema."
+
+# Full proxy resource exposed to frontend (all fields optional until backend handlers upgraded)
+Proxy:
+  type: object
+  description: "Comprehensive proxy resource including operational and health metadata. All properties currently optional while backend response is being incrementally expanded."
+  properties:
+    id: { type: string, format: uuid }
+    name: { type: string }
+    description: { type: string }
+    address: { type: string, description: "Full proxy address (scheme://user:pass@host:port or host:port)" }
+    protocol: { $ref: '#/components/schemas/ProxyProtocol' }
+    username: { type: string }
+    host: { type: string }
+    port: { type: integer }
+    isEnabled: { type: boolean }
+    isHealthy: { type: boolean }
+    lastStatus: { type: string }
+    lastCheckedAt: { type: string, format: date-time }
+    latencyMs: { type: integer, format: int64 }
+    city: { type: string }
+    countryCode: { type: string }
+    provider: { type: string }
+    createdAt: { type: string, format: date-time }
+    updatedAt: { type: string, format: date-time }
+    status: { type: string, description: "Frontend-oriented status enum (e.g., Active, Failed)" }
+    notes: { type: string }
+    successCount: { type: integer }
+    failureCount: { type: integer }
+    lastTested: { type: string, format: date-time }
+    lastError: { type: string }
+    inputUsername: { type: string }
+    inputPassword: { type: string }
 ProxyTestResponse:
   type: object
   properties:
@@ -38,15 +71,6 @@ UpdateProxyRequestAPI:
     countryCode: { type: string }
     isEnabled: { type: boolean }
     notes: { type: string }
-ProxyStatusResponse:
-  type: object
-  properties:
-    proxyId: { type: string, format: uuid }
-    status: { type: string }
-    lastChecked: { type: string, format: date-time }
-    responseTime: { type: integer, format: int64 }
-    isHealthy: { type: boolean }
-    proxyDetails: { $ref: '#/components/schemas/ProxyDetailsResponse' }
 ProxyHealthCheckResponse:
   type: object
   properties:

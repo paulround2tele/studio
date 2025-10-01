@@ -3,7 +3,7 @@ get:
   security:
     - cookieAuth: []
   summary: Get DNS validator configuration
-  operationId: config_get_DNS validator
+  operationId: config_get_dns_validator
   responses:
     '200':
       description: DNS validator config

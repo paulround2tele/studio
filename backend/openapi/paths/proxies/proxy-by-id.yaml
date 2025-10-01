@@ -19,7 +19,7 @@ put:
       description: Updated
       content:
         application/json:
-          schema: { $ref: '../../components/schemas/all.yaml#/ProxyDetailsResponse' }
+          schema: { $ref: '../../components/schemas/all.yaml#/Proxy' }
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }

@@ -22,7 +22,7 @@ get:
               configs:
                 type: object
                 additionalProperties: { type: object }
-  '400': { $ref: '../../components/responses.yaml#/BadRequest' }
-  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-  '404': { $ref: '../../components/responses.yaml#/NotFound' }
-  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

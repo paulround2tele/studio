@@ -2,7 +2,6 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { AuthApi } from '@/lib/api-client/apis/auth-api';
 import { apiConfiguration } from '@/lib/api/config';
 import type { LoginRequest, UserPublicResponse as User } from '@/lib/api-client/models';
-import { extractResponseData } from '@/lib/utils/apiResponseHelpers';
 
 const authClient = new AuthApi(apiConfiguration);
 
@@ -16,9 +15,8 @@ export const authApi = createApi({
       queryFn: async (credentials) => {
         try {
           const resp: any = await (authClient as any).authLogin(credentials);
-          const data = extractResponseData<any>(resp);
-          // Attempt to locate user object in envelope
-          const sessionUser = data?.User || data?.user;
+          const data = resp?.data ?? resp;
+          const sessionUser = data?.User || data?.user || data; // fallback
           if (sessionUser) {
             const user: User = {
               id: sessionUser.id ?? sessionUser.ID ?? 'unknown',
@@ -57,8 +55,8 @@ export const authApi = createApi({
       queryFn: async () => {
         try {
           const resp: any = await (authClient as any).authMe();
-          const user = extractResponseData<User>(resp);
-          return { data: user || null };
+          const body = resp?.data ?? resp;
+          return { data: (body as User) || null };
         } catch (error: any) {
           return { error: error?.response?.data || error?.message || 'Failed to load user' };
         }

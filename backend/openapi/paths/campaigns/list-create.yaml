@@ -14,7 +14,7 @@ get:
         application/json:
           schema:
             type: array
-          items: { $ref: '../../components/schemas/all.yaml#/CampaignResponse' }
+            items: { $ref: '../../components/schemas/all.yaml#/CampaignResponse' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
 post:

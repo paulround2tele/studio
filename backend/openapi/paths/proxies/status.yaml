@@ -12,7 +12,7 @@ get:
           schema:
             type: array
             items: { $ref: '../../components/schemas/all.yaml#/ProxyStatusResponse' }
-  '400': { $ref: '../../components/responses.yaml#/BadRequest' }
-  '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
-  '403': { $ref: '../../components/responses.yaml#/Forbidden' }
-  '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+    '400': { $ref: '../../components/responses.yaml#/BadRequest' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '403': { $ref: '../../components/responses.yaml#/Forbidden' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

@@ -22,17 +22,17 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
+import type { AuthChangePassword200Response } from '../models';
+// @ts-ignore
 import type { AuthChangePasswordRequest } from '../models';
-// @ts-ignore
-import type { AuthLogin200Response } from '../models';
-// @ts-ignore
-import type { AuthLogout200Response } from '../models';
-// @ts-ignore
-import type { AuthMe200Response } from '../models';
 // @ts-ignore
 import type { ErrorEnvelope } from '../models';
 // @ts-ignore
 import type { LoginRequest } from '../models';
+// @ts-ignore
+import type { SessionResponse } from '../models';
+// @ts-ignore
+import type { UserPublicResponse } from '../models';
 /**
  * AuthApi - axios parameter creator
  * @export
@@ -228,7 +228,7 @@ export const AuthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authChangePassword(authChangePasswordRequest: AuthChangePasswordRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthLogout200Response>> {
+        async authChangePassword(authChangePasswordRequest: AuthChangePasswordRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthChangePassword200Response>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.authChangePassword(authChangePasswordRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthApi.authChangePassword']?.[localVarOperationServerIndex]?.url;
@@ -241,7 +241,7 @@ export const AuthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authLogin(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthLogin200Response>> {
+        async authLogin(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SessionResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.authLogin(loginRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthApi.authLogin']?.[localVarOperationServerIndex]?.url;
@@ -253,7 +253,7 @@ export const AuthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authLogout(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthLogout200Response>> {
+        async authLogout(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.authLogout(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthApi.authLogout']?.[localVarOperationServerIndex]?.url;
@@ -265,7 +265,7 @@ export const AuthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authMe(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthMe200Response>> {
+        async authMe(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<UserPublicResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.authMe(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthApi.authMe']?.[localVarOperationServerIndex]?.url;
@@ -277,7 +277,7 @@ export const AuthApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async authRefresh(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<AuthLogin200Response>> {
+        async authRefresh(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SessionResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.authRefresh(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['AuthApi.authRefresh']?.[localVarOperationServerIndex]?.url;
@@ -300,7 +300,7 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authChangePassword(authChangePasswordRequest: AuthChangePasswordRequest, options?: RawAxiosRequestConfig): AxiosPromise<AuthLogout200Response> {
+        authChangePassword(authChangePasswordRequest: AuthChangePasswordRequest, options?: RawAxiosRequestConfig): AxiosPromise<AuthChangePassword200Response> {
             return localVarFp.authChangePassword(authChangePasswordRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -310,7 +310,7 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authLogin(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<AuthLogin200Response> {
+        authLogin(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<SessionResponse> {
             return localVarFp.authLogin(loginRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -319,7 +319,7 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authLogout(options?: RawAxiosRequestConfig): AxiosPromise<AuthLogout200Response> {
+        authLogout(options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.authLogout(options).then((request) => request(axios, basePath));
         },
         /**
@@ -328,7 +328,7 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authMe(options?: RawAxiosRequestConfig): AxiosPromise<AuthMe200Response> {
+        authMe(options?: RawAxiosRequestConfig): AxiosPromise<UserPublicResponse> {
             return localVarFp.authMe(options).then((request) => request(axios, basePath));
         },
         /**
@@ -337,7 +337,7 @@ export const AuthApiFactory = function (configuration?: Configuration, basePath?
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        authRefresh(options?: RawAxiosRequestConfig): AxiosPromise<AuthLogin200Response> {
+        authRefresh(options?: RawAxiosRequestConfig): AxiosPromise<SessionResponse> {
             return localVarFp.authRefresh(options).then((request) => request(axios, basePath));
         },
     };
@@ -357,7 +357,7 @@ export interface AuthApiInterface {
      * @throws {RequiredError}
      * @memberof AuthApiInterface
      */
-    authChangePassword(authChangePasswordRequest: AuthChangePasswordRequest, options?: RawAxiosRequestConfig): AxiosPromise<AuthLogout200Response>;
+    authChangePassword(authChangePasswordRequest: AuthChangePasswordRequest, options?: RawAxiosRequestConfig): AxiosPromise<AuthChangePassword200Response>;
 
     /**
      * 
@@ -367,7 +367,7 @@ export interface AuthApiInterface {
      * @throws {RequiredError}
      * @memberof AuthApiInterface
      */
-    authLogin(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<AuthLogin200Response>;
+    authLogin(loginRequest: LoginRequest, options?: RawAxiosRequestConfig): AxiosPromise<SessionResponse>;
 
     /**
      * 
@@ -376,7 +376,7 @@ export interface AuthApiInterface {
      * @throws {RequiredError}
      * @memberof AuthApiInterface
      */
-    authLogout(options?: RawAxiosRequestConfig): AxiosPromise<AuthLogout200Response>;
+    authLogout(options?: RawAxiosRequestConfig): AxiosPromise<void>;
 
     /**
      * 
@@ -385,7 +385,7 @@ export interface AuthApiInterface {
      * @throws {RequiredError}
      * @memberof AuthApiInterface
      */
-    authMe(options?: RawAxiosRequestConfig): AxiosPromise<AuthMe200Response>;
+    authMe(options?: RawAxiosRequestConfig): AxiosPromise<UserPublicResponse>;
 
     /**
      * 
@@ -394,7 +394,7 @@ export interface AuthApiInterface {
      * @throws {RequiredError}
      * @memberof AuthApiInterface
      */
-    authRefresh(options?: RawAxiosRequestConfig): AxiosPromise<AuthLogin200Response>;
+    authRefresh(options?: RawAxiosRequestConfig): AxiosPromise<SessionResponse>;
 
 }
 

@@ -24,9 +24,9 @@ import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError
 // @ts-ignore
 import type { BatchKeywordExtractionRequest } from '../models';
 // @ts-ignore
-import type { ErrorEnvelope } from '../models';
+import type { BatchKeywordExtractionResponse } from '../models';
 // @ts-ignore
-import type { KeywordExtractBatch200Response } from '../models';
+import type { ErrorEnvelope } from '../models';
 /**
  * KeywordExtractionApi - axios parameter creator
  * @export
@@ -144,7 +144,7 @@ export const KeywordExtractionApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async keywordExtractBatch(batchKeywordExtractionRequest: BatchKeywordExtractionRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<KeywordExtractBatch200Response>> {
+        async keywordExtractBatch(batchKeywordExtractionRequest: BatchKeywordExtractionRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<BatchKeywordExtractionResponse>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.keywordExtractBatch(batchKeywordExtractionRequest, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['KeywordExtractionApi.keywordExtractBatch']?.[localVarOperationServerIndex]?.url;
@@ -183,7 +183,7 @@ export const KeywordExtractionApiFactory = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        keywordExtractBatch(batchKeywordExtractionRequest: BatchKeywordExtractionRequest, options?: RawAxiosRequestConfig): AxiosPromise<KeywordExtractBatch200Response> {
+        keywordExtractBatch(batchKeywordExtractionRequest: BatchKeywordExtractionRequest, options?: RawAxiosRequestConfig): AxiosPromise<BatchKeywordExtractionResponse> {
             return localVarFp.keywordExtractBatch(batchKeywordExtractionRequest, options).then((request) => request(axios, basePath));
         },
         /**
@@ -216,7 +216,7 @@ export interface KeywordExtractionApiInterface {
      * @throws {RequiredError}
      * @memberof KeywordExtractionApiInterface
      */
-    keywordExtractBatch(batchKeywordExtractionRequest: BatchKeywordExtractionRequest, options?: RawAxiosRequestConfig): AxiosPromise<KeywordExtractBatch200Response>;
+    keywordExtractBatch(batchKeywordExtractionRequest: BatchKeywordExtractionRequest, options?: RawAxiosRequestConfig): AxiosPromise<BatchKeywordExtractionResponse>;
 
     /**
      * Server-Sent Events stream. Clients SHOULD handle heartbeats and reconnection hints. Heartbeat events are sent periodically: - see example SseHeartbeat; clients SHOULD keep the connection alive. The server MAY suggest a retry delay with an SSE control line (see SseRetry example). 

@@ -355,7 +355,7 @@ const { status, data } = await apiInstance.personasList(
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **personasTest**
-> PersonasTest200Response personasTest()
+> PersonaTestResponse personasTest()
 
 
 ### Example
@@ -385,7 +385,7 @@ const { status, data } = await apiInstance.personasTest(
 
 ### Return type
 
-**PersonasTest200Response**
+**PersonaTestResponse**
 
 ### Authorization
 

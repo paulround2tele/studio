@@ -13,20 +13,24 @@
  */
 
 
-// May contain unused imports in some cases
-// @ts-ignore
-import type { GetBulkResourceStatus200ResponseAllOfData } from './get-bulk-resource-status200-response-all-of-data';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { Metadata } from './metadata';
-// May contain unused imports in some cases
-// @ts-ignore
-import type { SuccessEnvelope } from './success-envelope';
 
 /**
- * @type GetBulkResourceStatus200Response
+ * 
  * @export
+ * @interface GetBulkResourceStatus200Response
  */
-export type GetBulkResourceStatus200Response = SuccessEnvelope;
-
+export interface GetBulkResourceStatus200Response {
+    /**
+     * 
+     * @type {string}
+     * @memberof GetBulkResourceStatus200Response
+     */
+    'allocationId'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof GetBulkResourceStatus200Response
+     */
+    'status'?: string;
+}
 

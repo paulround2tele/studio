@@ -31,31 +31,49 @@ func (h *strictHandlers) ProxiesList(ctx context.Context, r gen.ProxiesListReque
 	if err != nil {
 		return gen.ProxiesList500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to list proxies", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	items := make([]gen.ProxyDetailsResponse, 0, len(proxies))
+	items := make([]gen.Proxy, 0, len(proxies))
 	for _, p := range proxies {
-		var host *string
-		if p.Host.Valid {
-			s := p.Host.String
-			host = &s
+		// Map model to API Proxy
+		apiProxy := gen.Proxy{Id: openapi_types.UUID(p.ID), Name: p.Name, Address: p.Address, IsEnabled: p.IsEnabled, IsHealthy: p.IsHealthy, CreatedAt: p.CreatedAt, UpdatedAt: p.UpdatedAt}
+		if p.Description.Valid {
+			s := p.Description.String
+			apiProxy.Description = &s
 		}
-		var port *int
-		if p.Port.Valid {
-			v := int(p.Port.Int32)
-			port = &v
-		}
-		var protoStr *string
 		if p.Protocol != nil {
-			s := string(*p.Protocol)
-			protoStr = &s
+			protoStr := gen.ProxyProtocol(*p.Protocol)
+			apiProxy.Protocol = &protoStr
 		}
-		var username *string
 		if p.Username.Valid {
 			s := p.Username.String
-			username = &s
+			apiProxy.Username = &s
 		}
-		items = append(items, gen.ProxyDetailsResponse{Host: host, Port: port, Protocol: protoStr, Username: username})
+		if p.Host.Valid {
+			s := p.Host.String
+			apiProxy.Host = &s
+		}
+		if p.Port.Valid {
+			v := int(p.Port.Int32)
+			apiProxy.Port = &v
+		}
+		if p.LastCheckedAt.Valid {
+			t := p.LastCheckedAt.Time
+			apiProxy.LastCheckedAt = &t
+		}
+		if p.LatencyMs.Valid {
+			v := int(p.LatencyMs.Int32)
+			apiProxy.LatencyMs = &v
+		}
+		if p.CountryCode.Valid {
+			s := p.CountryCode.String
+			apiProxy.CountryCode = &s
+		}
+		if p.Notes.Valid {
+			s := p.Notes.String
+			apiProxy.Notes = &s
+		}
+		items = append(items, apiProxy)
 	}
-	return gen.ProxiesList200JSONResponse{Data: &items, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesList200JSONResponse(items), nil
 }
 
 func (h *strictHandlers) ProxiesCreate(ctx context.Context, r gen.ProxiesCreateRequestObject) (gen.ProxiesCreateResponseObject, error) {
@@ -89,28 +107,29 @@ func (h *strictHandlers) ProxiesCreate(ctx context.Context, r gen.ProxiesCreateR
 		}
 		return gen.ProxiesCreate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to create proxy", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	var host *string
-	if m.Host.Valid {
-		s := m.Host.String
-		host = &s
+	// Build API Proxy response
+	apiProxy := gen.Proxy{Id: openapi_types.UUID(m.ID), Name: m.Name, Address: m.Address, IsEnabled: m.IsEnabled, IsHealthy: m.IsHealthy, CreatedAt: m.CreatedAt, UpdatedAt: m.UpdatedAt}
+	if m.Description.Valid {
+		s := m.Description.String
+		apiProxy.Description = &s
 	}
-	var port *int
-	if m.Port.Valid {
-		v := int(m.Port.Int32)
-		port = &v
-	}
-	var protoStr *string
 	if m.Protocol != nil {
-		s := string(*m.Protocol)
-		protoStr = &s
+		protoStr := gen.ProxyProtocol(*m.Protocol)
+		apiProxy.Protocol = &protoStr
 	}
-	var username *string
 	if m.Username.Valid {
 		s := m.Username.String
-		username = &s
+		apiProxy.Username = &s
 	}
-	data := gen.ProxyDetailsResponse{Host: host, Port: port, Protocol: protoStr, Username: username}
-	return gen.ProxiesCreate201JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	if m.Host.Valid {
+		s := m.Host.String
+		apiProxy.Host = &s
+	}
+	if m.Port.Valid {
+		v := int(m.Port.Int32)
+		apiProxy.Port = &v
+	}
+	return gen.ProxiesCreate201JSONResponse(apiProxy), nil
 }
 
 func (h *strictHandlers) ProxiesBulkDelete(ctx context.Context, r gen.ProxiesBulkDeleteRequestObject) (gen.ProxiesBulkDeleteResponseObject, error) {
@@ -130,8 +149,7 @@ func (h *strictHandlers) ProxiesBulkDelete(ctx context.Context, r gen.ProxiesBul
 		}
 	}
 	total := len(r.Body.ProxyIds)
-	data := gen.BulkProxyOperationResponse{SuccessCount: &success, ErrorCount: &errors, TotalRequested: &total}
-	return gen.ProxiesBulkDelete200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesBulkDelete200JSONResponse(gen.BulkProxyOperationResponse{SuccessCount: &success, ErrorCount: &errors, TotalRequested: &total}), nil
 }
 
 func (h *strictHandlers) ProxiesBulkTest(ctx context.Context, r gen.ProxiesBulkTestRequestObject) (gen.ProxiesBulkTestResponseObject, error) {
@@ -146,8 +164,7 @@ func (h *strictHandlers) ProxiesBulkTest(ctx context.Context, r gen.ProxiesBulkT
 		var rt int64 = 0
 		results = append(results, gen.ProxyTestResponse{ProxyId: &pid, Success: &ok, StatusCode: &status, ResponseTime: &rt})
 	}
-	data := gen.BulkProxyTestResponse{Results: &results}
-	return gen.ProxiesBulkTest200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesBulkTest200JSONResponse(gen.BulkProxyTestResponse{Results: &results}), nil
 }
 
 func (h *strictHandlers) ProxiesBulkUpdate(ctx context.Context, r gen.ProxiesBulkUpdateRequestObject) (gen.ProxiesBulkUpdateResponseObject, error) {
@@ -191,8 +208,7 @@ func (h *strictHandlers) ProxiesBulkUpdate(ctx context.Context, r gen.ProxiesBul
 		}
 		success++
 	}
-	data := gen.BulkProxyOperationResponse{SuccessCount: &success, ErrorCount: &errors}
-	return gen.ProxiesBulkUpdate200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesBulkUpdate200JSONResponse(gen.BulkProxyOperationResponse{SuccessCount: &success, ErrorCount: &errors}), nil
 }
 
 func (h *strictHandlers) ProxiesHealthCheckAll(ctx context.Context, r gen.ProxiesHealthCheckAllRequestObject) (gen.ProxiesHealthCheckAllResponseObject, error) {
@@ -209,8 +225,7 @@ func (h *strictHandlers) ProxiesHealthCheckAll(ctx context.Context, r gen.Proxie
 		h.deps.ProxyMgr.ForceCheckProxiesAsync(ids)
 	}
 	total := len(ids)
-	data := gen.BulkHealthCheckResponse{TotalProxies: &total}
-	return gen.ProxiesHealthCheckAll202JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesHealthCheckAll202JSONResponse(gen.BulkHealthCheckResponse{TotalProxies: &total}), nil
 }
 
 func (h *strictHandlers) ProxiesStatus(ctx context.Context, r gen.ProxiesStatusRequestObject) (gen.ProxiesStatusResponseObject, error) {
@@ -222,14 +237,13 @@ func (h *strictHandlers) ProxiesStatus(ctx context.Context, r gen.ProxiesStatusR
 		for _, s := range statuses {
 			id := openapi_types.UUID(uuid.MustParse(s.ID))
 			healthy := s.IsHealthy
-			var details *gen.ProxyDetailsResponse
 			out = append(out, gen.ProxyStatusResponse{ProxyId: &id, IsHealthy: &healthy, Status: func() *string {
 				v := "ok"
 				if !healthy {
 					v = "unhealthy"
 				}
 				return &v
-			}(), LastChecked: &now, ProxyDetails: details})
+			}(), LastChecked: &now})
 		}
 	} else if h.deps != nil && h.deps.Stores.Proxy != nil && h.deps.DB != nil {
 		proxies, err := h.deps.Stores.Proxy.ListProxies(ctx, h.deps.DB, store.ListProxiesFilter{})
@@ -262,7 +276,7 @@ func (h *strictHandlers) ProxiesStatus(ctx context.Context, r gen.ProxiesStatusR
 	} else {
 		out = []gen.ProxyStatusResponse{}
 	}
-	return gen.ProxiesStatus200JSONResponse{Data: &out, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesStatus200JSONResponse(out), nil
 }
 
 func (h *strictHandlers) ProxiesDelete(ctx context.Context, r gen.ProxiesDeleteRequestObject) (gen.ProxiesDeleteResponseObject, error) {
@@ -275,7 +289,8 @@ func (h *strictHandlers) ProxiesDelete(ctx context.Context, r gen.ProxiesDeleteR
 		}
 		return gen.ProxiesDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to delete proxy", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	return gen.ProxiesDelete200JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	// 204 No Content per spec
+	return gen.ProxiesDelete204Response{}, nil
 }
 
 func (h *strictHandlers) ProxiesUpdate(ctx context.Context, r gen.ProxiesUpdateRequestObject) (gen.ProxiesUpdateResponseObject, error) {
@@ -319,28 +334,28 @@ func (h *strictHandlers) ProxiesUpdate(ctx context.Context, r gen.ProxiesUpdateR
 		}
 		return gen.ProxiesUpdate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to update proxy", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	var host *string
-	if existing.Host.Valid {
-		s := existing.Host.String
-		host = &s
+	apiProxy := gen.Proxy{Id: openapi_types.UUID(existing.ID), Name: existing.Name, Address: existing.Address, IsEnabled: existing.IsEnabled, IsHealthy: existing.IsHealthy, CreatedAt: existing.CreatedAt, UpdatedAt: existing.UpdatedAt}
+	if existing.Description.Valid {
+		s := existing.Description.String
+		apiProxy.Description = &s
 	}
-	var port *int
-	if existing.Port.Valid {
-		v := int(existing.Port.Int32)
-		port = &v
-	}
-	var protoStr *string
 	if existing.Protocol != nil {
-		s := string(*existing.Protocol)
-		protoStr = &s
+		protoStr := gen.ProxyProtocol(*existing.Protocol)
+		apiProxy.Protocol = &protoStr
 	}
-	var username *string
 	if existing.Username.Valid {
 		s := existing.Username.String
-		username = &s
+		apiProxy.Username = &s
 	}
-	data := gen.ProxyDetailsResponse{Host: host, Port: port, Protocol: protoStr, Username: username}
-	return gen.ProxiesUpdate200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	if existing.Host.Valid {
+		s := existing.Host.String
+		apiProxy.Host = &s
+	}
+	if existing.Port.Valid {
+		v := int(existing.Port.Int32)
+		apiProxy.Port = &v
+	}
+	return gen.ProxiesUpdate200JSONResponse(apiProxy), nil
 }
 
 func (h *strictHandlers) ProxiesHealthCheckSingle(ctx context.Context, r gen.ProxiesHealthCheckSingleRequestObject) (gen.ProxiesHealthCheckSingleResponseObject, error) {
@@ -370,7 +385,7 @@ func (h *strictHandlers) ProxiesHealthCheckSingle(ctx context.Context, r gen.Pro
 		ok := true
 		res = gen.ProxyHealthCheckResponse{ProxyId: &id, Success: &ok, Status: func() *string { s := "ok"; return &s }(), Timestamp: &now}
 	}
-	return gen.ProxiesHealthCheckSingle200JSONResponse{Data: &res, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesHealthCheckSingle200JSONResponse(res), nil
 }
 
 func (h *strictHandlers) ProxiesTest(ctx context.Context, r gen.ProxiesTestRequestObject) (gen.ProxiesTestResponseObject, error) {
@@ -380,5 +395,5 @@ func (h *strictHandlers) ProxiesTest(ctx context.Context, r gen.ProxiesTestReque
 	status := 200
 	var rt int64 = 0
 	data := gen.ProxyTestResponse{ProxyId: &pid, Success: &ok, StatusCode: &status, ResponseTime: &rt}
-	return gen.ProxiesTest200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxiesTest200JSONResponse(data), nil
 }

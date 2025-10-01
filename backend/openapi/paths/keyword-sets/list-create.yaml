@@ -16,7 +16,7 @@ get:
         application/json:
           schema:
             type: array
-          items: { $ref: '../../components/schemas/all.yaml#/KeywordSetResponse' }
+            items: { $ref: '../../components/schemas/all.yaml#/KeywordSetResponse' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
@@ -31,7 +31,7 @@ post:
     required: true
     content:
       application/json:
-          schema: { $ref: '../../components/schemas/all.yaml#/CreateKeywordSetRequest' }
+        schema: { $ref: '../../components/schemas/all.yaml#/CreateKeywordSetRequest' }
   responses:
     '201':
       description: Created
