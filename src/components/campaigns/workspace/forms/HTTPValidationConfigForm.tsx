@@ -53,9 +53,10 @@ export const HTTPValidationConfigForm: React.FC<Props> = ({ campaignId, onConfig
     const personasData = personasResponse.data || [];
     const poolsData = poolsResponse.data || [];
     const setsData = setsResponse.data || [];
-    const personasRaw = Array.isArray(personasData?.items) ? personasData.items : Array.isArray(personasData?.data) ? personasData.data : Array.isArray(personasData) ? personasData : [];
-    const poolsRaw = Array.isArray(poolsData?.items) ? poolsData.items : Array.isArray(poolsData?.data) ? poolsData.data : Array.isArray(poolsData) ? poolsData : [];
-    const setsRaw = Array.isArray(setsData?.items) ? setsData.items : Array.isArray(setsData?.data) ? setsData.data : Array.isArray(setsData) ? setsData : [];
+    // Since APIs return direct arrays, we can use them directly
+    const personasRaw = Array.isArray(personasData) ? personasData : [];
+    const poolsRaw = Array.isArray(poolsData) ? poolsData : [];
+    const setsRaw = Array.isArray(setsData) ? setsData : [];
     const activeHttp = personasRaw.filter((p: any)=> (p.personaType==='http' || p.personaType==='HTTP') && (p.isEnabled===true || p.isEnabled===undefined));
     setHttpPersonas(activeHttp);
     setKeywordSets(setsRaw||[]);

@@ -47,8 +47,9 @@ export const DNSValidationConfigForm: React.FC<Props> = ({ campaignId, onConfigu
     // API now returns direct arrays
     const personasData = personasResponse.data || [];
     const poolsData = poolsResponse.data || [];
-    const personasRaw = Array.isArray(personasData?.items) ? personasData.items : Array.isArray(personasData?.data) ? personasData.data : Array.isArray(personasData) ? personasData : [];
-    const poolsRaw = Array.isArray(poolsData?.items) ? poolsData.items : Array.isArray(poolsData?.data) ? poolsData.data : Array.isArray(poolsData) ? poolsData : [];
+    // Since APIs return direct arrays, we can use them directly
+    const personasRaw = Array.isArray(personasData) ? personasData : [];
+    const poolsRaw = Array.isArray(poolsData) ? poolsData : [];
     const enabledPools = poolsRaw.filter((p: any)=>p.isEnabled!==false);
     const activeDns = personasRaw.filter((p: any)=> (p.personaType==='dns' || p.personaType==='DNS' ) && (p.isEnabled===true || p.isEnabled===undefined));
     setDnsPersonas(activeDns);
