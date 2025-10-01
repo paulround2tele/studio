@@ -2277,7 +2277,8 @@ func (t PersonaConfigDetails) AsPersonaConfigHttp() (PersonaConfigHttp, error) {
 
 // FromPersonaConfigHttp overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigHttp
 func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error {
-	v.PersonaType = "http"
+	httpType := PersonaConfigHttpPersonaTypeHttp
+	v.PersonaType = &httpType
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -2285,7 +2286,8 @@ func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error 
 
 // MergePersonaConfigHttp performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigHttp
 func (t *PersonaConfigDetails) MergePersonaConfigHttp(v PersonaConfigHttp) error {
-	v.PersonaType = "http"
+	httpType := PersonaConfigHttpPersonaTypeHttp
+	v.PersonaType = &httpType
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2305,7 +2307,8 @@ func (t PersonaConfigDetails) AsPersonaConfigDns() (PersonaConfigDns, error) {
 
 // FromPersonaConfigDns overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigDns
 func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
-	v.PersonaType = "dns"
+	dnsType := PersonaConfigDnsPersonaTypeDns
+	v.PersonaType = &dnsType
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -2313,7 +2316,8 @@ func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
 
 // MergePersonaConfigDns performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigDns
 func (t *PersonaConfigDetails) MergePersonaConfigDns(v PersonaConfigDns) error {
-	v.PersonaType = "dns"
+	dnsType := PersonaConfigDnsPersonaTypeDns
+	v.PersonaType = &dnsType
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
