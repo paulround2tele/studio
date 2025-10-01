@@ -3,6 +3,8 @@
  * Web Worker for offloading heavy classification and aggregate computations
  */
 
+import { safeAt, safeFirst, safeLast, hasMinElements, isNonEmptyArray } from '@/lib/utils/arrayUtils';
+
 // Import types for worker communication
 interface WorkerMessage {
   type: 'compute' | 'computeAll' | 'forecastCompute' | 'forecastBulk' | 'result' | 'error' | 'cancel';
@@ -165,29 +167,60 @@ function computeSimpleExpSmoothingInWorker(
   horizon: number,
   alpha: number
 ): Array<{ timestamp: string; metricKey: string; value: number; lower: number; upper: number }> {
+  // Early return for insufficient data
+  if (!hasMinElements(series, 1)) {
+    return [];
+  }
+  
   const values = series.map(p => p.value);
   
+  // Safe first value access
+  const firstValue = safeFirst(values);
+  if (firstValue === undefined) {
+    return [];
+  }
+  
   // Calculate smoothed values
-  let smoothed = values[0];
+  let smoothed = firstValue;
   const smoothedValues = [smoothed];
   
   for (let i = 1; i < values.length; i++) {
-    smoothed = alpha * values[i] + (1 - alpha) * smoothed;
+    const currentValue = safeAt(values, i);
+    if (currentValue === undefined) continue;
+    
+    smoothed = alpha * currentValue + (1 - alpha) * smoothed;
     smoothedValues.push(smoothed);
   }
   
   // Calculate residuals for confidence intervals
-  const residuals = values.map((val, i) => val - smoothedValues[i]);
+  const residuals = values.map((val, i) => {
+    const smoothedVal = safeAt(smoothedValues, i);
+    return smoothedVal !== undefined ? val - smoothedVal : 0;
+  });
   const residualStdDev = calculateStdDev(residuals);
   
   // Generate forecast points
   const forecasts = [];
-  const lastTimestamp = series[series.length - 1].timestamp;
-  const timestampInterval = series.length > 1 ? 
-    (series[series.length - 1].timestamp - series[series.length - 2].timestamp) : 
-    86400000; // Default to 1 day
+  const lastPoint = safeLast(series);
+  if (!lastPoint) {
+    return [];
+  }
   
-  const lastSmoothed = smoothedValues[smoothedValues.length - 1];
+  const lastTimestamp = lastPoint.timestamp;
+  
+  // Calculate timestamp interval safely
+  let timestampInterval = 86400000; // Default to 1 day
+  if (series.length > 1) {
+    const secondLastPoint = safeAt(series, series.length - 2);
+    if (secondLastPoint) {
+      timestampInterval = lastTimestamp - secondLastPoint.timestamp;
+    }
+  }
+  
+  const lastSmoothed = safeLast(smoothedValues);
+  if (lastSmoothed === undefined) {
+    return [];
+  }
   
   for (let i = 1; i <= horizon; i++) {
     const forecastTimestamp = lastTimestamp + (i * timestampInterval);
@@ -219,52 +252,88 @@ function computeHoltWintersInWorker(
   const gamma = options.gamma || 0.1;
   const seasonLength = options.seasonLength || 7;
   
+  // Early return for insufficient data
+  if (!hasMinElements(series, seasonLength * 2)) {
+    return [];
+  }
+  
   const values = series.map(p => p.value);
   const n = values.length;
   
-  // Initialize components
-  let level = values[0];
-  let trend = (values[seasonLength] - values[0]) / seasonLength;
-  const seasonal = new Array(seasonLength).fill(0);
+  // Safe initialization
+  const firstValue = safeFirst(values);
+  const seasonValue = safeAt(values, seasonLength);
   
-  // Initialize seasonal indices
-  for (let i = 0; i < seasonLength; i++) {
-    seasonal[i] = values[i] - level;
+  if (firstValue === undefined || seasonValue === undefined) {
+    return [];
   }
   
-  const fitted = [];
+  // Initialize components
+  let level = firstValue;
+  let trend = (seasonValue - firstValue) / seasonLength;
+  const seasonal = new Array(seasonLength).fill(0);
+  
+  // Initialize seasonal indices safely
+  for (let i = 0; i < seasonLength; i++) {
+    const valueAtI = safeAt(values, i);
+    if (valueAtI !== undefined) {
+      seasonal[i] = valueAtI - level;
+    }
+  }
+  
+  const fitted: number[] = [];
   
   // Holt-Winters equations
   for (let i = 0; i < n; i++) {
-    const seasonalIndex = seasonal[i % seasonLength];
+    const seasonalIndex = safeAt(seasonal, i % seasonLength) ?? 0;
     const predicted = level + trend + seasonalIndex;
     fitted.push(predicted);
     
     if (i < n - 1) {
-      const newLevel = alpha * (values[i] - seasonalIndex) + (1 - alpha) * (level + trend);
-      const newTrend = beta * (newLevel - level) + (1 - beta) * trend;
-      const newSeasonal = gamma * (values[i] - newLevel) + (1 - gamma) * seasonalIndex;
-      
-      level = newLevel;
-      trend = newTrend;
-      seasonal[i % seasonLength] = newSeasonal;
+      const currentValue = safeAt(values, i);
+      if (currentValue !== undefined) {
+        const newLevel = alpha * (currentValue - seasonalIndex) + (1 - alpha) * (level + trend);
+        const newTrend = beta * (newLevel - level) + (1 - beta) * trend;
+        const newSeasonal = gamma * (currentValue - newLevel) + (1 - gamma) * seasonalIndex;
+        
+        level = newLevel;
+        trend = newTrend;
+        const seasonalIdx = i % seasonLength;
+        if (seasonalIdx < seasonal.length) {
+          seasonal[seasonalIdx] = newSeasonal;
+        }
+      }
     }
   }
   
   // Calculate residuals
-  const residuals = values.map((val, i) => val - fitted[i]);
+  const residuals = values.map((val, i) => {
+    const fittedVal = safeAt(fitted, i);
+    return fittedVal !== undefined ? val - fittedVal : 0;
+  });
   const residualStdDev = calculateStdDev(residuals);
   
   // Generate forecasts
   const forecasts = [];
-  const lastTimestamp = series[series.length - 1].timestamp;
-  const timestampInterval = series.length > 1 ? 
-    (series[series.length - 1].timestamp - series[series.length - 2].timestamp) : 
-    86400000;
+  const lastPoint = safeLast(series);
+  if (!lastPoint) {
+    return [];
+  }
+  
+  const lastTimestamp = lastPoint.timestamp;
+  
+  // Calculate timestamp interval safely
+  let timestampInterval = 86400000; // Default to 1 day
+  if (series.length > 1) {
+    const secondLastPoint = safeAt(series, series.length - 2);
+    if (secondLastPoint) {
+      timestampInterval = lastTimestamp - secondLastPoint.timestamp;
+    }
+  }
   
   for (let i = 1; i <= horizon; i++) {
     const forecastTimestamp = lastTimestamp + (i * timestampInterval);
-    const seasonalIndex = seasonal[(n + i - 1) % seasonLength];
+    const seasonalIndex = safeAt(seasonal, (n + i - 1) % seasonLength) ?? 0;
     const forecastValue = level + (i * trend) + seasonalIndex;
     const confidenceInterval = 1.96 * residualStdDev * Math.sqrt(i);
     
