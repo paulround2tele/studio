@@ -9,8 +9,10 @@ export interface PhaseExecRuntime {
   error?: string;
 }
 
+type PhaseExecMap = Partial<Record<PipelinePhaseKey, PhaseExecRuntime>>;
+
 export interface PipelineExecState {
-  byCampaign: Record<string, Record<PipelinePhaseKey, PhaseExecRuntime>>;
+  byCampaign: Record<string, PhaseExecMap>;
 }
 
 const initialState: PipelineExecState = { byCampaign: {} };
@@ -18,7 +20,7 @@ const initialState: PipelineExecState = { byCampaign: {} };
 const ensurePhase = (state: PipelineExecState, campaignId: string, phase: PipelinePhaseKey): PhaseExecRuntime => {
   let cmap = state.byCampaign[campaignId];
   if (!cmap) {
-    cmap = {} as Record<PipelinePhaseKey, PhaseExecRuntime>;
+    cmap = {};
     state.byCampaign[campaignId] = cmap;
   }
   const existing = cmap[phase];

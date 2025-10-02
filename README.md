@@ -2,6 +2,8 @@
 
 A sophisticated full-stack application for intelligent domain generation, validation, and lead extraction campaigns. Built with Next.js frontend and Go backend, featuring real-time Server-Sent Events (SSE) communications, multi-phase campaign orchestration, and advanced domain status tracking.
 
+> Type Usage Governance: See `docs/TYPE_INVENTORY.md` for the authoritative list of generated OpenAPI models and rules banning ad-hoc `any`/`unknown` wrappers. All new types must either come from codegen or be listed in that document.
+
 ## 🏗️ Architecture Overview
 
 ### Frontend (Next.js 15 + TypeScript)
