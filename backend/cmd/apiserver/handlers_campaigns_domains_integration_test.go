@@ -334,26 +334,16 @@ func TestCampaignsDomainsListServerSortIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("handler error: %v", err)
 	}
-	// Response should use wrapper type with header logic (we can't inspect header here, but metadata.extra.sort must exist)
-	var meta *gen.Metadata
-	switch v := resp.(type) {
-	case campaignsDomainsList200WithHeader:
-		meta = v.Metadata
-	case gen.CampaignsDomainsList200JSONResponse: // fallback (flag path failed)
-		meta = v.Metadata
-	default:
-		t.Fatalf("unexpected response type %T", resp)
+	// New contract: response is an alias of CampaignDomainsListResponse without metadata envelope
+	list := extractList(t, resp)
+	if list == nil || len(list.Items) == 0 {
+		t.Fatalf("expected items in list response")
 	}
-	if meta == nil || meta.Extra == nil {
-		t.Fatalf("expected metadata.extra present")
-	}
-	extra := *meta.Extra
-	sortObj, ok := extra["sort"].(map[string]any)
-	if !ok {
-		t.Fatalf("expected sort metadata present in extra got %+v", extra)
-	}
-	if sortObj["field"] != "richness_score" || sortObj["direction"] != "desc" {
-		t.Fatalf("unexpected sort metadata %+v", sortObj)
+	if list.Total != len(list.Items) {
+		// total may include more than current slice; tolerate >=
+		if list.Total < len(list.Items) {
+			t.Fatalf("expected total >= items length, got total=%d items=%d", list.Total, len(list.Items))
+		}
 	}
 }
 
@@ -406,23 +396,13 @@ func TestCampaignsDomainsListServerSortFieldVariations(t *testing.T) {
 	if err != nil {
 		t.Fatalf("handler error keywords_unique: %v", err)
 	}
-	listKU, metaKU := extractListAndMeta(t, respKU)
+	listKU := extractList(t, respKU)
 	if len(listKU.Items) == 0 {
 		t.Fatalf("expected items returned")
 	}
-	// Since metadata may still report richness_score, just ensure first item is highest richness (d-high)
+	// Ensure highest richness first under fallback ordering
 	if got := *listKU.Items[0].Domain; got != "d-high" {
 		t.Fatalf("expected d-high first (richness fallback) got %s", got)
-	}
-	// Accept either richness_score or keywords_unique due to enum constraint workaround
-	if metaKU != nil && metaKU.Extra != nil {
-		extra := *metaKU.Extra
-		if sortObj, ok := extra["sort"].(map[string]any); ok {
-			fld := sortObj["field"]
-			if fld != "richness_score" && fld != "keywords_unique" {
-				t.Fatalf("unexpected sort field meta %v", fld)
-			}
-		}
 	}
 
 	// microcrawl_gain desc
@@ -433,19 +413,9 @@ func TestCampaignsDomainsListServerSortFieldVariations(t *testing.T) {
 	if err != nil {
 		t.Fatalf("handler error microcrawl_gain: %v", err)
 	}
-	listMC, metaMC := extractListAndMeta(t, respMC)
+	listMC := extractList(t, respMC)
 	if got := *listMC.Items[0].Domain; got != "d-high" {
 		t.Fatalf("expected d-high first for microcrawl_gain desc got %s", got)
-	}
-	// Similar metadata fallback tolerance
-	if metaMC != nil && metaMC.Extra != nil {
-		extra := *metaMC.Extra
-		if sortObj, ok := extra["sort"].(map[string]any); ok {
-			fld := sortObj["field"]
-			if fld != "richness_score" && fld != "microcrawl_gain" {
-				t.Fatalf("unexpected sort field meta %v", fld)
-			}
-		}
 	}
 }
 
@@ -456,31 +426,18 @@ func newTestOrchestratorWithFeatures(fm map[string]map[string]any) *application.
 }
 
 // extractListAndMeta extracts response data list + metadata from handler response
-func extractListAndMeta(t *testing.T, resp interface{}) (*gen.CampaignDomainsListResponse, *gen.Metadata) {
+func extractList(t *testing.T, resp interface{}) *gen.CampaignDomainsListResponse {
 	t.Helper()
 	switch v := resp.(type) {
 	case campaignsDomainsList200WithHeader:
-		return v.CampaignsDomainsList200JSONResponse.Data, v.CampaignsDomainsList200JSONResponse.Metadata
+		r := gen.CampaignDomainsListResponse(v.CampaignsDomainsList200JSONResponse)
+		return (*gen.CampaignDomainsListResponse)(&r)
 	case gen.CampaignsDomainsList200JSONResponse:
-		return v.Data, v.Metadata
+		r := gen.CampaignDomainsListResponse(v)
+		return &r
 	default:
 		t.Fatalf("unexpected response type %T", resp)
-		return nil, nil
-	}
-}
-
-func assertSortMeta(t *testing.T, meta *gen.Metadata, field, direction string) {
-	t.Helper()
-	if meta == nil || meta.Extra == nil {
-		t.Fatalf("expected metadata.extra present")
-	}
-	extra := *meta.Extra
-	sortObj, ok := extra["sort"].(map[string]any)
-	if !ok {
-		t.Fatalf("expected sort object in extra got %+v", extra)
-	}
-	if sortObj["field"] != field || sortObj["direction"] != direction {
-		t.Fatalf("unexpected sort meta %+v expected %s/%s", sortObj, field, direction)
+		return nil
 	}
 }
 

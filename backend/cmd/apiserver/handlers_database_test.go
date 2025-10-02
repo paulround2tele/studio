@@ -68,11 +68,12 @@ func TestDbBulkQueryGuards(t *testing.T) {
 	}
 	r200, ok := resp.(gen.DbBulkQuery200JSONResponse)
 	if !ok {
-		// Guards may produce 200 with error entries per-query; tolerate other codes too in future changes
-		// For stability, just ensure we got some response type.
+		// If contract changes in future, just ensure some response returned.
 		return
 	}
-	if r200.Data == nil || r200.Data.Results == nil {
+	// New contract: alias directly holds results map fields
+	respObj := gen.BulkDatabaseQueryResponse(r200)
+	if respObj.Results == nil {
 		t.Fatalf("expected results map in response")
 	}
 }

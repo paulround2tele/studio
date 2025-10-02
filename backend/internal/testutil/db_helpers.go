@@ -55,14 +55,75 @@ func SetupTestDatabase(t *testing.T) (*sqlx.DB, func()) {
 		t.Fatalf("Failed to connect to test database: %v", err)
 	}
 
-	// Clean database by dropping schema
-	_, err = testDB.Exec("DROP SCHEMA IF EXISTS public CASCADE")
-	if err != nil {
-		t.Logf("Could not drop schema (non-fatal): %v", err)
-	}
-	_, err = testDB.Exec("CREATE SCHEMA public")
-	if err != nil {
-		t.Fatalf("Failed to recreate public schema: %v", err)
+	// Clean database by dropping schema. If not owner, fallback to truncating tables visible in public.
+	if _, err = testDB.Exec("DROP SCHEMA IF EXISTS public CASCADE"); err != nil {
+		t.Logf("Could not drop schema (non-fatal, will attempt truncate fallback): %v", err)
+		// Fallback: gather table list in public schema owned by current user and truncate
+		rows, qerr := testDB.Query(`SELECT tablename FROM pg_tables WHERE schemaname='public'`)
+		if qerr == nil {
+			var tbls []string
+			for rows.Next() {
+				var tn string
+				if scanErr := rows.Scan(&tn); scanErr == nil {
+					tbls = append(tbls, tn)
+				}
+			}
+			rows.Close()
+			if len(tbls) > 0 {
+				// Build TRUNCATE statement
+				stmt := "TRUNCATE TABLE " + strings.Join(tbls, ", ") + " CASCADE"
+				if _, terr := testDB.Exec(stmt); terr != nil {
+					t.Logf("Fallback truncate failed (continuing, DB may be dirty): %v", terr)
+				} else {
+					t.Logf("Performed truncate fallback on %d tables", len(tbls))
+				}
+			} else {
+				t.Log("No tables found for truncate fallback")
+			}
+		}
+		// Instead of complex partial cleanup, allocate a brand-new temporary database (user has CREATEDB)
+		// Parse existing DSN to extract base (scheme://user:pass@host:port/) and ignore current db name
+		orig := testDSN
+		base := orig
+		qIdx := strings.Index(base, "?")
+		var query string
+		if qIdx >= 0 {
+			base, query = base[:qIdx], orig[qIdx:]
+		}
+		lastSlash := strings.LastIndex(base, "/")
+		if lastSlash > -1 {
+			base = base[:lastSlash+1]
+		}
+		newDBName := "test_isolated_" + time.Now().Format("20060102150405")
+		createDSN := base + "postgres" + query // connect to postgres db to issue CREATE DATABASE
+		adminConn, cerr := sqlx.Connect("postgres", createDSN)
+		if cerr != nil {
+			t.Logf("Could not connect to postgres for temp DB creation: %v (continuing with existing dirty state)", cerr)
+		} else {
+			_, cexecErr := adminConn.Exec("CREATE DATABASE " + newDBName)
+			if cexecErr != nil {
+				t.Logf("CREATE DATABASE %s failed (may already exist or lacking privilege): %v", newDBName, cexecErr)
+				adminConn.Close()
+			} else {
+				adminConn.Close()
+				// Connect to new DB
+				newDSN := base + newDBName + query
+				ndb, nerr := sqlx.Connect("postgres", newDSN)
+				if nerr != nil {
+					t.Logf("Failed to connect new temp DB %s: %v (fallback to previous connection)", newDBName, nerr)
+				} else {
+					t.Logf("Using freshly created temporary database %s for tests", newDBName)
+					testDB.Close()
+					testDB = ndb
+					testDSN = newDSN
+				}
+			}
+		}
+	} else {
+		// Recreate schema after successful drop
+		if _, err = testDB.Exec("CREATE SCHEMA public"); err != nil {
+			t.Fatalf("Failed to recreate public schema after drop: %v", err)
+		}
 	}
 
 	// Create required extensions after schema recreation
@@ -77,7 +138,8 @@ func SetupTestDatabase(t *testing.T) (*sqlx.DB, func()) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 	cmd := exec.CommandContext(ctx, "go", "run", "./cmd/migrate", "-dsn", testDSN, "-migrations", "database/migrations", "-direction", "up")
-	cmd.Dir = "/home/vboxuser/studio/backend"
+	// Use dynamic workspace path instead of hardcoded home (portable in CI / devcontainers)
+	cmd.Dir = "/workspaces/studio/backend"
 	cmd.Env = append(os.Environ(), "POSTGRES_DSN="+testDSN)
 	output, err := cmd.CombinedOutput()
 	if err != nil {

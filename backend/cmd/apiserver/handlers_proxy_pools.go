@@ -28,7 +28,7 @@ func (h *strictHandlers) ProxyPoolsList(ctx context.Context, r gen.ProxyPoolsLis
 		updated := p.UpdatedAt
 		out = append(out, gen.ProxyPool{Id: &id, Name: &name, IsEnabled: &isEnabled, CreatedAt: &created, UpdatedAt: &updated})
 	}
-	return gen.ProxyPoolsList200JSONResponse{Data: &out, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxyPoolsList200JSONResponse(out), nil
 }
 
 func (h *strictHandlers) ProxyPoolsCreate(ctx context.Context, r gen.ProxyPoolsCreateRequestObject) (gen.ProxyPoolsCreateResponseObject, error) {
@@ -66,7 +66,7 @@ func (h *strictHandlers) ProxyPoolsCreate(ctx context.Context, r gen.ProxyPoolsC
 	created := pool.CreatedAt
 	updated := pool.UpdatedAt
 	data := gen.ProxyPool{Id: &id, Name: &name, IsEnabled: &isEnabled, CreatedAt: &created, UpdatedAt: &updated}
-	return gen.ProxyPoolsCreate201JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxyPoolsCreate201JSONResponse(data), nil
 }
 
 func (h *strictHandlers) ProxyPoolsDelete(ctx context.Context, r gen.ProxyPoolsDeleteRequestObject) (gen.ProxyPoolsDeleteResponseObject, error) {
@@ -79,7 +79,7 @@ func (h *strictHandlers) ProxyPoolsDelete(ctx context.Context, r gen.ProxyPoolsD
 	deleted := true
 	msg := "proxy pool deleted"
 	id := openapi_types.UUID(r.PoolId)
-	return gen.ProxyPoolsDelete200JSONResponse{Data: &gen.ProxyPoolDeleteResponse{Deleted: &deleted, Message: &msg, PoolId: &id}, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxyPoolsDelete200JSONResponse(gen.ProxyPoolDeleteResponse{Deleted: &deleted, Message: &msg, PoolId: &id}), nil
 }
 
 func (h *strictHandlers) ProxyPoolsUpdate(ctx context.Context, r gen.ProxyPoolsUpdateRequestObject) (gen.ProxyPoolsUpdateResponseObject, error) {
@@ -127,7 +127,7 @@ func (h *strictHandlers) ProxyPoolsUpdate(ctx context.Context, r gen.ProxyPoolsU
 	created := pool.CreatedAt
 	updated := pool.UpdatedAt
 	data := gen.ProxyPool{Id: &id, Name: &name, IsEnabled: &isEnabled, CreatedAt: &created, UpdatedAt: &updated}
-	return gen.ProxyPoolsUpdate200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxyPoolsUpdate200JSONResponse(data), nil
 }
 
 func (h *strictHandlers) ProxyPoolsAddProxy(ctx context.Context, r gen.ProxyPoolsAddProxyRequestObject) (gen.ProxyPoolsAddProxyResponseObject, error) {
@@ -146,7 +146,7 @@ func (h *strictHandlers) ProxyPoolsAddProxy(ctx context.Context, r gen.ProxyPool
 	}
 	pid := openapi_types.UUID(r.PoolId)
 	xid := openapi_types.UUID(r.Body.ProxyId)
-	return gen.ProxyPoolsAddProxy201JSONResponse{Data: &gen.ProxyPoolMembership{AddedAt: func() *time.Time { t := m.AddedAt; return &t }(), IsActive: &m.IsActive, PoolId: &pid, ProxyId: &xid, Weight: m.Weight}, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxyPoolsAddProxy201JSONResponse(gen.ProxyPoolMembership{AddedAt: func() *time.Time { t := m.AddedAt; return &t }(), IsActive: &m.IsActive, PoolId: &pid, ProxyId: &xid, Weight: m.Weight}), nil
 }
 
 func (h *strictHandlers) ProxyPoolsRemoveProxy(ctx context.Context, r gen.ProxyPoolsRemoveProxyRequestObject) (gen.ProxyPoolsRemoveProxyResponseObject, error) {
@@ -159,5 +159,5 @@ func (h *strictHandlers) ProxyPoolsRemoveProxy(ctx context.Context, r gen.ProxyP
 	removed := true
 	pid := openapi_types.UUID(r.PoolId)
 	xid := openapi_types.UUID(r.ProxyId)
-	return gen.ProxyPoolsRemoveProxy200JSONResponse{Data: &gen.ProxyPoolMembershipResponse{Removed: &removed, PoolId: &pid, ProxyId: &xid}, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ProxyPoolsRemoveProxy200JSONResponse(gen.ProxyPoolMembershipResponse{Removed: &removed, PoolId: &pid, ProxyId: &xid}), nil
 }

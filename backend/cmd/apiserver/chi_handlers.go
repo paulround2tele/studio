@@ -70,8 +70,8 @@ func startChiServer() {
 		return func(ctx context.Context, w http.ResponseWriter, r *http.Request, req interface{}) (interface{}, error) {
 			resp, err := next(ctx, w, r, req)
 			if operationID == "AuthLogin" {
-				if v, ok := resp.(gen.AuthLogin200JSONResponse); ok && v.Data != nil {
-					token := string(v.Data.Token)
+				if v, ok := resp.(gen.AuthLogin200JSONResponse); ok {
+					token := v.Token
 					if token != "" {
 						http.SetCookie(w, &http.Cookie{
 							Name:     config.SessionCookieName,

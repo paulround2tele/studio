@@ -29,7 +29,7 @@ func TestSSEStats(t *testing.T) {
 	if !ok {
 		t.Fatalf("expected 200 JSON response, got %T", resp)
 	}
-	if r200.Data == nil || r200.Data.ActiveConnections == nil || r200.Data.TotalEventsSent == nil || r200.Data.Uptime == nil {
+	if r200.ActiveConnections == nil || r200.TotalEventsSent == nil || r200.Uptime == nil {
 		t.Fatalf("unexpected stats payload: %+v", r200)
 	}
 }

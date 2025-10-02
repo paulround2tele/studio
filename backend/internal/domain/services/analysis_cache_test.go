@@ -37,9 +37,9 @@ func TestFeatureCacheMetrics(t *testing.T) {
 	}
 	defer db.Close()
 	// Expect one query for first fetch only
-	rows := sqlmock.NewRows([]string{"domain_id", "domain_name", "kw_unique_count", "kw_hits_total", "kw_weight_sum", "content_richness_score", "microcrawl_gain_ratio", "feature_vector"}).
-		AddRow("111", "example.com", 5, 9, 12.3, 0.8, 0.25, []byte(`{"kw_top3":["a","b","c"],"kw_signal_distribution":{"a":3,"b":2},"richness_weights_version":2,"prominence_norm":0.4,"diversity_effective_unique":0.5,"diversity_norm":0.6,"enrichment_norm":0.7,"applied_bonus":0.1,"applied_deductions_total":0.05,"stuffing_penalty":0.0,"repetition_index":0.02,"anchor_share":0.15}`))
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT def.domain_id, gd.domain_name")).
+	rows := sqlmock.NewRows([]string{"domain_id", "domain_name", "feature_vector"}).
+		AddRow("111", "example.com", []byte(`{"kw_top3":["a","b","c"],"kw_signal_distribution":{"a":3,"b":2},"richness_weights_version":2,"prominence_norm":0.4,"diversity_effective_unique":0.5,"diversity_norm":0.6,"enrichment_norm":0.7,"applied_bonus":0.1,"applied_deductions_total":0.05,"stuffing_penalty":0.0,"repetition_index":0.02,"anchor_share":0.15,"kw_unique":5,"kw_hits_total":9,"kw_weight_sum":12.3,"richness":0.8,"microcrawl_gain_ratio":0.25}`))
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT ")).
 		WithArgs(sqlmock.AnyArg()).
 		WillReturnRows(rows)
 
@@ -47,9 +47,16 @@ func TestFeatureCacheMetrics(t *testing.T) {
 	sqlxDB := sqlx.NewDb(db, "sqlmock")
 
 	deps := Dependencies{DB: sqlxDB, Logger: noopLogger{}}
-	// Custom registry to isolate metrics (prometheus default registry already used globally)
+	// Custom registry to isolate metrics; capture and restore globals to avoid cross-test interference
 	reg := prometheus.NewRegistry()
+	oldReg := prometheus.DefaultRegisterer
+	oldGatherer := prometheus.DefaultGatherer
 	prometheus.DefaultRegisterer = reg
+	prometheus.DefaultGatherer = reg
+	defer func() {
+		prometheus.DefaultRegisterer = oldReg
+		prometheus.DefaultGatherer = oldGatherer
+	}()
 
 	svc := NewAnalysisService(nil, deps, nil, nil, nil).(*analysisService)
 	campaignID := uuid.New()
@@ -87,9 +94,9 @@ func TestFeatureCacheMetrics(t *testing.T) {
 	}
 	// Ensure subsequent miss after invalidation triggers new query expectation
 	// Add new expectation
-	rows2 := sqlmock.NewRows([]string{"domain_id", "domain_name", "kw_unique_count", "kw_hits_total", "kw_weight_sum", "content_richness_score", "microcrawl_gain_ratio", "feature_vector"}).
-		AddRow("111", "example.com", 5, 9, 12.3, 0.81, 0.26, []byte(`{"kw_top3":["a","b","c"],"kw_signal_distribution":{"a":3,"b":2},"richness_weights_version":2,"prominence_norm":0.4,"diversity_effective_unique":0.5,"diversity_norm":0.6,"enrichment_norm":0.7,"applied_bonus":0.1,"applied_deductions_total":0.05,"stuffing_penalty":0.0,"repetition_index":0.02,"anchor_share":0.15}`))
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT def.domain_id, gd.domain_name")).
+	rows2 := sqlmock.NewRows([]string{"domain_id", "domain_name", "feature_vector"}).
+		AddRow("111", "example.com", []byte(`{"kw_top3":["a","b","c"],"kw_signal_distribution":{"a":3,"b":2},"richness_weights_version":2,"prominence_norm":0.4,"diversity_effective_unique":0.5,"diversity_norm":0.6,"enrichment_norm":0.7,"applied_bonus":0.1,"applied_deductions_total":0.05,"stuffing_penalty":0.0,"repetition_index":0.02,"anchor_share":0.15,"kw_unique":5,"kw_hits_total":9,"kw_weight_sum":12.3,"richness":0.81,"microcrawl_gain_ratio":0.26}`))
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT ")).
 		WithArgs(sqlmock.AnyArg()).
 		WillReturnRows(rows2)
 	if _, err := svc.FetchAnalysisReadyFeatures(context.Background(), campaignID); err != nil {

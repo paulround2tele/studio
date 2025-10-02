@@ -15,13 +15,7 @@ func (h *strictHandlers) ConfigGetProxyManager(ctx context.Context, r gen.Config
 		return gen.ConfigGetProxyManager500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	pmJSON := config.ConvertProxyManagerConfigToJSON(h.deps.Config.ProxyManager)
-	resp := gen.ConfigGetProxyManager200JSONResponse{
-		"data":      toMap(pmJSON),
-		"metadata":  okMeta(),
-		"requestId": reqID(),
-		"success":   true,
-	}
-	return resp, nil
+	return gen.ConfigGetProxyManager200JSONResponse(toMap(pmJSON)), nil
 }
 
 func (h *strictHandlers) ConfigUpdateProxyManager(ctx context.Context, r gen.ConfigUpdateProxyManagerRequestObject) (gen.ConfigUpdateProxyManagerResponseObject, error) {
@@ -39,11 +33,5 @@ func (h *strictHandlers) ConfigUpdateProxyManager(ctx context.Context, r gen.Con
 	if err := config.SaveAppConfig(h.deps.Config); err != nil {
 		return gen.ConfigUpdateProxyManager500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to save config", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	resp := gen.ConfigUpdateProxyManager200JSONResponse{
-		"data":      toMap(config.ConvertProxyManagerConfigToJSON(pmCfg)),
-		"metadata":  okMeta(),
-		"requestId": reqID(),
-		"success":   true,
-	}
-	return resp, nil
+	return gen.ConfigUpdateProxyManager200JSONResponse(toMap(config.ConvertProxyManagerConfigToJSON(pmCfg))), nil
 }

@@ -64,7 +64,7 @@ func (h *strictHandlers) AuthLogin(ctx context.Context, r gen.AuthLoginRequestOb
 	username := deriveUsername(email, firstName, lastName)
 	u := gen.UserPublicResponse{Email: openapi_types.Email(email), Id: openapi_types.UUID(id), IsActive: isActive, Username: username}
 	data := gen.SessionResponse{Token: sd.ID, ExpiresAt: sd.ExpiresAt, User: u}
-	return gen.AuthLogin200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.AuthLogin200JSONResponse(data), nil
 }
 
 // AuthLogout invalidates the current session.
@@ -81,10 +81,7 @@ func (h *strictHandlers) AuthLogout(ctx context.Context, r gen.AuthLogoutRequest
 		return gen.AuthLogout401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "unauthorized", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	_ = h.deps.Session.InvalidateSession(sid)
-	msg := "logged out"
-	return gen.AuthLogout200JSONResponse{Data: &struct {
-		Message *string `json:"message,omitempty"`
-	}{Message: &msg}, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.AuthLogout204Response{}, nil
 }
 
 // AuthMe returns the current authenticated user's public profile.
@@ -121,7 +118,7 @@ func (h *strictHandlers) AuthMe(ctx context.Context, r gen.AuthMeRequestObject) 
 	}
 	username := deriveUsername(email, firstName, lastName)
 	data := gen.UserPublicResponse{Email: openapi_types.Email(email), Id: openapi_types.UUID(uid), IsActive: isActive, Username: username}
-	return gen.AuthMe200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.AuthMe200JSONResponse(data), nil
 }
 
 // AuthRefresh extends the current session and returns an updated SessionResponse.
@@ -170,7 +167,7 @@ func (h *strictHandlers) AuthRefresh(ctx context.Context, r gen.AuthRefreshReque
 	username := deriveUsername(email, firstName, lastName)
 	u := gen.UserPublicResponse{Email: openapi_types.Email(email), Id: openapi_types.UUID(uid), IsActive: isActive, Username: username}
 	data := gen.SessionResponse{Token: sid, ExpiresAt: newExp, User: u}
-	return gen.AuthRefresh200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.AuthRefresh200JSONResponse(data), nil
 }
 
 // deriveUsername picks a reasonable username string for UserPublicResponse
@@ -243,5 +240,5 @@ func (h *strictHandlers) AuthChangePassword(ctx context.Context, r gen.AuthChang
 	if h.deps.Session != nil {
 		_ = h.deps.Session.InvalidateAllUserSessions(uid)
 	}
-	return gen.AuthChangePassword200JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.AuthChangePassword200JSONResponse{}, nil
 }

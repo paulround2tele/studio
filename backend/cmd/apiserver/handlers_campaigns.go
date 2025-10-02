@@ -132,7 +132,7 @@ func (h *strictHandlers) CampaignsEnrichedGet(ctx context.Context, r gen.Campaig
 	if len(execs) > 0 {
 		enriched.PhaseExecutions = &execs
 	}
-	return gen.CampaignsEnrichedGet200JSONResponse{Data: &enriched, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsEnrichedGet200JSONResponse(enriched), nil
 }
 
 // CampaignsFunnelGet implements GET /campaigns/{campaignId}/funnel
@@ -270,7 +270,7 @@ func (h *strictHandlers) CampaignsDuplicatePost(ctx context.Context, r gen.Campa
 
 	// Map to response
 	campaignResp := mapCampaignToResponse(&duplicatedCampaign)
-	return gen.CampaignsDuplicatePost201JSONResponse{Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true), Data: &campaignResp}, nil
+	return gen.CampaignsDuplicatePost201JSONResponse(campaignResp), nil
 }
 
 // CampaignsMomentumGet implements GET /campaigns/{campaignId}/momentum
@@ -833,10 +833,7 @@ func (h *strictHandlers) CampaignsModeUpdate(ctx context.Context, r gen.Campaign
 	// Successful response: data.mode per spec
 	// build mode pointer
 	modeEnum := gen.CampaignModeEnum(mode)
-	resp := gen.CampaignsModeUpdate200JSONResponse{Data: &struct {
-		Mode *gen.CampaignModeEnum `json:"mode,omitempty"`
-	}{Mode: &modeEnum}, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}
-	return resp, nil
+	return gen.CampaignsModeUpdate200JSONResponse{Mode: &modeEnum}, nil
 }
 
 // CampaignsDelete implements DELETE /campaigns/{campaignId}
@@ -1051,7 +1048,7 @@ func (h *strictHandlers) CampaignsPhaseConfigure(ctx context.Context, r gen.Camp
 	// Immediately fetch updated status to ensure configured response reflects new configuration
 	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, uuid.UUID(r.CampaignId), phaseModel)
 	data := buildPhaseStatusResponse(phaseModel, st)
-	return gen.CampaignsPhaseConfigure200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsPhaseConfigure200JSONResponse(data), nil
 }
 
 // intFromAny attempts to coerce an interface{} numeric to int with fallback default.
@@ -1176,7 +1173,7 @@ func (h *strictHandlers) CampaignsPhaseStart(ctx context.Context, r gen.Campaign
 	}
 	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, uuid.UUID(r.CampaignId), phaseModel)
 	data := buildPhaseStatusResponse(phaseModel, st)
-	return gen.CampaignsPhaseStart200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsPhaseStart200JSONResponse(data), nil
 }
 
 // CampaignsPhaseStatus implements GET /campaigns/{campaignId}/phase/{phase}/status
@@ -1196,7 +1193,7 @@ func (h *strictHandlers) CampaignsPhaseStatus(ctx context.Context, r gen.Campaig
 	}
 	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, uuid.UUID(r.CampaignId), phaseModel)
 	data := buildPhaseStatusResponse(phaseModel, st)
-	return gen.CampaignsPhaseStatus200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsPhaseStatus200JSONResponse(data), nil
 }
 
 // CampaignsPhaseConfigsList implements GET /campaigns/{campaignId}/configs
@@ -1235,7 +1232,11 @@ func (h *strictHandlers) CampaignsPhaseConfigsList(ctx context.Context, r gen.Ca
 		Configs        *map[string]map[string]interface{} `json:"configs,omitempty"`
 		ConfigsPresent *map[string]bool                   `json:"configsPresent,omitempty"`
 	}{CampaignId: &cid, Configs: &configsOut, ConfigsPresent: &present}
-	return gen.CampaignsPhaseConfigsList200JSONResponse{Data: data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsPhaseConfigsList200JSONResponse{
+		CampaignId:     data.CampaignId,
+		Configs:        data.Configs,
+		ConfigsPresent: data.ConfigsPresent,
+	}, nil
 }
 
 // mapCampaignToResponse converts a models.LeadGenerationCampaign to API response
@@ -1416,7 +1417,7 @@ func (h *strictHandlers) CampaignsPhaseStop(ctx context.Context, r gen.Campaigns
 	}
 	st, _ := h.deps.Orchestrator.GetPhaseStatus(ctx, uuid.UUID(r.CampaignId), phaseModel)
 	data := buildPhaseStatusResponse(phaseModel, st)
-	return gen.CampaignsPhaseStop200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsPhaseStop200JSONResponse(data), nil
 }
 
 // CampaignsProgress implements GET /campaigns/{campaignId}/progress
@@ -1624,7 +1625,7 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		}
 		// If feature map present, perform a JSON-level augmentation by serializing then injecting 'features'
 		// features already embedded per item
-		return gen.CampaignsDomainsList200JSONResponse{Data: &resp, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+		return gen.CampaignsDomainsList200JSONResponse(resp), nil
 	}
 
 	// ---- Phase 3: In-memory server-side richness sorting & warnings filtering (feature-flag guarded) ----
@@ -1715,7 +1716,7 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		items = append(items, gen.DomainListItem{Id: &id, Domain: &domainCopy, Offset: offsetPtr, CreatedAt: &createdAt, DnsStatus: dnsStatusPtr, HttpStatus: httpStatusPtr, LeadStatus: leadStatusPtr, DnsReason: dnsReasonPtr, HttpReason: httpReasonPtr, Features: features})
 	}
 
-	meta := okMeta() // start with base metadata (may augment extra)
+	// legacy metadata wrapper removed; pagination info is embedded in response model
 	if enableServerSort {
 		// Apply warnings filter first (has/none)
 		if requestedWarnings != "" {
@@ -1754,18 +1755,7 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 				return vi > vj
 			})
 		}
-		// Augment metadata.extra
-		if meta != nil {
-			if meta.Extra == nil {
-				meta.Extra = &map[string]interface{}{}
-			}
-			extra := *meta.Extra
-			extra["sort"] = map[string]any{"field": requestedSortField, "direction": requestedSortDir}
-			if requestedWarnings != "" {
-				extra["filter"] = map[string]any{"warnings": requestedWarnings}
-			}
-			meta.Extra = &extra
-		}
+		// Legacy metadata.extra removed; sort/filter info can be derived client-side
 	}
 
 	resp := gen.CampaignDomainsListResponse{CampaignId: openapi_types.UUID(r.CampaignId), Items: items}
@@ -1781,9 +1771,9 @@ func (h *strictHandlers) CampaignsDomainsList(ctx context.Context, r gen.Campaig
 		if domainsListServerSortRequests != nil {
 			domainsListServerSortRequests.WithLabelValues(requestedSortField, requestedWarnings).Inc()
 		}
-		return campaignsDomainsList200WithHeader{gen.CampaignsDomainsList200JSONResponse{Data: &resp, Metadata: meta, RequestId: reqID(), Success: boolPtr(true)}}, nil
+		return campaignsDomainsList200WithHeader{gen.CampaignsDomainsList200JSONResponse(resp)}, nil
 	}
-	return gen.CampaignsDomainsList200JSONResponse{Data: &resp, Metadata: meta, RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsDomainsList200JSONResponse(resp), nil
 }
 
 // getQueryRaw extracts a raw query parameter from context when not represented in generated params
@@ -1885,7 +1875,7 @@ func (h *strictHandlers) CampaignsDomainGenerationPatternOffset(ctx context.Cont
 		current = 0
 	}
 	data := gen.PatternOffsetResponse{CurrentOffset: &current}
-	return gen.CampaignsDomainGenerationPatternOffset200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsDomainGenerationPatternOffset200JSONResponse(data), nil
 }
 
 // augmentDomainFeatures injects feature objects into response.Items by converting each item to a generic map then back.
@@ -2060,7 +2050,7 @@ func (h *strictHandlers) CampaignsStateGet(ctx context.Context, r gen.CampaignsS
 			api.Configuration = &m
 		}
 	}
-	return gen.CampaignsStateGet200JSONResponse{Data: &api, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsStateGet200JSONResponse(api), nil
 }
 
 // CampaignsStatePut implements PUT /campaigns/{campaignId}/state
@@ -2129,7 +2119,7 @@ func (h *strictHandlers) CampaignsStatePut(ctx context.Context, r gen.CampaignsS
 			api.Configuration = &m
 		}
 	}
-	return gen.CampaignsStatePut200JSONResponse{Data: &api, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsStatePut200JSONResponse(api), nil
 }
 
 // CampaignsStateDelete implements DELETE /campaigns/{campaignId}/state
@@ -2176,7 +2166,7 @@ func (h *strictHandlers) CampaignsPhaseExecutionsList(ctx context.Context, r gen
 		}
 	}
 	composite := gen.CampaignStateWithExecutions{CampaignState: apiState, PhaseExecutions: execs}
-	return gen.CampaignsPhaseExecutionsList200JSONResponse{Data: &composite, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsPhaseExecutionsList200JSONResponse(composite), nil
 }
 
 // CampaignsPhaseExecutionGet implements GET /campaigns/{campaignId}/phase-executions/{phaseType}
@@ -2197,7 +2187,7 @@ func (h *strictHandlers) CampaignsPhaseExecutionGet(ctx context.Context, r gen.C
 		return gen.CampaignsPhaseExecutionGet500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to get phase execution", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	api := mapPhaseExecutionToAPI(*pe)
-	return gen.CampaignsPhaseExecutionGet200JSONResponse{Data: &api, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsPhaseExecutionGet200JSONResponse(api), nil
 }
 
 // CampaignsPhaseExecutionPut implements PUT /campaigns/{campaignId}/phase-executions/{phaseType}
@@ -2306,7 +2296,7 @@ func (h *strictHandlers) CampaignsPhaseExecutionPut(ctx context.Context, r gen.C
 		return gen.CampaignsPhaseExecutionPut500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to load phase execution after save", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	api := mapPhaseExecutionToAPI(*fresh)
-	return gen.CampaignsPhaseExecutionPut200JSONResponse{Data: &api, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.CampaignsPhaseExecutionPut200JSONResponse(api), nil
 }
 
 // CampaignsPhaseExecutionDelete implements DELETE /campaigns/{campaignId}/phase-executions/{phaseType}

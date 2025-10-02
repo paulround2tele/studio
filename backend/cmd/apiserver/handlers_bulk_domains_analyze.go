@@ -100,12 +100,7 @@ func (h *strictHandlers) BulkAnalyzeDomains(ctx context.Context, r gen.BulkAnaly
 		Status:              respStatus,
 	}
 
-	return gen.BulkAnalyzeDomains200JSONResponse{
-		Data:      &resp,
-		Metadata:  okMeta(),
-		RequestId: reqID(),
-		Success:   boolPtr(true),
-	}, nil
+	return gen.BulkAnalyzeDomains200JSONResponse(resp), nil
 }
 
 func float32Ptr(v float32) *float32 { return &v }

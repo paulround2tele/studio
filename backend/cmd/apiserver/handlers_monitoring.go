@@ -19,7 +19,7 @@ func (h *strictHandlers) MonitoringCampaignHealth(ctx context.Context, r gen.Mon
 	}
 	hres := integ.GetCampaignHealth(uuid.UUID(r.CampaignId))
 	data := toMap(hres)
-	return gen.MonitoringCampaignHealth200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.MonitoringCampaignHealth200JSONResponse(data), nil
 }
 
 func (h *strictHandlers) MonitoringCampaignLimits(ctx context.Context, r gen.MonitoringCampaignLimitsRequestObject) (gen.MonitoringCampaignLimitsResponseObject, error) {
@@ -63,7 +63,7 @@ func (h *strictHandlers) MonitoringCampaignPerformance(ctx context.Context, r ge
 		}
 	}
 	data := toMap(filtered)
-	return gen.MonitoringCampaignPerformance200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.MonitoringCampaignPerformance200JSONResponse(data), nil
 }
 
 func (h *strictHandlers) MonitoringCampaignResources(ctx context.Context, r gen.MonitoringCampaignResourcesRequestObject) (gen.MonitoringCampaignResourcesResponseObject, error) {
@@ -75,7 +75,7 @@ func (h *strictHandlers) MonitoringCampaignResources(ctx context.Context, r gen.
 		return gen.MonitoringCampaignResources404JSONResponse{NotFoundJSONResponse: gen.NotFoundJSONResponse{Error: gen.ApiError{Message: "campaign not found or no resource data", Code: gen.NOTFOUND, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	data := toMap(usage)
-	return gen.MonitoringCampaignResources200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.MonitoringCampaignResources200JSONResponse(data), nil
 }
 
 func (h *strictHandlers) MonitoringCampaignGeneric(ctx context.Context, r gen.MonitoringCampaignGenericRequestObject) (gen.MonitoringCampaignGenericResponseObject, error) {
@@ -101,7 +101,7 @@ func (h *strictHandlers) MonitoringCampaignGeneric(ctx context.Context, r gen.Mo
 		"usage":   toMap(usage),
 		"metrics": toMap(campMetrics),
 	}
-	return gen.MonitoringCampaignGeneric200JSONResponse{Data: &out, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.MonitoringCampaignGeneric200JSONResponse(out), nil
 }
 
 func (h *strictHandlers) MonitoringCleanupForce(ctx context.Context, r gen.MonitoringCleanupForceRequestObject) (gen.MonitoringCleanupForceResponseObject, error) {
@@ -139,7 +139,64 @@ func (h *strictHandlers) MonitoringPerformanceTrends(ctx context.Context, r gen.
 	}
 	trends := h.deps.Monitoring.PerformanceTracker.GetThroughputTrends("domain_generation", 24)
 	data := toMap(trends)
-	return gen.MonitoringPerformanceTrends200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.MonitoringPerformanceTrends200JSONResponse(data), nil
+}
+
+func (h *strictHandlers) MonitoringPerformanceFailed(ctx context.Context, r gen.MonitoringPerformanceFailedRequestObject) (gen.MonitoringPerformanceFailedResponseObject, error) {
+	if h.deps == nil || h.deps.Monitoring == nil {
+		return gen.MonitoringPerformanceFailed401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	failed := h.deps.Monitoring.PerformanceTracker.GetFailedOperations(100)
+	return gen.MonitoringPerformanceFailed200JSONResponse(toMap(failed)), nil
+}
+
+func (h *strictHandlers) MonitoringPerformanceMetrics(ctx context.Context, r gen.MonitoringPerformanceMetricsRequestObject) (gen.MonitoringPerformanceMetricsResponseObject, error) {
+	if h.deps == nil || h.deps.Monitoring == nil {
+		return gen.MonitoringPerformanceMetrics401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	metrics := h.deps.Monitoring.PerformanceTracker.GetRecentMetrics(200)
+	return gen.MonitoringPerformanceMetrics200JSONResponse(toMap(metrics)), nil
+}
+
+func (h *strictHandlers) MonitoringPerformanceSlow(ctx context.Context, r gen.MonitoringPerformanceSlowRequestObject) (gen.MonitoringPerformanceSlowResponseObject, error) {
+	if h.deps == nil || h.deps.Monitoring == nil {
+		return gen.MonitoringPerformanceSlow401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	// threshold 5000ms, limit 50
+	slow := h.deps.Monitoring.PerformanceTracker.GetSlowOperations(5000, 50)
+	return gen.MonitoringPerformanceSlow200JSONResponse(toMap(slow)), nil
+}
+
+func (h *strictHandlers) MonitoringResourcesAlerts(ctx context.Context, r gen.MonitoringResourcesAlertsRequestObject) (gen.MonitoringResourcesAlertsResponseObject, error) {
+	if h.deps == nil || h.deps.Monitoring == nil {
+		return gen.MonitoringResourcesAlerts401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	alerts := h.deps.Monitoring.ResourceMonitor.GetActiveAlerts(50)
+	return gen.MonitoringResourcesAlerts200JSONResponse(toMap(alerts)), nil
+}
+
+func (h *strictHandlers) MonitoringResourcesHistory(ctx context.Context, r gen.MonitoringResourcesHistoryRequestObject) (gen.MonitoringResourcesHistoryResponseObject, error) {
+	if h.deps == nil || h.deps.Monitoring == nil {
+		return gen.MonitoringResourcesHistory401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	history := h.deps.Monitoring.ResourceMonitor.GetResourceHistory(24)
+	return gen.MonitoringResourcesHistory200JSONResponse(toMap(history)), nil
+}
+
+func (h *strictHandlers) MonitoringResourcesSystem(ctx context.Context, r gen.MonitoringResourcesSystemRequestObject) (gen.MonitoringResourcesSystemResponseObject, error) {
+	if h.deps == nil || h.deps.Monitoring == nil {
+		return gen.MonitoringResourcesSystem401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	usage := h.deps.Monitoring.ResourceMonitor.GetSystemUsage()
+	return gen.MonitoringResourcesSystem200JSONResponse(toMap(usage)), nil
+}
+
+func (h *strictHandlers) MonitoringStats(ctx context.Context, r gen.MonitoringStatsRequestObject) (gen.MonitoringStatsResponseObject, error) {
+	if h.deps == nil || h.deps.Monitoring == nil {
+		return gen.MonitoringStats401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+	}
+	stats := h.deps.Monitoring.GetMonitoringStats()
+	return gen.MonitoringStats200JSONResponse(toMap(stats)), nil
 }
 
 func (h *strictHandlers) MonitoringHealth(ctx context.Context, r gen.MonitoringHealthRequestObject) (gen.MonitoringHealthResponseObject, error) {
@@ -148,7 +205,7 @@ func (h *strictHandlers) MonitoringHealth(ctx context.Context, r gen.MonitoringH
 	}
 	health := h.deps.Monitoring.GetSystemHealth()
 	data := toMap(health)
-	return gen.MonitoringHealth200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.MonitoringHealth200JSONResponse(data), nil
 }
 
 func (h *strictHandlers) MonitoringPerformanceActive(ctx context.Context, r gen.MonitoringPerformanceActiveRequestObject) (gen.MonitoringPerformanceActiveResponseObject, error) {
@@ -160,33 +217,6 @@ func (h *strictHandlers) MonitoringPerformanceActive(ctx context.Context, r gen.
 	return gen.MonitoringPerformanceActive200JSONResponse(data), nil
 }
 
-func (h *strictHandlers) MonitoringPerformanceFailed(ctx context.Context, r gen.MonitoringPerformanceFailedRequestObject) (gen.MonitoringPerformanceFailedResponseObject, error) {
-	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringPerformanceFailed401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
-	}
-	failed := h.deps.Monitoring.PerformanceTracker.GetFailedOperations(50)
-	data := toMap(failed)
-	return gen.MonitoringPerformanceFailed200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
-}
-
-func (h *strictHandlers) MonitoringPerformanceMetrics(ctx context.Context, r gen.MonitoringPerformanceMetricsRequestObject) (gen.MonitoringPerformanceMetricsResponseObject, error) {
-	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringPerformanceMetrics401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
-	}
-	metrics := h.deps.Monitoring.PerformanceTracker.GetRecentMetrics(100)
-	data := toMap(metrics)
-	return gen.MonitoringPerformanceMetrics200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
-}
-
-func (h *strictHandlers) MonitoringPerformanceSlow(ctx context.Context, r gen.MonitoringPerformanceSlowRequestObject) (gen.MonitoringPerformanceSlowResponseObject, error) {
-	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringPerformanceSlow401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
-	}
-	slow := h.deps.Monitoring.PerformanceTracker.GetSlowOperations(5000, 50)
-	data := toMap(slow)
-	return gen.MonitoringPerformanceSlow200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
-}
-
 func (h *strictHandlers) MonitoringPerformanceSummary(ctx context.Context, r gen.MonitoringPerformanceSummaryRequestObject) (gen.MonitoringPerformanceSummaryResponseObject, error) {
 	if h.deps == nil || h.deps.Monitoring == nil {
 		return gen.MonitoringPerformanceSummary401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
@@ -194,40 +224,4 @@ func (h *strictHandlers) MonitoringPerformanceSummary(ctx context.Context, r gen
 	summaries := h.deps.Monitoring.PerformanceTracker.GetAllSummaries()
 	data := toMap(summaries)
 	return gen.MonitoringPerformanceSummary200JSONResponse(data), nil
-}
-
-func (h *strictHandlers) MonitoringResourcesAlerts(ctx context.Context, r gen.MonitoringResourcesAlertsRequestObject) (gen.MonitoringResourcesAlertsResponseObject, error) {
-	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringResourcesAlerts401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
-	}
-	alerts := h.deps.Monitoring.ResourceMonitor.GetActiveAlerts(50)
-	data := toMap(alerts)
-	return gen.MonitoringResourcesAlerts200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
-}
-
-func (h *strictHandlers) MonitoringResourcesHistory(ctx context.Context, r gen.MonitoringResourcesHistoryRequestObject) (gen.MonitoringResourcesHistoryResponseObject, error) {
-	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringResourcesHistory401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
-	}
-	history := h.deps.Monitoring.ResourceMonitor.GetResourceHistory(24)
-	data := toMap(history)
-	return gen.MonitoringResourcesHistory200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
-}
-
-func (h *strictHandlers) MonitoringResourcesSystem(ctx context.Context, r gen.MonitoringResourcesSystemRequestObject) (gen.MonitoringResourcesSystemResponseObject, error) {
-	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringResourcesSystem401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
-	}
-	usage := h.deps.Monitoring.ResourceMonitor.GetSystemUsage()
-	data := toMap(usage)
-	return gen.MonitoringResourcesSystem200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
-}
-
-func (h *strictHandlers) MonitoringStats(ctx context.Context, r gen.MonitoringStatsRequestObject) (gen.MonitoringStatsResponseObject, error) {
-	if h.deps == nil || h.deps.Monitoring == nil {
-		return gen.MonitoringStats401JSONResponse{UnauthorizedJSONResponse: gen.UnauthorizedJSONResponse{Error: gen.ApiError{Message: "monitoring not available", Code: gen.UNAUTHORIZED, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
-	}
-	stats := h.deps.Monitoring.GetMonitoringStats()
-	data := toMap(stats)
-	return gen.MonitoringStats200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
 }

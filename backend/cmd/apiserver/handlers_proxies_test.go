@@ -170,8 +170,12 @@ func TestProxiesAndPoolsCRUDSmoke(t *testing.T) {
 		t.Fatalf("list proxies error: %v", err)
 	}
 	l200, ok := lr.(gen.ProxiesList200JSONResponse)
-	if !ok || l200.Data == nil || len(*l200.Data) != 1 {
-		t.Fatalf("expected 1 proxy, got %+v", l200)
+	if !ok {
+		t.Fatalf("expected 200 list proxies, got %T", lr)
+	}
+	proxies := []gen.Proxy(l200)
+	if len(proxies) != 1 {
+		t.Fatalf("expected 1 proxy, got %d", len(proxies))
 	}
 
 	// Create proxy pool
@@ -194,8 +198,12 @@ func TestProxiesAndPoolsCRUDSmoke(t *testing.T) {
 		t.Fatalf("list pools error: %v", err)
 	}
 	pl200, ok := plr.(gen.ProxyPoolsList200JSONResponse)
-	if !ok || pl200.Data == nil || len(*pl200.Data) != 1 {
-		t.Fatalf("expected 1 pool, got %+v", pl200)
+	if !ok {
+		t.Fatalf("expected 200 list pools, got %T", plr)
+	}
+	pools := []gen.ProxyPool(pl200)
+	if len(pools) != 1 {
+		t.Fatalf("expected 1 pool, got %d", len(pools))
 	}
 
 	// Update proxy: set username and disable

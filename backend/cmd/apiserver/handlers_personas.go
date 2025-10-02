@@ -316,20 +316,15 @@ func (h *strictHandlers) PersonasTest(ctx context.Context, r gen.PersonasTestReq
 	ok := true
 	passed := true
 	msg := fmt.Sprintf("%s persona test completed successfully", p.PersonaType)
-	return gen.PersonasTest200JSONResponse{
-		Data: &gen.PersonaTestResponse{
-			Message:     &msg,
-			PersonaId:   &pid,
-			PersonaName: &name,
-			PersonaType: &ptype,
-			Success:     &ok,
-			TestPassed:  &passed,
-			TestResults: &map[string]interface{}{"details": "Mock test data - will be replaced with actual test results", "duration": 100, "requestCount": 1, "successCount": 1, "errorCount": 0},
-			Results:     &map[string]interface{}{},
-			Timestamp:   &now,
-		},
-		Metadata:  okMeta(),
-		RequestId: reqID(),
-		Success:   boolPtr(true),
-	}, nil
+	return gen.PersonasTest200JSONResponse(gen.PersonaTestResponse{
+		Message:     &msg,
+		PersonaId:   &pid,
+		PersonaName: &name,
+		PersonaType: &ptype,
+		Success:     &ok,
+		TestPassed:  &passed,
+		TestResults: &map[string]interface{}{"details": "Mock test data - will be replaced with actual test results", "duration": 100, "requestCount": 1, "successCount": 1, "errorCount": 0},
+		Results:     &map[string]interface{}{},
+		Timestamp:   &now,
+	}), nil
 }

@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"time"
-
-	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
 )
 
 // MetricsRuntimeGet serves an internal runtime metrics snapshot (not in OpenAPI spec; auxiliary for tests).
@@ -18,5 +16,4 @@ func (h *strictHandlers) MetricsRuntimeGet(ctx context.Context) (map[string]inte
 	return out, nil
 }
 
-// (Optional) If later added to spec, wiring would return a gen response type.
-var _ = gen.Metadata{}
+// (Optional placeholder): if later added to spec, adapt to generated response alias.
