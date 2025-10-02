@@ -6,9 +6,11 @@ import { phaseStarted, phaseCompleted, phaseFailed } from '@/store/slices/pipeli
 import { campaignApi } from '@/store/api/campaignApi';
 import type { 
   CampaignSSEEventHandlers, 
-  CampaignProgress, 
-  PhaseEvent,
   RawSSEData 
+} from '@/types/sse';
+import type {
+  CampaignProgress as ImportedCampaignProgress,
+  PhaseEvent as ImportedPhaseEvent
 } from '@/types/sse';
 import type { CampaignPhase } from '@/types/domain';
 
@@ -27,23 +29,9 @@ const mapPhase = (raw: string | undefined): CampaignPhase | string => {
   return BACKEND_TO_INTERNAL_PHASE[raw] || raw;
 };
 
-export interface CampaignProgress {
-  current_phase: string;
-  progress_pct: number;
-  items_processed: number;
-  items_total: number;
-  status: string;
-  message?: string;
-  timestamp: string;
-}
-
-export interface PhaseEvent {
-  campaign_id: string;
-  phase: string;
-  message: string;
-  results?: Record<string, unknown>;
-  error?: string;
-}
+// Use types from the SSE module
+export type CampaignProgress = ImportedCampaignProgress;
+export type PhaseEvent = ImportedPhaseEvent;
 
 export interface CampaignSSEEvents {
   onProgress?: (campaignId: string, progress: CampaignProgress) => void;
