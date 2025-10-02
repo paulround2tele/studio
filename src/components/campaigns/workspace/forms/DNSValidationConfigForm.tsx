@@ -22,7 +22,13 @@ import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-co
 // Local structural type for proxy pools; generated model name mismatch handled elsewhere
 interface ProxyPoolLite { id?: string; name?: string; isEnabled?: boolean; }
 
-interface FormValues { personaIds: string[]; proxyPoolId?: string; name: string; }
+import type { DNSValidationConfigFormValues } from '@/types/forms';
+
+interface FormValues extends DNSValidationConfigFormValues { 
+  personaIds: string[]; 
+  proxyPoolId?: string; 
+  name: string; 
+}
 interface Props { campaignId: string; onConfigured?: () => void; readOnly?: boolean; }
 const MAX_PERSONAS_SELECTED = 5;
 
@@ -52,8 +58,8 @@ export const DNSValidationConfigForm: React.FC<Props> = ({ campaignId, onConfigu
     // Since APIs return direct arrays, we can use them directly
     const personasRaw = Array.isArray(personasData) ? personasData : [];
     const poolsRaw = Array.isArray(poolsData) ? poolsData : [];
-  const enabledPools: ProxyPoolLite[] = poolsRaw.filter((p: any)=>p && p.isEnabled!==false);
-    const activeDns = personasRaw.filter((p: any)=> (p.personaType==='dns' || p.personaType==='DNS' ) && (p.isEnabled===true || p.isEnabled===undefined));
+  const enabledPools: ProxyPoolLite[] = poolsRaw.filter((p: ProxyPoolLite) => p && p.isEnabled !== false);
+    const activeDns = personasRaw.filter((p: PersonaResponse) => (p.personaType === 'dns' || p.personaType === 'DNS') && (p.isEnabled === true || p.isEnabled === undefined));
     setDnsPersonas(activeDns);
     setProxyPools(enabledPools);
     // Auto-select if exactly one DNS persona available and none currently selected
@@ -121,7 +127,7 @@ export const DNSValidationConfigForm: React.FC<Props> = ({ campaignId, onConfigu
       //   { configuration: { dnsValidation: { personaIds: [...] } } }
       // Backend code (handlers_campaigns.go) looks for incoming["personaIds"].
       // Therefore we flatten to: { configuration: { personaIds: [...], name } }
-      const configuration: Record<string, any> = {
+      const configuration: Record<string, unknown> = {
         personaIds: submitData.personaIds,
         name: submitData.name,
       };
@@ -133,7 +139,7 @@ export const DNSValidationConfigForm: React.FC<Props> = ({ campaignId, onConfigu
       const res = await configurePhase({ campaignId, phase: 'validation', config: configRequest }).unwrap();
       if (res?.status === 'configured') {
         dispatch(
-          campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId, phase: 'validation' }, (draft: any) => ({
+          campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId, phase: 'validation' }, (draft) => ({
             ...(draft || {}),
             status: 'configured',
           }))
@@ -141,7 +147,7 @@ export const DNSValidationConfigForm: React.FC<Props> = ({ campaignId, onConfigu
       }
       // Force authoritative refetch
       dispatch(
-        campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: 'validation' } as any)
+        campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: 'validation' })
       );
       toast({ title: 'DNS validation configured' });
       dispatch(
@@ -156,11 +162,16 @@ export const DNSValidationConfigForm: React.FC<Props> = ({ campaignId, onConfigu
         })
       );
       onConfigured?.();
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
+      const errorMessage = (e && typeof e === 'object' && 'data' in e && e.data && typeof e.data === 'object' && 'message' in e.data 
+        ? e.data.message as string 
+        : e && typeof e === 'object' && 'message' in e 
+          ? e.message as string 
+          : 'Try again');
       toast({
         title: 'Save failed',
-        description: e?.data?.message || e?.message || 'Try again',
+        description: errorMessage,
         variant: 'destructive',
       });
     }

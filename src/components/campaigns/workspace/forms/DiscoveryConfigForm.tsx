@@ -11,13 +11,19 @@ import { useConfigurePhaseStandaloneMutation, campaignApi } from '@/store/api/ca
 import { useAppDispatch } from '@/store/hooks';
 import { pushGuidanceMessage } from '@/store/ui/campaignUiSlice';
 import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
+import type { DiscoveryConfigFormValues } from '@/types/forms';
 
-// Structural representation of domain generation configuration (generated model missing)
-interface DomainGenerationPhaseConfig {
-  patternType?: 'prefix' | 'suffix' | 'both';
+// Domain generation pattern types
+type PatternType = 'prefix' | 'suffix' | 'both';
+
+// Extended form values for discovery phase
+interface DiscoveryFormValues extends DiscoveryConfigFormValues {
+  patternType?: PatternType;
   characterSet?: string;
   constantString?: string;
   variableLength?: number;
+  prefixLength?: number;
+  suffixLength?: number;
   tlds?: string[];
   numDomainsToGenerate?: number;
   batchSize?: number;
@@ -30,9 +36,10 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
   const { toast } = useToast();
   const [configurePhase, { isLoading }] = useConfigurePhaseStandaloneMutation();
   const dispatch = useAppDispatch();
-  const form = useForm<DomainGenerationPhaseConfig & { prefixLength?: number; suffixLength?: number }>({
+  const form = useForm<DiscoveryFormValues>({
     defaultValues: {
-      patternType: 'prefix' as any,
+      enabled: true,
+      patternType: 'prefix',
       characterSet: 'abcdefghijklmnopqrstuvwxyz0123456789',
       constantString: 'brand',
       variableLength: 6,
@@ -44,7 +51,7 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
     },
   });
 
-  const onSubmit = async (values: DomainGenerationPhaseConfig & { prefixLength?: number; suffixLength?: number }) => {
+  const onSubmit = async (values: DiscoveryFormValues) => {
     try {
       const firstTld = Array.isArray(values.tlds) && values.tlds.length > 0 ? values.tlds[0] : '';
       const tld = firstTld && !firstTld.startsWith('.') ? `.${firstTld}` : firstTld;
@@ -57,19 +64,22 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
         const total = (values.prefixLength||0) + (values.suffixLength||0);
         if (total > 0) variableLength = total;
       }
-      const configuration = { ...values, variableLength, tld } as any;
+      const configuration: Record<string, unknown> = { ...values, variableLength, tld };
       const config: PhaseConfigurationRequest = { configuration };
       const result = await configurePhase({ campaignId, phase: 'discovery', config }).unwrap();
       // Optimistically ensure cache has status configured if backend responded
       if (result?.status === 'configured') {
         dispatch(
-          campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId, phase: 'discovery' }, (draft: any) => {
-            return { ...(draft||{}), status: 'configured' };
+          campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId, phase: 'discovery' }, (draft) => {
+            if (draft) {
+              draft.status = 'configured';
+            }
+            return draft;
           })
         );
       }
       // Force immediate refetch for authoritative status
-      dispatch(campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: 'discovery' } as any));
+      dispatch(campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: 'discovery' }));
       // Optimistic: if API returned status, dispatch guidance; otherwise force refetch hook elsewhere.
       toast({ title: 'Discovery configuration saved', description: 'Domain generation settings applied.' });
       dispatch(pushGuidanceMessage({ campaignId, msg: { id: Date.now().toString(), message: 'Discovery configured', phase: 'discovery', severity: 'info' } }));
@@ -154,10 +164,10 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
           <div className="flex flex-col gap-1 md:col-span-2" data-testid="phase-discovery-field-tlds">
             <label className="font-medium">TLDs (comma separated)</label>
             <Input data-testid="phase-discovery-input-tlds" disabled={isLoading} {...form.register('tlds')} onBlur={() => {
-              const raw = form.getValues('tlds') as any;
+              const raw = form.getValues('tlds');
               if (typeof raw === 'string') {
                 const arr = raw.split(',').map(s=>s.trim()).filter(Boolean);
-                (form as any).setValue('tlds', arr as any, { shouldDirty: true });
+                form.setValue('tlds', arr, { shouldDirty: true });
               }
             }} />
           </div>

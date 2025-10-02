@@ -467,7 +467,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
                 {proxies.map(proxy => {
                   const status = deriveStatus(proxy);
                   return (
-                  <div
+                    <div
                     key={proxy.id}
                     className="flex items-center space-x-2 p-2 rounded border hover:bg-muted/50"
                   >
@@ -492,7 +492,8 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
                       </div>
                     </div>
                   </div>
-                );}
+                  );
+                })}
               </div>
             </div>
           )}

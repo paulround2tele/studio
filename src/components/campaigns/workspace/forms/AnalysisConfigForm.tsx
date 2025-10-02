@@ -12,11 +12,14 @@ import { useToast } from '@/hooks/use-toast';
 import { useAppDispatch } from '@/store/hooks';
 import { pushGuidanceMessage } from '@/store/ui/campaignUiSlice';
 import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
-// The generated model api-analysis-config does not exist in current OpenAPI output.
-// Use a local structural type that matches the shape we submit.
-interface AnalysisPhaseConfig { name: string; analysisTypes: string[]; enableSuggestions: boolean; customRules: string[]; }
+import type { AnalysisConfigFormValues } from '@/types/forms';
 
-interface FormValues { name: string; analysisTypes: string[]; enableSuggestions: boolean; customRules: string[]; }
+interface FormValues extends AnalysisConfigFormValues { 
+  name: string; 
+  analysisTypes: string[]; 
+  enableSuggestions: boolean; 
+  customRules: string[]; 
+}
 interface Props { campaignId: string; onConfigured?: ()=>void; readOnly?: boolean; }
 
 const ALL_ANALYSIS_TYPES = ['content','links','headers','structure'];
@@ -44,10 +47,13 @@ export const AnalysisConfigForm: React.FC<Props> = ({ campaignId, onConfigured, 
       const req: PhaseConfigurationRequest = { configuration: { ...analysisConfig } };
       const res = await configurePhase({ campaignId, phase: 'analysis', config: req }).unwrap(); 
       if (res?.status === 'configured') { 
-        dispatch(campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId, phase: 'analysis' }, (draft: any)=> ({ ...(draft||{}), status: 'configured' })));
+        dispatch(campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId, phase: 'analysis' }, (draft) => ({
+          ...(draft || {}), 
+          status: 'configured' 
+        })));
       }
       // Force authoritative refetch
-      dispatch(campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: 'analysis' } as any)); 
+      dispatch(campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: 'analysis' })); 
       toast({ title:'Analysis configured' }); 
       dispatch(pushGuidanceMessage({ campaignId, msg: { id: Date.now().toString(), message:'Analysis configured', phase:'analysis', severity:'info' } })); 
       onConfigured?.(); 

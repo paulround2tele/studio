@@ -23,7 +23,15 @@ import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-co
 interface ProxyPoolLite { id?: string; name?: string; isEnabled?: boolean; }
 interface KeywordSetLite { id?: string; name?: string; }
 
-interface FormValues { name: string; personaIds: string[]; keywordSetIds: string[]; adHocKeywords: string[]; proxyPoolId?: string; }
+import type { HTTPValidationConfigFormValues } from '@/types/forms';
+
+interface FormValues extends HTTPValidationConfigFormValues { 
+  name: string; 
+  personaIds: string[]; 
+  keywordSetIds: string[]; 
+  adHocKeywords: string[]; 
+  proxyPoolId?: string; 
+}
 interface Props { campaignId: string; onConfigured?: ()=>void; readOnly?: boolean; }
 const MAX_PERSONAS_SELECTED = 5;
 
@@ -60,10 +68,10 @@ export const HTTPValidationConfigForm: React.FC<Props> = ({ campaignId, onConfig
     const personasRaw = Array.isArray(personasData) ? personasData : [];
     const poolsRaw = Array.isArray(poolsData) ? poolsData : [];
   const setsRaw: KeywordSetLite[] = Array.isArray(setsData) ? setsData : [];
-    const activeHttp = personasRaw.filter((p: any)=> (p.personaType==='http' || p.personaType==='HTTP') && (p.isEnabled===true || p.isEnabled===undefined));
+    const activeHttp = personasRaw.filter((p: PersonaResponse) => (p.personaType === 'http' || p.personaType === 'HTTP') && (p.isEnabled === true || p.isEnabled === undefined));
     setHttpPersonas(activeHttp);
   setKeywordSets(setsRaw||[]);
-  setProxyPools((poolsRaw||[]).filter((p: any)=>p && p.isEnabled!==false));
+  setProxyPools((poolsRaw || []).filter((p: ProxyPoolLite) => p && p.isEnabled !== false));
     // Auto-select single persona if exactly one exists and none selected yet
     const current = form.getValues('personaIds');
     if (activeHttp.length === 1 && current.length === 0) {
@@ -92,7 +100,7 @@ export const HTTPValidationConfigForm: React.FC<Props> = ({ campaignId, onConfig
     }
     try {
       // Flatten configuration (same rationale as DNS): backend expects personaIds at root of configuration map.
-      const configuration: Record<string, any> = {
+      const configuration: Record<string, unknown> = {
         personaIds: data.personaIds,
         name: data.name,
         keywordSetIds: data.keywordSetIds,
@@ -106,14 +114,14 @@ export const HTTPValidationConfigForm: React.FC<Props> = ({ campaignId, onConfig
       const res = await configurePhase({ campaignId, phase: 'extraction', config: configRequest }).unwrap();
       if (res?.status === 'configured') {
         dispatch(
-          campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId, phase: 'extraction' }, (draft: any) => ({
+          campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId, phase: 'extraction' }, (draft) => ({
             ...(draft || {}),
             status: 'configured',
           }))
         );
       }
       dispatch(
-        campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: 'extraction' } as any)
+        campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: 'extraction' })
       );
       toast({ title: 'HTTP validation configured' });
       dispatch(
