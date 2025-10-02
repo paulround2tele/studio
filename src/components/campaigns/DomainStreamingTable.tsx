@@ -6,6 +6,7 @@ import { ExternalLink, RefreshCw } from 'lucide-react';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 import { ScrollArea } from '../ui/scroll-area';
 import { StatusBadge, type DomainActivityStatus } from '@/components/shared/StatusBadge';
+import type { DomainRow, LifecycleState } from '@/types/domain';
 import { LeadScoreDisplay } from '@/components/shared/LeadScoreDisplay';
 import { Button } from '@/components/ui/button';
 // Deprecated hook replaced with direct RTK Query usage
@@ -18,8 +19,8 @@ interface DomainStreamingTableProps {
   generatedDomains?: Array<{ domainName?: string; dnsIp?: string; httpStatusCode?: string; httpTitle?: string; httpKeywords?: string; sourceKeyword?: string; generatedAt?: string }>;
   totalDomains?: number;
   loading?: boolean;
-  filters?: any;
-  onFiltersChange?: (filters: any) => void;
+  filters?: Record<string, unknown>;
+  onFiltersChange?: (filters: Record<string, unknown>) => void;
   onDownloadDomains?: (domains: string[], fileNamePrefix: string) => void;
   className?: string;
 }
@@ -44,7 +45,7 @@ interface EnrichedDomain {
 
 // Convert backend status to frontend format - ROBUST STATUS CONVERSION
 const convertStatus = (backendStatus?: string): DomainActivityStatus => {
-  if (!backendStatus) return 'not_validated' as any;
+  if (!backendStatus) return 'not_validated';
   const normalized = backendStatus.toLowerCase();
   
   switch (normalized) {
@@ -53,34 +54,34 @@ const convertStatus = (backendStatus?: string): DomainActivityStatus => {
     case 'resolved':
     case 'validated':
     case 'succeeded':
-      return 'validated' as any;
+      return 'validated';
     case 'error':
     case 'invalid':
     case 'unresolved':
     case 'failed':
     case 'timeout':
-      return 'Failed' as any;
+      return 'Failed';
     case 'pending':
     case 'processing':
     case 'queued':
-      return 'Pending' as any;
+      return 'Pending';
     case 'generating':
-      return 'generating' as any;
+      return 'generating';
     case 'scanned':
-      return 'scanned' as any;
+      return 'scanned';
     case 'no_leads':
-      return 'no_leads' as any;
+      return 'no_leads';
     case 'match':
-      return 'validated' as any; // Lead found/keywords matched
+      return 'validated'; // Lead found/keywords matched
     case 'no match':
     case 'no_match':
-      return 'no_leads' as any; // No keywords found
+      return 'no_leads'; // No keywords found
     case 'n_a':
     case 'na':
     case '':
-      return 'n_a' as any;
+      return 'n_a';
     default:
-      return 'not_validated' as any;
+      return 'not_validated';
   }
 };
 
@@ -193,7 +194,7 @@ export default function DomainStreamingTable({
   const apiDomains = page?.items || [];
   const total = page?.total || 0;
   const hasMore = (offset + apiDomains.length) < total; // simplistic; single page accumulation
-  const error = rtkError ? (typeof rtkError === 'object' && (rtkError as any).error) || 'Failed to load domains' : null;
+  const error = rtkError ? (typeof rtkError === 'object' && 'error' in rtkError ? rtkError.error as string : undefined) || 'Failed to load domains' : null;
   const loadMore = React.useCallback(() => {
     if (!hasMore || loading) return;
     setOffset(o => o + limit);
@@ -209,10 +210,10 @@ export default function DomainStreamingTable({
       summary: {
         total,
         generated: total,
-        dnsValidated: apiDomains.filter((d:any)=>['ok','valid','resolved','validated','succeeded'].includes(String(d.dnsStatus||'').toLowerCase())).length,
-        httpValidated: apiDomains.filter((d:any)=>['ok','valid','resolved','validated','succeeded'].includes(String(d.httpStatus||'').toLowerCase())).length,
-        leadsGenerated: apiDomains.filter((d:any)=>['match','matched'].includes(String(d.leadStatus||'').toLowerCase())).length,
-        failed: apiDomains.filter((d:any)=>['error','invalid','unresolved','failed','timeout'].includes(String(d.dnsStatus||'').toLowerCase()) || ['error','invalid','unresolved','failed','timeout'].includes(String(d.httpStatus||'').toLowerCase()) ).length,
+        dnsValidated: apiDomains.filter((d: DomainRow) => ['ok','valid','resolved','validated','succeeded'].includes(String(d.dnsStatus || '').toLowerCase())).length,
+        httpValidated: apiDomains.filter((d: DomainRow) => ['ok','valid','resolved','validated','succeeded'].includes(String(d.httpStatus || '').toLowerCase())).length,
+        leadsGenerated: apiDomains.filter((d: DomainRow) => ['match','matched'].includes(String(d.leadStatus || '').toLowerCase())).length,
+        failed: apiDomains.filter((d: DomainRow) => ['error','invalid','unresolved','failed','timeout'].includes(String(d.dnsStatus || '').toLowerCase()) || ['error','invalid','unresolved','failed','timeout'].includes(String(d.httpStatus || '').toLowerCase())).length,
       },
       currentPhase: 'unknown',
       phaseStatus: 'unknown'
