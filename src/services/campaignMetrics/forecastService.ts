@@ -133,7 +133,7 @@ export async function getServerForecast(
   // Apply horizon clamping if custom horizon is enabled
   const finalHorizon = forecastCustomHorizonEnabled() ? clampForecastHorizon(horizon) : getForecastHorizon();
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const apiUrl = typeof process !== 'undefined' ? process.env?.NEXT_PUBLIC_API_URL : undefined;
   if (!apiUrl) {
     throw new Error('API URL not configured');
   }
