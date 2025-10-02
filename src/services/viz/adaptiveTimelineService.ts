@@ -291,7 +291,8 @@ class AdaptiveTimelineService {
     }
     
     let bestResolution = resolutionLevels[0];
-    let bestDifference = Math.abs(bestResolution - optimalPointCount);
+  if (bestResolution === undefined) return [];
+  let bestDifference = Math.abs(bestResolution - optimalPointCount);
 
     for (const level of resolutionLevels) {
       const difference = Math.abs(level - optimalPointCount);
@@ -301,7 +302,7 @@ class AdaptiveTimelineService {
       }
     }
 
-    const selectedPoints = series.resolutions.get(bestResolution) || [];
+  const selectedPoints = (bestResolution !== undefined ? series.resolutions.get(bestResolution) : undefined) || [];
 
     // Add preserved extremes if they fall within focus window
     const result = [...selectedPoints];
@@ -463,7 +464,8 @@ class AdaptiveTimelineService {
     for (let i = windowSize; i < points.length; i++) {
       const point = points[i];
       const expected = movingAverage[i - windowSize];
-      const deviation = Math.abs(point.value - expected);
+  if (!point || expected === undefined) continue;
+  const deviation = Math.abs(point.value - expected);
       
       if (deviation > 2 * stdDev) {
         highlights.push({
@@ -491,7 +493,7 @@ class AdaptiveTimelineService {
       
       if (trendChange > stdDev) {
         highlights.push({
-          timestamp: points[i].timestamp,
+          timestamp: points[i]!.timestamp,
           type: 'causal_pivot',
           severity: trendChange > 2 * stdDev ? 'high' : 'medium',
           label: 'Trend change',

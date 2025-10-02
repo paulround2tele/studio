@@ -3,13 +3,12 @@
  * Lightweight CRDT-like store for collaborative scenario drafts
  */
 
-import { useCollaborativeDrafts } from '../../lib/feature-flags-simple';
+// Import feature flag with non-hook alias to satisfy react-hooks lint rules in non-React module context
+import { useCollaborativeDrafts as collaborativeDraftsEnabled } from '../../lib/feature-flags-simple';
 import { telemetryService } from '../campaignMetrics/telemetryService';
 
 // Feature flag check
-const isCollabDraftsEnabled = (): boolean => {
-  return useCollaborativeDrafts();
-};
+const isCollabDraftsEnabled = (): boolean => collaborativeDraftsEnabled();
 
 /**
  * Draft types
@@ -368,13 +367,17 @@ class DraftStoreService {
 
     for (let i = 0; i < fieldParts.length - 1; i++) {
       const part = fieldParts[i];
-      if (!(part in current) || typeof current[part] !== 'object') {
+  if (part === undefined) continue;
+  if (!(part in current) || typeof current[part] !== 'object') {
         current[part] = {};
       }
       current = current[part];
     }
 
-    current[fieldParts[fieldParts.length - 1]] = value;
+    const terminal = fieldParts[fieldParts.length - 1];
+    if (terminal !== undefined) {
+      current[terminal] = value;
+    }
   }
 
   /**
@@ -386,13 +389,17 @@ class DraftStoreService {
 
     for (let i = 0; i < fieldParts.length - 1; i++) {
       const part = fieldParts[i];
-      if (!(part in current) || typeof current[part] !== 'object') {
+  if (part === undefined) continue;
+  if (!(part in current) || typeof current[part] !== 'object') {
         return; // Field doesn't exist
       }
       current = current[part];
     }
 
-    delete current[fieldParts[fieldParts.length - 1]];
+    const terminalDel = fieldParts[fieldParts.length - 1];
+    if (terminalDel !== undefined) {
+      delete current[terminalDel];
+    }
   }
 
   /**

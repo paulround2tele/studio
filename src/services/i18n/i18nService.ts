@@ -253,8 +253,8 @@ class I18nService {
 
     // Try browser language
     if (typeof navigator !== 'undefined') {
-      const browserLang = navigator.language.split('-')[0];
-      if (this.isLocaleSupported(browserLang)) {
+      const browserLang = navigator.language?.split?.('-')[0];
+      if (browserLang && this.isLocaleSupported(browserLang)) {
         detectedLocale = browserLang as SupportedLocale;
       }
     }
@@ -452,7 +452,9 @@ class I18nService {
     // Simple pluralization - look for | separator
     const parts = message.split('|');
     if (parts.length === 2) {
-      return count === 1 ? parts[0] : parts[1];
+      const singular = parts[0] ?? '';
+      const plural = parts[1] ?? singular;
+      return count === 1 ? singular : plural;
     }
     return message;
   }

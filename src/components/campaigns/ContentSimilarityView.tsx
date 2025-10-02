@@ -8,8 +8,36 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FileText, UserCheck, Percent, Link as LinkIcon, ExternalLink, Sparkles, Loader2 } from 'lucide-react';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
-import type { ExtractedContentItem } from '@/lib/api-client/models/extracted-content-item';
-import type { LeadItem } from '@/lib/api-client/models/lead-item';
+// The generated OpenAPI client does not currently expose explicit ExtractedContentItem/LeadItem models.
+// Define minimal structural interfaces here to maintain type safety without invalid imports.
+interface ExtractedContentItem {
+  id?: string;
+  text?: string;
+  sourceUrl?: string;
+  similarityScore?: number;
+  previousCampaignId?: string;
+  advancedAnalysis?: {
+    summary?: string;
+    sentiment?: string;
+    advancedKeywords?: string[];
+    categories?: string[];
+  };
+}
+interface LeadItem {
+  id?: string;
+  name?: string | null;
+  email?: string | null;
+  company?: string | null;
+  sourceUrl?: string | null;
+  previousCampaignId?: string | null;
+  url?: string;
+  title?: string;
+  score?: number;
+  similarityScore?: number;
+  status?: string;
+  tags?: string[];
+  createdAt?: string;
+}
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import React, { useState } from 'react';

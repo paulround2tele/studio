@@ -8,7 +8,7 @@ import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
 import { setFullSequenceMode } from '@/store/ui/campaignUiSlice';
 import { Switch } from '@/components/ui/switch';
 import { useStartPhaseStandaloneMutation, useGetCampaignEnrichedQuery } from '@/store/api/campaignApi';
-import type { EnrichedCampaignResponse } from '@/lib/api-client/models/enriched-campaign-response';
+import type { EnrichedCampaignResponse } from '@/lib/api-client/models';
 import { useListScoringProfilesQuery } from '@/store/api/scoringApi';
 
 interface CampaignOverviewCardProps {
@@ -26,11 +26,12 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
   const { data: enriched } = useGetCampaignEnrichedQuery(campaignId, { skip: !campaignId });
   const enrichedTyped = enriched as EnrichedCampaignResponse | undefined;
   const { data: scoringProfiles } = useListScoringProfilesQuery(undefined, { skip: !campaignId });
-  const scoringProfileId = enrichedTyped?.scoringProfileId || enrichedTyped?.scoring?.profileId || (enrichedTyped as any)?.scoringProfile;
+  // Adjusted to match current enriched campaign model (no nested scoring object in generated models index)
+  const scoringProfileId = (enrichedTyped as any)?.scoringProfileId || (enrichedTyped as any)?.scoringProfile;
   const profileObj = scoringProfiles?.items?.find?.((p: any) => p.id === scoringProfileId);
   const profileName = profileObj?.name || scoringProfileId || '—';
-  const avgScore = enrichedTyped?.scoring?.averageScore;
-  const lastRescoreAt = enrichedTyped?.scoring?.lastRescoreAt;
+  const avgScore = (enrichedTyped as any)?.averageScore ?? (enrichedTyped as any)?.score;
+  const lastRescoreAt = (enrichedTyped as any)?.lastRescoreAt;
 
   const handlePrimaryCTA = async () => {
     if (!nextAction) return;

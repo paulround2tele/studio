@@ -221,8 +221,8 @@ function calculateTrend(snapshots: AggregateSnapshot[]): 'up' | 'down' | 'stable
   const latest = sorted[sorted.length - 1];
   const previous = sorted[sorted.length - 2];
 
-  const latestScore = latest.aggregates.successRate || 0;
-  const previousScore = previous.aggregates.successRate || 0;
+  const latestScore = latest?.aggregates?.successRate || 0;
+  const previousScore = previous?.aggregates?.successRate || 0;
 
   const diff = latestScore - previousScore;
   const threshold = 0.05; // 5% threshold for stability

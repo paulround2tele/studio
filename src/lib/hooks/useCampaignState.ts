@@ -9,7 +9,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
 import { apiConfiguration } from '@/lib/api/config';
-import type { CampaignsPhaseExecutionsList200Response } from '@/lib/api-client/models';
+import type { CampaignStateWithExecutions } from '@/lib/api-client/models/campaign-state-with-executions';
 import type { PhaseExecutionUpdate } from '@/lib/api-client/models/phase-execution-update';
 import { CampaignsPhaseExecutionPutPhaseTypeEnum, CampaignsPhaseExecutionDeletePhaseTypeEnum, CampaignsPhaseExecutionGetPhaseTypeEnum } from '@/lib/api-client/apis/campaigns-api';
 
@@ -25,9 +25,9 @@ export function useCampaignState(campaignId: string) {
 
   const stateQuery = useQuery({
     queryKey: ['campaign-state', campaignId],
-    queryFn: async (): Promise<CampaignsPhaseExecutionsList200Response> => {
+    queryFn: async (): Promise<CampaignStateWithExecutions> => {
       const res = await api.campaignsPhaseExecutionsList(campaignId);
-      return res.data;
+      return res.data as CampaignStateWithExecutions;
     },
     enabled: !!campaignId,
     staleTime: 30_000, // Increased stale time to reduce polling frequency

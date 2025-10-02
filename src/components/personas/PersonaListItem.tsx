@@ -5,12 +5,11 @@ import Link from 'next/link';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-// Use compat alias for stability across client regenerations
-import type { ApiPersonaResponse } from '@/lib/api-client/compat';
-import type { HTTPConfigDetails } from '@/lib/api-client/models/httpconfig-details';
-import type { DNSConfigDetails } from '@/lib/api-client/models/dnsconfig-details';
+import type { PersonaResponse as ApiPersonaResponse } from '@/lib/api-client/models/persona-response';
+import type { PersonaConfigHttp as HTTPConfigDetails } from '@/lib/api-client/models/persona-config-http';
+import type { PersonaConfigDns as DNSConfigDetails } from '@/lib/api-client/models/persona-config-dns';
 
-// Type for the actual persona data we receive from the API
+// Type for the actual persona data we receive from the API (personaType now plain 'http' | 'dns')
 type PersonaItem = ApiPersonaResponse;
 
 // Status type derived from the API
@@ -109,7 +108,8 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
 
   const renderHttpPersonaDetails = (p: PersonaItem) => {
     // Type assert the configDetails to HTTPConfigDetails since we know this is an HTTP persona
-    const config = (p.configDetails as HTTPConfigDetails) || {
+  const raw = p.configDetails as unknown;
+  const config = (raw as HTTPConfigDetails) || {
       userAgent: 'Not set',
       headers: {},
       requestTimeoutSeconds: 30,
@@ -140,7 +140,8 @@ export default function PersonaListItem({ persona, onDelete, onTest, onToggleSta
 
   const renderDnsPersonaDetails = (p: PersonaItem) => {
     // Type assert the configDetails to DNSConfigDetails since we know this is a DNS persona
-    const config = p.configDetails as DNSConfigDetails;
+  const raw = p.configDetails as unknown;
+  const config = (raw as DNSConfigDetails) || { resolverStrategy: undefined } as DNSConfigDetails;
     return (
       <>
         <div className="text-sm space-y-1 mb-3">

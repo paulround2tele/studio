@@ -12,13 +12,15 @@ import { PersonasApi, ProxiesApi, ProxyPoolsApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
 import { PersonaType } from '@/lib/api-client/models/persona-type';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
-import type { ModelsProxy } from '@/lib/api-client/models/models-proxy';
-import type { ModelsProxyPool } from '@/lib/api-client/models/models-proxy-pool';
+import type { Proxy } from '@/lib/api-client/models/proxy';
+import type { ProxyPool } from '@/lib/api-client/models/proxy-pool';
 import { useConfigurePhaseStandaloneMutation, campaignApi } from '@/store/api/campaignApi';
 import { useAppDispatch } from '@/store/hooks';
 import { pushGuidanceMessage } from '@/store/ui/campaignUiSlice';
-import type { ApiDNSValidationConfig } from '@/lib/api-client/models/api-dnsvalidation-config';
 import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
+
+// Local structural type for proxy pools; generated model name mismatch handled elsewhere
+interface ProxyPoolLite { id?: string; name?: string; isEnabled?: boolean; }
 
 interface FormValues { personaIds: string[]; proxyPoolId?: string; name: string; }
 interface Props { campaignId: string; onConfigured?: () => void; readOnly?: boolean; }
@@ -29,7 +31,7 @@ export const DNSValidationConfigForm: React.FC<Props> = ({ campaignId, onConfigu
   const [configurePhase, { isLoading: saving }] = useConfigurePhaseStandaloneMutation();
   const dispatch = useAppDispatch();
   const [dnsPersonas, setDnsPersonas] = useState<PersonaResponse[]>([]);
-  const [proxyPools, setProxyPools] = useState<ModelsProxyPool[]>([]);
+  const [proxyPools, setProxyPools] = useState<ProxyPoolLite[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const form = useForm<FormValues>({ defaultValues: { personaIds: [], name: `DNS Validation - ${new Date().toLocaleDateString()}` } });
   const watchedPersonaIds = form.watch('personaIds');
@@ -50,14 +52,15 @@ export const DNSValidationConfigForm: React.FC<Props> = ({ campaignId, onConfigu
     // Since APIs return direct arrays, we can use them directly
     const personasRaw = Array.isArray(personasData) ? personasData : [];
     const poolsRaw = Array.isArray(poolsData) ? poolsData : [];
-    const enabledPools = poolsRaw.filter((p: any)=>p.isEnabled!==false);
+  const enabledPools: ProxyPoolLite[] = poolsRaw.filter((p: any)=>p && p.isEnabled!==false);
     const activeDns = personasRaw.filter((p: any)=> (p.personaType==='dns' || p.personaType==='DNS' ) && (p.isEnabled===true || p.isEnabled===undefined));
     setDnsPersonas(activeDns);
     setProxyPools(enabledPools);
     // Auto-select if exactly one DNS persona available and none currently selected
     const currentSelected = form.getValues('personaIds');
     if (activeDns.length === 1 && currentSelected.length === 0) {
-      form.setValue('personaIds', [activeDns[0].id]);
+      const only = activeDns[0];
+      if (only?.id) form.setValue('personaIds', [only.id]);
     }
   } catch(e){ console.error(e); toast({ title:'Load failed', description:'Could not load DNS data', variant:'destructive'});} finally { setLoadingData(false);} })(); },[campaignId, readOnly, toast]);
 

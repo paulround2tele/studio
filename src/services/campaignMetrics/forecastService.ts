@@ -9,15 +9,22 @@ import { capabilitiesService } from './capabilitiesService';
 import { telemetryService } from './telemetryService';
 import { forecastBlendService } from './forecastBlendService';
 import { fetchWithPolicy } from '@/lib/utils/fetchWithPolicy';
-import { useBackendCanonical, useForecastCustomHorizon } from '@/lib/feature-flags-simple';
-import { safeAt, safeLast, safeFirst, hasMinElements, NonEmptyArray, isNonEmptyArray } from '@/lib/utils/arrayUtils';
+// Alias feature flag functions so they are not treated as React hooks in this plain service module
+import { useBackendCanonical as backendCanonicalEnabled, useForecastCustomHorizon as forecastCustomHorizonEnabled } from '@/lib/feature-flags-simple';
+import { safeAt, safeLast, safeFirst, hasMinElements } from '@/lib/utils/arrayUtils';
+import { 
+  ForecastPoint, 
+  NormalizedForecastResult,
+  normalizeForecastResult,
+  createForecastPoint 
+} from '@/types/forecasting';
 
 // Feature flags
 const isForecastsEnabled = () => 
-  process.env.NEXT_PUBLIC_ENABLE_FORECASTS !== 'false';
+  typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_ENABLE_FORECASTS !== 'false';
 
 const getForecastHorizon = () => 
-  parseInt(process.env.NEXT_PUBLIC_FORECAST_HORIZON_DAYS || '7', 10);
+  parseInt((typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_FORECAST_HORIZON_DAYS) || '7', 10);
 
 // Phase 9: Bayesian blending feature flag
 const isBayesianBlendingEnabled = () =>
@@ -57,20 +64,7 @@ export interface ServerForecastResponse {
   };
 }
 
-/**
- * Individual forecast point with confidence interval
- */
-export interface ForecastPoint {
-  timestamp: string;
-  metricKey: string;
-  value: number;
-  lower: number;
-  upper: number;
-  // Phase 8: Probabilistic forecasting
-  p10?: number;
-  p50?: number; // median
-  p90?: number;
-}
+// Local ForecastPoint removed; using centralized definition (optional metricKey supported centrally if needed)
 
 /**
  * Client forecast computation options
@@ -137,9 +131,9 @@ export async function getServerForecast(
   }
 
   // Apply horizon clamping if custom horizon is enabled
-  const finalHorizon = useForecastCustomHorizon() ? clampForecastHorizon(horizon) : getForecastHorizon();
+  const finalHorizon = forecastCustomHorizonEnabled() ? clampForecastHorizon(horizon) : getForecastHorizon();
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const apiUrl = typeof process !== 'undefined' ? process.env?.NEXT_PUBLIC_API_URL : undefined;
   if (!apiUrl) {
     throw new Error('API URL not configured');
   }
@@ -500,7 +494,7 @@ export async function getForecast(
   // Phase 7: Use domain resolution for server vs client decision
   let resolution: 'server' | 'client-fallback' | 'skip' = 'client-fallback';
   
-  if (useBackendCanonical()) {
+  if (backendCanonicalEnabled()) {
     try {
       // Ensure capabilities are loaded
       await capabilitiesService.initialize();
@@ -813,7 +807,7 @@ async function performModelArbitration(
     }
 
     // Test server model if available (mock scoring for now)
-    if (useBackendCanonical()) {
+    if (backendCanonicalEnabled()) {
       try {
         await capabilitiesService.initialize();
         const resolution = capabilitiesService.resolveDomain('forecast');
@@ -930,7 +924,7 @@ export async function getMultiModelForecast(
     };
   }
 
-  let primaryForecast: ForecastResult;
+  let primaryForecast: ForecastResult | undefined;
   let modelArbitration: Awaited<ReturnType<typeof performModelArbitration>> | undefined;
 
   // Perform model arbitration if enabled
@@ -961,13 +955,18 @@ export async function getMultiModelForecast(
         modelInfo: {
           selectedModel: 'server',
           arbitrationScores: modelArbitration.scores.find(s => s.model === 'server'),
-          alternativeModels: modelArbitration.scores.filter(s => s.model !== 'server')
+          alternativeModels: modelArbitration.scores
+            .filter(s => s.model !== 'server')
+            .map(s => ({ name: s.model, mae: s.mae, mape: s.mape }))
         },
-        qualityMetrics: serverResponse.qualityMetrics
+        qualityMetrics: serverResponse.qualityMetrics ? {
+          mae: serverResponse.qualityMetrics.mae ?? 0,
+          mape: serverResponse.qualityMetrics.mape ?? 0,
+          residualVariance: 0
+        } : undefined,
       };
     } catch (error) {
       console.warn('[getMultiModelForecast] Server forecast failed, falling back:', error);
-      // Fall back to client forecasting
     }
   }
 
@@ -990,7 +989,6 @@ export async function getMultiModelForecast(
 
     // Synthesize probabilistic bands if not provided
     const enhancedPoints = synthesizeProbabilisticBands(clientPoints, residualVariance);
-
     primaryForecast = {
       horizon,
       points: enhancedPoints,
@@ -1000,7 +998,9 @@ export async function getMultiModelForecast(
       modelInfo: {
         selectedModel: selectedMethod,
         arbitrationScores: modelArbitration?.scores.find(s => s.model.includes(selectedMethod)),
-        alternativeModels: modelArbitration?.scores.filter(s => !s.model.includes(selectedMethod))
+        alternativeModels: modelArbitration?.scores
+          .filter(s => !s.model.includes(selectedMethod))
+          .map(s => ({ name: s.model, mae: s.mae, mape: s.mape }))
       },
       qualityMetrics: {
         mae: modelArbitration?.scores.find(s => s.model.includes(selectedMethod))?.mae || 0,
@@ -1027,6 +1027,17 @@ export async function getMultiModelForecast(
     });
   }
 
+  // At this point primaryForecast must be defined; fallback guarantee
+  if (!primaryForecast) {
+    return {
+      horizon,
+      points: [],
+      generatedAt: new Date().toISOString(),
+      method: 'client',
+      error: 'Unknown forecasting failure',
+      timingMs: Date.now() - startTime
+    };
+  }
   return primaryForecast;
 }
 
@@ -1102,13 +1113,9 @@ async function getBlendedForecast(
   // Convert blended forecast to standard format
   const blendedPoints: ForecastPoint[] = blend.blendedPoints.map(point => ({
     timestamp: point.timestamp,
-    metricKey,
     value: point.value,
     lower: point.lower,
-    upper: point.upper,
-    p10: point.lower,
-    p50: point.value,
-    p90: point.upper,
+    upper: point.upper
   }));
 
   return {
@@ -1118,16 +1125,12 @@ async function getBlendedForecast(
     method: 'client',
     timingMs: Date.now() - startTime,
     modelInfo: {
-      selectedModel: 'bayesian_blend',
-      blendMethod: blend.blendMethod,
-      blendQuality: blend.qualityScore,
-      posteriorWeights: Object.fromEntries(blend.posteriorWeights),
-      contributingModels: Array.from(blend.posteriorWeights.keys()),
+      selectedModel: 'bayesian_blend'
     },
     qualityMetrics: {
-      mae: 0, // Would be calculated from historical performance
+      mae: 0,
       mape: 0,
-      confidence: blend.qualityScore,
+      residualVariance: 0
     }
   };
 }

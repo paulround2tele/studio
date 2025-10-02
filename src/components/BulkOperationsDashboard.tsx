@@ -32,7 +32,8 @@ import type {
   BulkAnalyticsRequest,
   BulkResourceAllocationRequest,
 } from '@/lib/api-client/models';
-import type { UUID } from '@/lib/api-client/uuid-types';
+// UUID type alias (generated client no longer exports uuid-types explicitly)
+type UUID = string;
 
 // Professional type aliases for readability
 type BulkResourceRequest = BulkResourceAllocationRequest;

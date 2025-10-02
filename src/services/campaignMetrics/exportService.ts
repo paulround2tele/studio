@@ -4,8 +4,9 @@
  */
 
 import { AggregateSnapshot, ExtendedAggregateMetrics } from '@/types/campaignMetrics';
+import type { ForecastPoint } from '@/types/forecasting';
 import { EnhancedRecommendation } from './recommendationsV3Pipeline';
-import { ForecastPoint } from './forecastService';
+// ForecastPoint removed from forecastService exports; rely on forecasting central types or inline shapes
 import { NormalizedSnapshot } from './normalizationService';
 import { CohortMatrix } from './cohortService';
 import { capabilitiesService, DomainType, DomainResolution } from './capabilitiesService';
@@ -833,6 +834,13 @@ export interface ExportOptionsV7 extends ExportOptionsV3 {
   policyData?: ShareBundleV7['policies'];
   vizProfileData?: ShareBundleV7['vizProfiles'];
   edgeProcessingData?: ShareBundleV7['edgeProcessing'];
+  // Carry forward Phase 10 (v6) optional data so type accesses are valid
+  includeCausalGraph?: boolean;
+  causalGraphData?: ShareBundleV7['causalGraph'];
+  experimentsData?: ShareBundleV7['experiments'];
+  semanticSummariesData?: ShareBundleV7['semanticSummaries'];
+  privacyLedgerData?: ShareBundleV7['privacyLedger'];
+  perfTracesData?: ShareBundleV7['perfTraces'];
 }
 
 /**

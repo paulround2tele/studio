@@ -158,21 +158,22 @@ class SecurityHardeningService {
       };
     }
     
-    const sanitizedPayload = { ...payload };
+  // Create a mutable working copy; we'll assert to T at the end
+  const workingCopy: Record<string, any> = { ...payload };
     const allViolations: string[] = [];
     const sanitizedFields: string[] = [];
     let wasModified = false;
     
     // Recursively sanitize numeric fields
-    Object.keys(sanitizedPayload).forEach(key => {
-      const value = sanitizedPayload[key];
+    Object.keys(workingCopy).forEach(key => {
+      const value = workingCopy[key];
       
       if (typeof value === 'number' || (typeof value === 'string' && !isNaN(parseFloat(value)))) {
         const bounds = customBounds[key] || DEFAULT_BOUNDS[key] || {};
         const result = this.sanitizeNumeric(value, bounds, key);
         
         if (result.wasModified) {
-          sanitizedPayload[key] = result.value;
+          workingCopy[key] = result.value;
           wasModified = true;
           sanitizedFields.push(key);
           allViolations.push(...result.violations.map(v => `${key}: ${v}`));
@@ -181,7 +182,7 @@ class SecurityHardeningService {
         // Recursively sanitize nested objects
         const nestedResult = this.sanitizeNumericPayload(value, customBounds);
         if (nestedResult.wasModified) {
-          sanitizedPayload[key] = nestedResult.value;
+          workingCopy[key] = nestedResult.value;
           wasModified = true;
           sanitizedFields.push(...nestedResult.metadata.sanitizedFields.map(f => `${key}.${f}`));
           allViolations.push(...nestedResult.violations);
@@ -190,7 +191,7 @@ class SecurityHardeningService {
     });
     
     return {
-      value: sanitizedPayload,
+      value: workingCopy as T,
       wasModified,
       violations: allViolations,
       metadata: {

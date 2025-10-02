@@ -356,9 +356,14 @@ class SnapshotCompactionService {
     for (let i = 1; i < snapshots.length - 1; i++) {
       if (selectedIndices.includes(i)) continue;
 
-      const current = snapshots[i].aggregates.avgLeadScore || 0;
-      const prev = snapshots[i - 1].aggregates.avgLeadScore || 0;
-      const next = snapshots[i + 1].aggregates.avgLeadScore || 0;
+      const curSnap = safeAt(snapshots, i);
+      const prevSnap = safeAt(snapshots, i - 1);
+      const nextSnap = safeAt(snapshots, i + 1);
+      if (!curSnap || !prevSnap || !nextSnap) continue;
+
+      const current = curSnap.aggregates?.avgLeadScore || 0;
+      const prev = prevSnap.aggregates?.avgLeadScore || 0;
+      const next = nextSnap.aggregates?.avgLeadScore || 0;
 
       // Check for significant change
       const changeFromPrev = prev > 0 ? Math.abs((current - prev) / prev) * 100 : 0;
@@ -378,35 +383,46 @@ class SnapshotCompactionService {
     startIndex: number,
     endIndex: number
   ): AggregateSnapshot {
-    if (snapshots.length === 1) return snapshots[0];
+    if (snapshots.length === 0) {
+      return {
+        timestamp: new Date().toISOString(),
+        aggregates: {} as any,
+      } as AggregateSnapshot;
+    }
+    if (snapshots.length === 1) {
+      const only = safeFirst(snapshots);
+      if (only) return only as AggregateSnapshot;
+      return {
+        timestamp: new Date().toISOString(),
+        aggregates: {} as any,
+      } as AggregateSnapshot;
+    }
 
-    // Use middle timestamp
     const middleIndex = Math.floor(snapshots.length / 2);
-    const timestamp = snapshots[middleIndex].timestamp;
+  const middleSnapshot = safeAt(snapshots, middleIndex) || safeFirst(snapshots);
+  const timestamp = middleSnapshot ? middleSnapshot.timestamp : new Date().toISOString();
 
-    // Average numeric aggregates
+  const firstSnapshot = safeFirst(snapshots);
+  const firstAgg = (firstSnapshot && (firstSnapshot as any).aggregates) || ({} as any);
     const aggregates: any = {};
-    const firstAgg = snapshots[0].aggregates;
-    
     Object.keys(firstAgg).forEach(key => {
-      const values = snapshots
-        .map(s => s.aggregates[key as keyof typeof s.aggregates])
-        .filter(v => v != null && typeof v === 'number') as number[];
-      
-      if (values.length > 0) {
-        aggregates[key] = values.reduce((sum, val) => sum + val, 0) / values.length;
+      const numericValues = snapshots
+        .map(s => (s.aggregates as any)?.[key])
+        .filter(v => typeof v === 'number') as number[];
+      if (numericValues.length > 0) {
+        aggregates[key] = numericValues.reduce((sum, val) => sum + val, 0) / numericValues.length;
       } else {
-        aggregates[key] = firstAgg[key as keyof typeof firstAgg];
+        aggregates[key] = (firstAgg as any)[key];
       }
     });
 
+    // Merge averaged aggregates with representative snapshot (excluding its original aggregates to avoid duplication)
+  const { aggregates: _origAgg, ...rest } = (middleSnapshot || {}) as any;
     return {
+      ...rest,
       timestamp,
       aggregates,
-      // Preserve other fields from middle snapshot
-      ...snapshots[middleIndex],
-      aggregates // Override with averaged aggregates
-    };
+    } as AggregateSnapshot;
   }
 
   /**
@@ -419,9 +435,12 @@ class SnapshotCompactionService {
   ): CompactionResult['metadata'] {
     let avgInterval = 0;
     if (compacted.length > 1) {
-      const totalTime = new Date(compacted[compacted.length - 1].timestamp).getTime() - 
-                       new Date(compacted[0].timestamp).getTime();
-      avgInterval = totalTime / (compacted.length - 1);
+      const first = safeFirst(compacted);
+      const last = safeLast(compacted);
+      if (first && last) {
+        const totalTime = new Date(last.timestamp).getTime() - new Date(first.timestamp).getTime();
+        avgInterval = totalTime / (compacted.length - 1);
+      }
     }
 
     // Estimate data loss based on missing important points
@@ -449,7 +468,7 @@ class SnapshotCompactionService {
       compressionRatio: 1,
       compactionTimeMs: Date.now() - startTime,
       strategy: 'lttb',
-      compactedSnapshots: snapshots,
+      compactedSnapshots: snapshots.slice(),
       preservedIndices: snapshots.map((_, i) => i),
       metadata: {
         avgInterval: 0,

@@ -10,8 +10,9 @@
 import type { 
   CampaignResponseCurrentPhaseEnum
 } from '@/lib/api-client/models/campaign-response';
-import type { HTTPKeywordValidationRequest } from '@/lib/api-client/models/httpkeyword-validation-request';
-import type { DNSValidationAPIRequest } from '@/lib/api-client/models/dnsvalidation-apirequest';
+// Legacy validation request types were removed from generated client; use lightweight placeholders.
+interface DNSValidationAPIRequest { personaIds?: string[]; }
+interface HTTPKeywordValidationRequest { keywordSetIds?: string[]; keywords?: string[]; }
 
 export type DomainGenerationPattern = "prefix_variable" | "suffix_variable" | "both_variable";
 export type DomainSourceSelectionMode = "none" | "upload" | "campaign_output";

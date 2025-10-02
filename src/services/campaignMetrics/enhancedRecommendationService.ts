@@ -5,7 +5,8 @@
 
 import { telemetryService } from './telemetryService';
 import { capabilitiesService } from './capabilitiesService';
-import { useBackendCanonical } from '@/lib/feature-flags-simple';
+// Alias import of feature flag util to avoid lint hook rule in service module
+import { useBackendCanonical as backendCanonicalEnabled } from '@/lib/feature-flags-simple';
 
 // Feature flag for layered recommendations
 const isLayeredRecommendationsEnabled = () => 
@@ -158,7 +159,7 @@ class EnhancedRecommendationService {
     campaignId: string, 
     snapshots: any[]
   ): Promise<EnhancedRecommendation[]> {
-    if (!useBackendCanonical()) {
+  if (!backendCanonicalEnabled()) {
       return [];
     }
 

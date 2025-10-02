@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { ModelsProxy as ProxyType } from '@/lib/api-client/models/models-proxy';
+import type { Proxy as ProxyType } from '@/lib/api-client/models/proxy';
 import type { UpdateProxyRequestAPI as UpdateProxyRequest } from '@/lib/api-client/models/update-proxy-request-api';
 import { ProxyProtocol } from '@/lib/api-client/models/proxy-protocol';
 

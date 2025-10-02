@@ -13,15 +13,12 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-// Use proper API client instead of fictional bridge
-import { personasApi } from "@/lib/api-client/compat";
-// Contract-aligned: personas endpoints now return direct PersonaResponse objects
-// Import types from proper models
-// Use compat alias to stay stable across client regenerations
-import type { ApiPersonaResponse } from '@/lib/api-client/compat';
-import type { HTTPConfigDetails } from '@/lib/api-client/models/httpconfig-details';
-import type { DNSConfigDetails } from '@/lib/api-client/models/dnsconfig-details';
-import { ApiCreatePersonaRequestPersonaTypeEnum } from '@/lib/api-client/models/api-create-persona-request';
+import { PersonasApi, Configuration } from '@/lib/api-client';
+import type { PersonaResponse as ApiPersonaResponse } from '@/lib/api-client/models/persona-response';
+import type { PersonaConfigHttp as HTTPConfigDetails } from '@/lib/api-client/models/persona-config-http';
+import type { PersonaConfigDns as DNSConfigDetails } from '@/lib/api-client/models/persona-config-dns';
+import { PersonaType as ApiCreatePersonaRequestPersonaTypeEnum } from '@/lib/api-client/models/persona-type';
+const personasApi = new PersonasApi(new Configuration());
 
 // Type aliases for better readability
 type Persona = ApiPersonaResponse;
@@ -216,7 +213,7 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
 
       const payload = {
         ...commonPayloadData,
-        personaType: ApiCreatePersonaRequestPersonaTypeEnum.PersonaTypeHTTP,
+  personaType: ApiCreatePersonaRequestPersonaTypeEnum.http,
         isEnabled: true,
         configDetails: httpConfigDetails
       };
@@ -561,7 +558,7 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
 
       const payload = {
           ...commonPayloadData,
-          personaType: ApiCreatePersonaRequestPersonaTypeEnum.PersonaTypeDNS,
+          personaType: ApiCreatePersonaRequestPersonaTypeEnum.dns,
           isEnabled: true,
           configDetails: dnsConfigDetails,
       };

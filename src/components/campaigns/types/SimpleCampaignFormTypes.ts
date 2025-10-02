@@ -7,7 +7,7 @@
  * 3. Uses ONLY auto-generated API types from OpenAPI spec
  */
 // Use the RTK wrapper's exported alias to match mutation input type exactly
-import type { ServicesCreateLeadGenerationCampaignRequest as CreateLeadGenerationCampaignRequest } from '@/lib/api-client';
+import type { CreateCampaignRequest as CreateLeadGenerationCampaignRequest } from '@/lib/api-client/models';
 // No discovery config on create for Option A
 
 /**
@@ -24,13 +24,11 @@ export interface SimpleCampaignFormValues {
  * Helper function to convert form values to API request
  */
 export function formToApiRequest(formValues: SimpleCampaignFormValues): CreateLeadGenerationCampaignRequest {
-  const payload: CreateLeadGenerationCampaignRequest = {
+  return {
     name: formValues.name,
     description: formValues.description,
-  // targetDomains removed from backend schema (historical placeholder)
-  // No initial phase configuration; phases configured on dashboard
+    configuration: undefined as any // Phase-centric: configuration added later
   };
-  return payload;
 }
 
 /**

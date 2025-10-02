@@ -10,8 +10,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { useConfigurePhaseStandaloneMutation, campaignApi } from '@/store/api/campaignApi';
 import { useAppDispatch } from '@/store/hooks';
 import { pushGuidanceMessage } from '@/store/ui/campaignUiSlice';
-import type { ServicesDomainGenerationPhaseConfig } from '@/lib/api-client/models/services-domain-generation-phase-config';
 import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
+
+// Structural representation of domain generation configuration (generated model missing)
+interface DomainGenerationPhaseConfig {
+  patternType?: 'prefix' | 'suffix' | 'both';
+  characterSet?: string;
+  constantString?: string;
+  variableLength?: number;
+  tlds?: string[];
+  numDomainsToGenerate?: number;
+  batchSize?: number;
+}
 import { useToast } from '@/hooks/use-toast';
 
 interface Props { campaignId: string; onConfigured?: () => void; readOnly?: boolean; }
@@ -20,7 +30,7 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
   const { toast } = useToast();
   const [configurePhase, { isLoading }] = useConfigurePhaseStandaloneMutation();
   const dispatch = useAppDispatch();
-  const form = useForm<ServicesDomainGenerationPhaseConfig & { prefixLength?: number; suffixLength?: number }>({
+  const form = useForm<DomainGenerationPhaseConfig & { prefixLength?: number; suffixLength?: number }>({
     defaultValues: {
       patternType: 'prefix' as any,
       characterSet: 'abcdefghijklmnopqrstuvwxyz0123456789',
@@ -34,7 +44,7 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
     },
   });
 
-  const onSubmit = async (values: ServicesDomainGenerationPhaseConfig & { prefixLength?: number; suffixLength?: number }) => {
+  const onSubmit = async (values: DomainGenerationPhaseConfig & { prefixLength?: number; suffixLength?: number }) => {
     try {
       const firstTld = Array.isArray(values.tlds) && values.tlds.length > 0 ? values.tlds[0] : '';
       const tld = firstTld && !firstTld.startsWith('.') ? `.${firstTld}` : firstTld;

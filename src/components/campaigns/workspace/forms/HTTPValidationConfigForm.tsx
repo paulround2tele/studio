@@ -12,13 +12,16 @@ import { PersonasApi, KeywordSetsApi, ProxyPoolsApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
 import { PersonaType } from '@/lib/api-client/models/persona-type';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
-import type { ModelsProxyPool } from '@/lib/api-client/models/models-proxy-pool';
+import type { ProxyPool } from '@/lib/api-client/models/proxy-pool';
 import type { KeywordSetResponse as ApiKeywordSet } from '@/lib/api-client/models/keyword-set-response';
 import { useConfigurePhaseStandaloneMutation, campaignApi } from '@/store/api/campaignApi';
 import { useAppDispatch } from '@/store/hooks';
 import { pushGuidanceMessage } from '@/store/ui/campaignUiSlice';
-import type { ApiHTTPValidationConfig } from '@/lib/api-client/models/api-httpvalidation-config';
 import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
+
+// Structural lightweight representations (generated models with these names not present)
+interface ProxyPoolLite { id?: string; name?: string; isEnabled?: boolean; }
+interface KeywordSetLite { id?: string; name?: string; }
 
 interface FormValues { name: string; personaIds: string[]; keywordSetIds: string[]; adHocKeywords: string[]; proxyPoolId?: string; }
 interface Props { campaignId: string; onConfigured?: ()=>void; readOnly?: boolean; }
@@ -29,8 +32,8 @@ export const HTTPValidationConfigForm: React.FC<Props> = ({ campaignId, onConfig
   const [configurePhase, { isLoading: saving }] = useConfigurePhaseStandaloneMutation();
   const dispatch = useAppDispatch();
   const [httpPersonas, setHttpPersonas] = useState<PersonaResponse[]>([]);
-  const [keywordSets, setKeywordSets] = useState<ApiKeywordSet[]>([]);
-  const [proxyPools, setProxyPools] = useState<ModelsProxyPool[]>([]);
+  const [keywordSets, setKeywordSets] = useState<KeywordSetLite[]>([]);
+  const [proxyPools, setProxyPools] = useState<ProxyPoolLite[]>([]);
   const [loadingData, setLoadingData] = useState(true);
   const [pendingKeyword, setPendingKeyword] = useState('');
   const form = useForm<FormValues>({ defaultValues: { name: `HTTP Validation - ${new Date().toLocaleDateString()}`, personaIds: [], keywordSetIds: [], adHocKeywords: [] } });
@@ -56,15 +59,16 @@ export const HTTPValidationConfigForm: React.FC<Props> = ({ campaignId, onConfig
     // Since APIs return direct arrays, we can use them directly
     const personasRaw = Array.isArray(personasData) ? personasData : [];
     const poolsRaw = Array.isArray(poolsData) ? poolsData : [];
-    const setsRaw = Array.isArray(setsData) ? setsData : [];
+  const setsRaw: KeywordSetLite[] = Array.isArray(setsData) ? setsData : [];
     const activeHttp = personasRaw.filter((p: any)=> (p.personaType==='http' || p.personaType==='HTTP') && (p.isEnabled===true || p.isEnabled===undefined));
     setHttpPersonas(activeHttp);
-    setKeywordSets(setsRaw||[]);
-    setProxyPools((poolsRaw||[]).filter((p: any)=>p.isEnabled!==false));
+  setKeywordSets(setsRaw||[]);
+  setProxyPools((poolsRaw||[]).filter((p: any)=>p && p.isEnabled!==false));
     // Auto-select single persona if exactly one exists and none selected yet
     const current = form.getValues('personaIds');
     if (activeHttp.length === 1 && current.length === 0) {
-      form.setValue('personaIds', [activeHttp[0].id]);
+      const only = activeHttp[0];
+      if (only?.id) form.setValue('personaIds', [only.id]);
     }
   } catch(e){ console.error(e); toast({ title:'Load failed', description:'Could not load HTTP data', variant:'destructive'});} finally { setLoadingData(false);} })(); },[campaignId, readOnly, toast, form]);
 

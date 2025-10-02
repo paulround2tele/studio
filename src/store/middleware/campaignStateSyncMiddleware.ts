@@ -1,31 +1,26 @@
 // Phase 3 Integration: Connect Redux to Backend State Machine
 // This middleware bridges the Redux frontend with the backend state machine
 
-import type { Middleware } from '@reduxjs/toolkit';
+import type { Middleware, AnyAction } from '@reduxjs/toolkit';
 import { campaignApi } from '../api/campaignApi';
-// Exec slice integration for explicit start API calls only (SSE handled in hook)
-import { phaseStarted, phaseCompleted, phaseFailed } from '../slices/pipelineExecSlice';
-import { 
-  startPhaseTransition,
-  completePhaseTransition,
-  failPhaseTransition,
-  setConnectionStatus
-} from '../slices/campaignSlice';
+import { phaseStarted } from '../slices/pipelineExecSlice';
+import { startPhaseTransition, completePhaseTransition, failPhaseTransition, setConnectionStatus } from '../slices/campaignSlice';
 import type { CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
 import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
+import type { AppDispatch } from '../index';
 
 // Middleware to handle campaign state synchronization
-export const campaignStateSyncMiddleware: Middleware = (store) => (next) => (action) => {
-  const result = next(action);
+export const campaignStateSyncMiddleware: Middleware = (store) => (next) => (action: AnyAction) => {
+  const result = next(action); // proceed action first to keep ordering predictable
 
   // Handle successful phase transitions
   if (campaignApi.endpoints.startPhaseStandalone.matchFulfilled(action)) {
-    const { meta } = action;
-    const _campaignId = meta.arg.originalArgs.campaignId;
-    // optimistic exec state start -> running handled earlier when initiating? we set here ensure started
-    store.dispatch(phaseStarted({ campaignId: _campaignId, phase: meta.arg.originalArgs.phase as any }));
-    // Refetch campaigns list to sync broader state
-    store.dispatch(campaignApi.endpoints.getCampaignsStandalone.initiate() as any);
+    const { meta } = action as typeof action & { meta: { arg: { originalArgs: { campaignId: string; phase: CampaignCurrentPhaseEnum } } } };
+    const campaignId = meta.arg.originalArgs.campaignId;
+    const phase = meta.arg.originalArgs.phase;
+    store.dispatch(phaseStarted({ campaignId, phase }));
+    // Refetch campaigns list to sync broader state (no cast to any; dispatch returns a subscription handle)
+  (store.dispatch as AppDispatch)(campaignApi.endpoints.getCampaignsStandalone.initiate());
     store.dispatch(completePhaseTransition());
   }
 
@@ -44,22 +39,18 @@ export const campaignStateSyncMiddleware: Middleware = (store) => (next) => (act
 };
 
 // Helper function to initialize campaign state sync
-export const initializeCampaignSync = (_campaignId: string) => (dispatch: any) => {
-  // Set connection status
+export const initializeCampaignSync = (_campaignId: string) => (dispatch: AppDispatch) => {
   dispatch(setConnectionStatus('connected'));
-  
-  // Fetch all campaigns (including the one we care about)
-  dispatch(campaignApi.endpoints.getCampaignsStandalone.initiate() as any);
+  dispatch(campaignApi.endpoints.getCampaignsStandalone.initiate());
 };
 // Phase transition helper with proper Redux integration
-export const performPhaseTransition = (campaignId: string, phase: string) => (dispatch: any) => {
-  // Start transition in Redux
+export const performPhaseTransition = (campaignId: string, phase: string) => (dispatch: AppDispatch) => {
   dispatch(startPhaseTransition(phase));
-  
-  // Execute backend transition
   const apiPhase = normalizeToApiPhase(phase);
-  return dispatch(campaignApi.endpoints.startPhaseStandalone.initiate({
-    campaignId,
-    phase: (apiPhase || phase) as CampaignCurrentPhaseEnum
-  }) as any);
+  return (dispatch as AppDispatch)(
+    campaignApi.endpoints.startPhaseStandalone.initiate({
+      campaignId,
+      phase: (apiPhase || phase) as CampaignCurrentPhaseEnum,
+    })
+  );
 };

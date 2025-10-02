@@ -192,7 +192,7 @@ class SummarizationService {
   /**
    * Initialize the service
    */
-  private async initialize(): void {
+  private async initialize(): Promise<void> {
     try {
       // Try to initialize web worker for local model
       await this.initializeWorker();

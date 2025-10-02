@@ -2,8 +2,15 @@
 // Production domain calculation utilities
 // Uses backend OpenAPI types exclusively
 
-import type { ServicesDomainGenerationPhaseConfig } from '@/lib/api-client/models/services-domain-generation-phase-config';
-type DomainGenerationParams = ServicesDomainGenerationPhaseConfig & {
+// Generated services-domain-generation-phase-config model not present – structural substitute
+interface DomainGenerationParams {
+  patternType?: 'prefix' | 'suffix' | 'both';
+  characterSet?: string;
+  constantString?: string;
+  variableLength?: number;
+  tlds?: string[];
+}
+type DomainGenerationParamsExtended = DomainGenerationParams & {
   // Optional explicit per-side lengths when patternType is 'both'; not in backend yet
   prefixVariableLength?: number;
   suffixVariableLength?: number;
@@ -13,7 +20,7 @@ type DomainGenerationParams = ServicesDomainGenerationPhaseConfig & {
  * Calculate maximum theoretical domains for a given configuration
  * Uses backend-defined types exclusively (when they exist)
  */
-export function calculateMaxTheoreticalDomains(config: DomainGenerationParams): number {
+export function calculateMaxTheoreticalDomains(config: DomainGenerationParamsExtended): number {
   if (!config) return 0;
 
   const { patternType, characterSet, variableLength, prefixVariableLength, suffixVariableLength } = config as any;
@@ -45,7 +52,7 @@ export function calculateMaxTheoreticalDomains(config: DomainGenerationParams): 
  * This would typically check against backend state, but for now provides estimate
  */
 export function calculateRemainingDomains(
-  config: DomainGenerationParams,
+  config: DomainGenerationParamsExtended,
   currentOffset: number = 0
 ): number {
   const maxTheoretical = calculateMaxTheoreticalDomains(config);
@@ -55,7 +62,7 @@ export function calculateRemainingDomains(
 /**
  * Validate domain generation configuration using backend schema
  */
-export function validateDomainConfig(config: DomainGenerationParams): {
+export function validateDomainConfig(config: DomainGenerationParamsExtended): {
   isValid: boolean;
   errors: string[];
 } {

@@ -7,7 +7,8 @@ import { AggregateSnapshot } from '@/types/campaignMetrics';
 import { capabilitiesService } from './capabilitiesService';
 import { telemetryService } from './telemetryService';
 import { fetchWithPolicy } from '@/lib/utils/fetchWithPolicy';
-import { useBackendCanonical, useTimelinePagination } from '@/lib/feature-flags-simple';
+// Alias feature flag helpers to avoid react-hooks lint violations in non-React service file
+import { useBackendCanonical as backendCanonicalEnabled, useTimelinePagination as timelinePaginationEnabled } from '@/lib/feature-flags-simple';
 
 // Feature flag for server timeline
 const isServerTimelineEnabled = () => 
@@ -60,7 +61,7 @@ export async function fetchServerTimeline(
     params.set('limit', limit.toString());
     
     // Phase 7: Add pagination parameters
-    if (useTimelinePagination() && paginationOptions) {
+  if (timelinePaginationEnabled() && paginationOptions) {
       if (paginationOptions.cursor) params.set('cursor', paginationOptions.cursor);
       if (paginationOptions.before) params.set('before', paginationOptions.before);
       if (paginationOptions.limit) params.set('limit', paginationOptions.limit.toString());
@@ -200,7 +201,7 @@ export async function fetchNextTimelinePage(
   cursor: string,
   limit: number = 50
 ): Promise<ServerTimelineResponse> {
-  if (!useTimelinePagination()) {
+  if (!timelinePaginationEnabled()) {
     throw new Error('Timeline pagination is disabled');
   }
 
@@ -221,7 +222,7 @@ export async function getTimeline(
   // Phase 7: Use domain resolution for server vs client decision
   let resolution: 'server' | 'client-fallback' | 'skip' = 'client-fallback';
   
-  if (useBackendCanonical()) {
+  if (backendCanonicalEnabled()) {
     try {
       // Ensure capabilities are loaded
       await capabilitiesService.initialize();

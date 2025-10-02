@@ -1,9 +1,9 @@
 "use client";
 
-import type { ModelsProxy as ProxyType } from '@/lib/api-client/models/models-proxy';
+import type { Proxy as ProxyType } from '@/lib/api-client/models/proxy';
 
 // Define proxy status type based on common proxy states
-type ProxyStatus = 'Active' | 'Disabled' | 'Failed' | 'Testing';
+type ProxyStatus = 'Active' | 'Disabled' | 'Failed';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,8 +28,6 @@ const getStatusBadgeInfo = (status: ProxyStatus): { variant: "default" | "second
       return { variant: 'default', icon: <CheckCircle className="h-3.5 w-3.5 text-green-500" />, text: 'Active' };
     case 'Disabled':
       return { variant: 'secondary', icon: <PowerOff className="h-3.5 w-3.5 text-muted-foreground" />, text: 'Disabled' };
-    case 'Testing':
-      return { variant: 'outline', icon: <Clock className="h-3.5 w-3.5 text-blue-500 animate-spin" />, text: 'Testing' };
     case 'Failed':
       return { variant: 'destructive', icon: <AlertCircle className="h-3.5 w-3.5 text-destructive" />, text: 'Failed' };
     default:
@@ -38,14 +36,17 @@ const getStatusBadgeInfo = (status: ProxyStatus): { variant: "default" | "second
 };
 
 export default function ProxyListItem({ proxy, onEdit, onDelete, onTest, onToggleStatus, isLoading }: ProxyListItemProps) {
-  const statusInfo = getStatusBadgeInfo(proxy.status as ProxyStatus);
+  const derivedStatus: ProxyStatus = proxy.isEnabled
+    ? (proxy.isHealthy ? 'Active' : 'Failed')
+    : 'Disabled';
+  const statusInfo = getStatusBadgeInfo(derivedStatus);
 
   const handleToggle = (checked: boolean) => {
     onToggleStatus(proxy, checked ? 'Active' : 'Disabled');
   };
   
-  const canBeEnabled = proxy.status === 'Disabled' || proxy.status === 'Failed';
-  const canBeDisabled = proxy.status === 'Active' || proxy.status === 'Testing';
+  const canBeEnabled = derivedStatus === 'Disabled' || derivedStatus === 'Failed';
+  const canBeDisabled = derivedStatus === 'Active';
 
 
   return (
@@ -78,13 +79,13 @@ export default function ProxyListItem({ proxy, onEdit, onDelete, onTest, onToggl
       </TableCell>
       <TableCell className="text-right" data-testid="proxy-cell-actions">
         <div className="flex items-center justify-end gap-1" data-testid="proxy-actions">
-           <Switch
-            checked={proxy.status === 'Active' || proxy.status === 'Testing'}
-            onCheckedChange={handleToggle}
-            disabled={isLoading || !(canBeEnabled || canBeDisabled) || proxy.status === 'Testing'}
+        <Switch
+  checked={derivedStatus === 'Active'}
+        onCheckedChange={handleToggle}
+  disabled={isLoading || !(canBeEnabled || canBeDisabled)}
             aria-label={`Toggle proxy ${proxy.address} status`}
             className={cn(
-               (proxy.status === 'Active' || proxy.status === 'Testing') ? "data-[state=checked]:bg-green-500" : "data-[state=unchecked]:bg-muted-foreground/50",
+          derivedStatus === 'Active' ? "data-[state=checked]:bg-green-500" : "data-[state=unchecked]:bg-muted-foreground/50",
             )}
             data-testid="proxy-toggle-status"
           />

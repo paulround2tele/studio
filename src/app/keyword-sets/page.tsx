@@ -7,7 +7,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Plus, Edit } from 'lucide-react';
-import { keywordSetsApi } from '@/lib/api-client/compat';
+import { KeywordSetsApi, Configuration } from '@/lib/api-client';
+const keywordSetsApi = new KeywordSetsApi(new Configuration());
 import type { KeywordSetResponse as ApiKeywordSetResponse } from '@/lib/api-client/models';
 import { useSSE } from '@/hooks/useSSE';
 
