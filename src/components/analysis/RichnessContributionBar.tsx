@@ -1,8 +1,21 @@
 "use client";
 import React from 'react';
 
+export interface RichnessMetrics {
+  prominence_norm?: number;
+  diversity_norm?: number;
+  enrichment_norm?: number;
+  applied_bonus?: number;
+  applied_deductions_total?: number;
+  stuffing_penalty?: number;
+  repetition_index?: number;
+  anchor_share?: number;
+  score?: number;
+  version?: number;
+}
+
 interface Props {
-  richness?: any | null;
+  richness?: RichnessMetrics | null;
   bonusCap?: number;
   dedCap?: number;
 }
@@ -19,7 +32,7 @@ const NEGATIVE_BORDER = '#991b1b';
 export const RichnessContributionBar: React.FC<Props> = ({ richness, bonusCap = 0.30, dedCap = 0.50 }) => {
   const data = React.useMemo(() => {
     if (!richness) return null;
-    const clamp = (v: any, min: number, max: number) => {
+    const clamp = (v: unknown, min: number, max: number) => {
       const n = typeof v === 'number' && isFinite(v) ? v : 0; return Math.min(Math.max(n, min), max);
     };
     const prominence = clamp(richness.prominence_norm, 0, 1);

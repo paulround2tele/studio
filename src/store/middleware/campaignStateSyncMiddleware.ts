@@ -1,7 +1,7 @@
 // Phase 3 Integration: Connect Redux to Backend State Machine
 // This middleware bridges the Redux frontend with the backend state machine
 
-import type { Middleware, AnyAction } from '@reduxjs/toolkit';
+import type { Middleware } from '@reduxjs/toolkit';
 import { campaignApi } from '../api/campaignApi';
 import { phaseStarted } from '../slices/pipelineExecSlice';
 import { startPhaseTransition, completePhaseTransition, failPhaseTransition, setConnectionStatus } from '../slices/campaignSlice';
@@ -10,7 +10,7 @@ import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 import type { AppDispatch } from '../index';
 
 // Middleware to handle campaign state synchronization
-export const campaignStateSyncMiddleware: Middleware = (store) => (next) => (action: AnyAction) => {
+export const campaignStateSyncMiddleware: Middleware = (store) => (next) => (action) => {
   const result = next(action); // proceed action first to keep ordering predictable
 
   // Handle successful phase transitions
