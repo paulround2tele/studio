@@ -492,7 +492,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
                       </div>
                     </div>
                   </div>
-                );})}
+                );}
               </div>
             </div>
           )}
