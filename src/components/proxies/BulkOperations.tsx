@@ -36,7 +36,7 @@ import {
   AlertTriangle,
   Loader2
 } from 'lucide-react';
-import type { ModelsProxy as ProxyType } from '@/lib/api-client/models/models-proxy';
+import type { Proxy as ProxyType } from '@/lib/api-client/models/proxy';
 // Removed unused types/helpers
 import {
   useTestProxyMutation,
@@ -83,10 +83,16 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
   const [processingProgress, setProcessingProgress] = useState<{ current: number; total: number } | null>(null);
 
   // Filter and count proxies by status
+  const deriveStatus = (p: ProxyType): 'Active' | 'Disabled' | 'Failed' => {
+    if (!p.isEnabled) return 'Disabled';
+    if (p.isEnabled && p.isHealthy) return 'Active';
+    return 'Failed';
+  };
+
   const enabledProxies = proxies.filter(p => p.isEnabled);
   const disabledProxies = proxies.filter(p => !p.isEnabled);
-  const failedProxies = proxies.filter(p => p.status === 'Failed');
-  const activeProxies = proxies.filter(p => p.status === 'Active');
+  const failedProxies = proxies.filter(p => deriveStatus(p) === 'Failed');
+  const activeProxies = proxies.filter(p => deriveStatus(p) === 'Active');
 
   const selectedProxies = proxies.filter(p => p.id && selectedProxyIds.has(p.id));
   const selectedCount = selectedProxyIds.size;
@@ -458,7 +464,9 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
           {proxies.length > 0 && (
             <div className="border rounded-lg p-3 max-h-64 overflow-y-auto">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {proxies.map(proxy => (
+                {proxies.map(proxy => {
+                  const status = deriveStatus(proxy);
+                  return (
                   <div
                     key={proxy.id}
                     className="flex items-center space-x-2 p-2 rounded border hover:bg-muted/50"
@@ -472,11 +480,11 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
                       <p className="text-sm font-medium truncate">{proxy.address}</p>
                       <div className="flex items-center gap-1">
                         <Badge
-                          variant={proxy.status === 'Active' ? 'default' : 
-                                  proxy.status === 'Failed' ? 'destructive' : 'secondary'}
+                          variant={status === 'Active' ? 'default' : 
+                                  status === 'Failed' ? 'destructive' : 'secondary'}
                           className="text-xs"
                         >
-                          {proxy.status}
+                          {status}
                         </Badge>
                         <Badge variant="outline" className="text-xs">
                           {proxy.protocol}
@@ -484,7 +492,7 @@ export function BulkOperations({ proxies, onProxiesUpdate, disabled = false }: B
                       </div>
                     </div>
                   </div>
-                ))}
+                );})}
               </div>
             </div>
           )}

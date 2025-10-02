@@ -142,7 +142,7 @@ class HealthFabricService {
 
   private healthHistory = new Map<string, Array<{ score: number; timestamp: number }>>();
   private eventCallbacks = new Set<(event: HealthEvent) => void>();
-  private updateTimer: number | null = null;
+  private updateTimer: ReturnType<typeof setInterval> | null = null;
   private updateCounter = 0;
   private lastUpdateTime = Date.now();
 
@@ -381,9 +381,26 @@ class HealthFabricService {
 
     // Calculate trend over recent history
     const recentHistory = history.slice(-10); // Last 10 data points
-    const oldestScore = recentHistory[0].score;
-    const newestScore = recentHistory[recentHistory.length - 1].score;
-    const timeDiffHours = (recentHistory[recentHistory.length - 1].timestamp - recentHistory[0].timestamp) / (1000 * 60 * 60);
+    if (recentHistory.length < 2) {
+      return {
+        direction: 'stable',
+        changeRate: 0,
+        confidence: 0.5,
+      };
+    }
+
+    const firstEntry = recentHistory[0];
+    const lastEntry = recentHistory[recentHistory.length - 1];
+    if (!firstEntry || !lastEntry) {
+      return {
+        direction: 'stable',
+        changeRate: 0,
+        confidence: 0.5,
+      };
+    }
+    const oldestScore = firstEntry.score;
+    const newestScore = lastEntry.score;
+    const timeDiffHours = (lastEntry.timestamp - firstEntry.timestamp) / (1000 * 60 * 60);
     
     const changeRate = timeDiffHours > 0 ? (newestScore - oldestScore) / timeDiffHours : 0;
     
@@ -412,8 +429,12 @@ class HealthFabricService {
     let totalChanges = 0;
 
     for (let i = 1; i < history.length - 1; i++) {
-      const prevChange = history[i].score - history[i - 1].score;
-      const nextChange = history[i + 1].score - history[i].score;
+      const current = history[i];
+      const prev = history[i - 1];
+      const next = history[i + 1];
+      if (!current || !prev || !next) continue;
+      const prevChange = current.score - prev.score;
+      const nextChange = next.score - current.score;
       
       totalChanges++;
       

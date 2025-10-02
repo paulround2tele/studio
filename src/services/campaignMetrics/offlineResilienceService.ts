@@ -109,7 +109,7 @@ class OfflineResilienceService {
   private actionQueue: DeferredAction[] = [];
   private governanceLog: GovernanceEvent[] = [];
   private isOnline = navigator.onLine;
-  private syncTimer: number | null = null;
+  private syncTimer: ReturnType<typeof setInterval> | null = null;
   private sequenceCounter = 0;
 
   private config: OfflineConfig = {
@@ -603,7 +603,9 @@ class OfflineResilienceService {
     // Remove oldest 25% of entries
     const toRemove = Math.ceil(entries.length * 0.25);
     for (let i = 0; i < toRemove; i++) {
-      this.cache.delete(entries[i][0]);
+      const entry = entries[i];
+      if (!entry) continue;
+      this.cache.delete(entry[0]);
     }
   }
 

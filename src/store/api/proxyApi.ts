@@ -5,6 +5,7 @@
 
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { ProxiesApi } from '@/lib/api-client';
+import type { AxiosError } from 'axios';
 import { apiConfiguration } from '@/lib/api/config';
 import type {
   BulkDeleteProxiesRequest,
@@ -14,7 +15,7 @@ import type {
   ProxyTestResponse,
   BulkProxyOperationResponse,
   Proxy,
-  BulkUpdateProxiesRequest as GeneratedBulkUpdateReq,
+  ErrorEnvelope,
 } from '@/lib/api-client/models';
 import type { UpdateProxyRequestAPI } from '@/lib/api-client/models/update-proxy-request-api';
 
@@ -29,37 +30,46 @@ export const proxyApi = createApi({
   tagTypes: ['Proxy', 'BulkOperation'],
   endpoints: (builder) => ({
     // Bulk operations - because professionals batch their operations
-  bulkDeleteProxies: builder.mutation<BulkProxyOperationResponse, BulkDeleteProxiesRequest>({
+    bulkDeleteProxies: builder.mutation<BulkProxyOperationResponse, BulkDeleteProxiesRequest>({
       queryFn: async (request) => {
         try {
           const response = await proxiesApi.proxiesBulkDelete(request);
-          return { data: response.data as BulkProxyOperationResponse };
-        } catch (error: any) {
-          return { error: error.response?.data || error.message };
+          return { data: response.data };
+        } catch (error) {
+          const err = error as AxiosError<ErrorEnvelope>;
+          const status = err.response?.status ?? 500;
+          const data = (err.response?.data as ErrorEnvelope | undefined) ?? { message: err.message || 'Bulk delete failed' };
+          return { error: { status, data } };
         }
       },
       invalidatesTags: ['Proxy', 'BulkOperation'],
     }),
 
-  bulkTestProxies: builder.mutation<BulkProxyTestResponse, ProxiesBulkTestRequest>({
+    bulkTestProxies: builder.mutation<BulkProxyTestResponse, ProxiesBulkTestRequest>({
       queryFn: async (request) => {
         try {
           const response = await proxiesApi.proxiesBulkTest(request);
-          return { data: response.data as BulkProxyTestResponse };
-        } catch (error: any) {
-          return { error: error.response?.data || error.message };
+          return { data: response.data };
+        } catch (error) {
+          const err = error as AxiosError<ErrorEnvelope>;
+          const status = err.response?.status ?? 500;
+          const data = (err.response?.data as ErrorEnvelope | undefined) ?? { message: err.message || 'Bulk test failed' };
+          return { error: { status, data } };
         }
       },
       invalidatesTags: ['BulkOperation'],
     }),
 
-  bulkUpdateProxies: builder.mutation<BulkProxyOperationResponse, BulkUpdateProxiesRequest>({
+    bulkUpdateProxies: builder.mutation<BulkProxyOperationResponse, BulkUpdateProxiesRequest>({
       queryFn: async (request) => {
         try {
           const response = await proxiesApi.proxiesBulkUpdate(request);
-          return { data: response.data as BulkProxyOperationResponse };
-        } catch (error: any) {
-          return { error: error.response?.data || error.message };
+          return { data: response.data };
+        } catch (error) {
+          const err = error as AxiosError<ErrorEnvelope>;
+          const status = err.response?.status ?? 500;
+          const data = (err.response?.data as ErrorEnvelope | undefined) ?? { message: err.message || 'Bulk update failed' };
+          return { error: { status, data } };
         }
       },
       invalidatesTags: ['Proxy', 'BulkOperation'],
@@ -71,8 +81,11 @@ export const proxyApi = createApi({
         try {
           await proxiesApi.proxiesDelete(proxyId);
           return { data: undefined };
-        } catch (error: any) {
-          return { error: error.response?.data || error.message };
+        } catch (error) {
+          const err = error as AxiosError<ErrorEnvelope>;
+          const status = err.response?.status ?? 500;
+          const data = (err.response?.data as ErrorEnvelope | undefined) ?? { message: err.message || 'Delete failed' };
+          return { error: { status, data } };
         }
       },
       invalidatesTags: ['Proxy'],
@@ -82,21 +95,27 @@ export const proxyApi = createApi({
       queryFn: async ({ proxyId, request }) => {
         try {
           const response = await proxiesApi.proxiesUpdate(proxyId, request);
-          return { data: response.data as Proxy };
-        } catch (error: any) {
-          return { error: error.response?.data || error.message };
+          return { data: response.data };
+        } catch (error) {
+          const err = error as AxiosError<ErrorEnvelope>;
+          const status = err.response?.status ?? 500;
+          const data = (err.response?.data as ErrorEnvelope | undefined) ?? { message: err.message || 'Update failed' };
+          return { error: { status, data } };
         }
       },
       invalidatesTags: ['Proxy'],
     }),
 
-  testProxy: builder.mutation<ProxyTestResponse, string>({
+    testProxy: builder.mutation<ProxyTestResponse, string>({
       queryFn: async (proxyId) => {
         try {
           const response = await proxiesApi.proxiesTest(proxyId);
-          return { data: response.data as ProxyTestResponse };
-        } catch (error: any) {
-          return { error: error.response?.data || error.message };
+          return { data: response.data };
+        } catch (error) {
+          const err = error as AxiosError<ErrorEnvelope>;
+          const status = err.response?.status ?? 500;
+          const data = (err.response?.data as ErrorEnvelope | undefined) ?? { message: err.message || 'Test failed' };
+          return { error: { status, data } };
         }
       },
       // Don't invalidate anything - testing doesn't change state
@@ -105,19 +124,15 @@ export const proxyApi = createApi({
     // Clean proxies operation - maps to bulk delete for cleaning inactive/failed proxies
     cleanProxies: builder.mutation<{ success: boolean; cleaned: number }, void>({
       queryFn: async () => {
-        try {
-          // Placeholder operation retained: simply report success=false until implemented
-          return { data: { success: true, cleaned: 0 } };
-        } catch (error: any) {
-          return { error: error.response?.data || error.message };
-        }
+        // No remote call yet – placeholder for future implementation
+        return { data: { success: true, cleaned: 0 } };
       },
       invalidatesTags: ['Proxy'],
     }),
   }),
 });
 
-// Export hooks for the components to use like civilized developers
+// Export hooks for components
 export const {
   useBulkDeleteProxiesMutation,
   useBulkTestProxiesMutation,

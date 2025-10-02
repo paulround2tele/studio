@@ -143,8 +143,12 @@ class WasmAccelerationService {
       
       // Convert to WASM format
       const modelIds = Object.keys(prevWeights);
-      const weights = new Float64Array(modelIds.map(id => prevWeights[id]));
-      const errorArray = new Float64Array(errors);
+      const weightsSource = modelIds.map(id => {
+        const v = prevWeights[id];
+        return typeof v === 'number' && !Number.isNaN(v) ? v : 0;
+      });
+      const weights = new Float64Array(weightsSource);
+      const errorArray = new Float64Array(errors.map(e => (typeof e === 'number' && !Number.isNaN(e) ? e : 0)));
       
       // Call WASM function
       const newWeights = kernel.module.update_blend_weights(weights, errorArray);
@@ -335,8 +339,9 @@ class WasmAccelerationService {
             const result = new Float64Array(threshold * 2);
             for (let i = 0; i < threshold; i++) {
               const index = Math.min(i * step, xValues.length - 1);
+              const y = yValues[index] ?? 0;
               result[i * 2] = index;
-              result[i * 2 + 1] = yValues[index];
+              result[i * 2 + 1] = y;
             }
             return result;
           }
@@ -349,14 +354,16 @@ class WasmAccelerationService {
             const alpha = 0.1;
             const result = new Float64Array(weights.length);
             for (let i = 0; i < weights.length; i++) {
-              const errorFactor = Math.exp(-errors[i] || 0);
-              result[i] = weights[i] * (1 - alpha) + errorFactor * alpha;
+              const err = errors[i] ?? 0;
+              const w = weights[i] ?? 0;
+              const errorFactor = Math.exp(-err);
+              result[i] = w * (1 - alpha) + errorFactor * alpha;
             }
             // Normalize to sum to 1
-            const sum = result.reduce((s, w) => s + w, 0);
+            const sum = result.reduce((s, w) => s + (w ?? 0), 0);
             if (sum > 0) {
               for (let i = 0; i < result.length; i++) {
-                result[i] /= sum;
+                result[i] = (result[i] ?? 0) / sum;
               }
             }
             return result;
@@ -405,24 +412,28 @@ class WasmAccelerationService {
    * Fallback LTTB implementation
    */
   private fallbackLttbDownsample(points: LttbPoint[], threshold: number): LttbPoint[] {
-    if (points.length <= threshold) return points;
+  if (points.length === 0) return [];
+  if (points.length <= threshold) return points.slice();
 
-    const bucketSize = (points.length - 2) / (threshold - 2);
-    const result: LttbPoint[] = [points[0]]; // Always include first point
+  const bucketSize = (points.length - 2) / Math.max(1, (threshold - 2));
+  const firstPoint = points[0];
+  if (!firstPoint) return [];
+  const result: LttbPoint[] = [firstPoint]; // Always include first point
 
     for (let i = 1; i < threshold - 1; i++) {
       const bucketStart = Math.floor(i * bucketSize) + 1;
       const bucketEnd = Math.floor((i + 1) * bucketSize) + 1;
       
       let maxArea = -1;
-      let selectedPoint = points[bucketStart];
+  let selectedPoint = points[bucketStart];
+  if (!selectedPoint) continue;
 
       // Calculate area for each point in bucket
       for (let j = bucketStart; j < Math.min(bucketEnd, points.length); j++) {
         const area = this.calculateTriangleArea(
-          result[result.length - 1],
-          points[j],
-          points[Math.min(bucketEnd, points.length - 1)]
+          result[result.length - 1]!,
+          points[j]!,
+          points[Math.min(bucketEnd, points.length - 1)]!
         );
         
         if (area > maxArea) {
@@ -431,10 +442,11 @@ class WasmAccelerationService {
         }
       }
 
-      result.push(selectedPoint);
+      if (selectedPoint) result.push(selectedPoint);
     }
 
-    result.push(points[points.length - 1]); // Always include last point
+    const lastPoint = points[points.length - 1];
+    if (lastPoint) result.push(lastPoint); // Always include last point
     return result;
   }
 
@@ -457,17 +469,18 @@ class WasmAccelerationService {
     let totalWeight = 0;
 
     modelIds.forEach((id, index) => {
-      const error = errors[index] || 0;
+      const error = errors[index] ?? 0;
+      const prev = prevWeights[id] ?? 0;
       const errorFactor = Math.exp(-Math.abs(error));
-      const newWeight = prevWeights[id] * (1 - alpha) + errorFactor * alpha;
-      newWeights[id] = newWeight;
-      totalWeight += newWeight;
+      const newWeight = prev * (1 - alpha) + errorFactor * alpha;
+      newWeights[id] = newWeight ?? 0;
+      totalWeight += newWeight ?? 0;
     });
 
     // Normalize weights to sum to 1
     if (totalWeight > 0) {
       modelIds.forEach(id => {
-        newWeights[id] /= totalWeight;
+        newWeights[id] = (newWeights[id] ?? 0) / totalWeight;
       });
     }
 

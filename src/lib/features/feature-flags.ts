@@ -13,7 +13,6 @@
 
 import { z } from 'zod';
 import React from 'react';
-import { FeatureFlagsApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
 
 // Feature flag value types
@@ -61,7 +60,7 @@ class FeatureFlagsService {
   private userContext: UserContext = {};
   private cacheTimestamp: number = 0;
   private abTestAssignments: Map<string, string> = new Map();
-  private api = new FeatureFlagsApi(apiConfiguration);
+  private apiEndpoint: string;
 
   constructor(config: FeatureFlagsConfig = {}) {
     this.config = {
@@ -69,8 +68,9 @@ class FeatureFlagsService {
       cacheTimeout: config.cacheTimeout || 300000, // 5 minutes
       defaultFlags: config.defaultFlags || [],
       enableLocalStorage: config.enableLocalStorage ?? true,
-      enableDebugMode: config.enableDebugMode ?? process.env.NODE_ENV === 'development'
+      enableDebugMode: config.enableDebugMode ?? (process.env.NODE_ENV === 'development')
     };
+    this.apiEndpoint = this.config.apiEndpoint || apiConfiguration.basePath || '';
 
     this.initializeDefaultFlags();
     this.loadFromLocalStorage();
@@ -82,7 +82,7 @@ class FeatureFlagsService {
    */
   private initializeDefaultFlags(): void {
     // Core feature flags
-    const defaultFlags: FeatureFlag[] = [
+  const defaultFlags: FeatureFlag[] = [
       {
         key: 'advanced_monitoring',
         value: true,
@@ -255,35 +255,24 @@ class FeatureFlagsService {
    */
   async fetchFlags(): Promise<void> {
     try {
-  // Use enhanced API client to fetch feature flags
-  const response = await this.api.featureFlagsGet();
-  const result = response.data as any;
-      
-      if (!result) {
-        throw new Error('No feature flags data received');
-      }
-
-      // Convert OpenAPI response to our internal format
-      const apiFlags = Object.entries(result).map(([key, value]) => ({
-        key,
+      const res = await fetch(`${this.apiEndpoint}/feature-flags`);
+      const json = await res.json().catch(()=>({}));
+      if (!json) throw new Error('No feature flags data received');
+      const rawFlags = (json as any).flags || (json as any);
+      const entries = Array.isArray(rawFlags)
+        ? rawFlags.map((f: any) => [f.key, f.value])
+        : Object.entries(rawFlags);
+      const apiFlags = entries.map(([key, value]) => ({
+        key: String(key),
         value: value as FeatureFlagValue,
         enabled: true,
         description: `API flag: ${key}`
       }));
-
-  const flags = z.array(FeatureFlagSchema).parse(apiFlags);
-
-      // Update flags
-      flags.forEach(flag => {
-        this.flags.set(flag.key, flag);
-      });
-
+      const parsed = z.array(FeatureFlagSchema).parse(apiFlags);
+      parsed.forEach(flag => this.flags.set(flag.key, flag));
       this.cacheTimestamp = Date.now();
       this.saveToLocalStorage();
-
-      if (this.config.enableDebugMode) {
-        console.log('Feature flags updated:', flags);
-      }
+      if (this.config.enableDebugMode) console.log('Feature flags updated:', parsed);
     } catch (error) {
       console.error('Error fetching feature flags:', error);
     }

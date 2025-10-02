@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { keywordSetsApi } from '@/lib/api-client/compat';
+import { KeywordSetsApi, Configuration } from '@/lib/api-client';
+const keywordSetsApi = new KeywordSetsApi(new Configuration());
 
 // Updated to use the actual request type from auto-generated client
 interface UpdateKeywordSetPayload {

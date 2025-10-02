@@ -7,8 +7,7 @@
 export type CampaignPhaseEnum = 'dns_validation' | 'http_keyword_validation' | 'analysis' | 'setup' | 'generation';
 export type CampaignPhaseStatusEnum = 'not_started' | 'in_progress' | 'completed' | 'failed' | 'paused';
 export type PhaseConfigureRequest = import('@/lib/api-client/models/phase-configuration-request').PhaseConfigurationRequest;
-export type DNSValidationConfig = import('@/lib/api-client/models/api-dnsvalidation-config').ApiDNSValidationConfig;
-export type HTTPValidationConfig = import('@/lib/api-client/models/api-httpvalidation-config').ApiHTTPValidationConfig;
+// Generated specific config model files not present; use structural helpers where needed in forms instead.
 
 // Backend CampaignPhaseEnum values (from models.go)
 export type BackendPhaseEnum = 

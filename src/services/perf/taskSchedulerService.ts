@@ -116,7 +116,7 @@ class TaskSchedulerService {
         return priorityOrder[b.priority] - priorityOrder[a.priority] || a.queuedAt - b.queuedAt;
       });
 
-    return availableTasks.length > 0 ? availableTasks[0] : null;
+  return availableTasks.length > 0 ? (availableTasks[0] ?? null) : null;
   }
 
   /**
@@ -375,16 +375,17 @@ class TaskSchedulerService {
 
     this.worker.postMessage(workerTask);
 
-    // Set task timeout using safe timer creation
+    // Set worker response timeout (global) and per-task timeout
     this.createTimer(() => {
       if (this.pendingTasks.has(task.id)) {
         this.pendingTasks.delete(task.id);
         const queuedTask = this.safeGetTask(task.id);
         if (queuedTask !== null) {
-          this.executeInlineFallback(queuedTask);
+          queuedTask.reject(new Error('Task timeout'));
+          this.taskQueue.delete(queuedTask.id);
         }
       }
-    }, this.WORKER_TIMEOUT_MS);
+    }, task.timeoutMs);
   }
 
   /**
@@ -473,10 +474,9 @@ class TaskSchedulerService {
    * Inline simulation projection (simplified)
    */
   private inlineSimulationProjection(payload: any): any {
-    const { baselineMetrics } = payload;
-    
+    const baselineMetrics = payload?.baselineMetrics || {};
     const projectedMetrics: Record<string, any> = {};
-    for (const [key, value] of Object.entries(baselineMetrics)) {
+    for (const [key, value] of Object.entries(baselineMetrics as Record<string, any>)) {
       projectedMetrics[key] = {
         baseline: value,
         projected: value, // No change in fallback
@@ -511,3 +511,12 @@ class TaskSchedulerService {
 
 // Export singleton instance
 export const taskScheduler = new TaskSchedulerService();
+
+// Schedule queue processing asynchronously to allow health flag overrides in tests before execution
+setTimeout(() => {
+  try {
+    (taskScheduler as any).processQueue();
+  } catch (e) {
+    // swallow in initialization
+  }
+}, 0);

@@ -8,9 +8,6 @@
  */
 export type NonEmptyArray<T> = [T, ...T[]];
 
-/**
- * Type guard to check if an array is non-empty
- */
 export function isNonEmptyArray<T>(arr: T[]): arr is NonEmptyArray<T> {
   return arr.length > 0;
 }
@@ -96,12 +93,9 @@ export function safeChunk<T>(arr: T[], size: number): T[][] {
 /**
  * Safe random selection from array
  */
-export function selectRandom<T>(arr: NonEmptyArray<T>): T;
-export function selectRandom<T>(arr: T[]): T | undefined;
-export function selectRandom<T>(arr: T[]): T | undefined {
-  if (arr.length === 0) return undefined;
-  const randomIndex = Math.floor(Math.random() * arr.length);
-  return arr[randomIndex];
+export function selectRandom<T>(arr: readonly T[] | T[]): T | undefined {
+  if (!Array.isArray(arr) || arr.length === 0) return undefined;
+  return arr[Math.floor(Math.random() * arr.length)];
 }
 
 /**

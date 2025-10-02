@@ -4,7 +4,6 @@ import React, { useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ExternalLink, RefreshCw } from 'lucide-react';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
-import type { GeneratedDomain } from '@/lib/api-client/models/generated-domain';
 import { ScrollArea } from '../ui/scroll-area';
 import { StatusBadge, type DomainActivityStatus } from '@/components/shared/StatusBadge';
 import { LeadScoreDisplay } from '@/components/shared/LeadScoreDisplay';
@@ -16,7 +15,7 @@ import { DEFAULT_DOMAIN_PAGE_SIZE } from '@/lib/constants';
 interface DomainStreamingTableProps {
   campaign: Campaign;
   // Legacy props for backward compatibility - removed unused props
-  generatedDomains?: GeneratedDomain[];
+  generatedDomains?: Array<{ domainName?: string; dnsIp?: string; httpStatusCode?: string; httpTitle?: string; httpKeywords?: string; sourceKeyword?: string; generatedAt?: string }>;
   totalDomains?: number;
   loading?: boolean;
   filters?: any;

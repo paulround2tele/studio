@@ -377,20 +377,24 @@ class ForecastBlendService {
     modelForecasts: Array<{ modelId: string; points: any[] }>
   ): BlendedForecast {
     // Simple arbitration: pick best performing model or default to first
-    let bestModelId = modelForecasts[0]?.modelId;
+    let bestModelId: string | undefined = modelForecasts[0]?.modelId;
     let bestScore = Infinity;
 
     for (const forecast of modelForecasts) {
+      if (!forecast?.modelId) continue;
       const key = `${metricKey}:${forecast.modelId}`;
       const stats = this.performanceStats.get(key);
-      
       if (stats && stats.meanAbsoluteError < bestScore) {
         bestScore = stats.meanAbsoluteError;
         bestModelId = forecast.modelId;
       }
     }
 
-    const bestForecast = modelForecasts.find(f => f.modelId === bestModelId);
+    // Defensive default if still undefined
+    if (!bestModelId) {
+      bestModelId = 'unknown_model';
+    }
+    const bestForecast = modelForecasts.find(f => f.modelId === bestModelId) || modelForecasts[0];
     if (!bestForecast) {
       throw new Error('No valid forecast found for arbitration');
     }
@@ -398,15 +402,15 @@ class ForecastBlendService {
     const weights = new Map<string, number>();
     weights.set(bestModelId, 1.0);
 
-    const blendedPoints = bestForecast.points.map(point => ({
-      timestamp: point.timestamp,
-      value: point.value,
-      lower: point.lower ?? point.value,
-      upper: point.upper ?? point.value,
+    const blendedPoints: BlendedForecast['blendedPoints'] = bestForecast.points.map(point => ({
+      timestamp: String(point.timestamp),
+      value: Number(point.value) || 0,
+      lower: Number(point.lower ?? point.value) || Number(point.value) || 0,
+      upper: Number(point.upper ?? point.value) || Number(point.value) || 0,
       contributors: [{
-        modelId: bestModelId,
+        modelId: bestModelId as string,
         weight: 1.0,
-        value: point.value,
+        value: Number(point.value) || 0,
       }],
     }));
 
@@ -454,8 +458,10 @@ class ForecastBlendService {
     
     const confidence = Math.max(0, Math.min(1, 1 - (Math.sqrt(variance) / (rollingMeanActual + 1))));
 
+    const split = key.split(':');
+    const derivedModelId = split.length > 1 ? split[1] : split[0];
     const stats: ModelPerformanceStats = {
-      modelId: key.split(':')[1],
+      modelId: derivedModelId || 'unknown_model',
       sampleCount: history.length,
       meanAbsoluteError,
       meanAbsolutePercentageError,

@@ -12,6 +12,8 @@ export interface ForecastPoint {
   lower: number;
   upper: number;
   confidence?: number;
+  /** Optional metric key when points are tied to a specific aggregate */
+  metricKey?: string;
 }
 
 /**
@@ -71,3 +73,6 @@ export interface NormalizedForecastResult {
   modelInfo: ModelInfo;
   qualityMetrics: QualityMetrics;
 }
+
+// Re-export normalizer + factory utilities so consumers can import from '@/types/forecasting'
+export * from './normalizers';

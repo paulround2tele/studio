@@ -3,12 +3,13 @@
  * Replaces unsafe `as any` casts with proper runtime type checking
  */
 
-import type { BulkEnrichedDataResponse } from '@/lib/api-client/models/bulk-enriched-data-response';
-import type { EnrichedCampaignData } from '@/lib/api-client/models/enriched-campaign-data';
-import type { GeneratedDomain } from '@/lib/api-client/models/generated-domain';
-import type { LeadItem } from '@/lib/api-client/models/lead-item';
-import type { CampaignData } from '@/lib/api-client/models/campaign-data';
-import type { UUID } from '@/lib/api-client/uuid-types';
+// Structural interfaces replacing missing generated model imports
+// Only include fields actually asserted in the guards below
+export interface GeneratedDomainStruct { id?: string; domainName?: string; campaignId?: string; [k: string]: any; }
+export interface LeadItemStruct { id?: string; name?: string | null; email?: string | null; company?: string | null; sourceUrl?: string | null; previousCampaignId?: string | null; [k: string]: any; }
+export interface CampaignDataStruct { id?: string | null; name?: string | null; currentPhase?: string | null; phaseStatus?: string | null; [k: string]: any; }
+export interface EnrichedCampaignDataStruct { campaign?: CampaignDataStruct | null; domains?: any[] | null; leads?: any[] | null; dnsValidatedDomains?: (string | null)[] | null; httpKeywordResults?: any[] | null; [k: string]: any; }
+export interface BulkEnrichedDataResponseStruct { campaigns?: Record<string, EnrichedCampaignDataStruct> | null; totalCount?: number | null; metadata?: any; [k: string]: any; }
 
 /**
  * Validates if a value is a non-null object
@@ -27,7 +28,7 @@ function isArray(value: unknown): value is unknown[] {
 /**
  * Type guard for GeneratedDomain
  */
-export function isGeneratedDomain(value: unknown): value is GeneratedDomain {
+export function isGeneratedDomain(value: unknown): value is GeneratedDomainStruct {
   if (!isObject(value)) return false;
   
   // Check required/common fields that should be present
@@ -41,7 +42,7 @@ export function isGeneratedDomain(value: unknown): value is GeneratedDomain {
 /**
  * Type guard for LeadItem
  */
-export function isLeadItem(value: unknown): value is LeadItem {
+export function isLeadItem(value: unknown): value is LeadItemStruct {
   if (!isObject(value)) return false;
   
   // Check required/common fields that should be present
@@ -56,7 +57,7 @@ export function isLeadItem(value: unknown): value is LeadItem {
  * Type guard for CampaignData
  * Handles null values from Go omitempty pointers and preserves rich schema validation
  */
-export function isCampaignData(value: unknown): value is CampaignData {
+export function isCampaignData(value: unknown): value is CampaignDataStruct {
   if (!isObject(value)) {
     console.debug('[TypeGuards] isCampaignData: not an object', typeof value, value);
     return false;
@@ -94,7 +95,7 @@ export function isCampaignData(value: unknown): value is CampaignData {
  * Type guard for EnrichedCampaignData
  * Handles null values from Go omitempty and validates rich schema structures
  */
-export function isEnrichedCampaignData(value: unknown): value is EnrichedCampaignData {
+export function isEnrichedCampaignData(value: unknown): value is EnrichedCampaignDataStruct {
   if (!isObject(value)) {
     console.debug('[TypeGuards] isEnrichedCampaignData: not an object', typeof value, value);
     return false;
@@ -174,7 +175,7 @@ export function isEnrichedCampaignData(value: unknown): value is EnrichedCampaig
  * Type guard for BulkEnrichedDataResponse
  * Handles null values from Go omitempty and provides detailed logging
  */
-export function isBulkEnrichedDataResponse(value: unknown): value is BulkEnrichedDataResponse {
+export function isBulkEnrichedDataResponse(value: unknown): value is BulkEnrichedDataResponseStruct {
   if (!isObject(value)) {
     console.debug('[TypeGuards] isBulkEnrichedDataResponse: not an object', typeof value, value);
     return false;
@@ -268,7 +269,7 @@ export function isCampaignIdsResponse(value: unknown): value is Array<{ campaign
  * Safe type assertion with runtime validation
  * Provides detailed error information and handles null/undefined gracefully
  */
-export function assertBulkEnrichedDataResponse(value: unknown): BulkEnrichedDataResponse {
+export function assertBulkEnrichedDataResponse(value: unknown): BulkEnrichedDataResponseStruct {
   console.debug('[TypeGuards] assertBulkEnrichedDataResponse: validating response', {
     type: typeof value,
     isNull: value === null,
@@ -283,7 +284,7 @@ export function assertBulkEnrichedDataResponse(value: unknown): BulkEnrichedData
       campaigns: {},
       totalCount: 0,
       metadata: {}
-    } as BulkEnrichedDataResponse;
+  } as BulkEnrichedDataResponseStruct;
   }
 
   if (!isBulkEnrichedDataResponse(value)) {
@@ -345,24 +346,23 @@ export function convertCampaignToLeadGeneration(campaign: any): any {
   // Create a compatible structure by ensuring UUID types are properly handled
   return {
     ...campaign,
-    currentPhaseId: campaign.currentPhaseId as UUID | undefined,
-    id: campaign.id as UUID,
-    // Ensure all other UUID fields are properly typed
-    ...(campaign.keywordSetId && { keywordSetId: campaign.keywordSetId as UUID }),
-    ...(campaign.personaId && { personaId: campaign.personaId as UUID }),
-    ...(campaign.proxyPoolId && { proxyPoolId: campaign.proxyPoolId as UUID })
+    currentPhaseId: campaign.currentPhaseId as string | undefined,
+    id: campaign.id as string,
+    ...(campaign.keywordSetId && { keywordSetId: campaign.keywordSetId as string }),
+    ...(campaign.personaId && { personaId: campaign.personaId as string }),
+    ...(campaign.proxyPoolId && { proxyPoolId: campaign.proxyPoolId as string })
   };
 }
 
 // Local EnrichedCampaignData interface for hooks compatibility
 export interface LocalEnrichedCampaignData {
-  id: UUID;
+  id: string;
   name: string;
   currentPhase?: string;
   phaseStatus?: string;
   overallProgress?: number;
-  domains?: GeneratedDomain[];
-  leads?: LeadItem[];
+  domains?: GeneratedDomainStruct[];
+  leads?: LeadItemStruct[];
   phases?: any[];
   statistics?: any;
   metadata?: any;
@@ -397,7 +397,7 @@ function calculateProgressPercentage(progress?: { [key: string]: object }): numb
 /**
  * Type-safe campaigns map extractor that converts API types to local types
  */
-export function extractCampaignsMap(response: BulkEnrichedDataResponse): Map<string, LocalEnrichedCampaignData> {
+export function extractCampaignsMap(response: BulkEnrichedDataResponseStruct): Map<string, LocalEnrichedCampaignData> {
   const campaignsMap = new Map<string, LocalEnrichedCampaignData>();
   
   if (response.campaigns) {
@@ -405,7 +405,7 @@ export function extractCampaignsMap(response: BulkEnrichedDataResponse): Map<str
       if (campaignId && campaignData) {
         // Transform API EnrichedCampaignData to local format
         const localCampaignData: LocalEnrichedCampaignData = {
-          id: campaignId as UUID,
+          id: campaignId,
           name: (campaignData as any).campaign?.name || '',
           currentPhase: (campaignData as any).campaign?.currentPhase,
           phaseStatus: (campaignData as any).campaign?.phaseStatus,

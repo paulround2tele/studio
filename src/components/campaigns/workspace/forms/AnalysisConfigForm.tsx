@@ -12,7 +12,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useAppDispatch } from '@/store/hooks';
 import { pushGuidanceMessage } from '@/store/ui/campaignUiSlice';
 import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
-import type { ApiAnalysisConfig } from '@/lib/api-client/models/api-analysis-config';
+// The generated model api-analysis-config does not exist in current OpenAPI output.
+// Use a local structural type that matches the shape we submit.
+interface AnalysisPhaseConfig { name: string; analysisTypes: string[]; enableSuggestions: boolean; customRules: string[]; }
 
 interface FormValues { name: string; analysisTypes: string[]; enableSuggestions: boolean; customRules: string[]; }
 interface Props { campaignId: string; onConfigured?: ()=>void; readOnly?: boolean; }
@@ -30,7 +32,30 @@ export const AnalysisConfigForm: React.FC<Props> = ({ campaignId, onConfigured, 
   const addRule = (r:string) => { const trimmed=r.trim(); if(!trimmed) return; const cur=form.getValues('customRules'); if(cur.includes(trimmed)) return; form.setValue('customRules',[...cur, trimmed]); };
   const removeRule = (r:string) => form.setValue('customRules', form.getValues('customRules').filter(x=>x!==r));
 
-  const onSubmit = async (data: FormValues) => { try { const analysisConfig: ApiAnalysisConfig = { name: data.name, analysisTypes: data.analysisTypes, enableSuggestions: data.enableSuggestions, customRules: data.customRules } as any; const req: PhaseConfigurationRequest = { configuration: { analysis: analysisConfig } }; const res = await configurePhase({ campaignId, phase: 'analysis', config: req }).unwrap(); if (res?.status === 'configured') { dispatch(campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId, phase: 'analysis' }, (draft: any)=> ({ ...(draft||{}), status: 'configured' }))); } dispatch(campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: 'analysis' } as any)); toast({ title:'Analysis configured' }); dispatch(pushGuidanceMessage({ campaignId, msg: { id: Date.now().toString(), message:'Analysis configured', phase:'analysis', severity:'info' } })); onConfigured?.(); } catch(e){ console.error(e); toast({ title:'Save failed', description:'Try again', variant:'destructive'});} };
+  const onSubmit = async (data: FormValues) => { 
+    try { 
+      const analysisConfig: AnalysisPhaseConfig = { 
+        name: data.name, 
+        analysisTypes: data.analysisTypes, 
+        enableSuggestions: data.enableSuggestions, 
+        customRules: data.customRules 
+      };
+      // Flatten configuration – backend expects keys at root of configuration map for this phase
+      const req: PhaseConfigurationRequest = { configuration: { ...analysisConfig } };
+      const res = await configurePhase({ campaignId, phase: 'analysis', config: req }).unwrap(); 
+      if (res?.status === 'configured') { 
+        dispatch(campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId, phase: 'analysis' }, (draft: any)=> ({ ...(draft||{}), status: 'configured' })));
+      }
+      // Force authoritative refetch
+      dispatch(campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: 'analysis' } as any)); 
+      toast({ title:'Analysis configured' }); 
+      dispatch(pushGuidanceMessage({ campaignId, msg: { id: Date.now().toString(), message:'Analysis configured', phase:'analysis', severity:'info' } })); 
+      onConfigured?.(); 
+    } catch(e){ 
+      console.error(e); 
+      toast({ title:'Save failed', description:'Try again', variant:'destructive'});
+    }
+  };
 
   if(readOnly){ const v=form.getValues(); return <div data-testid="phase-analysis-readonly" className="space-y-2 text-xs"><div data-testid="phase-analysis-readonly-name"><strong>Name:</strong> {v.name}</div><div data-testid="phase-analysis-readonly-types"><strong>Types:</strong> {v.analysisTypes.join(', ')}</div><div data-testid="phase-analysis-readonly-suggestions"><strong>Suggestions:</strong> {v.enableSuggestions? 'On':'Off'}</div><div data-testid="phase-analysis-readonly-rules"><strong>Rules:</strong> {v.customRules.length}</div></div>; }
 

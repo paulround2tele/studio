@@ -245,7 +245,9 @@ class WorkerCoordinator {
    */
   public cancelAllTasks(): void {
     this.taskQueue.forEach(task => {
-      task.reject(new Error('Task cancelled'));
+      if (task) {
+        task.reject(new Error('Task cancelled'));
+      }
     });
     this.taskQueue = [];
 
@@ -274,8 +276,8 @@ class WorkerCoordinator {
     // Remove from queue if not started
     const queueIndex = this.taskQueue.findIndex(task => task.id === taskId);
     if (queueIndex !== -1) {
-      const task = this.taskQueue.splice(queueIndex, 1)[0];
-      task.reject(new Error('Task cancelled'));
+  const task = this.taskQueue.splice(queueIndex, 1)[0];
+  if (task) task.reject(new Error('Task cancelled'));
       return true;
     }
 

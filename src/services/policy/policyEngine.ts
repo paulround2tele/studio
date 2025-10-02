@@ -3,13 +3,12 @@
  * Unified policy engine for governance actions, privacy levels, and constraints
  */
 
-import { usePolicyEngine } from '../../lib/feature-flags-simple';
+// Import feature flag function under an alias to avoid react-hooks lint rule (not a React component/hook here)
+import { usePolicyEngine as policyEngineFlagEnabled } from '../../lib/feature-flags-simple';
 import { telemetryService } from '../campaignMetrics/telemetryService';
 
 // Feature flag check
-const isPolicyEngineEnabled = (): boolean => {
-  return usePolicyEngine();
-};
+const isPolicyEngineEnabled = (): boolean => policyEngineFlagEnabled();
 
 /**
  * Policy condition evaluation context

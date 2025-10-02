@@ -124,9 +124,13 @@ export class GCFriendlyCollection<T> {
       );
 
       for (let i = 0; i < itemsToRemove; i++) {
-        const [key] = sortedEntries[i];
-        this.data.delete(key);
-        this.accessOrder.delete(key);
+        const entry = sortedEntries[i];
+        if (!entry) continue;
+        const [key] = entry;
+        if (key != null) {
+          this.data.delete(key);
+          this.accessOrder.delete(key);
+        }
       }
 
       this.cleanupInProgress = false;
@@ -250,6 +254,7 @@ class PerformanceGuardrailsService {
 
     for (let i = 0; i < sortedData.length; i++) {
       const item = sortedData[i];
+      if (!item) continue;
       let shouldRetain = true;
 
       // Check age limit
@@ -431,12 +436,16 @@ class PerformanceGuardrailsService {
     let memoryTrend: 'stable' | 'increasing' | 'decreasing' = 'stable';
     
     if (recentMemoryStats.length >= 3) {
-      const first = recentMemoryStats[0].usagePercentage;
-      const last = recentMemoryStats[recentMemoryStats.length - 1].usagePercentage;
+      const firstStats = recentMemoryStats[0];
+      const lastStats = recentMemoryStats[recentMemoryStats.length - 1];
+      if (firstStats && lastStats) {
+        const first = firstStats.usagePercentage;
+        const last = lastStats.usagePercentage;
       const diff = last - first;
       
-      if (diff > 5) memoryTrend = 'increasing';
-      else if (diff < -5) memoryTrend = 'decreasing';
+        if (diff > 5) memoryTrend = 'increasing';
+        else if (diff < -5) memoryTrend = 'decreasing';
+      }
     }
 
     // Slowest operations

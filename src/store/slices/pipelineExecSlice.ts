@@ -16,7 +16,11 @@ export interface PipelineExecState {
 const initialState: PipelineExecState = { byCampaign: {} };
 
 const ensurePhase = (state: PipelineExecState, campaignId: string, phase: PipelinePhaseKey): PhaseExecRuntime => {
-  const cmap = state.byCampaign[campaignId] || (state.byCampaign[campaignId] = {} as any);
+  let cmap = state.byCampaign[campaignId];
+  if (!cmap) {
+    cmap = {} as Record<PipelinePhaseKey, PhaseExecRuntime>;
+    state.byCampaign[campaignId] = cmap;
+  }
   const existing = cmap[phase];
   if (existing) return existing;
   const created: PhaseExecRuntime = { phase, status: 'idle' };

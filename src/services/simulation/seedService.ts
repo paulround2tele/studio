@@ -101,13 +101,15 @@ class SeedService {
    * Generate deterministic random choice from array
    */
   randomChoice<T>(seed: string, choices: T[]): T {
-    if (!isSeedServiceEnabled() || choices.length === 0) {
-      return choices[Math.floor(Math.random() * choices.length)];
+    if (choices.length === 0) {
+      throw new Error('randomChoice called with empty array');
     }
-
+    if (!isSeedServiceEnabled()) {
+      return choices[Math.floor(Math.random() * choices.length)]!;
+    }
     const rng = this.createSeededRNG(seed + '_choice');
     const index = Math.floor(rng() * choices.length);
-    return choices[index];
+    return choices[index]!;
   }
 
   /**

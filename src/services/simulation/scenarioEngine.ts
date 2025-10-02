@@ -3,13 +3,12 @@
  * Enable users to stage hypothetical interventions and view projected impacts
  */
 
-import { useScenarioSimulation } from '../../lib/feature-flags-simple';
+// Import feature flag function under alias to prevent react-hooks lint violations in plain service module
+import { useScenarioSimulation as scenarioSimulationEnabled } from '../../lib/feature-flags-simple';
 import { telemetryService } from '../campaignMetrics/telemetryService';
 
 // Feature flag check
-const isScenarioEnabled = (): boolean => {
-  return useScenarioSimulation();
-};
+const isScenarioEnabled = (): boolean => scenarioSimulationEnabled();
 
 /**
  * Types of interventions that can be applied to scenarios

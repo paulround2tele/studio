@@ -2,10 +2,17 @@
 /**
  * @fileOverview Utility functions for deterministic domain generation.
  * This includes generating the Nth character combination and constructing a domain from an index.
- * Uses backend OpenAPI types exclusively - no frontend duplication
+ * Uses structural typing because generated domain generation config model was removed/missing.
  */
-import type { ServicesDomainGenerationPhaseConfig } from '@/lib/api-client/models/services-domain-generation-phase-config';
-type DomainGenerationParams = ServicesDomainGenerationPhaseConfig;
+// Generated model services-domain-generation-phase-config not present; define structural equivalent
+interface DomainGenerationParams {
+    patternType?: 'prefix' | 'suffix' | 'both';
+    constantString?: string;
+    characterSet?: string;
+    tlds?: string[];
+    variableLength?: number;
+    numDomainsToGenerate?: number;
+}
 
 // Constants for SLD validation
 const MAX_SLD_LENGTH = 63;
@@ -106,7 +113,8 @@ export function generateCharsForNth(n: number, length: number, charSet: string[]
  * Generate a domain from an index using backend schema
  */
 export function domainFromIndex(index: number, config: DomainGenerationParams): string | null {
-    const { patternType, constantString, characterSet, variableLength } = config;
+    const { patternType, constantString, characterSet } = config;
+    const variableLength = config.variableLength ?? 0;
     const charSet = (characterSet || '').split('');
     
     let sld = '';
@@ -129,7 +137,7 @@ export function domainFromIndex(index: number, config: DomainGenerationParams): 
         }
     } else if (patternType === 'both') {
         // Split variable length between prefix and suffix
-        const halfLength = Math.floor(variableLength / 2);
+    const halfLength = Math.floor(variableLength / 2);
         
         let prefix = '';
         let suffix = '';

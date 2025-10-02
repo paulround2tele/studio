@@ -12,6 +12,19 @@ export type BulkOperationType =
 export type BulkOperationState = 'idle' | 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
 
 // Interface for tracking bulk operations in progress
+export interface BulkOperationResultSummary {
+  processedCount?: number;
+  domainsProcessed?: number;
+  totalProcessed?: number;
+  [key: string]: unknown;
+}
+
+export type BulkOperationResult = {
+  data?: BulkOperationResultSummary & Record<string, unknown>;
+  summary?: BulkOperationResultSummary;
+  [key: string]: unknown;
+};
+
 export interface TrackedBulkOperation {
   id: string;
   type: BulkOperationType;
@@ -19,9 +32,9 @@ export interface TrackedBulkOperation {
   progress?: number;
   startTime: string;
   endTime?: string;
-  result?: any; // Generic result type to handle different operation response types
+  result?: BulkOperationResult; // Structured generic result type
   error?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 // State interface for bulk operations management
@@ -119,7 +132,7 @@ const bulkOperationsSlice = createSlice({
     startTracking: (state, action: PayloadAction<{
       id: string;
       type: BulkOperationType;
-      metadata?: Record<string, any>;
+      metadata?: Record<string, unknown>;
     }>) => {
       const { id, type, metadata } = action.payload;
       state.activeOperations[id] = {
@@ -137,7 +150,7 @@ const bulkOperationsSlice = createSlice({
       id: string;
       status: BulkOperationState;
       progress?: number;
-      result?: any; // Generic result type to handle different operation response types
+      result?: BulkOperationResult;
       error?: string;
     }>) => {
       const { id, status, progress, result, error } = action.payload;
@@ -165,9 +178,12 @@ const bulkOperationsSlice = createSlice({
           // Update metrics
           if (status === 'completed') {
             // Try to extract processed count from result data
-            const processedCount = result?.data?.processedCount || 
-                                 result?.data?.summary?.totalProcessed || 
-                                 result?.data?.domainsProcessed || 0;
+            const processedCount: number = Number(
+              result?.data?.processedCount ??
+              (result?.data?.summary && (result.data.summary as BulkOperationResultSummary).totalProcessed) ??
+              result?.data?.domainsProcessed ??
+              0
+            );
             
             state.metrics.totalDomainsProcessed += processedCount;
             state.metrics.successRate = (state.metrics.successRate + 1) / 2; // Simple running average

@@ -2,11 +2,36 @@
 // Addresses audit issue: "Persona Configuration Type Safety"
 
 import { z } from 'zod';
-import type { ConfigDNSValidatorConfigJSON } from '@/lib/api-client/models/config-dnsvalidator-config-json';
-import type { ConfigHTTPValidatorConfigJSON } from '@/lib/api-client/models/config-httpvalidator-config-json';
-
-type DnsPersonaConfig = ConfigDNSValidatorConfigJSON;
-type HttpPersonaConfig = ConfigHTTPValidatorConfigJSON;
+// Generated config model files not present; define structural equivalents used in validation
+interface DnsPersonaConfig {
+  concurrentQueriesPerDomain?: number;
+  maxConcurrentGoroutines?: number;
+  maxDomainsPerRequest?: number;
+  queryDelayMaxMs?: number;
+  queryDelayMinMs?: number;
+  queryTimeoutSeconds?: number;
+  rateLimitBurst?: number;
+  rateLimitDps?: number;
+  resolverStrategy?: string;
+  resolvers?: string[];
+  resolversPreferredOrder?: string[];
+  resolversWeighted?: Record<string, number>;
+  useSystemResolvers?: boolean;
+}
+interface HttpPersonaConfig {
+  allowInsecureTLS?: boolean;
+  defaultHeaders?: Record<string,string>;
+  defaultUserAgent?: string;
+  followRedirects?: boolean;
+  maxBodyReadBytes?: number;
+  maxConcurrentGoroutines?: number;
+  maxDomainsPerRequest?: number;
+  maxRedirects?: number;
+  rateLimitBurst?: number;
+  rateLimitDps?: number;
+  requestTimeoutSeconds?: number;
+  userAgents?: string[];
+}
 
 // Validation schemas that match backend DnsPersonaConfig and HttpPersonaConfig
 export const dnsPersonaConfigSchema = z.object({

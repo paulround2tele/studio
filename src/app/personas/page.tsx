@@ -5,24 +5,12 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/shared/PageHeader';
 import PersonaListItem from '@/components/personas/PersonaListItem';
-import { ApiPersonaResponse } from '@/lib/api-client/compat';
+import type { PersonaResponse as ApiPersonaResponse } from '@/lib/api-client/models/persona-response';
 
-// Use OpenAPI types directly - simplified for now
-type PersonaBase = any;
-
-// Legacy compatibility types - add missing properties from old types
-interface Persona extends PersonaBase {
-  status?: "Active" | "Disabled" | "Testing" | "Failed"; // Use correct OpenAPI enum
-  tags?: string[]; // Legacy support
-}
-
-interface HttpPersona extends Persona {
-  personaType: 'http';
-}
-
-interface DnsPersona extends Persona {
-  personaType: 'dns';
-}
+// OpenAPI persona type (personaType already 'http' | 'dns')
+type Persona = ApiPersonaResponse & { status?: 'Active' | 'Disabled' | 'Testing' | 'Failed'; tags?: string[] };
+type HttpPersona = Persona & { personaType: 'http' };
+type DnsPersona = Persona & { personaType: 'dns' };
 
 // Define proper create persona payload types
 interface CreatePersonaRequest {

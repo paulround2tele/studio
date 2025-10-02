@@ -31,7 +31,7 @@ import {
   Activity,
   Loader2
 } from 'lucide-react';
-import type { ModelsProxy as ProxyType } from '@/lib/api-client/models/models-proxy';
+import type { Proxy as ProxyType } from '@/lib/api-client/models/proxy';
 import { useTestProxyMutation } from '@/store/api/proxyApi';
 import { useToast } from '@/hooks/use-toast';
 import { useProxyHealth } from '@/lib/hooks/useProxyHealth';
@@ -549,11 +549,10 @@ export function ProxyTesting({ proxies, onProxiesUpdate, disabled = false }: Pro
                     <p className="text-sm font-medium truncate">{proxy.address}</p>
                     <div className="flex items-center gap-1">
                       <Badge
-                        variant={proxy.status === 'Active' ? 'default' : 
-                                proxy.status === 'Failed' ? 'destructive' : 'secondary'}
+                        variant={proxy.isEnabled ? (proxy.isHealthy ? 'default' : 'destructive') : 'secondary'}
                         className="text-xs"
                       >
-                        {proxy.status}
+                        {proxy.isEnabled ? (proxy.isHealthy ? 'Active' : 'Failed') : 'Disabled'}
                       </Badge>
                       <Badge variant="outline" className="text-xs">
                         {proxy.protocol}

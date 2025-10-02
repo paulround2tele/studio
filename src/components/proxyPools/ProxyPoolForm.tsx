@@ -15,8 +15,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { proxyPoolsApi } from "@/lib/api-client/compat";
-import type { ModelsProxyPool as ProxyPoolType } from '@/lib/api-client/models/models-proxy-pool';
+// TODO: Replace with actual generated API client once endpoint mapping updated
+// import { proxyPoolsApi } from "@/lib/api-client/compat";
+import type { ProxyPool as ProxyPoolType, ProxyPoolRequest } from '@/lib/api-client/models';
+import React from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
@@ -40,6 +42,23 @@ export default function ProxyPoolForm({
   onCancel,
 }: ProxyPoolFormProps) {
   const { toast } = useToast();
+  // Minimal proxy pools API implementation leveraging generic client
+  const proxyPoolsApi = React.useMemo(() => {
+    const base = process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v2';
+    const headers = { 'Content-Type': 'application/json' };
+    return {
+      proxyPoolsCreate: async (body: Partial<ProxyPoolRequest>) => {
+        const res = await fetch(`${base}/proxy-pools`, { method: 'POST', headers, body: JSON.stringify(body) });
+        if (!res.ok) throw new Error('Failed to create pool');
+        return res.json().catch(()=>undefined);
+      },
+      proxyPoolsUpdate: async (id: string, body: Partial<ProxyPoolRequest>) => {
+        const res = await fetch(`${base}/proxy-pools/${id}`, { method: 'PUT', headers, body: JSON.stringify(body) });
+        if (!res.ok) throw new Error('Failed to update pool');
+        return res.json().catch(()=>undefined);
+      }
+    };
+  }, []);
   const isEditing = !!pool;
 
   const form = useForm<PoolFormValues>({

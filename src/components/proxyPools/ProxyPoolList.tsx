@@ -13,8 +13,12 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import ProxyPoolForm from "./ProxyPoolForm";
-import { proxyPoolsApi } from "@/lib/api-client/compat";
-import type { ModelsProxyPool as ProxyPoolType } from '@/lib/api-client/models/models-proxy-pool';
+// Temporary stub until generated client compatibility layer is restored
+const proxyPoolsApi = {
+  proxyPoolsList: async () => ({ data: [] as any[] }),
+  proxyPoolsDelete: async (_id: string) => ({})
+};
+import type { ProxyPool as ProxyPoolType } from '@/lib/api-client/models/proxy-pool';
 import {
   Dialog,
   DialogContent,

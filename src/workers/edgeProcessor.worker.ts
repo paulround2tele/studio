@@ -103,15 +103,19 @@ function handleCausalRecompute(payload: {
       const metricA = metricKeys[i];
       const metricB = metricKeys[j];
       
-      const seriesA = metricGroups.get(metricA)!.map(obs => obs.value);
-      const seriesB = metricGroups.get(metricB)!.map(obs => obs.value);
+  if (!metricA || !metricB) continue;
+  const groupA = metricGroups.get(metricA);
+  const groupB = metricGroups.get(metricB);
+  if (!groupA || !groupB) continue;
+  const seriesA = groupA.map(obs => obs.value);
+  const seriesB = groupB.map(obs => obs.value);
       
       const correlation = calculateCorrelation(seriesA, seriesB);
       const confidence = Math.min(seriesA.length, seriesB.length) / 100; // Simple confidence based on sample size
       
       correlations.push({
-        metricA,
-        metricB,
+  metricA: metricA!,
+  metricB: metricB!,
         correlation,
         confidence: Math.min(confidence, 1.0)
       });
@@ -278,8 +282,11 @@ function calculateCorrelation(x: number[], y: number[]): number {
   let sumYSquared = 0;
 
   for (let i = 0; i < n; i++) {
-    const deltaX = x[i] - meanX;
-    const deltaY = y[i] - meanY;
+  const vx = x[i];
+  const vy = y[i];
+  if (vx === undefined || vy === undefined) continue;
+  const deltaX = vx - meanX;
+  const deltaY = vy - meanY;
     
     numerator += deltaX * deltaY;
     sumXSquared += deltaX * deltaX;
