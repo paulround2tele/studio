@@ -161,8 +161,7 @@ func (h *strictHandlers) KeywordExtractBatch(ctx context.Context, r gen.KeywordE
 	}
 
 	data := gen.BatchKeywordExtractionResponse{Results: &results}
-	resp := gen.KeywordExtractBatch200JSONResponse{Data: &data, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}
-	return resp, nil
+	return gen.KeywordExtractBatch200JSONResponse(data), nil
 }
 
 func (h *strictHandlers) KeywordExtractStream(ctx context.Context, r gen.KeywordExtractStreamRequestObject) (gen.KeywordExtractStreamResponseObject, error) {
@@ -322,8 +321,7 @@ func (h *strictHandlers) KeywordRulesQuery(ctx context.Context, r gen.KeywordRul
 			UpdatedAt:    &rr.UpdatedAt,
 		})
 	}
-	resp := gen.KeywordRulesQuery200JSONResponse{Data: &dtos, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}
-	return resp, nil
+	return gen.KeywordRulesQuery200JSONResponse(dtos), nil
 }
 
 func (h *strictHandlers) KeywordSetsList(ctx context.Context, r gen.KeywordSetsListRequestObject) (gen.KeywordSetsListResponseObject, error) {
@@ -616,7 +614,7 @@ func (h *strictHandlers) KeywordSetsGet(ctx context.Context, r gen.KeywordSetsGe
 	if ks.Rules != nil {
 		count = len(*ks.Rules)
 	}
-	resp := gen.KeywordSetsGet200JSONResponse{Data: &gen.KeywordSetResponse{
+	resp := gen.KeywordSetsGet200JSONResponse(gen.KeywordSetResponse{
 		Id:          openapi_types.UUID(ks.ID),
 		Name:        ks.Name,
 		Description: desc,
@@ -624,7 +622,7 @@ func (h *strictHandlers) KeywordSetsGet(ctx context.Context, r gen.KeywordSetsGe
 		CreatedAt:   ks.CreatedAt,
 		UpdatedAt:   ks.UpdatedAt,
 		RuleCount:   count,
-	}, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}
+	})
 	return resp, nil
 }
 
@@ -722,7 +720,7 @@ func (h *strictHandlers) KeywordSetsUpdate(ctx context.Context, r gen.KeywordSet
 	if ks != nil && ks.Rules != nil {
 		count = len(*ks.Rules)
 	}
-	resp := gen.KeywordSetsUpdate200JSONResponse{Data: &gen.KeywordSetResponse{
+	resp := gen.KeywordSetsUpdate200JSONResponse(gen.KeywordSetResponse{
 		Id: openapi_types.UUID(setID),
 		Name: func() string {
 			if ks != nil {
@@ -756,7 +754,7 @@ func (h *strictHandlers) KeywordSetsUpdate(ctx context.Context, r gen.KeywordSet
 			return time.Now().UTC()
 		}(),
 		RuleCount: count,
-	}, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}
+	})
 	// Broadcast SSE update event
 	if h.deps != nil && h.deps.SSE != nil {
 		var userID *uuid.UUID
@@ -819,6 +817,5 @@ func (h *strictHandlers) KeywordSetsRulesList(ctx context.Context, r gen.Keyword
 			UpdatedAt:    &rr.UpdatedAt,
 		})
 	}
-	resp := gen.KeywordSetsRulesList200JSONResponse{Data: &dtos, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}
-	return resp, nil
+	return gen.KeywordSetsRulesList200JSONResponse(dtos), nil
 }

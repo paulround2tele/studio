@@ -77,10 +77,5 @@ func (h *strictHandlers) BulkValidateHTTP(ctx context.Context, r gen.BulkValidat
 		}
 	}
 
-	return gen.BulkValidateHTTP200JSONResponse{
-		Data:      &resp,
-		Metadata:  okMeta(),
-		RequestId: reqID(),
-		Success:   boolPtr(true),
-	}, nil
+	return gen.BulkValidateHTTP200JSONResponse(resp), nil
 }

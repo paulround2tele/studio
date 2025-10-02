@@ -103,7 +103,7 @@ export default function ProxyForm({ proxyToEdit, onSaveSuccess, onCancel }: Prox
           name: data.name,
           description: data.description,
           address: data.address,
-          protocol: data.protocol as unknown as ProxyProtocol,
+          protocol: data.protocol as ProxyProtocol,
           username: data.username,
           password: data.password,
           countryCode: data.countryCode,

@@ -4,7 +4,6 @@ import (
 	"context"
 
 	gen "github.com/fntelecomllc/studio/backend/internal/api/gen"
-	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // CancelBulkOperation implements POST /campaigns/bulk/operations/{operationId}/cancel
@@ -17,15 +16,7 @@ func (h *strictHandlers) CancelBulkOperation(ctx context.Context, r gen.CancelBu
 	default:
 		mapped = gen.BulkOperationCancelStatusCancelling
 	}
-	return gen.CancelBulkOperation200JSONResponse{
-		Data: &struct {
-			OperationId *openapi_types.UUID            `json:"operationId,omitempty"`
-			Status      *gen.BulkOperationCancelStatus `json:"status,omitempty"`
-		}{OperationId: &r.OperationId, Status: &mapped},
-		Metadata:  okMeta(),
-		RequestId: reqID(),
-		Success:   boolPtr(true),
-	}, nil
+	return gen.CancelBulkOperation200JSONResponse{OperationId: &r.OperationId, Status: &mapped}, nil
 }
 
 // GetBulkOperationStatus implements GET /campaigns/bulk/operations/{operationId}/status

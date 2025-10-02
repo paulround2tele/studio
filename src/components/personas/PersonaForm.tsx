@@ -17,11 +17,26 @@ import { PersonasApi, Configuration } from '@/lib/api-client';
 import type { PersonaResponse as ApiPersonaResponse } from '@/lib/api-client/models/persona-response';
 import type { PersonaConfigHttp as HTTPConfigDetails } from '@/lib/api-client/models/persona-config-http';
 import type { PersonaConfigDns as DNSConfigDetails } from '@/lib/api-client/models/persona-config-dns';
+import type { PersonaConfigDetails } from '@/lib/api-client/models/persona-config-details';
 import { PersonaType as ApiCreatePersonaRequestPersonaTypeEnum } from '@/lib/api-client/models/persona-type';
+import type { CreatePersonaRequest } from '@/lib/api-client/models/create-persona-request';
+import type { UpdatePersonaRequest } from '@/lib/api-client/models/update-persona-request';
 const personasApi = new PersonasApi(new Configuration());
 
 // Type aliases for better readability
 type Persona = ApiPersonaResponse;
+
+// Narrowers
+function asHttpConfig(p: Persona | undefined): HTTPConfigDetails | undefined {
+  const c = p?.configDetails as PersonaConfigDetails | undefined;
+  if (c && 'userAgent' in c) return c as HTTPConfigDetails; // distinctive HTTP field
+  return undefined;
+}
+function asDnsConfig(p: Persona | undefined): DNSConfigDetails | undefined {
+  const c = p?.configDetails as PersonaConfigDetails | undefined;
+  if (c && 'resolvers' in c) return c as DNSConfigDetails; // distinctive DNS field
+  return undefined;
+}
 
 // DNS Resolver Strategy options - aligned with OpenAPI schema
 type DnsResolverStrategy = "round_robin" | "random" | "weighted" | "priority";
@@ -49,40 +64,30 @@ function parseJsonOrUndefined<T>(jsonString: string | undefined): T | undefined 
   }
 }
 
-// HTTP Persona Schema
+// HTTP Persona Schema (strictly matches PersonaConfigHttp fields + request wrapper meta)
 const httpPersonaFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  tagsInput: z.string().optional(),
   userAgent: z.string().min(1, "User-Agent is required"),
-  headersJson: z.string().min(1, "Headers JSON is required"),
+  headersJson: z.string().optional(),
   headerOrderInput: z.string().optional(),
   tlsClientHelloJson: z.string().optional(),
   http2SettingsJson: z.string().optional(),
   cookieHandlingJson: z.string().optional(),
-  allowInsecureTls: z.boolean(),
-  requestTimeoutSec: z.number().min(1),
-  maxRedirects: z.number().min(0),
-  useHeadless: z.boolean().optional(),
-  fallbackPolicy: z.enum(['never','on_fetch_error','always']).optional(),
-  viewportWidth: z.number().optional(),
-  viewportHeight: z.number().optional(),
-  headlessUserAgent: z.string().optional(),
-  scriptExecution: z.boolean().optional(),
-  loadImages: z.boolean().optional(),
-  screenshot: z.boolean().optional(),
-  domSnapshot: z.boolean().optional(),
-  headlessTimeoutSec: z.number().optional(),
-  waitDelaySec: z.number().optional(),
-  fetchBodyForKeywords: z.boolean().optional(),
+  requestTimeoutSeconds: z.number().min(1).optional(),
+  followRedirects: z.boolean().optional(),
+  allowedStatusCodesInput: z.string().optional(), // comma separated numbers
+  rateLimitDps: z.number().optional(),
+  rateLimitBurst: z.number().optional(),
   notes: z.string().optional(),
+  // enable toggle - default true
+  isEnabled: z.boolean().default(true)
 });
 
-// DNS Persona Schema
+// DNS Persona Schema (strict to PersonaConfigDns plus wrapper meta)
 const dnsPersonaFormSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  tagsInput: z.string().optional(),
   config_resolversInput: z.string().min(1, "At least one resolver is required"),
   config_useSystemResolvers: z.boolean(),
   config_queryTimeoutSeconds: z.number().min(1),
@@ -96,6 +101,7 @@ const dnsPersonaFormSchema = z.object({
   config_maxConcurrentGoroutines: z.number().min(1),
   config_rateLimitDps: z.number().optional(),
   config_rateLimitBurst: z.number().optional(),
+  isEnabled: z.boolean().default(true),
 });
 
 type HttpPersonaFormValues = z.infer<typeof httpPersonaFormSchema>;
@@ -111,128 +117,96 @@ interface PersonaFormProps {
 function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; isEditing?: boolean }) {
   const router = useRouter();
   const { toast } = useToast();
-  // THIN CLIENT: Removed useAuth - backend handles authentication
-  const user = null; // Backend provides user data when needed
+  // Authentication handled server-side; client form proceeds directly
 
-  const stringifyJsonForForm = (obj: Record<string, unknown> | null | undefined) => obj ? JSON.stringify(obj, null, 2) : "{}";
+  // Accept any serializable object; we only display it read/write as JSON text.
+  const stringifyJsonForForm = (obj: unknown) => obj ? JSON.stringify(obj as object, null, 2) : "{}";
   const form = useForm<HttpPersonaFormValues>({
     resolver: zodResolver(httpPersonaFormSchema),
     defaultValues: persona
       ? {
           name: persona.name || "",
           description: persona.description || "",
-          tagsInput: "", // Tags not in OpenAPI persona response
-          userAgent: (persona as any).configDetails?.userAgent || "",
-          headersJson: stringifyJsonForForm((persona.configDetails as any)?.headers || {}),
-          headerOrderInput: ((persona.configDetails as any) as unknown as HTTPConfigDetails)?.headerOrder?.join(', ') || "",
-          tlsClientHelloJson: stringifyJsonForForm((persona.configDetails as any)?.tlsClientHello as unknown as Record<string, unknown> || {}),
-          http2SettingsJson: stringifyJsonForForm((persona.configDetails as any)?.http2Settings as unknown as Record<string, unknown> || {}),
-          cookieHandlingJson: stringifyJsonForForm((persona.configDetails as any)?.cookieHandling as unknown as Record<string, unknown> || {}),
-          allowInsecureTls: (persona.configDetails as any)?.allowInsecureTls || false,
-          requestTimeoutSec: (persona.configDetails as any)?.requestTimeoutSeconds || 30,
-          maxRedirects: (persona.configDetails as any)?.maxRedirects || 5,
-          useHeadless: (persona.configDetails as any)?.useHeadless ?? false,
-          fallbackPolicy: 'never', // Not in OpenAPI HTTP config
-          viewportWidth: (persona.configDetails as any)?.viewportWidth,
-          viewportHeight: (persona.configDetails as any)?.viewportHeight,
-          headlessUserAgent: (persona.configDetails as any)?.headlessUserAgent || '',
-          scriptExecution: (persona.configDetails as any)?.scriptExecution ?? false,
-          loadImages: (persona.configDetails as any)?.loadImages ?? false,
-          screenshot: (persona.configDetails as any)?.screenshot ?? false,
-          domSnapshot: (persona.configDetails as any)?.domSnapshot ?? false,
-          headlessTimeoutSec: (persona.configDetails as any)?.headlessTimeoutSeconds,
-          waitDelaySec: (persona.configDetails as any)?.waitDelaySeconds,
-          fetchBodyForKeywords: (persona.configDetails as any)?.fetchBodyForKeywords ?? false,
-          notes: "", // Notes not in OpenAPI HTTP config
+          userAgent: asHttpConfig(persona)?.userAgent || "",
+          headersJson: stringifyJsonForForm(asHttpConfig(persona)?.headers || {}),
+          headerOrderInput: asHttpConfig(persona)?.headerOrder?.join(', ') || "",
+          tlsClientHelloJson: stringifyJsonForForm(asHttpConfig(persona)?.tlsClientHello || {}),
+          http2SettingsJson: stringifyJsonForForm(asHttpConfig(persona)?.http2Settings || {}),
+          cookieHandlingJson: stringifyJsonForForm(asHttpConfig(persona)?.cookieHandling || {}),
+          requestTimeoutSeconds: asHttpConfig(persona)?.requestTimeoutSeconds,
+          followRedirects: asHttpConfig(persona)?.followRedirects,
+          allowedStatusCodesInput: (asHttpConfig(persona)?.allowedStatusCodes || []).join(', '),
+          rateLimitDps: asHttpConfig(persona)?.rateLimitDps,
+          rateLimitBurst: asHttpConfig(persona)?.rateLimitBurst,
+          notes: asHttpConfig(persona)?.notes || "",
+          isEnabled: persona.isEnabled ?? true,
         }
       : {
           name: "",
           description: "",
-          tagsInput: "",
           userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
           headersJson: stringifyJsonForForm({ "Accept-Language": "en-US,en;q=0.9" }),
           headerOrderInput: "",
           tlsClientHelloJson: stringifyJsonForForm({ "cipherSuites": ["TLS_AES_128_GCM_SHA256", "TLS_CHACHA20_POLY1305_SHA256"] }),
           http2SettingsJson: stringifyJsonForForm({ "headerTableSize": 4096, "enablePush": false }),
           cookieHandlingJson: stringifyJsonForForm({ "mode": "session" }),
-          allowInsecureTls: false,
-          requestTimeoutSec: 30,
-          maxRedirects: 5,
-          useHeadless: false,
-          fallbackPolicy: 'never',
-          viewportWidth: undefined,
-          viewportHeight: undefined,
-          headlessUserAgent: '',
-          scriptExecution: false,
-          loadImages: false,
-          screenshot: false,
-          domSnapshot: false,
-          headlessTimeoutSec: undefined,
-          waitDelaySec: undefined,
-          fetchBodyForKeywords: false,
+          requestTimeoutSeconds: 30,
+          followRedirects: true,
+          allowedStatusCodesInput: "200, 301, 302", // sensible defaults
+          rateLimitDps: undefined,
+          rateLimitBurst: undefined,
           notes: "",
+          isEnabled: true,
         },
     mode: "onChange",
   });
 
   async function onSubmit(data: HttpPersonaFormValues) {
-    if (!user) {
-      toast({ title: "Authentication Required", description: "Please log in to create or edit personas.", variant: "destructive" });
-      return;
-    }
-
-    const commonPayloadData = {
-        name: data.name,
-        description: data.description || undefined,
-        tags: parseStringToArray(data.tagsInput || ""),
+    const commonPayloadData: Pick<CreatePersonaRequest, 'name' | 'description' | 'isEnabled'> = {
+      name: data.name,
+      description: data.description || undefined,
+      isEnabled: data.isEnabled
     };
 
     try {
-      const httpConfigDetails = {
+      const httpConfigDetails: HTTPConfigDetails = {
         userAgent: data.userAgent,
         headers: parseJsonOrUndefined<Record<string,string>>(data.headersJson || ""),
         headerOrder: parseStringToArray(data.headerOrderInput || ""),
         tlsClientHello: parseJsonOrUndefined(data.tlsClientHelloJson || ""),
         http2Settings: parseJsonOrUndefined(data.http2SettingsJson || ""),
         cookieHandling: parseJsonOrUndefined(data.cookieHandlingJson || ""),
-        allowInsecureTls: data.allowInsecureTls,
-        requestTimeoutSec: data.requestTimeoutSec,
-        maxRedirects: data.maxRedirects,
-        useHeadless: data.useHeadless,
-        viewportWidth: data.viewportWidth,
-        viewportHeight: data.viewportHeight,
-        headlessUserAgent: data.headlessUserAgent || undefined,
-        scriptExecution: data.scriptExecution,
-        loadImages: data.loadImages,
-        screenshot: data.screenshot,
-        domSnapshot: data.domSnapshot,
-        headlessTimeoutSeconds: data.headlessTimeoutSec,
-        waitDelaySeconds: data.waitDelaySec,
-        fetchBodyForKeywords: data.fetchBodyForKeywords,
+        requestTimeoutSeconds: data.requestTimeoutSeconds,
+        followRedirects: data.followRedirects,
+        allowedStatusCodes: parseStringToArray(data.allowedStatusCodesInput || '').map(n => parseInt(n, 10)).filter(n => !Number.isNaN(n)),
+        rateLimitDps: data.rateLimitDps,
+        rateLimitBurst: data.rateLimitBurst,
+        notes: data.notes || undefined,
       };
 
-      const payload = {
+      const payload: CreatePersonaRequest = {
         ...commonPayloadData,
-  personaType: ApiCreatePersonaRequestPersonaTypeEnum.http,
-        isEnabled: true,
-        configDetails: httpConfigDetails
+        personaType: ApiCreatePersonaRequestPersonaTypeEnum.http,
+        configDetails: httpConfigDetails as PersonaConfigDetails,
       };
 
-  let response;
+      let response;
       if (isEditing && persona && persona.id) {
-        const updatePayload = {
-          ...commonPayloadData,
-          configDetails: httpConfigDetails
+        const updatePayload: UpdatePersonaRequest = {
+          name: commonPayloadData.name,
+          description: commonPayloadData.description,
+          isEnabled: commonPayloadData.isEnabled,
+          configDetails: httpConfigDetails as PersonaConfigDetails
         };
-        response = await personasApi.personasUpdate(persona.id, updatePayload as any);
+        response = await personasApi.personasUpdate(persona.id, updatePayload);
       } else {
-        response = await personasApi.personasCreate(payload as any);
+        response = await personasApi.personasCreate(payload);
       }
 
       if (response.status >= 200 && response.status < 300) {
         // Direct resource body already returned (no envelope) via axios client
-        const data: any = (response as any).data;
-        toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${data?.name || ''}" has been successfully ${isEditing ? "updated" : "created"}.` });
+  const body = (response as { data?: Persona })?.data;
+  toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${body?.name || ''}" has been successfully ${isEditing ? "updated" : "created"}.` });
         router.push("/personas");
         router.refresh();
       } else {
@@ -322,137 +296,46 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
                 <FormMessage />
               </FormItem>
             )} />
-            <FormField control={form.control} name="requestTimeoutSec" render={({ field }) => (
+            <FormField control={form.control} name="requestTimeoutSeconds" render={({ field }) => (
               <FormItem data-testid="persona-http-field-request-timeout">
                 <FormLabel>Request Timeout (seconds)</FormLabel>
-                <FormControl><Input data-testid="persona-http-input-request-timeout" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl>
+                <FormControl><Input data-testid="persona-http-input-request-timeout" type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
-            <FormField control={form.control} name="maxRedirects" render={({ field }) => (
-              <FormItem data-testid="persona-http-field-max-redirects">
-                <FormLabel>Max Redirects</FormLabel>
-                <FormControl><Input data-testid="persona-http-input-max-redirects" type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="useHeadless" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-http-field-use-headless">
+            <FormField control={form.control} name="followRedirects" render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-http-field-follow-redirects">
                 <div className="space-y-0.5">
-                  <FormLabel>Use Headless Browser</FormLabel>
+                  <FormLabel>Follow Redirects</FormLabel>
                 </div>
-                <FormControl><Switch data-testid="persona-http-input-use-headless" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                <FormControl><Switch data-testid="persona-http-input-follow-redirects" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
-            <FormField control={form.control} name="fallbackPolicy" render={({ field }) => (
-              <FormItem data-testid="persona-http-field-fallback-policy">
-                <FormLabel>Fallback Policy</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger data-testid="persona-http-input-fallback-policy"><SelectValue placeholder="Select policy" /></SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="never">never</SelectItem>
-                    <SelectItem value="on_fetch_error">on_fetch_error</SelectItem>
-                    <SelectItem value="always">always</SelectItem>
-                  </SelectContent>
-                </Select>
+            <FormField control={form.control} name="allowedStatusCodesInput" render={({ field }) => (
+              <FormItem data-testid="persona-http-field-allowed-status-codes">
+                <FormLabel>Allowed Status Codes (comma-separated)</FormLabel>
+                <FormControl><Input data-testid="persona-http-input-allowed-status-codes" placeholder="200, 301, 302" {...field} /></FormControl>
+                <FormDescription>Leave blank to allow any successful status code.</FormDescription>
                 <FormMessage />
               </FormItem>
             )} />
-            <div className="grid grid-cols-2 gap-4" data-testid="persona-http-dimensions">
-              <FormField control={form.control} name="viewportWidth" render={({ field }) => (
-                <FormItem data-testid="persona-http-field-viewport-width">
-                  <FormLabel>Viewport Width</FormLabel>
-                  <FormControl><Input data-testid="persona-http-input-viewport-width" type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
+            <div className="grid grid-cols-2 gap-4" data-testid="persona-http-rate-limits">
+              <FormField control={form.control} name="rateLimitDps" render={({ field }) => (
+                <FormItem data-testid="persona-http-field-rate-limit-dps">
+                  <FormLabel>Rate Limit (DPS)</FormLabel>
+                  <FormControl><Input data-testid="persona-http-input-rate-limit-dps" type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
-              <FormField control={form.control} name="viewportHeight" render={({ field }) => (
-                <FormItem data-testid="persona-http-field-viewport-height">
-                  <FormLabel>Viewport Height</FormLabel>
-                  <FormControl><Input data-testid="persona-http-input-viewport-height" type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
+              <FormField control={form.control} name="rateLimitBurst" render={({ field }) => (
+                <FormItem data-testid="persona-http-field-rate-limit-burst">
+                  <FormLabel>Rate Limit Burst</FormLabel>
+                  <FormControl><Input data-testid="persona-http-input-rate-limit-burst" type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
                   <FormMessage />
                 </FormItem>
               )} />
             </div>
-            <FormField control={form.control} name="headlessUserAgent" render={({ field }) => (
-              <FormItem data-testid="persona-http-field-headless-user-agent">
-                <FormLabel>Headless User-Agent</FormLabel>
-                <FormControl><Input data-testid="persona-http-input-headless-user-agent" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="scriptExecution" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-http-field-script-execution">
-                <div className="space-y-0.5">
-                  <FormLabel>Enable Script Execution</FormLabel>
-                </div>
-                <FormControl><Switch data-testid="persona-http-input-script-execution" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="loadImages" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-http-field-load-images">
-                <div className="space-y-0.5">
-                  <FormLabel>Load Images</FormLabel>
-                </div>
-                <FormControl><Switch data-testid="persona-http-input-load-images" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="screenshot" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-http-field-screenshot">
-                <div className="space-y-0.5">
-                  <FormLabel>Capture Screenshot</FormLabel>
-                </div>
-                <FormControl><Switch data-testid="persona-http-input-screenshot" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="domSnapshot" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-http-field-dom-snapshot">
-                <div className="space-y-0.5">
-                  <FormLabel>Capture DOM Snapshot</FormLabel>
-                </div>
-                <FormControl><Switch data-testid="persona-http-input-dom-snapshot" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="headlessTimeoutSec" render={({ field }) => (
-              <FormItem data-testid="persona-http-field-headless-timeout">
-                <FormLabel>Headless Timeout (seconds)</FormLabel>
-                <FormControl><Input data-testid="persona-http-input-headless-timeout" type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="waitDelaySec" render={({ field }) => (
-              <FormItem data-testid="persona-http-field-wait-delay">
-                <FormLabel>Wait Delay (seconds)</FormLabel>
-                <FormControl><Input data-testid="persona-http-input-wait-delay" type="number" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="fetchBodyForKeywords" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-http-field-fetch-body-for-keywords">
-                <div className="space-y-0.5">
-                  <FormLabel>Fetch Body For Keywords</FormLabel>
-                </div>
-                <FormControl><Switch data-testid="persona-http-input-fetch-body-for-keywords" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
-            <FormField control={form.control} name="allowInsecureTls" render={({ field }) => (
-              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-http-field-allow-insecure-tls">
-                <div className="space-y-0.5">
-                  <FormLabel>Allow Insecure TLS</FormLabel>
-                  <FormDescription>Allow connections to servers with invalid/self-signed TLS certificates.</FormDescription>
-                </div>
-                <FormControl><Switch data-testid="persona-http-input-allow-insecure-tls" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
             <FormField control={form.control} name="notes" render={({ field }) => (
               <FormItem data-testid="persona-http-field-notes">
                 <FormLabel>Notes (Optional)</FormLabel>
@@ -460,11 +343,12 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
                 <FormMessage />
               </FormItem>
             )} />
-            <FormField control={form.control} name="tagsInput" render={({ field }) => (
-              <FormItem data-testid="persona-http-field-tags">
-                <FormLabel>Tags (comma-separated - Optional)</FormLabel>
-                <FormControl><Input data-testid="persona-http-input-tags" placeholder="e.g., stealth, primary-dns, us-region-proxy" {...field} /></FormControl>
-                <FormDescription>Help organize and filter personas. Use for grouping or classification.</FormDescription>
+            <FormField control={form.control} name="isEnabled" render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-http-field-is-enabled">
+                <div className="space-y-0.5">
+                  <FormLabel>Enabled</FormLabel>
+                </div>
+                <FormControl><Switch data-testid="persona-http-input-is-enabled" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -486,8 +370,6 @@ function HttpPersonaForm({ persona, isEditing = false }: { persona?: Persona; is
 function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isEditing?: boolean }) {
   const router = useRouter();
   const { toast } = useToast();
-  // THIN CLIENT: Removed useAuth - backend handles authentication
-  const user = null; // Backend provides user data when needed
 
   const stringifyJsonObjectForForm = (obj: Record<string, number> | null | undefined) => obj ? JSON.stringify(obj, null, 2) : "{}";
   const form = useForm<DnsPersonaFormValues>({
@@ -496,25 +378,24 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
       ? {
           name: persona.name || "",
           description: persona.description || "",
-          tagsInput: "", // Tags not in OpenAPI persona response
-          config_resolversInput: ((persona.configDetails as any) as unknown as DNSConfigDetails)?.resolvers?.join(', ') || "",
-          config_useSystemResolvers: ((persona.configDetails as any) as unknown as DNSConfigDetails)?.useSystemResolvers || false,
-          config_queryTimeoutSeconds: ((persona.configDetails as any) as unknown as DNSConfigDetails)?.queryTimeoutSeconds || 5,
-          config_maxDomainsPerRequest: ((persona.configDetails as any) as unknown as DNSConfigDetails)?.maxDomainsPerRequest || 100,
-          config_resolverStrategy: (((persona.configDetails as any) as unknown as DNSConfigDetails)?.resolverStrategy as DnsResolverStrategy) || "round_robin",
-          config_resolversWeightedJson: stringifyJsonObjectForForm(((persona.configDetails as any) as unknown as DNSConfigDetails)?.resolversWeighted || {}),
-          config_resolversPreferredOrderInput: ((persona.configDetails as any) as unknown as DNSConfigDetails)?.resolversPreferredOrder?.join(', ') || "",
-          config_concurrentQueriesPerDomain: ((persona.configDetails as any) as unknown as DNSConfigDetails)?.concurrentQueriesPerDomain || 2,
-          config_queryDelayMinMs: ((persona.configDetails as any) as unknown as DNSConfigDetails)?.queryDelayMinMs,
-          config_queryDelayMaxMs: ((persona.configDetails as any) as unknown as DNSConfigDetails)?.queryDelayMaxMs,
-          config_maxConcurrentGoroutines: ((persona.configDetails as any) as unknown as DNSConfigDetails)?.maxConcurrentGoroutines || 10,
-          config_rateLimitDps: ((persona.configDetails as any) as unknown as DNSConfigDetails)?.rateLimitDps,
-          config_rateLimitBurst: ((persona.configDetails as any) as unknown as DNSConfigDetails)?.rateLimitBurst,
+          config_resolversInput: asDnsConfig(persona)?.resolvers?.join(', ') || "",
+          config_useSystemResolvers: asDnsConfig(persona)?.useSystemResolvers || false,
+          config_queryTimeoutSeconds: asDnsConfig(persona)?.queryTimeoutSeconds || 5,
+          config_maxDomainsPerRequest: asDnsConfig(persona)?.maxDomainsPerRequest || 100,
+          config_resolverStrategy: (asDnsConfig(persona)?.resolverStrategy as DnsResolverStrategy) || "round_robin",
+          config_resolversWeightedJson: stringifyJsonObjectForForm(asDnsConfig(persona)?.resolversWeighted || {}),
+          config_resolversPreferredOrderInput: asDnsConfig(persona)?.resolversPreferredOrder?.join(', ') || "",
+          config_concurrentQueriesPerDomain: asDnsConfig(persona)?.concurrentQueriesPerDomain || 2,
+          config_queryDelayMinMs: asDnsConfig(persona)?.queryDelayMinMs,
+          config_queryDelayMaxMs: asDnsConfig(persona)?.queryDelayMaxMs,
+          config_maxConcurrentGoroutines: asDnsConfig(persona)?.maxConcurrentGoroutines || 10,
+          config_rateLimitDps: asDnsConfig(persona)?.rateLimitDps,
+          config_rateLimitBurst: asDnsConfig(persona)?.rateLimitBurst,
+          isEnabled: persona.isEnabled ?? true,
         }
       : {
           name: "",
           description: "",
-          tagsInput: "",
           config_resolversInput: "8.8.8.8, 1.1.1.1",
           config_useSystemResolvers: false,
           config_queryTimeoutSeconds: 5,
@@ -523,61 +404,58 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
           config_resolversPreferredOrderInput: "",
           config_concurrentQueriesPerDomain: 2,
           config_maxConcurrentGoroutines: 10,
+          isEnabled: true,
         },
     mode: "onChange",
   });
 
   async function onSubmit(data: DnsPersonaFormValues) {
-    if (!user) {
-      toast({ title: "Authentication Required", description: "Please log in to create or edit personas.", variant: "destructive" });
-      return;
-    }
-
-    const commonPayloadData = {
-        name: data.name,
-        description: data.description || undefined,
-        tags: parseStringToArray(data.tagsInput || ""),
+    const commonPayloadData: Pick<CreatePersonaRequest, 'name' | 'description' | 'isEnabled'> = {
+      name: data.name,
+      description: data.description || undefined,
+      isEnabled: data.isEnabled,
     };
 
     try {
-      const dnsConfigDetails = {
-          resolvers: parseStringToArray(data.config_resolversInput || ""),
-          useSystemResolvers: data.config_useSystemResolvers,
-          queryTimeoutSeconds: data.config_queryTimeoutSeconds,
-          maxDomainsPerRequest: data.config_maxDomainsPerRequest || 100,
-          resolverStrategy: data.config_resolverStrategy,
-          resolversWeighted: parseJsonOrUndefined<Record<string, number>>(data.config_resolversWeightedJson || ""),
-          resolversPreferredOrder: parseStringToArray(data.config_resolversPreferredOrderInput || ""),
-          concurrentQueriesPerDomain: data.config_concurrentQueriesPerDomain,
-          queryDelayMinMs: data.config_queryDelayMinMs || 100,
-          queryDelayMaxMs: data.config_queryDelayMaxMs || 1000,
-          maxConcurrentGoroutines: data.config_maxConcurrentGoroutines,
-          rateLimitDps: data.config_rateLimitDps || 100,
-          rateLimitBurst: data.config_rateLimitBurst || 10,
+      const dnsConfigDetails: DNSConfigDetails = {
+        resolvers: parseStringToArray(data.config_resolversInput || ""),
+        useSystemResolvers: data.config_useSystemResolvers,
+        queryTimeoutSeconds: data.config_queryTimeoutSeconds,
+        maxDomainsPerRequest: data.config_maxDomainsPerRequest || 100,
+        resolverStrategy: data.config_resolverStrategy as DNSConfigDetails['resolverStrategy'],
+        resolversWeighted: parseJsonOrUndefined<Record<string, number>>(data.config_resolversWeightedJson || ""),
+        resolversPreferredOrder: parseStringToArray(data.config_resolversPreferredOrderInput || ""),
+        concurrentQueriesPerDomain: data.config_concurrentQueriesPerDomain,
+        queryDelayMinMs: data.config_queryDelayMinMs,
+        queryDelayMaxMs: data.config_queryDelayMaxMs,
+        maxConcurrentGoroutines: data.config_maxConcurrentGoroutines,
+        rateLimitDps: data.config_rateLimitDps,
+        rateLimitBurst: data.config_rateLimitBurst,
       };
 
-      const payload = {
-          ...commonPayloadData,
-          personaType: ApiCreatePersonaRequestPersonaTypeEnum.dns,
-          isEnabled: true,
-          configDetails: dnsConfigDetails,
+      const payload: CreatePersonaRequest = {
+        ...commonPayloadData,
+        personaType: ApiCreatePersonaRequestPersonaTypeEnum.dns,
+        configDetails: dnsConfigDetails as PersonaConfigDetails,
       };
 
       let response;
       if (isEditing && persona && persona.id) {
-        const updatePayload = {
-          ...commonPayloadData,
-          configDetails: dnsConfigDetails
+        const updatePayload: UpdatePersonaRequest = {
+          name: commonPayloadData.name,
+          description: commonPayloadData.description,
+          isEnabled: commonPayloadData.isEnabled,
+          configDetails: dnsConfigDetails as PersonaConfigDetails
         };
-        response = await personasApi.personasUpdate(persona.id, updatePayload as any);
+        response = await personasApi.personasUpdate(persona.id, updatePayload);
       } else {
-        response = await personasApi.personasCreate(payload as any);
+        response = await personasApi.personasCreate(payload);
       }
 
       if (response.status >= 200 && response.status < 300) {
         // Direct resource body already returned (no envelope) via axios client
-        const data: any = (response as any).data;
-        toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${data?.name || ''}" has been successfully ${isEditing ? "updated" : "created"}.` });
+  const body = (response as { data?: Persona })?.data;
+  toast({ title: `Persona ${isEditing ? "Updated" : "Created"}`, description: `Persona "${body?.name || ''}" has been successfully ${isEditing ? "updated" : "created"}.` });
         router.push("/personas");
         router.refresh();
       } else {
@@ -727,11 +605,12 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
                 <FormMessage />
               </FormItem>
             )} />
-            <FormField control={form.control} name="tagsInput" render={({ field }) => (
-              <FormItem data-testid="persona-dns-field-tags">
-                <FormLabel>Tags (comma-separated - Optional)</FormLabel>
-                <FormControl><Input data-testid="persona-dns-input-tags" placeholder="e.g., stealth, primary-dns, us-region-proxy" {...field} /></FormControl>
-                <FormDescription>Help organize and filter personas. Use for grouping or classification.</FormDescription>
+            <FormField control={form.control} name="isEnabled" render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm" data-testid="persona-dns-field-is-enabled">
+                <div className="space-y-0.5">
+                  <FormLabel>Enabled</FormLabel>
+                </div>
+                <FormControl><Switch data-testid="persona-dns-input-is-enabled" checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />

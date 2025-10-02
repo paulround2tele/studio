@@ -78,10 +78,5 @@ func (h *strictHandlers) BulkValidateDNS(ctx context.Context, r gen.BulkValidate
 		}
 	}
 
-	return gen.BulkValidateDNS200JSONResponse{
-		Data:      &resp,
-		Metadata:  okMeta(),
-		RequestId: reqID(),
-		Success:   boolPtr(true),
-	}, nil
+	return gen.BulkValidateDNS200JSONResponse(resp), nil
 }

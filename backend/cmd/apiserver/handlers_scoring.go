@@ -77,8 +77,7 @@ func (h *strictHandlers) ScoringProfilesList(ctx context.Context, r gen.ScoringP
 		}
 		dtos = append(dtos, dto)
 	}
-	resp := gen.ScoringProfilesList200JSONResponse{Data: &dtos, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}
-	return resp, nil
+	return gen.ScoringProfilesList200JSONResponse(dtos), nil
 }
 
 func (h *strictHandlers) ScoringProfilesCreate(ctx context.Context, r gen.ScoringProfilesCreateRequestObject) (gen.ScoringProfilesCreateResponseObject, error) {
@@ -126,8 +125,7 @@ func (h *strictHandlers) ScoringProfilesCreate(ctx context.Context, r gen.Scorin
 	for k, v := range wm {
 		dto.Weights[k] = float32(v)
 	}
-	resp := gen.ScoringProfilesCreate201JSONResponse{Data: &dto, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}
-	return resp, nil
+	return gen.ScoringProfilesCreate201JSONResponse(dto), nil
 }
 
 func (h *strictHandlers) ScoringProfilesGet(ctx context.Context, r gen.ScoringProfilesGetRequestObject) (gen.ScoringProfilesGetResponseObject, error) {
@@ -158,8 +156,7 @@ func (h *strictHandlers) ScoringProfilesGet(ctx context.Context, r gen.ScoringPr
 	for k, v := range wm {
 		dto.Weights[k] = float32(v)
 	}
-	resp := gen.ScoringProfilesGet200JSONResponse{Data: &dto, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}
-	return resp, nil
+	return gen.ScoringProfilesGet200JSONResponse(dto), nil
 }
 
 func (h *strictHandlers) ScoringProfilesUpdate(ctx context.Context, r gen.ScoringProfilesUpdateRequestObject) (gen.ScoringProfilesUpdateResponseObject, error) {
@@ -226,8 +223,7 @@ func (h *strictHandlers) ScoringProfilesUpdate(ctx context.Context, r gen.Scorin
 	for k, v := range wm {
 		dto.Weights[k] = float32(v)
 	}
-	resp := gen.ScoringProfilesUpdate200JSONResponse{Data: &dto, Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}
-	return resp, nil
+	return gen.ScoringProfilesUpdate200JSONResponse(dto), nil
 }
 
 func (h *strictHandlers) ScoringProfilesDelete(ctx context.Context, r gen.ScoringProfilesDeleteRequestObject) (gen.ScoringProfilesDeleteResponseObject, error) {
@@ -245,7 +241,7 @@ func (h *strictHandlers) ScoringProfilesDelete(ctx context.Context, r gen.Scorin
 	} else {
 		return gen.ScoringProfilesDelete500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "delete not supported", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	return gen.ScoringProfilesDelete200JSONResponse{Success: boolPtr(true), RequestId: reqID(), Metadata: okMeta()}, nil
+	return gen.ScoringProfilesDelete204Response{}, nil
 }
 
 func (h *strictHandlers) CampaignsScoringProfileAssociate(ctx context.Context, r gen.CampaignsScoringProfileAssociateRequestObject) (gen.CampaignsScoringProfileAssociateResponseObject, error) {
@@ -268,7 +264,7 @@ func (h *strictHandlers) CampaignsScoringProfileAssociate(ctx context.Context, r
 	} else {
 		return gen.CampaignsScoringProfileAssociate500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "associate not supported", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	return gen.CampaignsScoringProfileAssociate200JSONResponse{Success: boolPtr(true), RequestId: reqID(), Metadata: okMeta()}, nil
+	return gen.CampaignsScoringProfileAssociate204Response{}, nil
 }
 
 func (h *strictHandlers) CampaignsRescore(ctx context.Context, r gen.CampaignsRescoreRequestObject) (gen.CampaignsRescoreResponseObject, error) {
@@ -277,5 +273,5 @@ func (h *strictHandlers) CampaignsRescore(ctx context.Context, r gen.CampaignsRe
 	}
 	campaignID := uuid.UUID(r.CampaignId)
 	go func(id uuid.UUID) { _ = h.deps.Orchestrator.RescoreCampaign(context.Background(), id) }(campaignID)
-	return gen.CampaignsRescore200JSONResponse{Success: boolPtr(true), RequestId: reqID(), Metadata: okMeta()}, nil
+	return gen.CampaignsRescore204Response{}, nil
 }

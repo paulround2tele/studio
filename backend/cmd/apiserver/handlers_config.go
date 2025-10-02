@@ -9,8 +9,8 @@ import (
 	"github.com/fntelecomllc/studio/backend/internal/config"
 )
 
-// ConfigGetAuth returns sanitized auth configuration as a free-form object
-func (h *strictHandlers) ConfigGetAuth(ctx context.Context, r gen.ConfigGetAuthRequestObject) (gen.ConfigGetAuthResponseObject, error) {
+// ConfigGetAuthentication returns sanitized auth configuration as a free-form object
+func (h *strictHandlers) ConfigGetAuthentication(ctx context.Context, r gen.ConfigGetAuthenticationRequestObject) (gen.ConfigGetAuthenticationResponseObject, error) {
 	var ac config.AuthConfig
 	if h.deps != nil && h.deps.Config != nil && h.deps.Config.Server.AuthConfig != nil {
 		ac = *h.deps.Config.Server.AuthConfig
@@ -33,16 +33,16 @@ func (h *strictHandlers) ConfigGetAuth(ctx context.Context, r gen.ConfigGetAuthR
 		"maxPasswordResetAttempts":   ac.MaxPasswordResetAttempts,
 		"captchaThreshold":           ac.CaptchaThreshold,
 	}
-	return gen.ConfigGetAuth200JSONResponse{Data: (*gen.AuthConfig)(&m), Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ConfigGetAuthentication200JSONResponse(m), nil
 }
 
-// ConfigUpdateAuth updates auth config fields dynamically and returns the updated config
-func (h *strictHandlers) ConfigUpdateAuth(ctx context.Context, r gen.ConfigUpdateAuthRequestObject) (gen.ConfigUpdateAuthResponseObject, error) {
+// ConfigUpdateAuthentication updates auth config fields dynamically and returns the updated config
+func (h *strictHandlers) ConfigUpdateAuthentication(ctx context.Context, r gen.ConfigUpdateAuthenticationRequestObject) (gen.ConfigUpdateAuthenticationResponseObject, error) {
 	if r.Body == nil {
-		return gen.ConfigUpdateAuth400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "body required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ConfigUpdateAuthentication400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "body required", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if h.deps == nil || h.deps.Config == nil {
-		return gen.ConfigUpdateAuth500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ConfigUpdateAuthentication500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if h.deps.Config.Server.AuthConfig == nil {
 		cfg := config.GetDefaultAuthConfig()
@@ -119,25 +119,25 @@ func (h *strictHandlers) ConfigUpdateAuth(ctx context.Context, r gen.ConfigUpdat
 		"maxPasswordResetAttempts":   ac.MaxPasswordResetAttempts,
 		"captchaThreshold":           ac.CaptchaThreshold,
 	}
-	return gen.ConfigUpdateAuth200JSONResponse{Data: (*gen.AuthConfig)(&m), Metadata: okMeta(), RequestId: reqID(), Success: boolPtr(true)}, nil
+	return gen.ConfigUpdateAuthentication200JSONResponse(m), nil
 }
 
 // ---- Config: DNS ----
-func (h *strictHandlers) ConfigGetDns(ctx context.Context, r gen.ConfigGetDnsRequestObject) (gen.ConfigGetDnsResponseObject, error) {
+func (h *strictHandlers) ConfigGetDnsValidator(ctx context.Context, r gen.ConfigGetDnsValidatorRequestObject) (gen.ConfigGetDnsValidatorResponseObject, error) {
 	if h.deps == nil || h.deps.Config == nil {
-		return gen.ConfigGetDns500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ConfigGetDnsValidator500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	dataJSON := config.ConvertDNSConfigToJSON(h.deps.Config.DNSValidator)
 	dm := gen.DNSValidatorConfigJSON(toMap(dataJSON))
-	return gen.ConfigGetDns200JSONResponse{Success: boolPtr(true), RequestId: reqID(), Metadata: okMeta(), Data: &dm}, nil
+	return gen.ConfigGetDnsValidator200JSONResponse(dm), nil
 }
 
-func (h *strictHandlers) ConfigUpdateDns(ctx context.Context, r gen.ConfigUpdateDnsRequestObject) (gen.ConfigUpdateDnsResponseObject, error) {
+func (h *strictHandlers) ConfigUpdateDnsValidator(ctx context.Context, r gen.ConfigUpdateDnsValidatorRequestObject) (gen.ConfigUpdateDnsValidatorResponseObject, error) {
 	if h.deps == nil || h.deps.Config == nil {
-		return gen.ConfigUpdateDns500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ConfigUpdateDnsValidator500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	if r.Body == nil {
-		return gen.ConfigUpdateDns400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ConfigUpdateDnsValidator400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "missing body", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	var bodyJSON config.DNSValidatorConfigJSON
 	if b, err := json.Marshal(*r.Body); err == nil {
@@ -145,14 +145,14 @@ func (h *strictHandlers) ConfigUpdateDns(ctx context.Context, r gen.ConfigUpdate
 	}
 	updated := config.ConvertJSONToDNSConfig(bodyJSON)
 	if updated.QueryTimeoutSeconds <= 0 {
-		return gen.ConfigUpdateDns400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "queryTimeoutSeconds must be positive", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ConfigUpdateDnsValidator400JSONResponse{BadRequestJSONResponse: gen.BadRequestJSONResponse{Error: gen.ApiError{Message: "queryTimeoutSeconds must be positive", Code: gen.BADREQUEST, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	h.deps.Config.DNSValidator = updated
 	if err := config.SaveAppConfig(h.deps.Config); err != nil {
-		return gen.ConfigUpdateDns500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to save config", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
+		return gen.ConfigUpdateDnsValidator500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to save config", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	dm := gen.DNSValidatorConfigJSON(toMap(config.ConvertDNSConfigToJSON(updated)))
-	return gen.ConfigUpdateDns200JSONResponse{Success: boolPtr(true), RequestId: reqID(), Metadata: okMeta(), Data: &dm}, nil
+	return gen.ConfigUpdateDnsValidator200JSONResponse(dm), nil
 }
 
 // ---- Config: HTTP ----
@@ -161,12 +161,7 @@ func (h *strictHandlers) ConfigGetHttp(ctx context.Context, r gen.ConfigGetHttpR
 		return gen.ConfigGetHttp500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	data := config.ConvertHTTPConfigToJSON(h.deps.Config.HTTPValidator)
-	return gen.ConfigGetHttp200JSONResponse{
-		"data":      data,
-		"metadata":  okMeta(),
-		"requestId": reqID(),
-		"success":   true,
-	}, nil
+	return gen.ConfigGetHttp200JSONResponse(map[string]interface{}{"data": data}), nil
 }
 
 func (h *strictHandlers) ConfigUpdateHttp(ctx context.Context, r gen.ConfigUpdateHttpRequestObject) (gen.ConfigUpdateHttpResponseObject, error) {
@@ -188,13 +183,7 @@ func (h *strictHandlers) ConfigUpdateHttp(ctx context.Context, r gen.ConfigUpdat
 	if err := config.SaveAppConfig(h.deps.Config); err != nil {
 		return gen.ConfigUpdateHttp500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to save config", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	resp := gen.ConfigUpdateHttp200JSONResponse{
-		"data":      config.ConvertHTTPConfigToJSON(updated),
-		"metadata":  okMeta(),
-		"requestId": reqID(),
-		"success":   true,
-	}
-	return resp, nil
+	return gen.ConfigUpdateHttp200JSONResponse(map[string]interface{}{"data": config.ConvertHTTPConfigToJSON(updated)}), nil
 }
 
 // ---- Config: Logging ----
@@ -203,7 +192,7 @@ func (h *strictHandlers) ConfigGetLogging(ctx context.Context, r gen.ConfigGetLo
 		return gen.ConfigGetLogging500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	lm := gen.LoggingConfig(toMap(h.deps.Config.Logging))
-	return gen.ConfigGetLogging200JSONResponse{Success: boolPtr(true), RequestId: reqID(), Metadata: okMeta(), Data: &lm}, nil
+	return gen.ConfigGetLogging200JSONResponse(lm), nil
 }
 
 func (h *strictHandlers) ConfigUpdateLogging(ctx context.Context, r gen.ConfigUpdateLoggingRequestObject) (gen.ConfigUpdateLoggingResponseObject, error) {
@@ -226,7 +215,7 @@ func (h *strictHandlers) ConfigUpdateLogging(ctx context.Context, r gen.ConfigUp
 		return gen.ConfigUpdateLogging500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to save config", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	lm := gen.LoggingConfig(toMap(h.deps.Config.Logging))
-	return gen.ConfigUpdateLogging200JSONResponse{Success: boolPtr(true), RequestId: reqID(), Metadata: okMeta(), Data: &lm}, nil
+	return gen.ConfigUpdateLogging200JSONResponse(lm), nil
 }
 
 // ---- Config: RateLimiter ----
@@ -235,7 +224,7 @@ func (h *strictHandlers) ConfigGetRateLimiter(ctx context.Context, r gen.ConfigG
 		return gen.ConfigGetRateLimiter500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	rm := gen.RateLimiterConfig(toMap(h.deps.Config.RateLimiter))
-	return gen.ConfigGetRateLimiter200JSONResponse{Success: boolPtr(true), RequestId: reqID(), Metadata: okMeta(), Data: &rm}, nil
+	return gen.ConfigGetRateLimiter200JSONResponse(rm), nil
 }
 
 func (h *strictHandlers) ConfigUpdateRateLimiter(ctx context.Context, r gen.ConfigUpdateRateLimiterRequestObject) (gen.ConfigUpdateRateLimiterResponseObject, error) {
@@ -254,7 +243,7 @@ func (h *strictHandlers) ConfigUpdateRateLimiter(ctx context.Context, r gen.Conf
 		return gen.ConfigUpdateRateLimiter500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to save config", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	rm := gen.RateLimiterConfig(toMap(h.deps.Config.RateLimiter))
-	return gen.ConfigUpdateRateLimiter200JSONResponse{Success: boolPtr(true), RequestId: reqID(), Metadata: okMeta(), Data: &rm}, nil
+	return gen.ConfigUpdateRateLimiter200JSONResponse(rm), nil
 }
 
 // ---- Config: Server ----
@@ -263,17 +252,12 @@ func (h *strictHandlers) ConfigGetServer(ctx context.Context, r gen.ConfigGetSer
 		return gen.ConfigGetServer500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	c := h.deps.Config.Server
-	resp := gen.ConfigGetServer200JSONResponse{
-		"data": map[string]interface{}{
-			"port":            c.Port,
-			"streamChunkSize": c.StreamChunkSize,
-			"ginMode":         c.GinMode,
-		},
-		"metadata":  okMeta(),
-		"requestId": reqID(),
-		"success":   true,
+	resp := map[string]interface{}{
+		"port":            c.Port,
+		"streamChunkSize": c.StreamChunkSize,
+		"ginMode":         c.GinMode,
 	}
-	return resp, nil
+	return gen.ConfigGetServer200JSONResponse(resp), nil
 }
 
 func (h *strictHandlers) ConfigUpdateServer(ctx context.Context, r gen.ConfigUpdateServerRequestObject) (gen.ConfigUpdateServerResponseObject, error) {
@@ -297,17 +281,12 @@ func (h *strictHandlers) ConfigUpdateServer(ctx context.Context, r gen.ConfigUpd
 	if err := config.SaveAppConfig(h.deps.Config); err != nil {
 		return gen.ConfigUpdateServer500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to save config", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
-	resp := gen.ConfigUpdateServer200JSONResponse{
-		"data": map[string]interface{}{
-			"port":            h.deps.Config.Server.Port,
-			"streamChunkSize": h.deps.Config.Server.StreamChunkSize,
-			"ginMode":         h.deps.Config.Server.GinMode,
-		},
-		"metadata":  okMeta(),
-		"requestId": reqID(),
-		"success":   true,
+	updateServerMap := map[string]interface{}{
+		"port":            h.deps.Config.Server.Port,
+		"streamChunkSize": h.deps.Config.Server.StreamChunkSize,
+		"ginMode":         h.deps.Config.Server.GinMode,
 	}
-	return resp, nil
+	return gen.ConfigUpdateServer200JSONResponse(updateServerMap), nil
 }
 
 // ---- Config: Worker ----
@@ -316,7 +295,7 @@ func (h *strictHandlers) ConfigGetWorker(ctx context.Context, r gen.ConfigGetWor
 		return gen.ConfigGetWorker500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "config not initialized", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	wm := gen.WorkerConfig(toMap(h.deps.Config.Worker))
-	return gen.ConfigGetWorker200JSONResponse{Success: boolPtr(true), RequestId: reqID(), Metadata: okMeta(), Data: &wm}, nil
+	return gen.ConfigGetWorker200JSONResponse(wm), nil
 }
 
 func (h *strictHandlers) ConfigUpdateWorker(ctx context.Context, r gen.ConfigUpdateWorkerRequestObject) (gen.ConfigUpdateWorkerResponseObject, error) {
@@ -335,5 +314,5 @@ func (h *strictHandlers) ConfigUpdateWorker(ctx context.Context, r gen.ConfigUpd
 		return gen.ConfigUpdateWorker500JSONResponse{InternalServerErrorJSONResponse: gen.InternalServerErrorJSONResponse{Error: gen.ApiError{Message: "failed to save config", Code: gen.INTERNALSERVERERROR, Timestamp: time.Now()}, RequestId: reqID(), Success: boolPtr(false)}}, nil
 	}
 	wm := gen.WorkerConfig(toMap(h.deps.Config.Worker))
-	return gen.ConfigUpdateWorker200JSONResponse{Success: boolPtr(true), RequestId: reqID(), Metadata: okMeta(), Data: &wm}, nil
+	return gen.ConfigUpdateWorker200JSONResponse(wm), nil
 }

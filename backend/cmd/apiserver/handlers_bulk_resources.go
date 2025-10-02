@@ -39,24 +39,11 @@ func (h *strictHandlers) AllocateBulkResources(ctx context.Context, r gen.Alloca
 		}{Cpu: &cpu, Memory: &mem, NetworkBandwidth: &net, Storage: &stor},
 		Status: gen.BulkResourceAllocationResponseStatusAllocating,
 	}
-	return gen.AllocateBulkResources200JSONResponse{
-		Data:      &resp,
-		Metadata:  okMeta(),
-		RequestId: reqID(),
-		Success:   boolPtr(true),
-	}, nil
+	return gen.AllocateBulkResources200JSONResponse(resp), nil
 }
 
 // GetBulkResourceStatus implements GET /campaigns/bulk/resources/status/{allocationId}
 func (h *strictHandlers) GetBulkResourceStatus(ctx context.Context, r gen.GetBulkResourceStatusRequestObject) (gen.GetBulkResourceStatusResponseObject, error) {
 	status := "running"
-	return gen.GetBulkResourceStatus200JSONResponse{
-		Data: &struct {
-			AllocationId *openapi_types.UUID `json:"allocationId,omitempty"`
-			Status       *string             `json:"status,omitempty"`
-		}{AllocationId: &r.AllocationId, Status: &status},
-		Metadata:  okMeta(),
-		RequestId: reqID(),
-		Success:   boolPtr(true),
-	}, nil
+	return gen.GetBulkResourceStatus200JSONResponse{AllocationId: &r.AllocationId, Status: &status}, nil
 }

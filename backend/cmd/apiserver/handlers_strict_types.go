@@ -42,18 +42,7 @@ func boolPtr(b bool) *bool { return &b }
 // ---- Helpers ----
 func notImpl(name string) error { return fmt.Errorf("%s not implemented", name) }
 
-// serviceVersion provides a lightweight semantic version for metadata responses.
-const serviceVersion = "v0.1.0"
-
-// okMeta returns enriched metadata including server time and version info.
-func okMeta() *gen.Metadata {
-	now := time.Now().UTC()
-	extra := map[string]interface{}{
-		"serverTime": now.Format(time.RFC3339Nano),
-		"version":    serviceVersion,
-	}
-	return &gen.Metadata{Extra: &extra}
-}
+// Metadata support removed (spec no longer defines Metadata envelope types).
 
 // reqID is used in handlers where http.Request is not available.
 // It returns an empty string to keep response shape stable without leaking transport details.

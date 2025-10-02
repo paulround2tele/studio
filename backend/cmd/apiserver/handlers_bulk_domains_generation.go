@@ -89,12 +89,7 @@ func (h *strictHandlers) BulkGenerateDomains(ctx context.Context, r gen.BulkGene
 		}
 	}
 
-	return gen.BulkGenerateDomains200JSONResponse{
-		Data:      &resp,
-		Metadata:  okMeta(),
-		RequestId: reqID(),
-		Success:   boolPtr(true),
-	}, nil
+	return gen.BulkGenerateDomains200JSONResponse(resp), nil
 }
 
 func ptrString(s string) *string { return &s }

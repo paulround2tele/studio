@@ -12,18 +12,19 @@ export type BulkOperationType =
 export type BulkOperationState = 'idle' | 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
 
 // Interface for tracking bulk operations in progress
+// Canonical minimal summary fields observed from backend responses.
+// (Do NOT add ad-hoc properties here; extend only after backend spec update.)
 export interface BulkOperationResultSummary {
   processedCount?: number;
   domainsProcessed?: number;
   totalProcessed?: number;
-  [key: string]: unknown;
 }
 
-export type BulkOperationResult = {
-  data?: BulkOperationResultSummary & Record<string, unknown>;
+// Normalized result container (kept lean – no loose index signatures).
+export interface BulkOperationResult {
+  data?: BulkOperationResultSummary;
   summary?: BulkOperationResultSummary;
-  [key: string]: unknown;
-};
+}
 
 export interface TrackedBulkOperation {
   id: string;
@@ -32,9 +33,8 @@ export interface TrackedBulkOperation {
   progress?: number;
   startTime: string;
   endTime?: string;
-  result?: BulkOperationResult; // Structured generic result type
+  result?: BulkOperationResult; // Structured result (no arbitrary keys)
   error?: string;
-  metadata?: Record<string, unknown>;
 }
 
 // State interface for bulk operations management
@@ -132,15 +132,13 @@ const bulkOperationsSlice = createSlice({
     startTracking: (state, action: PayloadAction<{
       id: string;
       type: BulkOperationType;
-      metadata?: Record<string, unknown>;
     }>) => {
-      const { id, type, metadata } = action.payload;
+      const { id, type } = action.payload;
       state.activeOperations[id] = {
         id,
         type,
         status: 'pending',
-        startTime: new Date().toISOString(),
-        metadata
+        startTime: new Date().toISOString()
       };
       state.currentResourceUsage.concurrentOperations += 1;
     },
@@ -178,12 +176,15 @@ const bulkOperationsSlice = createSlice({
           // Update metrics
           if (status === 'completed') {
             // Try to extract processed count from result data
-            const processedCount: number = Number(
-              result?.data?.processedCount ??
-              (result?.data?.summary && (result.data.summary as BulkOperationResultSummary).totalProcessed) ??
-              result?.data?.domainsProcessed ??
-              0
-            );
+            const processedCountFields: Array<number | undefined> = [
+              result?.data?.processedCount,
+              result?.data?.totalProcessed,
+              result?.data?.domainsProcessed,
+              result?.summary?.processedCount,
+              result?.summary?.totalProcessed,
+              result?.summary?.domainsProcessed
+            ];
+            const processedCount = processedCountFields.find(v => typeof v === 'number') ?? 0;
             
             state.metrics.totalDomainsProcessed += processedCount;
             state.metrics.successRate = (state.metrics.successRate + 1) / 2; // Simple running average

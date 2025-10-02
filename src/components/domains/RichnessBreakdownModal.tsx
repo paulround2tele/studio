@@ -2,7 +2,7 @@
 import React from 'react';
 import type { DomainAnalysisFeatures } from '@/lib/api-client/models/domain-analysis-features';
 import { cn } from '@/lib/utils';
-import RichnessContributionBar from '@/components/analysis/RichnessContributionBar';
+import RichnessContributionBar, { RichnessMetrics } from '@/components/analysis/RichnessContributionBar';
 
 interface Props {
   open: boolean;
@@ -58,11 +58,11 @@ export const RichnessBreakdownModal: React.FC<Props> = ({ open, onClose, domain,
           <button type="button" onClick={onClose} aria-label="Close richness breakdown" className="text-xs px-2 py-1 rounded border hover:bg-muted" data-testid="richness-breakdown-close">Close</button>
         </div>
         <div className="mb-4" data-testid="richness-breakdown-contrib">
-          <RichnessContributionBar richness={richness as any} />
+          <RichnessContributionBar richness={richness as RichnessMetrics | undefined} />
         </div>
         <div className="space-y-3" data-testid="richness-breakdown-bars">
           {metricDefs.map(md => {
-            const rawVal = (richness as any)?.[md.key];
+            const rawVal = richness?.[md.key];
             if (rawVal == null) return null;
             // Normalize typical 0-1 metrics; for deductions/penalties keep absolute magnitude within [0,1] assumption.
             let val: number = typeof rawVal === 'number' ? rawVal : Number(rawVal);
