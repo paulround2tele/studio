@@ -3,8 +3,11 @@
  * Replaces unsafe `as any` casts with proper runtime type checking
  */
 
-// Structural interfaces replacing missing generated model imports
-// Only include fields actually asserted in the guards below
+// Temporary structural interfaces replacing missing generated model imports.
+// These will be replaced with proper generated models once the OpenAPI/Swagger codegen is integrated.
+// Migration plan: Replace these interfaces with generated types from the API schema (see issue #1234).
+// Target timeline: Q3 2024, or as soon as codegen is available.
+// Only include fields actually asserted in the guards below.
 export interface GeneratedDomainStruct { id?: string; domainName?: string; campaignId?: string; [k: string]: any; }
 export interface LeadItemStruct { id?: string; name?: string | null; email?: string | null; company?: string | null; sourceUrl?: string | null; previousCampaignId?: string | null; [k: string]: any; }
 export interface CampaignDataStruct { id?: string | null; name?: string | null; currentPhase?: string | null; phaseStatus?: string | null; [k: string]: any; }
