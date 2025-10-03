@@ -8,7 +8,7 @@ import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
 import { setFullSequenceMode } from '@/store/ui/campaignUiSlice';
 import { Switch } from '@/components/ui/switch';
 import { useStartPhaseStandaloneMutation, useGetCampaignEnrichedQuery } from '@/store/api/campaignApi';
-import type { EnrichedCampaignResponse } from '@/lib/api-client/models';
+import type { EnrichedCampaignResponse, ScoringProfile } from '@/lib/api-client/models';
 import { useListScoringProfilesQuery } from '@/store/api/scoringApi';
 
 interface CampaignOverviewCardProps {
@@ -24,19 +24,23 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
   const [startPhase, { isLoading }] = useStartPhaseStandaloneMutation();
   // Enriched campaign & scoring profile data
   const { data: enriched } = useGetCampaignEnrichedQuery(campaignId, { skip: !campaignId });
-  const enrichedTyped = enriched as EnrichedCampaignResponse | undefined;
+  const enrichedTyped: EnrichedCampaignResponse | undefined = enriched;
   const { data: scoringProfiles } = useListScoringProfilesQuery(undefined, { skip: !campaignId });
-  // Adjusted to match current enriched campaign model (no nested scoring object in generated models index)
-  const scoringProfileId = (enrichedTyped as any)?.scoringProfileId || (enrichedTyped as any)?.scoringProfile;
-  const profileObj = scoringProfiles?.items?.find?.((p: any) => p.id === scoringProfileId);
+  // Determine scoring profile id using known possible fields
+  const scoringProfileId: string | undefined = (enrichedTyped as any)?.scoringProfileId || (enrichedTyped as any)?.scoringProfile || undefined;
+  const profileObj: ScoringProfile | undefined = scoringProfiles?.items?.find?.((p: ScoringProfile) => p.id === scoringProfileId);
   const profileName = profileObj?.name || scoringProfileId || '—';
-  const avgScore = (enrichedTyped as any)?.averageScore ?? (enrichedTyped as any)?.score;
-  const lastRescoreAt = (enrichedTyped as any)?.lastRescoreAt;
+  const avgScore: number | undefined = typeof (enrichedTyped as any)?.averageScore === 'number'
+    ? (enrichedTyped as any).averageScore
+    : typeof (enrichedTyped as any)?.score === 'number'
+      ? (enrichedTyped as any).score
+      : undefined;
+  const lastRescoreAt: string | undefined = typeof (enrichedTyped as any)?.lastRescoreAt === 'string' ? (enrichedTyped as any).lastRescoreAt : undefined;
 
   const handlePrimaryCTA = async () => {
     if (!nextAction) return;
     if (nextAction.type === 'start') {
-      await startPhase({ campaignId, phase: nextAction.phase as any });
+  await startPhase({ campaignId, phase: nextAction.phase });
     }
   };
 
@@ -56,7 +60,7 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <CardTitle className="text-base font-semibold" data-testid="campaign-overview-title">Campaign Overview</CardTitle>
-            <StatusBadge variant={globalExecState as any} compact data-testid="campaign-overview-status">{globalExecState}</StatusBadge>
+            <StatusBadge variant={globalExecState} compact data-testid="campaign-overview-status">{globalExecState}</StatusBadge>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 text-xs px-2 py-0.5 rounded bg-muted border">

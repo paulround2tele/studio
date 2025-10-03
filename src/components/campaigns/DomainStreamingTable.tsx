@@ -238,13 +238,7 @@ export default function DomainStreamingTable({
           ? parseFloat(leadScoreRaw) || 0
           : 0;
       
-      console.log('🚀 [REST-API-DRIVEN] Domain data from API:', {
-        domainName: (domain as { domain?: unknown }).domain,
-        dnsStatus: `${(domain as { dnsStatus?: unknown }).dnsStatus} → ${dnsStatus}`,
-        httpStatus: `${(domain as { httpStatus?: unknown }).httpStatus} → ${httpStatus}`,
-        leadStatus: `${(domain as { leadStatus?: unknown }).leadStatus} → ${leadStatus}`,
-        leadScore: `${leadScoreRaw} → ${leadScore}`
-      });
+      // Debug log removed for production type alignment cleanup
 
       return {
         domainName: typeof (domain as { domain?: unknown }).domain === 'string'

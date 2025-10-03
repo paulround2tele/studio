@@ -12,34 +12,45 @@ import { Badge } from "@/components/ui/badge"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 // Column definition types
-export interface DataTableColumn<T = any> {
+export interface DataTableColumn<T extends Record<string, unknown>, V = unknown> {
+  /** Unique column identifier */
   id: string
+  /** Header label or custom node */
   header: string | React.ReactNode
+  /** Key on the row used for value extraction (mutually exclusive with accessorFn) */
   accessorKey?: keyof T
-  accessorFn?: (row: T) => any
-  cell?: (info: { row: T; value: any; column: DataTableColumn<T> }) => React.ReactNode
+  /** Custom accessor function producing a value of type V */
+  accessorFn?: (row: T) => V
+  /** Custom cell renderer receiving strongly typed row & value */
+  cell?: (info: { row: T; value: V; column: DataTableColumn<T, V> }) => React.ReactNode
+  /** Enable sorting interactions */
   enableSorting?: boolean
+  /** Enable column-level filtering */
   enableFiltering?: boolean
-  filterFn?: (row: T, columnId: string, filterValue: any) => boolean
+  /** Filter predicate for this column */
+  filterFn?: (row: T, columnId: string, filterValue: unknown) => boolean
+  /** Custom sorting comparator (return negative/zero/positive) */
   sortingFn?: (rowA: T, rowB: T, columnId: string) => number
+  /** Preferred pixel width */
   size?: number
   minSize?: number
   maxSize?: number
-  meta?: Record<string, any>
+  /** Arbitrary metadata constrained to unknown for later narrowing */
+  meta?: Record<string, unknown>
 }
 
 export interface DataTableState {
   sorting: Array<{ id: string; desc: boolean }>
-  filtering: Array<{ id: string; value: any }>
+  filtering: Array<{ id: string; value: unknown }>
   globalFilter: string
   pagination: { pageIndex: number; pageSize: number }
   rowSelection: Record<string, boolean>
   columnVisibility: Record<string, boolean>
 }
 
-export interface DataTableProps<T = any> extends VariantProps<typeof dataTableVariants> {
+export interface DataTableProps<T extends Record<string, unknown>> extends VariantProps<typeof dataTableVariants> {
   data: T[]
-  columns: DataTableColumn<T>[]
+  columns: DataTableColumn<T, any>[]
   state?: Partial<DataTableState>
   onStateChange?: (state: Partial<DataTableState>) => void
   enableSorting?: boolean
@@ -83,7 +94,7 @@ const dataTableVariants = cva(
   }
 )
 
-export function DataTable<T extends Record<string, any>>({
+export function DataTable<T extends Record<string, unknown>>({
   data,
   columns,
   state: controlledState,
@@ -458,7 +469,7 @@ export function DataTable<T extends Record<string, any>>({
                     const cellValue = column.accessorFn 
                       ? column.accessorFn(row)
                       : column.accessorKey 
-                        ? row[column.accessorKey]
+                        ? (row[column.accessorKey] as unknown)
                         : null
 
                     return (

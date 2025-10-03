@@ -13,7 +13,8 @@ export type ChartConfig = {
   [k in string]: {
     label?: React.ReactNode
     icon?: React.ComponentType
-    format?: (value: any) => string
+    /** Optional formatter converting numeric or string-like values */
+    format?: (value: number | string) => string
   } & (
     | { color?: string; theme?: never }
     | { color?: never; theme: Record<keyof typeof THEMES, string> }
@@ -296,10 +297,10 @@ interface ChartTooltipContentProps extends
   React.ComponentProps<"div">,
   VariantProps<typeof chartTooltipVariants> {
   active?: boolean
-  payload?: any[]
-  label?: any
-  labelFormatter?: any
-  formatter?: any
+  payload?: ReadonlyArray<unknown>
+  label?: string | number | Date | React.ReactNode
+  labelFormatter?: (label: unknown, payload: ReadonlyArray<unknown>) => React.ReactNode
+  formatter?: (value: unknown, name: string | number | undefined, item: unknown, index: number, raw: unknown) => React.ReactNode
   color?: string
   hideLabel?: boolean
   hideIndicator?: boolean
@@ -333,14 +334,24 @@ const ChartTooltipContent = React.forwardRef<HTMLDivElement, ChartTooltipContent
   ) => {
     const { config } = useChart()
 
+    // Minimal shape for Recharts payload items we care about
+    interface TooltipEntry {
+      dataKey?: string
+      name?: string | number
+      value?: unknown
+      color?: string
+      payload?: { fill?: string; [k: string]: unknown }
+    }
+
     const tooltipLabel = React.useMemo(() => {
       if (hideLabel || !payload?.length) {
         return null
       }
 
-      const [item] = payload
-      const key = `${labelKey || item?.dataKey || item?.name || "value"}`
-      const itemConfig = getPayloadConfigFromPayload(config, item, key)
+  const [rawItem] = payload
+  const item = rawItem as TooltipEntry
+  const key = `${labelKey || item?.dataKey || item?.name || "value"}`
+  const itemConfig = getPayloadConfigFromPayload(config, item as unknown, key)
       const value =
         !labelKey && typeof label === "string"
           ? config[label as keyof typeof config]?.label || label
@@ -386,14 +397,15 @@ const ChartTooltipContent = React.forwardRef<HTMLDivElement, ChartTooltipContent
       >
         {!nestLabel ? tooltipLabel : null}
         <div className="grid gap-1.5">
-          {payload.filter(Boolean).map((item, index) => {
+          {payload.filter(Boolean).map((rawItem, index) => {
             // Handle null/undefined items safely
-            if (!item || typeof item !== 'object') {
+            if (!rawItem || typeof rawItem !== 'object') {
               return null;
             }
+            const item = rawItem as TooltipEntry;
             
             const key = `${nameKey || item.name || item.dataKey || "value"}`
-            const itemConfig = getPayloadConfigFromPayload(config, item, key)
+            const itemConfig = getPayloadConfigFromPayload(config, item as unknown, key)
             const indicatorColor = color || item.payload?.fill || item.color
 
             return (
@@ -444,9 +456,11 @@ const ChartTooltipContent = React.forwardRef<HTMLDivElement, ChartTooltipContent
                           {itemConfig?.label || item.name}
                         </span>
                       </div>
-                      {item.value && (
+                      {item.value !== undefined && item.value !== null && (
                         <span className="font-mono font-medium tabular-nums text-foreground">
-                          {itemConfig?.format ? itemConfig.format(item.value) : item.value.toLocaleString()}
+                          {itemConfig?.format && typeof item.value === 'number'
+                            ? itemConfig.format(item.value)
+                            : (typeof item.value === 'number' && item.value.toLocaleString()) || String(item.value)}
                         </span>
                       )}
                     </div>
@@ -539,7 +553,7 @@ ChartLegendContent.displayName = "ChartLegend"
 
 // Simple Chart wrapper component
 interface SimpleChartProps extends ChartContainerProps {
-  data?: any[]
+  data?: ReadonlyArray<unknown>
 }
 
 const SimpleChart = React.forwardRef<HTMLDivElement, SimpleChartProps>(

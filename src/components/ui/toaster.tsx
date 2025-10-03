@@ -148,9 +148,11 @@ export function showToast({ message, type = "info", duration, action }: SimpleTo
 }
 
 // Toast Queue Manager for complex scenarios
+export interface ToastQueueItem { id: string; props: Record<string, unknown>; timestamp: number }
+
 export class ToastQueue {
   private static instance: ToastQueue
-  private queue: Array<{ id: string; props: any; timestamp: number }> = []
+  private queue: ToastQueueItem[] = []
   private maxConcurrent = 3
 
   static getInstance(): ToastQueue {
@@ -160,7 +162,7 @@ export class ToastQueue {
     return ToastQueue.instance
   }
 
-  add(toast: { id: string; props: any }) {
+  add(toast: { id: string; props: Record<string, unknown> }) {
     this.queue.push({ ...toast, timestamp: Date.now() })
     return this.queue.length
   }

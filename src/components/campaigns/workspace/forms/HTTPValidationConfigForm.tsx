@@ -11,6 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { PersonasApi, KeywordSetsApi, ProxyPoolsApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
 import { PersonaType } from '@/lib/api-client/models/persona-type';
+import { PhaseStatusResponseStatusEnum, PhaseStatusResponsePhaseEnum } from '@/lib/api-client/models';
+import { markConfigured } from '@/utils/phaseStatus';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 import type { ProxyPool } from '@/lib/api-client/models/proxy-pool';
 import type { KeywordSetResponse as ApiKeywordSet } from '@/lib/api-client/models/keyword-set-response';
@@ -68,7 +70,10 @@ export const HTTPValidationConfigForm: React.FC<Props> = ({ campaignId, onConfig
     const personasRaw = Array.isArray(personasData) ? personasData : [];
     const poolsRaw = Array.isArray(poolsData) ? poolsData : [];
   const setsRaw: KeywordSetLite[] = Array.isArray(setsData) ? setsData : [];
-    const activeHttp = personasRaw.filter((p: PersonaResponse) => (p.personaType === 'http' || p.personaType === 'HTTP') && (p.isEnabled === true || p.isEnabled === undefined));
+    const activeHttp = personasRaw.filter((p: PersonaResponse) => {
+      const kind = p.personaType?.toLowerCase();
+      return kind === 'http' && (p.isEnabled === true || p.isEnabled === undefined);
+    });
     setHttpPersonas(activeHttp);
   setKeywordSets(setsRaw||[]);
   setProxyPools((poolsRaw || []).filter((p: ProxyPoolLite) => p && p.isEnabled !== false));
@@ -112,13 +117,12 @@ export const HTTPValidationConfigForm: React.FC<Props> = ({ campaignId, onConfig
       };
       console.log('Final HTTP validation configure payload (flattened):', configRequest);
       const res = await configurePhase({ campaignId, phase: 'extraction', config: configRequest }).unwrap();
-      if (res?.status === 'configured') {
-        dispatch(
-          campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId, phase: 'extraction' }, (draft) => ({
-            ...(draft || {}),
-            status: 'configured',
-          }))
-        );
+  if (res?.status === PhaseStatusResponseStatusEnum.configured) {
+        dispatch(campaignApi.util.updateQueryData(
+          'getPhaseStatusStandalone',
+          { campaignId, phase: 'extraction' },
+          (draft) => markConfigured(draft, PhaseStatusResponsePhaseEnum.extraction)
+        ));
       }
       dispatch(
         campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: 'extraction' })

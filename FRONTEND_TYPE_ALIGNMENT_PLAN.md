@@ -117,8 +117,8 @@ Each form interface matches the request DTO for corresponding backend endpoint (
 ## Metrics & Tracking
 | Metric | Baseline (Oct 2 2025) | Target |
 |--------|-----------------------|--------|
-| Occurrences `: any` (src) | (captured via grep – count to be computed) | 0 (prod) |
-| Occurrences ` as any` | (captured via grep – count to be computed) | 0 (prod) |
+| Occurrences `: any` (src) | 20 (tests & util guards remaining) | 0 (prod) |
+| Occurrences ` as any` | 20 (primarily tests, SSE draft fallbacks) | 0 (prod) |
 | `@ts-ignore` in api client | ~90 lines | 0 or documented exceptions |
 | SSE cast chains (`as unknown as`) | Multiple | 0 |
 
@@ -128,9 +128,11 @@ Add a running section at bottom to log reductions per phase.
 ## Work Log (Populate During Execution)
 | Phase | Date | Change Summary | Remaining Risk |
 |-------|------|----------------|----------------|
-| 1 | TBD |  |  |
-| 2 | TBD |  |  |
-| 3 | TBD |  |  |
+| 1 | 2025-10-02 | Domain & scoring types established; refactored DomainsList, CampaignOverviewCard, DomainStreamingTable; enum-aligned phase forms; removed form casts; captured baseline metrics. | Residual anys in utilities, forecasting normalizers, SSE cache fallback; enforcement script & SSE union refactor pending. |
+| 2 | 2025-10-02 | Standardized phase config forms; introduced `phaseStatus` helper; removed all production form `as any` casts; unified enum-based status updates. | Remaining: SSE hook draft mutation `any` usages, utilities & forecasting normalizers still contain structural `any`; need SSE union refactor & enforcement script. |
+| 3 | 2025-10-02 | Implemented discriminated SSE union types; added mapper `mapRawToCampaignSSE`; removed `(ps as any).error` via local extended interface; standardized RTK cache updates using helpers. | Remaining global `any` in utilities & forecasting; SSE union not yet fully propagated to all consumer handlers (backwards compat layer retained). |
+| 4 | 2025-10-02 | Refactored UI primitives: generified `data-table`, tightened chart tooltip/legend typing, introduced `ToastQueueItem` & removed remaining `any` in toaster. | Residual anys now concentrated in utilities/forecasting & legacy test helpers; next focus Phase 5 utility tightening. |
+| 5 | 2025-10-03 | Added fetch overloads (`bodyKind`), removed broad casts in `fetchWithPolicy`; tightened case transformation utilities & error serialization; reduced double `as unknown as` patterns (kept only where generic fallback required). | Remaining double casts isolated (dynamic-imports fallback); next: API client hygiene (Phase 6). |
 | 4 | TBD |  |  |
 | 5 | TBD |  |  |
 | 6 | TBD |  |  |

@@ -16,9 +16,7 @@ export function createLazyComponent<T extends ComponentType<Record<string, unkno
     } catch (error) {
       console.error('Failed to load component:', error);
       // Return a simple error component
-      const ErrorComponent = () => {
-        return null; // Return null for failed components
-      };
+      const ErrorComponent = (() => null) satisfies ComponentType<Record<string, unknown>>;
       return { default: ErrorComponent as unknown as T };
     }
   });

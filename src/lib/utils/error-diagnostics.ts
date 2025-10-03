@@ -49,7 +49,7 @@ export function debugObjectSerialization(obj: unknown, label: string = 'Object')
       name: obj.name,
       message: obj.message,
       stack: obj.stack,
-      cause: (obj as unknown as Record<string, unknown>).cause
+  cause: (obj as unknown as { cause?: unknown })?.cause
     });
   }
   
@@ -74,8 +74,8 @@ export function serializeError(error: unknown): Record<string, unknown> {
       name: error.name,
       message: error.message,
       stack: error.stack,
-      cause: (error as unknown as Record<string, unknown>).cause,
-      ...(error as unknown as Record<string, unknown>) // Spread any additional enumerable properties
+  cause: (error as unknown as { cause?: unknown })?.cause,
+  ...(error as unknown as Record<string, unknown>) // Spread any additional enumerable properties
     };
   }
   
@@ -87,9 +87,9 @@ export function serializeError(error: unknown): Record<string, unknown> {
       currentTarget: error.currentTarget?.constructor?.name || 'Unknown',
       timeStamp: error.timeStamp,
       // Add other relevant Event properties
-      bubbles: (error as unknown as Record<string, unknown>).bubbles,
-      cancelable: (error as unknown as Record<string, unknown>).cancelable,
-      defaultPrevented: (error as unknown as Record<string, unknown>).defaultPrevented
+  bubbles: (error as unknown as { bubbles?: unknown })?.bubbles,
+  cancelable: (error as unknown as { cancelable?: unknown })?.cancelable,
+  defaultPrevented: (error as unknown as { defaultPrevented?: unknown })?.defaultPrevented
     };
   }
   

@@ -1,6 +1,8 @@
 "use client";
 import React from 'react';
 import { useForm } from 'react-hook-form';
+import { PhaseStatusResponseStatusEnum, PhaseStatusResponsePhaseEnum } from '@/lib/api-client/models';
+import { markConfigured } from '@/utils/phaseStatus';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -68,15 +70,12 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
       const config: PhaseConfigurationRequest = { configuration };
       const result = await configurePhase({ campaignId, phase: 'discovery', config }).unwrap();
       // Optimistically ensure cache has status configured if backend responded
-      if (result?.status === 'configured') {
-        dispatch(
-          campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId, phase: 'discovery' }, (draft) => {
-            if (draft) {
-              draft.status = 'configured';
-            }
-            return draft;
-          })
-        );
+  if (result?.status === PhaseStatusResponseStatusEnum.configured) {
+        dispatch(campaignApi.util.updateQueryData(
+          'getPhaseStatusStandalone',
+          { campaignId, phase: 'discovery' },
+          (draft) => markConfigured(draft, PhaseStatusResponsePhaseEnum.discovery)
+        ));
       }
       // Force immediate refetch for authoritative status
       dispatch(campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: 'discovery' }));
@@ -163,10 +162,10 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
           </div>
           <div className="flex flex-col gap-1 md:col-span-2" data-testid="phase-discovery-field-tlds">
             <label className="font-medium">TLDs (comma separated)</label>
-            <Input data-testid="phase-discovery-input-tlds" disabled={isLoading} {...form.register('tlds')} onBlur={() => {
-              const raw = form.getValues('tlds');
-              if (typeof raw === 'string') {
-                const arr = raw.split(',').map(s=>s.trim()).filter(Boolean);
+            <Input data-testid="phase-discovery-input-tlds" disabled={isLoading} {...form.register('tlds' as const)} onBlur={() => {
+              const rawVal = form.getValues('tlds') as string | string[] | undefined;
+              if (typeof rawVal === 'string') {
+                const arr: string[] = rawVal.split(',').map((s: string) => s.trim()).filter(Boolean);
                 form.setValue('tlds', arr, { shouldDirty: true });
               }
             }} />

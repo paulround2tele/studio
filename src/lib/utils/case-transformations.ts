@@ -29,7 +29,7 @@ export function snakeToCamelKeys<T = unknown>(obj: unknown): T {
 
   // Handle arrays
   if (Array.isArray(obj)) {
-    return (obj as unknown[]).map(item => snakeToCamelKeys(item)) as unknown as T;
+    return obj.map(item => snakeToCamelKeys(item)) as unknown as T;
   }
 
   // Handle objects
@@ -64,7 +64,7 @@ export function camelToSnakeKeys<T = unknown>(obj: unknown): T {
 
   // Handle arrays
   if (Array.isArray(obj)) {
-    return (obj as unknown[]).map(item => camelToSnakeKeys(item)) as unknown as T;
+    return obj.map(item => camelToSnakeKeys(item)) as unknown as T;
   }
 
   // Handle objects
@@ -194,7 +194,7 @@ export function transformKeysWithOverrides<T = unknown>(
 
   // Handle arrays
   if (Array.isArray(obj)) {
-    return (obj as unknown[]).map(item => transformKeysWithOverrides(item, overrides, defaultTransform)) as unknown as T;
+    return obj.map(item => transformKeysWithOverrides(item, overrides, defaultTransform)) as unknown[] as unknown as T;
   }
 
   // Handle objects

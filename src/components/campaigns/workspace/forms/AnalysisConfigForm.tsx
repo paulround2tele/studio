@@ -1,4 +1,5 @@
-"use client";
+   
+   "use client";
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -12,7 +13,16 @@ import { useToast } from '@/hooks/use-toast';
 import { useAppDispatch } from '@/store/hooks';
 import { pushGuidanceMessage } from '@/store/ui/campaignUiSlice';
 import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
+import { PhaseStatusResponseStatusEnum, PhaseStatusResponsePhaseEnum } from '@/lib/api-client/models';
+import { markConfigured } from '@/utils/phaseStatus';
 import type { AnalysisConfigFormValues } from '@/types/forms';
+
+interface AnalysisPhaseConfig {
+  name: string;
+  analysisTypes: string[];
+  enableSuggestions: boolean;
+  customRules: string[];
+}
 
 interface FormValues extends AnalysisConfigFormValues { 
   name: string; 
@@ -46,11 +56,12 @@ export const AnalysisConfigForm: React.FC<Props> = ({ campaignId, onConfigured, 
       // Flatten configuration – backend expects keys at root of configuration map for this phase
       const req: PhaseConfigurationRequest = { configuration: { ...analysisConfig } };
       const res = await configurePhase({ campaignId, phase: 'analysis', config: req }).unwrap(); 
-      if (res?.status === 'configured') { 
-        dispatch(campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId, phase: 'analysis' }, (draft) => ({
-          ...(draft || {}), 
-          status: 'configured' 
-        })));
+  if (res?.status === PhaseStatusResponseStatusEnum.configured) {
+        dispatch(campaignApi.util.updateQueryData(
+          'getPhaseStatusStandalone',
+          { campaignId, phase: 'analysis' },
+          (draft) => markConfigured(draft, PhaseStatusResponsePhaseEnum.analysis)
+        ));
       }
       // Force authoritative refetch
       dispatch(campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: 'analysis' })); 

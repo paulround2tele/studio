@@ -31,9 +31,10 @@ export interface FetchResult<T> {
   fromCache?: boolean;
 }
 
-/**
- * Enhanced fetch wrapper with comprehensive error handling and telemetry
- */
+// Supported response body kinds for overload resolution
+type BodyKind = 'json' | 'text' | 'arrayBuffer';
+
+// Overloads for execute
 export class FetchWithPolicy {
   private static defaultConfig: FetchPolicyConfig = {
     retries: 2,
@@ -43,24 +44,45 @@ export class FetchWithPolicy {
     category: 'api',
   };
 
-  /**
-   * Execute fetch with policy enforcement
-   */
-  static async execute<T>(
+  static async execute<T = unknown>(
+    url: string,
+    options?: RequestInit,
+    config?: FetchPolicyConfig & { bodyKind?: 'json' }
+  ): Promise<FetchResult<T>>;
+  static async execute(
+    url: string,
+    options: RequestInit | undefined,
+    config: FetchPolicyConfig & { bodyKind: 'text' }
+  ): Promise<FetchResult<string>>;
+  static async execute(
+    url: string,
+    options: RequestInit | undefined,
+    config: FetchPolicyConfig & { bodyKind: 'arrayBuffer' }
+  ): Promise<FetchResult<ArrayBuffer>>;
+  static async execute<T = unknown>(
     url: string,
     options: RequestInit = {},
-    config: FetchPolicyConfig = {}
-  ): Promise<FetchResult<T>> {
+    config: FetchPolicyConfig & { bodyKind?: BodyKind } = {}
+  ): Promise<FetchResult<T | string | ArrayBuffer>> {
     const finalConfig = { ...this.defaultConfig, ...config };
     const endpoint = this.extractEndpoint(url);
-    
+    const bodyKind: BodyKind = config.bodyKind || 'json';
+
+/**
+ * Enhanced fetch wrapper with comprehensive error handling and telemetry
+ */
     let lastError: Error | null = null;
     let attempt = 0;
-
+    
     // Add default headers
     const headers = new Headers(options.headers);
-    if (!headers.has('Content-Type')) {
+    if (!headers.has('Content-Type') && bodyKind === 'json') {
       headers.set('Content-Type', 'application/json');
+    }
+
+    // Accept header based on expected body kind
+    if (!headers.has('Accept')) {
+      headers.set('Accept', bodyKind === 'json' ? 'application/json' : bodyKind === 'text' ? 'text/plain' : '*/*');
     }
 
     // ETag support for caching
@@ -96,7 +118,7 @@ export class FetchWithPolicy {
 
         // Handle successful response
         if (result.ok) {
-          const data = await this.parseResponse<T>(result, finalConfig.validateSchema!);
+          const data = await this.parseResponse(result, finalConfig.validateSchema!, bodyKind) as T | string | ArrayBuffer;
           
           // Cache response with ETag
           if (finalConfig.enableETag && result.headers.has('ETag')) {
@@ -178,37 +200,44 @@ export class FetchWithPolicy {
   /**
    * Parse response with optional schema validation
    */
-  private static async parseResponse<T>(
+  private static async parseResponse(
     response: Response,
-    validateSchema: boolean
-  ): Promise<T> {
-    const contentType = response.headers.get('Content-Type') || '';
-    
-    if (contentType.includes('application/json')) {
-      try {
-        const data = await response.json();
-        
-        if (validateSchema) {
-          this.validateResponseSchema(data);
+    validateSchema: boolean,
+    bodyKind: BodyKind
+  ): Promise<unknown> {
+    switch (bodyKind) {
+      case 'text':
+        return response.text();
+      case 'arrayBuffer':
+        return response.arrayBuffer();
+      case 'json':
+      default: {
+        const contentType = response.headers.get('Content-Type') || '';
+        if (!contentType.includes('application/json')) {
+          // Attempt JSON parse anyway; if fails, surface error
+          try {
+            return await response.json();
+          } catch (e) {
+            throw new Error('Expected JSON response but received incompatible content-type');
+          }
         }
-        
-        return data;
-      } catch (error) {
-        throw new Error(`JSON parse error: ${error}`);
+        try {
+          const data = await response.json();
+          if (validateSchema) {
+            this.validateResponseSchema(data);
+          }
+          return data;
+        } catch (error) {
+          throw new Error(`JSON parse error: ${error}`);
+        }
       }
     }
-    
-    if (contentType.includes('text/')) {
-      return await response.text() as unknown as T;
-    }
-    
-    return await response.arrayBuffer() as unknown as T;
   }
 
   /**
    * Basic schema validation for common response patterns
    */
-  private static validateResponseSchema(data: any): void {
+  private static validateResponseSchema(data: unknown): void {
     // Check for common malformed patterns
     if (data === null || data === undefined) {
       throw new Error('Response data is null or undefined');
@@ -216,23 +245,23 @@ export class FetchWithPolicy {
 
     // Check for array responses with non-monotonic timestamps
     if (Array.isArray(data)) {
-      this.validateTimestampOrder(data);
+      this.validateTimestampOrder(data as unknown[]);
     }
 
     // Check for object responses with arrays
     if (typeof data === 'object' && !Array.isArray(data)) {
-      Object.values(data).forEach(value => {
+      for (const value of Object.values(data as Record<string, unknown>)) {
         if (Array.isArray(value)) {
-          this.validateTimestampOrder(value);
+          this.validateTimestampOrder(value as unknown[]);
         }
-      });
+      }
     }
   }
 
   /**
    * Validate timestamp ordering in arrays
    */
-  private static validateTimestampOrder(array: any[]): void {
+  private static validateTimestampOrder(array: unknown[]): void {
     for (let i = 0; i < array.length; i++) {
       const item = array[i];
       
@@ -241,15 +270,15 @@ export class FetchWithPolicy {
       
       // Check for timestamp fields
       const timestampFields = ['timestamp', 'createdAt', 'updatedAt', 'time'];
-      const timestamp = timestampFields.find(field => item[field]);
+      const timestamp = timestampFields.find(field => (item as Record<string, unknown>)[field]);
       
       if (timestamp && i > 0) {
         const prevItem = array[i - 1];
-        const prevTimestamp = timestampFields.find(field => prevItem[field]);
+        const prevTimestamp = timestampFields.find(field => (prevItem as Record<string, unknown>)[field]);
         
         if (prevTimestamp) {
-          const currentTime = new Date(item[timestamp]).getTime();
-          const prevTime = new Date(prevItem[prevTimestamp]).getTime();
+          const currentTime = new Date((item as Record<string, unknown>)[timestamp] as string).getTime();
+          const prevTime = new Date((prevItem as Record<string, unknown>)[prevTimestamp] as string).getTime();
           
           // Allow for small variations but catch major ordering issues
           if (currentTime < prevTime - 60000) { // 1 minute tolerance
@@ -259,11 +288,11 @@ export class FetchWithPolicy {
       }
 
       // Check for negative counts/values
-      Object.entries(item).forEach(([key, value]) => {
+      for (const [key, value] of Object.entries(item as Record<string, unknown>)) {
         if (typeof value === 'number' && key.includes('count') && value < 0) {
           throw new Error(`Negative count detected: ${key} = ${value}`);
         }
-      });
+      }
     }
   }
 

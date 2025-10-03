@@ -11,6 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { PersonasApi, ProxiesApi, ProxyPoolsApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
 import { PersonaType } from '@/lib/api-client/models/persona-type';
+import { PhaseStatusResponseStatusEnum, PhaseStatusResponsePhaseEnum } from '@/lib/api-client/models';
+import { markConfigured } from '@/utils/phaseStatus';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 import type { Proxy } from '@/lib/api-client/models/proxy';
 import type { ProxyPool } from '@/lib/api-client/models/proxy-pool';
@@ -59,7 +61,10 @@ export const DNSValidationConfigForm: React.FC<Props> = ({ campaignId, onConfigu
     const personasRaw = Array.isArray(personasData) ? personasData : [];
     const poolsRaw = Array.isArray(poolsData) ? poolsData : [];
   const enabledPools: ProxyPoolLite[] = poolsRaw.filter((p: ProxyPoolLite) => p && p.isEnabled !== false);
-    const activeDns = personasRaw.filter((p: PersonaResponse) => (p.personaType === 'dns' || p.personaType === 'DNS') && (p.isEnabled === true || p.isEnabled === undefined));
+    const activeDns = personasRaw.filter((p: PersonaResponse) => {
+      const kind = p.personaType?.toLowerCase();
+      return kind === 'dns' && (p.isEnabled === true || p.isEnabled === undefined);
+    });
     setDnsPersonas(activeDns);
     setProxyPools(enabledPools);
     // Auto-select if exactly one DNS persona available and none currently selected
@@ -137,13 +142,12 @@ export const DNSValidationConfigForm: React.FC<Props> = ({ campaignId, onConfigu
       };
       console.log('Final DNS configure payload (flattened):', configRequest);
       const res = await configurePhase({ campaignId, phase: 'validation', config: configRequest }).unwrap();
-      if (res?.status === 'configured') {
-        dispatch(
-          campaignApi.util.updateQueryData('getPhaseStatusStandalone', { campaignId, phase: 'validation' }, (draft) => ({
-            ...(draft || {}),
-            status: 'configured',
-          }))
-        );
+  if (res?.status === PhaseStatusResponseStatusEnum.configured) {
+        dispatch(campaignApi.util.updateQueryData(
+          'getPhaseStatusStandalone',
+          { campaignId, phase: 'validation' },
+          (draft) => markConfigured(draft, PhaseStatusResponsePhaseEnum.validation)
+        ));
       }
       // Force authoritative refetch
       dispatch(
