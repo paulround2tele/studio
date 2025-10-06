@@ -21,9 +21,13 @@ export interface BulkOperationResultSummary {
 }
 
 // Normalized result container (kept lean – no loose index signatures).
+// Union of backend bulk operation responses (subset for dashboard summarization)
+export type BulkOperationBackendResponse = Record<string, unknown>;
+
 export interface BulkOperationResult {
   data?: BulkOperationResultSummary;
   summary?: BulkOperationResultSummary;
+  raw?: BulkOperationBackendResponse; // retain original structured response for future enrichment
 }
 
 export interface TrackedBulkOperation {
@@ -35,6 +39,10 @@ export interface TrackedBulkOperation {
   endTime?: string;
   result?: BulkOperationResult; // Structured result (no arbitrary keys)
   error?: string;
+  metadata?: {
+    config?: unknown;
+    startedBy?: string;
+  };
 }
 
 // State interface for bulk operations management
@@ -132,13 +140,15 @@ const bulkOperationsSlice = createSlice({
     startTracking: (state, action: PayloadAction<{
       id: string;
       type: BulkOperationType;
+      metadata?: { config?: unknown; startedBy?: string };
     }>) => {
-      const { id, type } = action.payload;
+      const { id, type, metadata } = action.payload;
       state.activeOperations[id] = {
         id,
         type,
         status: 'pending',
-        startTime: new Date().toISOString()
+        startTime: new Date().toISOString(),
+        metadata,
       };
       state.currentResourceUsage.concurrentOperations += 1;
     },
@@ -148,7 +158,7 @@ const bulkOperationsSlice = createSlice({
       id: string;
       status: BulkOperationState;
       progress?: number;
-      result?: BulkOperationResult;
+      result?: BulkOperationBackendResponse;
       error?: string;
     }>) => {
       const { id, status, progress, result, error } = action.payload;
@@ -157,7 +167,18 @@ const bulkOperationsSlice = createSlice({
       if (operation) {
         operation.status = status;
         operation.progress = progress;
-        operation.result = result;
+        if (result) {
+          // Attempt lightweight normalization
+            operation.result = {
+              raw: result,
+              data: {
+                processedCount: typeof (result as any).processed === 'number' ? (result as any).processed : undefined,
+                domainsProcessed: typeof (result as any).domains === 'number' ? (result as any).domains : undefined,
+                totalProcessed: typeof (result as any).total === 'number' ? (result as any).total : undefined,
+              },
+              summary: undefined,
+            };
+        }
         operation.error = error;
         
         // Set end time for completed operations
@@ -176,13 +197,14 @@ const bulkOperationsSlice = createSlice({
           // Update metrics
           if (status === 'completed') {
             // Try to extract processed count from result data
+            const normalized = operation.result;
             const processedCountFields: Array<number | undefined> = [
-              result?.data?.processedCount,
-              result?.data?.totalProcessed,
-              result?.data?.domainsProcessed,
-              result?.summary?.processedCount,
-              result?.summary?.totalProcessed,
-              result?.summary?.domainsProcessed
+              normalized?.data?.processedCount,
+              normalized?.data?.totalProcessed,
+              normalized?.data?.domainsProcessed,
+              normalized?.summary?.processedCount,
+              normalized?.summary?.totalProcessed,
+              normalized?.summary?.domainsProcessed
             ];
             const processedCount = processedCountFields.find(v => typeof v === 'number') ?? 0;
             

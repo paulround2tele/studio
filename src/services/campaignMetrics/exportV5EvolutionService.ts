@@ -8,6 +8,15 @@ import { BlendedForecast } from './forecastBlendService';
 import { CausalChain } from './rootCauseAnalyticsService';
 import { DeferredAction, OfflineSyncStatus } from './offlineResilienceService';
 import { CapabilityDiff } from './capabilitiesService';
+// Generated API client model types replacing previous any[] placeholders
+import type { AnomalyRecord } from '@/lib/api-client/models/anomaly-record';
+import type { HealthFabricSnapshot } from '@/lib/api-client/models/health-fabric-snapshot';
+import type { PerformanceMetricRecord } from '@/lib/api-client/models/performance-metric-record';
+import type { ForecastPoint } from '@/lib/api-client/models/forecast-point';
+import type { RootCauseEvidence } from '@/lib/api-client/models/root-cause-evidence';
+import type { CampaignRecommendation } from '@/lib/api-client/models/campaign-recommendation';
+import type { components } from '@/lib/api-client/types';
+type TimelineEvent = components['schemas']['TimelineEvent'];
 
 // Declare process for Node.js environment variables
 /**
@@ -92,7 +101,7 @@ export interface RootCauseTrace {
     confidence: number;
     impact: number;
     timeRange: { start: string; end: string };
-    evidence: any[];
+  evidence: RootCauseEvidence[];
   }>;
   
   // Intervention history
@@ -171,8 +180,8 @@ export interface CapabilityDiffHistory {
     updateId: string;
     changeType: 'feature_added' | 'feature_removed' | 'version_updated' | 'config_changed';
     path: string;
-    oldValue?: any;
-    newValue?: any;
+  oldValue?: unknown;
+  newValue?: unknown;
     source: 'server_push' | 'polling' | 'manual_refresh';
     applied: boolean;
     rollbackAvailable: boolean;
@@ -209,18 +218,18 @@ export interface ExportBundleV5 {
   timeRange?: { start: string; end: string };
   
   // Core data (v4 compatibility)
-  timeline?: any[];
-  forecasts?: any[];
-  recommendations?: any[];
-  anomalies?: any[];
+  timeline?: TimelineEvent[];
+  forecasts?: ForecastPoint[];
+  recommendations?: CampaignRecommendation[];
+  anomalies?: AnomalyRecord[];
   
   // v5 enhancements
   blendedForecastProvenance?: BlendedForecastProvenance[];
   rootCauseTraces?: RootCauseTrace[];
   offlineReplayLog?: OfflineReplayLogEntry[];
   capabilityHistory?: CapabilityDiffHistory[];
-  healthFabricSnapshots?: any[];
-  performanceMetrics?: any[];
+  healthFabricSnapshots?: HealthFabricSnapshot[];
+  performanceMetrics?: PerformanceMetricRecord[];
   
   // Metadata
   exportMetadata: {
@@ -292,17 +301,17 @@ class ExportV5EvolutionService {
    */
   async generateExportV5(
     data: {
-      timeline?: any[];
-      forecasts?: any[];
-      recommendations?: any[];
-      anomalies?: any[];
+  timeline?: TimelineEvent[];
+  forecasts?: ForecastPoint[];
+  recommendations?: CampaignRecommendation[];
+  anomalies?: AnomalyRecord[];
       blendedForecasts?: BlendedForecast[];
       causalChains?: CausalChain[];
       offlineActions?: DeferredAction[];
       offlineSyncStatus?: OfflineSyncStatus;
       capabilityDiffs?: CapabilityDiff[];
-      healthFabricData?: any[];
-      performanceData?: any[];
+  healthFabricData?: HealthFabricSnapshot[];
+  performanceData?: PerformanceMetricRecord[];
     },
     options: ExportOptionsV5 = {}
   ): Promise<ExportBundleV5> {
@@ -356,7 +365,7 @@ class ExportV5EvolutionService {
     }
 
     if (data.recommendations) {
-      bundle.recommendations = this.filterByTimeRange(data.recommendations, exportOptions.timeRange);
+      bundle.recommendations = data.recommendations;
       bundle.dataTypes.push('recommendations');
     }
 
@@ -430,13 +439,13 @@ class ExportV5EvolutionService {
    */
   async generateExportV4(
     data: {
-      timeline?: any[];
-      forecasts?: any[];
-      recommendations?: any[];
-      anomalies?: any[];
+  timeline?: TimelineEvent[];
+      forecasts?: ForecastPoint[];
+  recommendations?: CampaignRecommendation[];
+      anomalies?: AnomalyRecord[];
     },
     options: ExportOptionsV5 = {}
-  ): Promise<any> {
+  ): Promise<unknown> {
     // Use v5 generator but filter out v5-specific features
     const v5Bundle = await this.generateExportV5(data, {
       ...options,
@@ -639,7 +648,15 @@ class ExportV5EvolutionService {
         confidence: factor.confidence,
         impact: factor.impact,
         timeRange: factor.timeRange,
-        evidence: factor.evidence,
+        evidence: (factor.evidence || []).map(ev => ({
+          // Best-effort mapping of existing evidence structure to RootCauseEvidence
+            type: (ev as Record<string, unknown>).metric as string ?? 'metric',
+            description: `deviation ${(ev as Record<string, unknown>).deviation ?? ''}`.trim(),
+            value: (ev as Record<string, unknown>).value,
+            confidence: undefined,
+            source: 'generated',
+            collectedAt: new Date().toISOString(),
+        })),
       })),
       
       recommendedInterventions: chain.interventions.map(intervention => ({
@@ -768,7 +785,7 @@ class ExportV5EvolutionService {
   /**
    * Filter data by time range
    */
-  private filterByTimeRange(data: any[], timeRange?: { start: string; end: string }): any[] {
+  private filterByTimeRange<T extends { [key: string]: any }>(data: T[] | undefined, timeRange?: { start: string; end: string }): T[] | undefined {
     if (!timeRange || !data) return data;
 
     const start = new Date(timeRange.start).getTime();
@@ -786,12 +803,15 @@ class ExportV5EvolutionService {
   /**
    * Extract campaign ID from data
    */
-  private extractCampaignId(data: any): string | undefined {
+  private extractCampaignId(data: Record<string, unknown>): string | undefined {
     // Look for campaign ID in various data structures
     for (const key of Object.keys(data)) {
-      const value = data[key];
-      if (Array.isArray(value) && value.length > 0 && value[0].campaignId) {
-        return value[0].campaignId;
+      const value = (data as Record<string, unknown>)[key];
+      if (Array.isArray(value) && value.length > 0) {
+        const first: any = value[0];
+        if (first && typeof first === 'object' && 'campaignId' in first) {
+          return String(first.campaignId);
+        }
       }
     }
     return undefined;

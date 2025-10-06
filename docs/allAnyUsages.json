@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2025-10-06T09:17:24.404Z",
+  "generatedAt": "2025-10-06T11:41:12.890Z",
   "root": "/workspaces/studio",
-  "total": 476,
+  "total": 443,
   "byPattern": {
-    "annotation": 262,
-    "cast": 214
+    "annotation": 228,
+    "cast": 215
   },
   "byLocationGroup": {
     "app": 40,
-    "components": 67,
-    "other": 77,
-    "services": 245,
-    "store": 47
+    "components": 70,
+    "other": 54,
+    "services": 226,
+    "store": 53
   },
   "usages": [
     {
@@ -373,6 +373,15 @@
       "code": "proxy={proxy as any}",
       "locationGroup": "app",
       "context": "key={proxy.id}"
+    },
+    {
+      "file": "src/components/BulkOperationsDashboard.tsx",
+      "line": 136,
+      "column": 66,
+      "pattern": "cast",
+      "code": "result: (dataObj && 'result' in dataObj ? (dataObj as any).result : undefined) as Record<string, unknown> | undefined,",
+      "locationGroup": "components",
+      "context": "// Provide raw backend result object if present; slice will normalize"
     },
     {
       "file": "src/components/CampaignProgressMonitor.tsx",
@@ -798,6 +807,15 @@
       "context": ""
     },
     {
+      "file": "src/components/refactor/campaign/CampaignExperiencePage.tsx",
+      "line": 278,
+      "column": 70,
+      "pattern": "cast",
+      "code": "recommendations={recommendationsData.recommendations as any}",
+      "locationGroup": "components",
+      "context": "<RecommendationPanel"
+    },
+    {
       "file": "src/components/refactor/campaign/CampaignOverviewV2.tsx",
       "line": 39,
       "column": 35,
@@ -922,6 +940,15 @@
       "code": "status: status as any,",
       "locationGroup": "components",
       "context": "phase: `HTTP ${status}`,"
+    },
+    {
+      "file": "src/components/refactor/campaign/RecommendationPanel.tsx",
+      "line": 66,
+      "column": 24,
+      "pattern": "cast",
+      "code": "severity: (rec as any).severity ?? 'info'",
+      "locationGroup": "components",
+      "context": "rationale: rec.rationaleCode,"
     },
     {
       "file": "src/components/refactor/experiments/BanditPanel.tsx",
@@ -1410,213 +1437,6 @@
       "context": "* Type Guards for API Response Validation"
     },
     {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 11,
-      "column": 108,
-      "pattern": "annotation",
-      "code": "export interface GeneratedDomainStruct { id?: string; domainName?: string; campaignId?: string; [k: string]: any; }",
-      "locationGroup": "other",
-      "context": "// Only include fields actually asserted in the guards below."
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 12,
-      "column": 192,
-      "pattern": "annotation",
-      "code": "export interface LeadItemStruct { id?: string; name?: string | null; email?: string | null; company?: string | null; sourceUrl?: string | null; previousCampaignId?: string | null; [k: string]: any; }",
-      "locationGroup": "other",
-      "context": "export interface GeneratedDomainStruct { id?: string; domainName?: string; campaignId?: string; [k: string]: any; }"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 13,
-      "column": 151,
-      "pattern": "annotation",
-      "code": "export interface CampaignDataStruct { id?: string | null; name?: string | null; currentPhase?: string | null; phaseStatus?: string | null; [k: string]: any; }",
-      "locationGroup": "other",
-      "context": "export interface LeadItemStruct { id?: string; name?: string | null; email?: string | null; company?: string | null; sourceUrl?: string | null; previousCampaignId?: string | null; [k: string]: any; }"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 14,
-      "column": 93,
-      "pattern": "annotation",
-      "code": "export interface EnrichedCampaignDataStruct { campaign?: CampaignDataStruct | null; domains?: any[] | null; leads?: any[] | null; dnsValidatedDomains?: (string | null)[] | null; httpKeywordResults?: any[] | null; [k: string]: any; }",
-      "locationGroup": "other",
-      "context": "export interface CampaignDataStruct { id?: string | null; name?: string | null; currentPhase?: string | null; phaseStatus?: string | null; [k: string]: any; }"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 14,
-      "column": 115,
-      "pattern": "annotation",
-      "code": "export interface EnrichedCampaignDataStruct { campaign?: CampaignDataStruct | null; domains?: any[] | null; leads?: any[] | null; dnsValidatedDomains?: (string | null)[] | null; httpKeywordResults?: any[] | null; [k: string]: any; }",
-      "locationGroup": "other",
-      "context": "export interface CampaignDataStruct { id?: string | null; name?: string | null; currentPhase?: string | null; phaseStatus?: string | null; [k: string]: any; }"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 14,
-      "column": 198,
-      "pattern": "annotation",
-      "code": "export interface EnrichedCampaignDataStruct { campaign?: CampaignDataStruct | null; domains?: any[] | null; leads?: any[] | null; dnsValidatedDomains?: (string | null)[] | null; httpKeywordResults?: any[] | null; [k: string]: any; }",
-      "locationGroup": "other",
-      "context": "export interface CampaignDataStruct { id?: string | null; name?: string | null; currentPhase?: string | null; phaseStatus?: string | null; [k: string]: any; }"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 14,
-      "column": 225,
-      "pattern": "annotation",
-      "code": "export interface EnrichedCampaignDataStruct { campaign?: CampaignDataStruct | null; domains?: any[] | null; leads?: any[] | null; dnsValidatedDomains?: (string | null)[] | null; httpKeywordResults?: any[] | null; [k: string]: any; }",
-      "locationGroup": "other",
-      "context": "export interface CampaignDataStruct { id?: string | null; name?: string | null; currentPhase?: string | null; phaseStatus?: string | null; [k: string]: any; }"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 15,
-      "column": 151,
-      "pattern": "annotation",
-      "code": "export interface BulkEnrichedDataResponseStruct { campaigns?: Record<string, EnrichedCampaignDataStruct> | null; totalCount?: number | null; metadata?: any; [k: string]: any; }",
-      "locationGroup": "other",
-      "context": "export interface EnrichedCampaignDataStruct { campaign?: CampaignDataStruct | null; domains?: any[] | null; leads?: any[] | null; dnsValidatedDomains?: (string | null)[] | null; httpKeywordResults?: any[] | null; [k: string]: any; }"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 15,
-      "column": 169,
-      "pattern": "annotation",
-      "code": "export interface BulkEnrichedDataResponseStruct { campaigns?: Record<string, EnrichedCampaignDataStruct> | null; totalCount?: number | null; metadata?: any; [k: string]: any; }",
-      "locationGroup": "other",
-      "context": "export interface EnrichedCampaignDataStruct { campaign?: CampaignDataStruct | null; domains?: any[] | null; leads?: any[] | null; dnsValidatedDomains?: (string | null)[] | null; httpKeywordResults?: any[] | null; [k: string]: any; }"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 267,
-      "column": 19,
-      "pattern": "cast",
-      "code": "(typeof (item as any).campaignId === 'string' || typeof (item as any).id === 'string')",
-      "locationGroup": "other",
-      "context": "isObject(item) &&"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 267,
-      "column": 67,
-      "pattern": "cast",
-      "code": "(typeof (item as any).campaignId === 'string' || typeof (item as any).id === 'string')",
-      "locationGroup": "other",
-      "context": "isObject(item) &&"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 346,
-      "column": 57,
-      "pattern": "annotation",
-      "code": "export function convertCampaignToLeadGeneration(campaign: any): any {",
-      "locationGroup": "other",
-      "context": "*/"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 346,
-      "column": 63,
-      "pattern": "annotation",
-      "code": "export function convertCampaignToLeadGeneration(campaign: any): any {",
-      "locationGroup": "other",
-      "context": "*/"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 369,
-      "column": 10,
-      "pattern": "annotation",
-      "code": "phases?: any[];",
-      "locationGroup": "other",
-      "context": "leads?: LeadItemStruct[];"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 370,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "statistics?: any;",
-      "locationGroup": "other",
-      "context": "phases?: any[];"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 371,
-      "column": 12,
-      "pattern": "annotation",
-      "code": "metadata?: any;",
-      "locationGroup": "other",
-      "context": "statistics?: any;"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 412,
-      "column": 31,
-      "pattern": "cast",
-      "code": "name: (campaignData as any).campaign?.name || '',",
-      "locationGroup": "other",
-      "context": "id: campaignId,"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 413,
-      "column": 39,
-      "pattern": "cast",
-      "code": "currentPhase: (campaignData as any).campaign?.currentPhase,",
-      "locationGroup": "other",
-      "context": "name: (campaignData as any).campaign?.name || '',"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 414,
-      "column": 38,
-      "pattern": "cast",
-      "code": "phaseStatus: (campaignData as any).campaign?.phaseStatus,",
-      "locationGroup": "other",
-      "context": "currentPhase: (campaignData as any).campaign?.currentPhase,"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 415,
-      "column": 70,
-      "pattern": "cast",
-      "code": "overallProgress: calculateProgressPercentage((campaignData as any).campaign?.progress),",
-      "locationGroup": "other",
-      "context": "phaseStatus: (campaignData as any).campaign?.phaseStatus,"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 416,
-      "column": 34,
-      "pattern": "cast",
-      "code": "domains: (campaignData as any).domains || [],",
-      "locationGroup": "other",
-      "context": "overallProgress: calculateProgressPercentage((campaignData as any).campaign?.progress),"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 417,
-      "column": 32,
-      "pattern": "cast",
-      "code": "leads: (campaignData as any).leads || [],",
-      "locationGroup": "other",
-      "context": "domains: (campaignData as any).domains || [],"
-    },
-    {
-      "file": "src/lib/utils/typeGuards.ts",
-      "line": 420,
-      "column": 35,
-      "pattern": "cast",
-      "code": "metadata: (campaignData as any).campaign || {} // Use campaign data as metadata",
-      "locationGroup": "other",
-      "context": "statistics: {}, // API doesn't provide statistics, initialize empty"
-    },
-    {
       "file": "src/lib/utils/typeSafetyPrimitives.ts",
       "line": 37,
       "column": 31,
@@ -1978,7 +1798,7 @@
     },
     {
       "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
-      "line": 10,
+      "line": 12,
       "column": 22,
       "pattern": "annotation",
       "code": "declare const process: any;",
@@ -1987,7 +1807,7 @@
     },
     {
       "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
-      "line": 101,
+      "line": 103,
       "column": 11,
       "pattern": "annotation",
       "code": "schema: any,",
@@ -1996,7 +1816,7 @@
     },
     {
       "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
-      "line": 132,
+      "line": 134,
       "column": 19,
       "pattern": "annotation",
       "code": "expectedSchema: any,",
@@ -2005,7 +1825,7 @@
     },
     {
       "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
-      "line": 197,
+      "line": 199,
       "column": 12,
       "pattern": "annotation",
       "code": "payload: any,",
@@ -2014,7 +1834,7 @@
     },
     {
       "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
-      "line": 241,
+      "line": 243,
       "column": 12,
       "pattern": "annotation",
       "code": "payload: any,",
@@ -2023,7 +1843,16 @@
     },
     {
       "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
-      "line": 530,
+      "line": 374,
+      "column": 62,
+      "pattern": "cast",
+      "code": "const sanitized = this.sanitizeForecastPoint(point as any, defaultConfig);",
+      "locationGroup": "services",
+      "context": "if (pointErrors.length === 0) {"
+    },
+    {
+      "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
+      "line": 541,
       "column": 9,
       "pattern": "annotation",
       "code": "data: any,",
@@ -2032,7 +1861,7 @@
     },
     {
       "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
-      "line": 531,
+      "line": 542,
       "column": 11,
       "pattern": "annotation",
       "code": "schema: any,",
@@ -2185,201 +2014,21 @@
     },
     {
       "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 95,
-      "column": 13,
+      "line": 788,
+      "column": 54,
       "pattern": "annotation",
-      "code": "evidence: any[];",
-      "locationGroup": "services",
-      "context": "timeRange: { start: string; end: string };"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 174,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "oldValue?: any;",
-      "locationGroup": "services",
-      "context": "path: string;"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 175,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "newValue?: any;",
-      "locationGroup": "services",
-      "context": "oldValue?: any;"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 212,
-      "column": 12,
-      "pattern": "annotation",
-      "code": "timeline?: any[];",
-      "locationGroup": "services",
-      "context": "// Core data (v4 compatibility)"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 213,
-      "column": 13,
-      "pattern": "annotation",
-      "code": "forecasts?: any[];",
-      "locationGroup": "services",
-      "context": "timeline?: any[];"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 214,
-      "column": 19,
-      "pattern": "annotation",
-      "code": "recommendations?: any[];",
-      "locationGroup": "services",
-      "context": "forecasts?: any[];"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 215,
-      "column": 13,
-      "pattern": "annotation",
-      "code": "anomalies?: any[];",
-      "locationGroup": "services",
-      "context": "recommendations?: any[];"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 222,
-      "column": 25,
-      "pattern": "annotation",
-      "code": "healthFabricSnapshots?: any[];",
-      "locationGroup": "services",
-      "context": "capabilityHistory?: CapabilityDiffHistory[];"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 223,
-      "column": 22,
-      "pattern": "annotation",
-      "code": "performanceMetrics?: any[];",
-      "locationGroup": "services",
-      "context": "healthFabricSnapshots?: any[];"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 295,
-      "column": 16,
-      "pattern": "annotation",
-      "code": "timeline?: any[];",
-      "locationGroup": "services",
-      "context": "data: {"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 296,
-      "column": 17,
-      "pattern": "annotation",
-      "code": "forecasts?: any[];",
-      "locationGroup": "services",
-      "context": "timeline?: any[];"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 297,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "recommendations?: any[];",
-      "locationGroup": "services",
-      "context": "forecasts?: any[];"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 298,
-      "column": 17,
-      "pattern": "annotation",
-      "code": "anomalies?: any[];",
-      "locationGroup": "services",
-      "context": "recommendations?: any[];"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 304,
-      "column": 24,
-      "pattern": "annotation",
-      "code": "healthFabricData?: any[];",
-      "locationGroup": "services",
-      "context": "capabilityDiffs?: CapabilityDiff[];"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 305,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "performanceData?: any[];",
-      "locationGroup": "services",
-      "context": "healthFabricData?: any[];"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 433,
-      "column": 16,
-      "pattern": "annotation",
-      "code": "timeline?: any[];",
-      "locationGroup": "services",
-      "context": "data: {"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 434,
-      "column": 17,
-      "pattern": "annotation",
-      "code": "forecasts?: any[];",
-      "locationGroup": "services",
-      "context": "timeline?: any[];"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 435,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "recommendations?: any[];",
-      "locationGroup": "services",
-      "context": "forecasts?: any[];"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 436,
-      "column": 17,
-      "pattern": "annotation",
-      "code": "anomalies?: any[];",
-      "locationGroup": "services",
-      "context": "recommendations?: any[];"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 771,
-      "column": 33,
-      "pattern": "annotation",
-      "code": "private filterByTimeRange(data: any[], timeRange?: { start: string; end: string }): any[] {",
+      "code": "private filterByTimeRange<T extends { [key: string]: any }>(data: T[] | undefined, timeRange?: { start: string; end: string }): T[] | undefined {",
       "locationGroup": "services",
       "context": "*/"
     },
     {
       "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 771,
-      "column": 85,
+      "line": 811,
+      "column": 20,
       "pattern": "annotation",
-      "code": "private filterByTimeRange(data: any[], timeRange?: { start: string; end: string }): any[] {",
+      "code": "const first: any = value[0];",
       "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 789,
-      "column": 33,
-      "pattern": "annotation",
-      "code": "private extractCampaignId(data: any): string | undefined {",
-      "locationGroup": "services",
-      "context": "*/"
+      "context": "if (Array.isArray(value) && value.length > 0) {"
     },
     {
       "file": "src/services/campaignMetrics/forecastBlendService.ts",
@@ -2401,7 +2050,7 @@
     },
     {
       "file": "src/services/campaignMetrics/forecastService.ts",
-      "line": 1165,
+      "line": 1168,
       "column": 43,
       "pattern": "annotation",
       "code": "): Promise<Array<{ modelId: string; points: any[] }>> {",
@@ -2410,7 +2059,7 @@
     },
     {
       "file": "src/services/campaignMetrics/forecastService.ts",
-      "line": 1166,
+      "line": 1169,
       "column": 56,
       "pattern": "annotation",
       "code": "const modelForecasts: Array<{ modelId: string; points: any[] }> = [];",
@@ -4297,6 +3946,60 @@
       "code": "const r = (runtime as any)[p.key];",
       "locationGroup": "store",
       "context": "const phasesEnriched = phases.map(p => {"
+    },
+    {
+      "file": "src/store/slices/bulkOperationsSlice.ts",
+      "line": 175,
+      "column": 48,
+      "pattern": "cast",
+      "code": "processedCount: typeof (result as any).processed === 'number' ? (result as any).processed : undefined,",
+      "locationGroup": "store",
+      "context": "data: {"
+    },
+    {
+      "file": "src/store/slices/bulkOperationsSlice.ts",
+      "line": 175,
+      "column": 89,
+      "pattern": "cast",
+      "code": "processedCount: typeof (result as any).processed === 'number' ? (result as any).processed : undefined,",
+      "locationGroup": "store",
+      "context": "data: {"
+    },
+    {
+      "file": "src/store/slices/bulkOperationsSlice.ts",
+      "line": 176,
+      "column": 50,
+      "pattern": "cast",
+      "code": "domainsProcessed: typeof (result as any).domains === 'number' ? (result as any).domains : undefined,",
+      "locationGroup": "store",
+      "context": "processedCount: typeof (result as any).processed === 'number' ? (result as any).processed : undefined,"
+    },
+    {
+      "file": "src/store/slices/bulkOperationsSlice.ts",
+      "line": 176,
+      "column": 89,
+      "pattern": "cast",
+      "code": "domainsProcessed: typeof (result as any).domains === 'number' ? (result as any).domains : undefined,",
+      "locationGroup": "store",
+      "context": "processedCount: typeof (result as any).processed === 'number' ? (result as any).processed : undefined,"
+    },
+    {
+      "file": "src/store/slices/bulkOperationsSlice.ts",
+      "line": 177,
+      "column": 48,
+      "pattern": "cast",
+      "code": "totalProcessed: typeof (result as any).total === 'number' ? (result as any).total : undefined,",
+      "locationGroup": "store",
+      "context": "domainsProcessed: typeof (result as any).domains === 'number' ? (result as any).domains : undefined,"
+    },
+    {
+      "file": "src/store/slices/bulkOperationsSlice.ts",
+      "line": 177,
+      "column": 85,
+      "pattern": "cast",
+      "code": "totalProcessed: typeof (result as any).total === 'number' ? (result as any).total : undefined,",
+      "locationGroup": "store",
+      "context": "domainsProcessed: typeof (result as any).domains === 'number' ? (result as any).domains : undefined,"
     }
   ],
   "notes": [

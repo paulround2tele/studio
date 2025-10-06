@@ -275,7 +275,7 @@ export function CampaignExperiencePage({ className, role = "region" }: CampaignE
               </div>
             ) : recommendationsData?.recommendations ? (
               <RecommendationPanel 
-                recommendations={recommendationsData.recommendations}
+                recommendations={recommendationsData.recommendations as any}
               />
             ) : (
               <div className="text-center p-8 text-gray-500">
@@ -332,7 +332,10 @@ export function CampaignExperiencePage({ className, role = "region" }: CampaignE
           {momentumData.histogram && (
             <div className="mt-6">
               <Histogram
-                bins={momentumData.histogram}
+                bins={momentumData.histogram.map((count: number, idx: number) => ({
+                  bucket: `bin_${idx}`,
+                  count
+                }))}
                 title="Score Delta Distribution"
                 orientation="horizontal"
                 colorScheme="diverging"

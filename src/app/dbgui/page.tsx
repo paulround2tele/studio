@@ -24,6 +24,7 @@ import type {
   BulkDatabaseQueryResponseResultsValue,
   BulkDatabaseStatsResponse,
   DatabaseStats,
+  DatabaseValue,
 } from '@/lib/api-client/models';
 
 // Professional API client initialization
@@ -534,9 +535,9 @@ export default function DatabaseGUI() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-          {queryResult.rows?.map((row: DatabaseValueLike[], rowIndex: number) => (
+          {queryResult.rows?.map((row: DatabaseValue[], rowIndex: number) => (
                               <TableRow key={rowIndex}>
-                                {row.map((cell: DatabaseValueLike, cellIndex: number) => (
+                                {row.map((cell: DatabaseValue, cellIndex: number) => (
                                   <TableCell key={cellIndex} className="font-mono text-sm">
             {renderDbValue(cell)}
                                   </TableCell>

@@ -4473,6 +4473,39 @@ components:
         - percentComplete
         - itemsProcessed
         - itemsTotal
+    TimelineEvent:
+      type: object
+      description: Unified campaign timeline event for export and progress tracking
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        phase:
+          type: string
+          nullable: true
+        type:
+          type: string
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum:
+            - pending
+            - running
+            - completed
+            - failed
+          nullable: true
+        progress:
+          type: number
+          format: float
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
+      required:
+        - timestamp
+        - type
     CampaignProgressResponse:
       type: object
       properties:
@@ -4514,23 +4547,10 @@ components:
             analysis:
               $ref: '#/components/schemas/PhaseProgressSummary'
         timeline:
-          type: object
-          properties:
-            createdAt:
-              type: string
-              format: date-time
-            startedAt:
-              type: string
-              format: date-time
-              nullable: true
-            estimatedCompletionAt:
-              type: string
-              format: date-time
-              nullable: true
-            completedAt:
-              type: string
-              format: date-time
-              nullable: true
+          type: array
+          description: Chronological list of timeline events for campaign lifecycle
+          items:
+            $ref: '#/components/schemas/TimelineEvent'
       required:
         - campaignId
         - overall
@@ -7371,6 +7391,46 @@ components:
     RescoreCampaignRequest:
       type: object
       description: Optional body for future rescore parameters (currently unused)
+    ForecastProbabilisticPoint:
+      type: object
+      description: Forecast data point with optional probabilistic quantiles
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        value:
+          type: number
+          format: float
+        lower:
+          type: number
+          format: float
+          nullable: true
+        upper:
+          type: number
+          format: float
+          nullable: true
+        p10:
+          type: number
+          format: float
+          nullable: true
+        p50:
+          type: number
+          format: float
+          nullable: true
+        p90:
+          type: number
+          format: float
+          nullable: true
+        confidence:
+          type: number
+          format: float
+          nullable: true
+        metricKey:
+          type: string
+          nullable: true
+      required:
+        - timestamp
+        - value
     KeywordSetWithRulesResponse:
       type: object
       properties:
@@ -7505,3 +7565,224 @@ components:
       type: object
       description: Server configuration update request
       additionalProperties: true
+    AnomalyRecord:
+      type: object
+      description: Detected anomaly record used in export bundles
+      properties:
+        id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        type:
+          type: string
+        severity:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+            - critical
+        description:
+          type: string
+        status:
+          type: string
+          enum:
+            - open
+            - investigating
+            - mitigated
+            - resolved
+          nullable: true
+        metrics:
+          type: object
+          additionalProperties:
+            type: number
+        tags:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - timestamp
+        - type
+        - severity
+    RootCauseEvidence:
+      type: object
+      description: Evidence item supporting a root cause factor
+      properties:
+        type:
+          type: string
+        description:
+          type: string
+        value: {}
+        confidence:
+          type: number
+          format: float
+        source:
+          type: string
+        collectedAt:
+          type: string
+          format: date-time
+      required:
+        - type
+        - description
+    HealthFabricSnapshot:
+      type: object
+      description: Snapshot of campaign 'health fabric' status
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        healthScore:
+          type: number
+          format: float
+        dimensions:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              score:
+                type: number
+                format: float
+              weight:
+                type: number
+                format: float
+                nullable: true
+            required:
+              - name
+              - score
+        anomaliesDetected:
+          type: integer
+          nullable: true
+        riskLevel:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+            - critical
+          nullable: true
+      required:
+        - timestamp
+        - healthScore
+    PerformanceMetricRecord:
+      type: object
+      description: Time series performance metric for export
+      properties:
+        metricKey:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        value:
+          type: number
+          format: float
+        window:
+          type: string
+          enum:
+            - raw
+            - 1m
+            - 5m
+            - 1h
+            - 1d
+          nullable: true
+        breakdown:
+          type: object
+          additionalProperties:
+            type: number
+      required:
+        - metricKey
+        - timestamp
+        - value
+    ForecastPoint:
+      type: object
+      description: Forecast point with bounds and optional actual value
+      properties:
+        metricKey:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        predictedValue:
+          type: number
+          format: float
+        lowerBound:
+          type: number
+          format: float
+          nullable: true
+        upperBound:
+          type: number
+          format: float
+          nullable: true
+        actualValue:
+          type: number
+          format: float
+          nullable: true
+      required:
+        - metricKey
+        - timestamp
+        - predictedValue
+    ProbabilisticForecastResponse:
+      type: object
+      description: Forecast response including probabilistic quantile points
+      properties:
+        horizon:
+          type: integer
+        generatedAt:
+          type: string
+          format: date-time
+        method:
+          type: string
+          enum:
+            - server
+            - client
+            - blended
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/ForecastProbabilisticPoint'
+        timingMs:
+          type: integer
+          nullable: true
+        error:
+          type: string
+          nullable: true
+        modelInfo:
+          type: object
+          nullable: true
+          properties:
+            selectedModel:
+              type: string
+            arbitrationScores:
+              type: object
+              nullable: true
+              properties:
+                mae:
+                  type: number
+                  format: float
+                mape:
+                  type: number
+                  format: float
+                confidence:
+                  type: number
+                  format: float
+        qualityMetrics:
+          type: object
+          nullable: true
+          properties:
+            mae:
+              type: number
+              format: float
+            mape:
+              type: number
+              format: float
+            residualVariance:
+              type: number
+              format: float
+      required:
+        - horizon
+        - generatedAt
+        - method
+        - points

@@ -1934,6 +1934,21 @@ export interface components {
             /** @description Human readable duration */
             duration?: string | null;
         };
+        /** @description Unified campaign timeline event for export and progress tracking */
+        TimelineEvent: {
+            /** Format: date-time */
+            timestamp: string;
+            phase?: string | null;
+            type: string;
+            description?: string | null;
+            /** @enum {string|null} */
+            status?: "pending" | "running" | "completed" | "failed" | null;
+            /** Format: float */
+            progress?: number | null;
+            metadata?: {
+                [key: string]: unknown;
+            };
+        };
         CampaignProgressResponse: {
             /** Format: uuid */
             campaignId: string;
@@ -1953,16 +1968,8 @@ export interface components {
                 extraction?: components["schemas"]["PhaseProgressSummary"];
                 analysis?: components["schemas"]["PhaseProgressSummary"];
             };
-            timeline: {
-                /** Format: date-time */
-                createdAt?: string;
-                /** Format: date-time */
-                startedAt?: string | null;
-                /** Format: date-time */
-                estimatedCompletionAt?: string | null;
-                /** Format: date-time */
-                completedAt?: string | null;
-            };
+            /** @description Chronological list of timeline events for campaign lifecycle */
+            timeline: components["schemas"]["TimelineEvent"][];
         };
         CampaignProgressEvent: components["schemas"]["CampaignProgressResponse"];
         CampaignSseProgressEvent: {
@@ -3322,6 +3329,26 @@ export interface components {
         };
         /** @description Optional body for future rescore parameters (currently unused) */
         RescoreCampaignRequest: Record<string, never>;
+        /** @description Forecast data point with optional probabilistic quantiles */
+        ForecastProbabilisticPoint: {
+            /** Format: date-time */
+            timestamp: string;
+            /** Format: float */
+            value: number;
+            /** Format: float */
+            lower?: number | null;
+            /** Format: float */
+            upper?: number | null;
+            /** Format: float */
+            p10?: number | null;
+            /** Format: float */
+            p50?: number | null;
+            /** Format: float */
+            p90?: number | null;
+            /** Format: float */
+            confidence?: number | null;
+            metricKey?: string | null;
+        };
         KeywordSetWithRulesResponse: {
             /** Format: uuid */
             id: string;
@@ -3389,6 +3416,107 @@ export interface components {
         /** @description Server configuration update request */
         ServerConfigUpdateRequest: {
             [key: string]: unknown;
+        };
+        /** @description Detected anomaly record used in export bundles */
+        AnomalyRecord: {
+            id: string;
+            /** Format: date-time */
+            timestamp: string;
+            type: string;
+            /** @enum {string} */
+            severity: "low" | "medium" | "high" | "critical";
+            description?: string;
+            /** @enum {string|null} */
+            status?: "open" | "investigating" | "mitigated" | "resolved" | null;
+            metrics?: {
+                [key: string]: number;
+            };
+            tags?: string[];
+        };
+        /** @description Evidence item supporting a root cause factor */
+        RootCauseEvidence: {
+            type: string;
+            description: string;
+            value?: unknown;
+            /** Format: float */
+            confidence?: number;
+            source?: string;
+            /** Format: date-time */
+            collectedAt?: string;
+        };
+        /** @description Snapshot of campaign 'health fabric' status */
+        HealthFabricSnapshot: {
+            /** Format: date-time */
+            timestamp: string;
+            /** Format: float */
+            healthScore: number;
+            dimensions?: {
+                name: string;
+                /** Format: float */
+                score: number;
+                /** Format: float */
+                weight?: number | null;
+            }[];
+            anomaliesDetected?: number | null;
+            /** @enum {string|null} */
+            riskLevel?: "low" | "medium" | "high" | "critical" | null;
+        };
+        /** @description Time series performance metric for export */
+        PerformanceMetricRecord: {
+            metricKey: string;
+            /** Format: date-time */
+            timestamp: string;
+            /** Format: float */
+            value: number;
+            /** @enum {string|null} */
+            window?: "raw" | "1m" | "5m" | "1h" | "1d" | null;
+            breakdown?: {
+                [key: string]: number;
+            };
+        };
+        /** @description Forecast point with bounds and optional actual value */
+        ForecastPoint: {
+            metricKey: string;
+            /** Format: date-time */
+            timestamp: string;
+            /** Format: float */
+            predictedValue: number;
+            /** Format: float */
+            lowerBound?: number | null;
+            /** Format: float */
+            upperBound?: number | null;
+            /** Format: float */
+            actualValue?: number | null;
+        };
+        /** @description Forecast response including probabilistic quantile points */
+        ProbabilisticForecastResponse: {
+            horizon: number;
+            /** Format: date-time */
+            generatedAt: string;
+            /** @enum {string} */
+            method: "server" | "client" | "blended";
+            points: components["schemas"]["ForecastProbabilisticPoint"][];
+            timingMs?: number | null;
+            error?: string | null;
+            modelInfo?: {
+                selectedModel?: string;
+                arbitrationScores?: {
+                    /** Format: float */
+                    mae?: number;
+                    /** Format: float */
+                    mape?: number;
+                    /** Format: float */
+                    confidence?: number;
+                } | null;
+            } | null;
+            qualityMetrics?: {
+                /** Format: float */
+                mae?: number;
+                /** Format: float */
+                mape?: number;
+                /** Format: float */
+                residualVariance?: number;
+            } | null;
         };
     };
     responses: {

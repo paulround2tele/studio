@@ -4,7 +4,9 @@
  */
 
 import { telemetryService } from './telemetryService';
-import { ForecastPoint } from './forecastService';
+import type { ForecastPoint } from '@/types/forecasting';
+import type { components } from '@/lib/api-client/types';
+type ProbPoint = components['schemas']['ForecastProbabilisticPoint'];
 
 // Declare process for Node.js environment variables
 declare const process: any;
@@ -369,7 +371,16 @@ class SecurityHardeningService {
 
         // If no errors, sanitize and add to valid points
         if (pointErrors.length === 0) {
-          validPoints.push(this.sanitizeForecastPoint(point, defaultConfig));
+          const sanitized = this.sanitizeForecastPoint(point as any, defaultConfig);
+          // Cast nullable bounds to number by fallback to value for compatibility with ForecastPoint
+          validPoints.push({
+            timestamp: sanitized.timestamp,
+            value: sanitized.value,
+            lower: sanitized.lower ?? sanitized.value,
+            upper: sanitized.upper ?? sanitized.value,
+            confidence: sanitized.confidence ?? undefined,
+            metricKey: sanitized.metricKey ?? undefined,
+          });
         } else {
           errors.push(...pointErrors);
         }
@@ -587,23 +598,23 @@ class SecurityHardeningService {
   /**
    * Validate quantile consistency (p10 <= p50 <= p90)
    */
-  private validateQuantileConsistency(point: ForecastPoint, index: number): string[] {
+  private validateQuantileConsistency(point: ProbPoint, index: number): string[] {
     const errors: string[] = [];
 
-    if (point.p10 !== undefined && point.p50 !== undefined && point.p10 > point.p50) {
+  if (point.p10 != null && point.p50 != null && point.p10 > point.p50) {
       errors.push(`Quantile inconsistency at index ${index}: p10 (${point.p10}) > p50 (${point.p50})`);
     }
 
-    if (point.p50 !== undefined && point.p90 !== undefined && point.p50 > point.p90) {
+  if (point.p50 != null && point.p90 != null && point.p50 > point.p90) {
       errors.push(`Quantile inconsistency at index ${index}: p50 (${point.p50}) > p90 (${point.p90})`);
     }
 
-    if (point.p10 !== undefined && point.p90 !== undefined && point.p10 > point.p90) {
+  if (point.p10 != null && point.p90 != null && point.p10 > point.p90) {
       errors.push(`Quantile inconsistency at index ${index}: p10 (${point.p10}) > p90 (${point.p90})`);
     }
 
     // Validate lower/upper bounds consistency
-    if (point.lower !== undefined && point.upper !== undefined && point.lower > point.upper) {
+  if (point.lower != null && point.upper != null && point.lower > point.upper) {
       errors.push(`Bound inconsistency at index ${index}: lower (${point.lower}) > upper (${point.upper})`);
     }
 
@@ -646,34 +657,34 @@ class SecurityHardeningService {
    * Sanitize forecast point by clamping values and fixing precision
    */
   private sanitizeForecastPoint(
-    point: ForecastPoint,
+    point: ProbPoint,
     config: ProbabilisticBandConfig
-  ): ForecastPoint {
-    const sanitized = { ...point };
+  ): ProbPoint {
+    const sanitized: ProbPoint = { ...point };
 
     // Sanitize main value
     sanitized.value = this.sanitizeNumericValue(point.value, config.valueRange);
 
     // Sanitize bounds
-    if (point.lower !== undefined) {
-      sanitized.lower = this.sanitizeNumericValue(point.lower, config.valueRange);
+    if (point.lower != null) {
+      sanitized.lower = this.sanitizeNumericValue(point.lower || 0, config.valueRange);
     }
 
-    if (point.upper !== undefined) {
-      sanitized.upper = this.sanitizeNumericValue(point.upper, config.valueRange);
+    if (point.upper != null) {
+      sanitized.upper = this.sanitizeNumericValue(point.upper || 0, config.valueRange);
     }
 
     // Sanitize quantiles
-    if (point.p10 !== undefined) {
-      sanitized.p10 = this.sanitizeNumericValue(point.p10, config.valueRange);
+    if (point.p10 != null) {
+      sanitized.p10 = this.sanitizeNumericValue(point.p10 || 0, config.valueRange);
     }
 
-    if (point.p50 !== undefined) {
-      sanitized.p50 = this.sanitizeNumericValue(point.p50, config.valueRange);
+    if (point.p50 != null) {
+      sanitized.p50 = this.sanitizeNumericValue(point.p50 || 0, config.valueRange);
     }
 
-    if (point.p90 !== undefined) {
-      sanitized.p90 = this.sanitizeNumericValue(point.p90, config.valueRange);
+    if (point.p90 != null) {
+      sanitized.p90 = this.sanitizeNumericValue(point.p90 || 0, config.valueRange);
     }
 
     return sanitized;

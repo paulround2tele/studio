@@ -132,7 +132,8 @@ export const BulkOperationsDashboard: React.FC = () => {
               id: operation_id,
               status: normalizeStatus((dataObj as { status?: unknown }).status, event.event),
               progress: Number((dataObj as { progress?: unknown }).progress ?? 0),
-              result: (dataObj as { result?: unknown }).result,
+              // Provide raw backend result object if present; slice will normalize
+              result: (dataObj && 'result' in dataObj ? (dataObj as any).result : undefined) as Record<string, unknown> | undefined,
               error: (dataObj as { error?: unknown }).error as string | undefined,
             }));
           }
@@ -217,7 +218,7 @@ export const BulkOperationsDashboard: React.FC = () => {
         id: operationId,
         status: 'completed',
         progress: 100,
-        result
+        result: result as unknown as Record<string, unknown>
       }));
       
   } catch (error) {

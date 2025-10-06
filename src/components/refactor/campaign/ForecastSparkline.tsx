@@ -5,7 +5,7 @@
 
 import React, { useMemo } from 'react';
 import { AggregateSnapshot } from '@/types/campaignMetrics';
-import { ForecastPoint } from '@/services/campaignMetrics/forecastService';
+import type { ForecastPoint } from '@/types/forecasting';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, TrendingDown, Activity } from 'lucide-react';

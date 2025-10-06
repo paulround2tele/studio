@@ -19,6 +19,9 @@ import {
   createForecastPoint 
 } from '@/types/forecasting';
 
+// Re-export ForecastPoint (value-less type export) for UI components
+export type { ForecastPoint } from '@/types/forecasting';
+
 // Feature flags
 const isForecastsEnabled = () => 
   typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_ENABLE_FORECASTS !== 'false';

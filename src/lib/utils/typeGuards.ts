@@ -3,16 +3,19 @@
  * Replaces unsafe `as any` casts with proper runtime type checking
  */
 
-// Temporary structural interfaces replacing missing generated model imports.
-// These will be replaced with proper generated models once the OpenAPI/Swagger codegen is integrated.
-// Migration plan: Replace these interfaces with generated types from the API schema (see issue #1234).
-// Target timeline: Q3 2024, or as soon as codegen is available.
-// Only include fields actually asserted in the guards below.
-export interface GeneratedDomainStruct { id?: string; domainName?: string; campaignId?: string; [k: string]: any; }
-export interface LeadItemStruct { id?: string; name?: string | null; email?: string | null; company?: string | null; sourceUrl?: string | null; previousCampaignId?: string | null; [k: string]: any; }
-export interface CampaignDataStruct { id?: string | null; name?: string | null; currentPhase?: string | null; phaseStatus?: string | null; [k: string]: any; }
-export interface EnrichedCampaignDataStruct { campaign?: CampaignDataStruct | null; domains?: any[] | null; leads?: any[] | null; dnsValidatedDomains?: (string | null)[] | null; httpKeywordResults?: any[] | null; [k: string]: any; }
-export interface BulkEnrichedDataResponseStruct { campaigns?: Record<string, EnrichedCampaignDataStruct> | null; totalCount?: number | null; metadata?: any; [k: string]: any; }
+// Temporary interfaces removed – generated models now available. We preserve guard behavior using generated types + unknown refinement.
+import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
+import type { CampaignResponse } from '@/lib/api-client/models/campaign-response';
+import type { EnrichedCampaignResponse } from '@/lib/api-client/models/enriched-campaign-response';
+
+// Composite bulk structure not directly generated; represent minimally with unknown maps refined at runtime.
+export interface BulkEnrichedDataResponseStruct { campaigns?: Record<string, unknown> | null; totalCount?: number | null; metadata?: Record<string, unknown> | null; }
+
+// Local light structural aliases for clarity (no index signatures with any).
+type GeneratedDomainStruct = DomainListItem & { domainName?: string }; // legacy compatibility field
+type LeadItemStruct = { id?: string; name?: string | null; email?: string | null }; // minimal fields actually used
+type CampaignDataStruct = Pick<CampaignResponse, 'id' | 'name' | 'currentPhase'> & { phaseStatus?: string | null; progress?: unknown };
+type EnrichedCampaignDataStruct = { campaign?: CampaignDataStruct | null; domains?: unknown[] | null; leads?: unknown[] | null; dnsValidatedDomains?: (string | null)[] | null; httpKeywordResults?: unknown[] | null };
 
 /**
  * Validates if a value is a non-null object
@@ -262,10 +265,11 @@ export function isBulkEnrichedDataResponse(value: unknown): value is BulkEnriche
 export function isCampaignIdsResponse(value: unknown): value is Array<{ campaignId?: string; id?: string }> {
   if (!isArray(value)) return false;
   
-  return value.every(item => 
-    isObject(item) && 
-    (typeof (item as any).campaignId === 'string' || typeof (item as any).id === 'string')
-  );
+  return value.every(item => {
+    if (!isObject(item)) return false;
+    const obj = item as Record<string, unknown>;
+    return (typeof obj.campaignId === 'string') || (typeof obj.id === 'string');
+  });
 }
 
 /**
@@ -343,17 +347,16 @@ export function extractDomainName(domain: unknown): string {
  * Safe campaign type converter
  * Converts Campaign to LeadGenerationCampaign compatible structure
  */
-export function convertCampaignToLeadGeneration(campaign: any): any {
-  if (!campaign) return campaign;
-  
-  // Create a compatible structure by ensuring UUID types are properly handled
+export function convertCampaignToLeadGeneration(campaign: unknown): unknown {
+  if (!campaign || typeof campaign !== 'object') return campaign;
+  const obj = campaign as Record<string, unknown>;
   return {
-    ...campaign,
-    currentPhaseId: campaign.currentPhaseId as string | undefined,
-    id: campaign.id as string,
-    ...(campaign.keywordSetId && { keywordSetId: campaign.keywordSetId as string }),
-    ...(campaign.personaId && { personaId: campaign.personaId as string }),
-    ...(campaign.proxyPoolId && { proxyPoolId: campaign.proxyPoolId as string })
+    ...obj,
+    currentPhaseId: typeof obj.currentPhaseId === 'string' ? obj.currentPhaseId : undefined,
+    id: typeof obj.id === 'string' ? obj.id : (obj.id ?? '') as string,
+    ...(typeof obj.keywordSetId === 'string' && { keywordSetId: obj.keywordSetId }),
+    ...(typeof obj.personaId === 'string' && { personaId: obj.personaId }),
+    ...(typeof obj.proxyPoolId === 'string' && { proxyPoolId: obj.proxyPoolId })
   };
 }
 
@@ -366,9 +369,9 @@ export interface LocalEnrichedCampaignData {
   overallProgress?: number;
   domains?: GeneratedDomainStruct[];
   leads?: LeadItemStruct[];
-  phases?: any[];
-  statistics?: any;
-  metadata?: any;
+  phases?: unknown[];
+  statistics?: unknown;
+  metadata?: unknown;
 }
 
 /**
@@ -407,17 +410,19 @@ export function extractCampaignsMap(response: BulkEnrichedDataResponseStruct): M
     Object.entries(response.campaigns).forEach(([campaignId, campaignData]) => {
       if (campaignId && campaignData) {
         // Transform API EnrichedCampaignData to local format
+        const ec = campaignData as EnrichedCampaignDataStruct;
+        const camp = ec.campaign as CampaignDataStruct | undefined | null;
         const localCampaignData: LocalEnrichedCampaignData = {
           id: campaignId,
-          name: (campaignData as any).campaign?.name || '',
-          currentPhase: (campaignData as any).campaign?.currentPhase,
-          phaseStatus: (campaignData as any).campaign?.phaseStatus,
-          overallProgress: calculateProgressPercentage((campaignData as any).campaign?.progress),
-          domains: (campaignData as any).domains || [],
-          leads: (campaignData as any).leads || [],
-          phases: [], // API doesn't provide phases array, initialize empty
-          statistics: {}, // API doesn't provide statistics, initialize empty
-          metadata: (campaignData as any).campaign || {} // Use campaign data as metadata
+          name: camp?.name || '',
+          currentPhase: camp?.currentPhase || undefined,
+          phaseStatus: camp?.phaseStatus || undefined,
+          overallProgress: calculateProgressPercentage(camp?.progress as Record<string, object> | undefined),
+          domains: Array.isArray(ec.domains) ? (ec.domains.filter(isGeneratedDomain) as GeneratedDomainStruct[]) : [],
+          leads: Array.isArray(ec.leads) ? (ec.leads.filter(isLeadItem) as LeadItemStruct[]) : [],
+          phases: [],
+          statistics: {},
+          metadata: camp || {}
         };
         campaignsMap.set(campaignId, localCampaignData);
       }

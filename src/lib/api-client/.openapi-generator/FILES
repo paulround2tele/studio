@@ -21,6 +21,7 @@ configuration.ts
 docs/ActivityItem.md
 docs/AnalysisFailedEvent.md
 docs/AnalysisReuseEnrichmentEvent.md
+docs/AnomalyRecord.md
 docs/ApiError.md
 docs/ApiErrorDetailsInner.md
 docs/AssociateScoringProfileRequest.md
@@ -156,10 +157,13 @@ docs/ErrorEnvelope.md
 docs/ExecutionStatusEnum.md
 docs/ExtendedPageInfo.md
 docs/FeatureFlags.md
+docs/ForecastPoint.md
 docs/GetBulkOperationStatus200Response.md
 docs/GetBulkResourceStatus200Response.md
 docs/HTTPValidatorConfigJSON.md
 docs/HealthApi.md
+docs/HealthFabricSnapshot.md
+docs/HealthFabricSnapshotDimensionsInner.md
 docs/HealthResponse.md
 docs/KeywordExtractionApi.md
 docs/KeywordRuleDTO.md
@@ -176,6 +180,7 @@ docs/MonitoringCampaignLimitsRequest.md
 docs/PageInfo.md
 docs/PatternOffsetRequest.md
 docs/PatternOffsetResponse.md
+docs/PerformanceMetricRecord.md
 docs/PersonaConfigDetails.md
 docs/PersonaConfigDns.md
 docs/PersonaConfigHttp.md
@@ -215,6 +220,7 @@ docs/ProxyStatusResponse.md
 docs/ProxyTestResponse.md
 docs/RateLimiterConfig.md
 docs/RecommendationSeverity.md
+docs/RootCauseEvidence.md
 docs/SchemaStats.md
 docs/ScoringApi.md
 docs/ScoringProfile.md
@@ -238,6 +244,7 @@ index.ts
 models/activity-item.ts
 models/analysis-failed-event.ts
 models/analysis-reuse-enrichment-event.ts
+models/anomaly-record.ts
 models/api-error-details-inner.ts
 models/api-error.ts
 models/associate-scoring-profile-request.ts
@@ -370,8 +377,11 @@ models/error-envelope.ts
 models/execution-status-enum.ts
 models/extended-page-info.ts
 models/feature-flags.ts
+models/forecast-point.ts
 models/get-bulk-operation-status200-response.ts
 models/get-bulk-resource-status200-response.ts
+models/health-fabric-snapshot-dimensions-inner.ts
+models/health-fabric-snapshot.ts
 models/health-response.ts
 models/httpvalidator-config-json.ts
 models/index.ts
@@ -386,6 +396,7 @@ models/monitoring-campaign-limits-request.ts
 models/page-info.ts
 models/pattern-offset-request.ts
 models/pattern-offset-response.ts
+models/performance-metric-record.ts
 models/persona-config-details.ts
 models/persona-config-dns.ts
 models/persona-config-http-cookie-handling.ts
@@ -422,6 +433,7 @@ models/proxy-test-response.ts
 models/proxy.ts
 models/rate-limiter-config.ts
 models/recommendation-severity.ts
+models/root-cause-evidence.ts
 models/schema-stats.ts
 models/scoring-profile.ts
 models/server-config-response.ts

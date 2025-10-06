@@ -46,7 +46,7 @@ export interface ForecastState {
   forecast: ForecastPoint[] | null;
   loading: boolean;
   error: string | null;
-  method: 'server' | 'client' | null;
+  method: 'server' | 'client' | 'insufficient-data' | 'skipped' | 'client-worker' | null;
   lastUpdated: string | null;
   timingMs: number;
 }
@@ -269,7 +269,7 @@ export function useSimpleForecast(
   forecast: ForecastPoint[] | null;
   loading: boolean;
   error: string | null;
-  method: 'server' | 'client' | null;
+  method: 'server' | 'client' | 'insufficient-data' | 'skipped' | 'client-worker' | null;
 } {
   const { forecast, loading, error, method } = useForecast(campaignId, snapshots, {
     metricKey,
