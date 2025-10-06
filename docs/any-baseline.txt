@@ -1,0 +1,1055 @@
+src/components/domains/__tests__/RichnessBreakdownModal.test.tsx:28:} as any;
+src/components/CampaignProgressMonitor.tsx:9:  onPhaseCompleted?: (phase: string, results?: any) => void;
+src/components/proxyPools/ProxyPoolList.tsx:18:  proxyPoolsList: async () => ({ data: [] as any[] }),
+src/components/proxyPools/ProxyPoolForm.tsx:78:        await proxyPoolsApi.proxyPoolsUpdate(pool.id, values as any);
+src/components/proxyPools/ProxyPoolForm.tsx:82:        await proxyPoolsApi.proxyPoolsCreate(values as any);
+src/components/campaigns/CampaignFormV2.tsx:102:    } catch (error: any) {
+src/components/campaigns/__tests__/DomainsList.features.test.tsx:23:        return { data: { data: { campaign: { id: campaignId } }, success: true } } as any;
+src/components/campaigns/__tests__/DomainsList.features.test.tsx:87:        } as any;
+src/components/campaigns/__tests__/DomainsList.sorting.test.tsx:17:  usePaginatedDomains: (_cid: string, _opts: any) => ([{
+src/components/campaigns/CampaignControls.tsx:73:  const extractErrorMessage = (e: any): string => {
+src/components/campaigns/workspace/CampaignOverviewCard.tsx:30:  const scoringProfileId: string | undefined = (enrichedTyped as any)?.scoringProfileId || (enrichedTyped as any)?.scoringProfile || undefined;
+src/components/campaigns/workspace/CampaignOverviewCard.tsx:33:  const avgScore: number | undefined = typeof (enrichedTyped as any)?.averageScore === 'number'
+src/components/campaigns/workspace/CampaignOverviewCard.tsx:34:    ? (enrichedTyped as any).averageScore
+src/components/campaigns/workspace/CampaignOverviewCard.tsx:35:    : typeof (enrichedTyped as any)?.score === 'number'
+src/components/campaigns/workspace/CampaignOverviewCard.tsx:36:      ? (enrichedTyped as any).score
+src/components/campaigns/workspace/CampaignOverviewCard.tsx:38:  const lastRescoreAt: string | undefined = typeof (enrichedTyped as any)?.lastRescoreAt === 'string' ? (enrichedTyped as any).lastRescoreAt : undefined;
+src/components/campaigns/PipelineWorkspace.tsx:53:      await startPhase({ campaignId, phase: nextAction.phase as any });
+src/components/campaigns/PipelineWorkspace.tsx:55:      dispatch(campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: nextAction.phase } as any));
+src/components/campaigns/PipelineWorkspace.tsx:66:      startPhase({ campaignId, phase: nextAuto as any }).finally(()=> {
+src/components/campaigns/PipelineWorkspace.tsx:164:                  <Button key={p} size="sm" variant="destructive" className="text-[10px] py-1" onClick={()=>startPhase({ campaignId, phase: p as any })}>Retry {p}</Button>
+src/components/campaigns/CampaignDashboard.tsx:117:    onSave(data as any);
+src/components/campaigns/CampaignDashboard.tsx:122:      onSaveAndStart(data as any);
+src/components/campaigns/CampaignProgressMonitor.tsx:125:            variant={progressInfo.statusColor as any}
+src/components/campaigns/FullSequencePreflightWizard.tsx:31:            {phases.map((p: any) => (
+src/components/campaigns/ContentSimilarityView.tsx:58:  if (score > 75) return "default" as any;
+src/components/campaigns/ContentSimilarityView.tsx:59:  if (score > 50) return "secondary" as any;
+src/components/campaigns/ContentSimilarityView.tsx:60:  if (score > 25) return "outline" as any;
+src/components/campaigns/ContentSimilarityView.tsx:61:  return "destructive" as any;
+src/components/campaigns/ContentSimilarityView.tsx:66:  const extractedContent: ExtractedContentItem[] = (campaign as any).extractedContent || [];
+src/components/campaigns/ContentSimilarityView.tsx:67:  const leads: LeadItem[] = Array.isArray((campaign as any).leads) ? (campaign as any).leads :
+src/components/campaigns/ContentSimilarityView.tsx:68:                           Array.isArray((campaign as any).leadItems) ? (campaign as any).leadItems : [];
+src/components/campaigns/controls/CampaignModeToggle.tsx:48:  const ov: any = useAppSelector(overviewSel as any);
+src/components/campaigns/types/SimpleCampaignFormTypes.ts:30:    configuration: undefined as any // Phase-centric: configuration added later
+src/components/ui/input.tsx:45:      [key: string]: any;
+src/components/debug/ForecastQualityDebugPanel.tsx:23:  snapshots: any[];
+src/components/debug/ForecastQualityDebugPanel.tsx:29:  forecastResult?: any;
+src/components/debug/ForecastQualityDebugPanel.tsx:35:  degradationState?: any;
+src/components/debug/ForecastQualityDebugPanel.tsx:41:  statistics?: any;
+src/components/debug/ForecastQualityDebugPanel.tsx:42:  recentEntries: any[];
+src/components/debug/ForecastQualityDebugPanel.tsx:174:  const formatModelScore = (score: any) => {
+src/components/debug/ForecastQualityDebugPanel.tsx:301:                          {forecastDebug.forecastResult.modelInfo.alternativeModels.map((model: any, idx: number) => (
+src/components/debug/ForecastQualityDebugPanel.tsx:326:                          {forecastDebug.forecastResult.points.slice(0, 5).map((point: any, idx: number) => (
+src/components/debug/ForecastQualityDebugPanel.tsx:526:                      {auditDebug.recentEntries.map((entry: any, idx: number) => (
+src/components/refactor/__tests__/CampaignOverviewV2.test.tsx:21:    middleware: jest.fn(() => () => (next: any) => (action: any) => next(action))
+src/components/refactor/__tests__/CampaignOverviewV2.test.tsx:32:      getDefaultMiddleware().concat(campaignApi.middleware as any)
+src/components/refactor/__tests__/CampaignCreateWizard.test.tsx:33:    middleware: jest.fn(() => () => (next: any) => (action: any) => next(action))
+src/components/refactor/__tests__/CampaignCreateWizard.test.tsx:55:      getDefaultMiddleware().concat(campaignApi.middleware as any)
+src/components/refactor/__tests__/CampaignCreateWizard.test.tsx:306:    const setupCompleteWizard = async (user: any) => {
+src/components/refactor/viz/AdaptiveTimeline.tsx:226:  const formatTooltip = useCallback((value: any, name: string, props: any) => {
+src/components/refactor/experiments/BanditPanel.tsx:80:  const getArmStatusColor = (arm: any) => {
+src/components/refactor/experiments/BanditPanel.tsx:87:  const getArmStatusText = (arm: any) => {
+src/components/refactor/experiments/BanditPanel.tsx:98:  const renderArmCard = (arm: any) => {
+src/components/refactor/campaign/CampaignCreateWizard.tsx:178:    } catch (error: any) {
+src/components/refactor/campaign/CampaignCreateWizard.tsx:223:      } catch (startError: any) {
+src/components/refactor/campaign/CohortComparisonPanel.tsx:202:          <Tabs value={viewType} onValueChange={setViewType as any} className="w-full">
+src/components/refactor/campaign/CohortComparisonPanel.tsx:379:  campaign: any;
+src/components/refactor/campaign/PipelineBarContainer.tsx:49:        status: status as any,
+src/components/refactor/campaign/PipelineBarContainer.tsx:62:        status: status as any,
+src/components/refactor/campaign/EnhancedCampaignOverview.tsx:19:  domains: any[];
+src/components/refactor/campaign/MetricsDebugPanel.tsx:28:  lastDeltas?: any[];
+src/components/refactor/campaign/MetricsDebugPanel.tsx:29:  topMovers?: any[];
+src/components/refactor/campaign/CampaignOverviewV2.tsx:39:function convertDomains(apiDomains: any[] | undefined | null): CampaignDomain[] {
+src/components/refactor/campaign/CampaignOverviewV2.tsx:57:    dns_status: domain.dns_status as any,
+src/components/refactor/campaign/CampaignOverviewV2.tsx:58:    http_status: domain.http_status as any,
+src/components/refactor/campaign/CampaignOverviewV2.tsx:72:  const warnings: any[] = []; // Remove mock warnings for now - should come from metrics context
+src/components/refactor/campaign/CampaignOverviewV2.tsx:73:  const config: any[] = []; // Remove mock config for now - should come from actual campaign data
+src/components/refactor/campaign/CampaignOverviewV2.tsx:76:  const kpisWithDeltas: (CampaignKpi & { delta?: any })[] = [
+src/components/refactor/campaign/CampaignOverviewV2.tsx:233:  const rawDomains = listObj?.items || (enrichedObj as any)?.domains || [];
+src/components/refactor/analytics/CausalGraphPanel.tsx:82:  const renderNodeCard = (node: any) => {
+src/components/refactor/analytics/CausalGraphPanel.tsx:113:  const renderEdgeList = (edges: any[], title: string, variant: 'default' | 'secondary' | 'outline') => (
+src/lib/utils/__tests__/typeSafetyPrimitives.test.ts:50:      expect(result).toBe((obj as any).a.b.c);
+src/lib/utils/__tests__/typeSafetyPrimitives.test.ts:134:      expect((obj as any).newList).toEqual(['first']);
+src/lib/utils/__tests__/typeSafetyPrimitives.test.ts:147:      const op = { type: 'unknown', path: 'test', value: 'test' } as any;
+src/lib/utils/typeSafetyPrimitives.ts:37:export function ensurePath(obj: any, segments: string[]): any {
+src/lib/utils/typeSafetyPrimitives.ts:101:export function applyPatchOp(root: any, op: StreamPatchOp): Result<any, string> {
+src/lib/utils/typeSafetyPrimitives.ts:143:        return Err(`Unknown operation type: ${(op as any).type}`);
+src/lib/utils/typeSafetyPrimitives.ts:155:export function createMessageEvent(data: any): MessageEvent {
+src/lib/utils/domainCalculation.ts:26:  const { patternType, characterSet, variableLength, prefixVariableLength, suffixVariableLength } = config as any;
+src/lib/utils/sqlNullTransformers.ts:280:    return transformSqlNullInt32(value) as any;
+src/lib/utils/sqlNullTransformers.ts:284:    return transformSqlNullString(value) as any;
+src/lib/utils/sqlNullTransformers.ts:288:    return transformSqlNullTime(value) as any;
+src/lib/utils/sqlNullTransformers.ts:292:    return transformSqlNullBool(value) as any;
+src/lib/utils/sqlNullTransformers.ts:296:    return transformSqlNullFloat64(value) as any;
+src/lib/utils/sqlNullTransformers.ts:300:  return value as any;
+src/lib/utils/typeGuards.ts:3: * Replaces unsafe `as any` casts with proper runtime type checking
+src/lib/utils/typeGuards.ts:11:export interface GeneratedDomainStruct { id?: string; domainName?: string; campaignId?: string; [k: string]: any; }
+src/lib/utils/typeGuards.ts:12:export interface LeadItemStruct { id?: string; name?: string | null; email?: string | null; company?: string | null; sourceUrl?: string | null; previousCampaignId?: string | null; [k: string]: any; }
+src/lib/utils/typeGuards.ts:13:export interface CampaignDataStruct { id?: string | null; name?: string | null; currentPhase?: string | null; phaseStatus?: string | null; [k: string]: any; }
+src/lib/utils/typeGuards.ts:14:export interface EnrichedCampaignDataStruct { campaign?: CampaignDataStruct | null; domains?: any[] | null; leads?: any[] | null; dnsValidatedDomains?: (string | null)[] | null; httpKeywordResults?: any[] | null; [k: string]: any; }
+src/lib/utils/typeGuards.ts:15:export interface BulkEnrichedDataResponseStruct { campaigns?: Record<string, EnrichedCampaignDataStruct> | null; totalCount?: number | null; metadata?: any; [k: string]: any; }
+src/lib/utils/typeGuards.ts:267:    (typeof (item as any).campaignId === 'string' || typeof (item as any).id === 'string')
+src/lib/utils/typeGuards.ts:346:export function convertCampaignToLeadGeneration(campaign: any): any {
+src/lib/utils/typeGuards.ts:369:  phases?: any[];
+src/lib/utils/typeGuards.ts:370:  statistics?: any;
+src/lib/utils/typeGuards.ts:371:  metadata?: any;
+src/lib/utils/typeGuards.ts:412:          name: (campaignData as any).campaign?.name || '',
+src/lib/utils/typeGuards.ts:413:          currentPhase: (campaignData as any).campaign?.currentPhase,
+src/lib/utils/typeGuards.ts:414:          phaseStatus: (campaignData as any).campaign?.phaseStatus,
+src/lib/utils/typeGuards.ts:415:          overallProgress: calculateProgressPercentage((campaignData as any).campaign?.progress),
+src/lib/utils/typeGuards.ts:416:          domains: (campaignData as any).domains || [],
+src/lib/utils/typeGuards.ts:417:          leads: (campaignData as any).leads || [],
+src/lib/utils/typeGuards.ts:420:          metadata: (campaignData as any).campaign || {} // Use campaign data as metadata
+src/lib/utils/memoization.ts:14:function deepEqual(a: any, b: any): boolean {
+src/lib/utils/memoization.ts:60:export function useDeepCallback<T extends (...args: any[]) => any>(
+src/lib/utils/apiResponseHelpers.ts:18:    const axiosError = error as any;
+src/lib/utils/typeGuards.test.ts:2: * Tests for Type Guards - Ensuring `as any` replacement functionality
+src/lib/utils/typeGuards.test.ts:24:describe('Type Guards - `as any` Replacement Tests', () => {
+src/lib/utils/typeGuards.test.ts:93:      const empty = assertBulkEnrichedDataResponse(null as any);
+src/lib/utils/typeGuards.test.ts:96:      const empty2 = assertBulkEnrichedDataResponse(undefined as any);
+src/lib/utils/typeGuards.test.ts:174:      const campaignsMap = extractCampaignsMap(response as any);
+src/lib/utils/typeGuards.test.ts:188:      const campaignsMap = extractCampaignsMap(response as any);
+src/lib/utils/typeGuards.test.ts:203:      const campaignsMap = extractCampaignsMap(response as any);
+src/lib/utils/typeGuards.test.ts:293:    const bulkData = realApiResponse.data as any; // Use any for test data simulation
+src/lib/utils/toRtkError.ts:7:  details?: any;
+src/lib/utils/toRtkError.ts:8:  raw?: any;
+src/lib/utils/toRtkError.ts:15:export function toRtkError(err: any): NormalizedRtkError {
+src/lib/services/healthService.ts:51:      const envelope = response?.data as any;
+src/lib/features/feature-flags.ts:261:      const rawFlags = (json as any).flags || (json as any);
+src/lib/features/feature-flags.ts:263:        ? rawFlags.map((f: any) => [f.key, f.value])
+src/lib/api-client/docs/BulkProxyOperationResponse.md:13:**results** | **Array&lt;{ [key: string]: any; }&gt;** |  | [optional] [default to undefined]
+src/lib/api-client/docs/PhaseConfigurationRequest.md:8:**configuration** | **{ [key: string]: any; }** | Phase-specific configuration | [default to undefined]
+src/lib/api-client/docs/ApiErrorDetailsInner.md:11:**context** | **{ [key: string]: any; }** |  | [optional] [default to undefined]
+src/lib/api-client/docs/CreateCampaignRequestConfigurationPatternConfig.md:18:**projectionEstimate** | **{ [key: string]: any; }** | Optional projection estimate payload for UI modeling | [optional] [default to undefined]
+src/lib/api-client/docs/ProxyPool.md:19:**proxies** | **Array&lt;{ [key: string]: any; }&gt;** |  | [optional] [default to undefined]
+src/lib/api-client/docs/CampaignState.md:11:**configuration** | **{ [key: string]: any; }** |  | [optional] [default to undefined]
+src/lib/api-client/docs/CampaignStateUpdate.md:10:**configuration** | **{ [key: string]: any; }** |  | [optional] [default to undefined]
+src/lib/api-client/docs/PhaseExecutionUpdate.md:18:**configuration** | **{ [key: string]: any; }** |  | [optional] [default to undefined]
+src/lib/api-client/docs/PhaseExecutionUpdate.md:19:**errorDetails** | **{ [key: string]: any; }** |  | [optional] [default to undefined]
+src/lib/api-client/docs/PhaseExecutionUpdate.md:20:**metrics** | **{ [key: string]: any; }** |  | [optional] [default to undefined]
+src/lib/api-client/docs/PhaseExecution.md:21:**configuration** | **{ [key: string]: any; }** |  | [optional] [default to undefined]
+src/lib/api-client/docs/PhaseExecution.md:22:**errorDetails** | **{ [key: string]: any; }** |  | [optional] [default to undefined]
+src/lib/api-client/docs/PhaseExecution.md:23:**metrics** | **{ [key: string]: any; }** |  | [optional] [default to undefined]
+src/lib/api-client/apis/campaigns-api.ts:129:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:130:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:167:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:168:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:205:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:206:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:243:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:244:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:281:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:282:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:316:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:317:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:353:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:354:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:392:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:393:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:431:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:432:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:466:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:467:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:509:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:510:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:560:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:561:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:656:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:657:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:692:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:693:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:728:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:729:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:764:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:765:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:796:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:797:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:832:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:833:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:871:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:872:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:910:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:911:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:946:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:947:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:989:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:990:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1032:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1033:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1072:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1073:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1115:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1116:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1154:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1155:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1194:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1195:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1234:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1235:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1274:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1275:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1310:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1311:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1346:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1347:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1382:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1383:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1418:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1419:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1457:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1458:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1496:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1497:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1535:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1536:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1574:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1575:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1610:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1611:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1646:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/campaigns-api.ts:1647:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/personas-api.ts:63:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/personas-api.ts:64:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/personas-api.ts:102:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/personas-api.ts:103:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/personas-api.ts:138:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/personas-api.ts:139:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/personas-api.ts:174:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/personas-api.ts:175:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/personas-api.ts:210:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/personas-api.ts:211:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/personas-api.ts:246:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/personas-api.ts:247:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/personas-api.ts:298:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/personas-api.ts:299:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/personas-api.ts:337:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/personas-api.ts:338:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/keyword-sets-api.ts:59:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/keyword-sets-api.ts:60:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/keyword-sets-api.ts:98:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/keyword-sets-api.ts:99:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/keyword-sets-api.ts:134:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/keyword-sets-api.ts:135:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/keyword-sets-api.ts:170:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/keyword-sets-api.ts:171:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/keyword-sets-api.ts:222:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/keyword-sets-api.ts:223:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/keyword-sets-api.ts:261:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/keyword-sets-api.ts:262:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/sse-api.ts:50:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/sse-api.ts:51:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/sse-api.ts:86:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/sse-api.ts:87:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/sse-api.ts:118:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/sse-api.ts:119:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/keyword-extraction-api.ts:55:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/keyword-extraction-api.ts:56:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/keyword-extraction-api.ts:98:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/keyword-extraction-api.ts:99:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/auth-api.ts:61:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/auth-api.ts:62:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/auth-api.ts:99:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/auth-api.ts:100:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/auth-api.ts:134:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/auth-api.ts:135:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/auth-api.ts:166:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/auth-api.ts:167:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/auth-api.ts:198:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/auth-api.ts:199:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:79:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:80:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:117:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:118:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:155:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:156:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:193:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:194:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:232:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:233:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:265:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:266:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:304:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:305:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:342:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:343:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:398:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:399:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:434:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:435:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:473:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/proxies-api.ts:474:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:54:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:55:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:90:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:91:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:129:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:130:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:168:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:169:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:204:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:205:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:240:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:241:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:272:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:273:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:304:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:305:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:336:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:337:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:368:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:369:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:400:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:401:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:432:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:433:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:464:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:465:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:496:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:497:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:528:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:529:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:560:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:561:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:592:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:593:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:624:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:625:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:656:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/monitoring-api.ts:657:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/database-api.ts:60:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/database-api.ts:61:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/database-api.ts:102:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/database-api.ts:103:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/health-api.ts:52:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/health-api.ts:53:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/health-api.ts:84:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/health-api.ts:85:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/health-api.ts:116:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/health-api.ts:117:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/health-api.ts:148:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/health-api.ts:149:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:64:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:65:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:96:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:97:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:128:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:129:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:160:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:161:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:192:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:193:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:224:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:225:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:256:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:257:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:288:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:289:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:320:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:321:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:352:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:353:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:387:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:388:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:425:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:426:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:463:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:464:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:501:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:502:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:539:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:540:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:577:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:578:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:615:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:616:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:653:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:654:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:691:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/server-settings-api.ts:692:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/proxy-pools-api.ts:67:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/proxy-pools-api.ts:68:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/proxy-pools-api.ts:105:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/proxy-pools-api.ts:106:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/proxy-pools-api.ts:144:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/proxy-pools-api.ts:145:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/proxy-pools-api.ts:176:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/proxy-pools-api.ts:177:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/proxy-pools-api.ts:216:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/proxy-pools-api.ts:217:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/proxy-pools-api.ts:255:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/proxy-pools-api.ts:256:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/keyword-rules-api.ts:59:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/keyword-rules-api.ts:60:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/scoring-api.ts:61:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/scoring-api.ts:62:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/scoring-api.ts:103:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/scoring-api.ts:104:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/scoring-api.ts:141:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/scoring-api.ts:142:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/scoring-api.ts:180:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/scoring-api.ts:181:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/scoring-api.ts:216:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/scoring-api.ts:217:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/scoring-api.ts:250:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/scoring-api.ts:251:            const localVarQueryParameter = {} as any;
+src/lib/api-client/apis/scoring-api.ts:297:            const localVarHeaderParameter = {} as any;
+src/lib/api-client/apis/scoring-api.ts:298:            const localVarQueryParameter = {} as any;
+src/lib/api-client/common.ts:42:export const setApiKeyToObject = async function (object: any, keyParamName: string, configuration?: Configuration) {
+src/lib/api-client/common.ts:55:export const setBasicAuthToObject = function (object: any, configuration?: Configuration) {
+src/lib/api-client/common.ts:65:export const setBearerAuthToObject = async function (object: any, configuration?: Configuration) {
+src/lib/api-client/common.ts:78:export const setOAuthToObject = async function (object: any, name: string, scopes: string[], configuration?: Configuration) {
+src/lib/api-client/common.ts:87:function setFlattenedQueryParams(urlSearchParams: URLSearchParams, parameter: any, key: string = ""): void {
+src/lib/api-client/common.ts:91:            (parameter as any[]).forEach(item => setFlattenedQueryParams(urlSearchParams, item, key));
+src/lib/api-client/common.ts:113:export const setSearchParams = function (url: URL, ...objects: any[]) {
+src/lib/api-client/common.ts:123:export const serializeDataIfNeeded = function (value: any, requestOptions: any, configuration?: Configuration) {
+src/lib/api-client/configuration.ts:23:    baseOptions?: any;
+src/lib/api-client/configuration.ts:75:    baseOptions?: any;
+src/lib/api-client/models/phase-execution.ts:106:     * @type {{ [key: string]: any; }}
+src/lib/api-client/models/phase-execution.ts:109:    'configuration'?: { [key: string]: any; };
+src/lib/api-client/models/phase-execution.ts:112:     * @type {{ [key: string]: any; }}
+src/lib/api-client/models/phase-execution.ts:115:    'errorDetails'?: { [key: string]: any; };
+src/lib/api-client/models/phase-execution.ts:118:     * @type {{ [key: string]: any; }}
+src/lib/api-client/models/phase-execution.ts:121:    'metrics'?: { [key: string]: any; };
+src/lib/api-client/models/campaign-state-update.ts:43:     * @type {{ [key: string]: any; }}
+src/lib/api-client/models/campaign-state-update.ts:46:    'configuration'?: { [key: string]: any; };
+src/lib/api-client/models/proxy-pool.ts:91:     * @type {Array<{ [key: string]: any; }>}
+src/lib/api-client/models/proxy-pool.ts:94:    'proxies'?: Array<{ [key: string]: any; }>;
+src/lib/api-client/models/api-error-details-inner.ts:46:     * @type {{ [key: string]: any; }}
+src/lib/api-client/models/api-error-details-inner.ts:49:    'context'?: { [key: string]: any; };
+src/lib/api-client/models/create-campaign-request-configuration-pattern-config.ts:79:     * @type {{ [key: string]: any; }}
+src/lib/api-client/models/create-campaign-request-configuration-pattern-config.ts:82:    'projectionEstimate'?: { [key: string]: any; };
+src/lib/api-client/models/phase-configuration-request.ts:28:     * @type {{ [key: string]: any; }}
+src/lib/api-client/models/phase-configuration-request.ts:31:    'configuration': { [key: string]: any; };
+src/lib/api-client/models/server-config-update-request.ts:23:    [key: string]: any;
+src/lib/api-client/models/phase-execution-update.ts:88:     * @type {{ [key: string]: any; }}
+src/lib/api-client/models/phase-execution-update.ts:91:    'configuration'?: { [key: string]: any; };
+src/lib/api-client/models/phase-execution-update.ts:94:     * @type {{ [key: string]: any; }}
+src/lib/api-client/models/phase-execution-update.ts:97:    'errorDetails'?: { [key: string]: any; };
+src/lib/api-client/models/phase-execution-update.ts:100:     * @type {{ [key: string]: any; }}
+src/lib/api-client/models/phase-execution-update.ts:103:    'metrics'?: { [key: string]: any; };
+src/lib/api-client/models/dnsvalidator-config-json.ts:23:    [key: string]: any;
+src/lib/api-client/models/bulk-database-stats-request.ts:23:    [key: string]: any;
+src/lib/api-client/models/rate-limiter-config.ts:23:    [key: string]: any;
+src/lib/api-client/models/logging-config.ts:23:    [key: string]: any;
+src/lib/api-client/models/proxy-manager-config-json.ts:23:    [key: string]: any;
+src/lib/api-client/models/campaign-state.ts:49:     * @type {{ [key: string]: any; }}
+src/lib/api-client/models/campaign-state.ts:52:    'configuration'?: { [key: string]: any; };
+src/lib/api-client/models/bulk-proxy-operation-response.ts:58:     * @type {Array<{ [key: string]: any; }>}
+src/lib/api-client/models/bulk-proxy-operation-response.ts:61:    'results'?: Array<{ [key: string]: any; }>;
+src/lib/api-client/models/server-config-response.ts:23:    [key: string]: any;
+src/lib/api-client/models/httpvalidator-config-json.ts:23:    [key: string]: any;
+src/lib/api-client/models/worker-config.ts:23:    [key: string]: any;
+src/lib/api-client/models/auth-config.ts:23:    [key: string]: any;
+src/lib/security/csp.ts:269:  return (req: any, res: any, next: any) => {
+src/lib/security/rate-limiter.ts:410:export function withRateLimit<T extends (...args: any[]) => Promise<any>>(
+src/lib/hooks/usePaginatedDomains.ts:19:  items: any[]; // current page OR accumulated if infinite
+src/lib/hooks/usePaginatedDomains.ts:41:  items: any[];
+src/lib/hooks/usePaginatedDomains.ts:64:  const pageInfo = (data as any)?.pageInfo;
+src/lib/hooks/usePaginatedDomains.ts:74:      const seen = new Set(accumulated.current.map((d: any) => d.id || d.domain));
+src/lib/hooks/usePaginatedDomains.ts:96:    error: error ? (error as any).message || 'Failed to load domains' : undefined,
+src/lib/hooks/useProxyHealth.ts:73:    const activeProxies = safeProxyData.filter((p: any) => p?.isEnabled && p?.isHealthy).length;
+src/lib/hooks/useProxyHealth.ts:74:    const failedProxies = safeProxyData.filter((p: any) => p?.isEnabled && !p?.isHealthy).length;
+src/lib/hooks/useProxyHealth.ts:76:  const disabledProxies = safeProxyData.filter((p: any) => !p?.isEnabled).length;
+src/lib/hooks/useProxyHealth.ts:78:  const proxiesWithLatency = safeProxyData.filter((p: any) => {
+src/lib/hooks/useProxyHealth.ts:79:      const lm: any = p?.latencyMs;
+src/lib/hooks/useProxyHealth.ts:90:  const totalTests = safeProxyData.reduce((sum, p: any) => {
+src/lib/hooks/useProxyHealth.ts:91:      const successCount: any = p?.successCount || 0;
+src/lib/hooks/useProxyHealth.ts:92:      const failureCount: any = p?.failureCount || 0;
+src/lib/hooks/useProxyHealth.ts:98:  const totalSuccesses = safeProxyData.reduce((sum, p: any) => {
+src/lib/hooks/useProxyHealth.ts:99:      const successCount: any = p?.successCount || 0;
+src/lib/hooks/useProxyHealth.ts:122:  return proxies.map((proxy: any) => ({
+src/lib/hooks/useProxyHealth.ts:126:      latencyMs: proxy?.latencyMs ? (typeof proxy.latencyMs === 'string' ? parseFloat(proxy.latencyMs) : (proxy.latencyMs as any)) : null,
+src/lib/hooks/useProxyHealth.ts:127:      lastTested: proxy?.lastCheckedAt ? new Date(proxy.lastCheckedAt as any) : null,
+src/lib/hooks/useProxyHealth.ts:128:      successCount: typeof proxy?.successCount === 'string' ? parseInt(proxy.successCount, 10) : (proxy?.successCount as any || 0),
+src/lib/hooks/useProxyHealth.ts:129:      failureCount: typeof proxy?.failureCount === 'string' ? parseInt(proxy.failureCount, 10) : (proxy?.failureCount as any || 0),
+src/lib/hooks/useProxyHealth.ts:147:  const data = (response as any)?.data ?? response;
+src/lib/hooks/useProxyHealth.ts:185:  const data = (response as any)?.data ?? response;
+src/lib/hooks/useProxyHealth.ts:220:  const data = (response as any)?.data ?? response;
+src/lib/hooks/useProxyHealth.ts:255:  const proxy: any = proxies.find((p: any) => p?.id === proxyId);
+src/lib/hooks/useProxyHealth.ts:258:  const successCount: any = proxy?.successCount || 0;
+src/lib/hooks/useProxyHealth.ts:259:  const failureCount: any = proxy?.failureCount || 0;
+src/lib/hooks/useCampaignPhaseEvents.ts:117:                        (draft: any) => {
+src/lib/hooks/useCampaignPhaseEvents.ts:122:                          const items: DomainListItem[] | undefined = draft.items as any;
+src/lib/hooks/useCampaignPhaseEvents.ts:133:                      ) as any
+src/lib/hooks/useInfiniteScroll.ts:28:  fetchFn: (page: number) => Promise<{ data: any[]; pageInfo?: PageInfo & { current?: number; total?: number }; totalCount?: number }>,
+src/lib/hooks/useInfiniteScroll.ts:59:        if (typeof (result.pageInfo as any).hasNextPage === 'boolean') {
+src/lib/hooks/useInfiniteScroll.ts:60:          hasMore = (result.pageInfo as any).hasNextPage;
+src/lib/hooks/useInfiniteScroll.ts:61:        } else if ((result.pageInfo as any).current !== undefined && (result.pageInfo as any).total !== undefined) {
+src/lib/hooks/useInfiniteScroll.ts:62:          hasMore = ((result.pageInfo as any).current) < ((result.pageInfo as any).total);
+src/lib/hooks/useCampaignFormData.ts:48:  const personasData: Persona[] = (personasResp as any)?.data ?? personasResp ?? [];
+src/lib/hooks/useCampaignFormData.ts:56:  const proxiesData: ProxyType[] = (proxiesResp as any)?.data ?? proxiesResp ?? [];
+src/lib/hooks/useCampaignFormData.ts:61:  const campaignsData: Campaign[] = (campaignsResp as any)?.data ?? campaignsResp ?? [];
+src/lib/hooks/useCampaignFormData.ts:65:      const message = (error as any)?.message || (error as any)?.response?.data?.message || 'Failed to load form data';
+src/lib/hooks/useCachedAuth.tsx:133:      const userData: User | null = (response as any)?.data ?? (response as any) ?? null;
+src/lib/hooks/useCachedAuth.tsx:226:  const loginData: any = (response as any)?.data ?? response;
+src/lib/hooks/useCachedAuth.tsx:232:        const sessionUser = (loginData as any)?.User || (loginData as any)?.user;
+src/lib/api/transformers/campaign-transformers.ts:7:export function transformCampaignResponse(campaign: any): Campaign {
+src/lib/api/transformers/campaign-transformers.ts:15:export function transformCampaignArrayResponse(campaigns: any[] | null | undefined): Campaign[] {
+src/services/perf/__tests__/taskSchedulerService.test.ts:20:(global as any).Worker = jest.fn(() => mockWorker);
+src/services/perf/__tests__/taskSchedulerService.test.ts:42:      (taskScheduler as any).workerHealthy = false;
+src/services/perf/__tests__/taskSchedulerService.test.ts:86:      (global as any).Worker = jest.fn(() => {
+src/services/perf/__tests__/taskSchedulerService.test.ts:98:      const service = (taskScheduler as any);
+src/services/perf/__tests__/taskSchedulerService.test.ts:120:      const service = (taskScheduler as any);
+src/services/perf/__tests__/taskSchedulerService.test.ts:131:      const service = (taskScheduler as any);
+src/services/perf/memoryPressureService.ts:63:      const memInfo = (performance as any).memory;
+src/services/perf/memoryPressureService.ts:138:    if (typeof window !== 'undefined' && (window as any).gc) {
+src/services/perf/memoryPressureService.ts:140:        (window as any).gc();
+src/services/perf/memoryPressureService.ts:249:           (performance as any).memory !== undefined;
+src/services/perf/memoryPressureService.ts:269:    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
+src/services/perf/memoryPressureService.ts:270:      const telemetryService = (window as any).__telemetryService;
+src/services/perf/memoryPressureService.ts:289:        if ((window as any)[cacheName]) {
+src/services/perf/memoryPressureService.ts:290:          const cache = (window as any)[cacheName];
+src/services/perf/memoryPressureService.ts:301:    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
+src/services/perf/memoryPressureService.ts:302:      const telemetryService = (window as any).__telemetryService;
+src/services/perf/memoryPressureService.ts:313:  return typeof performance !== 'undefined' && (performance as any).memory !== undefined;
+src/services/perf/taskSchedulerService.ts:33:  | { kind: 'forecast'; payload: { modelForecasts: any[]; metricKey: string; horizon: number } }
+src/services/perf/taskSchedulerService.ts:34:  | { kind: 'metric'; payload: { aggregates: any; classifiedCounts: any } }
+src/services/perf/taskSchedulerService.ts:50:  payload: any; // TODO: Replace with TaskDescriptor payload when fully typed
+src/services/perf/taskSchedulerService.ts:54:  resolve: (result: any) => void;
+src/services/perf/taskSchedulerService.ts:74:  result?: any;
+src/services/perf/taskSchedulerService.ts:159:    payload: any,
+src/services/perf/taskSchedulerService.ts:418:  private async executeInline(kind: TaskKind, payload: any): Promise<any> {
+src/services/perf/taskSchedulerService.ts:434:  private inlineCausalRecompute(payload: any): any {
+src/services/perf/taskSchedulerService.ts:448:  private inlineForecastBlend(payload: any): any {
+src/services/perf/taskSchedulerService.ts:457:    const blendedPoints = firstForecast.points.map((point: any) => ({
+src/services/perf/taskSchedulerService.ts:476:  private inlineSimulationProjection(payload: any): any {
+src/services/perf/taskSchedulerService.ts:518:    (taskScheduler as any).processQueue();
+src/services/perf/wasmAccelerationService.ts:16:  module?: any;
+src/services/perf/wasmAccelerationService.ts:332:  private createMockWasmModule(name: string): any {
+src/services/perf/wasmAccelerationService.ts:518:    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
+src/services/perf/wasmAccelerationService.ts:519:      const telemetryService = (window as any).__telemetryService;
+src/services/perf/wasmAccelerationService.ts:528:    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
+src/services/perf/wasmAccelerationService.ts:529:      const telemetryService = (window as any).__telemetryService;
+src/services/collab/draftStore.ts:25:  value: any;
+src/services/collab/draftStore.ts:56:    localValue: any;
+src/services/collab/draftStore.ts:57:    remoteValue: any;
+src/services/collab/draftStore.ts:58:    resolution: any;
+src/services/collab/draftStore.ts:346:  private getFieldValue(data: Record<string, any>, field: string): any {
+src/services/collab/draftStore.ts:364:  private setFieldValue(data: Record<string, any>, field: string, value: any): void {
+src/services/collab/draftStore.ts:410:    localValue: any,
+src/services/collab/draftStore.ts:411:    remoteValue: any,
+src/services/collab/draftStore.ts:414:  ): any {
+src/services/simulation/scenarioEngine.ts:77:  assumedCausalGraph?: any; // Reference to causal graph if available
+src/services/privacy/privacyRedactionService.ts:33:  redacted: any;
+src/services/privacy/privacyRedactionService.ts:84:  redactPayload(obj: any, policy?: PrivacyPolicy): RedactionResult {
+src/services/privacy/privacyRedactionService.ts:185:  redactValue(value: any, fieldPath: string, level: PrivacyLevel = 'public'): { redacted: any; applied: boolean } {
+src/services/privacy/privacyRedactionService.ts:202:  private redactObject(obj: any, policy: PrivacyPolicy, applied: RedactionEntry[], path: string): any {
+src/services/privacy/privacyRedactionService.ts:227:      const result: any = {};
+src/services/privacy/privacyRedactionService.ts:297:  private applyRedactionRule(value: any, rule: PrivacyRule): any {
+src/services/privacy/privacyRedactionService.ts:317:  private performRedaction(value: any, rule: PrivacyRule): string {
+src/services/privacy/privacyRedactionService.ts:329:  private hashValue(value: any, salt?: string): string {
+src/services/privacy/privacyRedactionService.ts:347:  private maskValue(value: any, rule: PrivacyRule): string {
+src/services/privacy/privacyRedactionService.ts:433:    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
+src/services/privacy/privacyRedactionService.ts:434:      const telemetryService = (window as any).__telemetryService;
+src/services/privacy/differentialPrivacyService.ts:429:    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
+src/services/privacy/differentialPrivacyService.ts:430:      const telemetryService = (window as any).__telemetryService;
+src/services/policy/policyEngine.ts:59:  value: any;
+src/services/policy/policyEngine.ts:363:  private getContextValue(context: PolicyEventContext, field: string): any {
+src/services/policy/policyEngine.ts:365:    let value: any = context;
+src/services/observability/tracingService.ts:331:    } catch (error: any) {
+src/services/observability/tracingService.ts:415:    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
+src/services/observability/tracingService.ts:416:      const telemetryService = (window as any).__telemetryService;
+src/services/summarization/summarizationService.ts:579:    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
+src/services/summarization/summarizationService.ts:580:      const telemetryService = (window as any).__telemetryService;
+src/services/analytics/causalGraphService.ts:450:    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
+src/services/analytics/causalGraphService.ts:451:      const telemetryService = (window as any).__telemetryService;
+src/services/campaignMetrics/__tests__/serverAdapter.test.ts:182:      expect((snapshot.aggregates as any).customField).toBeUndefined();
+src/services/campaignMetrics/__tests__/serverAdapter.test.ts:194:      const snapshot = transformServerResponse(responseWithBadTypes as any);
+src/services/campaignMetrics/__tests__/forecastService.test.ts:119:        } as any
+src/services/campaignMetrics/forecastBlendService.ts:227:    modelForecasts: Array<{ modelId: string; points: any[] }>
+src/services/campaignMetrics/forecastBlendService.ts:377:    modelForecasts: Array<{ modelId: string; points: any[] }>
+src/services/campaignMetrics/auditLogService.ts:25:    oldValue?: any;
+src/services/campaignMetrics/auditLogService.ts:26:    newValue?: any;
+src/services/campaignMetrics/healthFabricService.ts:62:    value: any;
+src/services/campaignMetrics/healthFabricService.ts:107:  oldValue?: any;
+src/services/campaignMetrics/healthFabricService.ts:108:  newValue?: any;
+src/services/campaignMetrics/healthFabricService.ts:173:      domainType: domainType as any,
+src/services/campaignMetrics/healthFabricService.ts:589:  private getHealthFieldValue(health: DomainHealth, field: string): any {
+src/services/campaignMetrics/forecastService.ts:1165:): Promise<Array<{ modelId: string; points: any[] }>> {
+src/services/campaignMetrics/forecastService.ts:1166:  const modelForecasts: Array<{ modelId: string; points: any[] }> = [];
+src/services/campaignMetrics/enhancedSecurityHardeningService.ts:10:declare const process: any;
+src/services/campaignMetrics/enhancedSecurityHardeningService.ts:101:    schema: any,
+src/services/campaignMetrics/enhancedSecurityHardeningService.ts:132:    expectedSchema: any,
+src/services/campaignMetrics/enhancedSecurityHardeningService.ts:197:    payload: any,
+src/services/campaignMetrics/enhancedSecurityHardeningService.ts:241:    payload: any,
+src/services/campaignMetrics/enhancedSecurityHardeningService.ts:530:    data: any,
+src/services/campaignMetrics/enhancedSecurityHardeningService.ts:531:    schema: any,
+src/services/campaignMetrics/workerCoordinator.ts:21:  aggregates?: any;
+src/services/campaignMetrics/workerCoordinator.ts:22:  classifiedCounts?: any;
+src/services/campaignMetrics/workerCoordinator.ts:23:  movers?: any;
+src/services/campaignMetrics/workerCoordinator.ts:24:  deltas?: any;
+src/services/campaignMetrics/workerCoordinator.ts:39:  resolve: (result: any) => void;
+src/services/campaignMetrics/workerCoordinator.ts:345:  aggregates: any;
+src/services/campaignMetrics/workerCoordinator.ts:346:  classifiedCounts: any;
+src/services/campaignMetrics/workerCoordinator.ts:347:  movers?: any;
+src/services/campaignMetrics/workerCoordinator.ts:348:  deltas?: any;
+src/services/campaignMetrics/streamPool.ts:93:  private baseSnapshot: any = {};
+src/services/campaignMetrics/streamPool.ts:99:  applyPatch(patch: DifferentialPatch, baseData?: any): any {
+src/services/campaignMetrics/streamPool.ts:117:  private applyChange(target: any, change: StreamPatchOp): void {
+src/services/campaignMetrics/streamPool.ts:127:  updateBaseSnapshot(snapshot: any): void {
+src/services/campaignMetrics/streamPool.ts:134:  getCurrentState(): any {
+src/services/campaignMetrics/streamPool.ts:282:    let messageData: any;
+src/services/campaignMetrics/streamPool.ts:541:  private emitTelemetryEvent(eventType: string, data: any): void {
+src/services/campaignMetrics/streamPool.ts:543:    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
+src/services/campaignMetrics/streamPool.ts:545:        (window as any).__telemetryService.emitTelemetry(eventType, data);
+src/services/campaignMetrics/progressStream.ts:172:  private handleSSEError(reject: (reason?: any) => void): void {
+src/services/campaignMetrics/metricsPerf.ts:15:  detail?: any;
+src/services/campaignMetrics/metricsPerf.ts:44:export function mark(name: string, detail?: any): void {
+src/services/campaignMetrics/metricsPerf.ts:172:  detail?: any
+src/services/campaignMetrics/metricsPerf.ts:201:  detail?: any
+src/services/campaignMetrics/metricsPerf.ts:306:export function emitPerformanceEvent(eventName: string, detail: any): void {
+src/services/campaignMetrics/metricsPerf.ts:336:  const memory = (performance as any).memory;
+src/services/campaignMetrics/enhancedRecommendationService.ts:97:    snapshots: any[],
+src/services/campaignMetrics/enhancedRecommendationService.ts:99:      anomalies?: any[];
+src/services/campaignMetrics/enhancedRecommendationService.ts:100:      forecasts?: any[];
+src/services/campaignMetrics/enhancedRecommendationService.ts:101:      cohortInsights?: any[];
+src/services/campaignMetrics/enhancedRecommendationService.ts:160:    snapshots: any[]
+src/services/campaignMetrics/enhancedRecommendationService.ts:182:          modelVersion: (serverResponse as any).modelVersion,
+src/services/campaignMetrics/enhancedRecommendationService.ts:202:    snapshots: any[],
+src/services/campaignMetrics/enhancedRecommendationService.ts:235:    anomalies: any[],
+src/services/campaignMetrics/enhancedRecommendationService.ts:236:    snapshots: any[],
+src/services/campaignMetrics/enhancedRecommendationService.ts:287:    snapshots: any[],
+src/services/campaignMetrics/enhancedRecommendationService.ts:288:    context: any
+src/services/campaignMetrics/enhancedRecommendationService.ts:474:    snapshots: any[],
+src/services/campaignMetrics/enhancedRecommendationService.ts:476:  ): any[] {
+src/services/campaignMetrics/enhancedRecommendationService.ts:481:  private categorizeRecommendation(rec: any): EnhancedRecommendation['category'] {
+src/services/campaignMetrics/enhancedRecommendationService.ts:491:  private calculatePriority(rec: any): number {
+src/services/campaignMetrics/enhancedRecommendationService.ts:497:  private estimateImpact(rec: any): EnhancedRecommendation['estimatedImpact'] {
+src/services/campaignMetrics/enhancedRecommendationService.ts:505:  private makeActionable(rec: any): EnhancedRecommendation['actionable'] {
+src/services/campaignMetrics/enhancedRecommendationService.ts:541:  snapshots: any[],
+src/services/campaignMetrics/enhancedRecommendationService.ts:542:  context?: any,
+src/services/campaignMetrics/exportService.ts:177:    nodes: any[];
+src/services/campaignMetrics/exportService.ts:178:    edges: any[];
+src/services/campaignMetrics/exportService.ts:182:    arms: any[];
+src/services/campaignMetrics/exportService.ts:183:    decisions: any[];
+src/services/campaignMetrics/exportService.ts:184:    rewardsSummary: any;
+src/services/campaignMetrics/exportService.ts:187:    anomalies: any[];
+src/services/campaignMetrics/exportService.ts:188:    causalDeltas: any[];
+src/services/campaignMetrics/exportService.ts:198:    spans: any[];
+src/services/campaignMetrics/exportService.ts:683:function escapeCSVField(value: any): string {
+src/services/campaignMetrics/exportService.ts:916:    if ((optionsV7 as any).includeCausalGraph && (optionsV7 as any).causalGraphData) {
+src/services/campaignMetrics/exportService.ts:917:      exportData.causalGraph = (optionsV7 as any).causalGraphData;
+src/services/campaignMetrics/exportService.ts:999:      delete (parsed as any).scenarios;
+src/services/campaignMetrics/exportService.ts:1000:      delete (parsed as any).policies;
+src/services/campaignMetrics/exportService.ts:1001:      delete (parsed as any).vizProfiles;
+src/services/campaignMetrics/exportService.ts:1002:      delete (parsed as any).edgeProcessing;
+src/services/campaignMetrics/serverAdapter.ts:51:    (aggregates as any).highPotentialCount = serverAggregates.highPotentialCount;
+src/services/campaignMetrics/serverAdapter.ts:54:    (aggregates as any).leadsCount = serverAggregates.leadsCount;
+src/services/campaignMetrics/serverAdapter.ts:57:    (aggregates as any).avgRichness = serverAggregates.avgRichness;
+src/services/campaignMetrics/serverAdapter.ts:60:    (aggregates as any).warningRate = serverAggregates.warningRate;
+src/services/campaignMetrics/serverAdapter.ts:63:    (aggregates as any).keywordCoverage = serverAggregates.keywordCoverage;
+src/services/campaignMetrics/serverAdapter.ts:66:    (aggregates as any).medianGain = serverAggregates.medianGain;
+src/services/campaignMetrics/serverAdapter.ts:81:export function validateServerResponse(response: any): response is ServerMetricsResponse {
+src/services/campaignMetrics/serverAdapter.ts:116:export function logServerWarning(message: string, details?: any) {
+src/services/campaignMetrics/snapshotCompactionService.ts:389:        aggregates: {} as any,
+src/services/campaignMetrics/snapshotCompactionService.ts:397:        aggregates: {} as any,
+src/services/campaignMetrics/snapshotCompactionService.ts:406:  const firstAgg = (firstSnapshot && (firstSnapshot as any).aggregates) || ({} as any);
+src/services/campaignMetrics/snapshotCompactionService.ts:407:    const aggregates: any = {};
+src/services/campaignMetrics/snapshotCompactionService.ts:410:        .map(s => (s.aggregates as any)?.[key])
+src/services/campaignMetrics/snapshotCompactionService.ts:415:        aggregates[key] = (firstAgg as any)[key];
+src/services/campaignMetrics/snapshotCompactionService.ts:420:  const { aggregates: _origAgg, ...rest } = (middleSnapshot || {}) as any;
+src/services/campaignMetrics/normalizationService.ts:231:function validateBenchmarkData(data: any): data is BenchmarkMetrics {
+src/services/campaignMetrics/securityHardeningService.ts:66:    originalValue?: any;
+src/services/campaignMetrics/securityHardeningService.ts:81:    value: any,
+src/services/campaignMetrics/securityHardeningService.ts:207:  validateForecastHorizon(horizon: any): SanitizationResult<number> {
+src/services/campaignMetrics/securityHardeningService.ts:214:  sanitizeForecastPoints(points: any[]): SanitizationResult<any[]> {
+src/services/campaignMetrics/securityHardeningService.ts:224:    const sanitizedPoints: any[] = [];
+src/services/campaignMetrics/securityHardeningService.ts:283:  sanitizeMetricAggregates(aggregates: any): SanitizationResult<any> {
+src/services/campaignMetrics/securityHardeningService.ts:299:  sanitizeString(input: any, maxLength: number = 1000): SanitizationResult<string> {
+src/services/campaignMetrics/securityHardeningService.ts:375:export function validateForecastHorizon(horizon: any): SanitizationResult<number> {
+src/services/campaignMetrics/securityHardeningService.ts:382:export function sanitizeForecastPoints(points: any[]): SanitizationResult<any[]> {
+src/services/campaignMetrics/securityHardeningService.ts:396:export function sanitizeString(input: any, maxLength?: number): SanitizationResult<string> {
+src/services/campaignMetrics/offlineResilienceService.ts:9:declare const process: any;
+src/services/campaignMetrics/offlineResilienceService.ts:41:  payload: any;
+src/services/campaignMetrics/offlineResilienceService.ts:62:  payload: any;
+src/services/campaignMetrics/offlineResilienceService.ts:649:  private calculateChecksum(data: any): string {
+src/services/campaignMetrics/offlineResilienceService.ts:663:  private calculateContextHash(event: any): string {
+src/services/campaignMetrics/dynamicCohortService.ts:385:      const values = aggregates.filter(agg => agg != null).map(agg => (agg as any)[key] as number).filter(v => typeof v === 'number' && !isNaN(v));
+src/services/campaignMetrics/capabilitiesService.ts:61:  oldValue?: any;
+src/services/campaignMetrics/capabilitiesService.ts:62:  newValue?: any;
+src/services/campaignMetrics/recommendationScoreService.ts:30:  classification: any;
+src/services/campaignMetrics/deltasService.ts:164:      (baselineAggregates as any)[key] = Math.max(0, value * (1 - reduction));
+src/services/campaignMetrics/degradationEvaluatorService.ts:318:          domain: domain as any,
+src/services/campaignMetrics/degradationEvaluatorService.ts:338:          domain: domain as any,
+src/services/campaignMetrics/degradationEvaluatorService.ts:349:      const resolution = capabilitiesService.resolveDomain(domain as any);
+src/services/campaignMetrics/degradationEvaluatorService.ts:353:          domain: domain as any,
+src/services/campaignMetrics/degradationEvaluatorService.ts:361:          domain: domain as any,
+src/services/campaignMetrics/degradationEvaluatorService.ts:371:          domain: domain as any,
+src/services/campaignMetrics/degradationEvaluatorService.ts:381:        domain: domain as any,
+src/services/campaignMetrics/exportV5EvolutionService.ts:95:    evidence: any[];
+src/services/campaignMetrics/exportV5EvolutionService.ts:174:    oldValue?: any;
+src/services/campaignMetrics/exportV5EvolutionService.ts:175:    newValue?: any;
+src/services/campaignMetrics/exportV5EvolutionService.ts:212:  timeline?: any[];
+src/services/campaignMetrics/exportV5EvolutionService.ts:213:  forecasts?: any[];
+src/services/campaignMetrics/exportV5EvolutionService.ts:214:  recommendations?: any[];
+src/services/campaignMetrics/exportV5EvolutionService.ts:215:  anomalies?: any[];
+src/services/campaignMetrics/exportV5EvolutionService.ts:222:  healthFabricSnapshots?: any[];
+src/services/campaignMetrics/exportV5EvolutionService.ts:223:  performanceMetrics?: any[];
+src/services/campaignMetrics/exportV5EvolutionService.ts:295:      timeline?: any[];
+src/services/campaignMetrics/exportV5EvolutionService.ts:296:      forecasts?: any[];
+src/services/campaignMetrics/exportV5EvolutionService.ts:297:      recommendations?: any[];
+src/services/campaignMetrics/exportV5EvolutionService.ts:298:      anomalies?: any[];
+src/services/campaignMetrics/exportV5EvolutionService.ts:304:      healthFabricData?: any[];
+src/services/campaignMetrics/exportV5EvolutionService.ts:305:      performanceData?: any[];
+src/services/campaignMetrics/exportV5EvolutionService.ts:433:      timeline?: any[];
+src/services/campaignMetrics/exportV5EvolutionService.ts:434:      forecasts?: any[];
+src/services/campaignMetrics/exportV5EvolutionService.ts:435:      recommendations?: any[];
+src/services/campaignMetrics/exportV5EvolutionService.ts:436:      anomalies?: any[];
+src/services/campaignMetrics/exportV5EvolutionService.ts:771:  private filterByTimeRange(data: any[], timeRange?: { start: string; end: string }): any[] {
+src/services/campaignMetrics/exportV5EvolutionService.ts:789:  private extractCampaignId(data: any): string | undefined {
+src/services/campaignMetrics/historyStore.ts:280:        entries: parsed.entries.map((entry: any) => ({
+src/services/campaignMetrics/telemetryService.ts:135:    oldValue?: any;
+src/services/campaignMetrics/telemetryService.ts:136:    newValue?: any;
+src/services/campaignMetrics/telemetryService.ts:233:        (window as any).__telemetryService = this;
+src/services/campaignMetrics/telemetryService.ts:441:    if (typeof window !== 'undefined' && (window as any).__telemetryService === this) {
+src/services/campaignMetrics/telemetryService.ts:442:      delete (window as any).__telemetryService;
+src/services/campaignMetrics/performanceGuardrailsService.ts:9:declare const process: any;
+src/services/campaignMetrics/performanceGuardrailsService.ts:296:      if (typeof performance !== 'undefined' && (performance as any).memory) {
+src/services/campaignMetrics/performanceGuardrailsService.ts:297:        const memory = (performance as any).memory;
+src/services/campaignMetrics/performanceGuardrailsService.ts:382:          .catch(err => finalize(null as any, err)) as Promise<T>;
+src/services/campaignMetrics/performanceGuardrailsService.ts:387:      return finalize(null as any, error as Error);
+src/services/campaignMetrics/performanceGuardrailsService.ts:397:      if (typeof global !== 'undefined' && (global as any).gc) {
+src/services/campaignMetrics/performanceGuardrailsService.ts:398:        (global as any).gc();
+src/services/campaignMetrics/rootCauseAnalyticsService.ts:459:  ): { score: number; evidence: any[] } {
+src/services/campaignMetrics/rootCauseAnalyticsService.ts:483:  ): { score: number; evidence: any[] } {
+src/services/campaignMetrics/rootCauseAnalyticsService.ts:516:  ): { significance: number; direction: string; evidence: any[] } {
+src/services/campaignMetrics/rootCauseAnalyticsService.ts:543:  ): { significance: number; evidence: any[] } {
+src/services/campaignMetrics/rootCauseAnalyticsService.ts:570:  ): { score: number; evidence: any[] } {
+src/services/campaignMetrics/rootCauseAnalyticsService.ts:604:  private detectModelDrift(context: AnomalyContext): { score: number; evidence: any[] } {
+src/services/campaignMetrics/rootCauseAnalyticsService.ts:622:  private detectSeasonalEffects(context: AnomalyContext): { score: number; evidence: any[] } {
+src/services/campaignMetrics/rootCauseAnalyticsService.ts:728:    template: any
+src/services/campaignMetrics/mlRecommendationsService.ts:119:function validateMLResponse(data: any): data is MLRecommendationsResponse {
+src/services/campaignMetrics/mlRecommendationsService.ts:134:function validateMLRecommendation(rec: any): rec is MLRecommendation {
+src/services/i18n/i18nService.ts:435:    let current: any = obj;
+src/services/i18n/i18nService.ts:494:      if (typeof window !== 'undefined' && (window as any).telemetryService) {
+src/services/i18n/i18nService.ts:495:        (window as any).telemetryService.emitTelemetry('i18n_locale_loaded', {
+src/services/i18n/i18nService.ts:750:    const countKeys = (obj: any): number => {
+src/services/experimentation/banditService.ts:527:    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
+src/services/experimentation/banditService.ts:528:      const telemetryService = (window as any).__telemetryService;
+src/services/experimentation/banditService.ts:537:    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
+src/services/experimentation/banditService.ts:538:      const telemetryService = (window as any).__telemetryService;
+src/providers/RTKCampaignDataProvider.tsx:78:          const dataMsg = (data && (String((data as any).message) || String((data as any).error?.message))) || null;
+src/store/selectors/pipelineSelectors.ts:26:const selectCampaignApiState = (s: RootState) => (s as any).campaignApi; // RTK Query slice
+src/store/selectors/pipelineSelectors.ts:48:    const sub = base(state as any);
+src/store/selectors/pipelineSelectors.ts:49:    return (sub as any)?.data as { status?: BackendStatus } | undefined;
+src/store/selectors/pipelineSelectors.ts:135:        const runnableIdx = PIPELINE_PHASE_ORDER.indexOf(nextRunnable.key as any);
+src/store/selectors/pipelineSelectors.ts:161:  phases => phases.reduce((acc, p) => { (acc as any)[p.execState] = ((acc as any)[p.execState]||0)+1; return acc; }, { idle:0, running:0, completed:0, failed:0 } as Record<string, number>)
+src/store/selectors/pipelineSelectors.ts:168:  (state as any).pipelineExec?.byCampaign?.[campaignId] || EMPTY_EXEC_RUNTIME;
+src/store/selectors/pipelineSelectors.ts:170:  return (state as any).pipelineExec?.byCampaign?.[campaignId]?.[phase];
+src/store/selectors/pipelineSelectors.ts:174:  const exec = (state as any).pipelineExec?.byCampaign?.[campaignId];
+src/store/selectors/pipelineSelectors.ts:217:  }, {} as any)
+src/store/selectors/pipelineSelectors.ts:362:      const r = (runtime as any)[p.key];
+src/store/ui/__tests__/campaignUiSlice.test.ts:5:    const state = reducer(undefined, { type: '@@INIT' } as any);
+src/store/ui/__tests__/pipelineSelectors.test.ts:7:interface QueryEntry { endpointName: string; originalArgs: any; data?: any }
+src/store/ui/__tests__/pipelineSelectors.test.ts:44:		const first = sel(store.getState() as any);
+src/store/ui/__tests__/pipelineSelectors.test.ts:45:		const second = sel(store.getState() as any);
+src/store/ui/__tests__/pipelineSelectors.test.ts:54:		const ov = ovSel(store.getState() as any);
+src/store/api/cleanCampaignApi.ts:57:// - Type casting with 'as any'
+src/store/api/bulkOperationsApi.ts:59:  return data ? { data } : { error: { status: 500, data: 'Empty bulk generation response' } as any };
+src/store/api/bulkOperationsApi.ts:60:        } catch (error: any) {
+src/store/api/bulkOperationsApi.ts:74:      return data ? { data } : { error: { status: 500, data: 'Empty DNS validation response' } as any };
+src/store/api/bulkOperationsApi.ts:75:        } catch (error: any) {
+src/store/api/bulkOperationsApi.ts:88:      return data ? { data } : { error: { status: 500, data: 'Empty HTTP validation response' } as any };
+src/store/api/bulkOperationsApi.ts:89:        } catch (error: any) {
+src/store/api/bulkOperationsApi.ts:103:      return data ? { data } : { error: { status: 500, data: 'Empty bulk analytics response' } as any };
+src/store/api/bulkOperationsApi.ts:104:        } catch (error: any) {
+src/store/api/bulkOperationsApi.ts:118:      return data ? { data } : { error: { status: 500, data: 'Empty bulk resource allocation response' } as any };
+src/store/api/bulkOperationsApi.ts:119:        } catch (error: any) {
+src/store/api/bulkOperationsApi.ts:132:      return data ? { data } : { error: { status: 500, data: 'Empty bulk resource status response' } as any };
+src/store/api/bulkOperationsApi.ts:133:        } catch (error: any) {
+src/store/api/bulkOperationsApi.ts:149:      return data ? { data } : { error: { status: 500, data: 'Empty cancel operation response' } as any };
+src/store/api/bulkOperationsApi.ts:150:        } catch (error: any) {
+src/store/api/bulkOperationsApi.ts:164:          const resp = await bulkOperationsApiClient.getBulkOperationStatus(operationId) as any;
+src/store/api/bulkOperationsApi.ts:167:            return { error: { status: 500, data: 'Empty bulk operation status' } as any };
+src/store/api/bulkOperationsApi.ts:170:        } catch (error: any) {
+src/store/api/bulkOperationsApi.ts:191:      return data ? { data } : { error: { status: 500, data: 'Empty bulk operations list response' } as any };
+src/store/api/bulkOperationsApi.ts:192:        } catch (error: any) {
+src/store/api/README.md:39:  if ('error' in res && res.error && (res.error as any).data?.error) {
+src/store/api/README.md:40:    const { error, requestId } = (res.error as any).data;
+src/store/api/README.md:41:    return { error: { status: (res.error as any).status, data: { code: error.code, message: error.message, requestId } } };
+src/store/api/campaignApi.ts:42:          const resp = await campaignsApi.campaignsCreate(request) as any;
+src/store/api/campaignApi.ts:45:          if (!data || !data.id) return { error: 'Empty campaign response' as any };
+src/store/api/campaignApi.ts:47:        } catch (error: any) {
+src/store/api/campaignApi.ts:48:          return { error: toRtkError(error) as any };
+src/store/api/campaignApi.ts:59:          const data = (response as any)?.data ?? response;
+src/store/api/campaignApi.ts:60:          if (!data) return { error: 'Empty enriched campaign response' as any };
+src/store/api/campaignApi.ts:62:        } catch (error: any) {
+src/store/api/campaignApi.ts:63:          return { error: toRtkError(error) as any };
+src/store/api/campaignApi.ts:76:          const resp = await campaignsApi.campaignsList() as any;
+src/store/api/campaignApi.ts:80:        } catch (error: any) {
+src/store/api/campaignApi.ts:81:          return { error: toRtkError(error) as any };
+src/store/api/campaignApi.ts:92:          const data = (response as any)?.data ?? response;
+src/store/api/campaignApi.ts:93:          if (!data) return { error: 'Empty domains list response' as any };
+src/store/api/campaignApi.ts:95:        } catch (error: any) {
+src/store/api/campaignApi.ts:96:          return { error: toRtkError(error) as any };
+src/store/api/campaignApi.ts:109:          const data = (response as any)?.data ?? response;
+src/store/api/campaignApi.ts:110:          if (!data) return { error: 'Empty progress response' as any };
+src/store/api/campaignApi.ts:112:        } catch (error: any) {
+src/store/api/campaignApi.ts:113:          return { error: toRtkError(error) as any };
+src/store/api/campaignApi.ts:130:          const data = (response as any)?.data ?? response;
+src/store/api/campaignApi.ts:131:          if (!data) return { error: 'Empty phase configure response' as any };
+src/store/api/campaignApi.ts:133:        } catch (error: any) {
+src/store/api/campaignApi.ts:134:          return { error: toRtkError(error) as any };
+src/store/api/campaignApi.ts:153:          const data = (response as any)?.data ?? response;
+src/store/api/campaignApi.ts:154:          if (!data) return { error: 'Empty phase start response' as any };
+src/store/api/campaignApi.ts:156:        } catch (error: any) {
+src/store/api/campaignApi.ts:157:          return { error: toRtkError(error) as any };
+src/store/api/campaignApi.ts:178:          const data = (response as any)?.data ?? response;
+src/store/api/campaignApi.ts:179:          if (!data) return { error: 'Empty phase status response' as any };
+src/store/api/campaignApi.ts:181:        } catch (error: any) {
+src/store/api/campaignApi.ts:182:          return { error: toRtkError(error) as any };
+src/store/api/campaignApi.ts:199:          const data = (response as any)?.data ?? response;
+src/store/api/campaignApi.ts:200:          if (!data) return { error: 'Empty pattern offset response' as any };
+src/store/api/campaignApi.ts:202:        } catch (error: any) {
+src/store/api/campaignApi.ts:203:          return { error: toRtkError(error) as any };
+src/store/api/campaignApi.ts:221:            const payload = (resp as any)?.data ?? resp;
+src/store/api/campaignApi.ts:232:        } catch (error: any) {
+src/store/api/campaignApi.ts:233:          return { error: toRtkError(error) as any };
+src/store/api/campaignApi.ts:245:          const response = await (campaignsApi as any).campaignsModeUpdate(campaignId, { mode });
+src/store/api/campaignApi.ts:246:          const extracted = ((response as any)?.data ?? response) || { mode };
+src/store/api/campaignApi.ts:247:          return { data: { mode: (extracted as any).mode || mode } };
+src/store/api/campaignApi.ts:248:        } catch (error: any) {
+src/store/api/campaignApi.ts:249:          return { error: toRtkError(error) as any };
+src/store/api/campaignApi.ts:267:          const fn: any = (campaignsApi as any).campaignsDomainScoreBreakdown;
+src/store/api/campaignApi.ts:268:          if (!fn) return { error: 'Domain score breakdown endpoint missing in client' as any };
+src/store/api/campaignApi.ts:270:          const data = (response as any)?.data ?? response;
+src/store/api/campaignApi.ts:271:          if (!data) return { error: 'Empty score breakdown' as any };
+src/store/api/campaignApi.ts:273:        } catch (error: any) {
+src/store/api/campaignApi.ts:274:          return { error: toRtkError(error) as any };
+src/store/api/campaignApi.ts:287:          const data = (response as any)?.data ?? response;
+src/store/api/campaignApi.ts:289:        } catch (error: any) {
+src/store/api/campaignApi.ts:290:          return { error: toRtkError(error) as any };
+src/store/api/campaignApi.ts:301:          const resp = await campaignsApi.campaignsMetricsGet(campaignId) as any;
+src/store/api/campaignApi.ts:304:        } catch (error: any) {
+src/store/api/campaignApi.ts:305:          return { error: toRtkError(error) as any };
+src/store/api/campaignApi.ts:317:          const data = (response as any)?.data ?? response;
+src/store/api/campaignApi.ts:319:        } catch (error: any) {
+src/store/api/campaignApi.ts:320:          return { error: toRtkError(error) as any };
+src/store/api/campaignApi.ts:332:          const data = (response as any)?.data ?? response;
+src/store/api/campaignApi.ts:334:        } catch (error: any) {
+src/store/api/campaignApi.ts:335:          return { error: toRtkError(error) as any };
+src/store/api/campaignApi.ts:347:          const data = (response as any)?.data ?? response;
+src/store/api/campaignApi.ts:349:        } catch (error: any) {
+src/store/api/campaignApi.ts:350:          return { error: toRtkError(error) as any };
+src/store/api/campaignApi.ts:362:          const data = (response as any)?.data ?? response;
+src/store/api/campaignApi.ts:364:        } catch (error: any) {
+src/store/api/campaignApi.ts:365:          return { error: toRtkError(error) as any };
+src/store/api/campaignApi.ts:377:          const data = (response as any)?.data ?? response;
+src/store/api/campaignApi.ts:379:        } catch (error: any) {
+src/store/api/campaignApi.ts:380:          return { error: toRtkError(error) as any };
+src/store/api/scoringApi.ts:17:          const resp = await (scoringClient as any).scoringProfilesList();
+src/store/api/scoringApi.ts:20:        } catch (e: any) { return { error: toRtkError(e) as any }; }
+src/store/api/scoringApi.ts:27:          const resp = await (scoringClient as any).scoringProfilesGet(profileId);
+src/store/api/scoringApi.ts:29:          if (!data) return { error: 'Profile not found' as any };
+src/store/api/scoringApi.ts:31:        } catch (e: any) { return { error: toRtkError(e) as any }; }
+src/store/api/scoringApi.ts:38:          const resp = await (scoringClient as any).scoringProfilesCreate(payload);
+src/store/api/scoringApi.ts:40:          if (!data) return { error: 'Create failed' as any };
+src/store/api/scoringApi.ts:42:        } catch (e: any) { return { error: toRtkError(e) as any }; }
+src/store/api/scoringApi.ts:46:    updateScoringProfile: builder.mutation<any, { profileId: string; body: any }>({
+src/store/api/scoringApi.ts:49:          const resp = await (scoringClient as any).scoringProfilesUpdate(profileId, body);
+src/store/api/scoringApi.ts:51:          if (!data) return { error: 'Update failed' as any };
+src/store/api/scoringApi.ts:53:        } catch (e: any) { return { error: toRtkError(e) as any }; }
+src/store/api/scoringApi.ts:60:          await (scoringClient as any).scoringProfilesDelete(profileId);
+src/store/api/scoringApi.ts:62:        } catch (e: any) { return { error: toRtkError(e) as any }; }
+src/store/api/scoringApi.ts:69:          const resp = await (scoringClient as any).campaignsScoringProfileAssociate(campaignId, { profileId });
+src/store/api/scoringApi.ts:72:        } catch (e: any) { return { error: toRtkError(e) as any }; }
+src/store/api/scoringApi.ts:82:          const resp = await (scoringClient as any).campaignsRescore(campaignId);
+src/store/api/scoringApi.ts:85:        } catch (e: any) { return { error: toRtkError(e) as any }; }
+src/store/api/monitoringApi.ts:67:      transformResponse: (response: any) => (response?.data ?? response) as SystemHealth,
+src/store/api/monitoringApi.ts:74:      transformResponse: (response: any) => (response?.data ?? response) as ResourceMetrics,
+src/store/api/monitoringApi.ts:91:      transformResponse: (response: any) => (response?.data ?? response) as CampaignResourceMetrics,
+src/store/api/monitoringApi.ts:100:      transformResponse: (response: any) => (response?.data ?? response) as CleanupStatus,
+src/store/api/monitoringApi.ts:110:      transformResponse: (response: any) => ((response?.data ?? response) || { message: 'OK' }) as { message: string },
+src/store/api/authApi.ts:17:          const resp: any = await (authClient as any).authLogin(credentials);
+src/store/api/authApi.ts:37:        } catch (error: any) {
+src/store/api/authApi.ts:46:          await (authClient as any).authLogout();
+src/store/api/authApi.ts:48:        } catch (error: any) {
+src/store/api/authApi.ts:57:          const resp: any = await (authClient as any).authMe();
+src/store/api/authApi.ts:60:        } catch (error: any) {
+src/hooks/__tests__/useWorkerMetricsFallback.test.ts:14:  postMessage(message: any) {
+src/hooks/__tests__/useWorkerMetricsFallback.test.ts:48:(global as any).Worker = jest.fn().mockImplementation(() => new MockWorker());
+src/hooks/__tests__/useWorkerMetricsFallback.test.ts:51:(global as any).URL = {
+src/hooks/__tests__/useWorkerMetricsFallback.test.ts:152:      (global as any).Worker = jest.fn().mockImplementation(() => {
+src/hooks/__tests__/useWorkerMetricsFallback.test.ts:170:        postMessage(message: any) {
+src/hooks/__tests__/useWorkerMetricsFallback.test.ts:186:      (global as any).Worker = jest.fn().mockImplementation(() => new ErrorWorker());
+src/hooks/__tests__/useWorkerMetricsFallback.test.ts:252:      (global as any).Worker = jest.fn().mockImplementation(() => ({
+src/hooks/useWorkerMetricsFallback.ts:16:  domains?: any[];
+src/hooks/useWorkerMetricsFallback.ts:17:  aggregates?: any;
+src/hooks/useWorkerMetricsFallback.ts:18:  classifiedCounts?: any;
+src/hooks/useWorkerMetricsFallback.ts:24:  aggregates: any;
+src/hooks/useWorkerMetricsFallback.ts:25:  classifiedCounts: any;
+src/hooks/useSemanticSummaries.ts:78:  const generateCacheKey = useCallback((type: string, data: any): string => {
+src/hooks/useSemanticSummaries.ts:372:    items: Array<{ id: string; type: 'anomaly_cluster' | 'causal_delta'; data: any }>
+src/hooks/useEnhancedMetricsContext.tsx:29:  aggregates: any;
+src/hooks/useEnhancedMetricsContext.tsx:30:  classification: any;
+src/hooks/useEnhancedMetricsContext.tsx:31:  uiBuckets: any[];
+src/hooks/useEnhancedMetricsContext.tsx:63:  recommendationGroups: any[];
+src/hooks/useCampaignPhaseStream.ts:81:  const handleSSEEvent = useCallback((event: any) => {
+src/hooks/useCampaignServerMetrics.ts:189:function convertUiBucketsToClassification(uiBuckets: any[]): Record<string, number> {
+src/hooks/useCampaignPipeline.ts:80:  const overview: any = useAppSelector(overviewSel as any);
+src/hooks/useCampaignPipeline.ts:89:    configurePhase: (phase: string, config: any) => configurePhase({ campaignId, phase, config }),
+src/hooks/useClientTraceDebug.ts:276:  const endSpan = useCallback((finalStatus: 'completed' | 'error' = 'completed', error?: any) => {
+src/hooks/useMetricsContext.tsx:17:  aggregates: any; // AggregateMetrics
+src/hooks/useMetricsContext.tsx:18:  classification: any;
+src/hooks/useMetricsContext.tsx:19:  uiBuckets: any[];
+src/hooks/useMetricsContext.tsx:45:  recommendations: any[]; // Recommendation[]
+src/app/dbgui/page.tsx:92:        'XMLHttpRequest' as any
+src/app/dbgui/page.tsx:94:      const data = (response as any)?.data ?? response;
+src/app/dbgui/page.tsx:111:      const queryId = (typeof globalThis !== 'undefined' && (globalThis as any).crypto && typeof (globalThis as any).crypto.randomUUID === 'function')
+src/app/dbgui/page.tsx:112:        ? (globalThis as any).crypto.randomUUID()
+src/app/dbgui/page.tsx:127:        'XMLHttpRequest' as any
+src/app/dbgui/page.tsx:129:  const data = (response as any)?.data ?? response;
+src/app/dbgui/page.tsx:147:  const renderDbValue = (cell: any): string | JSX.Element => {
+src/app/dbgui/page.tsx:148:    if (cell == null) return <span className="text-gray-400 italic">NULL</span> as any;
+src/app/dbgui/page.tsx:151:    if ('isNull' in cell && cell.isNull) return <span className="text-gray-400 italic">NULL</span> as any;
+src/app/dbgui/page.tsx:533:          {queryResult.rows?.map((row: any[], rowIndex: number) => (
+src/app/dbgui/page.tsx:535:                                {row.map((cell: any, cellIndex: number) => (
+src/app/keyword-sets/[id]/edit/page.tsx:39:        const payload = (resp as any)?.data?.data ?? (resp as any)?.data;
+src/app/keyword-sets/[id]/edit/page.tsx:61:  await keywordSetsApi.keywordSetsUpdate(params.id as string, data as any);
+src/app/keyword-sets/page.tsx:29:  const data = (resp as any)?.data?.data ?? (resp as any)?.data;
+src/app/proxies/page.tsx:66:    const data = (response as any)?.data ?? response;
+src/app/proxies/page.tsx:67:    const proxiesArray = Array.isArray(data) ? data.map((p: any) => ({ ...p })) : [];
+src/app/proxies/page.tsx:68:    setProxies(proxiesArray as any);
+src/app/proxies/page.tsx:88:    setProxies(current => current.map((proxy: any) => proxy?.id === proxyId ? { ...proxy, isHealthy: health === 'healthy' } : proxy));
+src/app/proxies/page.tsx:129:    setProxies(prev => prev.filter((p: any) => p?.id !== proxyToDelete!.id));
+src/app/proxies/page.tsx:144:    const data = (response as any)?.data ?? response;
+src/app/proxies/page.tsx:168:    const response = await proxiesApi.proxiesUpdate(proxy.id!, payload as any);
+src/app/proxies/page.tsx:169:    const data = (response as any)?.data ?? response;
+src/app/proxies/page.tsx:172:    setProxies(prev => prev.map((p: any) => p?.id === proxy.id ? { ...p, ...data } : p));
+src/app/proxies/page.tsx:189:    const proxyIds = proxies.map((proxy: any) => proxy?.id).filter(Boolean) as string[];
+src/app/proxies/page.tsx:194:    await proxiesApi.proxiesBulkTest({ proxyIds } as any);
+src/app/proxies/page.tsx:209:    const disabledProxies = proxies.filter((proxy: any) => !proxy?.isEnabled);
+src/app/proxies/page.tsx:210:    const proxyIds = disabledProxies.map((proxy: any) => proxy?.id).filter(Boolean) as string[];
+src/app/proxies/page.tsx:217:    await proxiesApi.proxiesBulkDelete({ proxyIds } as any);
+src/app/proxies/page.tsx:257:            const response = await proxiesApi.proxiesCreate(payload as any);
+src/app/proxies/page.tsx:292:  const activeProxiesCount = Array.isArray(proxies) ? proxies.filter((p: any) => p?.isEnabled).length : 0;
+src/app/proxies/page.tsx:388:                        {Array.isArray(proxies) && proxies.map((proxy: any) => {
+src/app/proxies/page.tsx:393:                              proxy={proxy as any}
+src/app/personas/[id]/edit/page.tsx:62:  const data = (response as any)?.data ?? response;
+src/app/personas/[id]/edit/page.tsx:70:            setPersona(data as any);
+src/app/personas/[id]/edit/page.tsx:135:      <PersonaForm persona={persona as any} isEditing={true} personaType={persona.personaType} />
+src/app/personas/page.tsx:123:  const response = await personasApi.personasList(undefined, undefined, undefined, type as any);
+src/app/personas/page.tsx:193:        const personaName = (response.data as any)?.personaId || 'Persona';
+src/app/personas/page.tsx:216:  const response = await personasApi.personasUpdate(personaId, { isEnabled } as any);
+src/app/personas/page.tsx:218:        const updated = response.data as any;
+src/app/personas/page.tsx:279:                    } as any
+src/app/personas/page.tsx:286:                        case "random_rotation": return "random" as any;
+src/app/personas/page.tsx:287:                        case "weighted_rotation": return "weighted" as any;
+src/app/personas/page.tsx:288:                        case "sequential_failover": return "priority" as any;
+src/app/personas/page.tsx:289:                        default: return "round_robin" as any;
+src/app/personas/page.tsx:312:                    } as any,
+src/app/personas/page.tsx:316:              const response = await personasApi.personasCreate(createPayload as any);
+src/app/personas/page.tsx:323:            } catch (e: any) {
+src/app/campaigns/[id]/edit/page.tsx:41:      : (error && typeof error === 'object' && (error as any).data?.message)
+src/app/campaigns/[id]/edit/page.tsx:42:        || (error && typeof error === 'object' && (error as any).message)
+src/app/campaigns/page.tsx:26:  domainsData?: any;
+src/app/campaigns/page.tsx:27:  dnsResults?: any;
+src/app/campaigns/page.tsx:28:  httpResults?: any;
+src/app/campaigns/page.tsx:29:  analysisResults?: any;
+src/app/campaigns/page.tsx:84:  const getBulkDataSummary = (campaign: any) => {
+src/app/campaigns/page.tsx:129:              <p className="text-red-600 mb-4" data-testid="campaign-list-error-message">{error as any}</p>
+src/app/campaigns/page.tsx:171:          {campaigns.map((campaign: any) => (
+src/workers/edgeProcessor.worker.ts:10:  payload: any;
+src/workers/edgeProcessor.worker.ts:18:  result?: any;
+src/workers/edgeProcessor.worker.ts:78:  existingGraph?: any;
+src/workers/edgeProcessor.worker.ts:79:}): any {
+src/workers/edgeProcessor.worker.ts:144:}): any {
+src/workers/edgeProcessor.worker.ts:221:}): any {
+src/workers/metricsWorker.ts:12:  domains?: any[];
+src/workers/metricsWorker.ts:13:  previousDomains?: any[];
+src/workers/metricsWorker.ts:15:  aggregates?: any;
+src/workers/metricsWorker.ts:16:  classifiedCounts?: any;
+src/workers/metricsWorker.ts:17:  movers?: any;
+src/workers/metricsWorker.ts:18:  deltas?: any;
+src/workers/metricsWorker.ts:47:let classifyDomains: (domains: any[]) => any;
+src/workers/metricsWorker.ts:48:let computeAggregates: (domains: any[]) => any;
+src/workers/metricsWorker.ts:49:let enrichAggregatesWithHighPotential: (aggregates: any, highPotentialCount: number) => any;
+src/workers/metricsWorker.ts:50:let computeMovers: (domains: any[], previousDomains?: any[]) => any;
+src/workers/metricsWorker.ts:51:let calculateDeltas: (current: any, previous?: any) => any;
+src/workers/metricsWorker.ts:54:function safeClassifyDomains(domains: any[]) {
+src/workers/metricsWorker.ts:69:function safeComputeAggregates(domains: any[]) {
+src/workers/metricsWorker.ts:82:function safeEnrichAggregatesWithHighPotential(aggregates: any, highPotentialCount: number) {
+src/workers/metricsWorker.ts:91:function safeComputeMovers(domains: any[], previousDomains?: any[]) {
+src/workers/metricsWorker.ts:111:function safeCalculateDeltas(current: any, previous?: any) {
+src/workers/metricsWorker.ts:248:  options: any
+src/tests/pagination/usePaginatedDomains.test.tsx:9:  let pages: Record<number, { items: any[]; total: number }> = {};
+src/tests/pagination/usePaginatedDomains.test.tsx:13:    useGetCampaignDomainsQuery: ({ limit, offset }: any) => {
+src/tests/pagination/usePaginatedDomains.remove:9:  const listeners: any[] = [];
+src/tests/pagination/usePaginatedDomains.remove:10:  let pages: Record<number, { items: any[]; total: number }> = {};
+src/tests/pagination/usePaginatedDomains.remove:15:    useGetCampaignDomainsQuery: ({ limit, offset }: any) => {
+src/tests/pipeline/toRtkError.test.ts:4:if (typeof (global as any).Response === 'undefined') { (global as any).Response = function(){} as any; }
+src/tests/pipeline/toRtkError.test.ts:9:    const err: any = { isAxiosError: true, response: { status: 400, data: { message: 'Bad request', code: 'E_BAD' } } };
+src/tests/pipeline/toRtkError.test.ts:16:    const err: any = { message: 'Boom' };
+src/tests/pipeline/reconciliationHook.test.tsx:17:  if (!(global as any).fetch) {
+src/tests/pipeline/reconciliationHook.test.tsx:18:    (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
+src/tests/pipeline/reconciliationHook.test.tsx:21:  function makeStore(runtime: any) {
+src/tests/pipeline/reconciliationHook.test.tsx:25:  (campaignApi.util as any).invalidateTags = (tags: any) => { spyInvalidate(tags); return { type: '__TEST__/INVALIDATE', payload: tags }; };
+src/tests/pipeline/countersReconciledEvent.test.tsx:14:  useSSE: (_url: string | null, onEvent: (evt: any) => void) => {
+src/tests/pipeline/countersReconciledEvent.test.tsx:15:    (global as any).__emit = onEvent; // expose emitter for test
+src/tests/pipeline/countersReconciledEvent.test.tsx:28:    (campaignApi.util as any).invalidateTags = (tags: any) => { spyInvalidate(tags); return { type: '__TEST__/INVALIDATE', payload: tags }; };
+src/tests/pipeline/countersReconciledEvent.test.tsx:36:    const emit = (global as any).__emit as (e: any) => void;
+src/tests/pipeline/domainOptimisticEvents.test.ts:5:interface QueryEntry { endpointName: string; originalArgs: any; data?: any }
+src/tests/pipeline/domainOptimisticEvents.test.ts:37:    updateQueryData: (_endpoint: string, _args: any, _updater: (draft: any) => void) => ({ type: '__TEST__/NOOP' }),
+src/tests/pipeline/domainOptimisticEvents.test.ts:46:  const campaignApiReducer = (state: MockApiState = initial, action: any): MockApiState => {
+src/tests/pipeline/domainOptimisticEvents.test.ts:75:  const targetDomain: DomainListItem = { id: 'd-77', domain: 'example77.test' } as any;
+src/tests/pipeline/domainOptimisticEvents.test.ts:79:    const page1Items: DomainListItem[] = Array.from({ length: 50 }).map((_, i) => ({ id: `d-${i}`, domain: `example${i}.test` } as any));
+src/tests/pipeline/domainOptimisticEvents.test.ts:81:    const page2Items: DomainListItem[] = Array.from({ length: 50 }).map((_, i) => ({ id: `d-${i+50}`, domain: `example${i+50}.test`, dnsStatus: 'pending' } as any));
+src/tests/pipeline/domainOptimisticEvents.test.ts:82:    page2Items[10] = { ...targetDomain, dnsStatus: 'pending' } as any;
+src/tests/pipeline/domainOptimisticEvents.test.ts:92:    const originalUpdate = (campaignApi as any).util.updateQueryData;
+src/tests/pipeline/domainOptimisticEvents.test.ts:93:    (campaignApi as any).util.updateQueryData = (endpointName: string, args: any, updater: (draft: any) => void) => {
+src/tests/pipeline/domainOptimisticEvents.test.ts:109:          (campaignApi.util as any).updateQueryData('getCampaignDomains', { campaignId, limit: l, offset }, (draft: any) => {
+src/tests/pipeline/domainOptimisticEvents.test.ts:121:    const state: any = store.getState();
+src/tests/pipeline/domainOptimisticEvents.test.ts:123:    expect(updatedPage2.find((d: any) => d.id === targetDomain.id).dnsStatus).toBe('valid');
+src/tests/pipeline/domainOptimisticEvents.test.ts:126:  (campaignApi as any).util.updateQueryData = originalUpdate;
+src/tests/pipeline/overviewScoringDisplay.test.tsx:10:let mockEnriched: any = {};
+src/tests/pipeline/overviewScoringDisplay.test.tsx:11:let mockProfiles: any[] = [];
+src/tests/pipeline/overviewScoringDisplay.test.tsx:23:    setMockEnriched: (d: any) => { mockEnriched = d; },
+src/tests/pipeline/overviewScoringDisplay.test.tsx:27:          select: ({ phase }: any) => () => ({ data: mockStatuses[phase] })
+src/tests/pipeline/overviewScoringDisplay.test.tsx:43:    setMockProfiles: (p: any[]) => { mockProfiles = p; },
+src/tests/pipeline/phaseSelectorsRefactor.test.ts:12:interface QuerySubstate { endpointName: string; originalArgs: PhaseArgs; data?: any }
+src/tests/pipeline/phaseSelectorsRefactor.test.ts:36:    const campaignApiReducer = (state = sliceState, _action: any) => state;
+src/tests/pipeline/phaseSelectorsRefactor.test.ts:39:    (campaignApi.endpoints as any).getPhaseStatusStandalone = {
+src/tests/pipeline/phaseSelectorsRefactor.test.ts:40:      select: ({ campaignId, phase }: PhaseArgs) => (root: any) => {
+src/tests/pipeline/phaseSelectorsRefactor.test.ts:58:    const phases = select(store.getState() as any);
+src/tests/pipeline/phaseSelectorsRefactor.test.ts:71:    expect(allConfiguredSel(store.getState() as any)).toBe(true);
+src/tests/pipeline/failureRetryFlow.test.ts:7:interface QueryEntry { endpointName: string; originalArgs: any; data?: any; }
+src/tests/pipeline/failureRetryFlow.test.ts:26:    const campaignApiReducer = (state: MockApiState = { queries: buildQueries(campaignId, statuses) }, action: any): MockApiState => {
+src/tests/pipeline/failureRetryFlow.test.ts:54:    store.dispatch(phaseStarted({ campaignId, phase: 'discovery' as any }));
+src/tests/pipeline/failureRetryFlow.test.ts:56:  store.dispatch(phaseFailed({ campaignId, phase: 'discovery' as any, error: 'boom' }));
+src/tests/pipeline/failureRetryFlow.test.ts:65:    const state = store.getState() as any;
+src/tests/pipeline/failureRetryFlow.test.ts:76:    store.dispatch(phaseStarted({ campaignId, phase: 'discovery' as any }));
+src/tests/pipeline/failureRetryFlow.test.ts:77:    store.dispatch(phaseFailed({ campaignId, phase: 'discovery' as any, error: 'boom' }));
+src/tests/pipeline/failureRetryFlow.test.ts:80:  store.dispatch(phaseStarted({ campaignId, phase: 'discovery' as any }));
+src/tests/pipeline/failureRetryFlow.test.ts:81:  store.dispatch(phaseCompleted({ campaignId, phase: 'discovery' as any }));
+src/tests/pipeline/failureRetryFlow.test.ts:90:    const state = store.getState() as any;
+src/tests/pipeline/nextUserActionProgression.test.ts:6:interface QueryEntry { endpointName: string; originalArgs: any; data?: any; }
+src/tests/pipeline/nextUserActionProgression.test.ts:38:    expect(sel(store.getState() as any)).toEqual({ type: 'configure', phase: 'discovery', reason: 'Configuration required' });
+src/tests/pipeline/nextUserActionProgression.test.ts:43:      return { state: newStore.getState() as any };
+src/tests/pipeline/nextUserActionProgression.test.ts:63:    const ov = overviewSel(store.getState() as any);
+src/tests/pipeline/autoAdvanceExecution.test.ts:7:interface QueryEntry { endpointName: string; originalArgs: any; data?: any; }
+src/tests/pipeline/autoAdvanceExecution.test.ts:37:    let ov = selectOverview(store.getState() as any);
+src/tests/pipeline/autoAdvanceExecution.test.ts:41:    store.dispatch(phaseStarted({ campaignId, phase: 'discovery' as any }));
+src/tests/pipeline/autoAdvanceExecution.test.ts:43:  ov = selectOverview(store.getState() as any);
+src/tests/pipeline/autoAdvanceExecution.test.ts:47:    store.dispatch(phaseCompleted({ campaignId, phase: 'discovery' as any }));
+src/tests/pipeline/autoAdvanceExecution.test.ts:48:  ov = selectOverview(store.getState() as any);
+src/tests/pipeline/autoAdvanceExecution.test.ts:56:    store.dispatch(phaseStarted({ campaignId, phase: 'validation' as any }));
+src/tests/pipeline/autoAdvanceExecution.test.ts:58:    store.dispatch(phaseCompleted({ campaignId, phase: 'validation' as any }));
+src/tests/pipeline/autoAdvanceExecution.test.ts:59:  ov = selectOverview(store.getState() as any);
+src/tests/api/contract.personas.spec.ts:7:  let spec: any;
+src/api/normalizeResponse.ts:18:  const r: any = raw;
+src/api/normalizeResponse.ts:53:  const r: any = response;
+src/types/__tests__/domainAnalysisFeatures.test.ts:41:    expect(coerceFeatures(null as any)).toBeNull();
+src/types/__tests__/domainAnalysisFeatures.test.ts:42:    expect(coerceFeatures(undefined as any)).toBeNull();
+src/types/__tests__/domainAnalysisFeatures.test.ts:43:    expect(coerceFeatures('str' as any)).toBeNull();
+src/types/forecasting/__tests__/normalizers.test.ts:21:      expect(normalizeForecastPoints(null as any)).toEqual([]);
+src/types/forecasting/normalizers.ts:18:export function normalizeForecastPoints(points: any[]): ForecastPoint[] {
+src/types/forecasting/normalizers.ts:35:export function coerceModelScores(scores: any): ModelScore {
+src/types/forecasting/normalizers.ts:47:export function normalizeBlendResult(result: any): BlendResult {
+src/types/forecasting/normalizers.ts:61:export function normalizeQualityMetrics(metrics: any): QualityMetrics {
+src/types/forecasting/normalizers.ts:72:export function normalizeModelInfo(info: any): ModelInfo {
+src/types/forecasting/normalizers.ts:77:      ? info.alternativeModels.map((model: any) => ({
+src/types/forecasting/normalizers.ts:89:export function normalizeForecastResult(result: any): NormalizedForecastResult {
+src/types/ui-proxy.ts:23:export function isUiProxy(obj: any): obj is UiProxy {
+src/types/domainAnalysisFeatures.ts:28:export function coerceFeatures(raw: any): DomainAnalysisFeatures | null {
+src/types/domainAnalysisFeatures.ts:30:  const safeNum = (v: any): number | null => (typeof v === 'number' ? v : v === null || v === undefined ? null : Number.isFinite(Number(v)) ? Number(v) : null);
+src/types/domainAnalysisFeatures.ts:31:  const top3 = Array.isArray(raw.keywords?.top3) ? raw.keywords.top3.filter((x: any) => typeof x === 'string') : [];

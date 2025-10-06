@@ -23,12 +23,15 @@ export interface UseInfiniteScrollOptions {
   rootMargin?: string;
 }
 
+type ActivityItem = Record<string, unknown>; // generic until backend defines concrete ActivityItem schema
+type PageInfoExt = PageInfo & { current?: number; total?: number };
+
 export function useInfiniteScrollActivity(
   // fetchFn returns cursor-based pageInfo (OpenAPI) or legacy numeric pagination fields
-  fetchFn: (page: number) => Promise<{ data: any[]; pageInfo?: PageInfo & { current?: number; total?: number }; totalCount?: number }>,
+  fetchFn: (page: number) => Promise<{ data: ActivityItem[]; pageInfo?: PageInfoExt; totalCount?: number }>,
   options: UseInfiniteScrollOptions = {}
 ) {
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<ActivityItem[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [state, setState] = useState<InfiniteScrollState>({
     isLoading: false,
@@ -56,10 +59,10 @@ export function useInfiniteScrollActivity(
       // 4. Fallback: assume more if we received any data for this page.
       let hasMore = true;
       if (result.pageInfo) {
-        if (typeof (result.pageInfo as any).hasNextPage === 'boolean') {
-          hasMore = (result.pageInfo as any).hasNextPage;
-        } else if ((result.pageInfo as any).current !== undefined && (result.pageInfo as any).total !== undefined) {
-          hasMore = ((result.pageInfo as any).current) < ((result.pageInfo as any).total);
+        if (typeof result.pageInfo.hasNextPage === 'boolean') {
+          hasMore = result.pageInfo.hasNextPage;
+        } else if (result.pageInfo.current !== undefined && result.pageInfo.total !== undefined) {
+          hasMore = result.pageInfo.current < result.pageInfo.total;
         }
       } else if (typeof result.totalCount === 'number') {
         hasMore = (data.length + result.data.length) < result.totalCount;

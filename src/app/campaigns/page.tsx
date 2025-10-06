@@ -11,7 +11,7 @@ import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
-interface CampaignData {
+interface CampaignCardView {
   campaignId: string;
   name: string;
   currentPhase: string;
@@ -19,14 +19,17 @@ interface CampaignData {
   totalItems: number;
   createdAt: string;
   updatedAt: string;
-  progress?: number;
-  domains?: number;
-  leads?: number;
-  dnsValidatedDomains?: number;
-  domainsData?: any;
-  dnsResults?: any;
-  httpResults?: any;
-  analysisResults?: any;
+  progress: number;
+  domains: number;
+  leads: number;
+  dnsValidatedDomains: number;
+  httpValidatedDomains: number;
+  leadsFound: number;
+  domainsData: DomainListItem[];
+  leadsData: unknown[]; // Replace with concrete Lead model when available
+  dnsResults?: unknown; // Placeholder for future typed DNS result aggregation
+  httpResults?: unknown; // Placeholder
+  analysisResults?: unknown; // Placeholder
 }
 
 const PHASE_LABELS: Record<string, string> = {
@@ -50,8 +53,8 @@ export default function CampaignsPage() {
   const { toast: _toast } = useToast();
   const router = useRouter();
   const { campaigns: enrichedCampaigns, loading, error, refetch } = useRTKCampaignsList();
-  const campaigns = useMemo(() => {
-    return enrichedCampaigns.map((campaign: CampaignLite) => {
+  const campaigns: CampaignCardView[] = useMemo(() => {
+    return enrichedCampaigns.map((campaign: CampaignLite): CampaignCardView => {
       const domains = (campaign.domains || []) as DomainListItem[];
       const leads = (campaign.leads || []) as unknown[];
       const dnsValidatedCount = domains.filter((domain) => domain && typeof domain === 'object' && (domain as DomainListItem).dnsStatus === 'ok').length;
@@ -81,7 +84,7 @@ export default function CampaignsPage() {
   }, [enrichedCampaigns]);
   const fetchCampaigns = refetch;
 
-  const getBulkDataSummary = (campaign: any) => {
+  const getBulkDataSummary = (campaign: CampaignCardView) => {
     const items: string[] = [];
     if (campaign.domains) items.push(`${campaign.domains.toLocaleString()} domains`);
     if (campaign.dnsValidatedDomains) items.push(`${campaign.dnsValidatedDomains.toLocaleString()} DNS validated`);
@@ -126,7 +129,7 @@ export default function CampaignsPage() {
         <Card data-testid="campaign-list-error-card">
           <CardContent className="p-6">
             <div className="text-center" data-testid="campaign-list-error-content">
-              <p className="text-red-600 mb-4" data-testid="campaign-list-error-message">{error as any}</p>
+              <p className="text-red-600 mb-4" data-testid="campaign-list-error-message">{typeof error === 'string' ? error : 'Failed to load campaigns'}</p>
               <Button onClick={fetchCampaigns} data-testid="campaign-list-error-retry">Try Again</Button>
             </div>
           </CardContent>
@@ -168,7 +171,7 @@ export default function CampaignsPage() {
         </Card>
       ) : (
         <div className="grid gap-4" data-testid="campaign-list-grid">
-          {campaigns.map((campaign: any) => (
+          {campaigns.map((campaign) => (
             <Card
               key={campaign.campaignId}
               className="hover:shadow-md transition-shadow"

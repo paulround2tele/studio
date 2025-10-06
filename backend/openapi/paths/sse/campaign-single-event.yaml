@@ -1,0 +1,36 @@
+get:
+  tags: [sse]
+  summary: Obtain a single latest campaign SSE event (JSON form)
+  description: Diagnostic / typing endpoint returning a single CampaignSseEvent wrapper object.
+  operationId: sse_events_campaign_latest
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    '200':
+      description: Latest event (if any)
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/all.yaml#/CampaignSseEvent'
+          examples:
+            progress:
+              summary: Progress event
+              value:
+                type: campaign_progress
+                timestamp: '2025-01-01T00:00:05Z'
+                payload:
+                  campaignId: '00000000-0000-0000-0000-000000000000'
+                  overall: { completedPhases: 1, totalPhases: 4 }
+            phaseStarted:
+              summary: Phase started event
+              value:
+                type: phase_started
+                timestamp: '2025-01-01T00:00:10Z'
+                payload:
+                  phase: discovery
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

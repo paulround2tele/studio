@@ -1,0 +1,35 @@
+get:
+  tags: [sse]
+  summary: Sample (non-stream) campaign events list for typing
+  description: Returns a JSON array of campaign SSE events in their discriminated wrapper form for schema materialization and tooling.
+  operationId: sse_events_campaign_sample
+  parameters:
+    - name: campaignId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+  responses:
+    '200':
+      description: JSON array sample
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '../../components/schemas/all.yaml#/CampaignSseEvent'
+          examples:
+            sample:
+              summary: Two wrapped events
+              value:
+                - type: campaign_progress
+                  timestamp: '2025-01-01T00:00:00Z'
+                  payload:
+                    campaignId: '00000000-0000-0000-0000-000000000000'
+                    overall: { completedPhases: 1, totalPhases: 4 }
+                - type: phase_started
+                  timestamp: '2025-01-01T00:01:00Z'
+                  payload:
+                    phase: discovery
+    '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
+    '404': { $ref: '../../components/responses.yaml#/NotFound' }
+    '500': { $ref: '../../components/responses.yaml#/InternalServerError' }

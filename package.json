@@ -48,8 +48,11 @@
     "test:campaign": "node scripts/e2e-campaign-test.js",
     "api:regen:quick": "npm run api:bundle && npm run gen:types && npm run gen:clients && bash scripts/post-generate-cleanup.sh",
     "api:lint": "spectral lint backend/openapi/dist/openapi.yaml",
-    "any:audit": "node scripts/audit-any.mjs",
-    "lint:safe": "npm run lint && npm run any:audit",
+  "any:audit": "node scripts/audit-any.mjs",
+  "audit:any": "tsx scripts/type-audit/scan-any.ts > docs/allAnyUsages.json",
+  "ci:check:any": "tsx scripts/type-audit/scan-any.ts | jq '.total' | grep '^0$'",
+  "ci:types": "bash scripts/ci/check-any-zero.sh",
+  "lint:safe": "npm run lint && npm run audit:any",
     "api:contract-check": "node scripts/ci/check-response-aliases.cjs && node scripts/ci/check-success-key-2xx.cjs",
     "prepare": "husky"
   },

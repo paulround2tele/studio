@@ -96,8 +96,51 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Stream campaign events (specific campaign) */
+        /**
+         * Stream campaign events (specific campaign)
+         * @description Server-Sent Events stream of campaign lifecycle and progress events. Each SSE data line contains a JSON object matching one of the CampaignSseEventPayload union variants.
+         */
         get: operations["sse_events_campaign"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sse/campaigns/{campaignId}/events/sample": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Sample (non-stream) campaign events list for typing
+         * @description Returns a JSON array of campaign SSE events in their discriminated wrapper form for schema materialization and tooling.
+         */
+        get: operations["sse_events_campaign_sample"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sse/campaigns/{campaignId}/events/latest": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Obtain a single latest campaign SSE event (JSON form)
+         * @description Diagnostic / typing endpoint returning a single CampaignSseEvent wrapper object.
+         */
+        get: operations["sse_events_campaign_latest"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1847,6 +1890,219 @@ export interface components {
             timestamp?: string;
             version?: string;
         };
+        /** @description Analysis phase reused existing feature vectors. */
+        AnalysisReuseEnrichmentEvent: {
+            /** @description Number of feature vectors reused from prior HTTP phase enrichment. */
+            featureVectorCount?: number | null;
+        };
+        CampaignSseAnalysisReuseEnrichmentEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "CampaignSseAnalysisReuseEnrichmentEvent";
+            /** Format: date-time */
+            timestamp?: string;
+            payload?: components["schemas"]["AnalysisReuseEnrichmentEvent"];
+        };
+        /** @description Analysis phase preflight or execution failed. */
+        AnalysisFailedEvent: {
+            error: string;
+            errorCode?: string | null;
+        };
+        CampaignSseAnalysisFailedEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "CampaignSseAnalysisFailedEvent";
+            /** Format: date-time */
+            timestamp?: string;
+            payload: components["schemas"]["AnalysisFailedEvent"];
+        };
+        PhaseProgressSummary: {
+            /** @enum {string} */
+            status: "not_started" | "configured" | "running" | "paused" | "completed" | "failed";
+            /** Format: float */
+            percentComplete: number;
+            itemsProcessed: number;
+            itemsTotal: number;
+            /** Format: date-time */
+            startedAt?: string | null;
+            /** Format: date-time */
+            completedAt?: string | null;
+            /** @description Human readable duration */
+            duration?: string | null;
+        };
+        CampaignProgressResponse: {
+            /** Format: uuid */
+            campaignId: string;
+            overall: {
+                /** @enum {string} */
+                status?: "draft" | "running" | "paused" | "completed" | "failed" | "cancelled";
+                /** Format: float */
+                percentComplete?: number;
+                totalDomains?: number;
+                processedDomains?: number;
+                successfulDomains?: number;
+                failedDomains?: number;
+            };
+            phases: {
+                discovery?: components["schemas"]["PhaseProgressSummary"];
+                validation?: components["schemas"]["PhaseProgressSummary"];
+                extraction?: components["schemas"]["PhaseProgressSummary"];
+                analysis?: components["schemas"]["PhaseProgressSummary"];
+            };
+            timeline: {
+                /** Format: date-time */
+                createdAt?: string;
+                /** Format: date-time */
+                startedAt?: string | null;
+                /** Format: date-time */
+                estimatedCompletionAt?: string | null;
+                /** Format: date-time */
+                completedAt?: string | null;
+            };
+        };
+        CampaignProgressEvent: components["schemas"]["CampaignProgressResponse"];
+        CampaignSseProgressEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "CampaignSseProgressEvent";
+            /** Format: date-time */
+            timestamp?: string;
+            payload?: components["schemas"]["CampaignProgressEvent"];
+        };
+        /** @description Canonical nested analysis feature vector for a discovered domain. */
+        DomainAnalysisFeatures: {
+            keywords?: {
+                unique_count?: number | null;
+                hits_total?: number | null;
+                /** Format: float */
+                weight_sum?: number | null;
+                top3?: string[];
+                signal_distribution?: {
+                    [key: string]: number;
+                };
+            };
+            richness?: {
+                /** Format: float */
+                score?: number | null;
+                version?: number | null;
+                /** Format: float */
+                prominence_norm?: number | null;
+                /** Format: float */
+                diversity_effective_unique?: number | null;
+                /** Format: float */
+                diversity_norm?: number | null;
+                /** Format: float */
+                enrichment_norm?: number | null;
+                /** Format: float */
+                applied_bonus?: number | null;
+                /** Format: float */
+                applied_deductions_total?: number | null;
+                /** Format: float */
+                stuffing_penalty?: number | null;
+                /** Format: float */
+                repetition_index?: number | null;
+                /** Format: float */
+                anchor_share?: number | null;
+            };
+            microcrawl?: {
+                /** Format: float */
+                gain_ratio?: number | null;
+            };
+        };
+        /** @description Domain generation/validation status update (subset / partial DomainListItem fields may be present). */
+        DomainStatusEvent: {
+            /** Format: uuid */
+            id?: string;
+            domain?: string;
+            dnsStatus?: string | null;
+            httpStatus?: string | null;
+            leadStatus?: string | null;
+            dnsReason?: string | null;
+            httpReason?: string | null;
+            features?: components["schemas"]["DomainAnalysisFeatures"];
+        };
+        CampaignSseDomainGeneratedEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "CampaignSseDomainGeneratedEvent";
+            /** Format: date-time */
+            timestamp?: string;
+            payload?: components["schemas"]["DomainStatusEvent"];
+        };
+        CampaignSseDomainValidatedEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "CampaignSseDomainValidatedEvent";
+            /** Format: date-time */
+            timestamp?: string;
+            payload?: components["schemas"]["DomainStatusEvent"];
+        };
+        /** @description Phase lifecycle transition (started or completed). */
+        PhaseTransitionEvent: {
+            phase: string;
+        };
+        CampaignSsePhaseStartedEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "CampaignSsePhaseStartedEvent";
+            /** Format: date-time */
+            timestamp?: string;
+            payload?: components["schemas"]["PhaseTransitionEvent"];
+        };
+        CampaignSsePhaseCompletedEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "CampaignSsePhaseCompletedEvent";
+            /** Format: date-time */
+            timestamp?: string;
+            payload?: components["schemas"]["PhaseTransitionEvent"];
+        };
+        /** @description Phase failure event. */
+        PhaseFailedEvent: {
+            phase: string;
+            error: string;
+        };
+        CampaignSsePhaseFailedEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "CampaignSsePhaseFailedEvent";
+            /** Format: date-time */
+            timestamp?: string;
+            payload?: components["schemas"]["PhaseFailedEvent"];
+        };
+        /** @description Campaign has fully completed successfully. */
+        CampaignCompletedEvent: {
+            /** Format: uuid */
+            campaignId: string;
+        };
+        CampaignSseCompletedEvent: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "CampaignSseCompletedEvent";
+            /** Format: date-time */
+            timestamp?: string;
+            payload?: components["schemas"]["CampaignCompletedEvent"];
+        };
+        /** @description Discriminated union of all campaign SSE event wrapper objects. */
+        CampaignSseEvent: components["schemas"]["CampaignSseAnalysisReuseEnrichmentEvent"] | components["schemas"]["CampaignSseAnalysisFailedEvent"] | components["schemas"]["CampaignSseProgressEvent"] | components["schemas"]["CampaignSseDomainGeneratedEvent"] | components["schemas"]["CampaignSseDomainValidatedEvent"] | components["schemas"]["CampaignSsePhaseStartedEvent"] | components["schemas"]["CampaignSsePhaseCompletedEvent"] | components["schemas"]["CampaignSsePhaseFailedEvent"] | components["schemas"]["CampaignSseCompletedEvent"];
         /** @enum {string} */
         PersonaType: "dns" | "http";
         /** @description HTTP persona configuration details */
@@ -2431,90 +2687,6 @@ export interface components {
             /** @description Campaign configuration settings (same structure as CreateCampaignRequest) */
             configuration?: Record<string, never>;
         };
-        PhaseProgressSummary: {
-            /** @enum {string} */
-            status: "not_started" | "configured" | "running" | "paused" | "completed" | "failed";
-            /** Format: float */
-            percentComplete: number;
-            itemsProcessed: number;
-            itemsTotal: number;
-            /** Format: date-time */
-            startedAt?: string | null;
-            /** Format: date-time */
-            completedAt?: string | null;
-            /** @description Human readable duration */
-            duration?: string | null;
-        };
-        CampaignProgressResponse: {
-            /** Format: uuid */
-            campaignId: string;
-            overall: {
-                /** @enum {string} */
-                status?: "draft" | "running" | "paused" | "completed" | "failed" | "cancelled";
-                /** Format: float */
-                percentComplete?: number;
-                totalDomains?: number;
-                processedDomains?: number;
-                successfulDomains?: number;
-                failedDomains?: number;
-            };
-            phases: {
-                discovery?: components["schemas"]["PhaseProgressSummary"];
-                validation?: components["schemas"]["PhaseProgressSummary"];
-                extraction?: components["schemas"]["PhaseProgressSummary"];
-                analysis?: components["schemas"]["PhaseProgressSummary"];
-            };
-            timeline: {
-                /** Format: date-time */
-                createdAt?: string;
-                /** Format: date-time */
-                startedAt?: string | null;
-                /** Format: date-time */
-                estimatedCompletionAt?: string | null;
-                /** Format: date-time */
-                completedAt?: string | null;
-            };
-        };
-        /** @description Canonical nested analysis feature vector for a discovered domain. */
-        DomainAnalysisFeatures: {
-            keywords?: {
-                unique_count?: number | null;
-                hits_total?: number | null;
-                /** Format: float */
-                weight_sum?: number | null;
-                top3?: string[];
-                signal_distribution?: {
-                    [key: string]: number;
-                };
-            };
-            richness?: {
-                /** Format: float */
-                score?: number | null;
-                version?: number | null;
-                /** Format: float */
-                prominence_norm?: number | null;
-                /** Format: float */
-                diversity_effective_unique?: number | null;
-                /** Format: float */
-                diversity_norm?: number | null;
-                /** Format: float */
-                enrichment_norm?: number | null;
-                /** Format: float */
-                applied_bonus?: number | null;
-                /** Format: float */
-                applied_deductions_total?: number | null;
-                /** Format: float */
-                stuffing_penalty?: number | null;
-                /** Format: float */
-                repetition_index?: number | null;
-                /** Format: float */
-                anchor_share?: number | null;
-            };
-            microcrawl?: {
-                /** Format: float */
-                gain_ratio?: number | null;
-            };
-        };
         DomainListItem: {
             /** Format: uuid */
             id?: string;
@@ -2547,6 +2719,13 @@ export interface components {
             /** @description Requested page size */
             first?: number;
         };
+        /** @description Augmented pagination metadata combining cursor and numeric pagination when simultaneously available. */
+        ExtendedPageInfo: components["schemas"]["PageInfo"] & {
+            /** @description 1-based current page index (numeric pagination fallback) */
+            current?: number;
+            /** @description Total number of pages when known via numeric pagination */
+            total?: number;
+        };
         CampaignDomainsListResponse: {
             /** Format: uuid */
             campaignId: string;
@@ -2574,7 +2753,7 @@ export interface components {
                     timeout?: number;
                 };
             };
-            pageInfo?: components["schemas"]["PageInfo"];
+            pageInfo?: components["schemas"]["ExtendedPageInfo"];
         };
         /** @description Component scores contributing to the final relevance score for a domain. */
         DomainScoreBreakdownResponse: {
@@ -3156,6 +3335,17 @@ export interface components {
             rules: components["schemas"]["KeywordRuleDTO"][];
             ruleCount: number;
         };
+        /** @description Generic activity log / timeline record with free-form properties (server-defined). */
+        ActivityItem: {
+            [key: string]: unknown;
+        };
+        /**
+         * @description Enumerated server-sent campaign event names.
+         * @enum {string}
+         */
+        CampaignSseEventType: "analysis_reuse_enrichment" | "analysis_failed" | "campaign_progress" | "counters_reconciled" | "domain_generated" | "domain_validated" | "phase_started" | "phase_completed" | "phase_failed" | "campaign_completed";
+        /** @description Union of possible JSON payload shapes emitted via campaign SSE stream. */
+        CampaignSseEventPayload: components["schemas"]["AnalysisReuseEnrichmentEvent"] | components["schemas"]["AnalysisFailedEvent"] | components["schemas"]["CampaignProgressEvent"] | components["schemas"]["DomainStatusEvent"] | components["schemas"]["PhaseTransitionEvent"] | components["schemas"]["PhaseFailedEvent"] | components["schemas"]["CampaignCompletedEvent"];
         /** @description HTTP validator configuration */
         HTTPValidatorConfigJSON: {
             [key: string]: unknown;
@@ -3240,6 +3430,15 @@ export interface components {
                 "application/json": components["schemas"]["ErrorEnvelope"];
             };
         };
+        /** @description Not Found */
+        NotFound: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["ErrorEnvelope"];
+            };
+        };
         /** @description Bad Request */
         BadRequest: {
             headers: {
@@ -3251,15 +3450,6 @@ export interface components {
         };
         /** @description Validation Error */
         ValidationError: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["ErrorEnvelope"];
-            };
-        };
-        /** @description Not Found */
-        NotFound: {
             headers: {
                 [name: string]: unknown;
             };
@@ -3456,6 +3646,56 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             429: components["responses"]["RateLimitExceeded"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    sse_events_campaign_sample: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description JSON array sample */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignSseEvent"][];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
+            500: components["responses"]["InternalServerError"];
+        };
+    };
+    sse_events_campaign_latest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaignId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Latest event (if any) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CampaignSseEvent"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            404: components["responses"]["NotFound"];
             500: components["responses"]["InternalServerError"];
         };
     };

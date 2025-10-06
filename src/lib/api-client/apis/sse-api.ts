@@ -22,6 +22,8 @@ import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObj
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
 // @ts-ignore
+import type { CampaignSseEvent } from '../models';
+// @ts-ignore
 import type { ErrorEnvelope } from '../models';
 // @ts-ignore
 import type { SseEventsStats200Response } from '../models';
@@ -64,7 +66,7 @@ export const SseApiAxiosParamCreator = function (configuration?: Configuration) 
             };
         },
         /**
-         * 
+         * Server-Sent Events stream of campaign lifecycle and progress events. Each SSE data line contains a JSON object matching one of the CampaignSseEventPayload union variants.
          * @summary Stream campaign events (specific campaign)
          * @param {string} campaignId 
          * @param {*} [options] Override http request option.
@@ -74,6 +76,78 @@ export const SseApiAxiosParamCreator = function (configuration?: Configuration) 
             // verify required parameter 'campaignId' is not null or undefined
             assertParamExists('sseEventsCampaign', 'campaignId', campaignId)
             const localVarPath = `/sse/campaigns/{campaignId}/events`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication cookieAuth required
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Diagnostic / typing endpoint returning a single CampaignSseEvent wrapper object.
+         * @summary Obtain a single latest campaign SSE event (JSON form)
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        sseEventsCampaignLatest: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('sseEventsCampaignLatest', 'campaignId', campaignId)
+            const localVarPath = `/sse/campaigns/{campaignId}/events/latest`
+                .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication cookieAuth required
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * Returns a JSON array of campaign SSE events in their discriminated wrapper form for schema materialization and tooling.
+         * @summary Sample (non-stream) campaign events list for typing
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        sseEventsCampaignSample: async (campaignId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'campaignId' is not null or undefined
+            assertParamExists('sseEventsCampaignSample', 'campaignId', campaignId)
+            const localVarPath = `/sse/campaigns/{campaignId}/events/sample`
                 .replace(`{${"campaignId"}}`, encodeURIComponent(String(campaignId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -154,7 +228,7 @@ export const SseApiFp = function(configuration?: Configuration) {
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
-         * 
+         * Server-Sent Events stream of campaign lifecycle and progress events. Each SSE data line contains a JSON object matching one of the CampaignSseEventPayload union variants.
          * @summary Stream campaign events (specific campaign)
          * @param {string} campaignId 
          * @param {*} [options] Override http request option.
@@ -164,6 +238,32 @@ export const SseApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.sseEventsCampaign(campaignId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['SseApi.sseEventsCampaign']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Diagnostic / typing endpoint returning a single CampaignSseEvent wrapper object.
+         * @summary Obtain a single latest campaign SSE event (JSON form)
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async sseEventsCampaignLatest(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<CampaignSseEvent>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.sseEventsCampaignLatest(campaignId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['SseApi.sseEventsCampaignLatest']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * Returns a JSON array of campaign SSE events in their discriminated wrapper form for schema materialization and tooling.
+         * @summary Sample (non-stream) campaign events list for typing
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async sseEventsCampaignSample(campaignId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<CampaignSseEvent>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.sseEventsCampaignSample(campaignId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['SseApi.sseEventsCampaignSample']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -198,7 +298,7 @@ export const SseApiFactory = function (configuration?: Configuration, basePath?:
             return localVarFp.sseEventsAll(options).then((request) => request(axios, basePath));
         },
         /**
-         * 
+         * Server-Sent Events stream of campaign lifecycle and progress events. Each SSE data line contains a JSON object matching one of the CampaignSseEventPayload union variants.
          * @summary Stream campaign events (specific campaign)
          * @param {string} campaignId 
          * @param {*} [options] Override http request option.
@@ -206,6 +306,26 @@ export const SseApiFactory = function (configuration?: Configuration, basePath?:
          */
         sseEventsCampaign(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<string> {
             return localVarFp.sseEventsCampaign(campaignId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Diagnostic / typing endpoint returning a single CampaignSseEvent wrapper object.
+         * @summary Obtain a single latest campaign SSE event (JSON form)
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        sseEventsCampaignLatest(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignSseEvent> {
+            return localVarFp.sseEventsCampaignLatest(campaignId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * Returns a JSON array of campaign SSE events in their discriminated wrapper form for schema materialization and tooling.
+         * @summary Sample (non-stream) campaign events list for typing
+         * @param {string} campaignId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        sseEventsCampaignSample(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<CampaignSseEvent>> {
+            return localVarFp.sseEventsCampaignSample(campaignId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -235,7 +355,7 @@ export interface SseApiInterface {
     sseEventsAll(options?: RawAxiosRequestConfig): AxiosPromise<string>;
 
     /**
-     * 
+     * Server-Sent Events stream of campaign lifecycle and progress events. Each SSE data line contains a JSON object matching one of the CampaignSseEventPayload union variants.
      * @summary Stream campaign events (specific campaign)
      * @param {string} campaignId 
      * @param {*} [options] Override http request option.
@@ -243,6 +363,26 @@ export interface SseApiInterface {
      * @memberof SseApiInterface
      */
     sseEventsCampaign(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<string>;
+
+    /**
+     * Diagnostic / typing endpoint returning a single CampaignSseEvent wrapper object.
+     * @summary Obtain a single latest campaign SSE event (JSON form)
+     * @param {string} campaignId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SseApiInterface
+     */
+    sseEventsCampaignLatest(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<CampaignSseEvent>;
+
+    /**
+     * Returns a JSON array of campaign SSE events in their discriminated wrapper form for schema materialization and tooling.
+     * @summary Sample (non-stream) campaign events list for typing
+     * @param {string} campaignId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SseApiInterface
+     */
+    sseEventsCampaignSample(campaignId: string, options?: RawAxiosRequestConfig): AxiosPromise<Array<CampaignSseEvent>>;
 
     /**
      * 
@@ -274,7 +414,7 @@ export class SseApi extends BaseAPI implements SseApiInterface {
     }
 
     /**
-     * 
+     * Server-Sent Events stream of campaign lifecycle and progress events. Each SSE data line contains a JSON object matching one of the CampaignSseEventPayload union variants.
      * @summary Stream campaign events (specific campaign)
      * @param {string} campaignId 
      * @param {*} [options] Override http request option.
@@ -283,6 +423,30 @@ export class SseApi extends BaseAPI implements SseApiInterface {
      */
     public sseEventsCampaign(campaignId: string, options?: RawAxiosRequestConfig) {
         return SseApiFp(this.configuration).sseEventsCampaign(campaignId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Diagnostic / typing endpoint returning a single CampaignSseEvent wrapper object.
+     * @summary Obtain a single latest campaign SSE event (JSON form)
+     * @param {string} campaignId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SseApi
+     */
+    public sseEventsCampaignLatest(campaignId: string, options?: RawAxiosRequestConfig) {
+        return SseApiFp(this.configuration).sseEventsCampaignLatest(campaignId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * Returns a JSON array of campaign SSE events in their discriminated wrapper form for schema materialization and tooling.
+     * @summary Sample (non-stream) campaign events list for typing
+     * @param {string} campaignId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SseApi
+     */
+    public sseEventsCampaignSample(campaignId: string, options?: RawAxiosRequestConfig) {
+        return SseApiFp(this.configuration).sseEventsCampaignSample(campaignId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

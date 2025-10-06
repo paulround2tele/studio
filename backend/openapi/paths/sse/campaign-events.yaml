@@ -3,25 +3,33 @@ get:
   security:
     - cookieAuth: []
   summary: Stream campaign events (specific campaign)
+  description: Server-Sent Events stream of campaign lifecycle and progress events. Each SSE data line contains a JSON object matching one of the CampaignSseEventPayload union variants.
   operationId: sse_events_campaign
   parameters:
     - name: campaignId
       in: path
       required: true
-      schema: { type: string, format: uuid }
+      schema:
+        type: string
+        format: uuid
   responses:
     '200':
       description: SSE stream
       content:
         text/event-stream:
-          schema: { type: string }
+          schema:
+            type: string
           examples:
-            message:
-              summary: Example event
+            progress:
+              summary: Progress event
               value: |
                 event: campaign_progress
-                data: {"campaignId":"00000000-0000-0000-0000-000000000000","progress":75.0,"status":"in_progress"}
+                data: {"campaignId":"00000000-0000-0000-0000-000000000000","overall":{"completedPhases":1,"totalPhases":4}}
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '403': { $ref: '../../components/responses.yaml#/Forbidden' }
     '429': { $ref: '../../components/responses.yaml#/RateLimitExceeded' }
     '500': { $ref: '../../components/responses.yaml#/InternalServerError' }
+  x-event-payload-schema:
+    description: JSON payload union for campaign SSE events (see CampaignSseEventPayload schema for shapes). This is documentation only; SSE body remains streamed text.
+    $ref: '../../components/schemas/all.yaml#/CampaignSseEventPayload'
+

@@ -172,6 +172,7 @@ paths:
       security:
         - cookieAuth: []
       summary: Stream campaign events (specific campaign)
+      description: Server-Sent Events stream of campaign lifecycle and progress events. Each SSE data line contains a JSON object matching one of the CampaignSseEventPayload union variants.
       operationId: sse_events_campaign
       parameters:
         - name: campaignId
@@ -188,17 +189,116 @@ paths:
               schema:
                 type: string
               examples:
-                message:
-                  summary: Example event
+                progress:
+                  summary: Progress event
                   value: |
                     event: campaign_progress
-                    data: {"campaignId":"00000000-0000-0000-0000-000000000000","progress":75.0,"status":"in_progress"}
+                    data: {"campaignId":"00000000-0000-0000-0000-000000000000","overall":{"completedPhases":1,"totalPhases":4}}
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
         '429':
           $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      x-event-payload-schema:
+        description: JSON payload union for campaign SSE events (see CampaignSseEventPayload schema for shapes). This is documentation only; SSE body remains streamed text.
+        oneOf:
+          - $ref: '#/components/schemas/AnalysisReuseEnrichmentEvent'
+          - $ref: '#/components/schemas/AnalysisFailedEvent'
+          - $ref: '#/components/schemas/CampaignProgressEvent'
+          - $ref: '#/components/schemas/DomainStatusEvent'
+          - $ref: '#/components/schemas/PhaseTransitionEvent'
+          - $ref: '#/components/schemas/PhaseFailedEvent'
+          - $ref: '#/components/schemas/CampaignCompletedEvent'
+  /sse/campaigns/{campaignId}/events/sample:
+    get:
+      tags:
+        - sse
+      summary: Sample (non-stream) campaign events list for typing
+      description: Returns a JSON array of campaign SSE events in their discriminated wrapper form for schema materialization and tooling.
+      operationId: sse_events_campaign_sample
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: JSON array sample
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CampaignSseEvent'
+              examples:
+                sample:
+                  summary: Two wrapped events
+                  value:
+                    - type: campaign_progress
+                      timestamp: '2025-01-01T00:00:00Z'
+                      payload:
+                        campaignId: 00000000-0000-0000-0000-000000000000
+                        overall:
+                          completedPhases: 1
+                          totalPhases: 4
+                    - type: phase_started
+                      timestamp: '2025-01-01T00:01:00Z'
+                      payload:
+                        phase: discovery
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /sse/campaigns/{campaignId}/events/latest:
+    get:
+      tags:
+        - sse
+      summary: Obtain a single latest campaign SSE event (JSON form)
+      description: Diagnostic / typing endpoint returning a single CampaignSseEvent wrapper object.
+      operationId: sse_events_campaign_latest
+      parameters:
+        - name: campaignId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Latest event (if any)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignSseEvent'
+              examples:
+                progress:
+                  summary: Progress event
+                  value:
+                    type: campaign_progress
+                    timestamp: '2025-01-01T00:00:05Z'
+                    payload:
+                      campaignId: 00000000-0000-0000-0000-000000000000
+                      overall:
+                        completedPhases: 1
+                        totalPhases: 4
+                phaseStarted:
+                  summary: Phase started event
+                  value:
+                    type: phase_started
+                    timestamp: '2025-01-01T00:00:10Z'
+                    payload:
+                      phase: discovery
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
   /sse/events/stats:
@@ -4058,6 +4158,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorEnvelope'
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorEnvelope'
     BadRequest:
       description: Bad Request
       content:
@@ -4066,12 +4172,6 @@ components:
             $ref: '#/components/schemas/ErrorEnvelope'
     ValidationError:
       description: Validation Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorEnvelope'
-    NotFound:
-      description: Not Found
       content:
         application/json:
           schema:
@@ -4289,6 +4389,401 @@ components:
           type: string
       required:
         - message
+    AnalysisReuseEnrichmentEvent:
+      type: object
+      description: Analysis phase reused existing feature vectors.
+      properties:
+        featureVectorCount:
+          type: integer
+          nullable: true
+          description: Number of feature vectors reused from prior HTTP phase enrichment.
+    CampaignSseAnalysisReuseEnrichmentEvent:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - analysis_reuse_enrichment
+        timestamp:
+          type: string
+          format: date-time
+        payload:
+          $ref: '#/components/schemas/AnalysisReuseEnrichmentEvent'
+      required:
+        - type
+    AnalysisFailedEvent:
+      type: object
+      description: Analysis phase preflight or execution failed.
+      properties:
+        error:
+          type: string
+        errorCode:
+          type: string
+          nullable: true
+      required:
+        - error
+    CampaignSseAnalysisFailedEvent:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - analysis_failed
+        timestamp:
+          type: string
+          format: date-time
+        payload:
+          $ref: '#/components/schemas/AnalysisFailedEvent'
+      required:
+        - type
+        - payload
+    PhaseProgressSummary:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - not_started
+            - configured
+            - running
+            - paused
+            - completed
+            - failed
+        percentComplete:
+          type: number
+          format: float
+        itemsProcessed:
+          type: integer
+        itemsTotal:
+          type: integer
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        duration:
+          type: string
+          nullable: true
+          description: Human readable duration
+      required:
+        - status
+        - percentComplete
+        - itemsProcessed
+        - itemsTotal
+    CampaignProgressResponse:
+      type: object
+      properties:
+        campaignId:
+          type: string
+          format: uuid
+        overall:
+          type: object
+          properties:
+            status:
+              type: string
+              enum:
+                - draft
+                - running
+                - paused
+                - completed
+                - failed
+                - cancelled
+            percentComplete:
+              type: number
+              format: float
+            totalDomains:
+              type: integer
+            processedDomains:
+              type: integer
+            successfulDomains:
+              type: integer
+            failedDomains:
+              type: integer
+        phases:
+          type: object
+          properties:
+            discovery:
+              $ref: '#/components/schemas/PhaseProgressSummary'
+            validation:
+              $ref: '#/components/schemas/PhaseProgressSummary'
+            extraction:
+              $ref: '#/components/schemas/PhaseProgressSummary'
+            analysis:
+              $ref: '#/components/schemas/PhaseProgressSummary'
+        timeline:
+          type: object
+          properties:
+            createdAt:
+              type: string
+              format: date-time
+            startedAt:
+              type: string
+              format: date-time
+              nullable: true
+            estimatedCompletionAt:
+              type: string
+              format: date-time
+              nullable: true
+            completedAt:
+              type: string
+              format: date-time
+              nullable: true
+      required:
+        - campaignId
+        - overall
+        - phases
+        - timeline
+    CampaignProgressEvent:
+      allOf:
+        - $ref: '#/components/schemas/CampaignProgressResponse'
+    CampaignSseProgressEvent:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - campaign_progress
+        timestamp:
+          type: string
+          format: date-time
+        payload:
+          $ref: '#/components/schemas/CampaignProgressEvent'
+      required:
+        - type
+    DomainAnalysisFeatures:
+      type: object
+      description: Canonical nested analysis feature vector for a discovered domain.
+      properties:
+        keywords:
+          type: object
+          properties:
+            unique_count:
+              type: integer
+              nullable: true
+            hits_total:
+              type: integer
+              nullable: true
+            weight_sum:
+              type: number
+              format: float
+              nullable: true
+            top3:
+              type: array
+              items:
+                type: string
+            signal_distribution:
+              type: object
+              additionalProperties:
+                type: number
+                format: float
+        richness:
+          type: object
+          properties:
+            score:
+              type: number
+              format: float
+              nullable: true
+            version:
+              type: integer
+              nullable: true
+            prominence_norm:
+              type: number
+              format: float
+              nullable: true
+            diversity_effective_unique:
+              type: number
+              format: float
+              nullable: true
+            diversity_norm:
+              type: number
+              format: float
+              nullable: true
+            enrichment_norm:
+              type: number
+              format: float
+              nullable: true
+            applied_bonus:
+              type: number
+              format: float
+              nullable: true
+            applied_deductions_total:
+              type: number
+              format: float
+              nullable: true
+            stuffing_penalty:
+              type: number
+              format: float
+              nullable: true
+            repetition_index:
+              type: number
+              format: float
+              nullable: true
+            anchor_share:
+              type: number
+              format: float
+              nullable: true
+        microcrawl:
+          type: object
+          properties:
+            gain_ratio:
+              type: number
+              format: float
+              nullable: true
+    DomainStatusEvent:
+      type: object
+      description: Domain generation/validation status update (subset / partial DomainListItem fields may be present).
+      properties:
+        id:
+          type: string
+          format: uuid
+        domain:
+          type: string
+        dnsStatus:
+          type: string
+          nullable: true
+        httpStatus:
+          type: string
+          nullable: true
+        leadStatus:
+          type: string
+          nullable: true
+        dnsReason:
+          type: string
+          nullable: true
+        httpReason:
+          type: string
+          nullable: true
+        features:
+          $ref: '#/components/schemas/DomainAnalysisFeatures'
+    CampaignSseDomainGeneratedEvent:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - domain_generated
+        timestamp:
+          type: string
+          format: date-time
+        payload:
+          $ref: '#/components/schemas/DomainStatusEvent'
+      required:
+        - type
+    CampaignSseDomainValidatedEvent:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - domain_validated
+        timestamp:
+          type: string
+          format: date-time
+        payload:
+          $ref: '#/components/schemas/DomainStatusEvent'
+      required:
+        - type
+    PhaseTransitionEvent:
+      type: object
+      description: Phase lifecycle transition (started or completed).
+      properties:
+        phase:
+          type: string
+      required:
+        - phase
+    CampaignSsePhaseStartedEvent:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - phase_started
+        timestamp:
+          type: string
+          format: date-time
+        payload:
+          $ref: '#/components/schemas/PhaseTransitionEvent'
+      required:
+        - type
+    CampaignSsePhaseCompletedEvent:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - phase_completed
+        timestamp:
+          type: string
+          format: date-time
+        payload:
+          $ref: '#/components/schemas/PhaseTransitionEvent'
+      required:
+        - type
+    PhaseFailedEvent:
+      type: object
+      description: Phase failure event.
+      properties:
+        phase:
+          type: string
+        error:
+          type: string
+      required:
+        - phase
+        - error
+    CampaignSsePhaseFailedEvent:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - phase_failed
+        timestamp:
+          type: string
+          format: date-time
+        payload:
+          $ref: '#/components/schemas/PhaseFailedEvent'
+      required:
+        - type
+    CampaignCompletedEvent:
+      type: object
+      description: Campaign has fully completed successfully.
+      properties:
+        campaignId:
+          type: string
+          format: uuid
+      required:
+        - campaignId
+    CampaignSseCompletedEvent:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - campaign_completed
+        timestamp:
+          type: string
+          format: date-time
+        payload:
+          $ref: '#/components/schemas/CampaignCompletedEvent'
+      required:
+        - type
+    CampaignSseEvent:
+      description: Discriminated union of all campaign SSE event wrapper objects.
+      oneOf:
+        - $ref: '#/components/schemas/CampaignSseAnalysisReuseEnrichmentEvent'
+        - $ref: '#/components/schemas/CampaignSseAnalysisFailedEvent'
+        - $ref: '#/components/schemas/CampaignSseProgressEvent'
+        - $ref: '#/components/schemas/CampaignSseDomainGeneratedEvent'
+        - $ref: '#/components/schemas/CampaignSseDomainValidatedEvent'
+        - $ref: '#/components/schemas/CampaignSsePhaseStartedEvent'
+        - $ref: '#/components/schemas/CampaignSsePhaseCompletedEvent'
+        - $ref: '#/components/schemas/CampaignSsePhaseFailedEvent'
+        - $ref: '#/components/schemas/CampaignSseCompletedEvent'
+      discriminator:
+        propertyName: type
     PersonaType:
       type: string
       enum:
@@ -5476,184 +5971,6 @@ components:
         configuration:
           type: object
           description: Campaign configuration settings (same structure as CreateCampaignRequest)
-    PhaseProgressSummary:
-      type: object
-      properties:
-        status:
-          type: string
-          enum:
-            - not_started
-            - configured
-            - running
-            - paused
-            - completed
-            - failed
-        percentComplete:
-          type: number
-          format: float
-        itemsProcessed:
-          type: integer
-        itemsTotal:
-          type: integer
-        startedAt:
-          type: string
-          format: date-time
-          nullable: true
-        completedAt:
-          type: string
-          format: date-time
-          nullable: true
-        duration:
-          type: string
-          nullable: true
-          description: Human readable duration
-      required:
-        - status
-        - percentComplete
-        - itemsProcessed
-        - itemsTotal
-    CampaignProgressResponse:
-      type: object
-      properties:
-        campaignId:
-          type: string
-          format: uuid
-        overall:
-          type: object
-          properties:
-            status:
-              type: string
-              enum:
-                - draft
-                - running
-                - paused
-                - completed
-                - failed
-                - cancelled
-            percentComplete:
-              type: number
-              format: float
-            totalDomains:
-              type: integer
-            processedDomains:
-              type: integer
-            successfulDomains:
-              type: integer
-            failedDomains:
-              type: integer
-        phases:
-          type: object
-          properties:
-            discovery:
-              $ref: '#/components/schemas/PhaseProgressSummary'
-            validation:
-              $ref: '#/components/schemas/PhaseProgressSummary'
-            extraction:
-              $ref: '#/components/schemas/PhaseProgressSummary'
-            analysis:
-              $ref: '#/components/schemas/PhaseProgressSummary'
-        timeline:
-          type: object
-          properties:
-            createdAt:
-              type: string
-              format: date-time
-            startedAt:
-              type: string
-              format: date-time
-              nullable: true
-            estimatedCompletionAt:
-              type: string
-              format: date-time
-              nullable: true
-            completedAt:
-              type: string
-              format: date-time
-              nullable: true
-      required:
-        - campaignId
-        - overall
-        - phases
-        - timeline
-    DomainAnalysisFeatures:
-      type: object
-      description: Canonical nested analysis feature vector for a discovered domain.
-      properties:
-        keywords:
-          type: object
-          properties:
-            unique_count:
-              type: integer
-              nullable: true
-            hits_total:
-              type: integer
-              nullable: true
-            weight_sum:
-              type: number
-              format: float
-              nullable: true
-            top3:
-              type: array
-              items:
-                type: string
-            signal_distribution:
-              type: object
-              additionalProperties:
-                type: number
-                format: float
-        richness:
-          type: object
-          properties:
-            score:
-              type: number
-              format: float
-              nullable: true
-            version:
-              type: integer
-              nullable: true
-            prominence_norm:
-              type: number
-              format: float
-              nullable: true
-            diversity_effective_unique:
-              type: number
-              format: float
-              nullable: true
-            diversity_norm:
-              type: number
-              format: float
-              nullable: true
-            enrichment_norm:
-              type: number
-              format: float
-              nullable: true
-            applied_bonus:
-              type: number
-              format: float
-              nullable: true
-            applied_deductions_total:
-              type: number
-              format: float
-              nullable: true
-            stuffing_penalty:
-              type: number
-              format: float
-              nullable: true
-            repetition_index:
-              type: number
-              format: float
-              nullable: true
-            anchor_share:
-              type: number
-              format: float
-              nullable: true
-        microcrawl:
-          type: object
-          properties:
-            gain_ratio:
-              type: number
-              format: float
-              nullable: true
     DomainListItem:
       type: object
       properties:
@@ -5712,6 +6029,18 @@ components:
           description: Requested page size
       required:
         - hasNextPage
+    ExtendedPageInfo:
+      description: Augmented pagination metadata combining cursor and numeric pagination when simultaneously available.
+      allOf:
+        - $ref: '#/components/schemas/PageInfo'
+        - type: object
+          properties:
+            current:
+              type: integer
+              description: 1-based current page index (numeric pagination fallback)
+            total:
+              type: integer
+              description: Total number of pages when known via numeric pagination
     CampaignDomainsListResponse:
       type: object
       properties:
@@ -5764,7 +6093,7 @@ components:
                 timeout:
                   type: integer
         pageInfo:
-          $ref: '#/components/schemas/PageInfo'
+          $ref: '#/components/schemas/ExtendedPageInfo'
       required:
         - campaignId
         - items
@@ -7074,6 +7403,34 @@ components:
         - updatedAt
         - rules
         - ruleCount
+    ActivityItem:
+      description: Generic activity log / timeline record with free-form properties (server-defined).
+      type: object
+      additionalProperties: true
+    CampaignSseEventType:
+      type: string
+      description: Enumerated server-sent campaign event names.
+      enum:
+        - analysis_reuse_enrichment
+        - analysis_failed
+        - campaign_progress
+        - counters_reconciled
+        - domain_generated
+        - domain_validated
+        - phase_started
+        - phase_completed
+        - phase_failed
+        - campaign_completed
+    CampaignSseEventPayload:
+      description: Union of possible JSON payload shapes emitted via campaign SSE stream.
+      oneOf:
+        - $ref: '#/components/schemas/AnalysisReuseEnrichmentEvent'
+        - $ref: '#/components/schemas/AnalysisFailedEvent'
+        - $ref: '#/components/schemas/CampaignProgressEvent'
+        - $ref: '#/components/schemas/DomainStatusEvent'
+        - $ref: '#/components/schemas/PhaseTransitionEvent'
+        - $ref: '#/components/schemas/PhaseFailedEvent'
+        - $ref: '#/components/schemas/CampaignCompletedEvent'
     HTTPValidatorConfigJSON:
       type: object
       description: HTTP validator configuration

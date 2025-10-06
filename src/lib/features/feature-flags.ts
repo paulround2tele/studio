@@ -256,15 +256,22 @@ class FeatureFlagsService {
   async fetchFlags(): Promise<void> {
     try {
       const res = await fetch(`${this.apiEndpoint}/feature-flags`);
-      const json = await res.json().catch(()=>({}));
-      if (!json) throw new Error('No feature flags data received');
-      const rawFlags = (json as any).flags || (json as any);
-      const entries = Array.isArray(rawFlags)
-        ? rawFlags.map((f: any) => [f.key, f.value])
-        : Object.entries(rawFlags);
+      const json: unknown = await res.json().catch(() => ({}));
+      if (!json || (typeof json !== 'object')) throw new Error('No feature flags data received');
+      type RawFlagRecord = Record<string, FeatureFlagValue>;
+      type RawFlagArrayEntry = { key: string; value: FeatureFlagValue };
+      interface RawEnvelope { flags?: RawFlagArrayEntry[] | RawFlagRecord }
+      const envelope = json as RawEnvelope;
+      const container: RawFlagArrayEntry[] | RawFlagRecord = envelope.flags ?? (json as RawFlagRecord);
+      let entries: [string, FeatureFlagValue][];
+      if (Array.isArray(container)) {
+        entries = container.map(f => [f.key, f.value]);
+      } else {
+        entries = Object.entries(container);
+      }
       const apiFlags = entries.map(([key, value]) => ({
         key: String(key),
-        value: value as FeatureFlagValue,
+        value,
         enabled: true,
         description: `API flag: ${key}`
       }));

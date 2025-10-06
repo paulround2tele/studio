@@ -47,12 +47,13 @@ class HealthService {
     try {
       // Make fresh API call using the generated client
       // Health endpoints return a SuccessEnvelope with no data field; treat success=true as ok
-      const response = await this.api.healthCheck();
-      const envelope = response?.data as any;
-      const isOk = envelope && typeof envelope === 'object' && envelope.success === true;
+  const response = await this.api.healthCheck();
+  interface HealthEnvelope { success?: boolean; metadata?: { version?: string } }
+  const envelope: HealthEnvelope | undefined = (response as unknown as { data?: HealthEnvelope }).data;
+  const isOk = envelope?.success === true;
 
       const normalized: CachedHealthData = {
-        version: envelope?.metadata?.version || undefined,
+  version: envelope?.metadata?.version || undefined,
         status: isOk ? 'ok' : 'unhealthy',
         isCached: false,
         cachedAt: now,

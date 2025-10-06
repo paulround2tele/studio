@@ -13,7 +13,8 @@ import { Label } from '@/components/ui/label';
 // Only import icons that are actually used in the component
 import { Database, Server } from 'lucide-react';
 import { useCachedAuth } from '@/lib/hooks/useCachedAuth';
-import { DatabaseApi } from '@/lib/api-client/apis/database-api';
+import { DatabaseApi, DbBulkQueryXRequestedWithEnum, DbBulkStatsXRequestedWithEnum } from '@/lib/api-client/apis/database-api';
+import { unwrapApiResponse } from '@/lib/utils/unwrapApiResponse';
 import { apiConfiguration } from '@/lib/api/config';
 import type {
   BulkDatabaseStatsRequest,
@@ -88,12 +89,11 @@ export default function DatabaseGUI() {
       
       const response = await databaseApi.dbBulkStats(
         statsRequest,
-        // X-Requested-With header sentinel
-        'XMLHttpRequest' as any
+        DbBulkStatsXRequestedWithEnum.XMLHttpRequest
       );
-      const data = (response as any)?.data ?? response;
-      if (data && (data as BulkDatabaseStatsResponse).databaseStats) {
-        setDbStats((data as BulkDatabaseStatsResponse).databaseStats || null);
+      const data = unwrapApiResponse<BulkDatabaseStatsResponse>(response);
+      if (data?.databaseStats) {
+        setDbStats(data.databaseStats || null);
       }
     } catch (err) {
       console.error('Failed to load database stats:', err);
@@ -108,8 +108,10 @@ export default function DatabaseGUI() {
     setError(null);
     
     try {
-      const queryId = (typeof globalThis !== 'undefined' && (globalThis as any).crypto && typeof (globalThis as any).crypto.randomUUID === 'function')
-        ? (globalThis as any).crypto.randomUUID()
+      const cryptoObj: Crypto | undefined =
+        typeof globalThis !== 'undefined' && 'crypto' in globalThis ? (globalThis as unknown as { crypto?: Crypto }).crypto : undefined;
+      const queryId = (cryptoObj && typeof cryptoObj.randomUUID === 'function')
+        ? cryptoObj.randomUUID()
         : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const query: BulkDatabaseQueryRequestQueriesInner = {
         id: queryId,
@@ -123,13 +125,12 @@ export default function DatabaseGUI() {
       
   const response = await databaseApi.dbBulkQuery(
         queryRequest,
-        // X-Requested-With header sentinel
-        'XMLHttpRequest' as any
+        DbBulkQueryXRequestedWithEnum.XMLHttpRequest
       );
-  const data = (response as any)?.data ?? response;
-  if (data && (data as BulkDatabaseQueryResponse).results) {
-    const resultsMap = (data as BulkDatabaseQueryResponse).results!;
-    const first = Object.values(resultsMap)[0] as BulkDatabaseQueryResponseResultsValue | undefined;
+  const data = unwrapApiResponse<BulkDatabaseQueryResponse>(response);
+  if (data?.results) {
+    const resultsMap = data.results;
+    const first = Object.values(resultsMap)[0];
     if (first) setQueryResult(first);
   }
     } catch (err) {
@@ -143,18 +144,21 @@ export default function DatabaseGUI() {
     }
   };
 
-  // Map DatabaseValue shape to a string for display
-  const renderDbValue = (cell: any): string | JSX.Element => {
-    if (cell == null) return <span className="text-gray-400 italic">NULL</span> as any;
-    if (typeof cell !== 'object') return String(cell);
-    // DatabaseValue from API
-    if ('isNull' in cell && cell.isNull) return <span className="text-gray-400 italic">NULL</span> as any;
-    if ('stringValue' in cell && cell.stringValue != null) return String(cell.stringValue);
-    if ('intValue' in cell && cell.intValue != null) return String(cell.intValue);
-    if ('floatValue' in cell && cell.floatValue != null) return String(cell.floatValue);
-    if ('boolValue' in cell && cell.boolValue != null) return String(cell.boolValue);
-    if ('rawValue' in cell && cell.rawValue != null) return String(cell.rawValue);
-    return JSON.stringify(cell);
+  // Map database cell value (unknown shape from backend) to display string/JSX without introducing new local types
+  const renderDbValue = (cell: unknown): string | JSX.Element => {
+    if (cell == null) return <span className="text-gray-400 italic">NULL</span>;
+    if (typeof cell === 'string' || typeof cell === 'number' || typeof cell === 'boolean') return String(cell);
+    if (typeof cell === 'object') {
+      const obj = cell as Record<string, unknown>;
+      if (obj.isNull === true) return <span className="text-gray-400 italic">NULL</span>;
+      if (obj.stringValue != null) return String(obj.stringValue);
+      if (obj.intValue != null) return String(obj.intValue);
+      if (obj.floatValue != null) return String(obj.floatValue);
+      if (obj.boolValue != null) return String(obj.boolValue);
+      if (obj.rawValue != null) return String(obj.rawValue as string | number | boolean | null | undefined);
+      return JSON.stringify(obj);
+    }
+    return String(cell);
   };
 
   // Predefined queries
@@ -530,9 +534,9 @@ export default function DatabaseGUI() {
                             </TableRow>
                           </TableHeader>
                           <TableBody>
-          {queryResult.rows?.map((row: any[], rowIndex: number) => (
+          {queryResult.rows?.map((row: DatabaseValueLike[], rowIndex: number) => (
                               <TableRow key={rowIndex}>
-                                {row.map((cell: any, cellIndex: number) => (
+                                {row.map((cell: DatabaseValueLike, cellIndex: number) => (
                                   <TableCell key={cellIndex} className="font-mono text-sm">
             {renderDbValue(cell)}
                                   </TableCell>

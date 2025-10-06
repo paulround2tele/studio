@@ -11,6 +11,10 @@
   $ref: "./sse/events.yaml"
 "/sse/campaigns/{campaignId}/events":
   $ref: "./sse/campaign-events.yaml"
+"/sse/campaigns/{campaignId}/events/sample":
+  $ref: "./sse/campaign-events-sample.yaml"
+"/sse/campaigns/{campaignId}/events/latest":
+  $ref: "./sse/campaign-single-event.yaml"
 "/sse/events/stats":
   $ref: "./sse/stats.yaml"
 

@@ -6,6 +6,7 @@ import type { Proxy as ProxyType } from '@/lib/api-client/models/proxy';
 import { PersonasApi } from '@/lib/api-client/apis/personas-api';
 import { ProxiesApi } from '@/lib/api-client/apis/proxies-api';
 import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
+import { unwrapApiResponse } from '@/lib/utils/unwrapApiResponse';
 import { apiConfiguration as config } from '@/lib/api/config';
 
 type HttpPersona = Persona;
@@ -45,7 +46,7 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
 
   // Load personas and filter by type using generated enum
   const personasResp = await personasApi.personasList();
-  const personasData: Persona[] = (personasResp as any)?.data ?? personasResp ?? [];
+  const personasData = unwrapApiResponse<Persona[]>(personasResp) || [];
   const httpPs = personasData.filter(p => p.personaType === PersonaType.http);
   const dnsPs = personasData.filter(p => p.personaType === PersonaType.dns);
       setHttpPersonas(httpPs);
@@ -53,16 +54,20 @@ export function useCampaignFormData(_isEditing?: boolean): CampaignFormData {
 
       // Load proxies
   const proxiesResp = await proxiesApi.proxiesList();
-  const proxiesData: ProxyType[] = (proxiesResp as any)?.data ?? proxiesResp ?? [];
+  const proxiesData = unwrapApiResponse<ProxyType[]>(proxiesResp) || [];
       setProxies(proxiesData);
 
       // Load source campaigns (simple list)
   const campaignsResp = await campaignsApi.campaignsList();
-  const campaignsData: Campaign[] = (campaignsResp as any)?.data ?? campaignsResp ?? [];
+  const campaignsData = unwrapApiResponse<Campaign[]>(campaignsResp) || [];
       setSourceCampaigns(campaignsData);
     } catch (error) {
       console.error('Error loading form data:', error);
-      const message = (error as any)?.message || (error as any)?.response?.data?.message || 'Failed to load form data';
+      let message = 'Failed to load form data';
+      if (error && typeof error === 'object') {
+        const maybeErr = error as { message?: string; response?: { data?: { message?: string } } };
+        message = maybeErr.response?.data?.message || maybeErr.message || message;
+      }
       setError(message);
     } finally {
       setIsLoading(false);

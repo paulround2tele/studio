@@ -12,33 +12,42 @@
  * @param raw Raw response from API
  * @returns Extracted data or throws error
  */
+interface SuccessEnvelope<D = unknown> { success: true; data?: D; error?: never }
+interface ErrorEnvelope { success: false; error: unknown }
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isSuccessEnvelope(value: unknown): value is SuccessEnvelope {
+  return isObject(value) && value.success === true;
+}
+
 export function normalizeResponse<T>(raw: unknown): T {
   if (raw == null) throw new Error('Empty response');
-  
-  const r: any = raw;
-  
-  // Pattern 1: Direct resource (migrated endpoints)
-  if (Array.isArray(r) || (typeof r === 'object' && !('success' in r) && !('error' in r))) {
-    return r as T;
+
+  // Pattern 1: Direct resource (migrated endpoints) – object/array without envelope markers
+  if (
+    Array.isArray(raw) ||
+    (isObject(raw) && !('success' in raw) && !('error' in raw))
+  ) {
+    return raw as T; // Caller supplied T expectation; upstream generator defines shape
   }
-  
-  // Pattern 2: SuccessEnvelope (legacy endpoints during transition)
-  if (r.success === true && 'data' in r) {
-    // Intentionally handle double-wrapped envelope (known transitional state during migration)
-    if (r.data && r.data.success === true && 'data' in r.data) {
+
+  if (isSuccessEnvelope(raw)) {
+    const data = raw.data;
+    // Double-wrapped transitional shape
+    if (isSuccessEnvelope(data)) {
       if (process.env.NODE_ENV !== 'production') {
         console.warn('[contract] double-wrapped response detected – unwrapping');
       }
-      return r.data.data as T;
+      return (data.data ?? ({} as unknown)) as T;
     }
-    return r.data as T;
-  }
-  
-  // Pattern 3: Legacy success without data (health endpoints pre-migration)
-  if (r.success === true && !('data' in r)) {
+    if (data !== undefined) return data as T;
+    // Legacy success without data (health endpoints)
     return {} as T;
   }
-  
+
   throw new Error('[contract] Unexpected response shape');
 }
 
@@ -48,10 +57,10 @@ export function normalizeResponse<T>(raw: unknown): T {
  * @returns true if direct resource, false if still enveloped
  */
 export function isDirectResponse(response: unknown): boolean {
-  if (!response || typeof response !== 'object') return false;
-  
-  const r: any = response;
-  return Array.isArray(r) || (!('success' in r) && !('error' in r));
+  return !!(
+    response &&
+    (Array.isArray(response) || (isObject(response) && !('success' in response) && !('error' in response)))
+  );
 }
 
 /**

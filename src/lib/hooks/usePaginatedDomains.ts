@@ -8,7 +8,7 @@ export interface UsePaginatedDomainsOptions {
   virtualizationThreshold?: number; // row count after which consumer should virtualize
   sortBy?: string; // future backend pass-through
   sortOrder?: 'asc' | 'desc';
-  filters?: Record<string, any>; // future backend pass-through
+  filters?: Record<string, unknown>; // future backend pass-through
 }
 
 export interface PaginatedDomainsState {
@@ -16,7 +16,7 @@ export interface PaginatedDomainsState {
   pageSize: number;
   pageCount: number | undefined; // undefined when total not known
   total: number | undefined;
-  items: any[]; // current page OR accumulated if infinite
+  items: CampaignDomainsListResponse['items']; // current page OR accumulated if infinite
   loading: boolean;
   error?: string;
   hasNext: boolean;
@@ -38,8 +38,10 @@ export interface PaginatedDomainsApi {
 }
 
 interface InternalPageCacheEntry {
-  items: any[];
+  items: CampaignDomainsListResponse['items'];
 }
+
+// Do not introduce new page info types; treat as unknown with a minimal shape check
 
 // Hook encapsulating numeric (offset/total) and cursor (hasNextPage) pagination.
 export function usePaginatedDomains(campaignId: string, opts: UsePaginatedDomainsOptions): [PaginatedDomainsState, PaginatedDomainsApi] {
@@ -50,7 +52,7 @@ export function usePaginatedDomains(campaignId: string, opts: UsePaginatedDomain
   const [version, setVersion] = useState(0); // bump to refetch current page
 
   const pageCache = useRef<Map<number, InternalPageCacheEntry>>(new Map());
-  const accumulated = useRef<any[]>([]);
+  const accumulated = useRef<CampaignDomainsListResponse['items']>([]);
 
   // Compute offset for numeric paging
   const offset = (page - 1) * pageSize;
@@ -61,9 +63,10 @@ export function usePaginatedDomains(campaignId: string, opts: UsePaginatedDomain
   );
 
   const total = data?.total ?? undefined;
-  const pageInfo = (data as any)?.pageInfo;
+  // PageInfo now references ExtendedPageInfo in OpenAPI (current/total may exist when backend supplies numeric context)
+  const pageInfo = data?.pageInfo as (CampaignDomainsListResponse['pageInfo'] & { current?: number; total?: number }) | undefined;
   const cursorMode = !total && !!pageInfo; // heuristic: no total but have cursor metadata
-  const hasNextFromCursor = cursorMode ? !!pageInfo?.hasNextPage : false;
+  const hasNextFromCursor = cursorMode ? Boolean(pageInfo && pageInfo.hasNextPage) : false;
 
   // Cache current page items
   const currentItems = data?.items || [];
@@ -71,7 +74,7 @@ export function usePaginatedDomains(campaignId: string, opts: UsePaginatedDomain
     pageCache.current.set(page, { items: currentItems });
     if (infinite) {
       // Append new unique items (simple concat; could enhance with domain id uniqueness)
-      const seen = new Set(accumulated.current.map((d: any) => d.id || d.domain));
+      const seen = new Set(accumulated.current.map((d) => (d as any).id || (d as any).domain));
       const appended = currentItems.filter(d => !seen.has(d.id || d.domain));
       if (appended.length) {
         accumulated.current = accumulated.current.concat(appended);
@@ -93,7 +96,7 @@ export function usePaginatedDomains(campaignId: string, opts: UsePaginatedDomain
     total,
     items: infinite ? accumulated.current : (pageCache.current.get(page)?.items || currentItems),
     loading: isFetching,
-    error: error ? (error as any).message || 'Failed to load domains' : undefined,
+  error: error ? (error as { message?: string })?.message || 'Failed to load domains' : undefined,
     hasNext,
     hasPrev,
     infinite,

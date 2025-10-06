@@ -200,19 +200,6 @@ export default [
         }
       ],
       
-      // Prevent manual type definitions that conflict with generated types
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: 'TSInterfaceDeclaration[id.name=/^(Campaign|Proxy|Persona|KeywordSet|Models)$/]',
-          message: 'Manual interface definitions for API models are not allowed. Use auto-generated types from @/lib/api-client/ instead. If you need a local interface, use a different naming pattern that doesn\'t conflict with generated types.'
-        },
-        {
-          selector: 'TSTypeAliasDeclaration[id.name=/^(Campaign|Proxy|Persona|KeywordSet|Models)$/]',
-          message: 'Manual type aliases for API models are not allowed. Use auto-generated types from @/lib/api-client/ instead. If you need a local type, use a different naming pattern that doesn\'t conflict with generated types.'
-        }
-      ],
-      
       // Custom rules
       "@typescript-eslint/no-unused-vars": [
         "error",
@@ -222,7 +209,38 @@ export default [
           caughtErrorsIgnorePattern: "^_"
         }
       ],
-      "@typescript-eslint/no-explicit-any": "warn",
+      // Elevate governance: explicit any now an error in production code
+      "@typescript-eslint/no-explicit-any": "error",
+      // Ban casts to any (TSAsExpression) and annotations using any, guiding toward unknown or concrete types
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'TSInterfaceDeclaration[id.name=/^(Campaign|Proxy|Persona|KeywordSet|Models)$/]',
+          message: 'Manual interface definitions for API models are not allowed. Use auto-generated types from @/lib/api-client/ instead. If you need a local interface, use a different naming pattern that doesn\'t conflict with generated types.'
+        },
+        {
+          selector: 'TSTypeAliasDeclaration[id.name=/^(Campaign|Proxy|Persona|KeywordSet|Models)$/]',
+          message: 'Manual type aliases for API models are not allowed. Use auto-generated types from @/lib/api-client/ instead. If you need a local type, use a different naming pattern that doesn\'t conflict with generated types.'
+        },
+        {
+          selector: 'TSAsExpression > TSAnyKeyword',
+          message: 'Casting to any is disallowed. Use unknown then narrow, or a concrete generated model type.'
+        },
+        {
+          selector: 'TSTypeAnnotation > TSAnyKeyword',
+          message: 'Avoid annotating with any. Use a specific generated type or unknown + proper type guard.'
+        }
+      ],
+      // Discourage legacy axios unwrap pattern in favor of unwrapApiResponse helper
+      'no-restricted-patterns': ['off'], // placeholder to avoid config errors if plugin absent
+      'no-restricted-properties': [
+        'error',
+        {
+          object: 'resp',
+          property: 'data',
+          message: 'Direct resp.data access with casts discouraged; use unwrapApiResponse<T>(resp).' 
+        }
+      ],
       "@typescript-eslint/no-require-imports": "off", // Allow require() imports
       "react/no-unescaped-entities": "warn",
       "react-hooks/exhaustive-deps": "warn",

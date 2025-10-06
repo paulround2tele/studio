@@ -6,6 +6,13 @@ import { useToast } from '@/hooks/use-toast';
 import { campaignApi } from '@/store/api/campaignApi';
 import type { CampaignProgressResponse } from '@/lib/api-client/models/campaign-progress-response';
 import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
+import type { CampaignSseEvent } from '@/lib/api-client/models/campaign-sse-event';
+import type { AnalysisReuseEnrichmentEvent } from '@/lib/api-client/models/analysis-reuse-enrichment-event';
+import type { AnalysisFailedEvent } from '@/lib/api-client/models/analysis-failed-event';
+import type { DomainStatusEvent } from '@/lib/api-client/models/domain-status-event';
+import type { PhaseTransitionEvent } from '@/lib/api-client/models/phase-transition-event';
+import type { PhaseFailedEvent } from '@/lib/api-client/models/phase-failed-event';
+import type { CampaignDomainsListResponse } from '@/lib/api-client/models/campaign-domains-list-response';
 
 /**
  * Subscribes to campaign-specific SSE events and invalidates the campaign-state query
@@ -18,22 +25,43 @@ export function useCampaignPhaseEvents(campaignId: string | null | undefined) {
   // Build SSE URL (Next.js rewrite proxies to backend localhost:8080)
   const url = campaignId ? `/api/v2/sse/campaigns/${campaignId}/events` : null;
 
+  function isCampaignSseEvent(obj: unknown): obj is CampaignSseEvent {
+    if (!obj || typeof obj !== 'object') return false;
+    const t = (obj as { type?: unknown }).type;
+    return typeof t === 'string'; // rely on generated union narrowing after guard
+  }
+
   const { isConnected } = useSSE(
     url,
     (evt) => {
       if (!campaignId) return;
-      const type = evt.event || '';
-      const data = (evt.data ?? {}) as Record<string, any>;
-      const phase = (data.phase as string) || 'phase';
-      switch (type) {
+      const raw = evt.data as unknown;
+      // Handle non-modeled event names (legacy / internal) by evt.event fallback
+      if (!isCampaignSseEvent(raw)) {
+        if (evt.event === 'counters_reconciled') {
+          toast({ title: 'Counters reconciled', description: 'Campaign counters adjusted for consistency.' });
+          dispatch(
+            campaignApi.util.invalidateTags([
+              { type: 'Campaign', id: campaignId },
+              { type: 'CampaignProgress', id: campaignId },
+              { type: 'CampaignDomains', id: campaignId },
+            ])
+          );
+        }
+        return;
+      }
+      const phaseFallback = 'phase';
+      switch (raw.type) {
         case 'analysis_reuse_enrichment': {
-          const count = data.featureVectorCount ?? data.feature_vector_count;
+          const reuse = raw.payload as AnalysisReuseEnrichmentEvent;
+          const count = reuse.featureVectorCount;
           toast({ title: 'Analysis reuse', description: `Reusing ${count ?? 'existing'} feature vector(s) from HTTP phase.` });
           break;
         }
         case 'analysis_failed': {
-          const err = (data.error as string) || 'Analysis preflight failed';
-          const code = data.errorCode as string | undefined;
+          const failed = raw.payload as AnalysisFailedEvent;
+          const err = failed.error || 'Analysis preflight failed';
+          const code = failed.errorCode as string | undefined;
           const desc = code ? `${err} (${code})` : err;
           toast({ title: 'Analysis failed', description: desc, variant: 'destructive' });
           // Invalidate analysis phase status & progress for refresh
@@ -56,7 +84,7 @@ export function useCampaignPhaseEvents(campaignId: string | null | undefined) {
                 campaignId,
                 (draft) => {
                   // Only apply if shape matches (defensive)
-                  const incoming = data as Partial<CampaignProgressResponse>;
+                  const incoming = raw.payload as Partial<CampaignProgressResponse>;
                   if (draft && incoming) {
                     Object.assign(draft, incoming);
                   }
@@ -75,19 +103,6 @@ export function useCampaignPhaseEvents(campaignId: string | null | undefined) {
           );
           break;
         }
-        case 'counters_reconciled': {
-          // Reconciliation job adjusted aggregate counters (e.g., validated counts, scoring totals)
-          // Strategy: invalidate campaign-level aggregates & domains so UI refetches authoritative values.
-          toast({ title: 'Counters reconciled', description: 'Campaign counters adjusted for consistency.' });
-          dispatch(
-            campaignApi.util.invalidateTags([
-              { type: 'Campaign', id: campaignId },
-              { type: 'CampaignProgress', id: campaignId },
-              { type: 'CampaignDomains', id: campaignId },
-            ])
-          );
-          break;
-        }
         case 'domain_generated':
         case 'domain_validated': {
           // Dynamic optimistic domain status propagation across cached pages.
@@ -96,7 +111,8 @@ export function useCampaignPhaseEvents(campaignId: string | null | undefined) {
           //  * Stop after last cached page even if total unknown.
           //  * Handle shrink scenarios (if total decreased) by clamping probing.
           //  * Preserve lightweight best-effort nature (no crashes on cache miss).
-          const incoming = data as Partial<DomainListItem> & { id?: string; domain?: string };
+          const incomingPayload = raw.payload as DomainStatusEvent;
+          const incoming = incomingPayload as unknown as Partial<DomainListItem> & { id?: string; domain?: string };
           if (incoming && (incoming.id || incoming.domain)) {
             const limits = [25, 50, 100];
             try {
@@ -114,12 +130,12 @@ export function useCampaignPhaseEvents(campaignId: string | null | undefined) {
                       campaignApi.util.updateQueryData(
                         'getCampaignDomains',
                         { campaignId, limit, offset },
-                        (draft: any) => {
+                        (draft) => {
                           if (!draft) return;
                           hit = true;
-                          // Capture total if exposed
-                          if (typeof draft.total === 'number') total = draft.total;
-                          const items: DomainListItem[] | undefined = draft.items as any;
+                          const d = draft as CampaignDomainsListResponse;
+                          if (typeof d.total === 'number') total = d.total;
+                          const items = d.items as DomainListItem[] | undefined;
                           if (!items || !items.length) return;
                           const idx = items.findIndex(
                             (d) =>
@@ -130,7 +146,7 @@ export function useCampaignPhaseEvents(campaignId: string | null | undefined) {
                             items[idx] = { ...items[idx], ...incoming };
                           }
                         }
-                      ) as any
+                      )
                     );
                   } catch (_inner) {
                     // Cache miss -> stop probing further pages for this limit.
@@ -152,36 +168,42 @@ export function useCampaignPhaseEvents(campaignId: string | null | undefined) {
           break;
         }
         case 'phase_started': {
-          toast({ title: 'Phase started', description: `Phase ${phase} has started.` });
+          const trans = raw.payload as PhaseTransitionEvent;
+          const p = trans.phase || phaseFallback;
+          toast({ title: 'Phase started', description: `Phase ${p} has started.` });
           dispatch(
             campaignApi.util.invalidateTags([
               { type: 'Campaign', id: campaignId },
               { type: 'CampaignProgress', id: campaignId },
-              { type: 'CampaignPhase', id: `${campaignId}:${phase}` },
+              { type: 'CampaignPhase', id: `${campaignId}:${p}` },
             ])
           );
           break;
         }
         case 'phase_completed': {
-          toast({ title: 'Phase completed', description: `Phase ${phase} completed successfully.` });
+          const trans = raw.payload as PhaseTransitionEvent;
+          const p = trans.phase || phaseFallback;
+          toast({ title: 'Phase completed', description: `Phase ${p} completed successfully.` });
           dispatch(
             campaignApi.util.invalidateTags([
               { type: 'Campaign', id: campaignId },
               { type: 'CampaignProgress', id: campaignId },
               { type: 'CampaignDomains', id: campaignId },
-              { type: 'CampaignPhase', id: `${campaignId}:${phase}` },
+              { type: 'CampaignPhase', id: `${campaignId}:${p}` },
             ])
           );
           break;
         }
         case 'phase_failed': {
-          const err = (data.error as string) || 'Unknown error';
-          toast({ title: 'Phase failed', description: `Phase ${phase} failed: ${err}`, variant: 'destructive' });
+          const failed = raw.payload as PhaseFailedEvent;
+          const p = failed.phase || phaseFallback;
+          const err = failed.error || 'Unknown error';
+          toast({ title: 'Phase failed', description: `Phase ${p} failed: ${err}`, variant: 'destructive' });
           dispatch(
             campaignApi.util.invalidateTags([
               { type: 'Campaign', id: campaignId },
               { type: 'CampaignProgress', id: campaignId },
-              { type: 'CampaignPhase', id: `${campaignId}:${phase}` },
+              { type: 'CampaignPhase', id: `${campaignId}:${p}` },
             ])
           );
           break;

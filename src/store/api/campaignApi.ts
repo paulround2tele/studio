@@ -23,6 +23,18 @@ import type { EnrichedCampaignResponse } from '@/lib/api-client/models/enriched-
 import type { DomainListItem } from '@/lib/api-client/models/domain-list-item';
 import type { CampaignDomainsListResponse } from '@/lib/api-client/models/campaign-domains-list-response';
 import { toRtkError } from '@/lib/utils/toRtkError';
+import type { CampaignMomentumResponse } from '@/lib/api-client/models/campaign-momentum-response';
+import type { CampaignRecommendationsResponse } from '@/lib/api-client/models/campaign-recommendations-response';
+import type { CampaignMetricsResponse } from '@/lib/api-client/models/campaign-metrics-response';
+import type { CampaignClassificationsResponse } from '@/lib/api-client/models/campaign-classifications-response';
+import type { CampaignFunnelResponse } from '@/lib/api-client/models/campaign-funnel-response';
+import type { DomainScoreBreakdownResponse } from '@/lib/api-client/models/domain-score-breakdown-response';
+
+// Helper for axios/fetch hybrid responses
+const unwrap = <T>(resp: unknown): T | undefined => {
+  const maybe = (resp as any)?.data ?? resp;
+  return maybe as T | undefined;
+};
 
 // Centralized API configuration targeting /api/v2
 const campaignsApi = new CampaignsApi(apiConfiguration);
@@ -39,13 +51,15 @@ export const campaignApi = createApi({
   createCampaign: builder.mutation<CampaignResponse, CreateCampaignRequest>({
       queryFn: async (request) => {
         try {
-          const resp = await campaignsApi.campaignsCreate(request) as any;
-          // Post-migration: direct CampaignResponse (OR axios response .data during transition)
-          const data: CampaignResponse | undefined = resp?.data ?? resp;
-          if (!data || !data.id) return { error: 'Empty campaign response' as any };
+          const resp = await campaignsApi.campaignsCreate(request);
+          const data = unwrap<CampaignResponse>(resp);
+          if (!data || !data.id) {
+            return { error: { status: 500, data: { message: 'Empty campaign response' } } };
+          }
           return { data };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
       invalidatesTags: ['Campaign', 'CampaignList'],
@@ -56,11 +70,12 @@ export const campaignApi = createApi({
       queryFn: async (campaignId) => {
         try {
           const response = await campaignsApi.campaignsEnrichedGet(campaignId);
-          const data = (response as any)?.data ?? response;
-          if (!data) return { error: 'Empty enriched campaign response' as any };
+          const data = unwrap<EnrichedCampaignResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty enriched campaign response' } } };
           return { data };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
       providesTags: (result, error, campaignId) => [
@@ -73,12 +88,13 @@ export const campaignApi = createApi({
     getCampaignsStandalone: builder.query<CampaignResponse[], void>({
       queryFn: async () => {
         try {
-          const resp = await campaignsApi.campaignsList() as any;
-          // Direct array (or axios response wrapper) after envelope removal
-          const list: CampaignResponse[] = Array.isArray(resp?.data) ? resp.data : (Array.isArray(resp) ? resp : []);
+          const resp = await campaignsApi.campaignsList();
+          const raw = unwrap<CampaignResponse[] | unknown>(resp);
+          const list: CampaignResponse[] = Array.isArray(raw) ? raw as CampaignResponse[] : [];
           return { data: list };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
       providesTags: ['CampaignList'],
@@ -89,11 +105,12 @@ export const campaignApi = createApi({
       queryFn: async ({ campaignId, limit, offset }) => {
         try {
           const response = await campaignsApi.campaignsDomainsList(campaignId, limit, offset);
-          const data = (response as any)?.data ?? response;
-          if (!data) return { error: 'Empty domains list response' as any };
+          const data = unwrap<CampaignDomainsListResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty domains list response' } } };
           return { data };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
       providesTags: (result, error, { campaignId }) => [
@@ -106,11 +123,12 @@ export const campaignApi = createApi({
       queryFn: async (campaignId) => {
         try {
           const response = await campaignsApi.campaignsProgress(campaignId);
-          const data = (response as any)?.data ?? response;
-          if (!data) return { error: 'Empty progress response' as any };
+          const data = unwrap<CampaignProgressResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty progress response' } } };
           return { data };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
       providesTags: (result, error, campaignId) => [
@@ -127,11 +145,12 @@ export const campaignApi = createApi({
         try {
           const phaseEnum: CampaignsPhaseConfigurePhaseEnum = (phase as CampaignsPhaseConfigurePhaseEnum);
           const response = await campaignsApi.campaignsPhaseConfigure(campaignId, phaseEnum, config);
-          const data = (response as any)?.data ?? response;
-          if (!data) return { error: 'Empty phase configure response' as any };
+          const data = unwrap<PhaseStatusResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty phase configure response' } } };
           return { data };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
       invalidatesTags: (result, error, { campaignId, phase }) => [
@@ -150,11 +169,12 @@ export const campaignApi = createApi({
         try {
           const phaseEnum: CampaignsPhaseStartPhaseEnum = (phase as CampaignsPhaseStartPhaseEnum);
           const response = await campaignsApi.campaignsPhaseStart(campaignId, phaseEnum);
-          const data = (response as any)?.data ?? response;
-          if (!data) return { error: 'Empty phase start response' as any };
+          const data = unwrap<PhaseStatusResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty phase start response' } } };
           return { data };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
       invalidatesTags: (result, error, { campaignId, phase }) => [
@@ -175,11 +195,12 @@ export const campaignApi = createApi({
         try {
           const phaseEnum: CampaignsPhaseStatusPhaseEnum = (phase as CampaignsPhaseStatusPhaseEnum);
           const response = await campaignsApi.campaignsPhaseStatus(campaignId, phaseEnum);
-          const data = (response as any)?.data ?? response;
-          if (!data) return { error: 'Empty phase status response' as any };
+          const data = unwrap<PhaseStatusResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty phase status response' } } };
           return { data };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
       providesTags: (result, error, { campaignId, phase }) => [
@@ -196,11 +217,12 @@ export const campaignApi = createApi({
       queryFn: async (request) => {
         try {
           const response = await campaignsApi.campaignsDomainGenerationPatternOffset(request);
-          const data = (response as any)?.data ?? response;
-          if (!data) return { error: 'Empty pattern offset response' as any };
+          const data = unwrap<PatternOffsetResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty pattern offset response' } } };
           return { data };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
     }),
@@ -218,7 +240,7 @@ export const campaignApi = createApi({
           let pages = 0;
           while (all.length < total && pages < MAX_PAGES) {
             const resp = await campaignsApi.campaignsDomainsList(campaignId, limit, offset);
-            const payload = (resp as any)?.data ?? resp;
+            const payload = unwrap<CampaignDomainsListResponse>(resp);
             if (!payload) break;
             const items = payload.items || [];
             total = payload.total || items.length;
@@ -229,8 +251,9 @@ export const campaignApi = createApi({
           }
           const text = all.map(d => d.domain).filter(Boolean).join('\n');
           return { data: text };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
     }),
@@ -243,10 +266,11 @@ export const campaignApi = createApi({
       queryFn: async ({ campaignId, mode }) => {
         try {
           const response = await (campaignsApi as any).campaignsModeUpdate(campaignId, { mode });
-          const extracted = ((response as any)?.data ?? response) || { mode };
-          return { data: { mode: (extracted as any).mode || mode } };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+          const extracted = unwrap<{ mode?: string }>(response) || { mode };
+          return { data: { mode: extracted.mode || mode } };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
       invalidatesTags: (result, error, { campaignId }) => [
@@ -256,22 +280,18 @@ export const campaignApi = createApi({
     }),
 
     // Domain score breakdown (analysis insight) - lazy usage
-    getCampaignDomainScoreBreakdown: builder.query<
-      any,
-      { campaignId: string; domain: string }
-    >({
+    getCampaignDomainScoreBreakdown: builder.query<DomainScoreBreakdownResponse, { campaignId: string; domain: string }>({
       queryFn: async ({ campaignId, domain }) => {
         try {
-          // Generated method name inferred from path /campaigns/{id}/domains/score-breakdown?domain=
-          // If spec uses different naming, this will need alignment.
-          const fn: any = (campaignsApi as any).campaignsDomainScoreBreakdown;
-          if (!fn) return { error: 'Domain score breakdown endpoint missing in client' as any };
+          const fn = (campaignsApi as any).campaignsDomainScoreBreakdown as ((id: string, domain: string) => Promise<unknown>) | undefined;
+          if (!fn) return { error: { status: 500, data: { message: 'Domain score breakdown endpoint missing in client' } } };
           const response = await fn(campaignId, domain);
-          const data = (response as any)?.data ?? response;
-          if (!data) return { error: 'Empty score breakdown' as any };
+          const data = unwrap<DomainScoreBreakdownResponse>(response);
+            if (!data) return { error: { status: 500, data: { message: 'Empty score breakdown' } } };
           return { data };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
       providesTags: (result, error, { campaignId }) => [
@@ -280,14 +300,16 @@ export const campaignApi = createApi({
     }),
 
     // New UX Refactor endpoints (Phase A)
-    getCampaignFunnel: builder.query<any, string>({
+    getCampaignFunnel: builder.query<CampaignFunnelResponse, string>({
       queryFn: async (campaignId) => {
         try {
           const response = await campaignsApi.campaignsFunnelGet(campaignId);
-          const data = (response as any)?.data ?? response;
+          const data = unwrap<CampaignFunnelResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty funnel response' } } };
           return { data };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
       providesTags: (result, error, campaignId) => [
@@ -295,14 +317,16 @@ export const campaignApi = createApi({
       ],
     }),
 
-    getCampaignMetrics: builder.query<any, string>({
+    getCampaignMetrics: builder.query<CampaignMetricsResponse, string>({
       queryFn: async (campaignId) => {
         try {
-          const resp = await campaignsApi.campaignsMetricsGet(campaignId) as any;
-          const data = resp?.data ?? resp; // Direct object after migration
+          const resp = await campaignsApi.campaignsMetricsGet(campaignId);
+          const data = unwrap<CampaignMetricsResponse>(resp);
+          if (!data) return { error: { status: 500, data: { message: 'Empty metrics response' } } };
           return { data };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
       providesTags: (result, error, campaignId) => [
@@ -310,14 +334,16 @@ export const campaignApi = createApi({
       ],
     }),
 
-    getCampaignClassifications: builder.query<any, { campaignId: string; limit?: number }>({
+    getCampaignClassifications: builder.query<CampaignClassificationsResponse, { campaignId: string; limit?: number }>({
       queryFn: async ({ campaignId, limit }) => {
         try {
           const response = await campaignsApi.campaignsClassificationsGet(campaignId, limit);
-          const data = (response as any)?.data ?? response;
+          const data = unwrap<CampaignClassificationsResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty classifications response' } } };
           return { data };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
       providesTags: (result, error, { campaignId }) => [
@@ -325,14 +351,16 @@ export const campaignApi = createApi({
       ],
     }),
 
-    getCampaignMomentum: builder.query<any, string>({
+    getCampaignMomentum: builder.query<CampaignMomentumResponse, string>({
       queryFn: async (campaignId) => {
         try {
           const response = await campaignsApi.campaignsMomentumGet(campaignId);
-          const data = (response as any)?.data ?? response;
+          const data = unwrap<CampaignMomentumResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty momentum response' } } };
           return { data };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
       providesTags: (result, error, campaignId) => [
@@ -340,14 +368,16 @@ export const campaignApi = createApi({
       ],
     }),
 
-    getCampaignRecommendations: builder.query<any, string>({
+    getCampaignRecommendations: builder.query<CampaignRecommendationsResponse, string>({
       queryFn: async (campaignId) => {
         try {
           const response = await campaignsApi.campaignsRecommendationsGet(campaignId);
-          const data = (response as any)?.data ?? response;
+          const data = unwrap<CampaignRecommendationsResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty recommendations response' } } };
           return { data };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
       providesTags: (result, error, campaignId) => [
@@ -355,14 +385,17 @@ export const campaignApi = createApi({
       ],
     }),
 
-    getCampaignStatus: builder.query<any, string>({
+  // Status endpoint returns a CampaignResponse-like shape; using CampaignResponse until spec adds dedicated model
+  getCampaignStatus: builder.query<CampaignResponse, string>({
       queryFn: async (campaignId) => {
         try {
           const response = await campaignsApi.campaignsStatusGet(campaignId);
-          const data = (response as any)?.data ?? response;
+          const data = unwrap<CampaignResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty status response' } } };
           return { data };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
       providesTags: (result, error, campaignId) => [
@@ -370,14 +403,16 @@ export const campaignApi = createApi({
       ],
     }),
 
-    duplicateCampaign: builder.mutation<any, string>({
+    duplicateCampaign: builder.mutation<CampaignResponse, string>({
       queryFn: async (campaignId) => {
         try {
           const response = await campaignsApi.campaignsDuplicatePost(campaignId);
-          const data = (response as any)?.data ?? response;
+          const data = unwrap<CampaignResponse>(response);
+          if (!data) return { error: { status: 500, data: { message: 'Empty duplicate response' } } };
           return { data };
-        } catch (error: any) {
-          return { error: toRtkError(error) as any };
+        } catch (error) {
+          const norm = toRtkError(error);
+          return { error: { status: norm.status ?? 500, data: norm } };
         }
       },
       invalidatesTags: ['CampaignList'],

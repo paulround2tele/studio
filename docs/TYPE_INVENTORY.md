@@ -1,6 +1,6 @@
 # Type Inventory & Usage Governance
 
-Authoritative catalog of generated API types and application-side domain helpers. Goal: eliminate ad‑hoc `any`/`unknown` wrappers and enforce direct use of generated models.
+Authoritative catalog of generated API types and application-side domain helpers. Goal: eliminate ad‑hoc `any`/`unknown` wrappers and enforce direct use of generated models; reach and maintain 0 unapproved `any`.
 
 ## Principles
 1. Always prefer the generated OpenAPI type. No parallel hand-written interface with the same shape.
@@ -51,31 +51,41 @@ Any new helper must be added here or will be flagged by CI.
 5. Run `npm run typecheck` and `npm run lint`.
 
 ## Enforcement
-Add (or keep) the following lint rules:
-```jsonc
-// eslint.config.js (conceptual snippet)
-{
-  "rules": {
-    "@typescript-eslint/no-explicit-any": "error",
-    "no-restricted-syntax": ["error", {
-      "selector": "TSAsExpression[typeAnnotation.typeName.name='any']",
-      "message": "Do not cast to any; use generated type."
-    }]
-  }
-}
+Implemented tooling (Phase 1):
+
+| Layer | Mechanism | Status |
+|-------|-----------|--------|
+| Lint  | `@typescript-eslint/no-explicit-any` = error (production code) | Active |
+| Lint  | `no-restricted-syntax` ban on casts/annotations to `any` | Active |
+| Audit | `scripts/type-audit/scan-any.ts` produces `docs/allAnyUsages.json` | Active |
+| CI    | `npm run ci:check:any` (fails if total > 0) | Pending integration |
+
+Run audit:
+```
+npm run audit:any
 ```
 
-CI script (pseudo):
-```bash
-#!/usr/bin/env bash
-set -euo pipefail
-grep -R "as any" src | grep -v "legacy" && { echo 'Found forbidden any cast'; exit 1; }
+Raw baseline (initial snapshot during remediation):
 ```
+grep -R -n -E "(: any|as any)" src > docs/any-baseline.txt
+```
+
+`any` usage categories in JSON report: annotation vs cast; grouped by location (app/components/services/store/api/other).
+
+Guidance for remaining edge cases: prefer `unknown` + schema (e.g., Zod) for truly dynamic external payloads.
+
+## Exemptions (Should Remain Empty)
+| File | Line | Justification | Tracking Issue |
+|------|------|---------------|----------------|
+| *(none)* |  |  |  |
+
+Any proposed exemption must include a narrowing plan & link to an issue; update this table in the PR.
 
 ## Decision Log
 | Date | Change | Rationale |
 |------|--------|-----------|
 | 2025-10-02 | Introduced inventory & governance doc | Prevent regression into ad-hoc wrapper types |
+| 2025-10-03 | Elevated any enforcement; added scan-any audit & CI scripts | Begin formal remediation (Phase 1) |
 
 ## Future Actions
 - Generate a union `BulkOperationResult` once backend stabilizes field names (`processedCount` vs `domainsProcessed`).
