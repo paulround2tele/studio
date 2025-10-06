@@ -50,6 +50,8 @@
     "api:lint": "spectral lint backend/openapi/dist/openapi.yaml",
     "any:audit": "node scripts/audit-any.mjs",
     "audit:any": "tsx scripts/type-audit/scan-any.ts > docs/allAnyUsages.json",
+    "audit:any:enhanced": "tsx scripts/type-audit/enhanced-audit.ts > docs/enhanced-any-analysis.json",
+    "audit:any:summary": "tsx scripts/type-audit/run-audit-summary.ts",
     "ci:check:any": "tsx scripts/type-audit/scan-any.ts | jq '.total' | grep '^0$'",
     "ci:types": "bash scripts/ci/check-any-zero.sh",
     "lint:safe": "npm run lint && npm run audit:any",
