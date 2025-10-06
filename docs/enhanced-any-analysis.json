@@ -1,30 +1,30 @@
 {
-  "generatedAt": "2025-10-06T16:41:32.912Z",
+  "generatedAt": "2025-10-06T16:43:30.820Z",
   "root": "/home/runner/work/studio/studio",
-  "total": 443,
+  "total": 450,
   "byPattern": {
     "annotation": 228,
-    "cast": 215
+    "cast": 222
   },
   "byLocationGroup": {
     "app": 40,
     "components": 70,
     "services": 226,
     "store": 53,
-    "other": 54
+    "other": 61
   },
   "byDataOrigin": {
-    "api-response": 44,
-    "unknown": 358,
+    "api-response": 50,
+    "unknown": 359,
     "form-data": 23,
     "redux-state": 5,
     "event-handler": 6,
     "sse-event": 7
   },
   "bySeverity": {
-    "high": 51,
+    "high": 57,
     "medium": 28,
-    "low": 364
+    "low": 365
   },
   "byDomain": {
     "campaigns": 206,
@@ -32,7 +32,7 @@
     "personas": 15,
     "proxies": 40,
     "bulk-operations": 26,
-    "other": 148,
+    "other": 155,
     "domains": 3
   },
   "analyses": [
@@ -365,6 +365,102 @@
       "context": "const response = await authApi.authLogin(loginRequest);",
       "codeContext": "224:       \n225:   const response = await authApi.authLogin(loginRequest);\n226:   const loginData: any = (response as any)?.data ?? response;\n227:       \n228:       if (loginData) {",
       "variableName": "loginData",
+      "dataOrigin": "api-response",
+      "existingType": "AuthChangePassword200Response",
+      "recommendation": "Use existing type: AuthChangePassword200Response",
+      "severity": "high",
+      "domain": "other"
+    },
+    {
+      "file": "src/lib/utils/error-handling.ts",
+      "line": 39,
+      "column": 26,
+      "pattern": "cast",
+      "code": "* // Instead of: (error as any).data?.message || (error as any).message",
+      "locationGroup": "other",
+      "context": "* @example",
+      "codeContext": "37:  * \n38:  * @example\n39:  * // Instead of: (error as any).data?.message || (error as any).message\n40:  * const message = extractErrorMessage(error);\n41:  */",
+      "variableName": "error",
+      "dataOrigin": "api-response",
+      "existingType": "AuthChangePassword200Response",
+      "recommendation": "Use existing type: AuthChangePassword200Response",
+      "severity": "high",
+      "domain": "other"
+    },
+    {
+      "file": "src/lib/utils/error-handling.ts",
+      "line": 39,
+      "column": 58,
+      "pattern": "cast",
+      "code": "* // Instead of: (error as any).data?.message || (error as any).message",
+      "locationGroup": "other",
+      "context": "* @example",
+      "codeContext": "37:  * \n38:  * @example\n39:  * // Instead of: (error as any).data?.message || (error as any).message\n40:  * const message = extractErrorMessage(error);\n41:  */",
+      "variableName": "error",
+      "dataOrigin": "api-response",
+      "existingType": "AuthChangePassword200Response",
+      "recommendation": "Use existing type: AuthChangePassword200Response",
+      "severity": "high",
+      "domain": "other"
+    },
+    {
+      "file": "src/lib/utils/error-handling.ts",
+      "line": 63,
+      "column": 19,
+      "pattern": "cast",
+      "code": "typeof (error as any).response === 'object' &&",
+      "locationGroup": "other",
+      "context": "'response' in error &&",
+      "codeContext": "61:     error !== null &&\n62:     'response' in error &&\n63:     typeof (error as any).response === 'object' &&\n64:     (error as any).response?.data\n65:   ) {",
+      "variableName": "error",
+      "dataOrigin": "api-response",
+      "existingType": "AuthChangePassword200Response",
+      "recommendation": "Use existing type: AuthChangePassword200Response",
+      "severity": "high",
+      "domain": "other"
+    },
+    {
+      "file": "src/lib/utils/error-handling.ts",
+      "line": 64,
+      "column": 12,
+      "pattern": "cast",
+      "code": "(error as any).response?.data",
+      "locationGroup": "other",
+      "context": "typeof (error as any).response === 'object' &&",
+      "codeContext": "62:     'response' in error &&\n63:     typeof (error as any).response === 'object' &&\n64:     (error as any).response?.data\n65:   ) {\n66:     const responseData = (error as any).response.data;",
+      "variableName": "error",
+      "dataOrigin": "api-response",
+      "existingType": "AuthChangePassword200Response",
+      "recommendation": "Use existing type: AuthChangePassword200Response",
+      "severity": "high",
+      "domain": "other"
+    },
+    {
+      "file": "src/lib/utils/error-handling.ts",
+      "line": 66,
+      "column": 33,
+      "pattern": "cast",
+      "code": "const responseData = (error as any).response.data;",
+      "locationGroup": "other",
+      "context": ") {",
+      "codeContext": "64:     (error as any).response?.data\n65:   ) {\n66:     const responseData = (error as any).response.data;\n67:     \n68:     if (isErrorEnvelope(responseData)) {",
+      "variableName": "responseData",
+      "dataOrigin": "api-response",
+      "existingType": "AuthChangePassword200Response",
+      "recommendation": "Use existing type: AuthChangePassword200Response",
+      "severity": "high",
+      "domain": "other"
+    },
+    {
+      "file": "src/lib/utils/error-handling.ts",
+      "line": 105,
+      "column": 54,
+      "pattern": "cast",
+      "code": "*   : (error && typeof error === 'object' && (error as any).data?.message)",
+      "locationGroup": "other",
+      "context": "*   ? error",
+      "codeContext": "103:  * const description = typeof error === 'string'\n104:  *   ? error\n105:  *   : (error && typeof error === 'object' && (error as any).data?.message)\n106:  *     || (error && typeof error === 'object' && (error as any).message)\n107:  *     || 'Campaign data could not be loaded or found.';",
+      "variableName": "error",
       "dataOrigin": "api-response",
       "existingType": "AuthChangePassword200Response",
       "recommendation": "Use existing type: AuthChangePassword200Response",
@@ -2984,6 +3080,21 @@
       "recommendation": "Investigate data source and create appropriate type",
       "severity": "low",
       "domain": "domains"
+    },
+    {
+      "file": "src/lib/utils/error-handling.ts",
+      "line": 106,
+      "column": 57,
+      "pattern": "cast",
+      "code": "*     || (error && typeof error === 'object' && (error as any).message)",
+      "locationGroup": "other",
+      "context": "*   : (error && typeof error === 'object' && (error as any).data?.message)",
+      "codeContext": "104:  *   ? error\n105:  *   : (error && typeof error === 'object' && (error as any).data?.message)\n106:  *     || (error && typeof error === 'object' && (error as any).message)\n107:  *     || 'Campaign data could not be loaded or found.';\n108:  * ",
+      "variableName": "error",
+      "dataOrigin": "unknown",
+      "recommendation": "Investigate data source and create appropriate type",
+      "severity": "low",
+      "domain": "other"
     },
     {
       "file": "src/lib/utils/memoization.ts",
@@ -6976,7 +7087,7 @@
   ],
   "recommendations": {
     "immediate": [
-      "51 high-priority fixes have existing types available"
+      "57 high-priority fixes have existing types available"
     ],
     "backendChanges": [
       "7 SSE events need proper OpenAPI schema generation"
