@@ -576,8 +576,8 @@ class SummarizationService {
    * Emit summarization telemetry
    */
   private emitSummaryEvent(data: SemanticSummaryGeneratedEvent): void {
-    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
-      const telemetryService = (window as any).__telemetryService;
+    if (typeof window !== 'undefined' && window.__telemetryService) {
+      const telemetryService = window.__telemetryService;
       telemetryService.emit('semantic_summary_generated', data);
     }
   }

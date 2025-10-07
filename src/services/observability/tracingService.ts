@@ -415,8 +415,8 @@ class TracingService {
       avgDuration
     };
 
-    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
-      const telemetryService = (window as any).__telemetryService;
+    if (typeof window !== 'undefined' && window.__telemetryService) {
+      const telemetryService = window.__telemetryService;
       telemetryService.emit('trace_span_stats', event);
     }
   }

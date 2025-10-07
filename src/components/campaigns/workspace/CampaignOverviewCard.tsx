@@ -26,16 +26,33 @@ export const CampaignOverviewCard: React.FC<CampaignOverviewCardProps> = ({ camp
   const { data: enriched } = useGetCampaignEnrichedQuery(campaignId, { skip: !campaignId });
   const enrichedTyped: EnrichedCampaignResponse | undefined = enriched;
   const { data: scoringProfiles } = useListScoringProfilesQuery(undefined, { skip: !campaignId });
-  // Determine scoring profile id using known possible fields
-  const scoringProfileId: string | undefined = (enrichedTyped as any)?.scoringProfileId || (enrichedTyped as any)?.scoringProfile || undefined;
+  // Determine scoring profile id using known possible fields with type guards
+  const scoringProfileId: string | undefined = (() => {
+    if (enrichedTyped && typeof enrichedTyped === 'object') {
+      if ('scoringProfileId' in enrichedTyped) return String(enrichedTyped.scoringProfileId);
+      if ('scoringProfile' in enrichedTyped) return String(enrichedTyped.scoringProfile);
+    }
+    return undefined;
+  })();
   const profileObj: ScoringProfile | undefined = scoringProfiles?.items?.find?.((p: ScoringProfile) => p.id === scoringProfileId);
   const profileName = profileObj?.name || scoringProfileId || '—';
-  const avgScore: number | undefined = typeof (enrichedTyped as any)?.averageScore === 'number'
-    ? (enrichedTyped as any).averageScore
-    : typeof (enrichedTyped as any)?.score === 'number'
-      ? (enrichedTyped as any).score
-      : undefined;
-  const lastRescoreAt: string | undefined = typeof (enrichedTyped as any)?.lastRescoreAt === 'string' ? (enrichedTyped as any).lastRescoreAt : undefined;
+  const avgScore: number | undefined = (() => {
+    if (enrichedTyped && typeof enrichedTyped === 'object') {
+      if ('averageScore' in enrichedTyped && typeof enrichedTyped.averageScore === 'number') {
+        return enrichedTyped.averageScore;
+      }
+      if ('score' in enrichedTyped && typeof enrichedTyped.score === 'number') {
+        return enrichedTyped.score;
+      }
+    }
+    return undefined;
+  })();
+  const lastRescoreAt: string | undefined = (() => {
+    if (enrichedTyped && typeof enrichedTyped === 'object' && 'lastRescoreAt' in enrichedTyped && typeof enrichedTyped.lastRescoreAt === 'string') {
+      return enrichedTyped.lastRescoreAt;
+    }
+    return undefined;
+  })();
 
   const handlePrimaryCTA = async () => {
     if (!nextAction) return;

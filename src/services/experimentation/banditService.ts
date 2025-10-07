@@ -524,8 +524,8 @@ class BanditService {
    * Emit decision telemetry
    */
   private emitDecisionTelemetry(decision: BanditDecisionEvent): void {
-    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
-      const telemetryService = (window as any).__telemetryService;
+    if (typeof window !== 'undefined' && window.__telemetryService) {
+      const telemetryService = window.__telemetryService;
       telemetryService.emit('bandit_decision', decision);
     }
   }
@@ -534,8 +534,8 @@ class BanditService {
    * Emit reward telemetry
    */
   private emitRewardTelemetry(reward: BanditRewardEvent): void {
-    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
-      const telemetryService = (window as any).__telemetryService;
+    if (typeof window !== 'undefined' && window.__telemetryService) {
+      const telemetryService = window.__telemetryService;
       telemetryService.emit('bandit_reward', reward);
     }
   }

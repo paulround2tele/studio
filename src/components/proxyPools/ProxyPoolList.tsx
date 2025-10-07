@@ -15,10 +15,10 @@ import { Plus, Edit, Trash2 } from "lucide-react";
 import ProxyPoolForm from "./ProxyPoolForm";
 // Temporary stub until generated client compatibility layer is restored
 const proxyPoolsApi = {
-  proxyPoolsList: async () => ({ data: [] as any[] }),
+  proxyPoolsList: async () => ({ data: [] as ProxyPool[] }),
   proxyPoolsDelete: async (_id: string) => ({})
 };
-import type { ProxyPool as ProxyPoolType } from '@/lib/api-client/models/proxy-pool';
+import type { ProxyPool as ProxyPoolType, ProxyPool } from '@/lib/api-client/models';
 import {
   Dialog,
   DialogContent,

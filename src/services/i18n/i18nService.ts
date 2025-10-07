@@ -491,8 +491,8 @@ class I18nService {
       await this.loadCatalogChunk(locale);
       
       // Emit telemetry
-      if (typeof window !== 'undefined' && (window as any).telemetryService) {
-        (window as any).telemetryService.emitTelemetry('i18n_locale_loaded', {
+      if (typeof window !== 'undefined' && window.telemetryService) {
+        window.telemetryService.emitTelemetry('i18n_locale_loaded', {
           locale,
           keysLoaded: this.getCatalogKeyCount(locale)
         });

@@ -74,12 +74,19 @@ export default function ProxyPoolForm({
 
   async function onSubmit(values: PoolFormValues) {
     try {
+      // Convert form values to API request format
+      const requestData: ProxyPoolRequest = {
+        name: values.name,
+        description: values.description || undefined,
+        isEnabled: values.isEnabled
+      };
+      
       if (isEditing && pool && pool.id) {
-        await proxyPoolsApi.proxyPoolsUpdate(pool.id, values as any);
+        await proxyPoolsApi.proxyPoolsUpdate(pool.id, requestData);
         toast({ title: "Pool updated" });
         onSuccess();
       } else {
-        await proxyPoolsApi.proxyPoolsCreate(values as any);
+        await proxyPoolsApi.proxyPoolsCreate(requestData);
         toast({ title: "Pool created" });
         onSuccess();
       }
