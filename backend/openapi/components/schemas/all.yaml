@@ -233,8 +233,8 @@ PhaseExecution:
     successfulItems: { type: integer, format: int64 }
     failedItems: { type: integer, format: int64 }
     configuration: { type: object, additionalProperties: {}, nullable: true }
-  errorDetails: { type: object, additionalProperties: { $ref: '#/FlexibleValue' }, nullable: true }
-  metrics: { type: object, additionalProperties: { $ref: '#/FlexibleValue' }, nullable: true }
+    errorDetails: { type: object, additionalProperties: { $ref: '#/FlexibleValue' }, nullable: true }
+    metrics: { type: object, additionalProperties: { $ref: '#/FlexibleValue' }, nullable: true }
     createdAt: { type: string, format: date-time }
     updatedAt: { type: string, format: date-time }
   required: [id, campaignId, phaseType, status, createdAt, updatedAt]
@@ -253,8 +253,8 @@ PhaseExecutionUpdate:
     successfulItems: { type: integer, format: int64 }
     failedItems: { type: integer, format: int64 }
     configuration: { type: object, additionalProperties: {}, nullable: true }
-  errorDetails: { type: object, additionalProperties: { $ref: '#/FlexibleValue' }, nullable: true }
-  metrics: { type: object, additionalProperties: { $ref: '#/FlexibleValue' }, nullable: true }
+    errorDetails: { type: object, additionalProperties: { $ref: '#/FlexibleValue' }, nullable: true }
+    metrics: { type: object, additionalProperties: { $ref: '#/FlexibleValue' }, nullable: true }
 
 # Composite view
 CampaignStateWithExecutions:
@@ -1056,6 +1056,7 @@ DomainStatusEvent:
     features:
       $ref: '#/DomainAnalysisFeatures'
 CampaignProgressEvent:
+  description: Wrapper alias referencing CampaignProgressResponse (explicit type object for validator compatibility)
   allOf:
     - $ref: '#/CampaignProgressResponse'
 CampaignSseEventPayload:
@@ -1303,7 +1304,9 @@ CreateCampaignRequest:
           description: Maximum number of domains to process
         phases:
           type: object
-            $ref: '#/ProxyOperationResult'
+          description: Phase-specific configuration blocks
+          properties:
+            discovery:
               type: object
               properties:
                 enabled: { type: boolean }
@@ -1827,50 +1830,44 @@ BulkValidationResponse:
       enum: [initiated, pending, running]
     operations:
       type: object
-          items:
-            $ref: '#/ProxyPoolProxyRef'
-
-    ProxyOperationResult:
-      description: Result object for a proxy operation containing a proxyId and optional error or metadata.
-      type: object
-      properties:
-        proxyId: { type: string, format: uuid }
-        success: { type: boolean }
-        error: { type: string, nullable: true }
-        metadata:
-          type: object
-          nullable: true
-          additionalProperties:
-            $ref: '#/FlexibleValue'
-      required: [proxyId]
-
-    ProxyPoolProxyRef:
-      description: Lightweight proxy reference entry for inclusion inside a pool listing.
-      type: object
-      properties:
-        proxyId: { type: string, format: uuid }
-        address: { type: string }
-        protocol: { type: string }
-        isHealthy: { type: boolean }
-        lastChecked: { type: string, format: date-time, nullable: true }
-        metadata:
-          type: object
-          nullable: true
-          additionalProperties:
-            $ref: '#/FlexibleValue'
-      required: [proxyId, address, protocol, isHealthy]
-        type: object
-        properties:
-          campaignId: { type: string, format: uuid }
-          status: { type: string, enum: [pending, running, completed, failed] }
-          progress: { type: object, properties: { processed: { type: integer }, total: { type: integer } } }
-          estimatedCompletion: { type: string, format: date-time, nullable: true }
+      additionalProperties:
+        $ref: '#/ProxyOperationResult'
     totalOperations:
       type: integer
     estimatedDuration:
       type: string
       nullable: true
   required: [operationId, status, operations, totalOperations]
+
+ProxyOperationResult:
+  description: Result object for a proxy operation containing a proxyId and optional error or metadata.
+  type: object
+  properties:
+    proxyId: { type: string, format: uuid }
+    success: { type: boolean }
+    error: { type: string, nullable: true }
+    metadata:
+      type: object
+      nullable: true
+      additionalProperties:
+        $ref: '#/FlexibleValue'
+  required: [proxyId, success]
+
+ProxyPoolProxyRef:
+  description: Lightweight proxy reference entry for inclusion inside a pool listing.
+  type: object
+  properties:
+    proxyId: { type: string, format: uuid }
+    address: { type: string }
+    protocol: { type: string }
+    isHealthy: { type: boolean }
+    lastChecked: { type: string, format: date-time, nullable: true }
+    metadata:
+      type: object
+      nullable: true
+      additionalProperties:
+        $ref: '#/FlexibleValue'
+  required: [proxyId, address, protocol, isHealthy]
 
 BulkGenerationResponse:
   type: object

@@ -103,7 +103,15 @@ BulkProxyOperationResponse:
       type: array
       items:
         type: object
-        additionalProperties: true
+        description: Result record for each proxy operation performed
+        properties:
+          proxyId: { type: string, format: uuid }
+          operation: { type: string, description: "Operation performed (enable|disable|delete|update|test)" }
+          success: { type: boolean }
+          statusCode: { type: integer, description: "HTTP status or synthetic code for the operation" }
+          error: { type: string, description: "Error message if success=false" }
+          message: { type: string, description: "Optional human readable status message" }
+        required: [proxyId, operation, success]
 BulkUpdateProxiesRequest:
   type: object
   properties:
