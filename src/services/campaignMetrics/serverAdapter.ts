@@ -76,13 +76,12 @@ export function transformServerResponse(
  * Validate server response structure
  * Returns true if response has minimum required fields
  */
-export function validateServerResponse(response: any): response is ServerMetricsResponse {
+export function validateServerResponse(response: unknown): response is ServerMetricsResponse {
   if (!response || typeof response !== 'object') {
     return false;
   }
-  
-  // Accept response if it has either aggregates or classification
-  return !!(response.aggregates || response.classification);
+  const r = response as Partial<ServerMetricsResponse>;
+  return !!(r.aggregates || r.classification);
 }
 
 /**
@@ -111,9 +110,13 @@ export function createDefaultSnapshot(): AggregateSnapshot {
  */
 const loggedWarnings = new Set<string>();
 
-export function logServerWarning(message: string, details?: any) {
+export function logServerWarning(message: string, details?: unknown) {
   if (!loggedWarnings.has(message)) {
-    console.warn(`[ServerAdapter] ${message}`, details);
+    if (details !== undefined) {
+      console.warn(`[ServerAdapter] ${message}`, details);
+    } else {
+      console.warn(`[ServerAdapter] ${message}`);
+    }
     loggedWarnings.add(message);
   }
 }

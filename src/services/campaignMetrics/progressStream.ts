@@ -4,6 +4,7 @@
  */
 
 import { ProgressUpdate } from '@/types/campaignMetrics';
+import type { CampaignSseEventPayload, CampaignSseProgressEvent, CampaignSseEvent } from '@/lib/api-client/models';
 import { subscribeStreamPool, isStreamPoolingAvailable } from './streamPool';
 import { telemetryService } from './telemetryService';
 
@@ -143,23 +144,42 @@ export class ProgressStream {
    */
   private handleSSEMessage(event: MessageEvent): void {
     try {
-      const data = JSON.parse(event.data);
+      const data: unknown = JSON.parse(event.data);
       
-      // Check for heartbeat messages
-      if (data.type === 'heartbeat') {
+      if (typeof data === 'object' && data !== null && 'type' in data && (data as { type?: string }).type === 'heartbeat') {
         this.lastHeartbeat = Date.now();
         this.missedHeartbeats = 0;
         return;
       }
-      
-      // Handle progress updates
-      const update: ProgressUpdate = data;
-      this.callbacks.onUpdate(update);
-      
-      // Check if terminal phase
-      if (this.isTerminalPhase(update.phase)) {
-        this.callbacks.onComplete();
-        this.stop();
+      // Attempt to treat as wrapped progress event first
+      if (this.isCampaignSseProgressEvent(data)) {
+        const payload = (data as CampaignSseProgressEvent).payload;
+        const overall = payload?.overall as Record<string, unknown> | undefined;
+        const phase = typeof overall?.status === 'string' ? (overall.status as string) : 'unknown';
+        const update: ProgressUpdate = {
+          phase,
+          analyzedDomains: typeof overall?.processedDomains === 'number' ? (overall.processedDomains as number) : 0,
+          totalDomains: typeof overall?.totalDomains === 'number' ? (overall.totalDomains as number) : 0,
+          status: phase,
+          updatedAt: new Date().toISOString(),
+        };
+        this.callbacks.onUpdate(update);
+        if (this.isTerminalPhase(update.phase)) {
+          this.callbacks.onComplete();
+          this.stop();
+        }
+        return;
+      }
+
+      // Fallback: if it loosely matches ProgressUpdate shape
+      if (this.isLooseProgressUpdate(data)) {
+        const update: ProgressUpdate = data as ProgressUpdate;
+        this.callbacks.onUpdate(update);
+        if (this.isTerminalPhase(update.phase)) {
+          this.callbacks.onComplete();
+          this.stop();
+        }
+        return;
       }
     } catch (error) {
       this.callbacks.onError(new Error(`Failed to parse SSE data: ${error}`));
@@ -169,7 +189,7 @@ export class ProgressStream {
   /**
    * Handle SSE errors for direct EventSource
    */
-  private handleSSEError(reject: (reason?: any) => void): void {
+  private handleSSEError(reject: (reason?: unknown) => void): void {
     this.isConnected = false;
     
     if (this.retryCount < (this.options.maxRetries || 3)) {
@@ -310,6 +330,18 @@ export class ProgressStream {
       clearInterval(this.heartbeatCheckInterval);
       this.heartbeatCheckInterval = null;
     }
+  }
+
+  private isCampaignSseProgressEvent(value: unknown): value is CampaignSseProgressEvent {
+    if (typeof value !== 'object' || value === null) return false;
+    const v = value as Partial<CampaignSseProgressEvent>;
+    return v.type === 'campaign_progress' && !!v.payload && typeof v.payload === 'object' && 'overall' in v.payload!;
+  }
+
+  private isLooseProgressUpdate(value: unknown): value is ProgressUpdate {
+    if (typeof value !== 'object' || value === null) return false;
+    const v = value as Partial<ProgressUpdate>;
+    return typeof v.phase === 'string' && typeof v.status === 'string';
   }
 }
 

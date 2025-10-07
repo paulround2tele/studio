@@ -9,6 +9,8 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { setFullSequenceMode, setPreflightOpen } from '@/store/ui/campaignUiSlice';
 import { useUpdateCampaignModeMutation } from '@/store/api/campaignApi';
 import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
+import type { PipelineRelatedRootState } from '@/store/types/pipelineState';
+import { CampaignModeEnum } from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
 
 interface CampaignModeToggleProps {
@@ -45,8 +47,8 @@ export function CampaignModeToggle({
 }: CampaignModeToggleProps) {
   const _dispatch = useAppDispatch();
   const overviewSel = React.useMemo(()=>pipelineSelectors.overview(campaignId),[campaignId]);
-  const ov: any = useAppSelector(overviewSel as any);
-  const allConfigured = !!ov && ov.config && ov.config.progress && (ov.config.progress.configured === ov.config.progress.total);
+  const ov = useAppSelector(overviewSel as any) as ReturnType<typeof overviewSel>;
+  const allConfigured = Boolean(ov?.config?.progress && ov.config.progress.configured === ov.config.progress.total);
   const { toast } = useToast();
   const [updateMode, { isLoading: pending }] = useUpdateCampaignModeMutation();
 
@@ -65,7 +67,7 @@ export function CampaignModeToggle({
     // Optimistic update
     _dispatch(setFullSequenceMode({ campaignId, value: newModeBool }));
     try {
-      const result = await updateMode({ campaignId, mode: newMode }).unwrap();
+  const result = await updateMode({ campaignId, mode: newMode as CampaignModeEnum }).unwrap();
       const authoritativeMode = result?.mode;
       if (authoritativeMode === 'full_sequence' || authoritativeMode === 'step_by_step') {
         _dispatch(setFullSequenceMode({ campaignId, value: authoritativeMode === 'full_sequence' }));

@@ -8,6 +8,9 @@ import {
 } from '@/store/api/campaignApi';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { pipelineSelectors } from '@/store/selectors/pipelineSelectors';
+import type { PipelineRelatedRootState } from '@/store/types/pipelineState';
+import { CampaignModeEnum } from '@/lib/api-client';
+import type { PhaseConfigurationRequest } from '@/lib/api-client/models/phase-configuration-request';
 import { setFullSequenceMode } from '@/store/ui/campaignUiSlice';
 
 /**
@@ -77,8 +80,8 @@ export function useCampaignPipeline(campaignId: string) {
 
   // Derived UI state (legacy UI slice still stores mode optimistically)
   const overviewSel = useMemo(() => pipelineSelectors.overview(campaignId), [campaignId]);
-  const overview: any = useAppSelector(overviewSel as any);
-  const fullSequenceMode: boolean | undefined = overview?.ui?.fullSequenceMode;
+  const overview = useAppSelector(overviewSel as any) as ReturnType<typeof overviewSel>;
+  const fullSequenceMode: boolean | undefined = (overview as any)?.mode?.autoAdvance ?? (overview as any)?.ui?.fullSequenceMode;
 
   // Public API
   return {
@@ -86,7 +89,8 @@ export function useCampaignPipeline(campaignId: string) {
     progress: progressQuery.data,
     progressQuery,
     startPhase: (phase: string) => startPhase({ campaignId, phase }),
-    configurePhase: (phase: string, config: any) => configurePhase({ campaignId, phase, config }),
+    configurePhase: (phase: string, configuration: PhaseConfigurationRequest['configuration']) =>
+      configurePhase({ campaignId, phase, config: { configuration } as PhaseConfigurationRequest }),
     startPhaseState,
     configurePhaseState,
     exportDomains: () => exportDomains(campaignId).unwrap(),
@@ -95,7 +99,7 @@ export function useCampaignPipeline(campaignId: string) {
       // optimistic
       dispatch(setFullSequenceMode({ campaignId, value: next === 'full_sequence' }));
       try {
-        const result = await updateMode({ campaignId, mode: next }).unwrap();
+  const result = await updateMode({ campaignId, mode: next as CampaignModeEnum }).unwrap();
         const authoritative = result.mode;
         if (authoritative === 'full_sequence' || authoritative === 'step_by_step') {
           dispatch(setFullSequenceMode({ campaignId, value: authoritative === 'full_sequence' }));

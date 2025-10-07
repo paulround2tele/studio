@@ -13,6 +13,9 @@ import { Switch } from '@/components/ui/switch';
 import { PhaseStepper, PhasePanelShell, StatusBadge, CampaignOverviewCard, AlertStack } from '@/components/campaigns/workspace';
 import { useStartPhaseStandaloneMutation, useGetPhaseStatusStandaloneQuery, campaignApi } from '@/store/api/campaignApi';
 import computeAutoStartPhase from '@/store/selectors/autoAdvanceLogic';
+import type { PhaseStatusResponse } from '@/lib/api-client/models/phase-status-response';
+
+type CampaignPhase = PhaseStatusResponse['phase'];
 
 interface PipelineWorkspaceProps { campaignId: string; }
 
@@ -50,9 +53,9 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
   const handlePrimaryAction = async () => {
     if (!nextAction) return;
     if (nextAction.type === 'start') {
-      await startPhase({ campaignId, phase: nextAction.phase as any });
+  await startPhase({ campaignId, phase: nextAction.phase as CampaignPhase });
       // Force immediate status refetch for the started phase
-      dispatch(campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: nextAction.phase } as any));
+  dispatch(campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: nextAction.phase as CampaignPhase }));
     }
     // configure path will be handled in Phase 5 when inline forms introduced
   };
@@ -63,7 +66,7 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
     if (nextAuto) {
       if (pendingAutoStarts.current.has(nextAuto)) return; // suppression: already dispatched
       pendingAutoStarts.current.add(nextAuto);
-      startPhase({ campaignId, phase: nextAuto as any }).finally(()=> {
+  startPhase({ campaignId, phase: nextAuto as CampaignPhase }).finally(()=> {
         // Allow retry only if phase failed later; removal when we detect phase started
         setTimeout(()=>pendingAutoStarts.current.delete(nextAuto), 3000);
       });
@@ -161,7 +164,7 @@ export const PipelineWorkspace: React.FC<PipelineWorkspaceProps> = ({ campaignId
             {retryEligible.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-1" aria-label="Retry failed phase buttons">
                 {retryEligible.map(p => (
-                  <Button key={p} size="sm" variant="destructive" className="text-[10px] py-1" onClick={()=>startPhase({ campaignId, phase: p as any })}>Retry {p}</Button>
+                  <Button key={p} size="sm" variant="destructive" className="text-[10px] py-1" onClick={()=>startPhase({ campaignId, phase: p as CampaignPhase })}>Retry {p}</Button>
                 ))}
               </div>
             )}

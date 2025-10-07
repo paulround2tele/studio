@@ -22,7 +22,7 @@ export interface DraftPatch {
   id: string;
   field: string;
   operation: 'set' | 'delete' | 'array_append' | 'array_remove' | 'merge';
-  value: any;
+  value: unknown;
   timestamp: number;
   userId?: string;
   sessionId: string;
@@ -35,7 +35,7 @@ export interface DraftState {
   id: string;
   type: DraftType;
   targetId: string; // ID of the object being drafted
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   patches: DraftPatch[];
   lastModified: Record<string, number>; // field -> timestamp
   collaborators: string[]; // User IDs
@@ -53,9 +53,9 @@ export interface ConflictResolution {
   strategy: 'last_writer_wins' | 'semantic_merge' | 'user_choice';
   conflicts: Array<{
     field: string;
-    localValue: any;
-    remoteValue: any;
-    resolution: any;
+    localValue: unknown;
+    remoteValue: unknown;
+    resolution: unknown;
   }>;
 }
 
@@ -63,7 +63,7 @@ export interface ConflictResolution {
  * Remote state for merging
  */
 export interface RemoteState {
-  data: Record<string, any>;
+  data: Record<string, unknown>;
   lastModified: Record<string, number>;
   version: number;
   patches: DraftPatch[];
@@ -300,7 +300,7 @@ class DraftStoreService {
   /**
    * Apply a patch to data object
    */
-  private applyPatchToData(data: Record<string, any>, patch: DraftPatch): void {
+  private applyPatchToData(data: Record<string, unknown>, patch: DraftPatch): void {
     switch (patch.operation) {
       case 'set':
         this.setFieldValue(data, patch.field, patch.value);
@@ -343,13 +343,14 @@ class DraftStoreService {
   /**
    * Get field value using dot notation
    */
-  private getFieldValue(data: Record<string, any>, field: string): any {
+  private getFieldValue(data: Record<string, unknown>, field: string): unknown {
     const fieldParts = field.split('.');
-    let value = data;
+    let value: unknown = data;
 
     for (const part of fieldParts) {
       if (value && typeof value === 'object') {
-        value = value[part];
+        const obj = value as Record<string, unknown>;
+        value = obj[part];
       } else {
         return undefined;
       }
@@ -361,17 +362,18 @@ class DraftStoreService {
   /**
    * Set field value using dot notation
    */
-  private setFieldValue(data: Record<string, any>, field: string, value: any): void {
+  private setFieldValue(data: Record<string, unknown>, field: string, value: unknown): void {
     const fieldParts = field.split('.');
-    let current = data;
+    let current: Record<string, unknown> = data;
 
     for (let i = 0; i < fieldParts.length - 1; i++) {
       const part = fieldParts[i];
   if (part === undefined) continue;
-  if (!(part in current) || typeof current[part] !== 'object') {
-        current[part] = {};
+      const existing = current[part];
+      if (!(part in current) || typeof existing !== 'object' || existing === null) {
+        current[part] = {} as Record<string, unknown>;
       }
-      current = current[part];
+      current = current[part] as Record<string, unknown>;
     }
 
     const terminal = fieldParts[fieldParts.length - 1];
@@ -383,17 +385,17 @@ class DraftStoreService {
   /**
    * Delete field using dot notation
    */
-  private deleteField(data: Record<string, any>, field: string): void {
+  private deleteField(data: Record<string, unknown>, field: string): void {
     const fieldParts = field.split('.');
-    let current = data;
+    let current: Record<string, unknown> = data;
 
     for (let i = 0; i < fieldParts.length - 1; i++) {
       const part = fieldParts[i];
   if (part === undefined) continue;
-  if (!(part in current) || typeof current[part] !== 'object') {
+      if (!(part in current) || typeof current[part] !== 'object' || current[part] === null) {
         return; // Field doesn't exist
       }
-      current = current[part];
+      current = current[part] as Record<string, unknown>;
     }
 
     const terminalDel = fieldParts[fieldParts.length - 1];
@@ -407,11 +409,11 @@ class DraftStoreService {
    */
   private resolveConflict(
     field: string,
-    localValue: any,
-    remoteValue: any,
+    localValue: unknown,
+    remoteValue: unknown,
     localTimestamp: number,
     remoteTimestamp: number
-  ): any {
+  ): unknown {
     // Implement conflict resolution strategy
     
     // For numbers, try semantic merge (take average)

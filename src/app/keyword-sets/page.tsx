@@ -24,10 +24,16 @@ export default function KeywordSetsPage() {
     try {
       setIsLoading(true);
       // Use the correct method name from the generated API
-  const resp = await keywordSetsApi.keywordSetsList();
-  // Envelope may wrap the list; attempt minimal unwrap
-  const data = (resp as any)?.data?.data ?? (resp as any)?.data;
-  setSets((data as KeywordSet[]) || []);
+      const resp = await keywordSetsApi.keywordSetsList();
+      // Generated client returns AxiosResponse<KeywordSetResponse[]>
+      const body = resp.data as ApiKeywordSetResponse[] | { data?: ApiKeywordSetResponse[] };
+      if (Array.isArray(body)) {
+        setSets(body);
+      } else if (body && typeof body === 'object' && 'data' in body && Array.isArray(body.data)) {
+        setSets(body.data);
+      } else {
+        setSets([]);
+      }
     } catch (e) {
       console.error(e);
       setErrorMessage(e instanceof Error ? e.message : 'Failed to load keyword sets');

@@ -265,39 +265,41 @@ export function isSqlNullFloat64(value: unknown): value is SqlNullFloat64 {
  * @param value - Any SqlNull wrapper or simple value
  * @returns Transformed simple value
  */
-export function transformSqlNullValue<T>(value: T): T extends SqlNullInt32
-  ? number | undefined
-  : T extends SqlNullString
-    ? string | undefined
-    : T extends SqlNullTime
-      ? string | undefined
-      : T extends SqlNullBool
-        ? boolean | undefined
-        : T extends SqlNullFloat64
-          ? number | undefined
-          : T {
+// Unified SqlNull wrapper type
+export type SqlNullWrapper =
+  | SqlNullInt32
+  | SqlNullString
+  | SqlNullTime
+  | SqlNullBool
+  | SqlNullFloat64;
+
+// Overload signatures provide precise return types for callers
+export function transformSqlNullValue(value: SqlNullInt32): number | undefined;
+export function transformSqlNullValue(value: SqlNullString): string | undefined;
+export function transformSqlNullValue(value: SqlNullTime): string | undefined;
+export function transformSqlNullValue(value: SqlNullBool): boolean | undefined;
+export function transformSqlNullValue(value: SqlNullFloat64): number | undefined;
+export function transformSqlNullValue(value: number): number;
+export function transformSqlNullValue(value: string): string;
+export function transformSqlNullValue(value: boolean): boolean;
+export function transformSqlNullValue(value: unknown): unknown;
+export function transformSqlNullValue(value: unknown): unknown {
   if (isSqlNullInt32(value)) {
-    return transformSqlNullInt32(value) as any;
+    return transformSqlNullInt32(value);
   }
-  
   if (isSqlNullString(value)) {
-    return transformSqlNullString(value) as any;
+    return transformSqlNullString(value);
   }
-  
   if (isSqlNullTime(value)) {
-    return transformSqlNullTime(value) as any;
+    return transformSqlNullTime(value);
   }
-  
   if (isSqlNullBool(value)) {
-    return transformSqlNullBool(value) as any;
+    return transformSqlNullBool(value);
   }
-  
   if (isSqlNullFloat64(value)) {
-    return transformSqlNullFloat64(value) as any;
+    return transformSqlNullFloat64(value);
   }
-  
-  // Return value as-is if it's not a SqlNull wrapper
-  return value as any;
+  return value;
 }
 
 /**

@@ -16,6 +16,9 @@
 // May contain unused imports in some cases
 // @ts-ignore
 import type { ErrorCode } from './error-code';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { FlexibleValue } from './flexible-value';
 
 /**
  * 
@@ -51,7 +54,7 @@ export interface ApiErrorDetailsInner {
           string
     ;
   /**
-   * 
+   * Structured error context values constrained to primitive/array/object envelope.
    * @memberof ApiErrorDetailsInner
    */
   'context'?: 

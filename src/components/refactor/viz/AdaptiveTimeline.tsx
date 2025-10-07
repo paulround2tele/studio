@@ -84,7 +84,12 @@ const HighlightMarker: React.FC<{
 /**
  * Custom dot component for extreme values
  */
-const ExtremeDot: React.FC<any> = (props) => {
+interface ExtremeDotProps {
+  cx?: number;
+  cy?: number;
+  payload?: ChartPoint;
+}
+const ExtremeDot: React.FC<ExtremeDotProps> = (props) => {
   const { cx, cy, payload } = props;
   
   if (!payload?.isExtreme) {
@@ -223,11 +228,12 @@ export const AdaptiveTimeline: React.FC<AdaptiveTimelineProps> = ({
   }, [onPointClick, onHighlightClick, metricKey]);
 
   // Format tooltip content
-  const formatTooltip = useCallback((value: any, name: string, props: any) => {
-    const point = props.payload;
-    if (!point) return [value, name];
+  interface RechartsTooltipPayloadWrapper { payload?: ChartPoint }
+  const formatTooltip = useCallback((value: unknown, name: string, props: RechartsTooltipPayloadWrapper): React.ReactElement | null => {
+  const point = props?.payload;
+  if (!point) return null;
 
-    const formattedValue = typeof value === 'number' ? value.toFixed(2) : value;
+    const formattedValue = typeof value === 'number' ? value.toFixed(2) : String(value);
     const timestamp = new Date(point.timestamp).toLocaleString();
     
     const content = [
@@ -255,7 +261,8 @@ export const AdaptiveTimeline: React.FC<AdaptiveTimelineProps> = ({
       );
     }
 
-    return content;
+    // Recharts expects ReactNode or tuple patterns; return an array of ReactNode explicitly typed
+    return <div>{content}</div>;
   }, [metricKey]);
 
   // Loading state

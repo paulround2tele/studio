@@ -16,6 +16,9 @@
 // May contain unused imports in some cases
 // @ts-ignore
 import type { BulkProxyOperationResponseFailedProxiesInner } from './bulk-proxy-operation-response-failed-proxies-inner';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { BulkProxyOperationResponseResultsInner } from './bulk-proxy-operation-response-results-inner';
 
 /**
  * 
@@ -27,7 +30,7 @@ export interface BulkProxyOperationResponse {
    * 
    * @memberof BulkProxyOperationResponse
    */
-  'totalRequested'?: 
+  'totalRequested': 
         
           
           number
@@ -36,7 +39,7 @@ export interface BulkProxyOperationResponse {
    * 
    * @memberof BulkProxyOperationResponse
    */
-  'successCount'?: 
+  'successCount': 
         
           
           number
@@ -45,7 +48,7 @@ export interface BulkProxyOperationResponse {
    * 
    * @memberof BulkProxyOperationResponse
    */
-  'errorCount'?: 
+  'errorCount': 
         
           
           number
@@ -73,7 +76,9 @@ export interface BulkProxyOperationResponse {
    * @memberof BulkProxyOperationResponse
    */
   'results'?: 
-        Array<Record<string, unknown>>
+        
+          
+          Array<BulkProxyOperationResponseResultsInner>
     ;
 }
 

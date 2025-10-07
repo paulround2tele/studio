@@ -29,7 +29,7 @@ export interface DomainHealth {
     score: HealthScore;
     status: HealthStatus;
     message?: string;
-    details?: Record<string, any>;
+  details?: Record<string, unknown>;
   }>;
   trends: {
     direction: 'improving' | 'stable' | 'degrading';
@@ -59,7 +59,7 @@ export interface PropagationRule {
   conditions?: Array<{
     field: string;
     operator: 'gt' | 'lt' | 'eq' | 'gte' | 'lte';
-    value: any;
+  value: unknown;
   }>;
   dampingFactor: number; // 0-1, reduces propagation strength
   enabled: boolean;
@@ -104,8 +104,8 @@ export interface HealthEvent {
   id: string;
   type: 'score_change' | 'status_change' | 'cascade_detected' | 'recovery' | 'degradation';
   domain: string;
-  oldValue?: any;
-  newValue?: any;
+  oldValue?: unknown;
+  newValue?: unknown;
   severity: 'low' | 'medium' | 'high' | 'critical';
   timestamp: string;
   message: string;
@@ -571,22 +571,36 @@ class HealthFabricService {
 
     return conditions.every(condition => {
       const value = this.getHealthFieldValue(health, condition.field);
-      
-      switch (condition.operator) {
-        case 'gt': return value > condition.value;
-        case 'gte': return value >= condition.value;
-        case 'lt': return value < condition.value;
-        case 'lte': return value <= condition.value;
-        case 'eq': return value === condition.value;
-        default: return false;
+      const comparator = condition.value as unknown;
+      // Only support numeric comparison for score, exact match for status
+      const isScoreField = condition.field === 'score' && typeof value === 'number';
+      const isStatusField = condition.field === 'status' && typeof value === 'string';
+
+      if (isScoreField) {
+        const numericComparator = typeof comparator === 'number' ? comparator : Number(comparator);
+        switch (condition.operator) {
+          case 'gt': return value > numericComparator;
+          case 'gte': return value >= numericComparator;
+          case 'lt': return value < numericComparator;
+          case 'lte': return value <= numericComparator;
+          case 'eq': return value === numericComparator;
+          default: return false;
+        }
       }
+
+      if (isStatusField) {
+        if (condition.operator !== 'eq') return false; // Only equality makes sense for status
+        return value === comparator;
+      }
+      
+      return false;
     });
   }
 
   /**
    * Get field value from health object
    */
-  private getHealthFieldValue(health: DomainHealth, field: string): any {
+  private getHealthFieldValue(health: DomainHealth, field: string): number | HealthStatus {
     switch (field) {
       case 'score': return health.score;
       case 'status': return health.status;

@@ -207,7 +207,7 @@ paths:
         oneOf:
           - $ref: '#/components/schemas/AnalysisReuseEnrichmentEvent'
           - $ref: '#/components/schemas/AnalysisFailedEvent'
-          - $ref: '#/components/schemas/CampaignProgressEvent'
+          - $ref: '#/components/schemas/CampaignProgressResponse'
           - $ref: '#/components/schemas/DomainStatusEvent'
           - $ref: '#/components/schemas/PhaseTransitionEvent'
           - $ref: '#/components/schemas/PhaseFailedEvent'
@@ -244,8 +244,34 @@ paths:
                       payload:
                         campaignId: 00000000-0000-0000-0000-000000000000
                         overall:
-                          completedPhases: 1
-                          totalPhases: 4
+                          status: running
+                          percentComplete: 12.5
+                          totalDomains: 80
+                          processedDomains: 10
+                          successfulDomains: 8
+                          failedDomains: 2
+                        phases:
+                          discovery:
+                            status: running
+                            percentComplete: 20
+                            itemsProcessed: 20
+                            itemsTotal: 100
+                          validation:
+                            status: not_started
+                            percentComplete: 0
+                            itemsProcessed: 0
+                            itemsTotal: 0
+                          extraction:
+                            status: not_started
+                            percentComplete: 0
+                            itemsProcessed: 0
+                            itemsTotal: 0
+                          analysis:
+                            status: not_started
+                            percentComplete: 0
+                            itemsProcessed: 0
+                            itemsTotal: 0
+                        timeline: []
                     - type: phase_started
                       timestamp: '2025-01-01T00:01:00Z'
                       payload:
@@ -286,8 +312,34 @@ paths:
                     payload:
                       campaignId: 00000000-0000-0000-0000-000000000000
                       overall:
-                        completedPhases: 1
-                        totalPhases: 4
+                        status: running
+                        percentComplete: 25
+                        totalDomains: 200
+                        processedDomains: 50
+                        successfulDomains: 45
+                        failedDomains: 5
+                      phases:
+                        discovery:
+                          status: completed
+                          percentComplete: 100
+                          itemsProcessed: 100
+                          itemsTotal: 100
+                        validation:
+                          status: running
+                          percentComplete: 50
+                          itemsProcessed: 50
+                          itemsTotal: 100
+                        extraction:
+                          status: not_started
+                          percentComplete: 0
+                          itemsProcessed: 0
+                          itemsTotal: 0
+                        analysis:
+                          status: not_started
+                          percentComplete: 0
+                          itemsProcessed: 0
+                          itemsTotal: 0
+                      timeline: []
                 phaseStarted:
                   summary: Phase started event
                   value:
@@ -4324,6 +4376,40 @@ components:
         - CAMPAIGN_IN_PROGRESS
         - QUOTA_EXCEEDED
         - INVALID_STATE
+    FlexiblePrimitive:
+      description: Primitive value allowed in flexible configuration maps.
+      oneOf:
+        - type: string
+        - type: number
+        - type: integer
+        - type: boolean
+        - type: null
+    FlexibleArray:
+      description: Array of primitive flexible values.
+      type: array
+      items:
+        oneOf:
+          - type: string
+          - type: number
+          - type: integer
+          - type: boolean
+          - type: null
+    FlexibleObject:
+      description: Nested object whose values are flexible primitives (one-level nesting only).
+      type: object
+      additionalProperties:
+        oneOf:
+          - type: string
+          - type: number
+          - type: integer
+          - type: boolean
+          - type: null
+    FlexibleValue:
+      description: Union of acceptable flexible configuration / context value shapes.
+      oneOf:
+        - $ref: '#/components/schemas/FlexiblePrimitive'
+        - $ref: '#/components/schemas/FlexibleArray'
+        - $ref: '#/components/schemas/FlexibleObject'
     ApiError:
       type: object
       properties:
@@ -4345,7 +4431,9 @@ components:
                 type: string
               context:
                 type: object
-                additionalProperties: true
+                description: Structured error context values constrained to primitive/array/object envelope.
+                additionalProperties:
+                  $ref: '#/components/schemas/FlexibleValue'
             required:
               - code
               - message
@@ -4507,7 +4595,8 @@ components:
               - type: string
               - type: number
               - type: boolean
-              - type: 'null'
+              - type: string
+                nullable: true
       required:
         - timestamp
         - type
@@ -4561,9 +4650,6 @@ components:
         - overall
         - phases
         - timeline
-    CampaignProgressEvent:
-      allOf:
-        - $ref: '#/components/schemas/CampaignProgressResponse'
     CampaignSseProgressEvent:
       type: object
       properties:
@@ -4575,7 +4661,7 @@ components:
           type: string
           format: date-time
         payload:
-          $ref: '#/components/schemas/CampaignProgressEvent'
+          $ref: '#/components/schemas/CampaignProgressResponse'
       required:
         - type
     DomainAnalysisFeatures:
@@ -5272,7 +5358,35 @@ components:
           type: array
           items:
             type: object
-            additionalProperties: true
+            description: Result record for each proxy operation performed
+            properties:
+              proxyId:
+                type: string
+                format: uuid
+              operation:
+                type: string
+                description: Operation performed (enable|disable|delete|update|test)
+              success:
+                type: boolean
+              statusCode:
+                type: integer
+                description: HTTP status or synthetic code for the operation
+              error:
+                type: string
+                description: Error message if success=false
+                nullable: true
+              message:
+                type: string
+                description: Optional human readable status message
+                nullable: true
+            required:
+              - proxyId
+              - operation
+              - success
+      required:
+        - totalRequested
+        - successCount
+        - errorCount
     BulkDeleteProxiesRequest:
       type: object
       properties:
@@ -5713,23 +5827,28 @@ components:
     AuthConfig:
       type: object
       description: Authentication configuration
-      additionalProperties: true
+      additionalProperties:
+        $ref: '#/components/schemas/FlexibleValue'
     DNSValidatorConfigJSON:
       type: object
       description: DNS validator configuration
-      additionalProperties: true
+      additionalProperties:
+        $ref: '#/components/schemas/FlexibleValue'
     LoggingConfig:
       type: object
       description: Logging configuration
-      additionalProperties: true
+      additionalProperties:
+        $ref: '#/components/schemas/FlexibleValue'
     WorkerConfig:
       type: object
       description: Worker configuration
-      additionalProperties: true
+      additionalProperties:
+        $ref: '#/components/schemas/FlexibleValue'
     RateLimiterConfig:
       type: object
       description: Rate limiter configuration
-      additionalProperties: true
+      additionalProperties:
+        $ref: '#/components/schemas/FlexibleValue'
     FeatureFlags:
       type: object
       description: Feature flags map
@@ -5898,6 +6017,7 @@ components:
               description: Maximum number of domains to process
             phases:
               type: object
+              description: Phase-specific configuration blocks
               properties:
                 discovery:
                   type: object
@@ -6212,7 +6332,8 @@ components:
           $ref: '#/components/schemas/CampaignModeEnum'
         configuration:
           type: object
-          additionalProperties: {}
+          additionalProperties:
+            $ref: '#/components/schemas/FlexibleValue'
         version:
           type: integer
         createdAt:
@@ -6237,7 +6358,8 @@ components:
           $ref: '#/components/schemas/CampaignModeEnum'
         configuration:
           type: object
-          additionalProperties: {}
+          additionalProperties:
+            $ref: '#/components/schemas/FlexibleValue'
         version:
           type: integer
           description: Optional optimistic concurrency version; if provided must match current
@@ -6307,11 +6429,13 @@ components:
           nullable: true
         errorDetails:
           type: object
-          additionalProperties: {}
+          additionalProperties:
+            $ref: '#/components/schemas/FlexibleValue'
           nullable: true
         metrics:
           type: object
-          additionalProperties: {}
+          additionalProperties:
+            $ref: '#/components/schemas/FlexibleValue'
           nullable: true
         createdAt:
           type: string
@@ -6380,11 +6504,13 @@ components:
           nullable: true
         errorDetails:
           type: object
-          additionalProperties: {}
+          additionalProperties:
+            $ref: '#/components/schemas/FlexibleValue'
           nullable: true
         metrics:
           type: object
-          additionalProperties: {}
+          additionalProperties:
+            $ref: '#/components/schemas/FlexibleValue'
           nullable: true
     EnrichedCampaignResponse:
       type: object
@@ -7058,6 +7184,26 @@ components:
                   type: integer
       required:
         - operations
+    ProxyOperationResult:
+      description: Result object for a proxy operation containing a proxyId and optional error or metadata.
+      type: object
+      properties:
+        proxyId:
+          type: string
+          format: uuid
+        success:
+          type: boolean
+        error:
+          type: string
+          nullable: true
+        metadata:
+          type: object
+          nullable: true
+          additionalProperties:
+            $ref: '#/components/schemas/FlexibleValue'
+      required:
+        - proxyId
+        - success
     BulkValidationResponse:
       type: object
       properties:
@@ -7073,29 +7219,7 @@ components:
         operations:
           type: object
           additionalProperties:
-            type: object
-            properties:
-              campaignId:
-                type: string
-                format: uuid
-              status:
-                type: string
-                enum:
-                  - pending
-                  - running
-                  - completed
-                  - failed
-              progress:
-                type: object
-                properties:
-                  processed:
-                    type: integer
-                  total:
-                    type: integer
-              estimatedCompletion:
-                type: string
-                format: date-time
-                nullable: true
+            $ref: '#/components/schemas/ProxyOperationResult'
         totalOperations:
           type: integer
         estimatedDuration:
@@ -7491,7 +7615,7 @@ components:
       oneOf:
         - $ref: '#/components/schemas/AnalysisReuseEnrichmentEvent'
         - $ref: '#/components/schemas/AnalysisFailedEvent'
-        - $ref: '#/components/schemas/CampaignProgressEvent'
+        - $ref: '#/components/schemas/CampaignProgressResponse'
         - $ref: '#/components/schemas/DomainStatusEvent'
         - $ref: '#/components/schemas/PhaseTransitionEvent'
         - $ref: '#/components/schemas/PhaseFailedEvent'
@@ -7499,7 +7623,8 @@ components:
     HTTPValidatorConfigJSON:
       type: object
       description: HTTP validator configuration
-      additionalProperties: true
+      additionalProperties:
+        $ref: '#/components/schemas/FlexibleValue'
     WorkerConfigUpdate:
       type: object
       description: Worker configuration update payload
@@ -7561,15 +7686,44 @@ components:
     ProxyManagerConfigJSON:
       type: object
       description: Proxy manager configuration
-      additionalProperties: true
+      additionalProperties:
+        $ref: '#/components/schemas/FlexibleValue'
     ServerConfigResponse:
       type: object
       description: Consolidated server configuration response
-      additionalProperties: true
+      additionalProperties:
+        $ref: '#/components/schemas/FlexibleValue'
     ServerConfigUpdateRequest:
       type: object
       description: Server configuration update request
       additionalProperties: true
+    ProxyPoolProxyRef:
+      description: Lightweight proxy reference entry for inclusion inside a pool listing.
+      type: object
+      properties:
+        proxyId:
+          type: string
+          format: uuid
+        address:
+          type: string
+        protocol:
+          type: string
+        isHealthy:
+          type: boolean
+        lastChecked:
+          type: string
+          format: date-time
+          nullable: true
+        metadata:
+          type: object
+          nullable: true
+          additionalProperties:
+            $ref: '#/components/schemas/FlexibleValue'
+      required:
+        - proxyId
+        - address
+        - protocol
+        - isHealthy
     AnomalyRecord:
       type: object
       description: Detected anomaly record used in export bundles

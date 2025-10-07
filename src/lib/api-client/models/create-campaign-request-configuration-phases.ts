@@ -27,7 +27,7 @@ import type { CreateCampaignRequestConfigurationPhasesExtraction } from './creat
 import type { CreateCampaignRequestConfigurationPhasesValidation } from './create-campaign-request-configuration-phases-validation';
 
 /**
- * 
+ * Phase-specific configuration blocks
  * @export
  * @interface CreateCampaignRequestConfigurationPhases
  */

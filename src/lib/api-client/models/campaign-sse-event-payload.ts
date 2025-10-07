@@ -24,7 +24,7 @@ import type { AnalysisReuseEnrichmentEvent } from './analysis-reuse-enrichment-e
 import type { CampaignCompletedEvent } from './campaign-completed-event';
 // May contain unused imports in some cases
 // @ts-ignore
-import type { CampaignProgressEvent } from './campaign-progress-event';
+import type { CampaignProgressResponse } from './campaign-progress-response';
 // May contain unused imports in some cases
 // @ts-ignore
 import type { CampaignProgressResponseOverall } from './campaign-progress-response-overall';
@@ -52,6 +52,6 @@ import type { TimelineEvent } from './timeline-event';
  * Union of possible JSON payload shapes emitted via campaign SSE stream.
  * @export
  */
-export type CampaignSseEventPayload = AnalysisFailedEvent | AnalysisReuseEnrichmentEvent | CampaignCompletedEvent | CampaignProgressEvent | DomainStatusEvent | PhaseFailedEvent | PhaseTransitionEvent;
+export type CampaignSseEventPayload = AnalysisFailedEvent | AnalysisReuseEnrichmentEvent | CampaignCompletedEvent | CampaignProgressResponse | DomainStatusEvent | PhaseFailedEvent | PhaseTransitionEvent;
 
 

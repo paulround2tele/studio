@@ -19,6 +19,9 @@ import type { CampaignModeEnum } from './campaign-mode-enum';
 // May contain unused imports in some cases
 // @ts-ignore
 import type { CampaignStateEnum } from './campaign-state-enum';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { FlexibleValue } from './flexible-value';
 
 /**
  * 

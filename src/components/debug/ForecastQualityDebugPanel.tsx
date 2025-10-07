@@ -18,28 +18,92 @@ const isAuditDebugEnabled = () =>
   process.env.NEXT_PUBLIC_AUDIT_DEBUG_PANEL === 'true' || 
   process.env.NODE_ENV === 'development';
 
+interface ForecastSnapshotPoint {
+  timestamp: string;
+  value: number;
+  lower?: number;
+  upper?: number;
+  p10?: number;
+  p90?: number;
+}
+
+interface ForecastAlternativeModelScore {
+  name: string;
+  mae?: number;
+  mape?: number;
+}
+
+interface ForecastArbitrationScores {
+  mae?: number;
+  mape?: number;
+  confidence?: number;
+}
+
+interface ForecastModelInfo {
+  selectedModel: string;
+  arbitrationScores: ForecastArbitrationScores;
+  alternativeModels: ForecastAlternativeModelScore[];
+}
+
+interface ForecastResult {
+  method: string;
+  timingMs: number;
+  points: ForecastSnapshotPoint[];
+  modelInfo: ForecastModelInfo;
+}
+
 interface ForecastQualityDebugPanelProps {
   campaignId: string;
-  snapshots: any[];
+  snapshots: ForecastSnapshotPoint[];
   className?: string;
   onClose?: () => void;
 }
 
 interface ForecastDebugState {
-  forecastResult?: any;
+  forecastResult?: ForecastResult;
   loading: boolean;
   error?: string;
 }
 
+interface DegradationState {
+  tier: number;
+  healthyDomains: string[];
+  degradedDomains: string[];
+  failedDomains: string[];
+  userVisibleImpact: {
+    severity: string;
+    description: string;
+    affectedOperations: string[];
+  };
+}
+
 interface DegradationDebugState {
-  degradationState?: any;
+  degradationState?: DegradationState;
   loading: boolean;
   lastRefresh: string;
 }
 
+interface AuditEntryContext {
+  campaignId: string;
+  reason: string;
+}
+
+interface AuditEntry {
+  id: string;
+  action: string;
+  timestamp: string;
+  context: AuditEntryContext;
+}
+
+interface AuditStatistics {
+  totalEntries: number;
+  recentActions: number;
+  retentionUtilization: number;
+}
+
 interface AuditDebugState {
-  statistics?: any;
-  recentEntries: any[];
+  statistics?: AuditStatistics;
+  recentEntries: AuditEntry[];
   loading: boolean;
 }
 
@@ -171,7 +235,7 @@ export const ForecastQualityDebugPanel: React.FC<ForecastQualityDebugPanelProps>
   };
 
   // Format model score for display
-  const formatModelScore = (score: any) => {
+  const formatModelScore = (score: ForecastArbitrationScores | undefined) => {
     if (!score) return 'N/A';
     return `MAE: ${score.mae?.toFixed(3) || 'N/A'}, MAPE: ${score.mape?.toFixed(1) || 'N/A'}%`;
   };
@@ -286,7 +350,9 @@ export const ForecastQualityDebugPanel: React.FC<ForecastQualityDebugPanelProps>
                               {formatModelScore(forecastDebug.forecastResult.modelInfo.arbitrationScores)}
                             </p>
                             <p className="text-gray-600">
-                              Confidence: {(forecastDebug.forecastResult.modelInfo.arbitrationScores.confidence * 100).toFixed(1)}%
+                              Confidence: {(
+                                (forecastDebug.forecastResult.modelInfo.arbitrationScores.confidence ?? 0) * 100
+                              ).toFixed(1)}%
                             </p>
                           </div>
                         )}

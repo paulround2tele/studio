@@ -290,7 +290,7 @@ function ProxiesPageContent() {
     reader.readAsText(file);
   };
   
-  const activeProxiesCount = Array.isArray(proxies) ? proxies.filter((p: any) => p?.isEnabled).length : 0;
+  const activeProxiesCount = Array.isArray(proxies) ? proxies.filter((p: ProxyItem) => Boolean(p?.isEnabled)).length : 0;
 
   return (
     <>
@@ -386,12 +386,12 @@ function ProxiesPageContent() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {Array.isArray(proxies) && proxies.map((proxy: any) => {
+                        {Array.isArray(proxies) && proxies.map((proxy: ProxyItem) => {
                           if (!proxy?.id) return null;
                           return (
                             <ProxyListItem
                               key={proxy.id}
-                              proxy={proxy as any}
+                              proxy={proxy}
                               onEdit={handleEditProxy}
                               onDelete={openDeleteConfirmation}
                               onTest={handleTestProxy}

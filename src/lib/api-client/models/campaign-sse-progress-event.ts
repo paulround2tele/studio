@@ -15,7 +15,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { CampaignProgressEvent } from './campaign-progress-event';
+import type { CampaignProgressResponse } from './campaign-progress-response';
 
 /**
  * 
@@ -46,7 +46,7 @@ export interface CampaignSseProgressEvent {
   'payload'?: 
         
           
-          CampaignProgressEvent
+          CampaignProgressResponse
     ;
 }
 

@@ -22,9 +22,7 @@ put:
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              mode: { $ref: '../../components/schemas/all.yaml#/CampaignModeEnum' }
+            $ref: '../../components/schemas/all.yaml#/CampaignModeUpdateResponse'
     '400': { $ref: '../../components/responses.yaml#/BadRequest' }
     '401': { $ref: '../../components/responses.yaml#/Unauthorized' }
     '404': { $ref: '../../components/responses.yaml#/NotFound' }

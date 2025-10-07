@@ -7,6 +7,7 @@ import PageHeader from '@/components/shared/PageHeader';
 import { UserCog, Globe, Wifi, AlertCircle } from 'lucide-react';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState, Suspense } from 'react';
+import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { PersonasApi } from '@/lib/api-client/apis/personas-api';
@@ -26,7 +27,7 @@ function EditPersonaPageContent() {
   const personaId = params.id as string;
   const personaTypeParam = searchParams.get('type') as 'http' | 'dns' | null; 
   
-  const [persona, setPersona] = useState<any | null>(null);
+  const [persona, setPersona] = useState<PersonaResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -59,7 +60,7 @@ function EditPersonaPageContent() {
           response = await personasApi.personasGet(personaId);
         }
         
-  const data = (response as any)?.data ?? response;
+  const data: PersonaResponse | undefined = response.data ?? undefined;
         if (data) {
           // Check if the returned persona matches the expected type
           if (data.personaType !== type) {
@@ -67,7 +68,7 @@ function EditPersonaPageContent() {
             setPersona(null);
             toast({ title: "Type Mismatch", description: `Persona found, but it's not of type '${type}'.`, variant: "destructive" });
           } else {
-            setPersona(data as any);
+            setPersona(data);
           }
         } else {
           setError("Persona not found.");
@@ -132,7 +133,7 @@ function EditPersonaPageContent() {
         description={`Modify the details for this ${typeNameDisplay} persona.`}
         icon={IconToUse}
       />
-      <PersonaForm persona={persona as any} isEditing={true} personaType={persona.personaType} />
+  <PersonaForm persona={persona} isEditing={true} personaType={persona.personaType} />
     </>
   );
 }

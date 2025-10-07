@@ -29,11 +29,14 @@ import type { CampaignMetricsResponse } from '@/lib/api-client/models/campaign-m
 import type { CampaignClassificationsResponse } from '@/lib/api-client/models/campaign-classifications-response';
 import type { CampaignFunnelResponse } from '@/lib/api-client/models/campaign-funnel-response';
 import type { DomainScoreBreakdownResponse } from '@/lib/api-client/models/domain-score-breakdown-response';
+import type { CampaignsModeUpdateRequest } from '@/lib/api-client/models/campaigns-mode-update-request';
 
-// Helper for axios/fetch hybrid responses
-const unwrap = <T>(resp: unknown): T | undefined => {
-  const maybe = (resp as any)?.data ?? resp;
-  return maybe as T | undefined;
+// Helper for axios/fetch hybrid responses (no any)
+const unwrap = <T>(resp: { data?: T } | T): T | undefined => {
+  if (resp && typeof resp === 'object' && 'data' in resp && (resp as { data?: T }).data !== undefined) {
+    return (resp as { data?: T }).data;
+  }
+  return resp as T;
 };
 
 // Centralized API configuration targeting /api/v2
@@ -259,15 +262,14 @@ export const campaignApi = createApi({
     }),
 
     // Update campaign execution mode (full_sequence vs step_by_step) - now using typed extraction
-    updateCampaignMode: builder.mutation<
-      { mode: string },
-      { campaignId: string; mode: 'full_sequence' | 'step_by_step' }
-    >({
+    updateCampaignMode: builder.mutation<{ mode: CampaignsModeUpdateRequest['mode'] }, { campaignId: string; mode: CampaignsModeUpdateRequest['mode'] }>({
       queryFn: async ({ campaignId, mode }) => {
         try {
-          const response = await (campaignsApi as any).campaignsModeUpdate(campaignId, { mode });
-          const extracted = unwrap<{ mode?: string }>(response) || { mode };
-          return { data: { mode: extracted.mode || mode } };
+          const request: CampaignsModeUpdateRequest = { mode };
+          const response = await campaignsApi.campaignsModeUpdate(campaignId, request);
+          // Response likely shape: { data: { mode: CampaignModeEnum } } or 200 model wrapper
+          const raw = (response as { data?: { mode?: CampaignsModeUpdateRequest['mode'] } }).data;
+          return { data: { mode: raw?.mode ?? request.mode } };
         } catch (error) {
           const norm = toRtkError(error);
           return { error: { status: norm.status ?? 500, data: norm } };
@@ -283,9 +285,12 @@ export const campaignApi = createApi({
     getCampaignDomainScoreBreakdown: builder.query<DomainScoreBreakdownResponse, { campaignId: string; domain: string }>({
       queryFn: async ({ campaignId, domain }) => {
         try {
-          const fn = (campaignsApi as any).campaignsDomainScoreBreakdown as ((id: string, domain: string) => Promise<unknown>) | undefined;
-          if (!fn) return { error: { status: 500, data: { message: 'Domain score breakdown endpoint missing in client' } } };
-          const response = await fn(campaignId, domain);
+          const hasFn = (obj: unknown): obj is { campaignsDomainScoreBreakdown: (id: string, d: string) => Promise<{ data?: DomainScoreBreakdownResponse }> } =>
+            typeof obj === 'object' && obj !== null && 'campaignsDomainScoreBreakdown' in obj && typeof (obj as { campaignsDomainScoreBreakdown?: unknown }).campaignsDomainScoreBreakdown === 'function';
+          if (!hasFn(campaignsApi)) {
+            return { error: { status: 500, data: { message: 'Domain score breakdown endpoint missing in client' } } };
+          }
+          const response = await campaignsApi.campaignsDomainScoreBreakdown(campaignId, domain);
           const data = unwrap<DomainScoreBreakdownResponse>(response);
             if (!data) return { error: { status: 500, data: { message: 'Empty score breakdown' } } };
           return { data };
@@ -385,12 +390,12 @@ export const campaignApi = createApi({
       ],
     }),
 
-  // Status endpoint returns a CampaignResponse-like shape; using CampaignResponse until spec adds dedicated model
+  // Status endpoint returns a CampaignResponse-like shape (spec may later add dedicated status model)
   getCampaignStatus: builder.query<CampaignResponse, string>({
       queryFn: async (campaignId) => {
         try {
           const response = await campaignsApi.campaignsStatusGet(campaignId);
-          const data = unwrap<CampaignResponse>(response);
+          const data = unwrap<CampaignResponse | unknown>(response) as CampaignResponse | undefined;
           if (!data) return { error: { status: 500, data: { message: 'Empty status response' } } };
           return { data };
         } catch (error) {

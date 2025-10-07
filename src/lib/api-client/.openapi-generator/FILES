@@ -67,6 +67,7 @@ docs/BulkHealthCheckResponse.md
 docs/BulkOperationCancelStatus.md
 docs/BulkProxyOperationResponse.md
 docs/BulkProxyOperationResponseFailedProxiesInner.md
+docs/BulkProxyOperationResponseResultsInner.md
 docs/BulkProxyTestResponse.md
 docs/BulkResourceAllocationRequest.md
 docs/BulkResourceAllocationRequestResources.md
@@ -76,7 +77,6 @@ docs/BulkResourceAllocationResponseEndpoints.md
 docs/BulkResourceAllocationResponseResources.md
 docs/BulkUpdateProxiesRequest.md
 docs/BulkValidationResponse.md
-docs/BulkValidationResponseOperationsValue.md
 docs/CampaignClassificationBucketSample.md
 docs/CampaignClassificationBucketSampleDomainsInner.md
 docs/CampaignClassificationsResponse.md
@@ -93,7 +93,6 @@ docs/CampaignMomentumResponse.md
 docs/CampaignMomentumResponseMoversUpInner.md
 docs/CampaignPhasesStatusResponse.md
 docs/CampaignPhasesStatusResponsePhasesInner.md
-docs/CampaignProgressEvent.md
 docs/CampaignProgressResponse.md
 docs/CampaignProgressResponseOverall.md
 docs/CampaignProgressResponsePhases.md
@@ -156,6 +155,11 @@ docs/ErrorEnvelope.md
 docs/ExecutionStatusEnum.md
 docs/ExtendedPageInfo.md
 docs/FeatureFlags.md
+docs/FlexibleArray.md
+docs/FlexibleArrayInner.md
+docs/FlexibleObject.md
+docs/FlexiblePrimitive.md
+docs/FlexibleValue.md
 docs/ForecastPoint.md
 docs/ForecastProbabilisticPoint.md
 docs/GetBulkOperationStatus200Response.md
@@ -212,10 +216,12 @@ docs/ProxiesHealthCheckAllRequest.md
 docs/Proxy.md
 docs/ProxyHealthCheckResponse.md
 docs/ProxyManagerConfigJSON.md
+docs/ProxyOperationResult.md
 docs/ProxyPool.md
 docs/ProxyPoolDeleteResponse.md
 docs/ProxyPoolMembership.md
 docs/ProxyPoolMembershipResponse.md
+docs/ProxyPoolProxyRef.md
 docs/ProxyPoolRequest.md
 docs/ProxyPoolsAddProxyRequest.md
 docs/ProxyPoolsApi.md
@@ -296,6 +302,7 @@ models/bulk-httpvalidation-request-stealth.ts
 models/bulk-httpvalidation-request.ts
 models/bulk-operation-cancel-status.ts
 models/bulk-proxy-operation-response-failed-proxies-inner.ts
+models/bulk-proxy-operation-response-results-inner.ts
 models/bulk-proxy-operation-response.ts
 models/bulk-proxy-test-response.ts
 models/bulk-resource-allocation-request-resources.ts
@@ -305,7 +312,6 @@ models/bulk-resource-allocation-response-endpoints.ts
 models/bulk-resource-allocation-response-resources.ts
 models/bulk-resource-allocation-response.ts
 models/bulk-update-proxies-request.ts
-models/bulk-validation-response-operations-value.ts
 models/bulk-validation-response.ts
 models/campaign-classification-bucket-sample-domains-inner.ts
 models/campaign-classification-bucket-sample.ts
@@ -323,7 +329,6 @@ models/campaign-momentum-response-movers-up-inner.ts
 models/campaign-momentum-response.ts
 models/campaign-phases-status-response-phases-inner.ts
 models/campaign-phases-status-response.ts
-models/campaign-progress-event.ts
 models/campaign-progress-response-overall.ts
 models/campaign-progress-response-phases.ts
 models/campaign-progress-response.ts
@@ -384,6 +389,11 @@ models/error-envelope.ts
 models/execution-status-enum.ts
 models/extended-page-info.ts
 models/feature-flags.ts
+models/flexible-array-inner.ts
+models/flexible-array.ts
+models/flexible-object.ts
+models/flexible-primitive.ts
+models/flexible-value.ts
 models/forecast-point.ts
 models/forecast-probabilistic-point.ts
 models/get-bulk-operation-status200-response.ts
@@ -433,9 +443,11 @@ models/proxies-bulk-test-request.ts
 models/proxies-health-check-all-request.ts
 models/proxy-health-check-response.ts
 models/proxy-manager-config-json.ts
+models/proxy-operation-result.ts
 models/proxy-pool-delete-response.ts
 models/proxy-pool-membership-response.ts
 models/proxy-pool-membership.ts
+models/proxy-pool-proxy-ref.ts
 models/proxy-pool-request.ts
 models/proxy-pool.ts
 models/proxy-pools-add-proxy-request.ts

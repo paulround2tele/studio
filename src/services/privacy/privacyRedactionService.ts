@@ -30,7 +30,7 @@ export interface PrivacyRule {
 }
 
 export interface RedactionResult {
-  redacted: any;
+  redacted: unknown;
   applied: RedactionEntry[];
   policyVersion: string;
 }
@@ -51,7 +51,7 @@ export interface AuditEntry {
   privacyLevel: PrivacyLevel;
   userId?: string;
   sessionId?: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
 }
 
 // Telemetry events
@@ -81,7 +81,7 @@ class PrivacyRedactionService {
   /**
    * Redact payload according to privacy policy
    */
-  redactPayload(obj: any, policy?: PrivacyPolicy): RedactionResult {
+  redactPayload(obj: unknown, policy?: PrivacyPolicy): RedactionResult {
     if (!this.isAvailable()) {
       return {
         redacted: obj,
@@ -182,7 +182,7 @@ class PrivacyRedactionService {
   /**
    * Redact a single value - consolidated implementation
    */
-  redactValue(value: any, fieldPath: string, level: PrivacyLevel = 'public'): { redacted: any; applied: boolean } {
+  redactValue(value: unknown, fieldPath: string, level: PrivacyLevel = 'public'): { redacted: unknown; applied: boolean } {
     if (!this.isAvailable()) {
       return { redacted: value, applied: false };
     }
@@ -199,7 +199,7 @@ class PrivacyRedactionService {
   /**
    * Redact an object recursively
    */
-  private redactObject(obj: any, policy: PrivacyPolicy, applied: RedactionEntry[], path: string): any {
+  private redactObject(obj: unknown, policy: PrivacyPolicy, applied: RedactionEntry[], path: string): unknown {
     if (obj === null || obj === undefined) return obj;
 
     if (typeof obj === 'string' || typeof obj === 'number' || typeof obj === 'boolean') {
@@ -224,7 +224,7 @@ class PrivacyRedactionService {
     }
 
     if (typeof obj === 'object') {
-      const result: any = {};
+  const result: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(obj)) {
         const fieldPath = path ? `${path}.${key}` : key;
         const rule = this.findMatchingRule(fieldPath, policy);
@@ -294,7 +294,7 @@ class PrivacyRedactionService {
   /**
    * Apply redaction rule to a value
    */
-  private applyRedactionRule(value: any, rule: PrivacyRule): any {
+  private applyRedactionRule(value: unknown, rule: PrivacyRule): unknown {
     switch (rule.action) {
       case 'redact':
         return this.performRedaction(value, rule);
@@ -314,7 +314,7 @@ class PrivacyRedactionService {
   /**
    * Perform redaction operation (internal helper)
    */
-  private performRedaction(value: any, rule: PrivacyRule): string {
+  private performRedaction(value: unknown, rule: PrivacyRule): string {
     if (rule.preserveFormat && typeof value === 'string') {
       // Preserve format but redact content
       return value.replace(/[a-zA-Z0-9]/g, rule.maskCharacter || '*');
@@ -326,7 +326,7 @@ class PrivacyRedactionService {
   /**
    * Hash a value
    */
-  private hashValue(value: any, salt?: string): string {
+  private hashValue(value: unknown, salt?: string): string {
     const stringValue = String(value);
     const saltedValue = salt ? `${stringValue}${salt}` : stringValue;
     
@@ -344,7 +344,7 @@ class PrivacyRedactionService {
   /**
    * Mask a value (partial redaction)
    */
-  private maskValue(value: any, rule: PrivacyRule): string {
+  private maskValue(value: unknown, rule: PrivacyRule): string {
     const stringValue = String(value);
     const maskChar = rule.maskCharacter || '*';
     
@@ -430,9 +430,13 @@ class PrivacyRedactionService {
    * Emit redaction telemetry
    */
   private emitRedactionTelemetry(data: PrivacyRedactionAppliedEvent): void {
-    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
-      const telemetryService = (window as any).__telemetryService;
+    if (typeof window !== 'undefined') {
+      interface TelemetryWindow extends Window { __telemetryService?: { emit: (event: string, data: unknown) => void } }
+      const telemetryWin = window as TelemetryWindow;
+      if (telemetryWin.__telemetryService) {
+        const telemetryService = telemetryWin.__telemetryService;
       telemetryService.emit('privacy_redaction_applied', data);
+      }
     }
   }
 }

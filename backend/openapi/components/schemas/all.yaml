@@ -183,6 +183,10 @@ CampaignStateEnum:
 CampaignModeEnum:
   type: string
   enum: [full_sequence, step_by_step]
+CampaignPhaseEnum:
+  type: string
+  description: Canonical campaign phase identifier
+  enum: [discovery, validation, extraction, analysis]
 ExecutionStatusEnum:
   type: string
   enum: [not_started, ready, configured, in_progress, paused, completed, failed]
@@ -669,7 +673,16 @@ BulkProxyOperationResponse:
       type: array
       items:
         type: object
-        additionalProperties: true
+        description: Result record for each proxy operation performed
+        properties:
+          proxyId: { type: string, format: uuid }
+          operation: { type: string, description: "Operation performed (enable|disable|delete|update|test)" }
+          success: { type: boolean }
+          statusCode: { type: integer, description: "HTTP status or synthetic code for the operation" }
+          error: { type: string, description: "Error message if success=false", nullable: true }
+          message: { type: string, description: "Optional human readable status message", nullable: true }
+        required: [proxyId, operation, success]
+  required: [totalRequested, successCount, errorCount]
 BulkUpdateProxiesRequest:
   type: object
   properties:
@@ -996,6 +1009,8 @@ ActivityItem:
 # the JSON data portion only; the event type itself is surfaced out-of-band via the SSE event field.
 CampaignSseEventType:
   type: string
+  discriminator:
+    propertyName: type
   description: Enumerated server-sent campaign event names.
   enum:
     - analysis_reuse_enrichment
@@ -1007,6 +1022,71 @@ CampaignSseEventType:
     - phase_started
     - phase_completed
     - phase_failed
+
+# Additional Phase 2 schemas
+CampaignModeUpdateResponse:
+  type: object
+  description: Response model for campaign mode update operation.
+  properties:
+    mode: { $ref: '#/CampaignModeEnum' }
+    campaignId: { type: string, format: uuid }
+    updatedAt: { type: string, format: date-time }
+  required: [mode, campaignId, updatedAt]
+
+CreateCampaignConfiguration:
+  type: object
+  description: Configuration fragment accepted at campaign creation time.
+  properties:
+    generationStrategy: { type: string, enum: [pattern, list, seed_keywords] }
+    pattern: { type: string }
+    initialDomains:
+      type: array
+      items: { type: string }
+    seedKeywords:
+      type: array
+      items: { type: string }
+  additionalProperties: false
+
+ProxyConfigurationRequest:
+  type: object
+  properties:
+    poolId: { type: string, format: uuid }
+    isEnabled: { type: boolean }
+    authMode: { type: string, enum: [none, basic, bearer] }
+    maxFailures: { type: integer }
+    cooldownSeconds: { type: integer }
+  required: [poolId]
+
+ProxyConfigurationResponse:
+  allOf:
+    - $ref: '#/Proxy'
+    - type: object
+      properties:
+        configurationApplied: { type: boolean }
+
+PersonaUpdateRequest:
+  type: object
+  properties:
+    name: { type: string }
+    description: { type: string }
+    isEnabled: { type: boolean }
+    configDetails: { $ref: '#/PersonaConfigDetails' }
+  additionalProperties: false
+
+BulkOperationStatusResponse:
+  type: object
+  properties:
+    operationId: { type: string }
+    status: { type: string, enum: [queued, running, completed, failed, cancelled] }
+    progress:
+      type: object
+      properties:
+        processed: { type: integer }
+        total: { type: integer }
+      required: [processed, total]
+    startedAt: { type: string, format: date-time, nullable: true }
+    completedAt: { type: string, format: date-time, nullable: true }
+  required: [operationId, status, progress]
     - campaign_completed
 AnalysisReuseEnrichmentEvent:
   type: object
@@ -1055,16 +1135,12 @@ DomainStatusEvent:
     httpReason: { type: string, nullable: true }
     features:
       $ref: '#/DomainAnalysisFeatures'
-CampaignProgressEvent:
-  description: Wrapper alias referencing CampaignProgressResponse (explicit type object for validator compatibility)
-  allOf:
-    - $ref: '#/CampaignProgressResponse'
 CampaignSseEventPayload:
   description: Union of possible JSON payload shapes emitted via campaign SSE stream.
   oneOf:
     - $ref: '#/AnalysisReuseEnrichmentEvent'
     - $ref: '#/AnalysisFailedEvent'
-    - $ref: '#/CampaignProgressEvent'
+    - $ref: '#/CampaignProgressResponse'
     - $ref: '#/DomainStatusEvent'
     - $ref: '#/PhaseTransitionEvent'
     - $ref: '#/PhaseFailedEvent'
@@ -1091,7 +1167,7 @@ CampaignSseProgressEvent:
   properties:
     type: { type: string, enum: [campaign_progress] }
     timestamp: { type: string, format: date-time }
-    payload: { $ref: '#/CampaignProgressEvent' }
+    payload: { $ref: '#/CampaignProgressResponse' }
   required: [type]
 CampaignSseDomainGeneratedEvent:
   type: object
@@ -2100,7 +2176,8 @@ TimelineEvent:
           - { type: string }
           - { type: number }
           - { type: boolean }
-          - { type: 'null' }
+          # Represent null via nullable string to maintain permissive shape without using explicit 'null' type unsupported by kin-openapi
+          - { type: string, nullable: true }
   required: [timestamp, type]
 
 ForecastProbabilisticPoint:

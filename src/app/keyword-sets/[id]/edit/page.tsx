@@ -36,11 +36,11 @@ export default function EditKeywordSetPage() {
     async function load() {
       try {
         const resp = await keywordSetsApi.keywordSetsGet(params.id as string);
-        const payload = (resp as any)?.data?.data ?? (resp as any)?.data;
+        const payload = resp.data; // KeywordSetResponse
         form.reset({
           name: payload.name,
           description: payload.description || '',
-          isEnabled: payload.isEnabled,
+          isEnabled: payload.isEnabled ?? true,
         });
       } catch (e) {
         console.error(e);
@@ -58,7 +58,7 @@ export default function EditKeywordSetPage() {
     setErrorMessage(null);
     try {
       // Use the correct method name from the generated API
-  await keywordSetsApi.keywordSetsUpdate(params.id as string, data as any);
+  await keywordSetsApi.keywordSetsUpdate(params.id as string, data);
       setSuccessMessage('Keyword set updated');
       // PERFORMANCE FIX: Immediate navigation instead of 500ms delay
       router.push('/keyword-sets');

@@ -64,14 +64,24 @@ export const monitoringApi = createApi({
     // Health endpoint - matches /api/v2/monitoring/health
     getSystemHealth: builder.query<SystemHealth, void>({
       query: () => '/health',
-      transformResponse: (response: any) => (response?.data ?? response) as SystemHealth,
+      transformResponse: (response: unknown): SystemHealth => {
+        const unwrapped = (response && typeof response === 'object' && 'data' in response)
+          ? (response as { data?: unknown }).data
+          : response;
+        return unwrapped as SystemHealth;
+      },
       providesTags: ['MonitoringHealth'],
     }),
 
     // Resource stats - matches /api/v2/monitoring/stats
     getResourceMetrics: builder.query<ResourceMetrics, void>({
       query: () => '/stats',
-      transformResponse: (response: any) => (response?.data ?? response) as ResourceMetrics,
+      transformResponse: (response: unknown): ResourceMetrics => {
+        const unwrapped = (response && typeof response === 'object' && 'data' in response)
+          ? (response as { data?: unknown }).data
+          : response;
+        return unwrapped as ResourceMetrics;
+      },
       providesTags: ['ResourceMetrics'],
     }),
 
@@ -88,7 +98,12 @@ export const monitoringApi = createApi({
     // Campaign-specific monitoring - matches /api/v2/monitoring/campaigns/:id
     getCampaignMetrics: builder.query<CampaignResourceMetrics, string>({
       query: (campaignId) => `/campaigns/${campaignId}`,
-      transformResponse: (response: any) => (response?.data ?? response) as CampaignResourceMetrics,
+      transformResponse: (response: unknown): CampaignResourceMetrics => {
+        const unwrapped = (response && typeof response === 'object' && 'data' in response)
+          ? (response as { data?: unknown }).data
+          : response;
+        return unwrapped as CampaignResourceMetrics;
+      },
       providesTags: (_result, _error, campaignId) => [
         { type: 'ResourceMetrics', id: campaignId }
       ],
@@ -97,7 +112,12 @@ export const monitoringApi = createApi({
     // Cleanup status - matches /api/v2/monitoring/cleanup/status
     getCleanupStatus: builder.query<CleanupStatus, void>({
       query: () => '/cleanup/status',
-      transformResponse: (response: any) => (response?.data ?? response) as CleanupStatus,
+      transformResponse: (response: unknown): CleanupStatus => {
+        const unwrapped = (response && typeof response === 'object' && 'data' in response)
+          ? (response as { data?: unknown }).data
+          : response;
+        return unwrapped as CleanupStatus;
+      },
       providesTags: ['CleanupStatus'],
     }),
 
@@ -107,7 +127,14 @@ export const monitoringApi = createApi({
         url: `/cleanup/force/${campaignId}`,
         method: 'POST',
       }),
-      transformResponse: (response: any) => ((response?.data ?? response) || { message: 'OK' }) as { message: string },
+      transformResponse: (response: unknown): { message: string } => {
+        const unwrapped = (response && typeof response === 'object' && 'data' in response)
+          ? (response as { data?: unknown }).data
+          : response;
+        return (unwrapped as { message?: string })?.message
+          ? { message: (unwrapped as { message?: string }).message! }
+          : { message: 'OK' };
+      },
       invalidatesTags: ['CleanupStatus'],
     }),
 

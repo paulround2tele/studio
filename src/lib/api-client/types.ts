@@ -1857,6 +1857,16 @@ export interface components {
          * @enum {string}
          */
         ErrorCode: "BAD_REQUEST" | "UNAUTHORIZED" | "FORBIDDEN" | "NOT_FOUND" | "CONFLICT" | "VALIDATION_ERROR" | "REQUIRED_FIELD" | "RATE_LIMIT_EXCEEDED" | "REQUEST_TIMEOUT" | "NOT_IMPLEMENTED" | "INTERNAL_SERVER_ERROR" | "DATABASE_ERROR" | "SERVICE_UNAVAILABLE" | "GATEWAY_TIMEOUT" | "CAMPAIGN_IN_PROGRESS" | "QUOTA_EXCEEDED" | "INVALID_STATE";
+        /** @description Primitive value allowed in flexible configuration maps. */
+        FlexiblePrimitive: string | number | boolean | Record<string, never>;
+        /** @description Array of primitive flexible values. */
+        FlexibleArray: (string | number | boolean | Record<string, never>)[];
+        /** @description Nested object whose values are flexible primitives (one-level nesting only). */
+        FlexibleObject: {
+            [key: string]: string | number | boolean | Record<string, never>;
+        };
+        /** @description Union of acceptable flexible configuration / context value shapes. */
+        FlexibleValue: components["schemas"]["FlexiblePrimitive"] | components["schemas"]["FlexibleArray"] | components["schemas"]["FlexibleObject"];
         ApiError: {
             code: components["schemas"]["ErrorCode"];
             message: string;
@@ -1865,8 +1875,9 @@ export interface components {
                 field?: string;
                 code: components["schemas"]["ErrorCode"];
                 message: string;
+                /** @description Structured error context values constrained to primitive/array/object envelope. */
                 context?: {
-                    [key: string]: unknown;
+                    [key: string]: components["schemas"]["FlexibleValue"];
                 };
             }[];
             /** Format: date-time */
@@ -1946,7 +1957,7 @@ export interface components {
             /** Format: float */
             progress?: number | null;
             metadata?: {
-                [key: string]: string | number | boolean | null;
+                [key: string]: string | number | boolean | (string | null);
             };
         };
         CampaignProgressResponse: {
@@ -1971,7 +1982,6 @@ export interface components {
             /** @description Chronological list of timeline events for campaign lifecycle */
             timeline: components["schemas"]["TimelineEvent"][];
         };
-        CampaignProgressEvent: components["schemas"]["CampaignProgressResponse"];
         CampaignSseProgressEvent: {
             /**
              * @description discriminator enum property added by openapi-typescript
@@ -1980,7 +1990,7 @@ export interface components {
             type: "CampaignSseProgressEvent";
             /** Format: date-time */
             timestamp?: string;
-            payload?: components["schemas"]["CampaignProgressEvent"];
+            payload?: components["schemas"]["CampaignProgressResponse"];
         };
         /** @description Canonical nested analysis feature vector for a discovered domain. */
         DomainAnalysisFeatures: {
@@ -2311,9 +2321,9 @@ export interface components {
             updates: components["schemas"]["UpdateProxyRequestAPI"];
         };
         BulkProxyOperationResponse: {
-            totalRequested?: number;
-            successCount?: number;
-            errorCount?: number;
+            totalRequested: number;
+            successCount: number;
+            errorCount: number;
             successfulProxies?: string[];
             failedProxies?: {
                 /** Format: uuid */
@@ -2321,7 +2331,17 @@ export interface components {
                 error?: string;
             }[];
             results?: {
-                [key: string]: unknown;
+                /** Format: uuid */
+                proxyId: string;
+                /** @description Operation performed (enable|disable|delete|update|test) */
+                operation: string;
+                success: boolean;
+                /** @description HTTP status or synthetic code for the operation */
+                statusCode?: number;
+                /** @description Error message if success=false */
+                error?: string | null;
+                /** @description Optional human readable status message */
+                message?: string | null;
             }[];
         };
         BulkDeleteProxiesRequest: {
@@ -2546,23 +2566,23 @@ export interface components {
         };
         /** @description Authentication configuration */
         AuthConfig: {
-            [key: string]: unknown;
+            [key: string]: components["schemas"]["FlexibleValue"];
         };
         /** @description DNS validator configuration */
         DNSValidatorConfigJSON: {
-            [key: string]: unknown;
+            [key: string]: components["schemas"]["FlexibleValue"];
         };
         /** @description Logging configuration */
         LoggingConfig: {
-            [key: string]: unknown;
+            [key: string]: components["schemas"]["FlexibleValue"];
         };
         /** @description Worker configuration */
         WorkerConfig: {
-            [key: string]: unknown;
+            [key: string]: components["schemas"]["FlexibleValue"];
         };
         /** @description Rate limiter configuration */
         RateLimiterConfig: {
-            [key: string]: unknown;
+            [key: string]: components["schemas"]["FlexibleValue"];
         };
         /** @description Feature flags map */
         FeatureFlags: {
@@ -2647,6 +2667,7 @@ export interface components {
             configuration?: {
                 /** @description Maximum number of domains to process */
                 maxDomains?: number;
+                /** @description Phase-specific configuration blocks */
                 phases?: {
                     discovery?: {
                         enabled?: boolean;
@@ -2812,7 +2833,7 @@ export interface components {
             currentState: components["schemas"]["CampaignStateEnum"];
             mode: components["schemas"]["CampaignModeEnum"];
             configuration?: {
-                [key: string]: unknown;
+                [key: string]: components["schemas"]["FlexibleValue"];
             };
             version: number;
             /** Format: date-time */
@@ -2824,7 +2845,7 @@ export interface components {
             currentState?: components["schemas"]["CampaignStateEnum"];
             mode?: components["schemas"]["CampaignModeEnum"];
             configuration?: {
-                [key: string]: unknown;
+                [key: string]: components["schemas"]["FlexibleValue"];
             };
             /** @description Optional optimistic concurrency version; if provided must match current */
             version?: number;
@@ -2864,10 +2885,10 @@ export interface components {
                 [key: string]: unknown;
             } | null;
             errorDetails?: {
-                [key: string]: unknown;
+                [key: string]: components["schemas"]["FlexibleValue"];
             } | null;
             metrics?: {
-                [key: string]: unknown;
+                [key: string]: components["schemas"]["FlexibleValue"];
             } | null;
             /** Format: date-time */
             createdAt: string;
@@ -2902,10 +2923,10 @@ export interface components {
                 [key: string]: unknown;
             } | null;
             errorDetails?: {
-                [key: string]: unknown;
+                [key: string]: components["schemas"]["FlexibleValue"];
             } | null;
             metrics?: {
-                [key: string]: unknown;
+                [key: string]: components["schemas"]["FlexibleValue"];
             } | null;
         };
         /** @description Read-optimized composite model for campaign detail pages */
@@ -3169,24 +3190,23 @@ export interface components {
                 };
             };
         };
+        /** @description Result object for a proxy operation containing a proxyId and optional error or metadata. */
+        ProxyOperationResult: {
+            /** Format: uuid */
+            proxyId: string;
+            success: boolean;
+            error?: string | null;
+            metadata?: {
+                [key: string]: components["schemas"]["FlexibleValue"];
+            } | null;
+        };
         BulkValidationResponse: {
             /** Format: uuid */
             operationId: string;
             /** @enum {string} */
             status: "initiated" | "pending" | "running";
             operations: {
-                [key: string]: {
-                    /** Format: uuid */
-                    campaignId?: string;
-                    /** @enum {string} */
-                    status?: "pending" | "running" | "completed" | "failed";
-                    progress?: {
-                        processed?: number;
-                        total?: number;
-                    };
-                    /** Format: date-time */
-                    estimatedCompletion?: string | null;
-                };
+                [key: string]: components["schemas"]["ProxyOperationResult"];
             };
             totalOperations: number;
             estimatedDuration?: string | null;
@@ -3372,10 +3392,10 @@ export interface components {
          */
         CampaignSseEventType: "analysis_reuse_enrichment" | "analysis_failed" | "campaign_progress" | "counters_reconciled" | "domain_generated" | "domain_validated" | "phase_started" | "phase_completed" | "phase_failed" | "campaign_completed";
         /** @description Union of possible JSON payload shapes emitted via campaign SSE stream. */
-        CampaignSseEventPayload: components["schemas"]["AnalysisReuseEnrichmentEvent"] | components["schemas"]["AnalysisFailedEvent"] | components["schemas"]["CampaignProgressEvent"] | components["schemas"]["DomainStatusEvent"] | components["schemas"]["PhaseTransitionEvent"] | components["schemas"]["PhaseFailedEvent"] | components["schemas"]["CampaignCompletedEvent"];
+        CampaignSseEventPayload: components["schemas"]["AnalysisReuseEnrichmentEvent"] | components["schemas"]["AnalysisFailedEvent"] | components["schemas"]["CampaignProgressResponse"] | components["schemas"]["DomainStatusEvent"] | components["schemas"]["PhaseTransitionEvent"] | components["schemas"]["PhaseFailedEvent"] | components["schemas"]["CampaignCompletedEvent"];
         /** @description HTTP validator configuration */
         HTTPValidatorConfigJSON: {
-            [key: string]: unknown;
+            [key: string]: components["schemas"]["FlexibleValue"];
         };
         /** @description Worker configuration update payload */
         WorkerConfigUpdate: {
@@ -3407,15 +3427,28 @@ export interface components {
         };
         /** @description Proxy manager configuration */
         ProxyManagerConfigJSON: {
-            [key: string]: unknown;
+            [key: string]: components["schemas"]["FlexibleValue"];
         };
         /** @description Consolidated server configuration response */
         ServerConfigResponse: {
-            [key: string]: unknown;
+            [key: string]: components["schemas"]["FlexibleValue"];
         };
         /** @description Server configuration update request */
         ServerConfigUpdateRequest: {
             [key: string]: unknown;
+        };
+        /** @description Lightweight proxy reference entry for inclusion inside a pool listing. */
+        ProxyPoolProxyRef: {
+            /** Format: uuid */
+            proxyId: string;
+            address: string;
+            protocol: string;
+            isHealthy: boolean;
+            /** Format: date-time */
+            lastChecked?: string | null;
+            metadata?: {
+                [key: string]: components["schemas"]["FlexibleValue"];
+            } | null;
         };
         /** @description Detected anomaly record used in export bundles */
         AnomalyRecord: {

@@ -1,14 +1,15 @@
 // File: src/hooks/useSSE.ts
 import { useEffect, useRef, useCallback, useState } from 'react';
+import type { CampaignSseEvent } from '@/lib/api-client/models/campaign-sse-event';
 
-export interface SSEEvent {
+// Narrowed runtime event shape used by consumers. `data` will be strongly typed when
+// the event name matches a known CampaignSseEvent discriminator; otherwise unknown.
+export type SSEEvent = {
   id?: string;
   event: string;
   data: unknown;
   timestamp: string;
-  campaign_id?: string;
-  user_id?: string;
-}
+} & Record<string, unknown>;
 
 export interface SSEOptions {
   /**
@@ -206,13 +207,12 @@ export function useSSE(
         if (!mountedRef.current) return;
         
         try {
-          const parsedData = JSON.parse(event.data);
+          const parsedData: unknown = JSON.parse(event.data);
           const sseEvent: SSEEvent = {
             id: event.lastEventId || undefined,
             event: event.type || 'message',
             data: parsedData,
             timestamp: new Date().toISOString(),
-            ...parsedData, // Spread any additional fields from the server
           };
           
           setLastEvent(sseEvent);
@@ -245,13 +245,12 @@ export function useSSE(
           if (!mountedRef.current) return;
           
           try {
-            const parsedData = JSON.parse(event.data);
+            const parsedData: unknown = JSON.parse(event.data);
             const sseEvent: SSEEvent = {
               id: event.lastEventId || undefined,
               event: eventType,
               data: parsedData,
               timestamp: new Date().toISOString(),
-              ...parsedData,
             };
             
             setLastEvent(sseEvent);

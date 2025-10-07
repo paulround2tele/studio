@@ -175,15 +175,39 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
         router.push(`/campaigns/${result.id}`);
       }, redirectDelay);
       
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Campaign creation failed:', error);
-      
+
       // Hide any showing banner and show error
       hideBanner();
-      
+
+      // Narrow common API error shapes without using any
+      const extractMessage = (err: unknown): string => {
+        if (!err) return 'Please try again.';
+        // Axios-style error with response.data.message
+        if (typeof err === 'object') {
+          const maybeResp = (err as { response?: { data?: unknown } });
+          const data = maybeResp.response?.data;
+          if (data && typeof data === 'object' && 'message' in data) {
+            const msg = (data as { message?: unknown }).message;
+            if (typeof msg === 'string' && msg.trim().length > 0) return msg;
+          }
+          // Direct data.message shape
+          if ('data' in (err as object)) {
+            const anyData = (err as { data?: unknown }).data;
+            if (anyData && typeof anyData === 'object' && 'message' in anyData) {
+              const msg = (anyData as { message?: unknown }).message;
+              if (typeof msg === 'string' && msg.trim().length > 0) return msg;
+            }
+          }
+        }
+        if (err instanceof Error) return err.message || 'Please try again.';
+        return 'Please try again.';
+      };
+
       toast({
         title: "Campaign Creation Failed",
-        description: error?.data?.message || error?.message || "Please try again.",
+        description: extractMessage(error),
         variant: 'destructive'
       });
     }
@@ -220,18 +244,19 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
         
         return; // Success, exit retry loop
         
-      } catch (startError: any) {
+      } catch (startError: unknown) {
         console.warn(`Auto-start attempt ${attempt} failed:`, startError);
         
-        const isRetryableError = startError?.status === 409 || startError?.status === 422 || 
-                                 startError?.data?.code === 'CONFLICT' || 
-                                 startError?.data?.code === 'BADREQUEST';
+        const anyErr = startError as any;
+        const status = anyErr?.status;
+        const code = anyErr?.data?.code;
+        const isRetryableError = status === 409 || status === 422 || code === 'CONFLICT' || code === 'BADREQUEST';
         
         const isLastAttempt = attempt === MAX_RETRIES + 1;
         
         if (!isRetryableError || isLastAttempt) {
           // Final failure or non-retryable error
-          const errorMessage = startError?.data?.message || startError?.message || 'Auto-start failed';
+          const errorMessage = anyErr?.data?.message || (startError instanceof Error ? startError.message : 'Auto-start failed');
           showError(errorMessage, `Campaign "${campaignName}" was created successfully, but auto-start failed.`);
           
           toast({

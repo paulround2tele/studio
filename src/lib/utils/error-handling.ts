@@ -5,6 +5,14 @@
  */
 import type { ApiError, ErrorEnvelope } from '../api-client/models';
 
+// Minimal axios-style shape to avoid any casts
+interface AxiosLikeError<E = unknown> {
+  response?: {
+    data?: E;
+    status?: number;
+  };
+}
+
 /**
  * Type guard to check if an error is an API error
  */
@@ -36,7 +44,7 @@ export function isErrorEnvelope(error: unknown): error is ErrorEnvelope {
  * Extract error message from various error types without using `any`
  * 
  * @example
- * // Instead of: (error as any).data?.message || (error as any).message
+ * // Avoid unsafe casts like direct property drilling through unknown error objects
  * const message = extractErrorMessage(error);
  */
 export function extractErrorMessage(error: unknown): string {
@@ -59,27 +67,40 @@ export function extractErrorMessage(error: unknown): string {
   if (
     typeof error === 'object' &&
     error !== null &&
-    'response' in error &&
-    typeof (error as any).response === 'object' &&
-    (error as any).response?.data
+    'response' in (error as AxiosLikeError) &&
+    typeof (error as AxiosLikeError).response === 'object' &&
+    (error as AxiosLikeError).response?.data !== undefined
   ) {
-    const responseData = (error as any).response.data;
-    
+    const responseData = (error as AxiosLikeError).response?.data as unknown;
+
     if (isErrorEnvelope(responseData)) {
       return responseData.error.message;
     }
-    
+
     if (isApiError(responseData)) {
       return responseData.message;
     }
-    
-    // Check for data.message pattern
-    if (typeof responseData.data === 'object' && responseData.data?.message) {
-      return responseData.data.message;
+
+    // Narrow generic objects with message
+    if (
+      typeof responseData === 'object' &&
+      responseData !== null &&
+      'message' in responseData &&
+      typeof (responseData as { message?: unknown }).message === 'string'
+    ) {
+      return (responseData as { message: string }).message;
     }
-    
-    if (typeof responseData.message === 'string') {
-      return responseData.message;
+
+    // Nested data.message pattern
+    if (
+      typeof responseData === 'object' &&
+      responseData !== null &&
+      'data' in responseData &&
+      typeof (responseData as { data?: unknown }).data === 'object' &&
+      (responseData as { data?: { message?: unknown } }).data !== null &&
+      typeof ((responseData as { data: { message?: unknown } }).data.message) === 'string'
+    ) {
+      return ((responseData as { data: { message: string } }).data.message);
     }
   }
   
@@ -100,11 +121,7 @@ export function extractErrorMessage(error: unknown): string {
  * Example of how to refactor the campaign edit page error handling
  * 
  * Before:
- * const description = typeof error === 'string'
- *   ? error
- *   : (error && typeof error === 'object' && (error as any).data?.message)
- *     || (error && typeof error === 'object' && (error as any).message)
- *     || 'Campaign data could not be loaded or found.';
+ * const description = extractErrorMessage(error) || 'Campaign data could not be loaded or found.';
  * 
  * After:
  * const description = extractErrorMessage(error) || 'Campaign data could not be loaded or found.';

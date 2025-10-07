@@ -4,7 +4,7 @@ import { useCallback, useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthApi } from '@/lib/api-client/apis/auth-api';
 import { apiConfiguration } from '@/lib/api/config';
-import type { LoginRequest, UserPublicResponse as User } from '@/lib/api-client/models';
+import type { LoginRequest, UserPublicResponse as User, SessionResponse } from '@/lib/api-client/models';
 
 // Using generated model types
 
@@ -130,7 +130,7 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
       ]);
       console.log('[useCachedAuth] 🔍 DEBUGGING: API call completed, response:', response);
       // Generated client returns AxiosResponse<User>
-      const userData: User | null = (response as any)?.data ?? (response as any) ?? null;
+      const userData: User | null = response.data ?? null;
       console.log('[useCachedAuth] 🔍 DEBUGGING: Extracted user data:', userData);
       
       if (userData?.id && userData?.email) {
@@ -223,21 +223,21 @@ export function useCachedAuth(config: Partial<CachedAuthConfig> = {}) {
       };
       
   const response = await authApi.authLogin(loginRequest);
-  const loginData: any = (response as any)?.data ?? response;
+  const loginData: SessionResponse | null = response.data ?? null;
       
       if (loginData) {
         console.log('[useCachedAuth] Login successful');
         
         // Extract user data from SessionResponse
-        const sessionUser = (loginData as any)?.User || (loginData as any)?.user;
+  const sessionUser = (loginData as SessionResponse)?.user;
         let userData: User;
         
         if (sessionUser) {
           userData = {
-            id: sessionUser.id ?? sessionUser.ID,
-            email: sessionUser.email ?? sessionUser.Email,
-            username: sessionUser.username ?? sessionUser.Username ?? sessionUser.email,
-            isActive: sessionUser.isActive ?? sessionUser.IsActive ?? true,
+            id: sessionUser.id,
+            email: sessionUser.email,
+            username: sessionUser.username ?? sessionUser.email,
+            isActive: sessionUser.isActive ?? true,
           } as User;
         } else {
           // Fallback user data

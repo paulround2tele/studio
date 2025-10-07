@@ -132,14 +132,6 @@ const (
 	BulkResourceAllocationResponseStatusFailed     BulkResourceAllocationResponseStatus = "failed"
 )
 
-// Defines values for BulkValidationResponseOperationsStatus.
-const (
-	BulkValidationResponseOperationsStatusCompleted BulkValidationResponseOperationsStatus = "completed"
-	BulkValidationResponseOperationsStatusFailed    BulkValidationResponseOperationsStatus = "failed"
-	BulkValidationResponseOperationsStatusPending   BulkValidationResponseOperationsStatus = "pending"
-	BulkValidationResponseOperationsStatusRunning   BulkValidationResponseOperationsStatus = "running"
-)
-
 // Defines values for BulkValidationResponseStatus.
 const (
 	BulkValidationResponseStatusInitiated BulkValidationResponseStatus = "initiated"
@@ -223,6 +215,51 @@ const (
 	CampaignResponseStatusRunning   CampaignResponseStatus = "running"
 )
 
+// Defines values for CampaignSseAnalysisFailedEventType.
+const (
+	AnalysisFailed CampaignSseAnalysisFailedEventType = "analysis_failed"
+)
+
+// Defines values for CampaignSseAnalysisReuseEnrichmentEventType.
+const (
+	AnalysisReuseEnrichment CampaignSseAnalysisReuseEnrichmentEventType = "analysis_reuse_enrichment"
+)
+
+// Defines values for CampaignSseCompletedEventType.
+const (
+	CampaignCompleted CampaignSseCompletedEventType = "campaign_completed"
+)
+
+// Defines values for CampaignSseDomainGeneratedEventType.
+const (
+	DomainGenerated CampaignSseDomainGeneratedEventType = "domain_generated"
+)
+
+// Defines values for CampaignSseDomainValidatedEventType.
+const (
+	DomainValidated CampaignSseDomainValidatedEventType = "domain_validated"
+)
+
+// Defines values for CampaignSsePhaseCompletedEventType.
+const (
+	PhaseCompleted CampaignSsePhaseCompletedEventType = "phase_completed"
+)
+
+// Defines values for CampaignSsePhaseFailedEventType.
+const (
+	PhaseFailed CampaignSsePhaseFailedEventType = "phase_failed"
+)
+
+// Defines values for CampaignSsePhaseStartedEventType.
+const (
+	PhaseStarted CampaignSsePhaseStartedEventType = "phase_started"
+)
+
+// Defines values for CampaignSseProgressEventType.
+const (
+	CampaignProgress CampaignSseProgressEventType = "campaign_progress"
+)
+
 // Defines values for CampaignStateEnum.
 const (
 	CampaignStateEnumArchived  CampaignStateEnum = "archived"
@@ -272,6 +309,12 @@ const (
 	ExecutionStatusEnumReady      ExecutionStatusEnum = "ready"
 )
 
+// Defines values for ExtendedPageInfoSortOrder.
+const (
+	ExtendedPageInfoSortOrderASC  ExtendedPageInfoSortOrder = "ASC"
+	ExtendedPageInfoSortOrderDESC ExtendedPageInfoSortOrder = "DESC"
+)
+
 // Defines values for HealthResponseStatus.
 const (
 	HealthResponseStatusOk HealthResponseStatus = "ok"
@@ -285,8 +328,8 @@ const (
 
 // Defines values for PageInfoSortOrder.
 const (
-	ASC  PageInfoSortOrder = "ASC"
-	DESC PageInfoSortOrder = "DESC"
+	PageInfoSortOrderASC  PageInfoSortOrder = "ASC"
+	PageInfoSortOrderDESC PageInfoSortOrder = "DESC"
 )
 
 // Defines values for PatternOffsetRequestPatternType.
@@ -399,6 +442,14 @@ const (
 	Warn   RecommendationSeverity = "warn"
 )
 
+// Defines values for TimelineEventStatus.
+const (
+	TimelineEventStatusCompleted TimelineEventStatus = "completed"
+	TimelineEventStatusFailed    TimelineEventStatus = "failed"
+	TimelineEventStatusPending   TimelineEventStatus = "pending"
+	TimelineEventStatusRunning   TimelineEventStatus = "running"
+)
+
 // Defines values for XRequestedWith.
 const (
 	XRequestedWithXMLHttpRequest XRequestedWith = "XMLHttpRequest"
@@ -505,14 +556,28 @@ const (
 	XMLHttpRequest DbBulkStatsParamsXRequestedWith = "XMLHttpRequest"
 )
 
+// AnalysisFailedEvent Analysis phase preflight or execution failed.
+type AnalysisFailedEvent struct {
+	Error     string  `json:"error"`
+	ErrorCode *string `json:"errorCode"`
+}
+
+// AnalysisReuseEnrichmentEvent Analysis phase reused existing feature vectors.
+type AnalysisReuseEnrichmentEvent struct {
+	// FeatureVectorCount Number of feature vectors reused from prior HTTP phase enrichment.
+	FeatureVectorCount *int `json:"featureVectorCount"`
+}
+
 // ApiError defines model for ApiError.
 type ApiError struct {
 	// Code Stable error code space
 	Code    ErrorCode `json:"code"`
 	Details *[]struct {
 		// Code Stable error code space
-		Code    ErrorCode               `json:"code"`
-		Context *map[string]interface{} `json:"context,omitempty"`
+		Code ErrorCode `json:"code"`
+
+		// Context Structured error context values constrained to primitive/array/object envelope.
+		Context *map[string]FlexibleValue `json:"context,omitempty"`
 
 		// Field JSON pointer or field path
 		Field   *string `json:"field,omitempty"`
@@ -529,7 +594,7 @@ type AssociateScoringProfileRequest struct {
 }
 
 // AuthConfig Authentication configuration
-type AuthConfig map[string]interface{}
+type AuthConfig map[string]FlexibleValue
 
 // BatchKeywordExtractionRequest defines model for BatchKeywordExtractionRequest.
 type BatchKeywordExtractionRequest struct {
@@ -775,15 +840,29 @@ type BulkOperationCancelStatus string
 
 // BulkProxyOperationResponse defines model for BulkProxyOperationResponse.
 type BulkProxyOperationResponse struct {
-	ErrorCount    *int `json:"errorCount,omitempty"`
+	ErrorCount    int `json:"errorCount"`
 	FailedProxies *[]struct {
 		Error   *string             `json:"error,omitempty"`
 		ProxyId *openapi_types.UUID `json:"proxyId,omitempty"`
 	} `json:"failedProxies,omitempty"`
-	Results           *[]map[string]interface{} `json:"results,omitempty"`
-	SuccessCount      *int                      `json:"successCount,omitempty"`
-	SuccessfulProxies *[]openapi_types.UUID     `json:"successfulProxies,omitempty"`
-	TotalRequested    *int                      `json:"totalRequested,omitempty"`
+	Results *[]struct {
+		// Error Error message if success=false
+		Error *string `json:"error"`
+
+		// Message Optional human readable status message
+		Message *string `json:"message"`
+
+		// Operation Operation performed (enable|disable|delete|update|test)
+		Operation string             `json:"operation"`
+		ProxyId   openapi_types.UUID `json:"proxyId"`
+
+		// StatusCode HTTP status or synthetic code for the operation
+		StatusCode *int `json:"statusCode,omitempty"`
+		Success    bool `json:"success"`
+	} `json:"results,omitempty"`
+	SuccessCount      int                   `json:"successCount"`
+	SuccessfulProxies *[]openapi_types.UUID `json:"successfulProxies,omitempty"`
+	TotalRequested    int                   `json:"totalRequested"`
 }
 
 // BulkProxyTestResponse defines model for BulkProxyTestResponse.
@@ -857,23 +936,12 @@ type BulkUpdateProxiesRequest struct {
 
 // BulkValidationResponse defines model for BulkValidationResponse.
 type BulkValidationResponse struct {
-	EstimatedDuration *string            `json:"estimatedDuration"`
-	OperationId       openapi_types.UUID `json:"operationId"`
-	Operations        map[string]struct {
-		CampaignId          *openapi_types.UUID `json:"campaignId,omitempty"`
-		EstimatedCompletion *time.Time          `json:"estimatedCompletion"`
-		Progress            *struct {
-			Processed *int `json:"processed,omitempty"`
-			Total     *int `json:"total,omitempty"`
-		} `json:"progress,omitempty"`
-		Status *BulkValidationResponseOperationsStatus `json:"status,omitempty"`
-	} `json:"operations"`
-	Status          BulkValidationResponseStatus `json:"status"`
-	TotalOperations int                          `json:"totalOperations"`
+	EstimatedDuration *string                         `json:"estimatedDuration"`
+	OperationId       openapi_types.UUID              `json:"operationId"`
+	Operations        map[string]ProxyOperationResult `json:"operations"`
+	Status            BulkValidationResponseStatus    `json:"status"`
+	TotalOperations   int                             `json:"totalOperations"`
 }
-
-// BulkValidationResponseOperationsStatus defines model for BulkValidationResponse.Operations.Status.
-type BulkValidationResponseOperationsStatus string
 
 // BulkValidationResponseStatus defines model for BulkValidationResponse.Status.
 type BulkValidationResponseStatus string
@@ -903,6 +971,11 @@ type CampaignClassificationsResponse struct {
 	Samples *[]CampaignClassificationBucketSample `json:"samples,omitempty"`
 }
 
+// CampaignCompletedEvent Campaign has fully completed successfully.
+type CampaignCompletedEvent struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+}
+
 // CampaignDomainsListResponse defines model for CampaignDomainsListResponse.
 type CampaignDomainsListResponse struct {
 	// Aggregates Domain status aggregates sourced from counters table (Phase A optimization)
@@ -930,9 +1003,9 @@ type CampaignDomainsListResponse struct {
 	CampaignId openapi_types.UUID `json:"campaignId"`
 	Items      []DomainListItem   `json:"items"`
 
-	// PageInfo Cursor-based pagination metadata
-	PageInfo *PageInfo `json:"pageInfo,omitempty"`
-	Total    int       `json:"total"`
+	// PageInfo Augmented pagination metadata combining cursor and numeric pagination when simultaneously available.
+	PageInfo *ExtendedPageInfo `json:"pageInfo,omitempty"`
+	Total    int               `json:"total"`
 }
 
 // CampaignFunnelResponse defines model for CampaignFunnelResponse.
@@ -1012,12 +1085,9 @@ type CampaignProgressResponse struct {
 		Extraction *PhaseProgressSummary `json:"extraction,omitempty"`
 		Validation *PhaseProgressSummary `json:"validation,omitempty"`
 	} `json:"phases"`
-	Timeline struct {
-		CompletedAt           *time.Time `json:"completedAt"`
-		CreatedAt             *time.Time `json:"createdAt,omitempty"`
-		EstimatedCompletionAt *time.Time `json:"estimatedCompletionAt"`
-		StartedAt             *time.Time `json:"startedAt"`
-	} `json:"timeline"`
+
+	// Timeline Chronological list of timeline events for campaign lifecycle
+	Timeline []TimelineEvent `json:"timeline"`
 }
 
 // CampaignProgressResponseOverallStatus defines model for CampaignProgressResponse.Overall.Status.
@@ -1068,15 +1138,118 @@ type CampaignResponseCurrentPhase string
 // CampaignResponseStatus defines model for CampaignResponse.Status.
 type CampaignResponseStatus string
 
+// CampaignSseAnalysisFailedEvent defines model for CampaignSseAnalysisFailedEvent.
+type CampaignSseAnalysisFailedEvent struct {
+	// Payload Analysis phase preflight or execution failed.
+	Payload   AnalysisFailedEvent                `json:"payload"`
+	Timestamp *time.Time                         `json:"timestamp,omitempty"`
+	Type      CampaignSseAnalysisFailedEventType `json:"type"`
+}
+
+// CampaignSseAnalysisFailedEventType defines model for CampaignSseAnalysisFailedEvent.Type.
+type CampaignSseAnalysisFailedEventType string
+
+// CampaignSseAnalysisReuseEnrichmentEvent defines model for CampaignSseAnalysisReuseEnrichmentEvent.
+type CampaignSseAnalysisReuseEnrichmentEvent struct {
+	// Payload Analysis phase reused existing feature vectors.
+	Payload   *AnalysisReuseEnrichmentEvent               `json:"payload,omitempty"`
+	Timestamp *time.Time                                  `json:"timestamp,omitempty"`
+	Type      CampaignSseAnalysisReuseEnrichmentEventType `json:"type"`
+}
+
+// CampaignSseAnalysisReuseEnrichmentEventType defines model for CampaignSseAnalysisReuseEnrichmentEvent.Type.
+type CampaignSseAnalysisReuseEnrichmentEventType string
+
+// CampaignSseCompletedEvent defines model for CampaignSseCompletedEvent.
+type CampaignSseCompletedEvent struct {
+	// Payload Campaign has fully completed successfully.
+	Payload   *CampaignCompletedEvent       `json:"payload,omitempty"`
+	Timestamp *time.Time                    `json:"timestamp,omitempty"`
+	Type      CampaignSseCompletedEventType `json:"type"`
+}
+
+// CampaignSseCompletedEventType defines model for CampaignSseCompletedEvent.Type.
+type CampaignSseCompletedEventType string
+
+// CampaignSseDomainGeneratedEvent defines model for CampaignSseDomainGeneratedEvent.
+type CampaignSseDomainGeneratedEvent struct {
+	// Payload Domain generation/validation status update (subset / partial DomainListItem fields may be present).
+	Payload   *DomainStatusEvent                  `json:"payload,omitempty"`
+	Timestamp *time.Time                          `json:"timestamp,omitempty"`
+	Type      CampaignSseDomainGeneratedEventType `json:"type"`
+}
+
+// CampaignSseDomainGeneratedEventType defines model for CampaignSseDomainGeneratedEvent.Type.
+type CampaignSseDomainGeneratedEventType string
+
+// CampaignSseDomainValidatedEvent defines model for CampaignSseDomainValidatedEvent.
+type CampaignSseDomainValidatedEvent struct {
+	// Payload Domain generation/validation status update (subset / partial DomainListItem fields may be present).
+	Payload   *DomainStatusEvent                  `json:"payload,omitempty"`
+	Timestamp *time.Time                          `json:"timestamp,omitempty"`
+	Type      CampaignSseDomainValidatedEventType `json:"type"`
+}
+
+// CampaignSseDomainValidatedEventType defines model for CampaignSseDomainValidatedEvent.Type.
+type CampaignSseDomainValidatedEventType string
+
+// CampaignSseEvent Discriminated union of all campaign SSE event wrapper objects.
+type CampaignSseEvent struct {
+	union json.RawMessage
+}
+
+// CampaignSsePhaseCompletedEvent defines model for CampaignSsePhaseCompletedEvent.
+type CampaignSsePhaseCompletedEvent struct {
+	// Payload Phase lifecycle transition (started or completed).
+	Payload   *PhaseTransitionEvent              `json:"payload,omitempty"`
+	Timestamp *time.Time                         `json:"timestamp,omitempty"`
+	Type      CampaignSsePhaseCompletedEventType `json:"type"`
+}
+
+// CampaignSsePhaseCompletedEventType defines model for CampaignSsePhaseCompletedEvent.Type.
+type CampaignSsePhaseCompletedEventType string
+
+// CampaignSsePhaseFailedEvent defines model for CampaignSsePhaseFailedEvent.
+type CampaignSsePhaseFailedEvent struct {
+	// Payload Phase failure event.
+	Payload   *PhaseFailedEvent               `json:"payload,omitempty"`
+	Timestamp *time.Time                      `json:"timestamp,omitempty"`
+	Type      CampaignSsePhaseFailedEventType `json:"type"`
+}
+
+// CampaignSsePhaseFailedEventType defines model for CampaignSsePhaseFailedEvent.Type.
+type CampaignSsePhaseFailedEventType string
+
+// CampaignSsePhaseStartedEvent defines model for CampaignSsePhaseStartedEvent.
+type CampaignSsePhaseStartedEvent struct {
+	// Payload Phase lifecycle transition (started or completed).
+	Payload   *PhaseTransitionEvent            `json:"payload,omitempty"`
+	Timestamp *time.Time                       `json:"timestamp,omitempty"`
+	Type      CampaignSsePhaseStartedEventType `json:"type"`
+}
+
+// CampaignSsePhaseStartedEventType defines model for CampaignSsePhaseStartedEvent.Type.
+type CampaignSsePhaseStartedEventType string
+
+// CampaignSseProgressEvent defines model for CampaignSseProgressEvent.
+type CampaignSseProgressEvent struct {
+	Payload   *CampaignProgressResponse    `json:"payload,omitempty"`
+	Timestamp *time.Time                   `json:"timestamp,omitempty"`
+	Type      CampaignSseProgressEventType `json:"type"`
+}
+
+// CampaignSseProgressEventType defines model for CampaignSseProgressEvent.Type.
+type CampaignSseProgressEventType string
+
 // CampaignState defines model for CampaignState.
 type CampaignState struct {
-	CampaignId    openapi_types.UUID      `json:"campaignId"`
-	Configuration *map[string]interface{} `json:"configuration,omitempty"`
-	CreatedAt     time.Time               `json:"createdAt"`
-	CurrentState  CampaignStateEnum       `json:"currentState"`
-	Mode          CampaignModeEnum        `json:"mode"`
-	UpdatedAt     time.Time               `json:"updatedAt"`
-	Version       int                     `json:"version"`
+	CampaignId    openapi_types.UUID        `json:"campaignId"`
+	Configuration *map[string]FlexibleValue `json:"configuration,omitempty"`
+	CreatedAt     time.Time                 `json:"createdAt"`
+	CurrentState  CampaignStateEnum         `json:"currentState"`
+	Mode          CampaignModeEnum          `json:"mode"`
+	UpdatedAt     time.Time                 `json:"updatedAt"`
+	Version       int                       `json:"version"`
 }
 
 // CampaignStateEnum defines model for CampaignStateEnum.
@@ -1084,9 +1257,9 @@ type CampaignStateEnum string
 
 // CampaignStateUpdate defines model for CampaignStateUpdate.
 type CampaignStateUpdate struct {
-	Configuration *map[string]interface{} `json:"configuration,omitempty"`
-	CurrentState  *CampaignStateEnum      `json:"currentState,omitempty"`
-	Mode          *CampaignModeEnum       `json:"mode,omitempty"`
+	Configuration *map[string]FlexibleValue `json:"configuration,omitempty"`
+	CurrentState  *CampaignStateEnum        `json:"currentState,omitempty"`
+	Mode          *CampaignModeEnum         `json:"mode,omitempty"`
 
 	// Version Optional optimistic concurrency version; if provided must match current
 	Version *int `json:"version,omitempty"`
@@ -1125,6 +1298,8 @@ type CreateCampaignRequest struct {
 			// VariableLength Desired variable length for generation
 			VariableLength *int `json:"variableLength,omitempty"`
 		} `json:"patternConfig,omitempty"`
+
+		// Phases Phase-specific configuration blocks
 		Phases *struct {
 			Analysis *struct {
 				Enabled         *bool `json:"enabled,omitempty"`
@@ -1197,7 +1372,7 @@ type CreateScoringProfileRequest struct {
 }
 
 // DNSValidatorConfigJSON DNS validator configuration
-type DNSValidatorConfigJSON map[string]interface{}
+type DNSValidatorConfigJSON map[string]FlexibleValue
 
 // DatabaseStats Overall database statistics
 type DatabaseStats struct {
@@ -1302,6 +1477,20 @@ type DomainScoreBreakdownResponse struct {
 	Weights *map[string]float32 `json:"weights,omitempty"`
 }
 
+// DomainStatusEvent Domain generation/validation status update (subset / partial DomainListItem fields may be present).
+type DomainStatusEvent struct {
+	DnsReason *string `json:"dnsReason"`
+	DnsStatus *string `json:"dnsStatus"`
+	Domain    *string `json:"domain,omitempty"`
+
+	// Features Canonical nested analysis feature vector for a discovered domain.
+	Features   *DomainAnalysisFeatures `json:"features,omitempty"`
+	HttpReason *string                 `json:"httpReason"`
+	HttpStatus *string                 `json:"httpStatus"`
+	Id         *openapi_types.UUID     `json:"id,omitempty"`
+	LeadStatus *string                 `json:"leadStatus"`
+}
+
 // EnrichedCampaignResponse Read-optimized composite model for campaign detail pages
 type EnrichedCampaignResponse struct {
 	Campaign        CampaignResponse  `json:"campaign"`
@@ -1324,8 +1513,101 @@ type ErrorEnvelope struct {
 // ExecutionStatusEnum defines model for ExecutionStatusEnum.
 type ExecutionStatusEnum string
 
+// ExtendedPageInfo defines model for ExtendedPageInfo.
+type ExtendedPageInfo struct {
+	// Current 1-based current page index (numeric pagination fallback)
+	Current   *int    `json:"current,omitempty"`
+	EndCursor *string `json:"endCursor"`
+
+	// First Requested page size
+	First       *int `json:"first,omitempty"`
+	HasNextPage bool `json:"hasNextPage"`
+
+	// SortBy Field used for ordering
+	SortBy      *string                    `json:"sortBy,omitempty"`
+	SortOrder   *ExtendedPageInfoSortOrder `json:"sortOrder,omitempty"`
+	StartCursor *string                    `json:"startCursor"`
+
+	// Total Total number of pages when known via numeric pagination
+	Total *int `json:"total,omitempty"`
+}
+
+// ExtendedPageInfoSortOrder defines model for ExtendedPageInfo.SortOrder.
+type ExtendedPageInfoSortOrder string
+
 // FeatureFlags Feature flags map
 type FeatureFlags map[string]bool
+
+// FlexibleArray Array of primitive flexible values.
+type FlexibleArray = []FlexibleArray_Item
+
+// FlexibleArray0 defines model for .
+type FlexibleArray0 = string
+
+// FlexibleArray1 defines model for .
+type FlexibleArray1 = float32
+
+// FlexibleArray2 defines model for .
+type FlexibleArray2 = int
+
+// FlexibleArray3 defines model for .
+type FlexibleArray3 = bool
+
+// FlexibleArray4 defines model for .
+type FlexibleArray4 = interface{}
+
+// FlexibleArray_Item defines model for FlexibleArray.Item.
+type FlexibleArray_Item struct {
+	union json.RawMessage
+}
+
+// FlexibleObject Nested object whose values are flexible primitives (one-level nesting only).
+type FlexibleObject map[string]FlexibleObject_AdditionalProperties
+
+// FlexibleObject0 defines model for .
+type FlexibleObject0 = string
+
+// FlexibleObject1 defines model for .
+type FlexibleObject1 = float32
+
+// FlexibleObject2 defines model for .
+type FlexibleObject2 = int
+
+// FlexibleObject3 defines model for .
+type FlexibleObject3 = bool
+
+// FlexibleObject4 defines model for .
+type FlexibleObject4 = interface{}
+
+// FlexibleObject_AdditionalProperties defines model for FlexibleObject.AdditionalProperties.
+type FlexibleObject_AdditionalProperties struct {
+	union json.RawMessage
+}
+
+// FlexiblePrimitive Primitive value allowed in flexible configuration maps.
+type FlexiblePrimitive struct {
+	union json.RawMessage
+}
+
+// FlexiblePrimitive0 defines model for .
+type FlexiblePrimitive0 = string
+
+// FlexiblePrimitive1 defines model for .
+type FlexiblePrimitive1 = float32
+
+// FlexiblePrimitive2 defines model for .
+type FlexiblePrimitive2 = int
+
+// FlexiblePrimitive3 defines model for .
+type FlexiblePrimitive3 = bool
+
+// FlexiblePrimitive4 defines model for .
+type FlexiblePrimitive4 = interface{}
+
+// FlexibleValue Union of acceptable flexible configuration / context value shapes.
+type FlexibleValue struct {
+	union json.RawMessage
+}
 
 // HealthResponse defines model for HealthResponse.
 type HealthResponse struct {
@@ -1376,7 +1658,7 @@ type KeywordSetResponse struct {
 }
 
 // LoggingConfig Logging configuration
-type LoggingConfig map[string]interface{}
+type LoggingConfig map[string]FlexibleValue
 
 // LoginRequest defines model for LoginRequest.
 type LoginRequest struct {
@@ -1555,16 +1837,16 @@ type PhaseConfigurationRequest struct {
 
 // PhaseExecution defines model for PhaseExecution.
 type PhaseExecution struct {
-	CampaignId    openapi_types.UUID      `json:"campaignId"`
-	CompletedAt   *time.Time              `json:"completedAt"`
-	Configuration *map[string]interface{} `json:"configuration"`
-	CreatedAt     time.Time               `json:"createdAt"`
-	ErrorDetails  *map[string]interface{} `json:"errorDetails"`
-	FailedAt      *time.Time              `json:"failedAt"`
-	FailedItems   *int64                  `json:"failedItems,omitempty"`
-	Id            openapi_types.UUID      `json:"id"`
-	Metrics       *map[string]interface{} `json:"metrics"`
-	PausedAt      *time.Time              `json:"pausedAt"`
+	CampaignId    openapi_types.UUID        `json:"campaignId"`
+	CompletedAt   *time.Time                `json:"completedAt"`
+	Configuration *map[string]interface{}   `json:"configuration"`
+	CreatedAt     time.Time                 `json:"createdAt"`
+	ErrorDetails  *map[string]FlexibleValue `json:"errorDetails"`
+	FailedAt      *time.Time                `json:"failedAt"`
+	FailedItems   *int64                    `json:"failedItems,omitempty"`
+	Id            openapi_types.UUID        `json:"id"`
+	Metrics       *map[string]FlexibleValue `json:"metrics"`
+	PausedAt      *time.Time                `json:"pausedAt"`
 
 	// PhaseType Phase identifier
 	PhaseType          PhaseExecutionPhaseType `json:"phaseType"`
@@ -1582,19 +1864,25 @@ type PhaseExecutionPhaseType string
 
 // PhaseExecutionUpdate defines model for PhaseExecutionUpdate.
 type PhaseExecutionUpdate struct {
-	CompletedAt        *time.Time              `json:"completedAt"`
-	Configuration      *map[string]interface{} `json:"configuration"`
-	ErrorDetails       *map[string]interface{} `json:"errorDetails"`
-	FailedAt           *time.Time              `json:"failedAt"`
-	FailedItems        *int64                  `json:"failedItems,omitempty"`
-	Metrics            *map[string]interface{} `json:"metrics"`
-	PausedAt           *time.Time              `json:"pausedAt"`
-	ProcessedItems     *int64                  `json:"processedItems,omitempty"`
-	ProgressPercentage *float32                `json:"progressPercentage,omitempty"`
-	StartedAt          *time.Time              `json:"startedAt"`
-	Status             *ExecutionStatusEnum    `json:"status,omitempty"`
-	SuccessfulItems    *int64                  `json:"successfulItems,omitempty"`
-	TotalItems         *int64                  `json:"totalItems,omitempty"`
+	CompletedAt        *time.Time                `json:"completedAt"`
+	Configuration      *map[string]interface{}   `json:"configuration"`
+	ErrorDetails       *map[string]FlexibleValue `json:"errorDetails"`
+	FailedAt           *time.Time                `json:"failedAt"`
+	FailedItems        *int64                    `json:"failedItems,omitempty"`
+	Metrics            *map[string]FlexibleValue `json:"metrics"`
+	PausedAt           *time.Time                `json:"pausedAt"`
+	ProcessedItems     *int64                    `json:"processedItems,omitempty"`
+	ProgressPercentage *float32                  `json:"progressPercentage,omitempty"`
+	StartedAt          *time.Time                `json:"startedAt"`
+	Status             *ExecutionStatusEnum      `json:"status,omitempty"`
+	SuccessfulItems    *int64                    `json:"successfulItems,omitempty"`
+	TotalItems         *int64                    `json:"totalItems,omitempty"`
+}
+
+// PhaseFailedEvent Phase failure event.
+type PhaseFailedEvent struct {
+	Error string `json:"error"`
+	Phase string `json:"phase"`
 }
 
 // PhaseProgressSummary defines model for PhaseProgressSummary.
@@ -1642,6 +1930,11 @@ type PhaseStatusResponsePhase string
 // PhaseStatusResponseStatus defines model for PhaseStatusResponse.Status.
 type PhaseStatusResponseStatus string
 
+// PhaseTransitionEvent Phase lifecycle transition (started or completed).
+type PhaseTransitionEvent struct {
+	Phase string `json:"phase"`
+}
+
 // PingResponse defines model for PingResponse.
 type PingResponse struct {
 	Message   PingResponseMessage `json:"message"`
@@ -1685,6 +1978,14 @@ type ProxyHealthCheckResponse struct {
 	Status       *string             `json:"status,omitempty"`
 	Success      *bool               `json:"success,omitempty"`
 	Timestamp    *time.Time          `json:"timestamp,omitempty"`
+}
+
+// ProxyOperationResult Result object for a proxy operation containing a proxyId and optional error or metadata.
+type ProxyOperationResult struct {
+	Error    *string                   `json:"error"`
+	Metadata *map[string]FlexibleValue `json:"metadata"`
+	ProxyId  openapi_types.UUID        `json:"proxyId"`
+	Success  bool                      `json:"success"`
 }
 
 // ProxyPool defines model for ProxyPool.
@@ -1765,7 +2066,7 @@ type ProxyTestResponse struct {
 }
 
 // RateLimiterConfig Rate limiter configuration
-type RateLimiterConfig map[string]interface{}
+type RateLimiterConfig map[string]FlexibleValue
 
 // RecommendationSeverity defines model for RecommendationSeverity.
 type RecommendationSeverity string
@@ -1807,6 +2108,37 @@ type TableStats struct {
 	RowCount *int      `json:"rowCount,omitempty"`
 	Size     *string   `json:"size,omitempty"`
 }
+
+// TimelineEvent Unified campaign timeline event for export and progress tracking
+type TimelineEvent struct {
+	Description *string                                                 `json:"description"`
+	Metadata    *map[string]TimelineEvent_Metadata_AdditionalProperties `json:"metadata,omitempty"`
+	Phase       *string                                                 `json:"phase"`
+	Progress    *float32                                                `json:"progress"`
+	Status      *TimelineEventStatus                                    `json:"status"`
+	Timestamp   time.Time                                               `json:"timestamp"`
+	Type        string                                                  `json:"type"`
+}
+
+// TimelineEventMetadata0 defines model for .
+type TimelineEventMetadata0 = string
+
+// TimelineEventMetadata1 defines model for .
+type TimelineEventMetadata1 = float32
+
+// TimelineEventMetadata2 defines model for .
+type TimelineEventMetadata2 = bool
+
+// TimelineEventMetadata3 defines model for .
+type TimelineEventMetadata3 = string
+
+// TimelineEvent_Metadata_AdditionalProperties defines model for TimelineEvent.metadata.AdditionalProperties.
+type TimelineEvent_Metadata_AdditionalProperties struct {
+	union json.RawMessage
+}
+
+// TimelineEventStatus defines model for TimelineEvent.Status.
+type TimelineEventStatus string
 
 // UpdateCampaignRequest defines model for UpdateCampaignRequest.
 type UpdateCampaignRequest struct {
@@ -1862,7 +2194,7 @@ type UserPublicResponse struct {
 }
 
 // WorkerConfig Worker configuration
-type WorkerConfig map[string]interface{}
+type WorkerConfig map[string]FlexibleValue
 
 // IncludeRules defines model for IncludeRules.
 type IncludeRules = bool
@@ -2268,6 +2600,813 @@ type ScoringProfilesCreateJSONRequestBody = CreateScoringProfileRequest
 // ScoringProfilesUpdateJSONRequestBody defines body for ScoringProfilesUpdate for application/json ContentType.
 type ScoringProfilesUpdateJSONRequestBody = UpdateScoringProfileRequest
 
+// AsCampaignSseAnalysisReuseEnrichmentEvent returns the union data inside the CampaignSseEvent as a CampaignSseAnalysisReuseEnrichmentEvent
+func (t CampaignSseEvent) AsCampaignSseAnalysisReuseEnrichmentEvent() (CampaignSseAnalysisReuseEnrichmentEvent, error) {
+	var body CampaignSseAnalysisReuseEnrichmentEvent
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCampaignSseAnalysisReuseEnrichmentEvent overwrites any union data inside the CampaignSseEvent as the provided CampaignSseAnalysisReuseEnrichmentEvent
+func (t *CampaignSseEvent) FromCampaignSseAnalysisReuseEnrichmentEvent(v CampaignSseAnalysisReuseEnrichmentEvent) error {
+	v.Type = "CampaignSseAnalysisReuseEnrichmentEvent"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCampaignSseAnalysisReuseEnrichmentEvent performs a merge with any union data inside the CampaignSseEvent, using the provided CampaignSseAnalysisReuseEnrichmentEvent
+func (t *CampaignSseEvent) MergeCampaignSseAnalysisReuseEnrichmentEvent(v CampaignSseAnalysisReuseEnrichmentEvent) error {
+	v.Type = "CampaignSseAnalysisReuseEnrichmentEvent"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCampaignSseAnalysisFailedEvent returns the union data inside the CampaignSseEvent as a CampaignSseAnalysisFailedEvent
+func (t CampaignSseEvent) AsCampaignSseAnalysisFailedEvent() (CampaignSseAnalysisFailedEvent, error) {
+	var body CampaignSseAnalysisFailedEvent
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCampaignSseAnalysisFailedEvent overwrites any union data inside the CampaignSseEvent as the provided CampaignSseAnalysisFailedEvent
+func (t *CampaignSseEvent) FromCampaignSseAnalysisFailedEvent(v CampaignSseAnalysisFailedEvent) error {
+	v.Type = "CampaignSseAnalysisFailedEvent"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCampaignSseAnalysisFailedEvent performs a merge with any union data inside the CampaignSseEvent, using the provided CampaignSseAnalysisFailedEvent
+func (t *CampaignSseEvent) MergeCampaignSseAnalysisFailedEvent(v CampaignSseAnalysisFailedEvent) error {
+	v.Type = "CampaignSseAnalysisFailedEvent"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCampaignSseProgressEvent returns the union data inside the CampaignSseEvent as a CampaignSseProgressEvent
+func (t CampaignSseEvent) AsCampaignSseProgressEvent() (CampaignSseProgressEvent, error) {
+	var body CampaignSseProgressEvent
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCampaignSseProgressEvent overwrites any union data inside the CampaignSseEvent as the provided CampaignSseProgressEvent
+func (t *CampaignSseEvent) FromCampaignSseProgressEvent(v CampaignSseProgressEvent) error {
+	v.Type = "CampaignSseProgressEvent"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCampaignSseProgressEvent performs a merge with any union data inside the CampaignSseEvent, using the provided CampaignSseProgressEvent
+func (t *CampaignSseEvent) MergeCampaignSseProgressEvent(v CampaignSseProgressEvent) error {
+	v.Type = "CampaignSseProgressEvent"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCampaignSseDomainGeneratedEvent returns the union data inside the CampaignSseEvent as a CampaignSseDomainGeneratedEvent
+func (t CampaignSseEvent) AsCampaignSseDomainGeneratedEvent() (CampaignSseDomainGeneratedEvent, error) {
+	var body CampaignSseDomainGeneratedEvent
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCampaignSseDomainGeneratedEvent overwrites any union data inside the CampaignSseEvent as the provided CampaignSseDomainGeneratedEvent
+func (t *CampaignSseEvent) FromCampaignSseDomainGeneratedEvent(v CampaignSseDomainGeneratedEvent) error {
+	v.Type = "CampaignSseDomainGeneratedEvent"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCampaignSseDomainGeneratedEvent performs a merge with any union data inside the CampaignSseEvent, using the provided CampaignSseDomainGeneratedEvent
+func (t *CampaignSseEvent) MergeCampaignSseDomainGeneratedEvent(v CampaignSseDomainGeneratedEvent) error {
+	v.Type = "CampaignSseDomainGeneratedEvent"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCampaignSseDomainValidatedEvent returns the union data inside the CampaignSseEvent as a CampaignSseDomainValidatedEvent
+func (t CampaignSseEvent) AsCampaignSseDomainValidatedEvent() (CampaignSseDomainValidatedEvent, error) {
+	var body CampaignSseDomainValidatedEvent
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCampaignSseDomainValidatedEvent overwrites any union data inside the CampaignSseEvent as the provided CampaignSseDomainValidatedEvent
+func (t *CampaignSseEvent) FromCampaignSseDomainValidatedEvent(v CampaignSseDomainValidatedEvent) error {
+	v.Type = "CampaignSseDomainValidatedEvent"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCampaignSseDomainValidatedEvent performs a merge with any union data inside the CampaignSseEvent, using the provided CampaignSseDomainValidatedEvent
+func (t *CampaignSseEvent) MergeCampaignSseDomainValidatedEvent(v CampaignSseDomainValidatedEvent) error {
+	v.Type = "CampaignSseDomainValidatedEvent"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCampaignSsePhaseStartedEvent returns the union data inside the CampaignSseEvent as a CampaignSsePhaseStartedEvent
+func (t CampaignSseEvent) AsCampaignSsePhaseStartedEvent() (CampaignSsePhaseStartedEvent, error) {
+	var body CampaignSsePhaseStartedEvent
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCampaignSsePhaseStartedEvent overwrites any union data inside the CampaignSseEvent as the provided CampaignSsePhaseStartedEvent
+func (t *CampaignSseEvent) FromCampaignSsePhaseStartedEvent(v CampaignSsePhaseStartedEvent) error {
+	v.Type = "CampaignSsePhaseStartedEvent"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCampaignSsePhaseStartedEvent performs a merge with any union data inside the CampaignSseEvent, using the provided CampaignSsePhaseStartedEvent
+func (t *CampaignSseEvent) MergeCampaignSsePhaseStartedEvent(v CampaignSsePhaseStartedEvent) error {
+	v.Type = "CampaignSsePhaseStartedEvent"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCampaignSsePhaseCompletedEvent returns the union data inside the CampaignSseEvent as a CampaignSsePhaseCompletedEvent
+func (t CampaignSseEvent) AsCampaignSsePhaseCompletedEvent() (CampaignSsePhaseCompletedEvent, error) {
+	var body CampaignSsePhaseCompletedEvent
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCampaignSsePhaseCompletedEvent overwrites any union data inside the CampaignSseEvent as the provided CampaignSsePhaseCompletedEvent
+func (t *CampaignSseEvent) FromCampaignSsePhaseCompletedEvent(v CampaignSsePhaseCompletedEvent) error {
+	v.Type = "CampaignSsePhaseCompletedEvent"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCampaignSsePhaseCompletedEvent performs a merge with any union data inside the CampaignSseEvent, using the provided CampaignSsePhaseCompletedEvent
+func (t *CampaignSseEvent) MergeCampaignSsePhaseCompletedEvent(v CampaignSsePhaseCompletedEvent) error {
+	v.Type = "CampaignSsePhaseCompletedEvent"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCampaignSsePhaseFailedEvent returns the union data inside the CampaignSseEvent as a CampaignSsePhaseFailedEvent
+func (t CampaignSseEvent) AsCampaignSsePhaseFailedEvent() (CampaignSsePhaseFailedEvent, error) {
+	var body CampaignSsePhaseFailedEvent
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCampaignSsePhaseFailedEvent overwrites any union data inside the CampaignSseEvent as the provided CampaignSsePhaseFailedEvent
+func (t *CampaignSseEvent) FromCampaignSsePhaseFailedEvent(v CampaignSsePhaseFailedEvent) error {
+	v.Type = "CampaignSsePhaseFailedEvent"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCampaignSsePhaseFailedEvent performs a merge with any union data inside the CampaignSseEvent, using the provided CampaignSsePhaseFailedEvent
+func (t *CampaignSseEvent) MergeCampaignSsePhaseFailedEvent(v CampaignSsePhaseFailedEvent) error {
+	v.Type = "CampaignSsePhaseFailedEvent"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCampaignSseCompletedEvent returns the union data inside the CampaignSseEvent as a CampaignSseCompletedEvent
+func (t CampaignSseEvent) AsCampaignSseCompletedEvent() (CampaignSseCompletedEvent, error) {
+	var body CampaignSseCompletedEvent
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCampaignSseCompletedEvent overwrites any union data inside the CampaignSseEvent as the provided CampaignSseCompletedEvent
+func (t *CampaignSseEvent) FromCampaignSseCompletedEvent(v CampaignSseCompletedEvent) error {
+	v.Type = "CampaignSseCompletedEvent"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCampaignSseCompletedEvent performs a merge with any union data inside the CampaignSseEvent, using the provided CampaignSseCompletedEvent
+func (t *CampaignSseEvent) MergeCampaignSseCompletedEvent(v CampaignSseCompletedEvent) error {
+	v.Type = "CampaignSseCompletedEvent"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t CampaignSseEvent) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"type"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t CampaignSseEvent) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "CampaignSseAnalysisFailedEvent":
+		return t.AsCampaignSseAnalysisFailedEvent()
+	case "CampaignSseAnalysisReuseEnrichmentEvent":
+		return t.AsCampaignSseAnalysisReuseEnrichmentEvent()
+	case "CampaignSseCompletedEvent":
+		return t.AsCampaignSseCompletedEvent()
+	case "CampaignSseDomainGeneratedEvent":
+		return t.AsCampaignSseDomainGeneratedEvent()
+	case "CampaignSseDomainValidatedEvent":
+		return t.AsCampaignSseDomainValidatedEvent()
+	case "CampaignSsePhaseCompletedEvent":
+		return t.AsCampaignSsePhaseCompletedEvent()
+	case "CampaignSsePhaseFailedEvent":
+		return t.AsCampaignSsePhaseFailedEvent()
+	case "CampaignSsePhaseStartedEvent":
+		return t.AsCampaignSsePhaseStartedEvent()
+	case "CampaignSseProgressEvent":
+		return t.AsCampaignSseProgressEvent()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
+}
+
+func (t CampaignSseEvent) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *CampaignSseEvent) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsFlexibleArray0 returns the union data inside the FlexibleArray_Item as a FlexibleArray0
+func (t FlexibleArray_Item) AsFlexibleArray0() (FlexibleArray0, error) {
+	var body FlexibleArray0
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromFlexibleArray0 overwrites any union data inside the FlexibleArray_Item as the provided FlexibleArray0
+func (t *FlexibleArray_Item) FromFlexibleArray0(v FlexibleArray0) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeFlexibleArray0 performs a merge with any union data inside the FlexibleArray_Item, using the provided FlexibleArray0
+func (t *FlexibleArray_Item) MergeFlexibleArray0(v FlexibleArray0) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsFlexibleArray1 returns the union data inside the FlexibleArray_Item as a FlexibleArray1
+func (t FlexibleArray_Item) AsFlexibleArray1() (FlexibleArray1, error) {
+	var body FlexibleArray1
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromFlexibleArray1 overwrites any union data inside the FlexibleArray_Item as the provided FlexibleArray1
+func (t *FlexibleArray_Item) FromFlexibleArray1(v FlexibleArray1) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeFlexibleArray1 performs a merge with any union data inside the FlexibleArray_Item, using the provided FlexibleArray1
+func (t *FlexibleArray_Item) MergeFlexibleArray1(v FlexibleArray1) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsFlexibleArray2 returns the union data inside the FlexibleArray_Item as a FlexibleArray2
+func (t FlexibleArray_Item) AsFlexibleArray2() (FlexibleArray2, error) {
+	var body FlexibleArray2
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromFlexibleArray2 overwrites any union data inside the FlexibleArray_Item as the provided FlexibleArray2
+func (t *FlexibleArray_Item) FromFlexibleArray2(v FlexibleArray2) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeFlexibleArray2 performs a merge with any union data inside the FlexibleArray_Item, using the provided FlexibleArray2
+func (t *FlexibleArray_Item) MergeFlexibleArray2(v FlexibleArray2) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsFlexibleArray3 returns the union data inside the FlexibleArray_Item as a FlexibleArray3
+func (t FlexibleArray_Item) AsFlexibleArray3() (FlexibleArray3, error) {
+	var body FlexibleArray3
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromFlexibleArray3 overwrites any union data inside the FlexibleArray_Item as the provided FlexibleArray3
+func (t *FlexibleArray_Item) FromFlexibleArray3(v FlexibleArray3) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeFlexibleArray3 performs a merge with any union data inside the FlexibleArray_Item, using the provided FlexibleArray3
+func (t *FlexibleArray_Item) MergeFlexibleArray3(v FlexibleArray3) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsFlexibleArray4 returns the union data inside the FlexibleArray_Item as a FlexibleArray4
+func (t FlexibleArray_Item) AsFlexibleArray4() (FlexibleArray4, error) {
+	var body FlexibleArray4
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromFlexibleArray4 overwrites any union data inside the FlexibleArray_Item as the provided FlexibleArray4
+func (t *FlexibleArray_Item) FromFlexibleArray4(v FlexibleArray4) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeFlexibleArray4 performs a merge with any union data inside the FlexibleArray_Item, using the provided FlexibleArray4
+func (t *FlexibleArray_Item) MergeFlexibleArray4(v FlexibleArray4) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t FlexibleArray_Item) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *FlexibleArray_Item) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsFlexibleObject0 returns the union data inside the FlexibleObject_AdditionalProperties as a FlexibleObject0
+func (t FlexibleObject_AdditionalProperties) AsFlexibleObject0() (FlexibleObject0, error) {
+	var body FlexibleObject0
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromFlexibleObject0 overwrites any union data inside the FlexibleObject_AdditionalProperties as the provided FlexibleObject0
+func (t *FlexibleObject_AdditionalProperties) FromFlexibleObject0(v FlexibleObject0) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeFlexibleObject0 performs a merge with any union data inside the FlexibleObject_AdditionalProperties, using the provided FlexibleObject0
+func (t *FlexibleObject_AdditionalProperties) MergeFlexibleObject0(v FlexibleObject0) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsFlexibleObject1 returns the union data inside the FlexibleObject_AdditionalProperties as a FlexibleObject1
+func (t FlexibleObject_AdditionalProperties) AsFlexibleObject1() (FlexibleObject1, error) {
+	var body FlexibleObject1
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromFlexibleObject1 overwrites any union data inside the FlexibleObject_AdditionalProperties as the provided FlexibleObject1
+func (t *FlexibleObject_AdditionalProperties) FromFlexibleObject1(v FlexibleObject1) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeFlexibleObject1 performs a merge with any union data inside the FlexibleObject_AdditionalProperties, using the provided FlexibleObject1
+func (t *FlexibleObject_AdditionalProperties) MergeFlexibleObject1(v FlexibleObject1) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsFlexibleObject2 returns the union data inside the FlexibleObject_AdditionalProperties as a FlexibleObject2
+func (t FlexibleObject_AdditionalProperties) AsFlexibleObject2() (FlexibleObject2, error) {
+	var body FlexibleObject2
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromFlexibleObject2 overwrites any union data inside the FlexibleObject_AdditionalProperties as the provided FlexibleObject2
+func (t *FlexibleObject_AdditionalProperties) FromFlexibleObject2(v FlexibleObject2) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeFlexibleObject2 performs a merge with any union data inside the FlexibleObject_AdditionalProperties, using the provided FlexibleObject2
+func (t *FlexibleObject_AdditionalProperties) MergeFlexibleObject2(v FlexibleObject2) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsFlexibleObject3 returns the union data inside the FlexibleObject_AdditionalProperties as a FlexibleObject3
+func (t FlexibleObject_AdditionalProperties) AsFlexibleObject3() (FlexibleObject3, error) {
+	var body FlexibleObject3
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromFlexibleObject3 overwrites any union data inside the FlexibleObject_AdditionalProperties as the provided FlexibleObject3
+func (t *FlexibleObject_AdditionalProperties) FromFlexibleObject3(v FlexibleObject3) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeFlexibleObject3 performs a merge with any union data inside the FlexibleObject_AdditionalProperties, using the provided FlexibleObject3
+func (t *FlexibleObject_AdditionalProperties) MergeFlexibleObject3(v FlexibleObject3) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsFlexibleObject4 returns the union data inside the FlexibleObject_AdditionalProperties as a FlexibleObject4
+func (t FlexibleObject_AdditionalProperties) AsFlexibleObject4() (FlexibleObject4, error) {
+	var body FlexibleObject4
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromFlexibleObject4 overwrites any union data inside the FlexibleObject_AdditionalProperties as the provided FlexibleObject4
+func (t *FlexibleObject_AdditionalProperties) FromFlexibleObject4(v FlexibleObject4) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeFlexibleObject4 performs a merge with any union data inside the FlexibleObject_AdditionalProperties, using the provided FlexibleObject4
+func (t *FlexibleObject_AdditionalProperties) MergeFlexibleObject4(v FlexibleObject4) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t FlexibleObject_AdditionalProperties) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *FlexibleObject_AdditionalProperties) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsFlexiblePrimitive0 returns the union data inside the FlexiblePrimitive as a FlexiblePrimitive0
+func (t FlexiblePrimitive) AsFlexiblePrimitive0() (FlexiblePrimitive0, error) {
+	var body FlexiblePrimitive0
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromFlexiblePrimitive0 overwrites any union data inside the FlexiblePrimitive as the provided FlexiblePrimitive0
+func (t *FlexiblePrimitive) FromFlexiblePrimitive0(v FlexiblePrimitive0) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeFlexiblePrimitive0 performs a merge with any union data inside the FlexiblePrimitive, using the provided FlexiblePrimitive0
+func (t *FlexiblePrimitive) MergeFlexiblePrimitive0(v FlexiblePrimitive0) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsFlexiblePrimitive1 returns the union data inside the FlexiblePrimitive as a FlexiblePrimitive1
+func (t FlexiblePrimitive) AsFlexiblePrimitive1() (FlexiblePrimitive1, error) {
+	var body FlexiblePrimitive1
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromFlexiblePrimitive1 overwrites any union data inside the FlexiblePrimitive as the provided FlexiblePrimitive1
+func (t *FlexiblePrimitive) FromFlexiblePrimitive1(v FlexiblePrimitive1) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeFlexiblePrimitive1 performs a merge with any union data inside the FlexiblePrimitive, using the provided FlexiblePrimitive1
+func (t *FlexiblePrimitive) MergeFlexiblePrimitive1(v FlexiblePrimitive1) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsFlexiblePrimitive2 returns the union data inside the FlexiblePrimitive as a FlexiblePrimitive2
+func (t FlexiblePrimitive) AsFlexiblePrimitive2() (FlexiblePrimitive2, error) {
+	var body FlexiblePrimitive2
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromFlexiblePrimitive2 overwrites any union data inside the FlexiblePrimitive as the provided FlexiblePrimitive2
+func (t *FlexiblePrimitive) FromFlexiblePrimitive2(v FlexiblePrimitive2) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeFlexiblePrimitive2 performs a merge with any union data inside the FlexiblePrimitive, using the provided FlexiblePrimitive2
+func (t *FlexiblePrimitive) MergeFlexiblePrimitive2(v FlexiblePrimitive2) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsFlexiblePrimitive3 returns the union data inside the FlexiblePrimitive as a FlexiblePrimitive3
+func (t FlexiblePrimitive) AsFlexiblePrimitive3() (FlexiblePrimitive3, error) {
+	var body FlexiblePrimitive3
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromFlexiblePrimitive3 overwrites any union data inside the FlexiblePrimitive as the provided FlexiblePrimitive3
+func (t *FlexiblePrimitive) FromFlexiblePrimitive3(v FlexiblePrimitive3) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeFlexiblePrimitive3 performs a merge with any union data inside the FlexiblePrimitive, using the provided FlexiblePrimitive3
+func (t *FlexiblePrimitive) MergeFlexiblePrimitive3(v FlexiblePrimitive3) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsFlexiblePrimitive4 returns the union data inside the FlexiblePrimitive as a FlexiblePrimitive4
+func (t FlexiblePrimitive) AsFlexiblePrimitive4() (FlexiblePrimitive4, error) {
+	var body FlexiblePrimitive4
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromFlexiblePrimitive4 overwrites any union data inside the FlexiblePrimitive as the provided FlexiblePrimitive4
+func (t *FlexiblePrimitive) FromFlexiblePrimitive4(v FlexiblePrimitive4) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeFlexiblePrimitive4 performs a merge with any union data inside the FlexiblePrimitive, using the provided FlexiblePrimitive4
+func (t *FlexiblePrimitive) MergeFlexiblePrimitive4(v FlexiblePrimitive4) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t FlexiblePrimitive) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *FlexiblePrimitive) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsFlexiblePrimitive returns the union data inside the FlexibleValue as a FlexiblePrimitive
+func (t FlexibleValue) AsFlexiblePrimitive() (FlexiblePrimitive, error) {
+	var body FlexiblePrimitive
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromFlexiblePrimitive overwrites any union data inside the FlexibleValue as the provided FlexiblePrimitive
+func (t *FlexibleValue) FromFlexiblePrimitive(v FlexiblePrimitive) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeFlexiblePrimitive performs a merge with any union data inside the FlexibleValue, using the provided FlexiblePrimitive
+func (t *FlexibleValue) MergeFlexiblePrimitive(v FlexiblePrimitive) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsFlexibleArray returns the union data inside the FlexibleValue as a FlexibleArray
+func (t FlexibleValue) AsFlexibleArray() (FlexibleArray, error) {
+	var body FlexibleArray
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromFlexibleArray overwrites any union data inside the FlexibleValue as the provided FlexibleArray
+func (t *FlexibleValue) FromFlexibleArray(v FlexibleArray) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeFlexibleArray performs a merge with any union data inside the FlexibleValue, using the provided FlexibleArray
+func (t *FlexibleValue) MergeFlexibleArray(v FlexibleArray) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsFlexibleObject returns the union data inside the FlexibleValue as a FlexibleObject
+func (t FlexibleValue) AsFlexibleObject() (FlexibleObject, error) {
+	var body FlexibleObject
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromFlexibleObject overwrites any union data inside the FlexibleValue as the provided FlexibleObject
+func (t *FlexibleValue) FromFlexibleObject(v FlexibleObject) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeFlexibleObject performs a merge with any union data inside the FlexibleValue, using the provided FlexibleObject
+func (t *FlexibleValue) MergeFlexibleObject(v FlexibleObject) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t FlexibleValue) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *FlexibleValue) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
 // AsPersonaConfigHttp returns the union data inside the PersonaConfigDetails as a PersonaConfigHttp
 func (t PersonaConfigDetails) AsPersonaConfigHttp() (PersonaConfigHttp, error) {
 	var body PersonaConfigHttp
@@ -2277,8 +3416,7 @@ func (t PersonaConfigDetails) AsPersonaConfigHttp() (PersonaConfigHttp, error) {
 
 // FromPersonaConfigHttp overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigHttp
 func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error {
-	httpType := PersonaConfigHttpPersonaTypeHttp
-	v.PersonaType = &httpType
+	v.PersonaType = "http"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -2286,8 +3424,7 @@ func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error 
 
 // MergePersonaConfigHttp performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigHttp
 func (t *PersonaConfigDetails) MergePersonaConfigHttp(v PersonaConfigHttp) error {
-	httpType := PersonaConfigHttpPersonaTypeHttp
-	v.PersonaType = &httpType
+	v.PersonaType = "http"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2307,8 +3444,7 @@ func (t PersonaConfigDetails) AsPersonaConfigDns() (PersonaConfigDns, error) {
 
 // FromPersonaConfigDns overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigDns
 func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
-	dnsType := PersonaConfigDnsPersonaTypeDns
-	v.PersonaType = &dnsType
+	v.PersonaType = "dns"
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -2316,8 +3452,7 @@ func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
 
 // MergePersonaConfigDns performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigDns
 func (t *PersonaConfigDetails) MergePersonaConfigDns(v PersonaConfigDns) error {
-	dnsType := PersonaConfigDnsPersonaTypeDns
-	v.PersonaType = &dnsType
+	v.PersonaType = "dns"
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -2357,6 +3492,120 @@ func (t PersonaConfigDetails) MarshalJSON() ([]byte, error) {
 }
 
 func (t *PersonaConfigDetails) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
+
+// AsTimelineEventMetadata0 returns the union data inside the TimelineEvent_Metadata_AdditionalProperties as a TimelineEventMetadata0
+func (t TimelineEvent_Metadata_AdditionalProperties) AsTimelineEventMetadata0() (TimelineEventMetadata0, error) {
+	var body TimelineEventMetadata0
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromTimelineEventMetadata0 overwrites any union data inside the TimelineEvent_Metadata_AdditionalProperties as the provided TimelineEventMetadata0
+func (t *TimelineEvent_Metadata_AdditionalProperties) FromTimelineEventMetadata0(v TimelineEventMetadata0) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeTimelineEventMetadata0 performs a merge with any union data inside the TimelineEvent_Metadata_AdditionalProperties, using the provided TimelineEventMetadata0
+func (t *TimelineEvent_Metadata_AdditionalProperties) MergeTimelineEventMetadata0(v TimelineEventMetadata0) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsTimelineEventMetadata1 returns the union data inside the TimelineEvent_Metadata_AdditionalProperties as a TimelineEventMetadata1
+func (t TimelineEvent_Metadata_AdditionalProperties) AsTimelineEventMetadata1() (TimelineEventMetadata1, error) {
+	var body TimelineEventMetadata1
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromTimelineEventMetadata1 overwrites any union data inside the TimelineEvent_Metadata_AdditionalProperties as the provided TimelineEventMetadata1
+func (t *TimelineEvent_Metadata_AdditionalProperties) FromTimelineEventMetadata1(v TimelineEventMetadata1) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeTimelineEventMetadata1 performs a merge with any union data inside the TimelineEvent_Metadata_AdditionalProperties, using the provided TimelineEventMetadata1
+func (t *TimelineEvent_Metadata_AdditionalProperties) MergeTimelineEventMetadata1(v TimelineEventMetadata1) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsTimelineEventMetadata2 returns the union data inside the TimelineEvent_Metadata_AdditionalProperties as a TimelineEventMetadata2
+func (t TimelineEvent_Metadata_AdditionalProperties) AsTimelineEventMetadata2() (TimelineEventMetadata2, error) {
+	var body TimelineEventMetadata2
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromTimelineEventMetadata2 overwrites any union data inside the TimelineEvent_Metadata_AdditionalProperties as the provided TimelineEventMetadata2
+func (t *TimelineEvent_Metadata_AdditionalProperties) FromTimelineEventMetadata2(v TimelineEventMetadata2) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeTimelineEventMetadata2 performs a merge with any union data inside the TimelineEvent_Metadata_AdditionalProperties, using the provided TimelineEventMetadata2
+func (t *TimelineEvent_Metadata_AdditionalProperties) MergeTimelineEventMetadata2(v TimelineEventMetadata2) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsTimelineEventMetadata3 returns the union data inside the TimelineEvent_Metadata_AdditionalProperties as a TimelineEventMetadata3
+func (t TimelineEvent_Metadata_AdditionalProperties) AsTimelineEventMetadata3() (TimelineEventMetadata3, error) {
+	var body TimelineEventMetadata3
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromTimelineEventMetadata3 overwrites any union data inside the TimelineEvent_Metadata_AdditionalProperties as the provided TimelineEventMetadata3
+func (t *TimelineEvent_Metadata_AdditionalProperties) FromTimelineEventMetadata3(v TimelineEventMetadata3) error {
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeTimelineEventMetadata3 performs a merge with any union data inside the TimelineEvent_Metadata_AdditionalProperties, using the provided TimelineEventMetadata3
+func (t *TimelineEvent_Metadata_AdditionalProperties) MergeTimelineEventMetadata3(v TimelineEventMetadata3) error {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t TimelineEvent_Metadata_AdditionalProperties) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *TimelineEvent_Metadata_AdditionalProperties) UnmarshalJSON(b []byte) error {
 	err := t.union.UnmarshalJSON(b)
 	return err
 }
@@ -2753,6 +4002,12 @@ type ServerInterface interface {
 	// Stream campaign events (specific campaign)
 	// (GET /sse/campaigns/{campaignId}/events)
 	SseEventsCampaign(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
+	// Obtain a single latest campaign SSE event (JSON form)
+	// (GET /sse/campaigns/{campaignId}/events/latest)
+	SseEventsCampaignLatest(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
+	// Sample (non-stream) campaign events list for typing
+	// (GET /sse/campaigns/{campaignId}/events/sample)
+	SseEventsCampaignSample(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID)
 	// Stream campaign events
 	// (GET /sse/events)
 	SseEventsAll(w http.ResponseWriter, r *http.Request)
@@ -3542,6 +4797,18 @@ func (_ Unimplemented) ScoringProfilesUpdate(w http.ResponseWriter, r *http.Requ
 // Stream campaign events (specific campaign)
 // (GET /sse/campaigns/{campaignId}/events)
 func (_ Unimplemented) SseEventsCampaign(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Obtain a single latest campaign SSE event (JSON form)
+// (GET /sse/campaigns/{campaignId}/events/latest)
+func (_ Unimplemented) SseEventsCampaignLatest(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Sample (non-stream) campaign events list for typing
+// (GET /sse/campaigns/{campaignId}/events/sample)
+func (_ Unimplemented) SseEventsCampaignSample(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -7353,6 +8620,68 @@ func (siw *ServerInterfaceWrapper) SseEventsCampaign(w http.ResponseWriter, r *h
 	handler.ServeHTTP(w, r)
 }
 
+// SseEventsCampaignLatest operation middleware
+func (siw *ServerInterfaceWrapper) SseEventsCampaignLatest(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SseEventsCampaignLatest(w, r, campaignId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SseEventsCampaignSample operation middleware
+func (siw *ServerInterfaceWrapper) SseEventsCampaignSample(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "campaignId" -------------
+	var campaignId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "campaignId", chi.URLParam(r, "campaignId"), &campaignId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "campaignId", Err: err})
+		return
+	}
+
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, CookieAuthScopes, []string{})
+
+	r = r.WithContext(ctx)
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SseEventsCampaignSample(w, r, campaignId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // SseEventsAll operation middleware
 func (siw *ServerInterfaceWrapper) SseEventsAll(w http.ResponseWriter, r *http.Request) {
 
@@ -7895,6 +9224,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/sse/campaigns/{campaignId}/events", wrapper.SseEventsCampaign)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/sse/campaigns/{campaignId}/events/latest", wrapper.SseEventsCampaignLatest)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/sse/campaigns/{campaignId}/events/sample", wrapper.SseEventsCampaignSample)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/sse/events", wrapper.SseEventsAll)
@@ -15089,6 +16424,98 @@ func (response SseEventsCampaign500JSONResponse) VisitSseEventsCampaignResponse(
 	return json.NewEncoder(w).Encode(response)
 }
 
+type SseEventsCampaignLatestRequestObject struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+}
+
+type SseEventsCampaignLatestResponseObject interface {
+	VisitSseEventsCampaignLatestResponse(w http.ResponseWriter) error
+}
+
+type SseEventsCampaignLatest200JSONResponse CampaignSseEvent
+
+func (response SseEventsCampaignLatest200JSONResponse) VisitSseEventsCampaignLatestResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SseEventsCampaignLatest401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response SseEventsCampaignLatest401JSONResponse) VisitSseEventsCampaignLatestResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SseEventsCampaignLatest404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response SseEventsCampaignLatest404JSONResponse) VisitSseEventsCampaignLatestResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SseEventsCampaignLatest500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response SseEventsCampaignLatest500JSONResponse) VisitSseEventsCampaignLatestResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SseEventsCampaignSampleRequestObject struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+}
+
+type SseEventsCampaignSampleResponseObject interface {
+	VisitSseEventsCampaignSampleResponse(w http.ResponseWriter) error
+}
+
+type SseEventsCampaignSample200JSONResponse []CampaignSseEvent
+
+func (response SseEventsCampaignSample200JSONResponse) VisitSseEventsCampaignSampleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SseEventsCampaignSample401JSONResponse struct{ UnauthorizedJSONResponse }
+
+func (response SseEventsCampaignSample401JSONResponse) VisitSseEventsCampaignSampleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(401)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SseEventsCampaignSample404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response SseEventsCampaignSample404JSONResponse) VisitSseEventsCampaignSampleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type SseEventsCampaignSample500JSONResponse struct {
+	InternalServerErrorJSONResponse
+}
+
+func (response SseEventsCampaignSample500JSONResponse) VisitSseEventsCampaignSampleResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(500)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type SseEventsAllRequestObject struct {
 }
 
@@ -15610,6 +17037,12 @@ type StrictServerInterface interface {
 	// Stream campaign events (specific campaign)
 	// (GET /sse/campaigns/{campaignId}/events)
 	SseEventsCampaign(ctx context.Context, request SseEventsCampaignRequestObject) (SseEventsCampaignResponseObject, error)
+	// Obtain a single latest campaign SSE event (JSON form)
+	// (GET /sse/campaigns/{campaignId}/events/latest)
+	SseEventsCampaignLatest(ctx context.Context, request SseEventsCampaignLatestRequestObject) (SseEventsCampaignLatestResponseObject, error)
+	// Sample (non-stream) campaign events list for typing
+	// (GET /sse/campaigns/{campaignId}/events/sample)
+	SseEventsCampaignSample(ctx context.Context, request SseEventsCampaignSampleRequestObject) (SseEventsCampaignSampleResponseObject, error)
 	// Stream campaign events
 	// (GET /sse/events)
 	SseEventsAll(ctx context.Context, request SseEventsAllRequestObject) (SseEventsAllResponseObject, error)
@@ -19215,6 +20648,58 @@ func (sh *strictHandler) SseEventsCampaign(w http.ResponseWriter, r *http.Reques
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(SseEventsCampaignResponseObject); ok {
 		if err := validResponse.VisitSseEventsCampaignResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SseEventsCampaignLatest operation middleware
+func (sh *strictHandler) SseEventsCampaignLatest(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	var request SseEventsCampaignLatestRequestObject
+
+	request.CampaignId = campaignId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SseEventsCampaignLatest(ctx, request.(SseEventsCampaignLatestRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SseEventsCampaignLatest")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SseEventsCampaignLatestResponseObject); ok {
+		if err := validResponse.VisitSseEventsCampaignLatestResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SseEventsCampaignSample operation middleware
+func (sh *strictHandler) SseEventsCampaignSample(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID) {
+	var request SseEventsCampaignSampleRequestObject
+
+	request.CampaignId = campaignId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SseEventsCampaignSample(ctx, request.(SseEventsCampaignSampleRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SseEventsCampaignSample")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SseEventsCampaignSampleResponseObject); ok {
+		if err := validResponse.VisitSseEventsCampaignSampleResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

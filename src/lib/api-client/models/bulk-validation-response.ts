@@ -15,7 +15,7 @@
 
 // May contain unused imports in some cases
 // @ts-ignore
-import type { BulkValidationResponseOperationsValue } from './bulk-validation-response-operations-value';
+import type { ProxyOperationResult } from './proxy-operation-result';
 
 /**
  * 

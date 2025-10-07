@@ -7,6 +7,12 @@ import PageHeader from '@/components/shared/PageHeader';
 import PersonaListItem from '@/components/personas/PersonaListItem';
 import type { PersonaResponse as ApiPersonaResponse } from '@/lib/api-client/models/persona-response';
 import { PersonaType } from '@/lib/api-client/models/persona-type';
+// Adapt to actual generated request model (fallback to generic payload shape if missing)
+// The generated client may expose a CreatePersonaRequest; if not present we rely on PersonasCreateRequest type below.
+// Using type-only import inside try-catch pattern is unnecessary; adjust path if generator updates.
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports
+import type { CreatePersonaRequest } from '@/lib/api-client/models/create-persona-request';
+import { PersonaType as PersonaTypeEnum } from '@/lib/api-client/models/persona-type';
 
 // OpenAPI persona type (personaType already 'http' | 'dns')
 type Persona = ApiPersonaResponse & { status?: 'Active' | 'Disabled' | 'Testing' | 'Failed'; tags?: string[] };
@@ -14,16 +20,16 @@ type HttpPersona = Persona & { personaType: 'http' };
 type DnsPersona = Persona & { personaType: 'dns' };
 
 // Define proper create persona payload types
-interface CreatePersonaRequest {
+interface BaseCreatePersonaRequest {
   name: string;
   personaType: 'http' | 'dns';
   description?: string;
-  configDetails: object;
+  configDetails: Record<string, unknown>;
   isEnabled?: boolean;
 }
 
-type CreateHttpPersonaPayload = CreatePersonaRequest & { personaType: 'http' };
-type CreateDnsPersonaPayload = CreatePersonaRequest & { personaType: 'dns' };
+type CreateHttpPersonaPayload = BaseCreatePersonaRequest & { personaType: 'http' };
+type CreateDnsPersonaPayload = BaseCreatePersonaRequest & { personaType: 'dns' };
 type PersonaStatus = 'Active' | 'Disabled' | 'Testing' | 'Failed';
 import { PlusCircle, Users, Globe, Wifi, Search as SearchIcon, UploadCloud } from 'lucide-react';
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
@@ -191,7 +197,10 @@ function PersonasPageContent() {
     try {
   const response = await personasApi.personasTest(personaId);
       if (response.status >= 200) {
-        const personaName = (response.data as any)?.personaId || 'Persona';
+  // Some responses may return personaId only; name may not be present on PersonaTestResponse
+  const personaName = (response.data as { personaId?: string; name?: string } | undefined)?.personaId
+    || (response.data as { name?: string } | undefined)?.name
+    || 'Persona';
         toast({ title: "Persona Test Complete", description: `Test for ${personaName} completed.` });
         fetchPersonasData(personaType, false);
       } else {
@@ -216,8 +225,8 @@ function PersonasPageContent() {
       const isEnabled = newStatus === 'Active';
         const response = await personasApi.personasUpdate(personaId, { isEnabled });
       if (response.status >= 200) {
-        const updated = response.data as any;
-        toast({ title: `Persona Status Updated`, description: `${updated?.name || 'Persona'} is now ${newStatus}.` });
+  const updated = response.data;
+  toast({ title: `Persona Status Updated`, description: `${updated?.name ?? 'Persona'} is now ${newStatus}.` });
         fetchPersonasData(personaType, false);
       } else {
         toast({ title: "Error Updating Status", description: "Could not update persona status.", variant: "destructive"});
@@ -277,17 +286,17 @@ function PersonasPageContent() {
                         allowInsecureTls: validatedData.allowInsecureTls,
                         requestTimeoutSec: validatedData.requestTimeoutSec,
                         maxRedirects: validatedData.maxRedirects
-                    } as any
+                    }
                 };
             } else {
                 const validatedData = validationResult.data as z.infer<typeof DnsPersonaImportSchema>;
                 // Map old resolver strategy values to new ones
                 const mapResolverStrategy = (oldStrategy: string): "round_robin" | "random" | "weighted" | "priority" => {
                     switch (oldStrategy) {
-                        case "random_rotation": return "random" as any;
-                        case "weighted_rotation": return "weighted" as any;
-                        case "sequential_failover": return "priority" as any;
-                        default: return "round_robin" as any;
+                        case "random_rotation": return "random";
+                        case "weighted_rotation": return "weighted";
+                        case "sequential_failover": return "priority";
+                        default: return "round_robin";
                     }
                 };
                 
@@ -310,11 +319,23 @@ function PersonasPageContent() {
                         maxConcurrentGoroutines: validatedData.config.maxConcurrentGoroutines,
                         rateLimitDps: validatedData.config.rateLimitDps ?? 100.0,
                         rateLimitBurst: validatedData.config.rateLimitBurst ?? 10,
-                    } as any,
+                    },
                 };
             }
             try {
-              const response = await personasApi.personasCreate(createPayload as any);
+              // Map flexible import payload to strict CreatePersonaRequest shape
+              const requestPayload: CreatePersonaRequest = {
+                name: createPayload.name,
+                personaType: createPayload.personaType === 'http' ? PersonaTypeEnum.http : PersonaTypeEnum.dns,
+                description: createPayload.description,
+                isEnabled: createPayload.isEnabled,
+                // Preserve all configDetails fields while ensuring personaType discriminant is present
+                configDetails: {
+                  personaType: createPayload.personaType,
+                  ...(createPayload.configDetails as Record<string, unknown>)
+                } as unknown as CreatePersonaRequest['configDetails']
+              };
+              const response = await personasApi.personasCreate(requestPayload);
               if (response.data) {
               importedCount++;
               } else {

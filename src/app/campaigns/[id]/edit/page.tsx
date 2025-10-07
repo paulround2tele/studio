@@ -4,6 +4,7 @@
 import PageHeader from '@/components/shared/PageHeader';
 import { useGetCampaignEnrichedQuery } from '@/store/api/campaignApi';
 import type { CampaignResponse } from '@/lib/api-client/models';
+import { extractErrorMessage } from '@/lib/utils/error-handling';
 
 import { FilePenLine, AlertCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
@@ -36,11 +37,7 @@ function EditCampaignPageContent() {
   }
 
   if (error || !campaignData) {
-    const description = typeof error === 'string'
-      ? error
-      : (error && typeof error === 'object' && (error as any).data?.message)
-        || (error && typeof error === 'object' && (error as any).message)
-        || 'Campaign data could not be loaded or found.';
+    const description = error ? extractErrorMessage(error) : 'Campaign data could not be loaded or found.';
     return (
        <div className="text-center py-10">
         <AlertCircle className="mx-auto h-12 w-12 text-destructive" />

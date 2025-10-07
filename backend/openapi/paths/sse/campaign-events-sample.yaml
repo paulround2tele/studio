@@ -25,7 +25,35 @@ get:
                   timestamp: '2025-01-01T00:00:00Z'
                   payload:
                     campaignId: '00000000-0000-0000-0000-000000000000'
-                    overall: { completedPhases: 1, totalPhases: 4 }
+                    overall:
+                      status: running
+                      percentComplete: 12.5
+                      totalDomains: 80
+                      processedDomains: 10
+                      successfulDomains: 8
+                      failedDomains: 2
+                    phases:
+                      discovery:
+                        status: running
+                        percentComplete: 20
+                        itemsProcessed: 20
+                        itemsTotal: 100
+                      validation:
+                        status: not_started
+                        percentComplete: 0
+                        itemsProcessed: 0
+                        itemsTotal: 0
+                      extraction:
+                        status: not_started
+                        percentComplete: 0
+                        itemsProcessed: 0
+                        itemsTotal: 0
+                      analysis:
+                        status: not_started
+                        percentComplete: 0
+                        itemsProcessed: 0
+                        itemsTotal: 0
+                    timeline: []
                 - type: phase_started
                   timestamp: '2025-01-01T00:01:00Z'
                   payload:

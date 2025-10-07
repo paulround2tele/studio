@@ -16,6 +16,9 @@
 // May contain unused imports in some cases
 // @ts-ignore
 import type { ExecutionStatusEnum } from './execution-status-enum';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { FlexibleValue } from './flexible-value';
 
 /**
  * 

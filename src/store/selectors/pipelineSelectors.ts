@@ -137,7 +137,7 @@ const makeSelectStartBlockingReasons = (campaignId: string) => createSelector(
       } else if (missing.length) {
         const firstMissing = missing[0] as PipelinePhaseKey; // safe due to length check
         const firstMissingIdx = PIPELINE_PHASE_ORDER.indexOf(firstMissing);
-        const runnableIdx = PIPELINE_PHASE_ORDER.indexOf(nextRunnable.key as any);
+  const runnableIdx = PIPELINE_PHASE_ORDER.indexOf(nextRunnable.key);
         if (firstMissingIdx > -1 && firstMissingIdx < runnableIdx) {
           reasons.push(`Configure earlier phase: ${firstMissing}`);
         }
@@ -228,7 +228,7 @@ export const makeSelectPhaseProgressMap = (campaignId: string) => createSelector
     const percent = p.execState === 'completed' ? 100 : p.execState === 'running' ? 50 : 0;
     acc[p.key] = { percent, statusRaw: p.statusRaw };
     return acc;
-  }, {} as any)
+  }, {} as Record<PipelinePhaseKey, { percent: number; statusRaw?: string }>)
 );
 
 // ---------------------------------------------
