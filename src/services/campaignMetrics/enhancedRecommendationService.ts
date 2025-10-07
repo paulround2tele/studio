@@ -5,6 +5,7 @@
 
 import { telemetryService } from './telemetryService';
 import { capabilitiesService } from './capabilitiesService';
+import type { AggregateSnapshot } from '@/types/campaignMetrics';
 // Alias import of feature flag util to avoid lint hook rule in service module
 import { useBackendCanonical as backendCanonicalEnabled } from '@/lib/feature-flags-simple';
 
@@ -94,11 +95,11 @@ class EnhancedRecommendationService {
    */
   async generateLayeredRecommendations(
     campaignId: string,
-    snapshots: any[],
+    snapshots: AggregateSnapshot[],
     context: {
-      anomalies?: any[];
-      forecasts?: any[];
-      cohortInsights?: any[];
+      anomalies?: Record<string, unknown>[];
+      forecasts?: Record<string, unknown>[];
+      cohortInsights?: Record<string, unknown>[];
     } = {},
     config: ExperimentalRecommendationConfig = this.getDefaultConfig()
   ): Promise<{
@@ -157,7 +158,7 @@ class EnhancedRecommendationService {
    */
   private async getServerRecommendations(
     campaignId: string, 
-    snapshots: any[]
+    snapshots: AggregateSnapshot[]
   ): Promise<EnhancedRecommendation[]> {
   if (!backendCanonicalEnabled()) {
       return [];
@@ -199,7 +200,7 @@ class EnhancedRecommendationService {
    */
   private async getExperimentalMLRecommendations(
     campaignId: string,
-    snapshots: any[],
+    snapshots: AggregateSnapshot[],
     config: ExperimentalRecommendationConfig
   ): Promise<EnhancedRecommendation[]> {
     try {
@@ -232,8 +233,8 @@ class EnhancedRecommendationService {
    * Generate anomaly-augmented recommendations
    */
   private generateAnomalyAugmentedRecommendations(
-    anomalies: any[],
-    snapshots: any[],
+    anomalies: Record<string, unknown>[],
+    snapshots: AggregateSnapshot[],
     campaignId: string
   ): Promise<EnhancedRecommendation[]> {
     const recommendations: EnhancedRecommendation[] = [];
@@ -284,8 +285,8 @@ class EnhancedRecommendationService {
    * Generate client heuristic recommendations
    */
   private generateClientHeuristicRecommendations(
-    snapshots: any[],
-    context: any
+    snapshots: AggregateSnapshot[],
+    context: Record<string, unknown>
   ): EnhancedRecommendation[] {
     const recommendations: EnhancedRecommendation[] = [];
     
@@ -471,14 +472,14 @@ class EnhancedRecommendationService {
 
   private generateSyntheticMLRecommendations(
     campaignId: string,
-    snapshots: any[],
+    snapshots: AggregateSnapshot[],
     config: ExperimentalRecommendationConfig
-  ): any[] {
+  ): EnhancedRecommendation[] {
     // Generate synthetic ML recommendations for demonstration
     return [];
   }
 
-  private categorizeRecommendation(rec: any): EnhancedRecommendation['category'] {
+  private categorizeRecommendation(rec: Record<string, unknown>): EnhancedRecommendation['category'] {
     // Categorize based on title/content
     const title = rec.title.toLowerCase();
     if (title.includes('anomaly') || title.includes('unusual')) return 'anomaly';
@@ -488,13 +489,13 @@ class EnhancedRecommendationService {
     return 'optimization';
   }
 
-  private calculatePriority(rec: any): number {
+  private calculatePriority(rec: Record<string, unknown>): number {
     // Calculate priority based on severity and content
     const basePriority = rec.severity === 'action' ? 8 : rec.severity === 'warn' ? 6 : 4;
     return Math.min(10, basePriority + (rec.confidence || 0) * 2);
   }
 
-  private estimateImpact(rec: any): EnhancedRecommendation['estimatedImpact'] {
+  private estimateImpact(rec: Record<string, unknown>): EnhancedRecommendation['estimatedImpact'] {
     return {
       timeToImplement: '30 minutes',
       expectedROI: 10,
@@ -502,7 +503,7 @@ class EnhancedRecommendationService {
     };
   }
 
-  private makeActionable(rec: any): EnhancedRecommendation['actionable'] {
+  private makeActionable(rec: Record<string, unknown>): EnhancedRecommendation['actionable'] {
     return {
       quickAction: rec.detail,
       automatable: false
@@ -538,8 +539,8 @@ export const enhancedRecommendationService = new EnhancedRecommendationService()
  */
 export async function generateLayeredRecommendations(
   campaignId: string,
-  snapshots: any[],
-  context?: any,
+  snapshots: AggregateSnapshot[],
+  context?: Record<string, unknown>,
   config?: Partial<ExperimentalRecommendationConfig>
 ): Promise<ReturnType<EnhancedRecommendationService['generateLayeredRecommendations']>> {
   return enhancedRecommendationService.generateLayeredRecommendations(

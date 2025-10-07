@@ -99,15 +99,23 @@ export default function CampaignFormV2({ editMode = false, campaignData }: Campa
           throw routerError;
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Campaign operation error:', error);
       let errorMessage = editMode ? 'Failed to update campaign. Please try again.' : 'Failed to create campaign. Please try again.';
-      if (error?.data?.message) {
-        errorMessage = error.data.message;
-      } else if (error?.message) {
+      
+      // Extract error message with proper type checking
+      if (error && typeof error === 'object' && 'data' in error) {
+        const errorData = error.data;
+        if (errorData && typeof errorData === 'object' && 'message' in errorData) {
+          errorMessage = String(errorData.message);
+        } else if (errorData && typeof errorData === 'object' && 'error' in errorData) {
+          const nestedError = errorData.error;
+          if (nestedError && typeof nestedError === 'object' && 'message' in nestedError) {
+            errorMessage = String(nestedError.message);
+          }
+        }
+      } else if (error instanceof Error) {
         errorMessage = error.message;
-      } else if (error?.data?.error?.message) {
-        errorMessage = error.data.error.message;
       }
       toast({
         title: editMode ? 'Update Failed' : 'Creation Failed',

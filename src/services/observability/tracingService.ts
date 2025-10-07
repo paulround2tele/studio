@@ -328,11 +328,14 @@ class TracingService {
       const result = operation();
       this.endSpan(spanId, 'completed');
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorDetails = error instanceof Error 
+        ? { message: error.message, stack: error.stack }
+        : { message: String(error) };
+      
       this.endSpan(spanId, 'error', {
-        message: error?.message || 'Unknown error',
-        stack: error?.stack,
-        code: error?.code
+        ...errorDetails,
+        code: error && typeof error === 'object' && 'code' in error ? String(error.code) : undefined
       });
       throw error;
     }

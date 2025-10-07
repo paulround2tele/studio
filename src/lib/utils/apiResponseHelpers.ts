@@ -15,12 +15,16 @@
  */
 export function getAxiosErrorMessage(error: unknown): string {
   if (error && typeof error === 'object' && 'response' in error) {
-    const axiosError = error as any;
-    if (axiosError.response?.data?.error) {
-      return axiosError.response.data.error;
-    }
-    if (axiosError.response?.statusText) {
-      return `HTTP ${axiosError.response.status}: ${axiosError.response.statusText}`;
+    const response = error.response;
+    if (response && typeof response === 'object') {
+      // Check for error in response data
+      if ('data' in response && response.data && typeof response.data === 'object' && 'error' in response.data) {
+        return String(response.data.error);
+      }
+      // Check for status text
+      if ('statusText' in response && 'status' in response) {
+        return `HTTP ${response.status}: ${response.statusText}`;
+      }
     }
   }
   

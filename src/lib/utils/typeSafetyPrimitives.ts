@@ -34,7 +34,7 @@ export function assertNever(x: never): never {
 /**
  * Safe nested object path creation
  */
-export function ensurePath(obj: any, segments: string[]): any {
+export function ensurePath(obj: Record<string, unknown>, segments: string[]): Record<string, unknown> {
   if (!obj || typeof obj !== 'object') {
     throw new Error('Cannot ensure path on non-object');
   }
@@ -98,7 +98,7 @@ export interface StreamPatchOp {
 /**
  * Apply a patch operation to a root object
  */
-export function applyPatchOp(root: any, op: StreamPatchOp): Result<any, string> {
+export function applyPatchOp(root: Record<string, unknown>, op: StreamPatchOp): Result<Record<string, unknown>, string> {
   try {
     const pathSegments = op.path.split('.');
     if (pathSegments.length === 0) {
@@ -140,7 +140,7 @@ export function applyPatchOp(root: any, op: StreamPatchOp): Result<any, string> 
         current[finalKey].push(op.value);
         break;
       default:
-        return Err(`Unknown operation type: ${(op as any).type}`);
+        return Err(`Unknown operation type: ${op && typeof op === 'object' && 'type' in op ? String(op.type) : 'undefined'}`);
     }
 
     return Ok(root);
@@ -152,7 +152,7 @@ export function applyPatchOp(root: any, op: StreamPatchOp): Result<any, string> 
 /**
  * Create a safe MessageEvent for cloning
  */
-export function createMessageEvent(data: any): MessageEvent {
+export function createMessageEvent(data: unknown): MessageEvent {
   // Clone data to avoid readonly issues
   const clonedData = typeof data === 'string' ? data : JSON.stringify(data);
   

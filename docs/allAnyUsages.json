@@ -1,46 +1,18 @@
 {
-  "generatedAt": "2025-10-07T15:00:44.004Z",
+  "generatedAt": "2025-10-07T15:15:42.028Z",
   "root": "/home/runner/work/studio/studio",
-  "total": 237,
+  "total": 194,
   "byPattern": {
-    "annotation": 158,
-    "cast": 79
+    "annotation": 127,
+    "cast": 67
   },
   "byLocationGroup": {
-    "app": 1,
-    "components": 54,
-    "other": 39,
-    "services": 141,
+    "components": 41,
+    "other": 29,
+    "services": 122,
     "store": 2
   },
   "usages": [
-    {
-      "file": "src/app/personas/page.tsx",
-      "line": 345,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "} catch (e: any) {",
-      "locationGroup": "app",
-      "context": "}"
-    },
-    {
-      "file": "src/components/CampaignProgressMonitor.tsx",
-      "line": 9,
-      "column": 46,
-      "pattern": "annotation",
-      "code": "onPhaseCompleted?: (phase: string, results?: any) => void;",
-      "locationGroup": "components",
-      "context": "onProgressUpdate?: (progress: CampaignProgress) => void;"
-    },
-    {
-      "file": "src/components/campaigns/CampaignControls.tsx",
-      "line": 73,
-      "column": 33,
-      "pattern": "annotation",
-      "code": "const extractErrorMessage = (e: any): string => {",
-      "locationGroup": "components",
-      "context": ""
-    },
     {
       "file": "src/components/campaigns/CampaignDashboard.tsx",
       "line": 117,
@@ -58,105 +30,6 @@
       "code": "onSaveAndStart(data as any);",
       "locationGroup": "components",
       "context": "if (onSaveAndStart) {"
-    },
-    {
-      "file": "src/components/campaigns/CampaignFormV2.tsx",
-      "line": 102,
-      "column": 19,
-      "pattern": "annotation",
-      "code": "} catch (error: any) {",
-      "locationGroup": "components",
-      "context": "}"
-    },
-    {
-      "file": "src/components/campaigns/CampaignProgressMonitor.tsx",
-      "line": 125,
-      "column": 47,
-      "pattern": "cast",
-      "code": "variant={progressInfo.statusColor as any}",
-      "locationGroup": "components",
-      "context": "<Badge"
-    },
-    {
-      "file": "src/components/campaigns/ContentSimilarityView.tsx",
-      "line": 58,
-      "column": 36,
-      "pattern": "cast",
-      "code": "if (score > 75) return \"default\" as any;",
-      "locationGroup": "components",
-      "context": "const getSimilarityBadgeVariant = (score: number) => {"
-    },
-    {
-      "file": "src/components/campaigns/ContentSimilarityView.tsx",
-      "line": 59,
-      "column": 38,
-      "pattern": "cast",
-      "code": "if (score > 50) return \"secondary\" as any;",
-      "locationGroup": "components",
-      "context": "if (score > 75) return \"default\" as any;"
-    },
-    {
-      "file": "src/components/campaigns/ContentSimilarityView.tsx",
-      "line": 60,
-      "column": 36,
-      "pattern": "cast",
-      "code": "if (score > 25) return \"outline\" as any;",
-      "locationGroup": "components",
-      "context": "if (score > 50) return \"secondary\" as any;"
-    },
-    {
-      "file": "src/components/campaigns/ContentSimilarityView.tsx",
-      "line": 61,
-      "column": 24,
-      "pattern": "cast",
-      "code": "return \"destructive\" as any;",
-      "locationGroup": "components",
-      "context": "if (score > 25) return \"outline\" as any;"
-    },
-    {
-      "file": "src/components/campaigns/ContentSimilarityView.tsx",
-      "line": 66,
-      "column": 62,
-      "pattern": "cast",
-      "code": "const extractedContent: ExtractedContentItem[] = (campaign as any).extractedContent || [];",
-      "locationGroup": "components",
-      "context": "// Now using proper generated types from OpenAPI schema"
-    },
-    {
-      "file": "src/components/campaigns/ContentSimilarityView.tsx",
-      "line": 67,
-      "column": 53,
-      "pattern": "cast",
-      "code": "const leads: LeadItem[] = Array.isArray((campaign as any).leads) ? (campaign as any).leads :",
-      "locationGroup": "components",
-      "context": "const extractedContent: ExtractedContentItem[] = (campaign as any).extractedContent || [];"
-    },
-    {
-      "file": "src/components/campaigns/ContentSimilarityView.tsx",
-      "line": 67,
-      "column": 80,
-      "pattern": "cast",
-      "code": "const leads: LeadItem[] = Array.isArray((campaign as any).leads) ? (campaign as any).leads :",
-      "locationGroup": "components",
-      "context": "const extractedContent: ExtractedContentItem[] = (campaign as any).extractedContent || [];"
-    },
-    {
-      "file": "src/components/campaigns/ContentSimilarityView.tsx",
-      "line": 68,
-      "column": 52,
-      "pattern": "cast",
-      "code": "Array.isArray((campaign as any).leadItems) ? (campaign as any).leadItems : [];",
-      "locationGroup": "components",
-      "context": "const leads: LeadItem[] = Array.isArray((campaign as any).leads) ? (campaign as any).leads :"
-    },
-    {
-      "file": "src/components/campaigns/ContentSimilarityView.tsx",
-      "line": 68,
-      "column": 83,
-      "pattern": "cast",
-      "code": "Array.isArray((campaign as any).leadItems) ? (campaign as any).leadItems : [];",
-      "locationGroup": "components",
-      "context": "const leads: LeadItem[] = Array.isArray((campaign as any).leads) ? (campaign as any).leads :"
     },
     {
       "file": "src/components/campaigns/controls/CampaignModeToggle.tsx",
@@ -735,15 +608,6 @@
       "context": "// eslint-disable-next-line @typescript-eslint/no-explicit-any"
     },
     {
-      "file": "src/lib/utils/apiResponseHelpers.ts",
-      "line": 18,
-      "column": 30,
-      "pattern": "cast",
-      "code": "const axiosError = error as any;",
-      "locationGroup": "other",
-      "context": "if (error && typeof error === 'object' && 'response' in error) {"
-    },
-    {
       "file": "src/lib/utils/domainCalculation.ts",
       "line": 26,
       "column": 108,
@@ -751,33 +615,6 @@
       "code": "const { patternType, characterSet, variableLength, prefixVariableLength, suffixVariableLength } = config as any;",
       "locationGroup": "other",
       "context": ""
-    },
-    {
-      "file": "src/lib/utils/memoization.ts",
-      "line": 14,
-      "column": 21,
-      "pattern": "annotation",
-      "code": "function deepEqual(a: any, b: any): boolean {",
-      "locationGroup": "other",
-      "context": "// eslint-disable-next-line @typescript-eslint/no-explicit-any"
-    },
-    {
-      "file": "src/lib/utils/memoization.ts",
-      "line": 14,
-      "column": 29,
-      "pattern": "annotation",
-      "code": "function deepEqual(a: any, b: any): boolean {",
-      "locationGroup": "other",
-      "context": "// eslint-disable-next-line @typescript-eslint/no-explicit-any"
-    },
-    {
-      "file": "src/lib/utils/memoization.ts",
-      "line": 60,
-      "column": 51,
-      "pattern": "annotation",
-      "code": "export function useDeepCallback<T extends (...args: any[]) => any>(",
-      "locationGroup": "other",
-      "context": "// eslint-disable-next-line @typescript-eslint/no-explicit-any"
     },
     {
       "file": "src/lib/utils/toRtkError.ts",
@@ -798,15 +635,6 @@
       "context": "details?: any;"
     },
     {
-      "file": "src/lib/utils/toRtkError.ts",
-      "line": 15,
-      "column": 31,
-      "pattern": "annotation",
-      "code": "export function toRtkError(err: any): NormalizedRtkError {",
-      "locationGroup": "other",
-      "context": "*/"
-    },
-    {
       "file": "src/lib/utils/typeGuards.ts",
       "line": 3,
       "column": 21,
@@ -814,51 +642,6 @@
       "code": "* Replaces unsafe `as any` casts with proper runtime type checking",
       "locationGroup": "other",
       "context": "* Type Guards for API Response Validation"
-    },
-    {
-      "file": "src/lib/utils/typeSafetyPrimitives.ts",
-      "line": 37,
-      "column": 31,
-      "pattern": "annotation",
-      "code": "export function ensurePath(obj: any, segments: string[]): any {",
-      "locationGroup": "other",
-      "context": "*/"
-    },
-    {
-      "file": "src/lib/utils/typeSafetyPrimitives.ts",
-      "line": 37,
-      "column": 57,
-      "pattern": "annotation",
-      "code": "export function ensurePath(obj: any, segments: string[]): any {",
-      "locationGroup": "other",
-      "context": "*/"
-    },
-    {
-      "file": "src/lib/utils/typeSafetyPrimitives.ts",
-      "line": 101,
-      "column": 34,
-      "pattern": "annotation",
-      "code": "export function applyPatchOp(root: any, op: StreamPatchOp): Result<any, string> {",
-      "locationGroup": "other",
-      "context": "*/"
-    },
-    {
-      "file": "src/lib/utils/typeSafetyPrimitives.ts",
-      "line": 143,
-      "column": 51,
-      "pattern": "cast",
-      "code": "return Err(`Unknown operation type: ${(op as any).type}`);",
-      "locationGroup": "other",
-      "context": "default:"
-    },
-    {
-      "file": "src/lib/utils/typeSafetyPrimitives.ts",
-      "line": 155,
-      "column": 40,
-      "pattern": "annotation",
-      "code": "export function createMessageEvent(data: any): MessageEvent {",
-      "locationGroup": "other",
-      "context": "*/"
     },
     {
       "file": "src/services/analytics/causalGraphService.ts",
@@ -913,168 +696,6 @@
       "code": "newValue?: any;",
       "locationGroup": "services",
       "context": "oldValue?: any;"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 97,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "snapshots: any[],",
-      "locationGroup": "services",
-      "context": "campaignId: string,"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 99,
-      "column": 17,
-      "pattern": "annotation",
-      "code": "anomalies?: any[];",
-      "locationGroup": "services",
-      "context": "context: {"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 100,
-      "column": 17,
-      "pattern": "annotation",
-      "code": "forecasts?: any[];",
-      "locationGroup": "services",
-      "context": "anomalies?: any[];"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 101,
-      "column": 22,
-      "pattern": "annotation",
-      "code": "cohortInsights?: any[];",
-      "locationGroup": "services",
-      "context": "forecasts?: any[];"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 160,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "snapshots: any[]",
-      "locationGroup": "services",
-      "context": "campaignId: string,"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 202,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "snapshots: any[],",
-      "locationGroup": "services",
-      "context": "campaignId: string,"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 235,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "anomalies: any[],",
-      "locationGroup": "services",
-      "context": "private generateAnomalyAugmentedRecommendations("
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 236,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "snapshots: any[],",
-      "locationGroup": "services",
-      "context": "anomalies: any[],"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 287,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "snapshots: any[],",
-      "locationGroup": "services",
-      "context": "private generateClientHeuristicRecommendations("
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 288,
-      "column": 12,
-      "pattern": "annotation",
-      "code": "context: any",
-      "locationGroup": "services",
-      "context": "snapshots: any[],"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 474,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "snapshots: any[],",
-      "locationGroup": "services",
-      "context": "campaignId: string,"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 476,
-      "column": 4,
-      "pattern": "annotation",
-      "code": "): any[] {",
-      "locationGroup": "services",
-      "context": "config: ExperimentalRecommendationConfig"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 481,
-      "column": 39,
-      "pattern": "annotation",
-      "code": "private categorizeRecommendation(rec: any): EnhancedRecommendation['category'] {",
-      "locationGroup": "services",
-      "context": ""
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 491,
-      "column": 32,
-      "pattern": "annotation",
-      "code": "private calculatePriority(rec: any): number {",
-      "locationGroup": "services",
-      "context": ""
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 497,
-      "column": 29,
-      "pattern": "annotation",
-      "code": "private estimateImpact(rec: any): EnhancedRecommendation['estimatedImpact'] {",
-      "locationGroup": "services",
-      "context": ""
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 505,
-      "column": 29,
-      "pattern": "annotation",
-      "code": "private makeActionable(rec: any): EnhancedRecommendation['actionable'] {",
-      "locationGroup": "services",
-      "context": ""
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 541,
-      "column": 12,
-      "pattern": "annotation",
-      "code": "snapshots: any[],",
-      "locationGroup": "services",
-      "context": "campaignId: string,"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 542,
-      "column": 11,
-      "pattern": "annotation",
-      "code": "context?: any,",
-      "locationGroup": "services",
-      "context": "snapshots: any[],"
     },
     {
       "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
@@ -1834,16 +1455,7 @@
     },
     {
       "file": "src/services/observability/tracingService.ts",
-      "line": 331,
-      "column": 19,
-      "pattern": "annotation",
-      "code": "} catch (error: any) {",
-      "locationGroup": "services",
-      "context": "return result;"
-    },
-    {
-      "file": "src/services/observability/tracingService.ts",
-      "line": 415,
+      "line": 418,
       "column": 50,
       "pattern": "cast",
       "code": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {",
@@ -1852,7 +1464,7 @@
     },
     {
       "file": "src/services/observability/tracingService.ts",
-      "line": 416,
+      "line": 419,
       "column": 40,
       "pattern": "cast",
       "code": "const telemetryService = (window as any).__telemetryService;",

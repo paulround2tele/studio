@@ -342,15 +342,39 @@ function PersonasPageContent() {
                 errorCount++;
                 toast({ title: `Error Importing ${item.name || 'Persona'}` , description: "Failed to import persona.", variant: "destructive" });
               }
-            } catch (e: any) {
+            } catch (e: unknown) {
               // Treat HTTP 409 (Conflict) as already present and continue
-              const status = e?.response?.status;
+              let status: number | undefined;
+              if (e && typeof e === 'object' && 'response' in e) {
+                const response = e.response;
+                if (response && typeof response === 'object' && 'status' in response) {
+                  status = Number(response.status);
+                }
+              }
+              
               if (status === 409) {
                 // Skip counting as error; it's already there
                 continue;
               }
+              
               errorCount++;
-              const msg = e?.response?.data?.error?.message || e?.message || 'Unknown error';
+              
+              // Extract error message with proper type checking
+              let msg = 'Unknown error';
+              if (e && typeof e === 'object') {
+                if ('response' in e && e.response && typeof e.response === 'object' && 'data' in e.response) {
+                  const data = e.response.data;
+                  if (data && typeof data === 'object' && 'error' in data) {
+                    const error = data.error;
+                    if (error && typeof error === 'object' && 'message' in error) {
+                      msg = String(error.message);
+                    }
+                  }
+                } else if ('message' in e) {
+                  msg = String(e.message);
+                }
+              }
+              
               toast({ title: `Error Importing ${item.name || 'Persona'}`, description: msg, variant: "destructive" });
             }
         }

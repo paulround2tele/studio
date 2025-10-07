@@ -6,7 +6,7 @@ interface CampaignProgressMonitorProps {
   campaignId: string;
   initialProgress?: CampaignProgress;
   onProgressUpdate?: (progress: CampaignProgress) => void;
-  onPhaseCompleted?: (phase: string, results?: any) => void;
+  onPhaseCompleted?: (phase: string, results?: Record<string, unknown>) => void;
   onError?: (error: string) => void;
   showDebugInfo?: boolean;
   className?: string;
