@@ -540,10 +540,11 @@ class StreamPool {
    */
   private emitTelemetryEvent(eventType: string, data: any): void {
     // This will be implemented when telemetry service is available
-    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
+    if (typeof window !== 'undefined') {
+      const w = window as unknown as { __telemetryService?: { emitTelemetry: (e: string, d: unknown) => void } };
       try {
-        (window as any).__telemetryService.emitTelemetry(eventType, data);
-      } catch (error) {
+        w.__telemetryService?.emitTelemetry(eventType, data);
+      } catch {
         // Silent fail for telemetry
       }
     }

@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShieldCheck, PlusCircle, TestTubeDiagonal, Sparkles, Activity, UploadCloud } from 'lucide-react';
 import { ProxiesApi } from '@/lib/api-client/apis/proxies-api';
+import { ProxyProtocol } from '@/lib/api-client/models/proxy-protocol';
 import { apiConfiguration } from '@/lib/api/config';
 import type { Proxy as GeneratedProxy } from '@/lib/api-client/models/proxy';
 
@@ -62,10 +63,10 @@ function ProxiesPageContent() {
   const fetchProxiesData = useCallback(async (showLoadingSpinner = true) => {
     if (showLoadingSpinner) setLoading(true);
     try {
-    const response = await proxiesApi.proxiesList();
-    const data = (response as any)?.data ?? response;
-    const proxiesArray = Array.isArray(data) ? data.map((p: any) => ({ ...p })) : [];
-    setProxies(proxiesArray as any);
+      const response = await proxiesApi.proxiesList();
+      const data = response?.data;
+      const proxiesArray: ProxyItem[] = Array.isArray(data) ? data : [];
+      setProxies(proxiesArray);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred.";
       toast({ title: "Error", description: message, variant: "destructive" });
@@ -84,8 +85,8 @@ function ProxiesPageContent() {
   const handleProxyStatusUpdate = useCallback((message: { data: { proxyId: string; status: string; health: string } }) => {
     console.log('[ProxiesPage] Received proxy status update:', message.data);
     // Update individual proxy status without full refresh
-    const { proxyId, status: _status, health } = message.data; // Prefix status with _ since we only use health
-    setProxies(current => current.map((proxy: any) => proxy?.id === proxyId ? { ...proxy, isHealthy: health === 'healthy' } : proxy));
+  const { proxyId, status: _status, health } = message.data; // Prefix status with _ since we only use health
+  setProxies(current => current.map(proxy => proxy?.id === proxyId ? { ...proxy, isHealthy: health === 'healthy' } : proxy));
   }, []);
 
   useEffect(() => {
@@ -126,7 +127,7 @@ function ProxiesPageContent() {
       }
     await proxiesApi.proxiesDelete(proxyToDelete.id);
       toast({ title: "Proxy Deleted", description: "Proxy deleted successfully" });
-    setProxies(prev => prev.filter((p: any) => p?.id !== proxyToDelete!.id));
+      setProxies(prev => prev.filter(p => p?.id !== proxyToDelete.id));
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "An unexpected error occurred.";
       toast({ title: "Error", description: message, variant: "destructive" });
@@ -140,9 +141,9 @@ function ProxiesPageContent() {
   const handleTestProxy = async (proxyId: string) => {
     setActionLoading(prev => ({ ...prev, [`test-${proxyId}`]: true }));
     try {
-    const response = await proxiesApi.proxiesTest(proxyId);
-    const data = (response as any)?.data ?? response;
-  if (data) {
+      const response = await proxiesApi.proxiesTest(proxyId);
+      const data = response?.data;
+      if (data) {
         toast({ title: "Proxy Test Completed", description: `Test completed successfully` });
         // Refresh proxy list to get updated status
         fetchProxiesData(false);
@@ -165,11 +166,11 @@ function ProxiesPageContent() {
         toast({ title: "Error", description: "Invalid proxy ID", variant: "destructive" });
         return;
       }
-    const response = await proxiesApi.proxiesUpdate(proxy.id!, payload as any);
-    const data = (response as any)?.data ?? response;
-  if (data) {
+      const response = await proxiesApi.proxiesUpdate(proxy.id!, payload);
+      const data = response?.data;
+      if (data) {
         toast({ title: `Proxy ${newStatus === 'Active' ? 'Enabled' : 'Disabled'}`, description: `Proxy ${proxy.address} is now ${newStatus.toLowerCase()}.`});
-    setProxies(prev => prev.map((p: any) => p?.id === proxy.id ? { ...p, ...data } : p));
+        setProxies(prev => prev.map(p => p?.id === proxy.id ? { ...p, ...data } : p));
       } else {
         toast({ title: "Error Updating Proxy Status", description: "Failed to update proxy status.", variant: "destructive" });
       }
@@ -186,12 +187,12 @@ function ProxiesPageContent() {
     setPageActionLoading("testAll");
     try {
       // Get all proxy IDs from current proxies list
-    const proxyIds = proxies.map((proxy: any) => proxy?.id).filter(Boolean) as string[];
+  const proxyIds = proxies.map(proxy => proxy?.id).filter((id): id is string => typeof id === 'string');
       if (proxyIds.length === 0) {
         toast({ title: "No Proxies", description: "No proxies available to test.", variant: "destructive" });
         return;
       }
-    await proxiesApi.proxiesBulkTest({ proxyIds } as any);
+      await proxiesApi.proxiesBulkTest({ proxyIds });
       toast({ title: "Test All Proxies", description: "Testing process initiated/completed." });
       fetchProxiesData(false); // Refresh list to show updated statuses
     } catch (err: unknown) {
@@ -206,15 +207,15 @@ function ProxiesPageContent() {
     setPageActionLoading("clean");
     try {
       // Clean = delete disabled/failed proxies
-    const disabledProxies = proxies.filter((proxy: any) => !proxy?.isEnabled);
-    const proxyIds = disabledProxies.map((proxy: any) => proxy?.id).filter(Boolean) as string[];
+  const disabledProxies = proxies.filter(proxy => !proxy?.isEnabled);
+  const proxyIds = disabledProxies.map(proxy => proxy?.id).filter((id): id is string => typeof id === 'string');
       
       if (proxyIds.length === 0) {
         toast({ title: "No Disabled Proxies", description: "No disabled proxies to clean.", variant: "destructive" });
         return;
       }
       
-    await proxiesApi.proxiesBulkDelete({ proxyIds } as any);
+      await proxiesApi.proxiesBulkDelete({ proxyIds });
       toast({ title: "Clean Proxies", description: `Cleaned ${proxyIds.length} disabled proxies.` });
       fetchProxiesData(false); // Refresh list
     } catch (err: unknown) {
@@ -248,13 +249,13 @@ function ProxiesPageContent() {
           const payload = {
             name: `Proxy ${ip}:${port}`,
             description: `Imported proxy from file`,
-            protocol: 'http',
+            protocol: ProxyProtocol.http,
             address: `${ip}:${port}`,
             isEnabled: true
           };
 
           try {
-            const response = await proxiesApi.proxiesCreate(payload as any);
+            const response = await proxiesApi.proxiesCreate(payload);
             if (response.data) {
               importedCount++;
             } else {

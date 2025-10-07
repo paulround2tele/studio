@@ -20,29 +20,42 @@
  * @interface BulkResourceAllocationRequestResources
  */
 export interface BulkResourceAllocationRequestResources {
-    /**
-     * CPU cores
-     * @type {number}
-     * @memberof BulkResourceAllocationRequestResources
-     */
-    'cpu'?: number;
-    /**
-     * Memory in GB
-     * @type {number}
-     * @memberof BulkResourceAllocationRequestResources
-     */
-    'memory'?: number;
-    /**
-     * Bandwidth in Mbps
-     * @type {number}
-     * @memberof BulkResourceAllocationRequestResources
-     */
-    'networkBandwidth'?: number;
-    /**
-     * Storage in GB
-     * @type {number}
-     * @memberof BulkResourceAllocationRequestResources
-     */
-    'storage'?: number;
+  /**
+   * CPU cores
+   * @memberof BulkResourceAllocationRequestResources
+   */
+  'cpu'?: 
+        
+          
+          number
+    ;
+  /**
+   * Memory in GB
+   * @memberof BulkResourceAllocationRequestResources
+   */
+  'memory'?: 
+        
+          
+          number
+    ;
+  /**
+   * Bandwidth in Mbps
+   * @memberof BulkResourceAllocationRequestResources
+   */
+  'networkBandwidth'?: 
+        
+          
+          number
+    ;
+  /**
+   * Storage in GB
+   * @memberof BulkResourceAllocationRequestResources
+   */
+  'storage'?: 
+        
+          
+          number
+    ;
 }
+
 

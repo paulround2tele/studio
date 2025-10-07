@@ -23,29 +23,42 @@ import type { PhaseProgressSummary } from './phase-progress-summary';
  * @interface CampaignProgressResponsePhases
  */
 export interface CampaignProgressResponsePhases {
-    /**
-     * 
-     * @type {PhaseProgressSummary}
-     * @memberof CampaignProgressResponsePhases
-     */
-    'discovery'?: PhaseProgressSummary;
-    /**
-     * 
-     * @type {PhaseProgressSummary}
-     * @memberof CampaignProgressResponsePhases
-     */
-    'validation'?: PhaseProgressSummary;
-    /**
-     * 
-     * @type {PhaseProgressSummary}
-     * @memberof CampaignProgressResponsePhases
-     */
-    'extraction'?: PhaseProgressSummary;
-    /**
-     * 
-     * @type {PhaseProgressSummary}
-     * @memberof CampaignProgressResponsePhases
-     */
-    'analysis'?: PhaseProgressSummary;
+  /**
+   * 
+   * @memberof CampaignProgressResponsePhases
+   */
+  'discovery'?: 
+        
+          
+          PhaseProgressSummary
+    ;
+  /**
+   * 
+   * @memberof CampaignProgressResponsePhases
+   */
+  'validation'?: 
+        
+          
+          PhaseProgressSummary
+    ;
+  /**
+   * 
+   * @memberof CampaignProgressResponsePhases
+   */
+  'extraction'?: 
+        
+          
+          PhaseProgressSummary
+    ;
+  /**
+   * 
+   * @memberof CampaignProgressResponsePhases
+   */
+  'analysis'?: 
+        
+          
+          PhaseProgressSummary
+    ;
 }
+
 

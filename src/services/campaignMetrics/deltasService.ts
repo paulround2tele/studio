@@ -161,7 +161,7 @@ export function createBaselineSnapshot(current: AggregateSnapshot): AggregateSna
     if (value != null && value > 0) {
       // Reduce by 5-15% to create meaningful deltas
       const reduction = 0.05 + Math.random() * 0.1;
-      (baselineAggregates as any)[key] = Math.max(0, value * (1 - reduction));
+  (baselineAggregates as Record<string, unknown>)[key] = Math.max(0, value * (1 - reduction));
     }
   }
   

@@ -23,7 +23,11 @@ export interface UIPipelinePhase {
 // ---------------------------------------------
 const selectCampaignUiSlice = (s: RootState) => s.campaignUI;
 const selectCampaignUIById = (id: string) => createSelector(selectCampaignUiSlice, slice => slice.byId?.[id]);
-const selectCampaignApiState = (s: RootState) => (s as any).campaignApi; // RTK Query slice
+// Access RTK Query slice with explicit indexing to avoid 'as any'
+// RootState is declared in store; if campaignApi slice typing is missing, extend RootState accordingly instead of casting.
+// For now, treat unknown to keep zero 'any' usage and refine at call sites.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const selectCampaignApiState = (s: RootState): unknown => (s as unknown as Record<string, unknown>)['campaignApi'];
 
 // Direct RTK Query data selectors per phase to avoid O(N) scans over query cache.
 // Each call to campaignApi.endpoints.getPhaseStatusStandalone.select(arg) returns a selector (RootState)=>QuerySubstate.
@@ -45,8 +49,9 @@ const selectPhaseStatusQuery = (campaignId: string, phase: PipelinePhaseKey) => 
   const selector = (state: RootState): { status?: BackendStatus } | undefined => {
     // Fallback if endpoint missing (should not happen in normal runtime) to preserve safety.
     if (!base) return undefined;
-    const sub = base(state as any);
-    return (sub as any)?.data as { status?: BackendStatus } | undefined;
+    const sub = base(state);
+    const data = (sub as unknown as { data?: { status?: BackendStatus } }).data;
+    return data ? { status: data.status } : undefined;
   };
   campaignCache.set(cacheKey, selector);
   return selector;
@@ -158,22 +163,31 @@ export const makeSelectCanStartFullSequence = (campaignId: string) => createSele
 // ---------------------------------------------
 export const makeSelectExecSummary = (campaignId: string) => createSelector(
   makeSelectPipelinePhases(campaignId),
-  phases => phases.reduce((acc, p) => { (acc as any)[p.execState] = ((acc as any)[p.execState]||0)+1; return acc; }, { idle:0, running:0, completed:0, failed:0 } as Record<string, number>)
+  phases => phases.reduce<Record<string, number>>((acc, p) => {
+    acc[p.execState] = (acc[p.execState] || 0) + 1;
+    return acc;
+  }, { idle:0, running:0, completed:0, failed:0 })
 );
 
 // Exec runtime selectors
 // Use a frozen empty object to keep referential stability when slice absent
-const EMPTY_EXEC_RUNTIME: Record<string, any> = Object.freeze({});
+const EMPTY_EXEC_RUNTIME: Record<string, { startedAt?: number; completedAt?: number; status?: string }> = Object.freeze({});
 export const selectExecState = (campaignId: string) => (state: RootState) =>
-  (state as any).pipelineExec?.byCampaign?.[campaignId] || EMPTY_EXEC_RUNTIME;
+  (state as unknown as {
+    pipelineExec?: { byCampaign?: Record<string, Record<string, { startedAt?: number; completedAt?: number; status?: string }>> };
+  }).pipelineExec?.byCampaign?.[campaignId] || EMPTY_EXEC_RUNTIME;
 export const selectPhaseExecRuntime = (campaignId: string, phase: PipelinePhaseKey) => (state: RootState) => {
-  return (state as any).pipelineExec?.byCampaign?.[campaignId]?.[phase];
+  return (state as unknown as {
+    pipelineExec?: { byCampaign?: Record<string, Record<string, { startedAt?: number; completedAt?: number; status?: string }>> };
+  }).pipelineExec?.byCampaign?.[campaignId]?.[phase];
 };
 
 export const selectRetryEligiblePhases = (campaignId: string) => (state: RootState): PipelinePhaseKey[] => {
-  const exec = (state as any).pipelineExec?.byCampaign?.[campaignId];
-  if (!exec) return [];
-  return (Object.keys(exec) as PipelinePhaseKey[]).filter(p => exec[p].status === 'failed');
+  const execContainer = (state as unknown as {
+    pipelineExec?: { byCampaign?: Record<string, Record<string, { status?: string }>> };
+  }).pipelineExec?.byCampaign?.[campaignId];
+  if (!execContainer) return [];
+  return (Object.keys(execContainer) as PipelinePhaseKey[]).filter(p => execContainer[p]?.status === 'failed');
 };
 
 export const makeSelectActiveExecutionPhase = (campaignId: string) => createSelector(
@@ -359,7 +373,7 @@ export const makeSelectPipelineOverview = (campaignId: string) => createSelector
     nextAction
   ) => {
     const phasesEnriched = phases.map(p => {
-      const r = (runtime as any)[p.key];
+      const r = (runtime as Record<string, { startedAt?: number; completedAt?: number }>)[p.key];
       let durationMs: number | undefined;
       if (r?.startedAt && r?.completedAt) durationMs = r.completedAt - r.startedAt;
       return { ...p, startedAt: r?.startedAt, completedAt: r?.completedAt, durationMs };

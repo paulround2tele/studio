@@ -20,23 +20,33 @@
  * @interface BulkResourceAllocationResponseEndpoints
  */
 export interface BulkResourceAllocationResponseEndpoints {
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkResourceAllocationResponseEndpoints
-     */
-    'monitoring'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkResourceAllocationResponseEndpoints
-     */
-    'metrics'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkResourceAllocationResponseEndpoints
-     */
-    'control'?: string;
+  /**
+   * 
+   * @memberof BulkResourceAllocationResponseEndpoints
+   */
+  'monitoring'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BulkResourceAllocationResponseEndpoints
+   */
+  'metrics'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BulkResourceAllocationResponseEndpoints
+   */
+  'control'?: 
+        
+          
+          string
+    ;
 }
+
 

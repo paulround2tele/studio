@@ -20,35 +20,51 @@
  * @interface CampaignResponseProgress
  */
 export interface CampaignResponseProgress {
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignResponseProgress
-     */
-    'totalDomains'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignResponseProgress
-     */
-    'processedDomains'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignResponseProgress
-     */
-    'successfulDomains'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignResponseProgress
-     */
-    'failedDomains'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignResponseProgress
-     */
-    'percentComplete'?: number;
+  /**
+   * 
+   * @memberof CampaignResponseProgress
+   */
+  'totalDomains'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignResponseProgress
+   */
+  'processedDomains'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignResponseProgress
+   */
+  'successfulDomains'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignResponseProgress
+   */
+  'failedDomains'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignResponseProgress
+   */
+  'percentComplete'?: 
+        
+          
+          number
+    ;
 }
+
 

@@ -1946,7 +1946,7 @@ export interface components {
             /** Format: float */
             progress?: number | null;
             metadata?: {
-                [key: string]: unknown;
+                [key: string]: string | number | boolean | null;
             };
         };
         CampaignProgressResponse: {
@@ -3437,7 +3437,12 @@ export interface components {
         RootCauseEvidence: {
             type: string;
             description: string;
-            value?: unknown;
+            value?: string | number | boolean | {
+                metric: string;
+                value: number;
+                baseline?: number;
+                deviation?: number;
+            } | string[];
             /** Format: float */
             confidence?: number;
             source?: string;

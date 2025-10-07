@@ -1,0 +1,36 @@
+/**
+ * {{{description}}}
+ * @export
+ * @interface {{classname}}
+ */
+export interface {{classname}}{{#parent}} extends {{parent}}{{/parent}} {
+{{#vars}}
+  /**
+   * {{{description}}}
+   * @memberof {{classname}}
+   */
+  '{{baseName}}'{{^required}}?{{/required}}: 
+    {{#isEnum}}
+      {{#allowableValues}}{{#enumVars}}{{{value}}}{{^-last}} | {{/-last}}{{/enumVars}}{{/allowableValues}}
+    {{/isEnum}}
+    {{^isEnum}}
+      {{#isArray}}
+        {{#items.isFreeFormObject}}Array<Record<string, unknown>>{{/items.isFreeFormObject}}
+        {{^items.isFreeFormObject}}
+          {{#isMap}}Array<Record<string, unknown>>{{/isMap}}
+          {{^isMap}}{{{dataType}}}{{/isMap}}
+        {{/items.isFreeFormObject}}
+      {{/isArray}}
+      {{^isArray}}
+        {{#isFreeFormObject}}Record<string, unknown>{{/isFreeFormObject}}
+        {{^isFreeFormObject}}
+          {{#isMap}}Record<string, unknown>{{/isMap}}
+          {{^isMap}}{{{dataType}}}{{/isMap}}
+        {{/isFreeFormObject}}
+  {{/isArray}}
+    {{/isEnum}}{{#isNullable}} | null{{/isNullable}};
+{{/vars}}
+{{#additionalPropertiesType}}
+  [key: string]: Record<string, unknown>;
+{{/additionalPropertiesType}}
+}

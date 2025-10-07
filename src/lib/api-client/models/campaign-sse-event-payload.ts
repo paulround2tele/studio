@@ -33,9 +33,6 @@ import type { CampaignProgressResponseOverall } from './campaign-progress-respon
 import type { CampaignProgressResponsePhases } from './campaign-progress-response-phases';
 // May contain unused imports in some cases
 // @ts-ignore
-import type { CampaignProgressResponseTimeline } from './campaign-progress-response-timeline';
-// May contain unused imports in some cases
-// @ts-ignore
 import type { DomainAnalysisFeatures } from './domain-analysis-features';
 // May contain unused imports in some cases
 // @ts-ignore
@@ -46,6 +43,9 @@ import type { PhaseFailedEvent } from './phase-failed-event';
 // May contain unused imports in some cases
 // @ts-ignore
 import type { PhaseTransitionEvent } from './phase-transition-event';
+// May contain unused imports in some cases
+// @ts-ignore
+import type { TimelineEvent } from './timeline-event';
 
 /**
  * @type CampaignSseEventPayload

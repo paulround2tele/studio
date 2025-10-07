@@ -13,6 +13,9 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
+import type { RootCauseEvidenceValue } from './root-cause-evidence-value';
 
 /**
  * Evidence item supporting a root cause factor
@@ -20,41 +23,60 @@
  * @interface RootCauseEvidence
  */
 export interface RootCauseEvidence {
-    /**
-     * 
-     * @type {string}
-     * @memberof RootCauseEvidence
-     */
-    'type': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof RootCauseEvidence
-     */
-    'description': string;
-    /**
-     * 
-     * @type {any}
-     * @memberof RootCauseEvidence
-     */
-    'value'?: any;
-    /**
-     * 
-     * @type {number}
-     * @memberof RootCauseEvidence
-     */
-    'confidence'?: number;
-    /**
-     * 
-     * @type {string}
-     * @memberof RootCauseEvidence
-     */
-    'source'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof RootCauseEvidence
-     */
-    'collectedAt'?: string;
+  /**
+   * 
+   * @memberof RootCauseEvidence
+   */
+  'type': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof RootCauseEvidence
+   */
+  'description': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof RootCauseEvidence
+   */
+  'value'?: 
+        
+          
+          RootCauseEvidenceValue
+    ;
+  /**
+   * 
+   * @memberof RootCauseEvidence
+   */
+  'confidence'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof RootCauseEvidence
+   */
+  'source'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof RootCauseEvidence
+   */
+  'collectedAt'?: 
+        
+          
+          string
+    ;
 }
+
 

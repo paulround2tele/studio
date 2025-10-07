@@ -168,16 +168,25 @@ const bulkOperationsSlice = createSlice({
         operation.status = status;
         operation.progress = progress;
         if (result) {
-          // Attempt lightweight normalization
-            operation.result = {
-              raw: result,
-              data: {
-                processedCount: typeof (result as any).processed === 'number' ? (result as any).processed : undefined,
-                domainsProcessed: typeof (result as any).domains === 'number' ? (result as any).domains : undefined,
-                totalProcessed: typeof (result as any).total === 'number' ? (result as any).total : undefined,
-              },
-              summary: undefined,
-            };
+          // Attempt lightweight normalization without unsafe casts
+          const processedCount = typeof (result as Record<string, unknown>).processed === 'number'
+            ? (result as Record<string, unknown>).processed as number
+            : undefined;
+          const domainsProcessed = typeof (result as Record<string, unknown>).domains === 'number'
+            ? (result as Record<string, unknown>).domains as number
+            : undefined;
+          const totalProcessed = typeof (result as Record<string, unknown>).total === 'number'
+            ? (result as Record<string, unknown>).total as number
+            : undefined;
+          operation.result = {
+            raw: result,
+            data: {
+              processedCount,
+              domainsProcessed,
+              totalProcessed,
+            },
+            summary: undefined,
+          };
         }
         operation.error = error;
         

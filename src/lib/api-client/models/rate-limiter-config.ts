@@ -20,7 +20,7 @@
  * @interface RateLimiterConfig
  */
 export interface RateLimiterConfig {
-    [key: string]: any;
-
+  [key: string]: Record<string, unknown>;
 }
+
 

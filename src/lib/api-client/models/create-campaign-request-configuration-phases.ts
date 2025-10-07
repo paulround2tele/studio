@@ -32,29 +32,42 @@ import type { CreateCampaignRequestConfigurationPhasesValidation } from './creat
  * @interface CreateCampaignRequestConfigurationPhases
  */
 export interface CreateCampaignRequestConfigurationPhases {
-    /**
-     * 
-     * @type {CreateCampaignRequestConfigurationPhasesDiscovery}
-     * @memberof CreateCampaignRequestConfigurationPhases
-     */
-    'discovery'?: CreateCampaignRequestConfigurationPhasesDiscovery;
-    /**
-     * 
-     * @type {CreateCampaignRequestConfigurationPhasesValidation}
-     * @memberof CreateCampaignRequestConfigurationPhases
-     */
-    'validation'?: CreateCampaignRequestConfigurationPhasesValidation;
-    /**
-     * 
-     * @type {CreateCampaignRequestConfigurationPhasesExtraction}
-     * @memberof CreateCampaignRequestConfigurationPhases
-     */
-    'extraction'?: CreateCampaignRequestConfigurationPhasesExtraction;
-    /**
-     * 
-     * @type {CreateCampaignRequestConfigurationPhasesAnalysis}
-     * @memberof CreateCampaignRequestConfigurationPhases
-     */
-    'analysis'?: CreateCampaignRequestConfigurationPhasesAnalysis;
+  /**
+   * 
+   * @memberof CreateCampaignRequestConfigurationPhases
+   */
+  'discovery'?: 
+        
+          
+          CreateCampaignRequestConfigurationPhasesDiscovery
+    ;
+  /**
+   * 
+   * @memberof CreateCampaignRequestConfigurationPhases
+   */
+  'validation'?: 
+        
+          
+          CreateCampaignRequestConfigurationPhasesValidation
+    ;
+  /**
+   * 
+   * @memberof CreateCampaignRequestConfigurationPhases
+   */
+  'extraction'?: 
+        
+          
+          CreateCampaignRequestConfigurationPhasesExtraction
+    ;
+  /**
+   * 
+   * @memberof CreateCampaignRequestConfigurationPhases
+   */
+  'analysis'?: 
+        
+          
+          CreateCampaignRequestConfigurationPhasesAnalysis
+    ;
 }
+
 

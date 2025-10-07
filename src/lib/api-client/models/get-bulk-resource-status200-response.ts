@@ -20,17 +20,24 @@
  * @interface GetBulkResourceStatus200Response
  */
 export interface GetBulkResourceStatus200Response {
-    /**
-     * 
-     * @type {string}
-     * @memberof GetBulkResourceStatus200Response
-     */
-    'allocationId'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof GetBulkResourceStatus200Response
-     */
-    'status'?: string;
+  /**
+   * 
+   * @memberof GetBulkResourceStatus200Response
+   */
+  'allocationId'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof GetBulkResourceStatus200Response
+   */
+  'status'?: 
+        
+          
+          string
+    ;
 }
+
 

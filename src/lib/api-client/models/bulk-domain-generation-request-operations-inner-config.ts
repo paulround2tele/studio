@@ -20,58 +20,67 @@
  * @interface BulkDomainGenerationRequestOperationsInnerConfig
  */
 export interface BulkDomainGenerationRequestOperationsInnerConfig {
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkDomainGenerationRequestOperationsInnerConfig
-     */
-    'patternType': BulkDomainGenerationRequestOperationsInnerConfigPatternTypeEnum;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkDomainGenerationRequestOperationsInnerConfig
-     */
-    'variableLength': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkDomainGenerationRequestOperationsInnerConfig
-     */
-    'characterSet': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkDomainGenerationRequestOperationsInnerConfig
-     */
-    'constantString': string;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof BulkDomainGenerationRequestOperationsInnerConfig
-     */
-    'tlds': Array<string>;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkDomainGenerationRequestOperationsInnerConfig
-     */
-    'numDomainsToGenerate': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkDomainGenerationRequestOperationsInnerConfig
-     */
-    'batchSize'?: number;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum BulkDomainGenerationRequestOperationsInnerConfigPatternTypeEnum {
-    prefix = 'prefix',
-    suffix = 'suffix',
-    both = 'both'
+  /**
+   * 
+   * @memberof BulkDomainGenerationRequestOperationsInnerConfig
+   */
+  'patternType': 
+      'prefix' | 'suffix' | 'both'
+;
+  /**
+   * 
+   * @memberof BulkDomainGenerationRequestOperationsInnerConfig
+   */
+  'variableLength': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkDomainGenerationRequestOperationsInnerConfig
+   */
+  'characterSet': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BulkDomainGenerationRequestOperationsInnerConfig
+   */
+  'constantString': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BulkDomainGenerationRequestOperationsInnerConfig
+   */
+  'tlds': 
+        
+          
+          Array<string>
+    ;
+  /**
+   * 
+   * @memberof BulkDomainGenerationRequestOperationsInnerConfig
+   */
+  'numDomainsToGenerate': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkDomainGenerationRequestOperationsInnerConfig
+   */
+  'batchSize'?: 
+        
+          
+          number
+    ;
 }
 
 

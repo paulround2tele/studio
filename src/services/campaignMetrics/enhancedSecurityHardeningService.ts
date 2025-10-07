@@ -371,7 +371,7 @@ class SecurityHardeningService {
 
         // If no errors, sanitize and add to valid points
         if (pointErrors.length === 0) {
-          const sanitized = this.sanitizeForecastPoint(point as any, defaultConfig);
+          const sanitized = this.sanitizeForecastPoint(point, defaultConfig as Required<typeof defaultConfig>);
           // Cast nullable bounds to number by fallback to value for compatibility with ForecastPoint
           validPoints.push({
             timestamp: sanitized.timestamp,

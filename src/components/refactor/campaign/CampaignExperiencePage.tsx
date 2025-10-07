@@ -11,6 +11,8 @@ import { KpiGrid } from './KpiGrid';
 import { PipelineBar } from './PipelineBar';
 import { FunnelSnapshot } from './FunnelSnapshot';
 import { RecommendationPanel } from './RecommendationPanel';
+import type { CampaignRecommendation } from '@/lib/api-client/models/campaign-recommendation';
+import type { Recommendation } from '@/types/campaignMetrics';
 import { ConfigSummary } from './ConfigSummary';
 import { ConfigSummaryPanel } from './ConfigSummaryPanel';
 import { MomentumPanel } from './MomentumPanel';
@@ -275,7 +277,13 @@ export function CampaignExperiencePage({ className, role = "region" }: CampaignE
               </div>
             ) : recommendationsData?.recommendations ? (
               <RecommendationPanel 
-                recommendations={recommendationsData.recommendations as any}
+                recommendations={recommendationsData.recommendations.map((r: CampaignRecommendation): Recommendation => ({
+                  id: r.id ?? `${r.rationaleCode}-${r.message}`,
+                  title: r.message,
+                  detail: r.message,
+                  rationale: r.rationaleCode,
+                  severity: 'info'
+                }))}
               />
             ) : (
               <div className="text-center p-8 text-gray-500">

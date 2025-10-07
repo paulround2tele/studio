@@ -20,17 +20,24 @@
  * @interface CreateCampaignRequestConfigurationPhasesDiscovery
  */
 export interface CreateCampaignRequestConfigurationPhasesDiscovery {
-    /**
-     * 
-     * @type {boolean}
-     * @memberof CreateCampaignRequestConfigurationPhasesDiscovery
-     */
-    'enabled'?: boolean;
-    /**
-     * 
-     * @type {number}
-     * @memberof CreateCampaignRequestConfigurationPhasesDiscovery
-     */
-    'maxDepth'?: number;
+  /**
+   * 
+   * @memberof CreateCampaignRequestConfigurationPhasesDiscovery
+   */
+  'enabled'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof CreateCampaignRequestConfigurationPhasesDiscovery
+   */
+  'maxDepth'?: 
+        
+          
+          number
+    ;
 }
+
 

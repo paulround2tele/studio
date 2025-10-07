@@ -386,7 +386,7 @@ class SnapshotCompactionService {
     if (snapshots.length === 0) {
       return {
         timestamp: new Date().toISOString(),
-        aggregates: {} as any,
+  aggregates: {},
       } as AggregateSnapshot;
     }
     if (snapshots.length === 1) {
@@ -394,7 +394,7 @@ class SnapshotCompactionService {
       if (only) return only as AggregateSnapshot;
       return {
         timestamp: new Date().toISOString(),
-        aggregates: {} as any,
+  aggregates: {},
       } as AggregateSnapshot;
     }
 
@@ -403,21 +403,21 @@ class SnapshotCompactionService {
   const timestamp = middleSnapshot ? middleSnapshot.timestamp : new Date().toISOString();
 
   const firstSnapshot = safeFirst(snapshots);
-  const firstAgg = (firstSnapshot && (firstSnapshot as any).aggregates) || ({} as any);
+  const firstAgg: Record<string, unknown> = firstSnapshot ? (firstSnapshot as AggregateSnapshot).aggregates as unknown as Record<string, unknown> : {};
     const aggregates: any = {};
     Object.keys(firstAgg).forEach(key => {
       const numericValues = snapshots
-        .map(s => (s.aggregates as any)?.[key])
+  .map(s => (s.aggregates as unknown as Record<string, unknown>)?.[key])
         .filter(v => typeof v === 'number') as number[];
       if (numericValues.length > 0) {
         aggregates[key] = numericValues.reduce((sum, val) => sum + val, 0) / numericValues.length;
       } else {
-        aggregates[key] = (firstAgg as any)[key];
+  aggregates[key] = firstAgg[key];
       }
     });
 
     // Merge averaged aggregates with representative snapshot (excluding its original aggregates to avoid duplication)
-  const { aggregates: _origAgg, ...rest } = (middleSnapshot || {}) as any;
+  const { aggregates: _origAgg, ...rest } = (middleSnapshot || {}) as Partial<AggregateSnapshot>;
     return {
       ...rest,
       timestamp,

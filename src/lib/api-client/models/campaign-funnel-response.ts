@@ -20,47 +20,69 @@
  * @interface CampaignFunnelResponse
  */
 export interface CampaignFunnelResponse {
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignFunnelResponse
-     */
-    'generated': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignFunnelResponse
-     */
-    'dnsValid': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignFunnelResponse
-     */
-    'httpValid': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignFunnelResponse
-     */
-    'keywordHits': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignFunnelResponse
-     */
-    'analyzed': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignFunnelResponse
-     */
-    'highPotential': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignFunnelResponse
-     */
-    'leads': number;
+  /**
+   * 
+   * @memberof CampaignFunnelResponse
+   */
+  'generated': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignFunnelResponse
+   */
+  'dnsValid': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignFunnelResponse
+   */
+  'httpValid': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignFunnelResponse
+   */
+  'keywordHits': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignFunnelResponse
+   */
+  'analyzed': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignFunnelResponse
+   */
+  'highPotential': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignFunnelResponse
+   */
+  'leads': 
+        
+          
+          number
+    ;
 }
+
 

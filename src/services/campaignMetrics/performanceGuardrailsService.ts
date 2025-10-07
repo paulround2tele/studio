@@ -293,17 +293,18 @@ class PerformanceGuardrailsService {
    */
   getCurrentMemoryUsage(): MemoryStats | null {
     try {
-      if (typeof performance !== 'undefined' && (performance as any).memory) {
-        const memory = (performance as any).memory;
+      if (typeof performance !== 'undefined' && (performance as unknown as { memory?: { usedJSHeapSize?: number; totalJSHeapSize?: number; jsHeapSizeLimit?: number } }).memory) {
+        const memory = (performance as unknown as { memory?: { usedJSHeapSize?: number; totalJSHeapSize?: number; jsHeapSizeLimit?: number } }).memory!;
         
+        const used = memory.usedJSHeapSize ?? 0;
+        const total = memory.totalJSHeapSize ?? 0;
+        const limit = memory.jsHeapSizeLimit ?? 0;
         const stats: MemoryStats = {
-          usedJSHeapSize: memory.usedJSHeapSize || 0,
-          totalJSHeapSize: memory.totalJSHeapSize || 0,
-          jsHeapSizeLimit: memory.jsHeapSizeLimit || 0,
+          usedJSHeapSize: used,
+          totalJSHeapSize: total,
+          jsHeapSizeLimit: limit,
           timestamp: Date.now(),
-          usagePercentage: memory.jsHeapSizeLimit > 0 
-            ? (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100 
-            : 0,
+          usagePercentage: limit > 0 ? (used / limit) * 100 : 0,
         };
 
         return stats;
@@ -379,12 +380,12 @@ class PerformanceGuardrailsService {
       if (result instanceof Promise) {
         return result
           .then(res => finalize(res))
-          .catch(err => finalize(null as any, err)) as Promise<T>;
+          .catch(err => finalize(undefined as unknown as T, err)) as Promise<T>;
       } else {
         return finalize(result);
       }
     } catch (error) {
-      return finalize(null as any, error as Error);
+      return finalize(undefined as unknown as T, error as Error);
     }
   }
 
@@ -394,8 +395,8 @@ class PerformanceGuardrailsService {
   triggerGCHints(): void {
     try {
       // In environments that support it, request garbage collection
-      if (typeof global !== 'undefined' && (global as any).gc) {
-        (global as any).gc();
+      if (typeof global !== 'undefined' && (global as unknown as { gc?: () => void }).gc) {
+        (global as unknown as { gc?: () => void }).gc!();
       }
 
       // Clear internal caches if memory pressure is high

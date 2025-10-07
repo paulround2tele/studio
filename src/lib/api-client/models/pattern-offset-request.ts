@@ -20,46 +20,49 @@
  * @interface PatternOffsetRequest
  */
 export interface PatternOffsetRequest {
-    /**
-     * 
-     * @type {string}
-     * @memberof PatternOffsetRequest
-     */
-    'patternType': PatternOffsetRequestPatternTypeEnum;
-    /**
-     * 
-     * @type {number}
-     * @memberof PatternOffsetRequest
-     */
-    'variableLength': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof PatternOffsetRequest
-     */
-    'characterSet': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PatternOffsetRequest
-     */
-    'constantString'?: string;
-    /**
-     * Single TLD including dot, e.g. .com or without dot
-     * @type {string}
-     * @memberof PatternOffsetRequest
-     */
-    'tld'?: string;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum PatternOffsetRequestPatternTypeEnum {
-    prefix = 'prefix',
-    suffix = 'suffix',
-    both = 'both'
+  /**
+   * 
+   * @memberof PatternOffsetRequest
+   */
+  'patternType': 
+      'prefix' | 'suffix' | 'both'
+;
+  /**
+   * 
+   * @memberof PatternOffsetRequest
+   */
+  'variableLength': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PatternOffsetRequest
+   */
+  'characterSet': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PatternOffsetRequest
+   */
+  'constantString'?: 
+        
+          
+          string
+    ;
+  /**
+   * Single TLD including dot, e.g. .com or without dot
+   * @memberof PatternOffsetRequest
+   */
+  'tld'?: 
+        
+          
+          string
+    ;
 }
 
 

@@ -23,29 +23,42 @@ import type { UserPublicResponse } from './user-public-response';
  * @interface SessionResponse
  */
 export interface SessionResponse {
-    /**
-     * 
-     * @type {UserPublicResponse}
-     * @memberof SessionResponse
-     */
-    'user': UserPublicResponse;
-    /**
-     * 
-     * @type {string}
-     * @memberof SessionResponse
-     */
-    'token': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof SessionResponse
-     */
-    'refreshToken'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof SessionResponse
-     */
-    'expiresAt': string;
+  /**
+   * 
+   * @memberof SessionResponse
+   */
+  'user': 
+        
+          
+          UserPublicResponse
+    ;
+  /**
+   * 
+   * @memberof SessionResponse
+   */
+  'token': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof SessionResponse
+   */
+  'refreshToken'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof SessionResponse
+   */
+  'expiresAt': 
+        
+          
+          string
+    ;
 }
+
 

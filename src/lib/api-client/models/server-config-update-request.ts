@@ -20,7 +20,7 @@
  * @interface ServerConfigUpdateRequest
  */
 export interface ServerConfigUpdateRequest {
-    [key: string]: any;
-
+  [key: string]: Record<string, unknown>;
 }
+
 

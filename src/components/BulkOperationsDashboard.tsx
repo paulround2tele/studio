@@ -127,14 +127,25 @@ export const BulkOperationsDashboard: React.FC = () => {
           setRealTimeUpdates(prev => [event, ...prev.slice(0, 9)]); // Keep last 10 updates
           // Update Redux state if needed
           if (dataObj && 'operation_id' in dataObj) {
-            const operation_id = String((dataObj as { operation_id: unknown }).operation_id);
+            const opId = String((dataObj as { operation_id: unknown }).operation_id);
+            // Extract optional numeric progress
+            const progressVal = (dataObj as { progress?: unknown }).progress;
+            const progressNum = typeof progressVal === 'number' ? progressVal : Number(progressVal ?? 0) || 0;
+            // Safely extract nested result object
+            let opResult: Record<string, unknown> | undefined;
+            if ('result' in dataObj) {
+              const maybeResult = (dataObj as { result?: unknown }).result;
+              if (maybeResult && typeof maybeResult === 'object' && !Array.isArray(maybeResult)) {
+                opResult = maybeResult as Record<string, unknown>;
+              }
+            }
+            const errorVal = (dataObj as { error?: unknown }).error;
             dispatch(updateOperationStatus({
-              id: operation_id,
+              id: opId,
               status: normalizeStatus((dataObj as { status?: unknown }).status, event.event),
-              progress: Number((dataObj as { progress?: unknown }).progress ?? 0),
-              // Provide raw backend result object if present; slice will normalize
-              result: (dataObj && 'result' in dataObj ? (dataObj as any).result : undefined) as Record<string, unknown> | undefined,
-              error: (dataObj as { error?: unknown }).error as string | undefined,
+              progress: progressNum,
+              result: opResult,
+              error: typeof errorVal === 'string' ? errorVal : undefined,
             }));
           }
           break;

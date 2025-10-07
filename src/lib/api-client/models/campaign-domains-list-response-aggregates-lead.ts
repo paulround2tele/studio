@@ -20,35 +20,51 @@
  * @interface CampaignDomainsListResponseAggregatesLead
  */
 export interface CampaignDomainsListResponseAggregatesLead {
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignDomainsListResponseAggregatesLead
-     */
-    'pending'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignDomainsListResponseAggregatesLead
-     */
-    'match'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignDomainsListResponseAggregatesLead
-     */
-    'noMatch'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignDomainsListResponseAggregatesLead
-     */
-    'error'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignDomainsListResponseAggregatesLead
-     */
-    'timeout'?: number;
+  /**
+   * 
+   * @memberof CampaignDomainsListResponseAggregatesLead
+   */
+  'pending'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignDomainsListResponseAggregatesLead
+   */
+  'match'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignDomainsListResponseAggregatesLead
+   */
+  'noMatch'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignDomainsListResponseAggregatesLead
+   */
+  'error'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignDomainsListResponseAggregatesLead
+   */
+  'timeout'?: 
+        
+          
+          number
+    ;
 }
+
 

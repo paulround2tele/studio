@@ -20,17 +20,24 @@
  * @interface CreateCampaignRequestConfigurationPhasesAnalysis
  */
 export interface CreateCampaignRequestConfigurationPhasesAnalysis {
-    /**
-     * 
-     * @type {boolean}
-     * @memberof CreateCampaignRequestConfigurationPhasesAnalysis
-     */
-    'enabled'?: boolean;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof CreateCampaignRequestConfigurationPhasesAnalysis
-     */
-    'generateReports'?: boolean;
+  /**
+   * 
+   * @memberof CreateCampaignRequestConfigurationPhasesAnalysis
+   */
+  'enabled'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof CreateCampaignRequestConfigurationPhasesAnalysis
+   */
+  'generateReports'?: 
+        
+          
+          boolean
+    ;
 }
+
 

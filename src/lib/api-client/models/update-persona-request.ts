@@ -23,29 +23,42 @@ import type { PersonaConfigDetails } from './persona-config-details';
  * @interface UpdatePersonaRequest
  */
 export interface UpdatePersonaRequest {
-    /**
-     * 
-     * @type {string}
-     * @memberof UpdatePersonaRequest
-     */
-    'name'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof UpdatePersonaRequest
-     */
-    'description'?: string;
-    /**
-     * 
-     * @type {PersonaConfigDetails}
-     * @memberof UpdatePersonaRequest
-     */
-    'configDetails'?: PersonaConfigDetails;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof UpdatePersonaRequest
-     */
-    'isEnabled'?: boolean;
+  /**
+   * 
+   * @memberof UpdatePersonaRequest
+   */
+  'name'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof UpdatePersonaRequest
+   */
+  'description'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof UpdatePersonaRequest
+   */
+  'configDetails'?: 
+        
+          
+          PersonaConfigDetails
+    ;
+  /**
+   * 
+   * @memberof UpdatePersonaRequest
+   */
+  'isEnabled'?: 
+        
+          
+          boolean
+    ;
 }
+
 

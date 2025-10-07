@@ -333,7 +333,7 @@ export function getMemoryStats(): {
     return null;
   }
 
-  const memory = (performance as any).memory;
+  const memory = (performance as unknown as { memory?: { usedJSHeapSize: number; totalJSHeapSize: number } }).memory;
   if (!memory) return null;
 
   return {

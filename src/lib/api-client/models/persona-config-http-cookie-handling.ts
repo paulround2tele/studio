@@ -20,22 +20,13 @@
  * @interface PersonaConfigHttpCookieHandling
  */
 export interface PersonaConfigHttpCookieHandling {
-    /**
-     * 
-     * @type {string}
-     * @memberof PersonaConfigHttpCookieHandling
-     */
-    'mode'?: PersonaConfigHttpCookieHandlingModeEnum;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum PersonaConfigHttpCookieHandlingModeEnum {
-    preserve = 'preserve',
-    ignore = 'ignore',
-    custom = 'custom'
+  /**
+   * 
+   * @memberof PersonaConfigHttpCookieHandling
+   */
+  'mode'?: 
+      'preserve' | 'ignore' | 'custom'
+;
 }
 
 

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/shared/PageHeader';
 import PersonaListItem from '@/components/personas/PersonaListItem';
 import type { PersonaResponse as ApiPersonaResponse } from '@/lib/api-client/models/persona-response';
+import { PersonaType } from '@/lib/api-client/models/persona-type';
 
 // OpenAPI persona type (personaType already 'http' | 'dns')
 type Persona = ApiPersonaResponse & { status?: 'Active' | 'Disabled' | 'Testing' | 'Failed'; tags?: string[] };
@@ -120,7 +121,7 @@ function PersonasPageContent() {
     }
     
     try {
-  const response = await personasApi.personasList(undefined, undefined, undefined, type as any);
+    const response = await personasApi.personasList(undefined, undefined, undefined, type as PersonaType);
       // Contract-migrated: response body is now an array of PersonaResponse
       if (response.data) {
         const personasData = Array.isArray(response.data) ? response.data : [];
@@ -170,7 +171,7 @@ function PersonasPageContent() {
   const handleDeletePersona = async (personaId: string, personaType: 'http' | 'dns') => {
     setActionLoading(prev => ({ ...prev, [personaId]: 'delete' }));
     try {
-  const response = await personasApi.personasDelete(personaId);
+        const response = await personasApi.personasDelete(personaId);
       if (response.status >= 200) {
         toast({ title: "Persona Deleted", description: "Persona successfully deleted." });
         fetchPersonasData(personaType, false);
@@ -213,7 +214,7 @@ function PersonasPageContent() {
     try {
       // Map status to isEnabled field which is what the backend accepts
       const isEnabled = newStatus === 'Active';
-  const response = await personasApi.personasUpdate(personaId, { isEnabled } as any);
+        const response = await personasApi.personasUpdate(personaId, { isEnabled });
       if (response.status >= 200) {
         const updated = response.data as any;
         toast({ title: `Persona Status Updated`, description: `${updated?.name || 'Persona'} is now ${newStatus}.` });

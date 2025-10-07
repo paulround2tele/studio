@@ -20,17 +20,24 @@
  * @interface BulkGenerationResponseOperationsValueProgress
  */
 export interface BulkGenerationResponseOperationsValueProgress {
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkGenerationResponseOperationsValueProgress
-     */
-    'processed'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkGenerationResponseOperationsValueProgress
-     */
-    'total'?: number;
+  /**
+   * 
+   * @memberof BulkGenerationResponseOperationsValueProgress
+   */
+  'processed'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkGenerationResponseOperationsValueProgress
+   */
+  'total'?: 
+        
+          
+          number
+    ;
 }
+
 

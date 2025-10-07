@@ -23,85 +23,117 @@ import type { ExecutionStatusEnum } from './execution-status-enum';
  * @interface PhaseExecutionUpdate
  */
 export interface PhaseExecutionUpdate {
-    /**
-     * 
-     * @type {ExecutionStatusEnum}
-     * @memberof PhaseExecutionUpdate
-     */
-    'status'?: ExecutionStatusEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseExecutionUpdate
-     */
-    'startedAt'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseExecutionUpdate
-     */
-    'completedAt'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseExecutionUpdate
-     */
-    'pausedAt'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseExecutionUpdate
-     */
-    'failedAt'?: string;
-    /**
-     * 
-     * @type {number}
-     * @memberof PhaseExecutionUpdate
-     */
-    'progressPercentage'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof PhaseExecutionUpdate
-     */
-    'totalItems'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof PhaseExecutionUpdate
-     */
-    'processedItems'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof PhaseExecutionUpdate
-     */
-    'successfulItems'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof PhaseExecutionUpdate
-     */
-    'failedItems'?: number;
-    /**
-     * 
-     * @type {{ [key: string]: any; }}
-     * @memberof PhaseExecutionUpdate
-     */
-    'configuration'?: { [key: string]: any; };
-    /**
-     * 
-     * @type {{ [key: string]: any; }}
-     * @memberof PhaseExecutionUpdate
-     */
-    'errorDetails'?: { [key: string]: any; };
-    /**
-     * 
-     * @type {{ [key: string]: any; }}
-     * @memberof PhaseExecutionUpdate
-     */
-    'metrics'?: { [key: string]: any; };
+  /**
+   * 
+   * @memberof PhaseExecutionUpdate
+   */
+  'status'?: 
+        
+          
+          ExecutionStatusEnum
+    ;
+  /**
+   * 
+   * @memberof PhaseExecutionUpdate
+   */
+  'startedAt'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PhaseExecutionUpdate
+   */
+  'completedAt'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PhaseExecutionUpdate
+   */
+  'pausedAt'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PhaseExecutionUpdate
+   */
+  'failedAt'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PhaseExecutionUpdate
+   */
+  'progressPercentage'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PhaseExecutionUpdate
+   */
+  'totalItems'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PhaseExecutionUpdate
+   */
+  'processedItems'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PhaseExecutionUpdate
+   */
+  'successfulItems'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PhaseExecutionUpdate
+   */
+  'failedItems'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof PhaseExecutionUpdate
+   */
+  'configuration'?: 
+        Record<string, unknown>
+    ;
+  /**
+   * 
+   * @memberof PhaseExecutionUpdate
+   */
+  'errorDetails'?: 
+        Record<string, unknown>
+    ;
+  /**
+   * 
+   * @memberof PhaseExecutionUpdate
+   */
+  'metrics'?: 
+        Record<string, unknown>
+    ;
 }
-
 
 

@@ -913,8 +913,13 @@ export function exportSnapshotsJSONV7(
     }
 
     // Phase 10 data
-    if ((optionsV7 as any).includeCausalGraph && (optionsV7 as any).causalGraphData) {
-      exportData.causalGraph = (optionsV7 as any).causalGraphData;
+    const opts = optionsV7 as unknown as { includeCausalGraph?: boolean; causalGraphData?: unknown };
+    if (opts.includeCausalGraph && opts.causalGraphData) {
+      // Narrow causalGraph structure (best-effort) before assigning
+      const cg = opts.causalGraphData as unknown;
+      if (cg && typeof cg === 'object') {
+        exportData.causalGraph = cg as typeof exportData.causalGraph;
+      }
     }
 
     if (optionsV7.experimentsData) {
@@ -996,10 +1001,11 @@ export function decodeShareBundleV7(encodedData: string): ShareBundleV7 | null {
     // Backward compatibility handling
     if (version < 7.0) {
       // Bundle is from earlier version, ensure optional Phase 11 fields are undefined
-      delete (parsed as any).scenarios;
-      delete (parsed as any).policies;
-      delete (parsed as any).vizProfiles;
-      delete (parsed as any).edgeProcessing;
+  const mutable = parsed as unknown as Record<string, unknown>;
+  delete mutable.scenarios;
+  delete mutable.policies;
+  delete mutable.vizProfiles;
+  delete mutable.edgeProcessing;
     }
 
     return parsed;

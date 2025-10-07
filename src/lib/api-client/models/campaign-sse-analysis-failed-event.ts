@@ -23,32 +23,31 @@ import type { AnalysisFailedEvent } from './analysis-failed-event';
  * @interface CampaignSseAnalysisFailedEvent
  */
 export interface CampaignSseAnalysisFailedEvent {
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignSseAnalysisFailedEvent
-     */
-    'type': CampaignSseAnalysisFailedEventTypeEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignSseAnalysisFailedEvent
-     */
-    'timestamp'?: string;
-    /**
-     * 
-     * @type {AnalysisFailedEvent}
-     * @memberof CampaignSseAnalysisFailedEvent
-     */
-    'payload': AnalysisFailedEvent;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum CampaignSseAnalysisFailedEventTypeEnum {
-    analysis_failed = 'analysis_failed'
+  /**
+   * 
+   * @memberof CampaignSseAnalysisFailedEvent
+   */
+  'type': 
+      'analysis_failed'
+;
+  /**
+   * 
+   * @memberof CampaignSseAnalysisFailedEvent
+   */
+  'timestamp'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CampaignSseAnalysisFailedEvent
+   */
+  'payload': 
+        
+          
+          AnalysisFailedEvent
+    ;
 }
 
 

@@ -20,29 +20,42 @@
  * @interface TableStats
  */
 export interface TableStats {
-    /**
-     * 
-     * @type {string}
-     * @memberof TableStats
-     */
-    'name'?: string;
-    /**
-     * 
-     * @type {number}
-     * @memberof TableStats
-     */
-    'rowCount'?: number;
-    /**
-     * 
-     * @type {string}
-     * @memberof TableStats
-     */
-    'size'?: string;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof TableStats
-     */
-    'indexes'?: Array<string>;
+  /**
+   * 
+   * @memberof TableStats
+   */
+  'name'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof TableStats
+   */
+  'rowCount'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof TableStats
+   */
+  'size'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof TableStats
+   */
+  'indexes'?: 
+        
+          
+          Array<string>
+    ;
 }
+
 

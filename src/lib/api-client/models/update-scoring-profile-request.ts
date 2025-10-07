@@ -20,29 +20,40 @@
  * @interface UpdateScoringProfileRequest
  */
 export interface UpdateScoringProfileRequest {
-    /**
-     * 
-     * @type {string}
-     * @memberof UpdateScoringProfileRequest
-     */
-    'name'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof UpdateScoringProfileRequest
-     */
-    'description'?: string;
-    /**
-     * 
-     * @type {{ [key: string]: number; }}
-     * @memberof UpdateScoringProfileRequest
-     */
-    'weights'?: { [key: string]: number; };
-    /**
-     * 
-     * @type {number}
-     * @memberof UpdateScoringProfileRequest
-     */
-    'version'?: number;
+  /**
+   * 
+   * @memberof UpdateScoringProfileRequest
+   */
+  'name'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof UpdateScoringProfileRequest
+   */
+  'description'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof UpdateScoringProfileRequest
+   */
+  'weights'?: 
+        Record<string, unknown>
+    ;
+  /**
+   * 
+   * @memberof UpdateScoringProfileRequest
+   */
+  'version'?: 
+        
+          
+          number
+    ;
 }
+
 

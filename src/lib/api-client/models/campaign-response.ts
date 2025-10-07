@@ -23,95 +23,99 @@ import type { CampaignResponseProgress } from './campaign-response-progress';
  * @interface CampaignResponse
  */
 export interface CampaignResponse {
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignResponse
-     */
-    'id': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignResponse
-     */
-    'name': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignResponse
-     */
-    'description'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignResponse
-     */
-    'status': CampaignResponseStatusEnum;
-    /**
-     * Campaign configuration
-     * @type {object}
-     * @memberof CampaignResponse
-     */
-    'configuration': object;
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignResponse
-     */
-    'currentPhase'?: CampaignResponseCurrentPhaseEnum;
-    /**
-     * 
-     * @type {CampaignResponseProgress}
-     * @memberof CampaignResponse
-     */
-    'progress': CampaignResponseProgress;
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignResponse
-     */
-    'createdAt': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignResponse
-     */
-    'updatedAt': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignResponse
-     */
-    'startedAt'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignResponse
-     */
-    'completedAt'?: string;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum CampaignResponseStatusEnum {
-    draft = 'draft',
-    running = 'running',
-    paused = 'paused',
-    completed = 'completed',
-    failed = 'failed',
-    cancelled = 'cancelled'
-}
-/**
-    * @export
-    * @enum {string}
-    */
-export enum CampaignResponseCurrentPhaseEnum {
-    discovery = 'discovery',
-    validation = 'validation',
-    extraction = 'extraction',
-    analysis = 'analysis'
+  /**
+   * 
+   * @memberof CampaignResponse
+   */
+  'id': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CampaignResponse
+   */
+  'name': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CampaignResponse
+   */
+  'description'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CampaignResponse
+   */
+  'status': 
+      'draft' | 'running' | 'paused' | 'completed' | 'failed' | 'cancelled'
+;
+  /**
+   * Campaign configuration
+   * @memberof CampaignResponse
+   */
+  'configuration': 
+        Record<string, unknown>
+    ;
+  /**
+   * 
+   * @memberof CampaignResponse
+   */
+  'currentPhase'?: 
+      'discovery' | 'validation' | 'extraction' | 'analysis'
+;
+  /**
+   * 
+   * @memberof CampaignResponse
+   */
+  'progress': 
+        
+          
+          CampaignResponseProgress
+    ;
+  /**
+   * 
+   * @memberof CampaignResponse
+   */
+  'createdAt': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CampaignResponse
+   */
+  'updatedAt': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CampaignResponse
+   */
+  'startedAt'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CampaignResponse
+   */
+  'completedAt'?: 
+        
+          
+          string
+    ;
 }
 
 

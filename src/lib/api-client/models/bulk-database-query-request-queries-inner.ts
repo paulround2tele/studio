@@ -20,17 +20,24 @@
  * @interface BulkDatabaseQueryRequestQueriesInner
  */
 export interface BulkDatabaseQueryRequestQueriesInner {
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkDatabaseQueryRequestQueriesInner
-     */
-    'id': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkDatabaseQueryRequestQueriesInner
-     */
-    'sql': string;
+  /**
+   * 
+   * @memberof BulkDatabaseQueryRequestQueriesInner
+   */
+  'id': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof BulkDatabaseQueryRequestQueriesInner
+   */
+  'sql': 
+        
+          
+          string
+    ;
 }
+
 

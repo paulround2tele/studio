@@ -20,7 +20,7 @@
  * @interface DNSValidatorConfigJSON
  */
 export interface DNSValidatorConfigJSON {
-    [key: string]: any;
-
+  [key: string]: Record<string, unknown>;
 }
+
 

@@ -23,19 +23,24 @@ import type { BulkOperationCancelStatus } from './bulk-operation-cancel-status';
  * @interface CancelBulkOperation200Response
  */
 export interface CancelBulkOperation200Response {
-    /**
-     * 
-     * @type {string}
-     * @memberof CancelBulkOperation200Response
-     */
-    'operationId'?: string;
-    /**
-     * 
-     * @type {BulkOperationCancelStatus}
-     * @memberof CancelBulkOperation200Response
-     */
-    'status'?: BulkOperationCancelStatus;
+  /**
+   * 
+   * @memberof CancelBulkOperation200Response
+   */
+  'operationId'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CancelBulkOperation200Response
+   */
+  'status'?: 
+        
+          
+          BulkOperationCancelStatus
+    ;
 }
-
 
 

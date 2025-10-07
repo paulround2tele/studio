@@ -60,7 +60,9 @@ class MemoryPressureService {
     }
 
     try {
-      const memInfo = (performance as any).memory;
+      // Narrow performance.memory without using 'any'
+      const perfWithMemory = performance as unknown as { memory?: { usedJSHeapSize?: number; totalJSHeapSize?: number; jsHeapSizeLimit?: number } };
+      const memInfo = perfWithMemory.memory;
       if (!memInfo) return null;
 
       const usedBytes = memInfo.usedJSHeapSize || 0;
@@ -135,12 +137,15 @@ class MemoryPressureService {
    * Force garbage collection if available
    */
   forceGarbageCollection(): boolean {
-    if (typeof window !== 'undefined' && (window as any).gc) {
+    if (typeof window !== 'undefined') {
+      const w = window as unknown as { gc?: () => void };
+      if (w.gc) {
       try {
-        (window as any).gc();
+          w.gc();
         return true;
       } catch (error) {
         console.warn('Failed to force garbage collection:', error);
+      }
       }
     }
     return false;
@@ -245,8 +250,9 @@ class MemoryPressureService {
    * Check if Performance Memory API is supported
    */
   private isMemoryAPISupported(): boolean {
-    return typeof performance !== 'undefined' && 
-           (performance as any).memory !== undefined;
+    if (typeof performance === 'undefined') return false;
+    const perfWithMemory = performance as unknown as { memory?: unknown };
+    return perfWithMemory.memory !== undefined;
   }
 
   /**
@@ -266,11 +272,14 @@ class MemoryPressureService {
    */
   private registerDefaultCaches(): void {
     // Register telemetry service cache
-    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
-      const telemetryService = (window as any).__telemetryService;
-      if (telemetryService.eventQueue) {
+    if (typeof window !== 'undefined') {
+      const w = window as unknown as { __telemetryService?: { eventQueue?: unknown[] } };
+      const telemetryService = w.__telemetryService;
+      if (telemetryService && Array.isArray(telemetryService.eventQueue)) {
         this.registerCache('telemetry_events', telemetryService.eventQueue, 'low', () => {
-          telemetryService.eventQueue.splice(0, telemetryService.eventQueue.length * 0.5);
+          if (telemetryService.eventQueue) {
+            telemetryService.eventQueue.splice(0, Math.floor(telemetryService.eventQueue.length * 0.5));
+          }
         });
       }
     }
@@ -286,9 +295,10 @@ class MemoryPressureService {
       ];
 
       globalCaches.forEach(cacheName => {
-        if ((window as any)[cacheName]) {
-          const cache = (window as any)[cacheName];
-          this.registerCache(cacheName, cache, 'medium');
+        const w = window as unknown as Record<string, unknown>;
+        if (w[cacheName]) {
+          const cache = w[cacheName];
+          this.registerCache(cacheName, cache as unknown as Map<string, unknown>, 'medium');
         }
       });
     }
@@ -298,9 +308,12 @@ class MemoryPressureService {
    * Emit memory pressure telemetry
    */
   private emitMemoryPressureEvent(data: MemoryPressureEvent): void {
-    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
-      const telemetryService = (window as any).__telemetryService;
-      telemetryService.emit('memory_pressure', data);
+    if (typeof window !== 'undefined') {
+      const w = window as unknown as { __telemetryService?: { emit?: (event: string, payload: unknown) => void } };
+      const telemetryService = w.__telemetryService;
+      if (telemetryService && typeof telemetryService.emit === 'function') {
+        telemetryService.emit('memory_pressure', data);
+      }
     }
   }
 }
@@ -310,5 +323,7 @@ export const memoryPressureService = new MemoryPressureService();
 
 // Availability check function
 export const isMemoryMonitoringAvailable = (): boolean => {
-  return typeof performance !== 'undefined' && (performance as any).memory !== undefined;
+  if (typeof performance === 'undefined') return false;
+  const perfWithMemory = performance as unknown as { memory?: unknown };
+  return perfWithMemory.memory !== undefined;
 };

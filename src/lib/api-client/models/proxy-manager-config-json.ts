@@ -20,7 +20,7 @@
  * @interface ProxyManagerConfigJSON
  */
 export interface ProxyManagerConfigJSON {
-    [key: string]: any;
-
+  [key: string]: Record<string, unknown>;
 }
+
 

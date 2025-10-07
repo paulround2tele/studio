@@ -20,17 +20,24 @@
  * @interface AuthChangePasswordRequest
  */
 export interface AuthChangePasswordRequest {
-    /**
-     * 
-     * @type {string}
-     * @memberof AuthChangePasswordRequest
-     */
-    'oldPassword': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof AuthChangePasswordRequest
-     */
-    'newPassword': string;
+  /**
+   * 
+   * @memberof AuthChangePasswordRequest
+   */
+  'oldPassword': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof AuthChangePasswordRequest
+   */
+  'newPassword': 
+        
+          
+          string
+    ;
 }
+
 

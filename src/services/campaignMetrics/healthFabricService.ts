@@ -169,8 +169,8 @@ class HealthFabricService {
   updateDomainHealth(domainType: string, health: Partial<DomainHealth>): void {
     const currentHealth = this.healthFabric.domains.get(domainType);
     
-    const updatedHealth: DomainHealth = {
-      domainType: domainType as any,
+  const updatedHealth: DomainHealth = {
+	domainType: domainType as DomainHealth['domainType'],
       score: 100,
       status: 'healthy',
       lastUpdated: new Date().toISOString(),

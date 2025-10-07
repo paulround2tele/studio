@@ -8,10 +8,9 @@ import { X, AlertTriangle, Info, Zap, ChevronDown, ChevronUp, Brain } from 'luci
 import { cn } from '@/lib/utils';
 import type { Recommendation } from '@/types/campaignMetrics';
 import type { EnhancedRecommendation } from '@/services/campaignMetrics/recommendationsV3Pipeline';
-import type { CampaignRecommendation } from '@/lib/api-client/models/campaign-recommendation';
 
 interface RecommendationPanelProps {
-  recommendations: (Recommendation | EnhancedRecommendation | CampaignRecommendation)[];
+  recommendations: (Recommendation | EnhancedRecommendation)[];
   className?: string;
 }
 
@@ -55,22 +54,7 @@ export function RecommendationPanel({ recommendations, className }: Recommendati
     });
   };
 
-  const normalizeRec = (rec: Recommendation | EnhancedRecommendation | CampaignRecommendation): (Recommendation | EnhancedRecommendation) => {
-    if ('message' in rec && !('title' in rec)) {
-      // Map CampaignRecommendation (API) -> Recommendation view model
-      return {
-        id: rec.id ?? `${rec.rationaleCode}-${rec.message}`,
-        title: rec.message,
-        detail: rec.message,
-        rationale: rec.rationaleCode,
-        severity: (rec as any).severity ?? 'info'
-      } as Recommendation; // minimal mapping; extended fields absent
-    }
-    return rec as (Recommendation | EnhancedRecommendation);
-  };
-
-  const mapped = recommendations.map(normalizeRec);
-  const visibleRecommendations = mapped.filter(rec => !dismissedIds.has(rec.id));
+  const visibleRecommendations = recommendations.filter(rec => !dismissedIds.has(rec.id));
 
   if (visibleRecommendations.length === 0) {
     return null;

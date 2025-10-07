@@ -26,17 +26,24 @@ import type { CampaignClassificationsResponseCounts } from './campaign-classific
  * @interface CampaignClassificationsResponse
  */
 export interface CampaignClassificationsResponse {
-    /**
-     * 
-     * @type {CampaignClassificationsResponseCounts}
-     * @memberof CampaignClassificationsResponse
-     */
-    'counts': CampaignClassificationsResponseCounts;
-    /**
-     * 
-     * @type {Array<CampaignClassificationBucketSample>}
-     * @memberof CampaignClassificationsResponse
-     */
-    'samples'?: Array<CampaignClassificationBucketSample>;
+  /**
+   * 
+   * @memberof CampaignClassificationsResponse
+   */
+  'counts': 
+        
+          
+          CampaignClassificationsResponseCounts
+    ;
+  /**
+   * 
+   * @memberof CampaignClassificationsResponse
+   */
+  'samples'?: 
+        
+          
+          Array<CampaignClassificationBucketSample>
+    ;
 }
+
 

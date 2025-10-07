@@ -20,30 +20,22 @@
  * @interface BulkAnalyticsRequestAggregation
  */
 export interface BulkAnalyticsRequestAggregation {
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof BulkAnalyticsRequestAggregation
-     */
-    'groupBy'?: Array<string>;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof BulkAnalyticsRequestAggregation
-     */
-    'functions'?: Array<BulkAnalyticsRequestAggregationFunctionsEnum>;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum BulkAnalyticsRequestAggregationFunctionsEnum {
-    sum = 'sum',
-    avg = 'avg',
-    min = 'min',
-    max = 'max',
-    count = 'count'
+  /**
+   * 
+   * @memberof BulkAnalyticsRequestAggregation
+   */
+  'groupBy'?: 
+        
+          
+          Array<string>
+    ;
+  /**
+   * 
+   * @memberof BulkAnalyticsRequestAggregation
+   */
+  'functions'?: 
+      'sum' | 'avg' | 'min' | 'max' | 'count'
+;
 }
 
 

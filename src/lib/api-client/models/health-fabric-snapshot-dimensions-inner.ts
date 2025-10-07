@@ -20,23 +20,33 @@
  * @interface HealthFabricSnapshotDimensionsInner
  */
 export interface HealthFabricSnapshotDimensionsInner {
-    /**
-     * 
-     * @type {string}
-     * @memberof HealthFabricSnapshotDimensionsInner
-     */
-    'name': string;
-    /**
-     * 
-     * @type {number}
-     * @memberof HealthFabricSnapshotDimensionsInner
-     */
-    'score': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof HealthFabricSnapshotDimensionsInner
-     */
-    'weight'?: number;
+  /**
+   * 
+   * @memberof HealthFabricSnapshotDimensionsInner
+   */
+  'name': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof HealthFabricSnapshotDimensionsInner
+   */
+  'score': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof HealthFabricSnapshotDimensionsInner
+   */
+  'weight'?: 
+        
+          
+          number
+    ;
 }
+
 

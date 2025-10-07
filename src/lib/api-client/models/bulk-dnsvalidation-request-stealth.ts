@@ -23,35 +23,31 @@ import type { BulkDNSValidationRequestStealthDelayRange } from './bulk-dnsvalida
  * @interface BulkDNSValidationRequestStealth
  */
 export interface BulkDNSValidationRequestStealth {
-    /**
-     * 
-     * @type {boolean}
-     * @memberof BulkDNSValidationRequestStealth
-     */
-    'enabled'?: boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkDNSValidationRequestStealth
-     */
-    'randomizationLevel'?: BulkDNSValidationRequestStealthRandomizationLevelEnum;
-    /**
-     * 
-     * @type {BulkDNSValidationRequestStealthDelayRange}
-     * @memberof BulkDNSValidationRequestStealth
-     */
-    'delayRange'?: BulkDNSValidationRequestStealthDelayRange;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum BulkDNSValidationRequestStealthRandomizationLevelEnum {
-    low = 'low',
-    medium = 'medium',
-    high = 'high',
-    extreme = 'extreme'
+  /**
+   * 
+   * @memberof BulkDNSValidationRequestStealth
+   */
+  'enabled'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof BulkDNSValidationRequestStealth
+   */
+  'randomizationLevel'?: 
+      'low' | 'medium' | 'high' | 'extreme'
+;
+  /**
+   * 
+   * @memberof BulkDNSValidationRequestStealth
+   */
+  'delayRange'?: 
+        
+          
+          BulkDNSValidationRequestStealthDelayRange
+    ;
 }
 
 

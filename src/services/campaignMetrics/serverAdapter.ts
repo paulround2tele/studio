@@ -47,24 +47,22 @@ export function transformServerResponse(
   };
 
   // Add extended fields if available
-  if (serverAggregates.highPotentialCount !== undefined) {
-    (aggregates as any).highPotentialCount = serverAggregates.highPotentialCount;
-  }
-  if (serverAggregates.leadsCount !== undefined) {
-    (aggregates as any).leadsCount = serverAggregates.leadsCount;
-  }
-  if (serverAggregates.avgRichness !== undefined) {
-    (aggregates as any).avgRichness = serverAggregates.avgRichness;
-  }
-  if (serverAggregates.warningRate !== undefined) {
-    (aggregates as any).warningRate = serverAggregates.warningRate;
-  }
-  if (serverAggregates.keywordCoverage !== undefined) {
-    (aggregates as any).keywordCoverage = serverAggregates.keywordCoverage;
-  }
-  if (serverAggregates.medianGain !== undefined) {
-    (aggregates as any).medianGain = serverAggregates.medianGain;
-  }
+  // Extend aggregates via widening type using intersection while avoiding 'any'
+  type Extended = AggregateMetrics & {
+    highPotentialCount?: number;
+    leadsCount?: number;
+    avgRichness?: number;
+    warningRate?: number;
+    keywordCoverage?: number;
+    medianGain?: number;
+  };
+  const extended = aggregates as Extended;
+  if (serverAggregates.highPotentialCount !== undefined) extended.highPotentialCount = serverAggregates.highPotentialCount;
+  if (serverAggregates.leadsCount !== undefined) extended.leadsCount = serverAggregates.leadsCount;
+  if (serverAggregates.avgRichness !== undefined) extended.avgRichness = serverAggregates.avgRichness;
+  if (serverAggregates.warningRate !== undefined) extended.warningRate = serverAggregates.warningRate;
+  if (serverAggregates.keywordCoverage !== undefined) extended.keywordCoverage = serverAggregates.keywordCoverage;
+  if (serverAggregates.medianGain !== undefined) extended.medianGain = serverAggregates.medianGain;
 
   return {
     id: response.snapshotId || `snapshot-${Date.now()}`,

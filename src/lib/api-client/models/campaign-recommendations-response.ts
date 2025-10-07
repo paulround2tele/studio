@@ -23,11 +23,15 @@ import type { CampaignRecommendation } from './campaign-recommendation';
  * @interface CampaignRecommendationsResponse
  */
 export interface CampaignRecommendationsResponse {
-    /**
-     * 
-     * @type {Array<CampaignRecommendation>}
-     * @memberof CampaignRecommendationsResponse
-     */
-    'recommendations': Array<CampaignRecommendation>;
+  /**
+   * 
+   * @memberof CampaignRecommendationsResponse
+   */
+  'recommendations': 
+        
+          
+          Array<CampaignRecommendation>
+    ;
 }
+
 

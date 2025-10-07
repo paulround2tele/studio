@@ -20,11 +20,15 @@
  * @interface PhaseTransitionEvent
  */
 export interface PhaseTransitionEvent {
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseTransitionEvent
-     */
-    'phase': string;
+  /**
+   * 
+   * @memberof PhaseTransitionEvent
+   */
+  'phase': 
+        
+          
+          string
+    ;
 }
+
 

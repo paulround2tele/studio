@@ -20,17 +20,24 @@
  * @interface BulkDNSValidationRequestStealthDelayRange
  */
 export interface BulkDNSValidationRequestStealthDelayRange {
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkDNSValidationRequestStealthDelayRange
-     */
-    'min'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkDNSValidationRequestStealthDelayRange
-     */
-    'max'?: number;
+  /**
+   * 
+   * @memberof BulkDNSValidationRequestStealthDelayRange
+   */
+  'min'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkDNSValidationRequestStealthDelayRange
+   */
+  'max'?: 
+        
+          
+          number
+    ;
 }
+
 

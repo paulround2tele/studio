@@ -20,23 +20,33 @@
  * @interface PersonaDeleteResponse
  */
 export interface PersonaDeleteResponse {
-    /**
-     * 
-     * @type {string}
-     * @memberof PersonaDeleteResponse
-     */
-    'personaId': string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof PersonaDeleteResponse
-     */
-    'deleted': boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof PersonaDeleteResponse
-     */
-    'message'?: string;
+  /**
+   * 
+   * @memberof PersonaDeleteResponse
+   */
+  'personaId': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PersonaDeleteResponse
+   */
+  'deleted': 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof PersonaDeleteResponse
+   */
+  'message'?: 
+        
+          
+          string
+    ;
 }
+
 

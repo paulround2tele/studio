@@ -382,7 +382,10 @@ class DynamicCohortSegmentationService {
     const metricKeys = aggregates[0] ? Object.keys(aggregates[0]) : [];
     
     metricKeys.forEach(key => {
-      const values = aggregates.filter(agg => agg != null).map(agg => (agg as any)[key] as number).filter(v => typeof v === 'number' && !isNaN(v));
+      const values = aggregates
+        .filter((agg): agg is NonNullable<typeof agg> => !!agg)
+  .map(agg => (agg as unknown as Record<string, unknown>)[key])
+        .filter((v): v is number => typeof v === 'number' && !isNaN(v));
       if (values.length > 0) {
         avgMetrics[key] = values.reduce((sum, val) => sum + val, 0) / values.length;
       }

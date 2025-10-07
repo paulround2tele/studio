@@ -20,23 +20,33 @@
  * @interface ProxyPoolDeleteResponse
  */
 export interface ProxyPoolDeleteResponse {
-    /**
-     * 
-     * @type {boolean}
-     * @memberof ProxyPoolDeleteResponse
-     */
-    'deleted'?: boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProxyPoolDeleteResponse
-     */
-    'poolId'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ProxyPoolDeleteResponse
-     */
-    'message'?: string;
+  /**
+   * 
+   * @memberof ProxyPoolDeleteResponse
+   */
+  'deleted'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof ProxyPoolDeleteResponse
+   */
+  'poolId'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ProxyPoolDeleteResponse
+   */
+  'message'?: 
+        
+          
+          string
+    ;
 }
+
 

@@ -4502,7 +4502,12 @@ components:
           nullable: true
         metadata:
           type: object
-          additionalProperties: true
+          additionalProperties:
+            oneOf:
+              - type: string
+              - type: number
+              - type: boolean
+              - type: 'null'
       required:
         - timestamp
         - type
@@ -7614,7 +7619,27 @@ components:
           type: string
         description:
           type: string
-        value: {}
+        value:
+          oneOf:
+            - type: string
+            - type: number
+            - type: boolean
+            - type: object
+              properties:
+                metric:
+                  type: string
+                value:
+                  type: number
+                baseline:
+                  type: number
+                deviation:
+                  type: number
+              required:
+                - metric
+                - value
+            - type: array
+              items:
+                type: string
         confidence:
           type: number
           format: float

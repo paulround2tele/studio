@@ -20,23 +20,33 @@
  * @interface BulkAnalyticsResponseAnalyticsPerformanceMetrics
  */
 export interface BulkAnalyticsResponseAnalyticsPerformanceMetrics {
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkAnalyticsResponseAnalyticsPerformanceMetrics
-     */
-    'avgResponseTime'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkAnalyticsResponseAnalyticsPerformanceMetrics
-     */
-    'avgLeadScore'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkAnalyticsResponseAnalyticsPerformanceMetrics
-     */
-    'conversionRate'?: number;
+  /**
+   * 
+   * @memberof BulkAnalyticsResponseAnalyticsPerformanceMetrics
+   */
+  'avgResponseTime'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkAnalyticsResponseAnalyticsPerformanceMetrics
+   */
+  'avgLeadScore'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkAnalyticsResponseAnalyticsPerformanceMetrics
+   */
+  'conversionRate'?: 
+        
+          
+          number
+    ;
 }
+
 

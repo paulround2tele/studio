@@ -20,11 +20,15 @@
  * @interface ProxiesHealthCheckAllRequest
  */
 export interface ProxiesHealthCheckAllRequest {
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof ProxiesHealthCheckAllRequest
-     */
-    'ids'?: Array<string>;
+  /**
+   * 
+   * @memberof ProxiesHealthCheckAllRequest
+   */
+  'ids'?: 
+        
+          
+          Array<string>
+    ;
 }
+
 

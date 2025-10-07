@@ -20,11 +20,15 @@
  * @interface AssociateScoringProfileRequest
  */
 export interface AssociateScoringProfileRequest {
-    /**
-     * 
-     * @type {string}
-     * @memberof AssociateScoringProfileRequest
-     */
-    'profileId': string;
+  /**
+   * 
+   * @memberof AssociateScoringProfileRequest
+   */
+  'profileId': 
+        
+          
+          string
+    ;
 }
+
 

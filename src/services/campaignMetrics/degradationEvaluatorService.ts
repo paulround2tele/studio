@@ -315,7 +315,7 @@ class DegradationEvaluatorService {
       } catch (error) {
         // Mark domain as failed if health check throws
         this.domainHealthCache.set(domain, {
-          domain: domain as any,
+          domain: domain as DomainHealth['domain'],
           status: 'failed',
           lastChecked: new Date().toISOString(),
           lastError: error instanceof Error ? error.message : 'Unknown error',
@@ -335,7 +335,7 @@ class DegradationEvaluatorService {
       if (!useBackendCanonical()) {
         // If backend canonical is disabled, all domains are in fallback mode
         return {
-          domain: domain as any,
+          domain: domain as DomainHealth['domain'],
           status: 'healthy',
           lastChecked: new Date().toISOString(),
           responseTime: 0,
@@ -346,11 +346,11 @@ class DegradationEvaluatorService {
 
       // Check domain through capabilities service
       await capabilitiesService.initialize();
-      const resolution = capabilitiesService.resolveDomain(domain as any);
+  const resolution = capabilitiesService.resolveDomain(domain as DomainHealth['domain']);
       
       if (resolution === 'skip') {
         return {
-          domain: domain as any,
+          domain: domain as DomainHealth['domain'],
           status: 'failed',
           lastChecked: new Date().toISOString(),
           lastError: 'Domain marked as skip',
@@ -358,7 +358,7 @@ class DegradationEvaluatorService {
         };
       } else if (resolution === 'client-fallback') {
         return {
-          domain: domain as any,
+          domain: domain as DomainHealth['domain'],
           status: 'degraded',
           lastChecked: new Date().toISOString(),
           responseTime: Date.now() - startTime,
@@ -368,7 +368,7 @@ class DegradationEvaluatorService {
         // Server resolution - check actual server health
         const serverHealth = await this.pingServerDomain(domain);
         return {
-          domain: domain as any,
+          domain: domain as DomainHealth['domain'],
           status: serverHealth.ok ? 'healthy' : 'degraded',
           lastChecked: new Date().toISOString(),
           responseTime: Date.now() - startTime,
@@ -378,7 +378,7 @@ class DegradationEvaluatorService {
       }
     } catch (error) {
       return {
-        domain: domain as any,
+        domain: domain as DomainHealth['domain'],
         status: 'failed',
         lastChecked: new Date().toISOString(),
         lastError: error instanceof Error ? error.message : 'Health check failed',

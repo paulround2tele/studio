@@ -26,71 +26,63 @@ import type { PhaseStatusResponseProgress } from './phase-status-response-progre
  * @interface PhaseStatusResponse
  */
 export interface PhaseStatusResponse {
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseStatusResponse
-     */
-    'phase': PhaseStatusResponsePhaseEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseStatusResponse
-     */
-    'status': PhaseStatusResponseStatusEnum;
-    /**
-     * Current phase configuration
-     * @type {object}
-     * @memberof PhaseStatusResponse
-     */
-    'configuration'?: object;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseStatusResponse
-     */
-    'startedAt'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof PhaseStatusResponse
-     */
-    'completedAt'?: string;
-    /**
-     * 
-     * @type {PhaseStatusResponseProgress}
-     * @memberof PhaseStatusResponse
-     */
-    'progress': PhaseStatusResponseProgress;
-    /**
-     * 
-     * @type {Array<PhaseStatusResponseErrorsInner>}
-     * @memberof PhaseStatusResponse
-     */
-    'errors'?: Array<PhaseStatusResponseErrorsInner>;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum PhaseStatusResponsePhaseEnum {
-    discovery = 'discovery',
-    validation = 'validation',
-    extraction = 'extraction',
-    analysis = 'analysis'
-}
-/**
-    * @export
-    * @enum {string}
-    */
-export enum PhaseStatusResponseStatusEnum {
-    not_started = 'not_started',
-    configured = 'configured',
-    running = 'running',
-    paused = 'paused',
-    completed = 'completed',
-    failed = 'failed'
+  /**
+   * 
+   * @memberof PhaseStatusResponse
+   */
+  'phase': 
+      'discovery' | 'validation' | 'extraction' | 'analysis'
+;
+  /**
+   * 
+   * @memberof PhaseStatusResponse
+   */
+  'status': 
+      'not_started' | 'configured' | 'running' | 'paused' | 'completed' | 'failed'
+;
+  /**
+   * Current phase configuration
+   * @memberof PhaseStatusResponse
+   */
+  'configuration'?: 
+        Record<string, unknown>
+    ;
+  /**
+   * 
+   * @memberof PhaseStatusResponse
+   */
+  'startedAt'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PhaseStatusResponse
+   */
+  'completedAt'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof PhaseStatusResponse
+   */
+  'progress': 
+        
+          
+          PhaseStatusResponseProgress
+    ;
+  /**
+   * 
+   * @memberof PhaseStatusResponse
+   */
+  'errors'?: 
+        
+          
+          Array<PhaseStatusResponseErrorsInner>
+    ;
 }
 
 

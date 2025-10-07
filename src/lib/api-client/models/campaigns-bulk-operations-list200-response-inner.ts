@@ -20,23 +20,33 @@
  * @interface CampaignsBulkOperationsList200ResponseInner
  */
 export interface CampaignsBulkOperationsList200ResponseInner {
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignsBulkOperationsList200ResponseInner
-     */
-    'operationId'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignsBulkOperationsList200ResponseInner
-     */
-    'type'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignsBulkOperationsList200ResponseInner
-     */
-    'status'?: string;
+  /**
+   * 
+   * @memberof CampaignsBulkOperationsList200ResponseInner
+   */
+  'operationId'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CampaignsBulkOperationsList200ResponseInner
+   */
+  'type'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CampaignsBulkOperationsList200ResponseInner
+   */
+  'status'?: 
+        
+          
+          string
+    ;
 }
+
 

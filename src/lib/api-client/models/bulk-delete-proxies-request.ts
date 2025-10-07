@@ -20,11 +20,15 @@
  * @interface BulkDeleteProxiesRequest
  */
 export interface BulkDeleteProxiesRequest {
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof BulkDeleteProxiesRequest
-     */
-    'proxyIds': Array<string>;
+  /**
+   * 
+   * @memberof BulkDeleteProxiesRequest
+   */
+  'proxyIds': 
+        
+          
+          Array<string>
+    ;
 }
+
 

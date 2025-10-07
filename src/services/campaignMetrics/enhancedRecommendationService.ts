@@ -179,7 +179,7 @@ class EnhancedRecommendationService {
         provenance: {
           source: 'server' as const,
           confidence: rec.confidence || 0.9,
-          modelVersion: (serverResponse as any).modelVersion,
+          modelVersion: (serverResponse as unknown as { modelVersion?: string }).modelVersion,
           generatedAt: new Date().toISOString(),
           reasoning: rec.reasoning || []
         },

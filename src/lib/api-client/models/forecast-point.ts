@@ -20,41 +20,60 @@
  * @interface ForecastPoint
  */
 export interface ForecastPoint {
-    /**
-     * 
-     * @type {string}
-     * @memberof ForecastPoint
-     */
-    'metricKey': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof ForecastPoint
-     */
-    'timestamp': string;
-    /**
-     * 
-     * @type {number}
-     * @memberof ForecastPoint
-     */
-    'predictedValue': number;
-    /**
-     * 
-     * @type {number}
-     * @memberof ForecastPoint
-     */
-    'lowerBound'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof ForecastPoint
-     */
-    'upperBound'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof ForecastPoint
-     */
-    'actualValue'?: number;
+  /**
+   * 
+   * @memberof ForecastPoint
+   */
+  'metricKey': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ForecastPoint
+   */
+  'timestamp': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ForecastPoint
+   */
+  'predictedValue': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof ForecastPoint
+   */
+  'lowerBound'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof ForecastPoint
+   */
+  'upperBound'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof ForecastPoint
+   */
+  'actualValue'?: 
+        
+          
+          number
+    ;
 }
+
 

@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2025-10-06T16:36:52.646Z",
-  "root": "/home/runner/work/studio/studio",
-  "total": 443,
+  "generatedAt": "2025-10-06T14:36:53.547Z",
+  "root": "/workspaces/studio",
+  "total": 327,
   "byPattern": {
-    "annotation": 228,
-    "cast": 215
+    "annotation": 207,
+    "cast": 120
   },
   "byLocationGroup": {
-    "app": 40,
-    "components": 70,
+    "app": 23,
+    "components": 67,
     "other": 54,
-    "services": 226,
-    "store": 53
+    "services": 171,
+    "store": 12
   },
   "usages": [
     {
@@ -106,16 +106,7 @@
     },
     {
       "file": "src/app/personas/page.tsx",
-      "line": 123,
-      "column": 89,
-      "pattern": "cast",
-      "code": "const response = await personasApi.personasList(undefined, undefined, undefined, type as any);",
-      "locationGroup": "app",
-      "context": "try {"
-    },
-    {
-      "file": "src/app/personas/page.tsx",
-      "line": 193,
+      "line": 194,
       "column": 44,
       "pattern": "cast",
       "code": "const personaName = (response.data as any)?.personaId || 'Persona';",
@@ -124,16 +115,7 @@
     },
     {
       "file": "src/app/personas/page.tsx",
-      "line": 216,
-      "column": 78,
-      "pattern": "cast",
-      "code": "const response = await personasApi.personasUpdate(personaId, { isEnabled } as any);",
-      "locationGroup": "app",
-      "context": "const isEnabled = newStatus === 'Active';"
-    },
-    {
-      "file": "src/app/personas/page.tsx",
-      "line": 218,
+      "line": 219,
       "column": 39,
       "pattern": "cast",
       "code": "const updated = response.data as any;",
@@ -142,7 +124,7 @@
     },
     {
       "file": "src/app/personas/page.tsx",
-      "line": 279,
+      "line": 280,
       "column": 23,
       "pattern": "cast",
       "code": "} as any",
@@ -151,7 +133,7 @@
     },
     {
       "file": "src/app/personas/page.tsx",
-      "line": 286,
+      "line": 287,
       "column": 65,
       "pattern": "cast",
       "code": "case \"random_rotation\": return \"random\" as any;",
@@ -160,7 +142,7 @@
     },
     {
       "file": "src/app/personas/page.tsx",
-      "line": 287,
+      "line": 288,
       "column": 69,
       "pattern": "cast",
       "code": "case \"weighted_rotation\": return \"weighted\" as any;",
@@ -169,7 +151,7 @@
     },
     {
       "file": "src/app/personas/page.tsx",
-      "line": 288,
+      "line": 289,
       "column": 71,
       "pattern": "cast",
       "code": "case \"sequential_failover\": return \"priority\" as any;",
@@ -178,7 +160,7 @@
     },
     {
       "file": "src/app/personas/page.tsx",
-      "line": 289,
+      "line": 290,
       "column": 55,
       "pattern": "cast",
       "code": "default: return \"round_robin\" as any;",
@@ -187,7 +169,7 @@
     },
     {
       "file": "src/app/personas/page.tsx",
-      "line": 312,
+      "line": 313,
       "column": 23,
       "pattern": "cast",
       "code": "} as any,",
@@ -196,7 +178,7 @@
     },
     {
       "file": "src/app/personas/page.tsx",
-      "line": 316,
+      "line": 317,
       "column": 79,
       "pattern": "cast",
       "code": "const response = await personasApi.personasCreate(createPayload as any);",
@@ -205,7 +187,7 @@
     },
     {
       "file": "src/app/personas/page.tsx",
-      "line": 323,
+      "line": 324,
       "column": 23,
       "pattern": "annotation",
       "code": "} catch (e: any) {",
@@ -214,142 +196,7 @@
     },
     {
       "file": "src/app/proxies/page.tsx",
-      "line": 66,
-      "column": 28,
-      "pattern": "cast",
-      "code": "const data = (response as any)?.data ?? response;",
-      "locationGroup": "app",
-      "context": "const response = await proxiesApi.proxiesList();"
-    },
-    {
-      "file": "src/app/proxies/page.tsx",
-      "line": 67,
-      "column": 59,
-      "pattern": "annotation",
-      "code": "const proxiesArray = Array.isArray(data) ? data.map((p: any) => ({ ...p })) : [];",
-      "locationGroup": "app",
-      "context": "const data = (response as any)?.data ?? response;"
-    },
-    {
-      "file": "src/app/proxies/page.tsx",
-      "line": 68,
-      "column": 29,
-      "pattern": "cast",
-      "code": "setProxies(proxiesArray as any);",
-      "locationGroup": "app",
-      "context": "const proxiesArray = Array.isArray(data) ? data.map((p: any) => ({ ...p })) : [];"
-    },
-    {
-      "file": "src/app/proxies/page.tsx",
-      "line": 88,
-      "column": 45,
-      "pattern": "annotation",
-      "code": "setProxies(current => current.map((proxy: any) => proxy?.id === proxyId ? { ...proxy, isHealthy: health === 'healthy' } : proxy));",
-      "locationGroup": "app",
-      "context": "const { proxyId, status: _status, health } = message.data; // Prefix status with _ since we only use health"
-    },
-    {
-      "file": "src/app/proxies/page.tsx",
-      "line": 129,
-      "column": 38,
-      "pattern": "annotation",
-      "code": "setProxies(prev => prev.filter((p: any) => p?.id !== proxyToDelete!.id));",
-      "locationGroup": "app",
-      "context": "toast({ title: \"Proxy Deleted\", description: \"Proxy deleted successfully\" });"
-    },
-    {
-      "file": "src/app/proxies/page.tsx",
-      "line": 144,
-      "column": 28,
-      "pattern": "cast",
-      "code": "const data = (response as any)?.data ?? response;",
-      "locationGroup": "app",
-      "context": "const response = await proxiesApi.proxiesTest(proxyId);"
-    },
-    {
-      "file": "src/app/proxies/page.tsx",
-      "line": 168,
-      "column": 72,
-      "pattern": "cast",
-      "code": "const response = await proxiesApi.proxiesUpdate(proxy.id!, payload as any);",
-      "locationGroup": "app",
-      "context": "}"
-    },
-    {
-      "file": "src/app/proxies/page.tsx",
-      "line": 169,
-      "column": 28,
-      "pattern": "cast",
-      "code": "const data = (response as any)?.data ?? response;",
-      "locationGroup": "app",
-      "context": "const response = await proxiesApi.proxiesUpdate(proxy.id!, payload as any);"
-    },
-    {
-      "file": "src/app/proxies/page.tsx",
-      "line": 172,
-      "column": 35,
-      "pattern": "annotation",
-      "code": "setProxies(prev => prev.map((p: any) => p?.id === proxy.id ? { ...p, ...data } : p));",
-      "locationGroup": "app",
-      "context": "toast({ title: `Proxy ${newStatus === 'Active' ? 'Enabled' : 'Disabled'}`, description: `Proxy ${proxy.address} is now ${newStatus.toLowerCase()}.`});"
-    },
-    {
-      "file": "src/app/proxies/page.tsx",
-      "line": 189,
-      "column": 40,
-      "pattern": "annotation",
-      "code": "const proxyIds = proxies.map((proxy: any) => proxy?.id).filter(Boolean) as string[];",
-      "locationGroup": "app",
-      "context": "// Get all proxy IDs from current proxies list"
-    },
-    {
-      "file": "src/app/proxies/page.tsx",
-      "line": 194,
-      "column": 51,
-      "pattern": "cast",
-      "code": "await proxiesApi.proxiesBulkTest({ proxyIds } as any);",
-      "locationGroup": "app",
-      "context": "}"
-    },
-    {
-      "file": "src/app/proxies/page.tsx",
-      "line": 209,
-      "column": 50,
-      "pattern": "annotation",
-      "code": "const disabledProxies = proxies.filter((proxy: any) => !proxy?.isEnabled);",
-      "locationGroup": "app",
-      "context": "// Clean = delete disabled/failed proxies"
-    },
-    {
-      "file": "src/app/proxies/page.tsx",
-      "line": 210,
-      "column": 48,
-      "pattern": "annotation",
-      "code": "const proxyIds = disabledProxies.map((proxy: any) => proxy?.id).filter(Boolean) as string[];",
-      "locationGroup": "app",
-      "context": "const disabledProxies = proxies.filter((proxy: any) => !proxy?.isEnabled);"
-    },
-    {
-      "file": "src/app/proxies/page.tsx",
-      "line": 217,
-      "column": 53,
-      "pattern": "cast",
-      "code": "await proxiesApi.proxiesBulkDelete({ proxyIds } as any);",
-      "locationGroup": "app",
-      "context": ""
-    },
-    {
-      "file": "src/app/proxies/page.tsx",
-      "line": 257,
-      "column": 69,
-      "pattern": "cast",
-      "code": "const response = await proxiesApi.proxiesCreate(payload as any);",
-      "locationGroup": "app",
-      "context": "try {"
-    },
-    {
-      "file": "src/app/proxies/page.tsx",
-      "line": 292,
+      "line": 293,
       "column": 72,
       "pattern": "annotation",
       "code": "const activeProxiesCount = Array.isArray(proxies) ? proxies.filter((p: any) => p?.isEnabled).length : 0;",
@@ -358,7 +205,7 @@
     },
     {
       "file": "src/app/proxies/page.tsx",
-      "line": 388,
+      "line": 389,
       "column": 70,
       "pattern": "annotation",
       "code": "{Array.isArray(proxies) && proxies.map((proxy: any) => {",
@@ -367,21 +214,12 @@
     },
     {
       "file": "src/app/proxies/page.tsx",
-      "line": 393,
+      "line": 394,
       "column": 44,
       "pattern": "cast",
       "code": "proxy={proxy as any}",
       "locationGroup": "app",
       "context": "key={proxy.id}"
-    },
-    {
-      "file": "src/components/BulkOperationsDashboard.tsx",
-      "line": 136,
-      "column": 66,
-      "pattern": "cast",
-      "code": "result: (dataObj && 'result' in dataObj ? (dataObj as any).result : undefined) as Record<string, unknown> | undefined,",
-      "locationGroup": "components",
-      "context": "// Provide raw backend result object if present; slice will normalize"
     },
     {
       "file": "src/components/CampaignProgressMonitor.tsx",
@@ -807,15 +645,6 @@
       "context": ""
     },
     {
-      "file": "src/components/refactor/campaign/CampaignExperiencePage.tsx",
-      "line": 278,
-      "column": 70,
-      "pattern": "cast",
-      "code": "recommendations={recommendationsData.recommendations as any}",
-      "locationGroup": "components",
-      "context": "<RecommendationPanel"
-    },
-    {
       "file": "src/components/refactor/campaign/CampaignOverviewV2.tsx",
       "line": 39,
       "column": 35,
@@ -940,15 +769,6 @@
       "code": "status: status as any,",
       "locationGroup": "components",
       "context": "phase: `HTTP ${status}`,"
-    },
-    {
-      "file": "src/components/refactor/campaign/RecommendationPanel.tsx",
-      "line": 66,
-      "column": 24,
-      "pattern": "cast",
-      "code": "severity: (rec as any).severity ?? 'info'",
-      "locationGroup": "components",
-      "context": "rationale: rec.rationaleCode,"
     },
     {
       "file": "src/components/refactor/experiments/BanditPanel.tsx",
@@ -1545,87 +1365,6 @@
       "context": "oldValue?: any;"
     },
     {
-      "file": "src/services/campaignMetrics/degradationEvaluatorService.ts",
-      "line": 318,
-      "column": 26,
-      "pattern": "cast",
-      "code": "domain: domain as any,",
-      "locationGroup": "services",
-      "context": "this.domainHealthCache.set(domain, {"
-    },
-    {
-      "file": "src/services/campaignMetrics/degradationEvaluatorService.ts",
-      "line": 338,
-      "column": 26,
-      "pattern": "cast",
-      "code": "domain: domain as any,",
-      "locationGroup": "services",
-      "context": "return {"
-    },
-    {
-      "file": "src/services/campaignMetrics/degradationEvaluatorService.ts",
-      "line": 349,
-      "column": 67,
-      "pattern": "cast",
-      "code": "const resolution = capabilitiesService.resolveDomain(domain as any);",
-      "locationGroup": "services",
-      "context": "await capabilitiesService.initialize();"
-    },
-    {
-      "file": "src/services/campaignMetrics/degradationEvaluatorService.ts",
-      "line": 353,
-      "column": 26,
-      "pattern": "cast",
-      "code": "domain: domain as any,",
-      "locationGroup": "services",
-      "context": "return {"
-    },
-    {
-      "file": "src/services/campaignMetrics/degradationEvaluatorService.ts",
-      "line": 361,
-      "column": 26,
-      "pattern": "cast",
-      "code": "domain: domain as any,",
-      "locationGroup": "services",
-      "context": "return {"
-    },
-    {
-      "file": "src/services/campaignMetrics/degradationEvaluatorService.ts",
-      "line": 371,
-      "column": 26,
-      "pattern": "cast",
-      "code": "domain: domain as any,",
-      "locationGroup": "services",
-      "context": "return {"
-    },
-    {
-      "file": "src/services/campaignMetrics/degradationEvaluatorService.ts",
-      "line": 381,
-      "column": 24,
-      "pattern": "cast",
-      "code": "domain: domain as any,",
-      "locationGroup": "services",
-      "context": "return {"
-    },
-    {
-      "file": "src/services/campaignMetrics/deltasService.ts",
-      "line": 164,
-      "column": 27,
-      "pattern": "cast",
-      "code": "(baselineAggregates as any)[key] = Math.max(0, value * (1 - reduction));",
-      "locationGroup": "services",
-      "context": "const reduction = 0.05 + Math.random() * 0.1;"
-    },
-    {
-      "file": "src/services/campaignMetrics/dynamicCohortService.ts",
-      "line": 385,
-      "column": 76,
-      "pattern": "cast",
-      "code": "const values = aggregates.filter(agg => agg != null).map(agg => (agg as any)[key] as number).filter(v => typeof v === 'number' && !isNaN(v));",
-      "locationGroup": "services",
-      "context": "metricKeys.forEach(key => {"
-    },
-    {
       "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
       "line": 97,
       "column": 14,
@@ -1669,15 +1408,6 @@
       "code": "snapshots: any[]",
       "locationGroup": "services",
       "context": "campaignId: string,"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 182,
-      "column": 41,
-      "pattern": "cast",
-      "code": "modelVersion: (serverResponse as any).modelVersion,",
-      "locationGroup": "services",
-      "context": "confidence: rec.confidence || 0.9,"
     },
     {
       "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
@@ -1843,15 +1573,6 @@
     },
     {
       "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
-      "line": 374,
-      "column": 62,
-      "pattern": "cast",
-      "code": "const sanitized = this.sanitizeForecastPoint(point as any, defaultConfig);",
-      "locationGroup": "services",
-      "context": "if (pointErrors.length === 0) {"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
       "line": 541,
       "column": 9,
       "pattern": "annotation",
@@ -1950,69 +1671,6 @@
       "context": "*/"
     },
     {
-      "file": "src/services/campaignMetrics/exportService.ts",
-      "line": 916,
-      "column": 20,
-      "pattern": "cast",
-      "code": "if ((optionsV7 as any).includeCausalGraph && (optionsV7 as any).causalGraphData) {",
-      "locationGroup": "services",
-      "context": "// Phase 10 data"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportService.ts",
-      "line": 916,
-      "column": 61,
-      "pattern": "cast",
-      "code": "if ((optionsV7 as any).includeCausalGraph && (optionsV7 as any).causalGraphData) {",
-      "locationGroup": "services",
-      "context": "// Phase 10 data"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportService.ts",
-      "line": 917,
-      "column": 43,
-      "pattern": "cast",
-      "code": "exportData.causalGraph = (optionsV7 as any).causalGraphData;",
-      "locationGroup": "services",
-      "context": "if ((optionsV7 as any).includeCausalGraph && (optionsV7 as any).causalGraphData) {"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportService.ts",
-      "line": 999,
-      "column": 22,
-      "pattern": "cast",
-      "code": "delete (parsed as any).scenarios;",
-      "locationGroup": "services",
-      "context": "// Bundle is from earlier version, ensure optional Phase 11 fields are undefined"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportService.ts",
-      "line": 1000,
-      "column": 22,
-      "pattern": "cast",
-      "code": "delete (parsed as any).policies;",
-      "locationGroup": "services",
-      "context": "delete (parsed as any).scenarios;"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportService.ts",
-      "line": 1001,
-      "column": 22,
-      "pattern": "cast",
-      "code": "delete (parsed as any).vizProfiles;",
-      "locationGroup": "services",
-      "context": "delete (parsed as any).policies;"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportService.ts",
-      "line": 1002,
-      "column": 22,
-      "pattern": "cast",
-      "code": "delete (parsed as any).edgeProcessing;",
-      "locationGroup": "services",
-      "context": "delete (parsed as any).vizProfiles;"
-    },
-    {
       "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
       "line": 788,
       "column": 54,
@@ -2095,15 +1753,6 @@
     },
     {
       "file": "src/services/campaignMetrics/healthFabricService.ts",
-      "line": 173,
-      "column": 30,
-      "pattern": "cast",
-      "code": "domainType: domainType as any,",
-      "locationGroup": "services",
-      "context": "const updatedHealth: DomainHealth = {"
-    },
-    {
-      "file": "src/services/campaignMetrics/healthFabricService.ts",
       "line": 589,
       "column": 67,
       "pattern": "annotation",
@@ -2164,15 +1813,6 @@
       "code": "export function emitPerformanceEvent(eventName: string, detail: any): void {",
       "locationGroup": "services",
       "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/metricsPerf.ts",
-      "line": 336,
-      "column": 31,
-      "pattern": "cast",
-      "code": "const memory = (performance as any).memory;",
-      "locationGroup": "services",
-      "context": ""
     },
     {
       "file": "src/services/campaignMetrics/mlRecommendationsService.ts",
@@ -2254,60 +1894,6 @@
       "code": "declare const process: any;",
       "locationGroup": "services",
       "context": "// Declare process and global for Node.js environment"
-    },
-    {
-      "file": "src/services/campaignMetrics/performanceGuardrailsService.ts",
-      "line": 296,
-      "column": 62,
-      "pattern": "cast",
-      "code": "if (typeof performance !== 'undefined' && (performance as any).memory) {",
-      "locationGroup": "services",
-      "context": "try {"
-    },
-    {
-      "file": "src/services/campaignMetrics/performanceGuardrailsService.ts",
-      "line": 297,
-      "column": 37,
-      "pattern": "cast",
-      "code": "const memory = (performance as any).memory;",
-      "locationGroup": "services",
-      "context": "if (typeof performance !== 'undefined' && (performance as any).memory) {"
-    },
-    {
-      "file": "src/services/campaignMetrics/performanceGuardrailsService.ts",
-      "line": 382,
-      "column": 39,
-      "pattern": "cast",
-      "code": ".catch(err => finalize(null as any, err)) as Promise<T>;",
-      "locationGroup": "services",
-      "context": ".then(res => finalize(res))"
-    },
-    {
-      "file": "src/services/campaignMetrics/performanceGuardrailsService.ts",
-      "line": 387,
-      "column": 28,
-      "pattern": "cast",
-      "code": "return finalize(null as any, error as Error);",
-      "locationGroup": "services",
-      "context": "} catch (error) {"
-    },
-    {
-      "file": "src/services/campaignMetrics/performanceGuardrailsService.ts",
-      "line": 397,
-      "column": 52,
-      "pattern": "cast",
-      "code": "if (typeof global !== 'undefined' && (global as any).gc) {",
-      "locationGroup": "services",
-      "context": "// In environments that support it, request garbage collection"
-    },
-    {
-      "file": "src/services/campaignMetrics/performanceGuardrailsService.ts",
-      "line": 398,
-      "column": 17,
-      "pattern": "cast",
-      "code": "(global as any).gc();",
-      "locationGroup": "services",
-      "context": "if (typeof global !== 'undefined' && (global as any).gc) {"
     },
     {
       "file": "src/services/campaignMetrics/progressStream.ts",
@@ -2491,61 +2077,7 @@
     },
     {
       "file": "src/services/campaignMetrics/serverAdapter.ts",
-      "line": 51,
-      "column": 17,
-      "pattern": "cast",
-      "code": "(aggregates as any).highPotentialCount = serverAggregates.highPotentialCount;",
-      "locationGroup": "services",
-      "context": "if (serverAggregates.highPotentialCount !== undefined) {"
-    },
-    {
-      "file": "src/services/campaignMetrics/serverAdapter.ts",
-      "line": 54,
-      "column": 17,
-      "pattern": "cast",
-      "code": "(aggregates as any).leadsCount = serverAggregates.leadsCount;",
-      "locationGroup": "services",
-      "context": "if (serverAggregates.leadsCount !== undefined) {"
-    },
-    {
-      "file": "src/services/campaignMetrics/serverAdapter.ts",
-      "line": 57,
-      "column": 17,
-      "pattern": "cast",
-      "code": "(aggregates as any).avgRichness = serverAggregates.avgRichness;",
-      "locationGroup": "services",
-      "context": "if (serverAggregates.avgRichness !== undefined) {"
-    },
-    {
-      "file": "src/services/campaignMetrics/serverAdapter.ts",
-      "line": 60,
-      "column": 17,
-      "pattern": "cast",
-      "code": "(aggregates as any).warningRate = serverAggregates.warningRate;",
-      "locationGroup": "services",
-      "context": "if (serverAggregates.warningRate !== undefined) {"
-    },
-    {
-      "file": "src/services/campaignMetrics/serverAdapter.ts",
-      "line": 63,
-      "column": 17,
-      "pattern": "cast",
-      "code": "(aggregates as any).keywordCoverage = serverAggregates.keywordCoverage;",
-      "locationGroup": "services",
-      "context": "if (serverAggregates.keywordCoverage !== undefined) {"
-    },
-    {
-      "file": "src/services/campaignMetrics/serverAdapter.ts",
-      "line": 66,
-      "column": 17,
-      "pattern": "cast",
-      "code": "(aggregates as any).medianGain = serverAggregates.medianGain;",
-      "locationGroup": "services",
-      "context": "if (serverAggregates.medianGain !== undefined) {"
-    },
-    {
-      "file": "src/services/campaignMetrics/serverAdapter.ts",
-      "line": 81,
+      "line": 79,
       "column": 48,
       "pattern": "annotation",
       "code": "export function validateServerResponse(response: any): response is ServerMetricsResponse {",
@@ -2554,7 +2086,7 @@
     },
     {
       "file": "src/services/campaignMetrics/serverAdapter.ts",
-      "line": 116,
+      "line": 114,
       "column": 59,
       "pattern": "annotation",
       "code": "export function logServerWarning(message: string, details?: any) {",
@@ -2563,75 +2095,12 @@
     },
     {
       "file": "src/services/campaignMetrics/snapshotCompactionService.ts",
-      "line": 389,
-      "column": 24,
-      "pattern": "cast",
-      "code": "aggregates: {} as any,",
-      "locationGroup": "services",
-      "context": "timestamp: new Date().toISOString(),"
-    },
-    {
-      "file": "src/services/campaignMetrics/snapshotCompactionService.ts",
-      "line": 397,
-      "column": 24,
-      "pattern": "cast",
-      "code": "aggregates: {} as any,",
-      "locationGroup": "services",
-      "context": "timestamp: new Date().toISOString(),"
-    },
-    {
-      "file": "src/services/campaignMetrics/snapshotCompactionService.ts",
-      "line": 406,
-      "column": 53,
-      "pattern": "cast",
-      "code": "const firstAgg = (firstSnapshot && (firstSnapshot as any).aggregates) || ({} as any);",
-      "locationGroup": "services",
-      "context": "const firstSnapshot = safeFirst(snapshots);"
-    },
-    {
-      "file": "src/services/campaignMetrics/snapshotCompactionService.ts",
-      "line": 406,
-      "column": 80,
-      "pattern": "cast",
-      "code": "const firstAgg = (firstSnapshot && (firstSnapshot as any).aggregates) || ({} as any);",
-      "locationGroup": "services",
-      "context": "const firstSnapshot = safeFirst(snapshots);"
-    },
-    {
-      "file": "src/services/campaignMetrics/snapshotCompactionService.ts",
       "line": 407,
       "column": 21,
       "pattern": "annotation",
       "code": "const aggregates: any = {};",
       "locationGroup": "services",
-      "context": "const firstAgg = (firstSnapshot && (firstSnapshot as any).aggregates) || ({} as any);"
-    },
-    {
-      "file": "src/services/campaignMetrics/snapshotCompactionService.ts",
-      "line": 410,
-      "column": 33,
-      "pattern": "cast",
-      "code": ".map(s => (s.aggregates as any)?.[key])",
-      "locationGroup": "services",
-      "context": "const numericValues = snapshots"
-    },
-    {
-      "file": "src/services/campaignMetrics/snapshotCompactionService.ts",
-      "line": 415,
-      "column": 37,
-      "pattern": "cast",
-      "code": "aggregates[key] = (firstAgg as any)[key];",
-      "locationGroup": "services",
-      "context": "} else {"
-    },
-    {
-      "file": "src/services/campaignMetrics/snapshotCompactionService.ts",
-      "line": 420,
-      "column": 68,
-      "pattern": "cast",
-      "code": "const { aggregates: _origAgg, ...rest } = (middleSnapshot || {}) as any;",
-      "locationGroup": "services",
-      "context": "// Merge averaged aggregates with representative snapshot (excluding its original aggregates to avoid duplication)"
+      "context": "const firstAgg: Record<string, unknown> = firstSnapshot ? (firstSnapshot as AggregateSnapshot).aggregates as unknown as Record<string, unknown> : {};"
     },
     {
       "file": "src/services/campaignMetrics/streamPool.ts",
@@ -2706,24 +2175,6 @@
       "context": "*/"
     },
     {
-      "file": "src/services/campaignMetrics/streamPool.ts",
-      "line": 543,
-      "column": 50,
-      "pattern": "cast",
-      "code": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {",
-      "locationGroup": "services",
-      "context": "// This will be implemented when telemetry service is available"
-    },
-    {
-      "file": "src/services/campaignMetrics/streamPool.ts",
-      "line": 545,
-      "column": 17,
-      "pattern": "cast",
-      "code": "(window as any).__telemetryService.emitTelemetry(eventType, data);",
-      "locationGroup": "services",
-      "context": "try {"
-    },
-    {
       "file": "src/services/campaignMetrics/telemetryService.ts",
       "line": 135,
       "column": 14,
@@ -2740,33 +2191,6 @@
       "code": "newValue?: any;",
       "locationGroup": "services",
       "context": "oldValue?: any;"
-    },
-    {
-      "file": "src/services/campaignMetrics/telemetryService.ts",
-      "line": 233,
-      "column": 17,
-      "pattern": "cast",
-      "code": "(window as any).__telemetryService = this;",
-      "locationGroup": "services",
-      "context": "if (typeof window !== 'undefined') {"
-    },
-    {
-      "file": "src/services/campaignMetrics/telemetryService.ts",
-      "line": 441,
-      "column": 50,
-      "pattern": "cast",
-      "code": "if (typeof window !== 'undefined' && (window as any).__telemetryService === this) {",
-      "locationGroup": "services",
-      "context": "// Clean up global reference"
-    },
-    {
-      "file": "src/services/campaignMetrics/telemetryService.ts",
-      "line": 442,
-      "column": 22,
-      "pattern": "cast",
-      "code": "delete (window as any).__telemetryService;",
-      "locationGroup": "services",
-      "context": "if (typeof window !== 'undefined' && (window as any).__telemetryService === this) {"
     },
     {
       "file": "src/services/campaignMetrics/workerCoordinator.ts",
@@ -3028,105 +2452,6 @@
       "code": "const telemetryService = (window as any).__telemetryService;",
       "locationGroup": "services",
       "context": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {"
-    },
-    {
-      "file": "src/services/perf/memoryPressureService.ts",
-      "line": 63,
-      "column": 36,
-      "pattern": "cast",
-      "code": "const memInfo = (performance as any).memory;",
-      "locationGroup": "services",
-      "context": "try {"
-    },
-    {
-      "file": "src/services/perf/memoryPressureService.ts",
-      "line": 138,
-      "column": 50,
-      "pattern": "cast",
-      "code": "if (typeof window !== 'undefined' && (window as any).gc) {",
-      "locationGroup": "services",
-      "context": "forceGarbageCollection(): boolean {"
-    },
-    {
-      "file": "src/services/perf/memoryPressureService.ts",
-      "line": 140,
-      "column": 17,
-      "pattern": "cast",
-      "code": "(window as any).gc();",
-      "locationGroup": "services",
-      "context": "try {"
-    },
-    {
-      "file": "src/services/perf/memoryPressureService.ts",
-      "line": 249,
-      "column": 25,
-      "pattern": "cast",
-      "code": "(performance as any).memory !== undefined;",
-      "locationGroup": "services",
-      "context": "return typeof performance !== 'undefined' &&"
-    },
-    {
-      "file": "src/services/perf/memoryPressureService.ts",
-      "line": 269,
-      "column": 50,
-      "pattern": "cast",
-      "code": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {",
-      "locationGroup": "services",
-      "context": "// Register telemetry service cache"
-    },
-    {
-      "file": "src/services/perf/memoryPressureService.ts",
-      "line": 270,
-      "column": 40,
-      "pattern": "cast",
-      "code": "const telemetryService = (window as any).__telemetryService;",
-      "locationGroup": "services",
-      "context": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {"
-    },
-    {
-      "file": "src/services/perf/memoryPressureService.ts",
-      "line": 289,
-      "column": 21,
-      "pattern": "cast",
-      "code": "if ((window as any)[cacheName]) {",
-      "locationGroup": "services",
-      "context": "globalCaches.forEach(cacheName => {"
-    },
-    {
-      "file": "src/services/perf/memoryPressureService.ts",
-      "line": 290,
-      "column": 33,
-      "pattern": "cast",
-      "code": "const cache = (window as any)[cacheName];",
-      "locationGroup": "services",
-      "context": "if ((window as any)[cacheName]) {"
-    },
-    {
-      "file": "src/services/perf/memoryPressureService.ts",
-      "line": 301,
-      "column": 50,
-      "pattern": "cast",
-      "code": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {",
-      "locationGroup": "services",
-      "context": "private emitMemoryPressureEvent(data: MemoryPressureEvent): void {"
-    },
-    {
-      "file": "src/services/perf/memoryPressureService.ts",
-      "line": 302,
-      "column": 40,
-      "pattern": "cast",
-      "code": "const telemetryService = (window as any).__telemetryService;",
-      "locationGroup": "services",
-      "context": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {"
-    },
-    {
-      "file": "src/services/perf/memoryPressureService.ts",
-      "line": 313,
-      "column": 61,
-      "pattern": "cast",
-      "code": "return typeof performance !== 'undefined' && (performance as any).memory !== undefined;",
-      "locationGroup": "services",
-      "context": "export const isMemoryMonitoringAvailable = (): boolean => {"
     },
     {
       "file": "src/services/perf/taskSchedulerService.ts",
@@ -3525,249 +2850,6 @@
       "context": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {"
     },
     {
-      "file": "src/store/api/authApi.ts",
-      "line": 17,
-      "column": 21,
-      "pattern": "annotation",
-      "code": "const resp: any = await (authClient as any).authLogin(credentials);",
-      "locationGroup": "store",
-      "context": "try {"
-    },
-    {
-      "file": "src/store/api/authApi.ts",
-      "line": 17,
-      "column": 47,
-      "pattern": "cast",
-      "code": "const resp: any = await (authClient as any).authLogin(credentials);",
-      "locationGroup": "store",
-      "context": "try {"
-    },
-    {
-      "file": "src/store/api/authApi.ts",
-      "line": 37,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "} catch (error: any) {",
-      "locationGroup": "store",
-      "context": "return { data: fallback };"
-    },
-    {
-      "file": "src/store/api/authApi.ts",
-      "line": 46,
-      "column": 29,
-      "pattern": "cast",
-      "code": "await (authClient as any).authLogout();",
-      "locationGroup": "store",
-      "context": "try {"
-    },
-    {
-      "file": "src/store/api/authApi.ts",
-      "line": 48,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "} catch (error: any) {",
-      "locationGroup": "store",
-      "context": "return { data: { success: true } };"
-    },
-    {
-      "file": "src/store/api/authApi.ts",
-      "line": 57,
-      "column": 21,
-      "pattern": "annotation",
-      "code": "const resp: any = await (authClient as any).authMe();",
-      "locationGroup": "store",
-      "context": "try {"
-    },
-    {
-      "file": "src/store/api/authApi.ts",
-      "line": 57,
-      "column": 47,
-      "pattern": "cast",
-      "code": "const resp: any = await (authClient as any).authMe();",
-      "locationGroup": "store",
-      "context": "try {"
-    },
-    {
-      "file": "src/store/api/authApi.ts",
-      "line": 60,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "} catch (error: any) {",
-      "locationGroup": "store",
-      "context": "return { data: (body as User) || null };"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 59,
-      "column": 93,
-      "pattern": "cast",
-      "code": "return data ? { data } : { error: { status: 500, data: 'Empty bulk generation response' } as any };",
-      "locationGroup": "store",
-      "context": "const data = response.data as BulkGenerationResponse;"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 60,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "} catch (error: any) {",
-      "locationGroup": "store",
-      "context": "return data ? { data } : { error: { status: 500, data: 'Empty bulk generation response' } as any };"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 74,
-      "column": 96,
-      "pattern": "cast",
-      "code": "return data ? { data } : { error: { status: 500, data: 'Empty DNS validation response' } as any };",
-      "locationGroup": "store",
-      "context": "const data = response.data as BulkValidationResponse;"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 75,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "} catch (error: any) {",
-      "locationGroup": "store",
-      "context": "return data ? { data } : { error: { status: 500, data: 'Empty DNS validation response' } as any };"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 88,
-      "column": 97,
-      "pattern": "cast",
-      "code": "return data ? { data } : { error: { status: 500, data: 'Empty HTTP validation response' } as any };",
-      "locationGroup": "store",
-      "context": "const data = response.data as BulkValidationResponse;"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 89,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "} catch (error: any) {",
-      "locationGroup": "store",
-      "context": "return data ? { data } : { error: { status: 500, data: 'Empty HTTP validation response' } as any };"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 103,
-      "column": 96,
-      "pattern": "cast",
-      "code": "return data ? { data } : { error: { status: 500, data: 'Empty bulk analytics response' } as any };",
-      "locationGroup": "store",
-      "context": "const data = response.data as BulkAnalyticsResponse;"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 104,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "} catch (error: any) {",
-      "locationGroup": "store",
-      "context": "return data ? { data } : { error: { status: 500, data: 'Empty bulk analytics response' } as any };"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 118,
-      "column": 106,
-      "pattern": "cast",
-      "code": "return data ? { data } : { error: { status: 500, data: 'Empty bulk resource allocation response' } as any };",
-      "locationGroup": "store",
-      "context": "const data = response.data as BulkResourceAllocationResponse;"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 119,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "} catch (error: any) {",
-      "locationGroup": "store",
-      "context": "return data ? { data } : { error: { status: 500, data: 'Empty bulk resource allocation response' } as any };"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 132,
-      "column": 102,
-      "pattern": "cast",
-      "code": "return data ? { data } : { error: { status: 500, data: 'Empty bulk resource status response' } as any };",
-      "locationGroup": "store",
-      "context": "const data = response.data as GetBulkResourceStatus200Response;"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 133,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "} catch (error: any) {",
-      "locationGroup": "store",
-      "context": "return data ? { data } : { error: { status: 500, data: 'Empty bulk resource status response' } as any };"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 149,
-      "column": 98,
-      "pattern": "cast",
-      "code": "return data ? { data } : { error: { status: 500, data: 'Empty cancel operation response' } as any };",
-      "locationGroup": "store",
-      "context": "const data = response.data as CancelBulkOperation200Response;"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 150,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "} catch (error: any) {",
-      "locationGroup": "store",
-      "context": "return data ? { data } : { error: { status: 500, data: 'Empty cancel operation response' } as any };"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 164,
-      "column": 90,
-      "pattern": "cast",
-      "code": "const resp = await bulkOperationsApiClient.getBulkOperationStatus(operationId) as any;",
-      "locationGroup": "store",
-      "context": "try {"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 167,
-      "column": 82,
-      "pattern": "cast",
-      "code": "return { error: { status: 500, data: 'Empty bulk operation status' } as any };",
-      "locationGroup": "store",
-      "context": "if (!direct || !direct.operationId) {"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 170,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "} catch (error: any) {",
-      "locationGroup": "store",
-      "context": "return { data: direct as GetBulkOperationStatus200Response };"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 191,
-      "column": 102,
-      "pattern": "cast",
-      "code": "return data ? { data } : { error: { status: 500, data: 'Empty bulk operations list response' } as any };",
-      "locationGroup": "store",
-      "context": "const data = response.data as CampaignsBulkOperationsList200ResponseInner[];"
-    },
-    {
-      "file": "src/store/api/bulkOperationsApi.ts",
-      "line": 192,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "} catch (error: any) {",
-      "locationGroup": "store",
-      "context": "return data ? { data } : { error: { status: 500, data: 'Empty bulk operations list response' } as any };"
-    },
-    {
       "file": "src/store/api/campaignApi.ts",
       "line": 35,
       "column": 23,
@@ -3851,33 +2933,15 @@
     {
       "file": "src/store/selectors/pipelineSelectors.ts",
       "line": 26,
-      "column": 53,
+      "column": 60,
       "pattern": "cast",
-      "code": "const selectCampaignApiState = (s: RootState) => (s as any).campaignApi; // RTK Query slice",
+      "code": "// Access RTK Query slice with explicit indexing to avoid 'as any'",
       "locationGroup": "store",
       "context": "const selectCampaignUIById = (id: string) => createSelector(selectCampaignUiSlice, slice => slice.byId?.[id]);"
     },
     {
       "file": "src/store/selectors/pipelineSelectors.ts",
-      "line": 48,
-      "column": 28,
-      "pattern": "cast",
-      "code": "const sub = base(state as any);",
-      "locationGroup": "store",
-      "context": "if (!base) return undefined;"
-    },
-    {
-      "file": "src/store/selectors/pipelineSelectors.ts",
-      "line": 49,
-      "column": 17,
-      "pattern": "cast",
-      "code": "return (sub as any)?.data as { status?: BackendStatus } | undefined;",
-      "locationGroup": "store",
-      "context": "const sub = base(state as any);"
-    },
-    {
-      "file": "src/store/selectors/pipelineSelectors.ts",
-      "line": 135,
+      "line": 140,
       "column": 75,
       "pattern": "cast",
       "code": "const runnableIdx = PIPELINE_PHASE_ORDER.indexOf(nextRunnable.key as any);",
@@ -3886,120 +2950,12 @@
     },
     {
       "file": "src/store/selectors/pipelineSelectors.ts",
-      "line": 161,
-      "column": 46,
-      "pattern": "cast",
-      "code": "phases => phases.reduce((acc, p) => { (acc as any)[p.execState] = ((acc as any)[p.execState]||0)+1; return acc; }, { idle:0, running:0, completed:0, failed:0 } as Record<string, number>)",
-      "locationGroup": "store",
-      "context": "makeSelectPipelinePhases(campaignId),"
-    },
-    {
-      "file": "src/store/selectors/pipelineSelectors.ts",
-      "line": 161,
-      "column": 75,
-      "pattern": "cast",
-      "code": "phases => phases.reduce((acc, p) => { (acc as any)[p.execState] = ((acc as any)[p.execState]||0)+1; return acc; }, { idle:0, running:0, completed:0, failed:0 } as Record<string, number>)",
-      "locationGroup": "store",
-      "context": "makeSelectPipelinePhases(campaignId),"
-    },
-    {
-      "file": "src/store/selectors/pipelineSelectors.ts",
-      "line": 168,
-      "column": 10,
-      "pattern": "cast",
-      "code": "(state as any).pipelineExec?.byCampaign?.[campaignId] || EMPTY_EXEC_RUNTIME;",
-      "locationGroup": "store",
-      "context": "export const selectExecState = (campaignId: string) => (state: RootState) =>"
-    },
-    {
-      "file": "src/store/selectors/pipelineSelectors.ts",
-      "line": 170,
-      "column": 17,
-      "pattern": "cast",
-      "code": "return (state as any).pipelineExec?.byCampaign?.[campaignId]?.[phase];",
-      "locationGroup": "store",
-      "context": "export const selectPhaseExecRuntime = (campaignId: string, phase: PipelinePhaseKey) => (state: RootState) => {"
-    },
-    {
-      "file": "src/store/selectors/pipelineSelectors.ts",
-      "line": 174,
-      "column": 23,
-      "pattern": "cast",
-      "code": "const exec = (state as any).pipelineExec?.byCampaign?.[campaignId];",
-      "locationGroup": "store",
-      "context": "export const selectRetryEligiblePhases = (campaignId: string) => (state: RootState): PipelinePhaseKey[] => {"
-    },
-    {
-      "file": "src/store/selectors/pipelineSelectors.ts",
-      "line": 217,
+      "line": 231,
       "column": 9,
       "pattern": "cast",
       "code": "}, {} as any)",
       "locationGroup": "store",
       "context": "return acc;"
-    },
-    {
-      "file": "src/store/selectors/pipelineSelectors.ts",
-      "line": 362,
-      "column": 26,
-      "pattern": "cast",
-      "code": "const r = (runtime as any)[p.key];",
-      "locationGroup": "store",
-      "context": "const phasesEnriched = phases.map(p => {"
-    },
-    {
-      "file": "src/store/slices/bulkOperationsSlice.ts",
-      "line": 175,
-      "column": 48,
-      "pattern": "cast",
-      "code": "processedCount: typeof (result as any).processed === 'number' ? (result as any).processed : undefined,",
-      "locationGroup": "store",
-      "context": "data: {"
-    },
-    {
-      "file": "src/store/slices/bulkOperationsSlice.ts",
-      "line": 175,
-      "column": 89,
-      "pattern": "cast",
-      "code": "processedCount: typeof (result as any).processed === 'number' ? (result as any).processed : undefined,",
-      "locationGroup": "store",
-      "context": "data: {"
-    },
-    {
-      "file": "src/store/slices/bulkOperationsSlice.ts",
-      "line": 176,
-      "column": 50,
-      "pattern": "cast",
-      "code": "domainsProcessed: typeof (result as any).domains === 'number' ? (result as any).domains : undefined,",
-      "locationGroup": "store",
-      "context": "processedCount: typeof (result as any).processed === 'number' ? (result as any).processed : undefined,"
-    },
-    {
-      "file": "src/store/slices/bulkOperationsSlice.ts",
-      "line": 176,
-      "column": 89,
-      "pattern": "cast",
-      "code": "domainsProcessed: typeof (result as any).domains === 'number' ? (result as any).domains : undefined,",
-      "locationGroup": "store",
-      "context": "processedCount: typeof (result as any).processed === 'number' ? (result as any).processed : undefined,"
-    },
-    {
-      "file": "src/store/slices/bulkOperationsSlice.ts",
-      "line": 177,
-      "column": 48,
-      "pattern": "cast",
-      "code": "totalProcessed: typeof (result as any).total === 'number' ? (result as any).total : undefined,",
-      "locationGroup": "store",
-      "context": "domainsProcessed: typeof (result as any).domains === 'number' ? (result as any).domains : undefined,"
-    },
-    {
-      "file": "src/store/slices/bulkOperationsSlice.ts",
-      "line": 177,
-      "column": 85,
-      "pattern": "cast",
-      "code": "totalProcessed: typeof (result as any).total === 'number' ? (result as any).total : undefined,",
-      "locationGroup": "store",
-      "context": "domainsProcessed: typeof (result as any).domains === 'number' ? (result as any).domains : undefined,"
     }
   ],
   "notes": [

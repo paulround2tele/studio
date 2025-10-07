@@ -20,7 +20,7 @@
  * @interface ServerConfigResponse
  */
 export interface ServerConfigResponse {
-    [key: string]: any;
-
+  [key: string]: Record<string, unknown>;
 }
+
 

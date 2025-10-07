@@ -56,7 +56,9 @@ ApiError:
             type: string
           context:
             type: object
-            additionalProperties: true
+            description: Structured error context values constrained to primitive/array/object envelope.
+            additionalProperties:
+              $ref: '#/FlexibleValue'
         required: [code, message]
     timestamp:
       type: string
@@ -64,6 +66,42 @@ ApiError:
     path:
       type: string
   required: [code, message, timestamp]
+
+# Reusable flexible value (primitive or small structured) allowed in certain config / context maps
+FlexiblePrimitive:
+  description: Primitive value allowed in flexible configuration maps.
+  oneOf:
+    - { type: string }
+    - { type: number }
+    - { type: integer }
+    - { type: boolean }
+    - { type: null }
+FlexibleArray:
+  description: Array of primitive flexible values.
+  type: array
+  items:
+    oneOf:
+      - { type: string }
+      - { type: number }
+      - { type: integer }
+      - { type: boolean }
+      - { type: null }
+FlexibleObject:
+  description: Nested object whose values are flexible primitives (one-level nesting only).
+  type: object
+  additionalProperties:
+    oneOf:
+      - { type: string }
+      - { type: number }
+      - { type: integer }
+      - { type: boolean }
+      - { type: null }
+FlexibleValue:
+  description: Union of acceptable flexible configuration / context value shapes.
+  oneOf:
+    - $ref: '#/FlexiblePrimitive'
+    - $ref: '#/FlexibleArray'
+    - $ref: '#/FlexibleObject'
 
 # Direct response schemas (Option B - no envelope for 2xx)
 HealthResponse:
@@ -157,7 +195,8 @@ CampaignState:
     mode: { $ref: '#/CampaignModeEnum' }
     configuration:
       type: object
-      additionalProperties: {}
+      additionalProperties:
+        $ref: '#/FlexibleValue'
     version: { type: integer }
     createdAt: { type: string, format: date-time }
     updatedAt: { type: string, format: date-time }
@@ -170,7 +209,8 @@ CampaignStateUpdate:
     mode: { $ref: '#/CampaignModeEnum' }
     configuration:
       type: object
-      additionalProperties: {}
+      additionalProperties:
+        $ref: '#/FlexibleValue'
     version: { type: integer, description: Optional optimistic concurrency version; if provided must match current }
 
 PhaseExecution:
@@ -193,8 +233,8 @@ PhaseExecution:
     successfulItems: { type: integer, format: int64 }
     failedItems: { type: integer, format: int64 }
     configuration: { type: object, additionalProperties: {}, nullable: true }
-    errorDetails: { type: object, additionalProperties: {}, nullable: true }
-    metrics: { type: object, additionalProperties: {}, nullable: true }
+  errorDetails: { type: object, additionalProperties: { $ref: '#/FlexibleValue' }, nullable: true }
+  metrics: { type: object, additionalProperties: { $ref: '#/FlexibleValue' }, nullable: true }
     createdAt: { type: string, format: date-time }
     updatedAt: { type: string, format: date-time }
   required: [id, campaignId, phaseType, status, createdAt, updatedAt]
@@ -213,8 +253,8 @@ PhaseExecutionUpdate:
     successfulItems: { type: integer, format: int64 }
     failedItems: { type: integer, format: int64 }
     configuration: { type: object, additionalProperties: {}, nullable: true }
-    errorDetails: { type: object, additionalProperties: {}, nullable: true }
-    metrics: { type: object, additionalProperties: {}, nullable: true }
+  errorDetails: { type: object, additionalProperties: { $ref: '#/FlexibleValue' }, nullable: true }
+  metrics: { type: object, additionalProperties: { $ref: '#/FlexibleValue' }, nullable: true }
 
 # Composite view
 CampaignStateWithExecutions:
@@ -1113,23 +1153,28 @@ CampaignSseEvent:
 AuthConfig:
   type: object
   description: Authentication configuration
-  additionalProperties: true
+  additionalProperties:
+    $ref: '#/FlexibleValue'
 LoggingConfig:
   type: object
   description: Logging configuration
-  additionalProperties: true
+  additionalProperties:
+    $ref: '#/FlexibleValue'
 DNSValidatorConfigJSON:
   type: object
   description: DNS validator configuration
-  additionalProperties: true
+  additionalProperties:
+    $ref: '#/FlexibleValue'
 HTTPValidatorConfigJSON:
   type: object
   description: HTTP validator configuration
-  additionalProperties: true
+  additionalProperties:
+    $ref: '#/FlexibleValue'
 WorkerConfig:
   type: object
   description: Worker configuration
-  additionalProperties: true
+  additionalProperties:
+    $ref: '#/FlexibleValue'
 WorkerConfigUpdate:
   type: object
   description: Worker configuration update payload
@@ -1187,15 +1232,18 @@ WorkerConfigUpdate:
 RateLimiterConfig:
   type: object
   description: Rate limiter configuration
-  additionalProperties: true
+  additionalProperties:
+    $ref: '#/FlexibleValue'
 ProxyManagerConfigJSON:
   type: object
   description: Proxy manager configuration
-  additionalProperties: true
+  additionalProperties:
+    $ref: '#/FlexibleValue'
 ServerConfigResponse:
   type: object
   description: Consolidated server configuration response
-  additionalProperties: true
+  additionalProperties:
+    $ref: '#/FlexibleValue'
 ServerConfigUpdateRequest:
   type: object
   description: Server configuration update request
@@ -1255,8 +1303,7 @@ CreateCampaignRequest:
           description: Maximum number of domains to process
         phases:
           type: object
-          properties:
-            discovery:
+            $ref: '#/ProxyOperationResult'
               type: object
               properties:
                 enabled: { type: boolean }
@@ -1780,7 +1827,38 @@ BulkValidationResponse:
       enum: [initiated, pending, running]
     operations:
       type: object
-      additionalProperties:
+          items:
+            $ref: '#/ProxyPoolProxyRef'
+
+    ProxyOperationResult:
+      description: Result object for a proxy operation containing a proxyId and optional error or metadata.
+      type: object
+      properties:
+        proxyId: { type: string, format: uuid }
+        success: { type: boolean }
+        error: { type: string, nullable: true }
+        metadata:
+          type: object
+          nullable: true
+          additionalProperties:
+            $ref: '#/FlexibleValue'
+      required: [proxyId]
+
+    ProxyPoolProxyRef:
+      description: Lightweight proxy reference entry for inclusion inside a pool listing.
+      type: object
+      properties:
+        proxyId: { type: string, format: uuid }
+        address: { type: string }
+        protocol: { type: string }
+        isHealthy: { type: boolean }
+        lastChecked: { type: string, format: date-time, nullable: true }
+        metadata:
+          type: object
+          nullable: true
+          additionalProperties:
+            $ref: '#/FlexibleValue'
+      required: [proxyId, address, protocol, isHealthy]
         type: object
         properties:
           campaignId: { type: string, format: uuid }
@@ -1945,7 +2023,20 @@ RootCauseEvidence:
   properties:
     type: { type: string }
     description: { type: string }
-    value: {}
+    value:
+      oneOf:
+        - { type: string }
+        - { type: number }
+        - { type: boolean }
+        - type: object
+          properties:
+            metric: { type: string }
+            value: { type: number }
+            baseline: { type: number }
+            deviation: { type: number }
+          required: [metric, value]
+        - type: array
+          items: { type: string }
     confidence: { type: number, format: float }
     source: { type: string }
     collectedAt: { type: string, format: date-time }
@@ -2007,7 +2098,12 @@ TimelineEvent:
     progress: { type: number, format: float, nullable: true }
     metadata:
       type: object
-      additionalProperties: true
+      additionalProperties:
+        oneOf:
+          - { type: string }
+          - { type: number }
+          - { type: boolean }
+          - { type: 'null' }
   required: [timestamp, type]
 
 ForecastProbabilisticPoint:

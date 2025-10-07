@@ -24,7 +24,7 @@ import type { CampaignProgressResponseOverall } from './campaign-progress-respon
 import type { CampaignProgressResponsePhases } from './campaign-progress-response-phases';
 // May contain unused imports in some cases
 // @ts-ignore
-import type { CampaignProgressResponseTimeline } from './campaign-progress-response-timeline';
+import type { TimelineEvent } from './timeline-event';
 
 /**
  * @type CampaignProgressEvent

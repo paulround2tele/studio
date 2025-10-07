@@ -20,11 +20,15 @@
  * @interface AuthChangePassword200Response
  */
 export interface AuthChangePassword200Response {
-    /**
-     * 
-     * @type {string}
-     * @memberof AuthChangePassword200Response
-     */
-    'message'?: string;
+  /**
+   * 
+   * @memberof AuthChangePassword200Response
+   */
+  'message'?: 
+        
+          
+          string
+    ;
 }
+
 

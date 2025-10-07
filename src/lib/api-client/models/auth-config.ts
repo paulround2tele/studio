@@ -20,7 +20,7 @@
  * @interface AuthConfig
  */
 export interface AuthConfig {
-    [key: string]: any;
-
+  [key: string]: Record<string, unknown>;
 }
+
 

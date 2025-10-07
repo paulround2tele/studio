@@ -20,7 +20,7 @@
  * @interface WorkerConfig
  */
 export interface WorkerConfig {
-    [key: string]: any;
-
+  [key: string]: Record<string, unknown>;
 }
+
 

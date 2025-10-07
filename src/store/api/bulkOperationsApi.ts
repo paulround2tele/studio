@@ -21,14 +21,35 @@ import { CampaignsApi } from '@/lib/api-client/apis/campaigns-api';
 import { apiConfiguration } from '@/lib/api/config';
 import type {
   BulkResourceAllocationResponse,
+  BulkResourceAllocationRequest,
   BulkGenerationResponse,
+  BulkDomainGenerationRequest,
   BulkValidationResponse,
+  BulkDNSValidationRequest,
+  BulkHTTPValidationRequest,
   BulkAnalyticsResponse,
+  BulkAnalyticsRequest,
   CampaignsBulkOperationsList200ResponseInner,
   CancelBulkOperation200Response,
   GetBulkResourceStatus200Response,
   GetBulkOperationStatus200Response,
 } from '@/lib/api-client/models';
+
+// Standardized error envelope for RTK Query manual queryFn returns
+interface ApiErrorEnvelope {
+  status: number;
+  data: unknown;
+}
+
+const buildError = (e: unknown, fallbackMessage: string): { error: ApiErrorEnvelope } => {
+  if (e && typeof e === 'object') {
+    const err = e as { response?: { status?: number; data?: unknown }; message?: string };
+    const status = err.response?.status || 500;
+    const data = err.response?.data || err.message || fallbackMessage;
+    return { error: { status, data } };
+  }
+  return { error: { status: 500, data: fallbackMessage } };
+};
 // Envelope helper removed post-migration – direct payloads now
 
 // Create instance of the generated API client for bulk operations using centralized config
@@ -51,14 +72,14 @@ export const bulkOperationsApi = createApi({
     
   // ================ BULK DOMAINS OPERATIONS ================
   // Domain generation bulk operations -> return concrete payload
-  bulkGenerateDomains: builder.mutation<BulkGenerationResponse, any>({
+  bulkGenerateDomains: builder.mutation<BulkGenerationResponse, BulkDomainGenerationRequest>({
       queryFn: async (request) => {
         try {
-  const response = await bulkOperationsApiClient.bulkGenerateDomains(request);
-  const data = response.data as BulkGenerationResponse;
-  return data ? { data } : { error: { status: 500, data: 'Empty bulk generation response' } as any };
-        } catch (error: any) {
-          return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
+          const response = await bulkOperationsApiClient.bulkGenerateDomains(request);
+          const data = response.data as BulkGenerationResponse | undefined;
+          return data ? { data } : buildError(undefined, 'Empty bulk generation response');
+        } catch (error) {
+          return buildError(error, 'Bulk generation failed');
         }
       },
       invalidatesTags: ['BulkDomains', 'BulkOperationStatus'],
@@ -66,28 +87,28 @@ export const bulkOperationsApi = createApi({
 
     // ================ BULK VALIDATION OPERATIONS ================
     // DNS validation bulk operations -> return concrete payload
-    bulkValidateDNS: builder.mutation<BulkValidationResponse, any>({
+    bulkValidateDNS: builder.mutation<BulkValidationResponse, BulkDNSValidationRequest>({
       queryFn: async (request) => {
         try {
-  const response = await bulkOperationsApiClient.bulkValidateDNS(request);
-  const data = response.data as BulkValidationResponse;
-      return data ? { data } : { error: { status: 500, data: 'Empty DNS validation response' } as any };
-        } catch (error: any) {
-          return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
+          const response = await bulkOperationsApiClient.bulkValidateDNS(request);
+          const data = response.data as BulkValidationResponse | undefined;
+          return data ? { data } : buildError(undefined, 'Empty DNS validation response');
+        } catch (error) {
+          return buildError(error, 'Bulk DNS validation failed');
         }
       },
       invalidatesTags: ['BulkValidation', 'BulkOperationStatus'],
     }),
 
     // HTTP validation bulk operations -> return concrete payload
-    bulkValidateHTTP: builder.mutation<BulkValidationResponse, any>({
+    bulkValidateHTTP: builder.mutation<BulkValidationResponse, BulkHTTPValidationRequest>({
       queryFn: async (request) => {
         try {
-  const response = await bulkOperationsApiClient.bulkValidateHTTP(request);
-  const data = response.data as BulkValidationResponse;
-      return data ? { data } : { error: { status: 500, data: 'Empty HTTP validation response' } as any };
-        } catch (error: any) {
-          return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
+          const response = await bulkOperationsApiClient.bulkValidateHTTP(request);
+          const data = response.data as BulkValidationResponse | undefined;
+          return data ? { data } : buildError(undefined, 'Empty HTTP validation response');
+        } catch (error) {
+          return buildError(error, 'Bulk HTTP validation failed');
         }
       },
       invalidatesTags: ['BulkValidation', 'BulkOperationStatus'],
@@ -95,14 +116,14 @@ export const bulkOperationsApi = createApi({
 
   // ================ BULK ANALYTICS OPERATIONS ================
   // Analytics bulk operations -> return concrete payload
-  bulkAnalyzeDomains: builder.mutation<BulkAnalyticsResponse, any>({
+  bulkAnalyzeDomains: builder.mutation<BulkAnalyticsResponse, BulkAnalyticsRequest>({
       queryFn: async (request) => {
         try {
-    const response = await bulkOperationsApiClient.bulkAnalyzeDomains(request);
-      const data = response.data as BulkAnalyticsResponse;
-      return data ? { data } : { error: { status: 500, data: 'Empty bulk analytics response' } as any };
-        } catch (error: any) {
-          return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
+          const response = await bulkOperationsApiClient.bulkAnalyzeDomains(request);
+          const data = response.data as BulkAnalyticsResponse | undefined;
+          return data ? { data } : buildError(undefined, 'Empty bulk analytics response');
+        } catch (error) {
+          return buildError(error, 'Bulk analytics failed');
         }
       },
       invalidatesTags: ['BulkAnalytics', 'BulkOperationStatus'],
@@ -110,14 +131,14 @@ export const bulkOperationsApi = createApi({
 
   // ================ BULK RESOURCES OPERATIONS ================
   // Resource allocation bulk operations -> return concrete payload
-  allocateBulkResources: builder.mutation<BulkResourceAllocationResponse, any>({
+  allocateBulkResources: builder.mutation<BulkResourceAllocationResponse, BulkResourceAllocationRequest>({
       queryFn: async (request) => {
         try {
-  const response = await bulkOperationsApiClient.allocateBulkResources(request);
-  const data = response.data as BulkResourceAllocationResponse;
-      return data ? { data } : { error: { status: 500, data: 'Empty bulk resource allocation response' } as any };
-        } catch (error: any) {
-          return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
+          const response = await bulkOperationsApiClient.allocateBulkResources(request);
+          const data = response.data as BulkResourceAllocationResponse | undefined;
+          return data ? { data } : buildError(undefined, 'Empty bulk resource allocation response');
+        } catch (error) {
+          return buildError(error, 'Bulk resource allocation failed');
         }
       },
       invalidatesTags: ['BulkResources', 'BulkOperationStatus'],
@@ -128,10 +149,10 @@ export const bulkOperationsApi = createApi({
       queryFn: async ({ allocationId }) => {
         try {
           const response = await bulkOperationsApiClient.getBulkResourceStatus(allocationId);
-          const data = response.data as GetBulkResourceStatus200Response;
-      return data ? { data } : { error: { status: 500, data: 'Empty bulk resource status response' } as any };
-        } catch (error: any) {
-          return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
+          const data = response.data as GetBulkResourceStatus200Response | undefined;
+          return data ? { data } : buildError(undefined, 'Empty bulk resource status response');
+        } catch (error) {
+          return buildError(error, 'Get bulk resource status failed');
         }
       },
       providesTags: (result, error, { allocationId }) => [
@@ -145,10 +166,10 @@ export const bulkOperationsApi = createApi({
       queryFn: async ({ operationId }) => {
         try {
           const response = await bulkOperationsApiClient.cancelBulkOperation(operationId);
-          const data = response.data as CancelBulkOperation200Response;
-      return data ? { data } : { error: { status: 500, data: 'Empty cancel operation response' } as any };
-        } catch (error: any) {
-          return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
+          const data = response.data as CancelBulkOperation200Response | undefined;
+          return data ? { data } : buildError(undefined, 'Empty cancel operation response');
+        } catch (error) {
+          return buildError(error, 'Cancel bulk operation failed');
         }
       },
       invalidatesTags: (result, error, { operationId }) => [
@@ -161,14 +182,11 @@ export const bulkOperationsApi = createApi({
   getBulkOperationStatus: builder.query<GetBulkOperationStatus200Response, { operationId: string }>({
       queryFn: async ({ operationId }) => {
         try {
-          const resp = await bulkOperationsApiClient.getBulkOperationStatus(operationId) as any;
-          const direct = resp?.data ?? resp;
-          if (!direct || !direct.operationId) {
-            return { error: { status: 500, data: 'Empty bulk operation status' } as any };
-          }
-          return { data: direct as GetBulkOperationStatus200Response };
-        } catch (error: any) {
-          return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
+          const response = await bulkOperationsApiClient.getBulkOperationStatus(operationId);
+          const data = response.data as GetBulkOperationStatus200Response | undefined;
+          return data && data.operationId ? { data } : buildError(undefined, 'Empty bulk operation status');
+        } catch (error) {
+          return buildError(error, 'Get bulk operation status failed');
         }
       },
       providesTags: (result, error, { operationId }) => [
@@ -183,14 +201,13 @@ export const bulkOperationsApi = createApi({
       limit?: number;
       offset?: number;
     }>({
-      queryFn: async ({ status, type, limit, offset }) => {
+      queryFn: async () => {
         try {
-          // Generated client method has no filtering parameters exposed; filtering can be applied client-side if needed
           const response = await bulkOperationsApiClient.campaignsBulkOperationsList();
-          const data = response.data as CampaignsBulkOperationsList200ResponseInner[];
-      return data ? { data } : { error: { status: 500, data: 'Empty bulk operations list response' } as any };
-        } catch (error: any) {
-          return { error: { status: error.response?.status || 500, data: error.response?.data || error.message } };
+          const data = response.data as CampaignsBulkOperationsList200ResponseInner[] | undefined;
+          return (Array.isArray(data)) ? { data } : buildError(undefined, 'Empty bulk operations list response');
+        } catch (error) {
+          return buildError(error, 'List bulk operations failed');
         }
       },
       providesTags: ['BulkOperationStatus', 'BulkResources'],

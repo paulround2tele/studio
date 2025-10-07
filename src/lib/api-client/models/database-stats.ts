@@ -20,53 +20,78 @@
  * @interface DatabaseStats
  */
 export interface DatabaseStats {
-    /**
-     * 
-     * @type {number}
-     * @memberof DatabaseStats
-     */
-    'totalTables'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof DatabaseStats
-     */
-    'totalUsers'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof DatabaseStats
-     */
-    'totalSessions'?: number;
-    /**
-     * 
-     * @type {string}
-     * @memberof DatabaseStats
-     */
-    'databaseSize'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof DatabaseStats
-     */
-    'schemaVersion'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof DatabaseStats
-     */
-    'uptime'?: string;
-    /**
-     * 
-     * @type {string}
-     * @memberof DatabaseStats
-     */
-    'version'?: string;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof DatabaseStats
-     */
-    'isHealthy'?: boolean;
+  /**
+   * 
+   * @memberof DatabaseStats
+   */
+  'totalTables'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof DatabaseStats
+   */
+  'totalUsers'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof DatabaseStats
+   */
+  'totalSessions'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof DatabaseStats
+   */
+  'databaseSize'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof DatabaseStats
+   */
+  'schemaVersion'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof DatabaseStats
+   */
+  'uptime'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof DatabaseStats
+   */
+  'version'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof DatabaseStats
+   */
+  'isHealthy'?: 
+        
+          
+          boolean
+    ;
 }
+
 

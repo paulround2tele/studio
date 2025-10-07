@@ -26,31 +26,40 @@ import type { CampaignStateEnum } from './campaign-state-enum';
  * @interface CampaignStateUpdate
  */
 export interface CampaignStateUpdate {
-    /**
-     * 
-     * @type {CampaignStateEnum}
-     * @memberof CampaignStateUpdate
-     */
-    'currentState'?: CampaignStateEnum;
-    /**
-     * 
-     * @type {CampaignModeEnum}
-     * @memberof CampaignStateUpdate
-     */
-    'mode'?: CampaignModeEnum;
-    /**
-     * 
-     * @type {{ [key: string]: any; }}
-     * @memberof CampaignStateUpdate
-     */
-    'configuration'?: { [key: string]: any; };
-    /**
-     * Optional optimistic concurrency version; if provided must match current
-     * @type {number}
-     * @memberof CampaignStateUpdate
-     */
-    'version'?: number;
+  /**
+   * 
+   * @memberof CampaignStateUpdate
+   */
+  'currentState'?: 
+        
+          
+          CampaignStateEnum
+    ;
+  /**
+   * 
+   * @memberof CampaignStateUpdate
+   */
+  'mode'?: 
+        
+          
+          CampaignModeEnum
+    ;
+  /**
+   * 
+   * @memberof CampaignStateUpdate
+   */
+  'configuration'?: 
+        Record<string, unknown>
+    ;
+  /**
+   * Optional optimistic concurrency version; if provided must match current
+   * @memberof CampaignStateUpdate
+   */
+  'version'?: 
+        
+          
+          number
+    ;
 }
-
 
 

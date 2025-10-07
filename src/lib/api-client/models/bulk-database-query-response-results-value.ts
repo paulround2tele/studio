@@ -23,41 +23,60 @@ import type { DatabaseValue } from './database-value';
  * @interface BulkDatabaseQueryResponseResultsValue
  */
 export interface BulkDatabaseQueryResponseResultsValue {
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof BulkDatabaseQueryResponseResultsValue
-     */
-    'columns'?: Array<string>;
-    /**
-     * 
-     * @type {Array<Array<DatabaseValue>>}
-     * @memberof BulkDatabaseQueryResponseResultsValue
-     */
-    'rows'?: Array<Array<DatabaseValue>>;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkDatabaseQueryResponseResultsValue
-     */
-    'rowCount'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkDatabaseQueryResponseResultsValue
-     */
-    'executionTime'?: number;
-    /**
-     * 
-     * @type {boolean}
-     * @memberof BulkDatabaseQueryResponseResultsValue
-     */
-    'success'?: boolean;
-    /**
-     * 
-     * @type {string}
-     * @memberof BulkDatabaseQueryResponseResultsValue
-     */
-    'error'?: string;
+  /**
+   * 
+   * @memberof BulkDatabaseQueryResponseResultsValue
+   */
+  'columns'?: 
+        
+          
+          Array<string>
+    ;
+  /**
+   * 
+   * @memberof BulkDatabaseQueryResponseResultsValue
+   */
+  'rows'?: 
+        
+          
+          Array<Array<DatabaseValue>>
+    ;
+  /**
+   * 
+   * @memberof BulkDatabaseQueryResponseResultsValue
+   */
+  'rowCount'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkDatabaseQueryResponseResultsValue
+   */
+  'executionTime'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkDatabaseQueryResponseResultsValue
+   */
+  'success'?: 
+        
+          
+          boolean
+    ;
+  /**
+   * 
+   * @memberof BulkDatabaseQueryResponseResultsValue
+   */
+  'error'?: 
+        
+          
+          string
+    ;
 }
+
 

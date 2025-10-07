@@ -23,32 +23,31 @@ import type { CampaignProgressEvent } from './campaign-progress-event';
  * @interface CampaignSseProgressEvent
  */
 export interface CampaignSseProgressEvent {
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignSseProgressEvent
-     */
-    'type': CampaignSseProgressEventTypeEnum;
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignSseProgressEvent
-     */
-    'timestamp'?: string;
-    /**
-     * 
-     * @type {CampaignProgressEvent}
-     * @memberof CampaignSseProgressEvent
-     */
-    'payload'?: CampaignProgressEvent;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum CampaignSseProgressEventTypeEnum {
-    campaign_progress = 'campaign_progress'
+  /**
+   * 
+   * @memberof CampaignSseProgressEvent
+   */
+  'type': 
+      'campaign_progress'
+;
+  /**
+   * 
+   * @memberof CampaignSseProgressEvent
+   */
+  'timestamp'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CampaignSseProgressEvent
+   */
+  'payload'?: 
+        
+          
+          CampaignProgressEvent
+    ;
 }
 
 

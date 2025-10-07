@@ -230,7 +230,7 @@ class TelemetryService {
       this.startFlushInterval();
       // Expose to global for other services
       if (typeof window !== 'undefined') {
-        (window as any).__telemetryService = this;
+  (window as unknown as { __telemetryService?: TelemetryService }).__telemetryService = this;
       }
     }
   }
@@ -438,8 +438,8 @@ class TelemetryService {
     }
 
     // Clean up global reference
-    if (typeof window !== 'undefined' && (window as any).__telemetryService === this) {
-      delete (window as any).__telemetryService;
+    if (typeof window !== 'undefined' && (window as unknown as { __telemetryService?: TelemetryService }).__telemetryService === this) {
+      delete (window as unknown as { __telemetryService?: TelemetryService }).__telemetryService;
     }
   }
 }

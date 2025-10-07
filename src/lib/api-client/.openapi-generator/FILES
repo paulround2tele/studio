@@ -97,7 +97,6 @@ docs/CampaignProgressEvent.md
 docs/CampaignProgressResponse.md
 docs/CampaignProgressResponseOverall.md
 docs/CampaignProgressResponsePhases.md
-docs/CampaignProgressResponseTimeline.md
 docs/CampaignRecommendation.md
 docs/CampaignRecommendationsResponse.md
 docs/CampaignResponse.md
@@ -158,6 +157,7 @@ docs/ExecutionStatusEnum.md
 docs/ExtendedPageInfo.md
 docs/FeatureFlags.md
 docs/ForecastPoint.md
+docs/ForecastProbabilisticPoint.md
 docs/GetBulkOperationStatus200Response.md
 docs/GetBulkResourceStatus200Response.md
 docs/HTTPValidatorConfigJSON.md
@@ -202,6 +202,10 @@ docs/PhaseStatusResponseErrorsInner.md
 docs/PhaseStatusResponseProgress.md
 docs/PhaseTransitionEvent.md
 docs/PingResponse.md
+docs/ProbabilisticForecastResponse.md
+docs/ProbabilisticForecastResponseModelInfo.md
+docs/ProbabilisticForecastResponseModelInfoArbitrationScores.md
+docs/ProbabilisticForecastResponseQualityMetrics.md
 docs/ProxiesApi.md
 docs/ProxiesBulkTestRequest.md
 docs/ProxiesHealthCheckAllRequest.md
@@ -221,6 +225,8 @@ docs/ProxyTestResponse.md
 docs/RateLimiterConfig.md
 docs/RecommendationSeverity.md
 docs/RootCauseEvidence.md
+docs/RootCauseEvidenceValue.md
+docs/RootCauseEvidenceValueOneOf.md
 docs/SchemaStats.md
 docs/ScoringApi.md
 docs/ScoringProfile.md
@@ -231,6 +237,8 @@ docs/SessionResponse.md
 docs/SseApi.md
 docs/SseEventsStats200Response.md
 docs/TableStats.md
+docs/TimelineEvent.md
+docs/TimelineEventMetadataValue.md
 docs/UpdateCampaignRequest.md
 docs/UpdateKeywordSetRequest.md
 docs/UpdatePersonaRequest.md
@@ -318,7 +326,6 @@ models/campaign-phases-status-response.ts
 models/campaign-progress-event.ts
 models/campaign-progress-response-overall.ts
 models/campaign-progress-response-phases.ts
-models/campaign-progress-response-timeline.ts
 models/campaign-progress-response.ts
 models/campaign-recommendation.ts
 models/campaign-recommendations-response.ts
@@ -378,6 +385,7 @@ models/execution-status-enum.ts
 models/extended-page-info.ts
 models/feature-flags.ts
 models/forecast-point.ts
+models/forecast-probabilistic-point.ts
 models/get-bulk-operation-status200-response.ts
 models/get-bulk-resource-status200-response.ts
 models/health-fabric-snapshot-dimensions-inner.ts
@@ -417,6 +425,10 @@ models/phase-status-response-progress.ts
 models/phase-status-response.ts
 models/phase-transition-event.ts
 models/ping-response.ts
+models/probabilistic-forecast-response-model-info-arbitration-scores.ts
+models/probabilistic-forecast-response-model-info.ts
+models/probabilistic-forecast-response-quality-metrics.ts
+models/probabilistic-forecast-response.ts
 models/proxies-bulk-test-request.ts
 models/proxies-health-check-all-request.ts
 models/proxy-health-check-response.ts
@@ -433,6 +445,8 @@ models/proxy-test-response.ts
 models/proxy.ts
 models/rate-limiter-config.ts
 models/recommendation-severity.ts
+models/root-cause-evidence-value-one-of.ts
+models/root-cause-evidence-value.ts
 models/root-cause-evidence.ts
 models/schema-stats.ts
 models/scoring-profile.ts
@@ -441,6 +455,8 @@ models/server-config-update-request.ts
 models/session-response.ts
 models/sse-events-stats200-response.ts
 models/table-stats.ts
+models/timeline-event-metadata-value.ts
+models/timeline-event.ts
 models/update-campaign-request.ts
 models/update-keyword-set-request.ts
 models/update-persona-request.ts

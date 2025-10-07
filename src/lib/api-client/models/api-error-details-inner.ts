@@ -23,31 +23,40 @@ import type { ErrorCode } from './error-code';
  * @interface ApiErrorDetailsInner
  */
 export interface ApiErrorDetailsInner {
-    /**
-     * JSON pointer or field path
-     * @type {string}
-     * @memberof ApiErrorDetailsInner
-     */
-    'field'?: string;
-    /**
-     * 
-     * @type {ErrorCode}
-     * @memberof ApiErrorDetailsInner
-     */
-    'code': ErrorCode;
-    /**
-     * 
-     * @type {string}
-     * @memberof ApiErrorDetailsInner
-     */
-    'message': string;
-    /**
-     * 
-     * @type {{ [key: string]: any; }}
-     * @memberof ApiErrorDetailsInner
-     */
-    'context'?: { [key: string]: any; };
+  /**
+   * JSON pointer or field path
+   * @memberof ApiErrorDetailsInner
+   */
+  'field'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ApiErrorDetailsInner
+   */
+  'code': 
+        
+          
+          ErrorCode
+    ;
+  /**
+   * 
+   * @memberof ApiErrorDetailsInner
+   */
+  'message': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof ApiErrorDetailsInner
+   */
+  'context'?: 
+        Record<string, unknown>
+    ;
 }
-
 
 

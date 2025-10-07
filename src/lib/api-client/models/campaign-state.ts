@@ -26,49 +26,67 @@ import type { CampaignStateEnum } from './campaign-state-enum';
  * @interface CampaignState
  */
 export interface CampaignState {
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignState
-     */
-    'campaignId': string;
-    /**
-     * 
-     * @type {CampaignStateEnum}
-     * @memberof CampaignState
-     */
-    'currentState': CampaignStateEnum;
-    /**
-     * 
-     * @type {CampaignModeEnum}
-     * @memberof CampaignState
-     */
-    'mode': CampaignModeEnum;
-    /**
-     * 
-     * @type {{ [key: string]: any; }}
-     * @memberof CampaignState
-     */
-    'configuration'?: { [key: string]: any; };
-    /**
-     * 
-     * @type {number}
-     * @memberof CampaignState
-     */
-    'version': number;
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignState
-     */
-    'createdAt': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CampaignState
-     */
-    'updatedAt': string;
+  /**
+   * 
+   * @memberof CampaignState
+   */
+  'campaignId': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CampaignState
+   */
+  'currentState': 
+        
+          
+          CampaignStateEnum
+    ;
+  /**
+   * 
+   * @memberof CampaignState
+   */
+  'mode': 
+        
+          
+          CampaignModeEnum
+    ;
+  /**
+   * 
+   * @memberof CampaignState
+   */
+  'configuration'?: 
+        Record<string, unknown>
+    ;
+  /**
+   * 
+   * @memberof CampaignState
+   */
+  'version': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof CampaignState
+   */
+  'createdAt': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CampaignState
+   */
+  'updatedAt': 
+        
+          
+          string
+    ;
 }
-
 
 

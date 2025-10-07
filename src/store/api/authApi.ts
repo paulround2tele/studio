@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { AuthApi } from '@/lib/api-client/apis/auth-api';
 import { apiConfiguration } from '@/lib/api/config';
-import type { LoginRequest, UserPublicResponse as User } from '@/lib/api-client/models';
+import type { LoginRequest, SessionResponse, UserPublicResponse as User } from '@/lib/api-client/models';
 
 const authClient = new AuthApi(apiConfiguration);
 
@@ -14,28 +14,24 @@ export const authApi = createApi({
     login: builder.mutation<User, LoginRequest>({
       queryFn: async (credentials) => {
         try {
-          const resp: any = await (authClient as any).authLogin(credentials);
-          const data = resp?.data ?? resp;
-          const sessionUser = data?.User || data?.user || data; // fallback
-          if (sessionUser) {
-            const user: User = {
-              id: sessionUser.id ?? sessionUser.ID ?? 'unknown',
-              email: sessionUser.email ?? sessionUser.Email ?? credentials.email,
-              username: sessionUser.username ?? sessionUser.Username ?? credentials.email,
-              isActive: sessionUser.isActive ?? sessionUser.IsActive ?? true,
-            } as User;
-            return { data: user };
-          }
-          // Fallback minimal user
-          const fallback: User = {
+          const resp = await authClient.authLogin(credentials); // AxiosResponse<SessionResponse>
+          const session: SessionResponse | undefined = resp?.data;
+          const sessionUser = session?.user;
+          const user: User = sessionUser ? {
+            id: sessionUser.id ?? 'unknown',
+            email: sessionUser.email ?? credentials.email,
+            username: sessionUser.username ?? (sessionUser.email ?? credentials.email),
+            isActive: sessionUser.isActive ?? true,
+          } : {
             id: 'authenticated',
             email: credentials.email,
             username: credentials.email,
             isActive: true,
-          } as User;
-          return { data: fallback };
-        } catch (error: any) {
-          return { error: error?.response?.data || error?.message || 'Login failed' };
+          };
+          return { data: user };
+        } catch (error) {
+          const e = error as { response?: { data?: unknown; status?: number }; message?: string };
+          return { error: { status: e.response?.status || 500, data: e.response?.data || e.message || 'Login failed' } };
         }
       },
       invalidatesTags: ['AuthUser'],
@@ -43,10 +39,11 @@ export const authApi = createApi({
     logout: builder.mutation<{ success: boolean }, void>({
       queryFn: async () => {
         try {
-          await (authClient as any).authLogout();
+          await authClient.authLogout();
           return { data: { success: true } };
-        } catch (error: any) {
-            return { error: error?.response?.data || error?.message || 'Logout failed' };
+        } catch (error) {
+          const e = error as { response?: { data?: unknown; status?: number }; message?: string };
+          return { error: { status: e.response?.status || 500, data: e.response?.data || e.message || 'Logout failed' } };
         }
       },
       invalidatesTags: ['AuthUser'],
@@ -54,11 +51,18 @@ export const authApi = createApi({
     me: builder.query<User | null, void>({
       queryFn: async () => {
         try {
-          const resp: any = await (authClient as any).authMe();
-          const body = resp?.data ?? resp;
-          return { data: (body as User) || null };
-        } catch (error: any) {
-          return { error: error?.response?.data || error?.message || 'Failed to load user' };
+          const resp = await authClient.authMe(); // AxiosResponse<UserPublicResponse>
+          const body = resp?.data as User | undefined;
+            const user: User | null = body ? {
+              id: body.id ?? 'unknown',
+              email: body.email ?? 'unknown',
+              username: body.username ?? body.email ?? 'unknown',
+              isActive: body.isActive ?? true,
+            } : null;
+          return { data: user };
+        } catch (error) {
+          const e = error as { response?: { data?: unknown; status?: number }; message?: string };
+          return { error: { status: e.response?.status || 500, data: e.response?.data || e.message || 'Failed to load user' } };
         }
       },
       providesTags: ['AuthUser'],

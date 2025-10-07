@@ -23,47 +23,49 @@ import type { HealthFabricSnapshotDimensionsInner } from './health-fabric-snapsh
  * @interface HealthFabricSnapshot
  */
 export interface HealthFabricSnapshot {
-    /**
-     * 
-     * @type {string}
-     * @memberof HealthFabricSnapshot
-     */
-    'timestamp': string;
-    /**
-     * 
-     * @type {number}
-     * @memberof HealthFabricSnapshot
-     */
-    'healthScore': number;
-    /**
-     * 
-     * @type {Array<HealthFabricSnapshotDimensionsInner>}
-     * @memberof HealthFabricSnapshot
-     */
-    'dimensions'?: Array<HealthFabricSnapshotDimensionsInner>;
-    /**
-     * 
-     * @type {number}
-     * @memberof HealthFabricSnapshot
-     */
-    'anomaliesDetected'?: number;
-    /**
-     * 
-     * @type {string}
-     * @memberof HealthFabricSnapshot
-     */
-    'riskLevel'?: HealthFabricSnapshotRiskLevelEnum;
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum HealthFabricSnapshotRiskLevelEnum {
-    low = 'low',
-    medium = 'medium',
-    high = 'high',
-    critical = 'critical'
+  /**
+   * 
+   * @memberof HealthFabricSnapshot
+   */
+  'timestamp': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof HealthFabricSnapshot
+   */
+  'healthScore': 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof HealthFabricSnapshot
+   */
+  'dimensions'?: 
+        
+          
+          Array<HealthFabricSnapshotDimensionsInner>
+    ;
+  /**
+   * 
+   * @memberof HealthFabricSnapshot
+   */
+  'anomaliesDetected'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof HealthFabricSnapshot
+   */
+  'riskLevel'?: 
+      'low' | 'medium' | 'high' | 'critical'
+;
 }
 
 

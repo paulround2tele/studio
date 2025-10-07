@@ -20,75 +20,92 @@
  * @interface CreateCampaignRequestConfigurationPatternConfig
  */
 export interface CreateCampaignRequestConfigurationPatternConfig {
-    /**
-     * 
-     * @type {string}
-     * @memberof CreateCampaignRequestConfigurationPatternConfig
-     */
-    'type': CreateCampaignRequestConfigurationPatternConfigTypeEnum;
-    /**
-     * Constant pattern string when type=constant
-     * @type {string}
-     * @memberof CreateCampaignRequestConfigurationPatternConfig
-     */
-    'constant'?: string;
-    /**
-     * Desired variable length for generation
-     * @type {number}
-     * @memberof CreateCampaignRequestConfigurationPatternConfig
-     */
-    'variableLength'?: number;
-    /**
-     * Character set used for variable generation
-     * @type {string}
-     * @memberof CreateCampaignRequestConfigurationPatternConfig
-     */
-    'charset'?: string;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof CreateCampaignRequestConfigurationPatternConfig
-     */
-    'targetDomains'?: Array<string>;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof CreateCampaignRequestConfigurationPatternConfig
-     */
-    'tlds'?: Array<string>;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof CreateCampaignRequestConfigurationPatternConfig
-     */
-    'keywordSetIds'?: Array<string>;
-    /**
-     * 
-     * @type {Array<string>}
-     * @memberof CreateCampaignRequestConfigurationPatternConfig
-     */
-    'personaIds'?: Array<string>;
-    /**
-     * 
-     * @type {number}
-     * @memberof CreateCampaignRequestConfigurationPatternConfig
-     */
-    'crawlDepth'?: number;
-    /**
-     * Optional projection estimate payload for UI modeling
-     * @type {{ [key: string]: any; }}
-     * @memberof CreateCampaignRequestConfigurationPatternConfig
-     */
-    'projectionEstimate'?: { [key: string]: any; };
-}
-
-/**
-    * @export
-    * @enum {string}
-    */
-export enum CreateCampaignRequestConfigurationPatternConfigTypeEnum {
-    constant = 'constant',
-    variable = 'variable'
+  /**
+   * 
+   * @memberof CreateCampaignRequestConfigurationPatternConfig
+   */
+  'type': 
+      'constant' | 'variable'
+;
+  /**
+   * Constant pattern string when type=constant
+   * @memberof CreateCampaignRequestConfigurationPatternConfig
+   */
+  'constant'?: 
+        
+          
+          string
+    ;
+  /**
+   * Desired variable length for generation
+   * @memberof CreateCampaignRequestConfigurationPatternConfig
+   */
+  'variableLength'?: 
+        
+          
+          number
+    ;
+  /**
+   * Character set used for variable generation
+   * @memberof CreateCampaignRequestConfigurationPatternConfig
+   */
+  'charset'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CreateCampaignRequestConfigurationPatternConfig
+   */
+  'targetDomains'?: 
+        
+          
+          Array<string>
+    ;
+  /**
+   * 
+   * @memberof CreateCampaignRequestConfigurationPatternConfig
+   */
+  'tlds'?: 
+        
+          
+          Array<string>
+    ;
+  /**
+   * 
+   * @memberof CreateCampaignRequestConfigurationPatternConfig
+   */
+  'keywordSetIds'?: 
+        
+          
+          Array<string>
+    ;
+  /**
+   * 
+   * @memberof CreateCampaignRequestConfigurationPatternConfig
+   */
+  'personaIds'?: 
+        
+          
+          Array<string>
+    ;
+  /**
+   * 
+   * @memberof CreateCampaignRequestConfigurationPatternConfig
+   */
+  'crawlDepth'?: 
+        
+          
+          number
+    ;
+  /**
+   * Optional projection estimate payload for UI modeling
+   * @memberof CreateCampaignRequestConfigurationPatternConfig
+   */
+  'projectionEstimate'?: 
+        Record<string, unknown>
+    ;
 }
 
 

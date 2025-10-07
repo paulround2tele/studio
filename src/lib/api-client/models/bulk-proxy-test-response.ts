@@ -23,29 +23,42 @@ import type { ProxyTestResponse } from './proxy-test-response';
  * @interface BulkProxyTestResponse
  */
 export interface BulkProxyTestResponse {
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkProxyTestResponse
-     */
-    'totalRequested'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkProxyTestResponse
-     */
-    'successCount'?: number;
-    /**
-     * 
-     * @type {number}
-     * @memberof BulkProxyTestResponse
-     */
-    'errorCount'?: number;
-    /**
-     * 
-     * @type {Array<ProxyTestResponse>}
-     * @memberof BulkProxyTestResponse
-     */
-    'results'?: Array<ProxyTestResponse>;
+  /**
+   * 
+   * @memberof BulkProxyTestResponse
+   */
+  'totalRequested'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkProxyTestResponse
+   */
+  'successCount'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkProxyTestResponse
+   */
+  'errorCount'?: 
+        
+          
+          number
+    ;
+  /**
+   * 
+   * @memberof BulkProxyTestResponse
+   */
+  'results'?: 
+        
+          
+          Array<ProxyTestResponse>
+    ;
 }
+
 

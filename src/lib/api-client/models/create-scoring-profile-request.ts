@@ -20,29 +20,40 @@
  * @interface CreateScoringProfileRequest
  */
 export interface CreateScoringProfileRequest {
-    /**
-     * 
-     * @type {string}
-     * @memberof CreateScoringProfileRequest
-     */
-    'name': string;
-    /**
-     * 
-     * @type {string}
-     * @memberof CreateScoringProfileRequest
-     */
-    'description'?: string;
-    /**
-     * 
-     * @type {{ [key: string]: number; }}
-     * @memberof CreateScoringProfileRequest
-     */
-    'weights': { [key: string]: number; };
-    /**
-     * Optional explicit version; defaults to 1 if omitted
-     * @type {number}
-     * @memberof CreateScoringProfileRequest
-     */
-    'version'?: number;
+  /**
+   * 
+   * @memberof CreateScoringProfileRequest
+   */
+  'name': 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CreateScoringProfileRequest
+   */
+  'description'?: 
+        
+          
+          string
+    ;
+  /**
+   * 
+   * @memberof CreateScoringProfileRequest
+   */
+  'weights': 
+        Record<string, unknown>
+    ;
+  /**
+   * Optional explicit version; defaults to 1 if omitted
+   * @memberof CreateScoringProfileRequest
+   */
+  'version'?: 
+        
+          
+          number
+    ;
 }
+
 

@@ -20,7 +20,7 @@
  * @interface HTTPValidatorConfigJSON
  */
 export interface HTTPValidatorConfigJSON {
-    [key: string]: any;
-
+  [key: string]: Record<string, unknown>;
 }
+
 

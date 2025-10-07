@@ -1,0 +1,27 @@
+/* tslint:disable */
+/* eslint-disable */
+/**
+ * {{appName}} (custom template override)
+ * Version: {{version}}
+ * Generated – DO NOT EDIT.
+ */
+
+{{#models}}
+{{#model}}
+{{#description}}
+/** {{description}} */
+{{/description}}
+export interface {{classname}}{{#parent}} extends {{parent}}{{/parent}} {
+{{#vars}}
+  /** {{description}} */
+  '{{baseName}}'{{^required}}?{{/required}}: 
+    {{#isArray}}
+      {{#items.isMap}}Record<string, unknown>[]{{/items.isMap}}{{^items.isMap}}{{items.dataType}}[]{{/items.isMap}}
+    {{/isArray}}
+    {{^isArray}}
+      {{#isMap}}Record<string, unknown>{{/isMap}}{{^isMap}}{{dataType}}{{/isMap}}
+    {{/isArray}};
+{{/vars}}
+}
+{{/model}}
+{{/models}}

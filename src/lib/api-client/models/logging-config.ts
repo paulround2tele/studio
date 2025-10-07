@@ -20,7 +20,7 @@
  * @interface LoggingConfig
  */
 export interface LoggingConfig {
-    [key: string]: any;
-
+  [key: string]: Record<string, unknown>;
 }
+
 
