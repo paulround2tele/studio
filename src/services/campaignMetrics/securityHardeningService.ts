@@ -3,6 +3,8 @@
  * Lightweight security hardening for numeric payloads and input validation
  */
 
+import type { ForecastPoint } from '@/lib/api-client/models';
+
 // Feature flag for security hardening
 const isSecurityHardeningEnabled = () => 
   process.env.NEXT_PUBLIC_SECURITY_HARDENING !== 'false';
@@ -63,7 +65,7 @@ export interface SanitizationResult<T> {
   wasModified: boolean;
   violations: string[];
   metadata: {
-    originalValue?: any;
+    originalValue?: unknown;
     sanitizedFields: string[];
     securityLevel: 'none' | 'low' | 'medium' | 'high';
   };
@@ -78,7 +80,7 @@ class SecurityHardeningService {
    * Sanitize numeric value according to bounds
    */
   sanitizeNumeric(
-    value: any,
+    value: unknown,
     bounds: NumericBounds = {},
     fieldName?: string
   ): SanitizationResult<number> {
@@ -145,7 +147,7 @@ class SecurityHardeningService {
   /**
    * Sanitize object with numeric fields
    */
-  sanitizeNumericPayload<T extends Record<string, any>>(
+  sanitizeNumericPayload<T extends Record<string, unknown>>(
     payload: T,
     customBounds: Record<string, NumericBounds> = {}
   ): SanitizationResult<T> {
@@ -159,7 +161,7 @@ class SecurityHardeningService {
     }
     
   // Create a mutable working copy; we'll assert to T at the end
-  const workingCopy: Record<string, any> = { ...payload };
+  const workingCopy: Record<string, unknown> = { ...payload };
     const allViolations: string[] = [];
     const sanitizedFields: string[] = [];
     let wasModified = false;
@@ -204,14 +206,14 @@ class SecurityHardeningService {
   /**
    * Validate and clamp forecast horizon (Phase 8 requirement)
    */
-  validateForecastHorizon(horizon: any): SanitizationResult<number> {
+  validateForecastHorizon(horizon: unknown): SanitizationResult<number> {
     return this.sanitizeNumeric(horizon, FORECAST_HORIZON_LIMITS, 'forecastHorizon');
   }
   
   /**
    * Sanitize forecast points for rendering
    */
-  sanitizeForecastPoints(points: any[]): SanitizationResult<any[]> {
+  sanitizeForecastPoints(points: unknown[]): SanitizationResult<ForecastPoint[]> {
     if (!Array.isArray(points)) {
       return {
         value: [],
@@ -221,7 +223,7 @@ class SecurityHardeningService {
       };
     }
     
-    const sanitizedPoints: any[] = [];
+    const sanitizedPoints: ForecastPoint[] = [];
     const allViolations: string[] = [];
     const sanitizedFields: string[] = [];
     let wasModified = false;
@@ -379,7 +381,7 @@ export function validateForecastHorizon(horizon: any): SanitizationResult<number
 /**
  * Sanitize forecast points for safe rendering (convenience function)
  */
-export function sanitizeForecastPoints(points: any[]): SanitizationResult<any[]> {
+export function sanitizeForecastPoints(points: unknown[]): SanitizationResult<ForecastPoint[]> {
   return securityHardeningService.sanitizeForecastPoints(points);
 }
 
