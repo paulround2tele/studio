@@ -406,8 +406,7 @@ class RateLimiter {
 export const rateLimiter = new RateLimiter();
 
 // Middleware for fetch interception
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function withRateLimit<T extends (...args: any[]) => Promise<any>>(
+export function withRateLimit<T extends (...args: unknown[]) => Promise<unknown>>(
   fetchFn: T,
   endpoint: string
 ): T {

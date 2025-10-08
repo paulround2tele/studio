@@ -23,7 +23,7 @@ type DomainGenerationParamsExtended = DomainGenerationParams & {
 export function calculateMaxTheoreticalDomains(config: DomainGenerationParamsExtended): number {
   if (!config) return 0;
 
-  const { patternType, characterSet, variableLength, prefixVariableLength, suffixVariableLength } = config as any;
+  const { patternType, characterSet, variableLength, prefixVariableLength, suffixVariableLength } = config;
   const charSetLength = characterSet?.length || 26;
 
   switch (patternType) {

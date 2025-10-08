@@ -58,8 +58,8 @@ interface CachedCapabilities extends ServerCapabilities {
 export interface CapabilityDiff {
   type: 'feature_added' | 'feature_removed' | 'version_updated' | 'config_changed';
   path: string; // JSONPath to the changed field
-  oldValue?: any;
-  newValue?: any;
+  oldValue?: unknown;
+  newValue?: unknown;
   timestamp: string;
 }
 

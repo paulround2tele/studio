@@ -11,6 +11,7 @@
  */
 
 import crypto from 'crypto';
+import type { NextRequest, NextResponse } from 'next/server';
 
 export interface CSPDirectives {
   'default-src'?: string[];
@@ -265,8 +266,7 @@ export const csp = new ContentSecurityPolicy();
 
 // Middleware for Next.js
 export function cspMiddleware(generateNonce = true) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (req: any, res: any, next: any) => {
+  return (req: NextRequest, res: NextResponse, next: () => void) => {
     const policy = new ContentSecurityPolicy({
       generateNonce
     });

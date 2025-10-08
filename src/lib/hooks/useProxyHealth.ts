@@ -71,17 +71,17 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
     const safeProxyData = Array.isArray(proxyData) ? proxyData : [];
     const totalProxies = safeProxyData.length;
     // Using the comprehensive Proxy schema with all health fields directly available
-  const activeProxies = safeProxyData.filter((p) => p?.isEnabled && (p as any)?.isHealthy).length;
-  const failedProxies = safeProxyData.filter((p) => p?.isEnabled && !(p as any)?.isHealthy).length;
+  const activeProxies = safeProxyData.filter((p) => p?.isEnabled && p?.isHealthy).length;
+  const failedProxies = safeProxyData.filter((p) => p?.isEnabled && !p?.isHealthy).length;
   const testingProxies = 0;
   const disabledProxies = safeProxyData.filter((p) => !p?.isEnabled).length;
 
   const proxiesWithLatency = safeProxyData.filter((p) => {
-      const lm = (p as any)?.latencyMs;
+      const lm = p?.latencyMs;
       if (lm == null) return false;
       if (typeof lm === 'number') return lm > 0;
       if (typeof lm === 'string') return parseFloat(lm) > 0;
-      if (typeof lm === 'object' && (lm as any).valid && typeof (lm as any).value === 'number') return (lm as any).value > 0;
+      if (typeof lm === 'object' && lm !== null && 'valid' in lm && 'value' in lm && lm.valid && typeof lm.value === 'number') return lm.value > 0;
       return false;
     });
     const averageResponseTime = proxiesWithLatency.length > 0
@@ -89,15 +89,15 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
       : 0;
 
   const totalTests = safeProxyData.reduce((sum, p) => {
-      const successCount = (p as any)?.successCount ?? 0;
-      const failureCount = (p as any)?.failureCount ?? 0;
+      const successCount = p?.successCount ?? 0;
+      const failureCount = p?.failureCount ?? 0;
       const sc = typeof successCount === 'number' ? successCount : parseInt(String(successCount)) || 0;
       const fc = typeof failureCount === 'number' ? failureCount : parseInt(String(failureCount)) || 0;
       return sum + sc + fc;
     }, 0);
     
   const totalSuccesses = safeProxyData.reduce((sum, p) => {
-      const successCount = (p as any)?.successCount ?? 0;
+      const successCount = p?.successCount ?? 0;
       const sc = typeof successCount === 'number' ? successCount : parseInt(String(successCount)) || 0;
       return sum + sc;
     }, 0);
@@ -121,19 +121,19 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
    */
   const getProxyHealthDetails = useCallback((): ProxyHealthDetails[] => {
   return proxies.map((proxy) => {
-      const latency = (proxy as any)?.latencyMs;
-      const success = (proxy as any)?.successCount ?? 0;
-      const failure = (proxy as any)?.failureCount ?? 0;
+      const latency = proxy?.latencyMs;
+      const success = proxy?.successCount ?? 0;
+      const failure = proxy?.failureCount ?? 0;
       return {
         id: proxy?.id || '',
-        address: (proxy as any)?.address || '',
-        status: (proxy as any)?.isHealthy ? 'Active' : 'Failed',
+        address: proxy?.address || '',
+        status: proxy?.isHealthy ? 'Active' : 'Failed',
         latencyMs: latency ? (typeof latency === 'string' ? parseFloat(latency) : (typeof latency === 'number' ? latency : null)) : null,
-        lastTested: (proxy as any)?.lastCheckedAt ? new Date((proxy as any).lastCheckedAt) : null,
+        lastTested: proxy?.lastCheckedAt ? new Date(proxy.lastCheckedAt) : null,
         successCount: typeof success === 'string' ? parseInt(success, 10) : (typeof success === 'number' ? success : 0),
         failureCount: typeof failure === 'string' ? parseInt(failure, 10) : (typeof failure === 'number' ? failure : 0),
-        lastError: (proxy as any)?.lastError || null,
-        isHealthy: Boolean((proxy as any)?.isHealthy)
+        lastError: proxy?.lastError || null,
+        isHealthy: Boolean(proxy?.isHealthy)
       } as ProxyHealthDetails;
     });
   }, [proxies]);
@@ -258,7 +258,7 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
    * Get proxy uptime percentage
    */
   const getProxyUptime = useCallback((proxyId: string): number => {
-  const proxy = proxies.find((p) => p?.id === proxyId) as any;
+  const proxy = proxies.find((p) => p?.id === proxyId);
     if (!proxy) return 0;
     
   const successCount = proxy?.successCount || 0;

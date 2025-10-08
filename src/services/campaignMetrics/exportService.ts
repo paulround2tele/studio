@@ -10,6 +10,8 @@ import { EnhancedRecommendation } from './recommendationsV3Pipeline';
 import { NormalizedSnapshot } from './normalizationService';
 import { CohortMatrix } from './cohortService';
 import { capabilitiesService, DomainType, DomainResolution } from './capabilitiesService';
+import type { CausalNode, CausalEdge } from '@/services/analytics/causalGraphService';
+import type { BanditArm, BanditDecision } from '@/services/experimentation/banditService';
 import { telemetryService } from './telemetryService';
 
 // Feature flag for export tools
@@ -174,18 +176,18 @@ export interface ExportOptionsV6 extends ExportOptionsV3 {
   includePrivacyLedger?: boolean;
   includePerfTraces?: boolean;
   causalGraphData?: {
-    nodes: any[];
-    edges: any[];
+    nodes: CausalNode[];
+    edges: CausalEdge[];
     version: string;
   };
   experimentsData?: {
-    arms: any[];
-    decisions: any[];
-    rewardsSummary: any;
+    arms: BanditArm[];
+    decisions: BanditDecision[];
+    rewardsSummary: unknown;
   };
   semanticSummariesData?: {
-    anomalies: any[];
-    causalDeltas: any[];
+    anomalies: unknown[];
+    causalDeltas: unknown[];
   };
   privacyLedgerData?: {
     redactionsApplied: number;
@@ -195,7 +197,7 @@ export interface ExportOptionsV6 extends ExportOptionsV3 {
     policyVersion: string;
   };
   perfTracesData?: {
-    spans: any[];
+    spans: unknown[];
     totalSpans: number;
     averageDuration: number;
     errorRate: number;
@@ -680,7 +682,7 @@ function generateSnapshotsCSV(snapshots: AggregateSnapshot[]): string {
 /**
  * Escape CSV field values
  */
-function escapeCSVField(value: any): string {
+function escapeCSVField(value: unknown): string {
   const stringValue = String(value);
   if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
     return `"${stringValue.replace(/"/g, '""')}"`;

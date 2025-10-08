@@ -4,8 +4,8 @@ interface NormalizedRtkError {
   message: string;
   status?: number;
   code?: string;
-  details?: any;
-  raw?: any;
+  details?: unknown;
+  raw?: unknown;
 }
 
 /**

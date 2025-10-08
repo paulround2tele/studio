@@ -74,7 +74,7 @@ export function usePaginatedDomains(campaignId: string, opts: UsePaginatedDomain
     pageCache.current.set(page, { items: currentItems });
     if (infinite) {
       // Append new unique items (simple concat; could enhance with domain id uniqueness)
-      const seen = new Set(accumulated.current.map((d) => (d as any).id || (d as any).domain));
+      const seen = new Set(accumulated.current.map((d) => d.id || d.domain));
       const appended = currentItems.filter(d => !seen.has(d.id || d.domain));
       if (appended.length) {
         accumulated.current = accumulated.current.concat(appended);
