@@ -116,7 +116,7 @@ export async function fetchMLRecommendations(
 /**
  * Validate ML recommendations response structure
  */
-function validateMLResponse(data: any): data is MLRecommendationsResponse {
+function validateMLResponse(data: unknown): data is MLRecommendationsResponse {
   return (
     data &&
     typeof data.modelVersion === 'string' &&
@@ -131,7 +131,7 @@ function validateMLResponse(data: any): data is MLRecommendationsResponse {
 /**
  * Validate individual ML recommendation
  */
-function validateMLRecommendation(rec: any): rec is MLRecommendation {
+function validateMLRecommendation(rec: unknown): rec is MLRecommendation {
   return (
     rec &&
     typeof rec.id === 'string' &&

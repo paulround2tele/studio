@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2025-10-08T08:57:07.207Z",
+  "generatedAt": "2025-10-08T12:37:19.187Z",
   "root": "/home/runner/work/studio/studio",
-  "total": 83,
+  "total": 41,
   "byPattern": {
-    "annotation": 79,
+    "annotation": 37,
     "cast": 4
   },
   "byLocationGroup": {
     "other": 1,
-    "services": 80,
+    "services": 38,
     "store": 2
   },
   "usages": [
@@ -20,114 +20,6 @@
       "code": "* Replaces unsafe `as any` casts with proper runtime type checking",
       "locationGroup": "other",
       "context": "* Type Guards for API Response Validation"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 788,
-      "column": 54,
-      "pattern": "annotation",
-      "code": "private filterByTimeRange<T extends { [key: string]: any }>(data: T[] | undefined, timeRange?: { start: string; end: string }): T[] | undefined {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 811,
-      "column": 20,
-      "pattern": "annotation",
-      "code": "const first: any = value[0];",
-      "locationGroup": "services",
-      "context": "if (Array.isArray(value) && value.length > 0) {"
-    },
-    {
-      "file": "src/services/campaignMetrics/forecastService.ts",
-      "line": 1168,
-      "column": 43,
-      "pattern": "annotation",
-      "code": "): Promise<Array<{ modelId: string; points: any[] }>> {",
-      "locationGroup": "services",
-      "context": "options: ClientForecastOptions"
-    },
-    {
-      "file": "src/services/campaignMetrics/forecastService.ts",
-      "line": 1169,
-      "column": 56,
-      "pattern": "annotation",
-      "code": "const modelForecasts: Array<{ modelId: string; points: any[] }> = [];",
-      "locationGroup": "services",
-      "context": "): Promise<Array<{ modelId: string; points: any[] }>> {"
-    },
-    {
-      "file": "src/services/campaignMetrics/historyStore.ts",
-      "line": 280,
-      "column": 43,
-      "pattern": "annotation",
-      "code": "entries: parsed.entries.map((entry: any) => ({",
-      "locationGroup": "services",
-      "context": "const history: CampaignHistory = {"
-    },
-    {
-      "file": "src/services/campaignMetrics/metricsPerf.ts",
-      "line": 15,
-      "column": 10,
-      "pattern": "annotation",
-      "code": "detail?: any;",
-      "locationGroup": "services",
-      "context": "timestamp: number;"
-    },
-    {
-      "file": "src/services/campaignMetrics/metricsPerf.ts",
-      "line": 44,
-      "column": 43,
-      "pattern": "annotation",
-      "code": "export function mark(name: string, detail?: any): void {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/metricsPerf.ts",
-      "line": 172,
-      "column": 10,
-      "pattern": "annotation",
-      "code": "detail?: any",
-      "locationGroup": "services",
-      "context": "fn: () => T,"
-    },
-    {
-      "file": "src/services/campaignMetrics/metricsPerf.ts",
-      "line": 201,
-      "column": 10,
-      "pattern": "annotation",
-      "code": "detail?: any",
-      "locationGroup": "services",
-      "context": "fn: () => Promise<T>,"
-    },
-    {
-      "file": "src/services/campaignMetrics/metricsPerf.ts",
-      "line": 306,
-      "column": 63,
-      "pattern": "annotation",
-      "code": "export function emitPerformanceEvent(eventName: string, detail: any): void {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/mlRecommendationsService.ts",
-      "line": 119,
-      "column": 33,
-      "pattern": "annotation",
-      "code": "function validateMLResponse(data: any): data is MLRecommendationsResponse {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/mlRecommendationsService.ts",
-      "line": 134,
-      "column": 38,
-      "pattern": "annotation",
-      "code": "function validateMLRecommendation(rec: any): rec is MLRecommendation {",
-      "locationGroup": "services",
-      "context": "*/"
     },
     {
       "file": "src/services/campaignMetrics/normalizationService.ts",
@@ -185,24 +77,6 @@
     },
     {
       "file": "src/services/campaignMetrics/rootCauseAnalyticsService.ts",
-      "line": 459,
-      "column": 31,
-      "pattern": "annotation",
-      "code": "): { score: number; evidence: any[] } {",
-      "locationGroup": "services",
-      "context": "timeRange: { start: string; end: string }"
-    },
-    {
-      "file": "src/services/campaignMetrics/rootCauseAnalyticsService.ts",
-      "line": 483,
-      "column": 31,
-      "pattern": "annotation",
-      "code": "): { score: number; evidence: any[] } {",
-      "locationGroup": "services",
-      "context": "timeRange: { start: string; end: string }"
-    },
-    {
-      "file": "src/services/campaignMetrics/rootCauseAnalyticsService.ts",
       "line": 516,
       "column": 57,
       "pattern": "annotation",
@@ -257,52 +131,7 @@
     },
     {
       "file": "src/services/campaignMetrics/securityHardeningService.ts",
-      "line": 66,
-      "column": 19,
-      "pattern": "annotation",
-      "code": "originalValue?: any;",
-      "locationGroup": "services",
-      "context": "metadata: {"
-    },
-    {
-      "file": "src/services/campaignMetrics/securityHardeningService.ts",
-      "line": 81,
-      "column": 10,
-      "pattern": "annotation",
-      "code": "value: any,",
-      "locationGroup": "services",
-      "context": "sanitizeNumeric("
-    },
-    {
-      "file": "src/services/campaignMetrics/securityHardeningService.ts",
-      "line": 207,
-      "column": 34,
-      "pattern": "annotation",
-      "code": "validateForecastHorizon(horizon: any): SanitizationResult<number> {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/securityHardeningService.ts",
-      "line": 214,
-      "column": 32,
-      "pattern": "annotation",
-      "code": "sanitizeForecastPoints(points: any[]): SanitizationResult<any[]> {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/securityHardeningService.ts",
-      "line": 224,
-      "column": 26,
-      "pattern": "annotation",
-      "code": "const sanitizedPoints: any[] = [];",
-      "locationGroup": "services",
-      "context": ""
-    },
-    {
-      "file": "src/services/campaignMetrics/securityHardeningService.ts",
-      "line": 283,
+      "line": 285,
       "column": 38,
       "pattern": "annotation",
       "code": "sanitizeMetricAggregates(aggregates: any): SanitizationResult<any> {",
@@ -311,7 +140,7 @@
     },
     {
       "file": "src/services/campaignMetrics/securityHardeningService.ts",
-      "line": 299,
+      "line": 301,
       "column": 23,
       "pattern": "annotation",
       "code": "sanitizeString(input: any, maxLength: number = 1000): SanitizationResult<string> {",
@@ -320,7 +149,7 @@
     },
     {
       "file": "src/services/campaignMetrics/securityHardeningService.ts",
-      "line": 375,
+      "line": 377,
       "column": 48,
       "pattern": "annotation",
       "code": "export function validateForecastHorizon(horizon: any): SanitizationResult<number> {",
@@ -329,16 +158,7 @@
     },
     {
       "file": "src/services/campaignMetrics/securityHardeningService.ts",
-      "line": 382,
-      "column": 46,
-      "pattern": "annotation",
-      "code": "export function sanitizeForecastPoints(points: any[]): SanitizationResult<any[]> {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/securityHardeningService.ts",
-      "line": 396,
+      "line": 398,
       "column": 37,
       "pattern": "annotation",
       "code": "export function sanitizeString(input: any, maxLength?: number): SanitizationResult<string> {",
@@ -353,78 +173,6 @@
       "code": "const aggregates: any = {};",
       "locationGroup": "services",
       "context": "const firstAgg: Record<string, unknown> = firstSnapshot ? (firstSnapshot as AggregateSnapshot).aggregates as unknown as Record<string, unknown> : {};"
-    },
-    {
-      "file": "src/services/campaignMetrics/streamPool.ts",
-      "line": 93,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "private baseSnapshot: any = {};",
-      "locationGroup": "services",
-      "context": "class DifferentialPatchProcessor {"
-    },
-    {
-      "file": "src/services/campaignMetrics/streamPool.ts",
-      "line": 99,
-      "column": 49,
-      "pattern": "annotation",
-      "code": "applyPatch(patch: DifferentialPatch, baseData?: any): any {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/streamPool.ts",
-      "line": 99,
-      "column": 55,
-      "pattern": "annotation",
-      "code": "applyPatch(patch: DifferentialPatch, baseData?: any): any {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/streamPool.ts",
-      "line": 117,
-      "column": 29,
-      "pattern": "annotation",
-      "code": "private applyChange(target: any, change: StreamPatchOp): void {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/streamPool.ts",
-      "line": 127,
-      "column": 30,
-      "pattern": "annotation",
-      "code": "updateBaseSnapshot(snapshot: any): void {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/streamPool.ts",
-      "line": 134,
-      "column": 20,
-      "pattern": "annotation",
-      "code": "getCurrentState(): any {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/streamPool.ts",
-      "line": 282,
-      "column": 20,
-      "pattern": "annotation",
-      "code": "let messageData: any;",
-      "locationGroup": "services",
-      "context": ""
-    },
-    {
-      "file": "src/services/campaignMetrics/streamPool.ts",
-      "line": 541,
-      "column": 53,
-      "pattern": "annotation",
-      "code": "private emitTelemetryEvent(eventType: string, data: any): void {",
-      "locationGroup": "services",
-      "context": "*/"
     },
     {
       "file": "src/services/campaignMetrics/telemetryService.ts",
@@ -445,87 +193,6 @@
       "context": "oldValue?: any;"
     },
     {
-      "file": "src/services/campaignMetrics/workerCoordinator.ts",
-      "line": 21,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "aggregates?: any;",
-      "locationGroup": "services",
-      "context": "includeMovers?: boolean;"
-    },
-    {
-      "file": "src/services/campaignMetrics/workerCoordinator.ts",
-      "line": 22,
-      "column": 20,
-      "pattern": "annotation",
-      "code": "classifiedCounts?: any;",
-      "locationGroup": "services",
-      "context": "aggregates?: any;"
-    },
-    {
-      "file": "src/services/campaignMetrics/workerCoordinator.ts",
-      "line": 23,
-      "column": 10,
-      "pattern": "annotation",
-      "code": "movers?: any;",
-      "locationGroup": "services",
-      "context": "classifiedCounts?: any;"
-    },
-    {
-      "file": "src/services/campaignMetrics/workerCoordinator.ts",
-      "line": 24,
-      "column": 10,
-      "pattern": "annotation",
-      "code": "deltas?: any;",
-      "locationGroup": "services",
-      "context": "movers?: any;"
-    },
-    {
-      "file": "src/services/campaignMetrics/workerCoordinator.ts",
-      "line": 39,
-      "column": 19,
-      "pattern": "annotation",
-      "code": "resolve: (result: any) => void;",
-      "locationGroup": "services",
-      "context": "message: ExtendedWorkerMessage;"
-    },
-    {
-      "file": "src/services/campaignMetrics/workerCoordinator.ts",
-      "line": 345,
-      "column": 13,
-      "pattern": "annotation",
-      "code": "aggregates: any;",
-      "locationGroup": "services",
-      "context": "): Promise<{"
-    },
-    {
-      "file": "src/services/campaignMetrics/workerCoordinator.ts",
-      "line": 346,
-      "column": 19,
-      "pattern": "annotation",
-      "code": "classifiedCounts: any;",
-      "locationGroup": "services",
-      "context": "aggregates: any;"
-    },
-    {
-      "file": "src/services/campaignMetrics/workerCoordinator.ts",
-      "line": 347,
-      "column": 10,
-      "pattern": "annotation",
-      "code": "movers?: any;",
-      "locationGroup": "services",
-      "context": "classifiedCounts: any;"
-    },
-    {
-      "file": "src/services/campaignMetrics/workerCoordinator.ts",
-      "line": 348,
-      "column": 10,
-      "pattern": "annotation",
-      "code": "deltas?: any;",
-      "locationGroup": "services",
-      "context": "movers?: any;"
-    },
-    {
       "file": "src/services/i18n/i18nService.ts",
       "line": 435,
       "column": 16,
@@ -542,51 +209,6 @@
       "code": "const countKeys = (obj: any): number => {",
       "locationGroup": "services",
       "context": ""
-    },
-    {
-      "file": "src/services/perf/taskSchedulerService.ts",
-      "line": 33,
-      "column": 50,
-      "pattern": "annotation",
-      "code": "| { kind: 'forecast'; payload: { modelForecasts: any[]; metricKey: string; horizon: number } }",
-      "locationGroup": "services",
-      "context": "export type TaskDescriptor ="
-    },
-    {
-      "file": "src/services/perf/taskSchedulerService.ts",
-      "line": 34,
-      "column": 44,
-      "pattern": "annotation",
-      "code": "| { kind: 'metric'; payload: { aggregates: any; classifiedCounts: any } }",
-      "locationGroup": "services",
-      "context": "| { kind: 'forecast'; payload: { modelForecasts: any[]; metricKey: string; horizon: number } }"
-    },
-    {
-      "file": "src/services/perf/taskSchedulerService.ts",
-      "line": 34,
-      "column": 67,
-      "pattern": "annotation",
-      "code": "| { kind: 'metric'; payload: { aggregates: any; classifiedCounts: any } }",
-      "locationGroup": "services",
-      "context": "| { kind: 'forecast'; payload: { modelForecasts: any[]; metricKey: string; horizon: number } }"
-    },
-    {
-      "file": "src/services/perf/taskSchedulerService.ts",
-      "line": 50,
-      "column": 10,
-      "pattern": "annotation",
-      "code": "payload: any; // TODO: Replace with TaskDescriptor payload when fully typed",
-      "locationGroup": "services",
-      "context": "kind: TaskKind;"
-    },
-    {
-      "file": "src/services/perf/taskSchedulerService.ts",
-      "line": 54,
-      "column": 19,
-      "pattern": "annotation",
-      "code": "resolve: (result: any) => void;",
-      "locationGroup": "services",
-      "context": "timeoutMs: number;"
     },
     {
       "file": "src/services/perf/taskSchedulerService.ts",

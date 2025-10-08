@@ -30,9 +30,9 @@ export type TimerHandle = ReturnType<typeof setTimeout>;
  * Discriminated union for task descriptors
  */
 export type TaskDescriptor = 
-  | { kind: 'forecast'; payload: { modelForecasts: any[]; metricKey: string; horizon: number } }
-  | { kind: 'metric'; payload: { aggregates: any; classifiedCounts: any } }
-  | { kind: 'aggregate'; payload: { baselineMetrics: Record<string, any> } };
+  | { kind: 'forecast'; payload: { modelForecasts: Record<string, unknown>[]; metricKey: string; horizon: number } }
+  | { kind: 'metric'; payload: { aggregates: Record<string, number>; classifiedCounts: Record<string, number> } }
+  | { kind: 'aggregate'; payload: { baselineMetrics: Record<string, number> } };
 
 /**
  * Result wrapper for safe operations
@@ -47,11 +47,11 @@ export type Result<T, E = Error> =
 export interface ScheduledTask {
   id: string;
   kind: TaskKind;
-  payload: any; // TODO: Replace with TaskDescriptor payload when fully typed
+  payload: TaskDescriptor['payload'];
   priority: TaskPriority;
   queuedAt: number;
   timeoutMs: number;
-  resolve: (result: any) => void;
+  resolve: (result: unknown) => void;
   reject: (error: Error) => void;
 }
 

@@ -277,7 +277,7 @@ function loadFromLocalStorage(campaignId: string): void {
     const parsed = JSON.parse(data);
     if (parsed.version === 1 && Array.isArray(parsed.entries)) {
       const history: CampaignHistory = {
-        entries: parsed.entries.map((entry: any) => ({
+        entries: parsed.entries.map((entry: { snapshot: unknown; timestamp: string; pinned?: boolean }) => ({
           snapshot: entry.snapshot as AggregateSnapshot,
           timestamp: entry.timestamp,
           pinned: entry.pinned || false

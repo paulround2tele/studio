@@ -114,13 +114,17 @@ export function CampaignDashboard({
   });
 
   const handleSave = (data: CampaignFormData) => {
-    // Transform form data to Campaign shape
+    // Transform form data to Campaign shape with proper type conversion
     const campaignData: Campaign = {
-      ...data,
-      id: data.id || '',
-      // Ensure required Campaign fields are present
-      status: data.status || 'draft',
-      progress: data.progress || { phase: 'discovery', percentage: 0 }
+      id: campaign?.id || '',
+      name: data.name,
+      description: data.description,
+      status: campaign?.status || 'draft',
+      configuration: campaign?.configuration || {},
+      progress: campaign?.progress || { percentage: 0 },
+      createdAt: campaign?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      currentPhase: campaign?.currentPhase || 'discovery'
     };
     onSave(campaignData);
   };
@@ -128,10 +132,16 @@ export function CampaignDashboard({
   const handleSaveAndStart = (data: CampaignFormData) => {
     if (onSaveAndStart) {
       const campaignData: Campaign = {
-        ...data,
-        id: data.id || '',
-        status: data.status || 'running',
-        progress: data.progress || { phase: 'discovery', percentage: 0 }
+        id: campaign?.id || '',
+        name: data.name,
+        description: data.description,
+        status: 'running',
+        configuration: campaign?.configuration || {},
+        progress: { percentage: 0 },
+        createdAt: campaign?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        startedAt: new Date().toISOString(),
+        currentPhase: 'discovery'
       };
       onSaveAndStart(campaignData);
     }

@@ -12,7 +12,7 @@ const MAX_MEASURES = 50;
 interface PerformanceMark {
   name: string;
   timestamp: number;
-  detail?: any;
+  detail?: Record<string, unknown>;
 }
 
 interface PerformanceMeasure {
@@ -41,7 +41,7 @@ const perfStore: PerformanceStats = {
 /**
  * Create a performance mark
  */
-export function mark(name: string, detail?: any): void {
+export function mark(name: string, detail?: Record<string, unknown>): void {
   if (!ENABLE_PERF_TRACKING) return;
 
   const timestamp = performance.now();
@@ -169,7 +169,7 @@ export function getCounter(name: string): number {
 export function timeFunction<T>(
   name: string, 
   fn: () => T, 
-  detail?: any
+  detail?: Record<string, unknown>
 ): T {
   if (!ENABLE_PERF_TRACKING) {
     return fn();
@@ -198,7 +198,7 @@ export function timeFunction<T>(
 export async function timeAsyncFunction<T>(
   name: string, 
   fn: () => Promise<T>, 
-  detail?: any
+  detail?: Record<string, unknown>
 ): Promise<T> {
   if (!ENABLE_PERF_TRACKING) {
     return fn();
@@ -303,7 +303,7 @@ export function exportPerformanceData(): string {
 /**
  * Emit performance event for external monitoring
  */
-export function emitPerformanceEvent(eventName: string, detail: any): void {
+export function emitPerformanceEvent(eventName: string, detail: Record<string, unknown>): void {
   if (!ENABLE_PERF_TRACKING || typeof window === 'undefined') return;
 
   try {

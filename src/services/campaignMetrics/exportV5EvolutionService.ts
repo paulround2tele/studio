@@ -785,7 +785,7 @@ class ExportV5EvolutionService {
   /**
    * Filter data by time range
    */
-  private filterByTimeRange<T extends { [key: string]: any }>(data: T[] | undefined, timeRange?: { start: string; end: string }): T[] | undefined {
+  private filterByTimeRange<T extends { timestamp?: string; generatedAt?: string; createdAt?: string }>(data: T[] | undefined, timeRange?: { start: string; end: string }): T[] | undefined {
     if (!timeRange || !data) return data;
 
     const start = new Date(timeRange.start).getTime();
@@ -808,9 +808,9 @@ class ExportV5EvolutionService {
     for (const key of Object.keys(data)) {
       const value = (data as Record<string, unknown>)[key];
       if (Array.isArray(value) && value.length > 0) {
-        const first: any = value[0];
+        const first = value[0];
         if (first && typeof first === 'object' && 'campaignId' in first) {
-          return String(first.campaignId);
+          return String((first as { campaignId: unknown }).campaignId);
         }
       }
     }

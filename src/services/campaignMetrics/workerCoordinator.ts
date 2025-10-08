@@ -18,10 +18,10 @@ export interface ExtendedWorkerMessage {
   domains?: DomainMetricsInput[];
   previousDomains?: DomainMetricsInput[];
   includeMovers?: boolean;
-  aggregates?: any;
-  classifiedCounts?: any;
-  movers?: any;
-  deltas?: any;
+  aggregates?: Record<string, number>;
+  classifiedCounts?: Record<string, number>;
+  movers?: Record<string, unknown>[];
+  deltas?: Record<string, number>;
   error?: string;
   timings?: {
     queueTimeMs: number;
@@ -36,7 +36,7 @@ export interface ExtendedWorkerMessage {
 interface WorkerTask {
   id: string;
   message: ExtendedWorkerMessage;
-  resolve: (result: any) => void;
+  resolve: (result: unknown) => void;
   reject: (error: Error) => void;
   queuedAt: number;
   startedAt?: number;
@@ -342,10 +342,10 @@ export async function computeAllMetrics(
   previousDomains?: DomainMetricsInput[],
   includeMovers: boolean = false
 ): Promise<{
-  aggregates: any;
-  classifiedCounts: any;
-  movers?: any;
-  deltas?: any;
+  aggregates: Record<string, number>;
+  classifiedCounts: Record<string, number>;
+  movers?: Record<string, unknown>[];
+  deltas?: Record<string, number>;
   timings: {
     queueTimeMs: number;
     execTimeMs: number;

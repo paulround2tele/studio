@@ -273,11 +273,11 @@ export const BulkOperationsDashboard: React.FC = () => {
             campaignId: (globalThis.crypto?.randomUUID?.() || `${Date.now()}-dv`) as UUID,
             personaIds: ['persona-1', 'persona-2'],
             maxDomains: 100,
-            validationConfig: { timeout: 5000, retries: 1, recordTypes: ['A', 'MX'] },
+            validationConfig: { timeout: 5000, retries: 1, recordTypes: 'A' },
           }],
           batchSize: 50,
-          stealth: { /* shape defined but optional fields not specified */ },
-        } as BulkDNSValidationRequest;
+          stealth: {},
+        } satisfies BulkDNSValidationRequest;
       
       case 'http_validation':
         return {
@@ -295,13 +295,13 @@ export const BulkOperationsDashboard: React.FC = () => {
       case 'analytics':
         return {
           campaignIds: ['campaign-1', 'campaign-2'],
-          metrics: ['response_time', 'content_analysis', 'lead_score'],
+          metrics: 'response_time',
           granularity: 'day',
           timeRange: {
             startTime: '2024-01-01T00:00:00Z',
             endTime: '2024-12-31T23:59:59Z',
           },
-        } as BulkAnalyticsRequest;
+        } satisfies BulkAnalyticsRequest;
         
       case 'resource_allocation':
         return {
@@ -320,9 +320,9 @@ export const BulkOperationsDashboard: React.FC = () => {
         // Fallback to a no-op analytics request to satisfy typing; UI prevents hitting this path.
         return {
           campaignIds: [],
-          metrics: ['response_time'],
+          metrics: 'response_time',
           timeRange: { startTime: new Date().toISOString(), endTime: new Date().toISOString() },
-        } as BulkAnalyticsRequest;
+        } satisfies BulkAnalyticsRequest;
     }
   };
   

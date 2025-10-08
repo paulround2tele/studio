@@ -1165,8 +1165,8 @@ async function generateMultipleModelForecasts(
   timeSeries: TimeSeriesPoint[],
   horizon: number,
   options: ClientForecastOptions
-): Promise<Array<{ modelId: string; points: any[] }>> {
-  const modelForecasts: Array<{ modelId: string; points: any[] }> = [];
+): Promise<Array<{ modelId: string; points: ForecastPoint[] }>> {
+  const modelForecasts: Array<{ modelId: string; points: ForecastPoint[] }> = [];
 
   // Try server forecast
   try {

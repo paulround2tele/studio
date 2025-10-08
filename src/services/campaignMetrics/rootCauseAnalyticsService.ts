@@ -125,7 +125,7 @@ interface TemporalCorrelation {
  */
 class RootCauseAnalyticsService {
   private causalChains = new Map<string, CausalChain>();
-  private factorTemplates = new Map<CausalFactorType, any>();
+  private factorTemplates = new Map<CausalFactorType, Record<string, unknown>>();
 
   constructor() {
     this.initializeFactorTemplates();
@@ -456,7 +456,7 @@ class RootCauseAnalyticsService {
   private detectDataIncompleteness(
     snapshots: AggregateSnapshot[],
     timeRange: { start: string; end: string }
-  ): { score: number; evidence: any[] } {
+  ): { score: number; evidence: Record<string, unknown>[] } {
     // Simplified implementation - check for missing data points
     const expectedPoints = this.calculateExpectedDataPoints(timeRange);
     const actualPoints = snapshots.filter(s => 
@@ -480,7 +480,7 @@ class RootCauseAnalyticsService {
   private detectDataAccuracy(
     snapshots: AggregateSnapshot[],
     timeRange: { start: string; end: string }
-  ): { score: number; evidence: any[] } {
+  ): { score: number; evidence: Record<string, unknown>[] } {
     // Simplified implementation - check for outliers and inconsistencies
     const relevantSnapshots = snapshots.filter(s => 
       s.timestamp >= timeRange.start && s.timestamp <= timeRange.end
