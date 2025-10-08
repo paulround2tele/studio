@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { useBandit, useBanditArmPerformance } from '@/hooks/useBandit';
+import type { BanditArm } from '@/services/experimentation/banditService';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -77,14 +78,14 @@ export function BanditPanel({
     }
   };
 
-  const getArmStatusColor = (arm: any) => {
+  const getArmStatusColor = (arm: BanditArm) => {
     if (arm.stats.pulls === 0) return 'gray';
     if (arm.stats.averageReward > 0.7) return 'green';
     if (arm.stats.averageReward > 0.4) return 'yellow';
     return 'red';
   };
 
-  const getArmStatusText = (arm: any) => {
+  const getArmStatusText = (arm: BanditArm) => {
     if (arm.stats.pulls === 0) return 'Untested';
     if (arm.stats.averageReward > 0.7) return 'Performing Well';
     if (arm.stats.averageReward > 0.4) return 'Average';
@@ -95,7 +96,7 @@ export function BanditPanel({
     return (reward * 100).toFixed(1) + '%';
   };
 
-  const renderArmCard = (arm: any) => {
+  const renderArmCard = (arm: BanditArm) => {
     const statusColor = getArmStatusColor(arm);
     const statusText = getArmStatusText(arm);
     const isSelected = selectedArm === arm.id;

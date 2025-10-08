@@ -4,6 +4,7 @@
  */
 
 import { telemetryService } from './telemetryService';
+import type { ForecastPoint } from '@/lib/api-client/models';
 
 /**
  * Model registration info
@@ -224,7 +225,7 @@ class ForecastBlendService {
    */
   private calculatePosteriorWeights(
     metricKey: string,
-    modelForecasts: Array<{ modelId: string; points: any[] }>
+    modelForecasts: Array<{ modelId: string; points: ForecastPoint[] }>
   ): Map<string, number> {
     const weights = new Map<string, number>();
     const currentTime = Date.now();
@@ -374,7 +375,7 @@ class ForecastBlendService {
   private fallbackToArbitration(
     metricKey: string,
     horizon: number,
-    modelForecasts: Array<{ modelId: string; points: any[] }>
+    modelForecasts: Array<{ modelId: string; points: ForecastPoint[] }>
   ): BlendedForecast {
     // Simple arbitration: pick best performing model or default to first
     let bestModelId: string | undefined = modelForecasts[0]?.modelId;

@@ -25,8 +25,8 @@ const ENABLE_DEBUG_PANEL = process.env.NEXT_PUBLIC_DEBUG_METRICS_PANEL === 'true
 interface MetricsDebugPanelProps {
   snapshots?: AggregateSnapshot[];
   connectionState?: ConnectionState;
-  lastDeltas?: any[];
-  topMovers?: any[];
+  lastDeltas?: DeltaMetrics[];
+  topMovers?: Mover[];
   anomalies?: Anomaly[];
   portfolioSummary?: PortfolioSummary | null;
   portfolioOutliers?: PortfolioOutlier[];

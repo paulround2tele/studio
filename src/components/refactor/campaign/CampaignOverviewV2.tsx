@@ -5,6 +5,7 @@
 
 import React from 'react';
 import { useGetCampaignEnrichedQuery, useGetCampaignDomainsQuery } from '@/store/api/campaignApi';
+import type { DomainListItem } from '@/lib/api-client/models';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -26,7 +27,7 @@ import type {
   CampaignKpi, 
   CampaignDomain 
 } from '../types';
-import type { DomainMetricsInput } from '@/types/campaignMetrics';
+import type { DomainMetricsInput, DeltaMetrics } from '@/types/campaignMetrics';
 import type { EnrichedCampaignResponse } from '@/lib/api-client/models/enriched-campaign-response';
 import type { CampaignDomainsListResponse } from '@/lib/api-client/models/campaign-domains-list-response';
 
@@ -36,7 +37,7 @@ interface CampaignOverviewV2Props {
 }
 
 // Convert API domains to our lightweight interface
-function convertDomains(apiDomains: any[] | undefined | null): CampaignDomain[] {
+function convertDomains(apiDomains: DomainListItem[] | undefined | null): CampaignDomain[] {
   if (!apiDomains || !Array.isArray(apiDomains)) return [];
   return apiDomains.map(domain => ({
     id: domain.id,
@@ -68,12 +69,12 @@ function convertToMetricsInput(domains: CampaignDomain[]): DomainMetricsInput[] 
 function CampaignOverviewV2Inner({ className }: { className?: string }) {
   const metrics = useMetricsContext();
   
-  // Use real campaign data instead of mock data
-  const warnings: any[] = []; // Remove mock warnings for now - should come from metrics context
-  const config: any[] = []; // Remove mock config for now - should come from actual campaign data
+  // Use real campaign data instead of mock data  
+  const warnings: never[] = []; // Remove mock warnings for now - should come from metrics context
+  const config: never[] = []; // Remove mock config for now - should come from actual campaign data
   
   // Generate KPIs from Phase 3 aggregates with delta badges
-  const kpisWithDeltas: (CampaignKpi & { delta?: any })[] = [
+  const kpisWithDeltas: (CampaignKpi & { delta?: DeltaMetrics })[] = [
     {
       label: 'Total Domains',
       value: metrics.aggregates.totalDomains,
@@ -230,7 +231,7 @@ export function CampaignOverviewV2({ campaignId, className }: CampaignOverviewV2
   // Prefer domains from dedicated list endpoint; fall back to enriched domains if present
   const enrichedObj = enriched as EnrichedCampaignResponse | undefined;
   const listObj = domainsList as CampaignDomainsListResponse | undefined;
-  const rawDomains = listObj?.items || (enrichedObj as any)?.domains || [];
+  const rawDomains = listObj?.items || [];
   const domains = convertDomains(rawDomains);
   const metricsInput: DomainMetricsInput[] = convertToMetricsInput(domains);
   

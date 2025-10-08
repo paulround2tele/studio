@@ -6,7 +6,7 @@
 import { telemetryService } from './telemetryService';
 
 // Declare process for Node.js environment variables
-declare const process: any;
+declare const process: NodeJS.Process;
 
 /**
  * Offline cache entry

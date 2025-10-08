@@ -8,8 +8,8 @@ import type { ForecastPoint } from '@/types/forecasting';
 import type { components } from '@/lib/api-client/types';
 type ProbPoint = components['schemas']['ForecastProbabilisticPoint'];
 
-// Declare process for Node.js environment variables
-declare const process: any;
+// Use Node.js process types
+declare const process: NodeJS.Process;
 
 /**
  * Schema hash for validation
@@ -100,7 +100,7 @@ class SecurityHardeningService {
    * Generate schema hash for validation
    */
   generateSchemaHash(
-    schema: any,
+    schema: unknown,
     version: string,
     algorithm: 'sha256' | 'sha1' | 'md5' = this.config.defaultHashAlgorithm
   ): SchemaHash {
@@ -131,7 +131,7 @@ class SecurityHardeningService {
    */
   validatePayloadSchema<T>(
     payload: T,
-    expectedSchema: any,
+    expectedSchema: unknown,
     schemaVersion: string
   ): ValidatedPayload<T> {
     const validationErrors: string[] = [];
@@ -196,7 +196,7 @@ class SecurityHardeningService {
    * Sign payload with HMAC or RSA
    */
   signPayload(
-    payload: any,
+    payload: unknown,
     secretKey: string,
     algorithm: 'hmac-sha256' | 'rsa-sha256' = this.config.defaultSignatureAlgorithm,
     keyId?: string
@@ -240,7 +240,7 @@ class SecurityHardeningService {
    * Verify payload signature
    */
   verifyPayloadSignature(
-    payload: any,
+    payload: unknown,
     signature: PayloadSignature,
     secretKey: string
   ): boolean {
@@ -538,8 +538,8 @@ class SecurityHardeningService {
    * Validate schema structure recursively
    */
   private validateSchemaStructure(
-    data: any,
-    schema: any,
+    data: unknown,
+    schema: unknown,
     path: string = 'root'
   ): { isValid: boolean; errors: string[] } {
     const errors: string[] = [];
