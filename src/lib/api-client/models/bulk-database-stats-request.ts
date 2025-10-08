@@ -56,7 +56,7 @@ export interface BulkDatabaseStatsRequest {
           
           boolean
     ;
-  [key: string]: Record<string, unknown>;
+  [key: string]: unknown;
 }
 
 

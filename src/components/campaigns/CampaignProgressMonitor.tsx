@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { AlertCircle, CheckCircle, Clock, Pause } from 'lucide-react';
-import type { CampaignResponse as Campaign, CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum, CampaignResponseStatusEnum as CampaignPhaseStatusEnum } from '@/lib/api-client/models';
+import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
+type CampaignCurrentPhaseEnum = 'discovery' | 'validation' | 'extraction' | 'analysis';
+type CampaignPhaseStatusEnum = 'not_started' | 'configured' | 'running' | 'paused' | 'completed' | 'failed';
 import { normalizeStatus, getStatusColor } from '@/lib/utils/statusMapping';
 
 // Helper function to ensure valid badge variants

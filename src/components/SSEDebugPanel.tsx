@@ -248,9 +248,9 @@ export function SSEDebugPanel({
                       {new Date(entry.timestamp).toLocaleTimeString()}
                     </span>
                   </div>
-                  {entry.event.campaign_id && (
+                  {typeof (entry.event as any)?.campaign_id === 'string' && (
                     <div className="text-xs opacity-75 mb-1">
-                      Campaign: {String(entry.event.campaign_id)}
+                      Campaign: {String((entry.event as any).campaign_id)}
                     </div>
                   )}
                   <pre className="text-xs overflow-x-auto whitespace-pre-wrap">

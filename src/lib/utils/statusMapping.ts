@@ -3,7 +3,16 @@
  * Maps between frontend and backend campaign status representations
  */
 
-import { CampaignResponseStatusEnum as CampaignStatus } from '@/lib/api-client/models';
+// Local status literals (API may not export an enum—use string union)
+export const CampaignStatus = {
+  draft: 'draft',
+  running: 'running',
+  paused: 'paused',
+  completed: 'completed',
+  failed: 'failed',
+  cancelled: 'cancelled'
+} as const;
+export type CampaignStatus = typeof CampaignStatus[keyof typeof CampaignStatus];
 
 // Define the actual status values used by the system (aligned with API)
 export const CAMPAIGN_STATUSES = {
@@ -18,20 +27,13 @@ export const CAMPAIGN_STATUSES = {
 export type ValidCampaignStatus = typeof CAMPAIGN_STATUSES[keyof typeof CAMPAIGN_STATUSES];
 
 // All valid status values as array
-export const ALL_CAMPAIGN_STATUSES: CampaignStatus[] = [
-  CampaignStatus.draft,
-  CampaignStatus.running,
-  CampaignStatus.paused,
-  CampaignStatus.completed,
-  CampaignStatus.failed,
-  CampaignStatus.cancelled,
-];
+export const ALL_CAMPAIGN_STATUSES: CampaignStatus[] = Object.values(CampaignStatus);
 
 /**
  * Check if a string is a valid campaign status
  */
 export function isValidCampaignStatus(status: string): status is CampaignStatus {
-  return (Object.values(CampaignStatus) as string[]).includes(status);
+  return (ALL_CAMPAIGN_STATUSES as string[]).includes(status);
 }
 
 /**
@@ -39,7 +41,7 @@ export function isValidCampaignStatus(status: string): status is CampaignStatus 
  */
 export function normalizeStatus(status: unknown): CampaignStatus {
   if (typeof status !== 'string') {
-  return CampaignStatus.draft;
+    return CampaignStatus.draft;
   }
 
   const lowercaseStatus = status.toLowerCase();
@@ -55,7 +57,7 @@ export function normalizeStatus(status: unknown): CampaignStatus {
     case 'created':
     case 'new':
     case 'pending':
-  return CampaignStatus.draft;
+    return CampaignStatus.draft;
     case 'scheduled':
     case 'ready':
     case 'queued':
@@ -63,15 +65,15 @@ export function normalizeStatus(status: unknown): CampaignStatus {
     case 'inprogress':
     case 'running':
     case 'pausing':
-  return CampaignStatus.running;
+    return CampaignStatus.running;
     case 'stopped':
     case 'halted':
-  return CampaignStatus.paused;
+    return CampaignStatus.paused;
     case 'done':
     case 'finished':
     case 'success':
     case 'succeeded':
-  return CampaignStatus.completed;
+    return CampaignStatus.completed;
     case 'error':
     case 'errored':
     case 'failure':
@@ -81,10 +83,10 @@ export function normalizeStatus(status: unknown): CampaignStatus {
     case 'archived':
     case 'deleted':
     case 'removed':
-  return CampaignStatus.failed;
+    return CampaignStatus.failed;
     default:
-  console.warn(`Unknown status value: ${status}, defaulting to draft`);
-  return CampaignStatus.draft;
+      console.warn(`Unknown status value: ${status}, defaulting to draft`);
+      return CampaignStatus.draft;
   }
 }
 

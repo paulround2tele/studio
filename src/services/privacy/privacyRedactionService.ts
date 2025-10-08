@@ -431,11 +431,13 @@ class PrivacyRedactionService {
    */
   private emitRedactionTelemetry(data: PrivacyRedactionAppliedEvent): void {
     if (typeof window !== 'undefined') {
-      interface TelemetryWindow extends Window { __telemetryService?: { emit: (event: string, data: unknown) => void } }
-      const telemetryWin = window as TelemetryWindow;
-      if (telemetryWin.__telemetryService) {
-        const telemetryService = telemetryWin.__telemetryService;
-      telemetryService.emit('privacy_redaction_applied', data);
+      const telemetryService = (window as unknown as { __telemetryService?: { emit?: (e:string,d:unknown)=>void; emitTelemetry?: (e:string,d:Record<string,unknown>)=>void } }).__telemetryService;
+      if (telemetryService) {
+        if (typeof telemetryService.emitTelemetry === 'function') {
+          telemetryService.emitTelemetry('privacy_redaction_applied', data as unknown as Record<string, unknown>);
+        } else if (typeof telemetryService.emit === 'function') {
+          telemetryService.emit('privacy_redaction_applied', data);
+        }
       }
     }
   }

@@ -1,4 +1,14 @@
-import { PhaseStatusResponse, PhaseStatusResponsePhaseEnum, PhaseStatusResponseStatusEnum } from '@/lib/api-client/models';
+import { PhaseStatusResponse } from '@/lib/api-client/models';
+
+// Fallback literal types when enum exports are not generated (OpenAPI may inline string enums)
+export type PipelinePhase = 'discovery' | 'validation' | 'extraction' | 'analysis';
+export type PhaseRunStatus =
+  | 'not_started'
+  | 'configured'
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'paused';
 
 /**
  * Ensure a PhaseStatusResponse object is initialized and optionally update its status.
@@ -6,8 +16,8 @@ import { PhaseStatusResponse, PhaseStatusResponsePhaseEnum, PhaseStatusResponseS
  */
 export function ensurePhaseStatus(
   draft: unknown,
-  phase: PhaseStatusResponsePhaseEnum,
-  status?: PhaseStatusResponseStatusEnum
+  phase: PipelinePhase,
+  status?: PhaseRunStatus
 ): PhaseStatusResponse {
   if (draft && typeof draft === 'object') {
     const d = draft as PhaseStatusResponse;
@@ -17,8 +27,8 @@ export function ensurePhaseStatus(
     }
   }
   return {
-    phase,
-    status: status || PhaseStatusResponseStatusEnum.not_started,
+    phase: phase as any, // cast to align with generated type expecting string literal
+    status: (status || 'not_started') as any,
     progress: {
       totalItems: 0,
       processedItems: 0,
@@ -29,7 +39,6 @@ export function ensurePhaseStatus(
     configuration: {},
   };
 }
-
-export function markConfigured(draft: unknown, phase: PhaseStatusResponsePhaseEnum): PhaseStatusResponse {
-  return ensurePhaseStatus(draft, phase, PhaseStatusResponseStatusEnum.configured);
+export function markConfigured(draft: unknown, phase: PipelinePhase): PhaseStatusResponse {
+  return ensurePhaseStatus(draft, phase, 'configured');
 }

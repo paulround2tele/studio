@@ -39,14 +39,15 @@ interface CampaignOverviewV2Props {
 // Convert API domains to our lightweight interface
 function convertDomains(apiDomains: DomainListItem[] | undefined | null): CampaignDomain[] {
   if (!apiDomains || !Array.isArray(apiDomains)) return [];
-  return apiDomains.map(domain => ({
-    id: domain.id,
-    domain_name: domain.domain_name || domain.domainName || domain.domain || '',
-    dns_status: domain.dns_status || domain.dnsStatus || 'pending',
-    http_status: domain.http_status || domain.httpStatus || 'pending', 
-    lead_score: domain.lead_score ?? domain.leadScore ?? 0,
-    created_at: domain.created_at || domain.createdAt || new Date().toISOString(),
-    updated_at: domain.updated_at || domain.updatedAt || new Date().toISOString()
+  return apiDomains.map(d => ({
+    id: d.id || '',
+    domain_name: d.domain || '',
+    dns_status: d.dnsStatus || 'pending',
+    http_status: d.httpStatus || 'pending',
+    // lead score not provided directly by DomainListItem – default to 0 (could be enriched later)
+    lead_score: 0,
+    created_at: d.createdAt || new Date().toISOString(),
+    updated_at: d.createdAt || new Date().toISOString()
   }));
 }
 

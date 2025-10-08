@@ -178,32 +178,47 @@ class ForecastBlendService {
       }>;
     }>
   ): BlendedForecast {
+    // Adapt raw point shape to ForecastPoint (add metricKey & predictedValue aliasing value)
+    const adaptedForecasts: Array<{ modelId: string; points: ForecastPoint[] }> = modelForecasts.map(f => ({
+      modelId: f.modelId,
+      points: f.points.map(p => ({
+        metricKey,
+        timestamp: p.timestamp,
+        predictedValue: p.value,
+        // Carry raw values for lower/upper via augmentation for local calculations
+        // @ts-ignore - augmenting with optional fields not in ForecastPoint interface
+        value: p.value,
+        // @ts-ignore
+        lower: p.lower,
+        // @ts-ignore
+        upper: p.upper,
+      }))
+    }));
     const startTime = Date.now();
 
     // Check if we have sufficient performance data for Bayesian blending
-    const sufficientData = modelForecasts.every(forecast => {
+    const sufficientData = adaptedForecasts.every(forecast => {
       const key = `${metricKey}:${forecast.modelId}`;
       const history = this.performanceHistory.get(key);
       return history && history.length >= MIN_SAMPLE_THRESHOLD;
     });
 
     if (!sufficientData) {
-      // Fall back to arbitration logic (Phase 8 compatibility)
-      return this.fallbackToArbitration(metricKey, horizon, modelForecasts);
+      return this.fallbackToArbitration(metricKey, horizon, adaptedForecasts);
     }
 
     // Calculate posterior weights using Bayesian updates
-    const posteriorWeights = this.calculatePosteriorWeights(metricKey, modelForecasts);
+  const posteriorWeights = this.calculatePosteriorWeights(metricKey, adaptedForecasts);
 
     // Blend forecasts using weighted averaging
-    const blendedPoints = this.blendForecasts(modelForecasts, posteriorWeights);
+  const blendedPoints = this.blendForecasts(adaptedForecasts, posteriorWeights);
 
     const qualityScore = this.calculateBlendQuality(metricKey, posteriorWeights);
 
     telemetryService.emitTelemetry('forecast_blended', {
       metricKey,
       horizon,
-      modelCount: modelForecasts.length,
+      modelCount: adaptedForecasts.length,
       blendMethod: 'bayesian',
       qualityScore,
       timingMs: Date.now() - startTime,
@@ -225,7 +240,7 @@ class ForecastBlendService {
    */
   private calculatePosteriorWeights(
     metricKey: string,
-    modelForecasts: Array<{ modelId: string; points: ForecastPoint[] }>
+  modelForecasts: Array<{ modelId: string; points: ForecastPoint[] }>
   ): Map<string, number> {
     const weights = new Map<string, number>();
     const currentTime = Date.now();
@@ -273,20 +288,12 @@ class ForecastBlendService {
    * Blend forecasts using weighted averaging
    */
   private blendForecasts(
-    modelForecasts: Array<{
-      modelId: string;
-      points: Array<{
-        timestamp: string;
-        value: number;
-        lower?: number;
-        upper?: number;
-      }>;
-    }>,
+    modelForecasts: Array<{ modelId: string; points: ForecastPoint[] }>,
     weights: Map<string, number>
   ): BlendedForecast['blendedPoints'] {
     if (modelForecasts.length === 0) return [];
 
-    const maxPoints = Math.max(...modelForecasts.map(f => f.points.length));
+  const maxPoints = Math.max(...modelForecasts.map(f => f.points.length));
     const blendedPoints: BlendedForecast['blendedPoints'] = [];
 
     for (let i = 0; i < maxPoints; i++) {
@@ -306,15 +313,19 @@ class ForecastBlendService {
 
         const weight = weights.get(forecast.modelId) || 0;
         
-        weightedValue += point.value * weight;
-        weightedLower += (point.lower ?? point.value) * weight;
-        weightedUpper += (point.upper ?? point.value) * weight;
+  // point may have predictedValue (canonical) plus augmented raw fields
+  const pv: any = (point as any).predictedValue ?? (point as any).value;
+  const lower: any = (point as any).lower ?? pv;
+  const upper: any = (point as any).upper ?? pv;
+  weightedValue += pv * weight;
+  weightedLower += lower * weight;
+  weightedUpper += upper * weight;
         totalWeight += weight;
 
         contributors.push({
           modelId: forecast.modelId,
           weight,
-          value: point.value,
+          value: pv,
         });
       }
 
@@ -375,7 +386,7 @@ class ForecastBlendService {
   private fallbackToArbitration(
     metricKey: string,
     horizon: number,
-    modelForecasts: Array<{ modelId: string; points: ForecastPoint[] }>
+  modelForecasts: Array<{ modelId: string; points: ForecastPoint[] }>
   ): BlendedForecast {
     // Simple arbitration: pick best performing model or default to first
     let bestModelId: string | undefined = modelForecasts[0]?.modelId;
@@ -395,7 +406,7 @@ class ForecastBlendService {
     if (!bestModelId) {
       bestModelId = 'unknown_model';
     }
-    const bestForecast = modelForecasts.find(f => f.modelId === bestModelId) || modelForecasts[0];
+  const bestForecast = modelForecasts.find(f => f.modelId === bestModelId) || modelForecasts[0];
     if (!bestForecast) {
       throw new Error('No valid forecast found for arbitration');
     }
@@ -403,17 +414,22 @@ class ForecastBlendService {
     const weights = new Map<string, number>();
     weights.set(bestModelId, 1.0);
 
-    const blendedPoints: BlendedForecast['blendedPoints'] = bestForecast.points.map(point => ({
-      timestamp: String(point.timestamp),
-      value: Number(point.value) || 0,
-      lower: Number(point.lower ?? point.value) || Number(point.value) || 0,
-      upper: Number(point.upper ?? point.value) || Number(point.value) || 0,
+    const blendedPoints: BlendedForecast['blendedPoints'] = bestForecast.points.map(point => {
+      const pv: any = (point as any).predictedValue ?? (point as any).value;
+      const lower: any = (point as any).lower ?? pv;
+      const upper: any = (point as any).upper ?? pv;
+      return {
+        timestamp: String(point.timestamp),
+        value: Number(pv) || 0,
+        lower: Number(lower) || Number(pv) || 0,
+        upper: Number(upper) || Number(pv) || 0,
       contributors: [{
         modelId: bestModelId as string,
         weight: 1.0,
-        value: Number(point.value) || 0,
-      }],
-    }));
+          value: Number(pv) || 0,
+        }],
+      };
+    });
 
     telemetryService.emitTelemetry('forecast_blend_fallback', {
       metricKey,

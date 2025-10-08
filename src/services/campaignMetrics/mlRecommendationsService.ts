@@ -117,32 +117,36 @@ export async function fetchMLRecommendations(
  * Validate ML recommendations response structure
  */
 function validateMLResponse(data: unknown): data is MLRecommendationsResponse {
-  return (
-    data &&
-    typeof data.modelVersion === 'string' &&
-    typeof data.generatedAt === 'string' &&
-    Array.isArray(data.recommendations) &&
-    typeof data.totalRecommendations === 'number' &&
-    typeof data.confidence === 'number' &&
-    data.recommendations.every(validateMLRecommendation)
-  );
+  if (!data || typeof data !== 'object') return false;
+  const d = data as Record<string, unknown>;
+  if (typeof d.modelVersion !== 'string') return false;
+  if (typeof d.generatedAt !== 'string') return false;
+  if (typeof d.totalRecommendations !== 'number') return false;
+  if (typeof d.confidence !== 'number') return false;
+  if (!Array.isArray(d.recommendations)) return false;
+  return d.recommendations.every(r => validateMLRecommendation(r));
 }
 
 /**
  * Validate individual ML recommendation
  */
 function validateMLRecommendation(rec: unknown): rec is MLRecommendation {
-  return (
-    rec &&
-    typeof rec.id === 'string' &&
-    typeof rec.title === 'string' &&
-    typeof rec.detail === 'string' &&
-    ['info', 'warn', 'action'].includes(rec.severity) &&
-    typeof rec.score === 'number' &&
-    rec.score >= 0 && rec.score <= 1 &&
-    Array.isArray(rec.features) &&
-    typeof rec.modelVersion === 'string'
-  );
+  if (!rec || typeof rec !== 'object') return false;
+  const r = rec as Record<string, unknown>;
+  if (typeof r.id !== 'string') return false;
+  if (typeof r.title !== 'string') return false;
+  if (typeof r.detail !== 'string') return false;
+  if (typeof r.severity !== 'string' || !['info','warn','action'].includes(r.severity)) return false;
+  if (typeof r.score !== 'number' || r.score < 0 || r.score > 1) return false;
+  if (!Array.isArray(r.features) || !r.features.every(f=> typeof f === 'string')) return false;
+  if (typeof r.modelVersion !== 'string') return false;
+  if (r.explainability) {
+    const e = r.explainability as any;
+    if (typeof e !== 'object' || !Array.isArray(e.primary_factors) || typeof e.confidence !== 'number' || typeof e.model_reasoning !== 'string') {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**

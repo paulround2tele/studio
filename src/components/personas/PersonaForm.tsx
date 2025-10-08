@@ -371,7 +371,16 @@ function DnsPersonaForm({ persona, isEditing = false }: { persona?: Persona; isE
   const router = useRouter();
   const { toast } = useToast();
 
-  const stringifyJsonObjectForForm = (obj: Record<string, number> | null | undefined) => obj ? JSON.stringify(obj, null, 2) : "{}";
+  const stringifyJsonObjectForForm = (obj: Record<string, unknown> | null | undefined) => {
+    if (!obj) return '{}';
+    const numericOnly: Record<string, number> = {};
+    for (const [k,v] of Object.entries(obj)) {
+      if (typeof v === 'number' && Number.isFinite(v)) {
+        numericOnly[k] = v;
+      }
+    }
+    return JSON.stringify(numericOnly, null, 2);
+  };
   const form = useForm<DnsPersonaFormValues>({
     resolver: zodResolver(dnsPersonaFormSchema),
     defaultValues: persona

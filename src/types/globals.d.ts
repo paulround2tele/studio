@@ -4,6 +4,7 @@
 
 interface TelemetryService {
   emitTelemetry(eventName: string, data: Record<string, unknown>): void;
+  emit(eventName: string, data: unknown): void; // legacy alias accepts unknown payload
 }
 
 declare global {

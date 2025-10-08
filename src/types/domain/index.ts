@@ -5,8 +5,6 @@ import type {
   DomainListItem,
   DomainAnalysisFeatures,
   ScoringProfile,
-  CampaignPhasesStatusResponsePhasesInnerPhaseEnum,
-  CampaignPhasesStatusResponsePhasesInnerStatusEnum,
   CampaignDomainsListResponseAggregates
 } from '@/lib/api-client/models';
 
@@ -45,13 +43,13 @@ export interface ScoringProfileLite {
  * Campaign phase union type from generated enum
  * Replaces string literals throughout the app
  */
-export type CampaignPhase = CampaignPhasesStatusResponsePhasesInnerPhaseEnum;
+export type CampaignPhase = 'discovery' | 'validation' | 'extraction' | 'analysis';
 
 /**
  * Phase status type from generated enum
  * For consistent status handling across components
  */
-export type PhaseStatus = CampaignPhasesStatusResponsePhasesInnerStatusEnum;
+export type PhaseStatus = 'not_started' | 'configured' | 'running' | 'paused' | 'completed' | 'failed';
 
 /**
  * Phase status response shape
@@ -128,11 +126,11 @@ export const isValidLifecycleState = (state: unknown): state is LifecycleState =
 };
 
 export const isValidCampaignPhase = (phase: unknown): phase is CampaignPhase => {
-  return typeof phase === 'string' && ['generation', 'dns', 'http', 'analysis', 'leads'].includes(phase);
+  return typeof phase === 'string' && ['discovery','validation','extraction','analysis'].includes(phase);
 };
 
 export const isValidPhaseStatus = (status: unknown): status is PhaseStatus => {
   return typeof status === 'string' && [
-    'not_started', 'ready', 'configured', 'in_progress', 'paused', 'completed', 'failed'
+    'not_started', 'configured', 'running', 'paused', 'completed', 'failed'
   ].includes(status);
 };

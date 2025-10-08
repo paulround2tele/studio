@@ -77,11 +77,14 @@ export function useProxyHealth(options: UseProxyHealthOptions = {}) {
   const disabledProxies = safeProxyData.filter((p) => !p?.isEnabled).length;
 
   const proxiesWithLatency = safeProxyData.filter((p) => {
-      const lm = p?.latencyMs;
+      const lm = p?.latencyMs as unknown;
       if (lm == null) return false;
       if (typeof lm === 'number') return lm > 0;
       if (typeof lm === 'string') return parseFloat(lm) > 0;
-      if (typeof lm === 'object' && lm !== null && 'valid' in lm && 'value' in lm && lm.valid && typeof lm.value === 'number') return lm.value > 0;
+      if (typeof lm === 'object') {
+        const obj = lm as { valid?: unknown; value?: unknown };
+        return obj.valid === true && typeof obj.value === 'number' && obj.value > 0;
+      }
       return false;
     });
     const averageResponseTime = proxiesWithLatency.length > 0

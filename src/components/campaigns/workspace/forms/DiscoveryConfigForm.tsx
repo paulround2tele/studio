@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { PhaseStatusResponseStatusEnum, PhaseStatusResponsePhaseEnum } from '@/lib/api-client/models';
+// Removed phantom PhaseStatusResponse enums (not generated); use literal phases and markConfigured helper
 import { markConfigured } from '@/utils/phaseStatus';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
@@ -70,11 +70,11 @@ export const DiscoveryConfigForm: React.FC<Props> = ({ campaignId, onConfigured,
       const config: PhaseConfigurationRequest = { configuration };
       const result = await configurePhase({ campaignId, phase: 'discovery', config }).unwrap();
       // Optimistically ensure cache has status configured if backend responded
-  if (result?.status === PhaseStatusResponseStatusEnum.configured) {
+  if (result?.status === 'configured') {
         dispatch(campaignApi.util.updateQueryData(
           'getPhaseStatusStandalone',
           { campaignId, phase: 'discovery' },
-          (draft) => markConfigured(draft, PhaseStatusResponsePhaseEnum.discovery)
+          (draft) => markConfigured(draft, 'discovery')
         ));
       }
       // Force immediate refetch for authoritative status

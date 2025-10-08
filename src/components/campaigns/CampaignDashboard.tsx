@@ -120,8 +120,9 @@ export function CampaignDashboard({
       name: data.name,
       description: data.description,
       status: campaign?.status || 'draft',
-      configuration: campaign?.configuration || {},
-      progress: campaign?.progress || { percentage: 0 },
+    configuration: campaign?.configuration || {},
+    // Align with CampaignResponseProgress schema (totalDomains/processedDomains/...)
+    progress: campaign?.progress || { totalDomains: 0, processedDomains: 0, successfulDomains: 0, failedDomains: 0, percentComplete: 0 },
       createdAt: campaign?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       currentPhase: campaign?.currentPhase || 'discovery'
@@ -136,8 +137,8 @@ export function CampaignDashboard({
         name: data.name,
         description: data.description,
         status: 'running',
-        configuration: campaign?.configuration || {},
-        progress: { percentage: 0 },
+    configuration: campaign?.configuration || {},
+    progress: { totalDomains: 0, processedDomains: 0, successfulDomains: 0, failedDomains: 0, percentComplete: 0 },
         createdAt: campaign?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         startedAt: new Date().toISOString(),

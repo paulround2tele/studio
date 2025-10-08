@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PersonasApi, KeywordSetsApi, ProxyPoolsApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
 import { PersonaType } from '@/lib/api-client/models/persona-type';
-import { PhaseStatusResponseStatusEnum, PhaseStatusResponsePhaseEnum } from '@/lib/api-client/models';
+// Removed phantom PhaseStatusResponse enums; use literal phase/status strings
 import { markConfigured } from '@/utils/phaseStatus';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 import type { ProxyPool } from '@/lib/api-client/models/proxy-pool';
@@ -117,11 +117,11 @@ export const HTTPValidationConfigForm: React.FC<Props> = ({ campaignId, onConfig
       };
       console.log('Final HTTP validation configure payload (flattened):', configRequest);
       const res = await configurePhase({ campaignId, phase: 'extraction', config: configRequest }).unwrap();
-  if (res?.status === PhaseStatusResponseStatusEnum.configured) {
+  if (res?.status === 'configured') {
         dispatch(campaignApi.util.updateQueryData(
           'getPhaseStatusStandalone',
           { campaignId, phase: 'extraction' },
-          (draft) => markConfigured(draft, PhaseStatusResponsePhaseEnum.extraction)
+          (draft) => markConfigured(draft, 'extraction')
         ));
       }
       dispatch(

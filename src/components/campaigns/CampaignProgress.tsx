@@ -4,7 +4,8 @@ import React, { memo, useMemo, useCallback } from 'react';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
 import type { PhaseExecution } from '@/lib/api-client/models/phase-execution';
 import type { CampaignState } from '@/lib/api-client/models/campaign-state';
-import { CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
+// Local phase literal union matching OpenAPI string literals
+type CampaignPhase = 'discovery' | 'validation' | 'extraction' | 'analysis';
 import { CheckCircle, AlertTriangle, Clock, Loader2, WorkflowIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Progress } from '@/components/ui/progress';
@@ -22,20 +23,15 @@ interface CampaignProgressProps {
 }
 
 // PROFESSIONAL PHASE DISPLAY NAMES using ACTUAL OpenAPI ENUM VALUES
-const phaseDisplayNames: Record<CampaignCurrentPhaseEnum, string> = {
-  [CampaignCurrentPhaseEnum.discovery]: 'Discovery',
-  [CampaignCurrentPhaseEnum.validation]: 'Validation',
-  [CampaignCurrentPhaseEnum.extraction]: 'Extraction',
-  [CampaignCurrentPhaseEnum.analysis]: 'Analysis',
+const phaseDisplayNames: Record<CampaignPhase, string> = {
+  discovery: 'Discovery',
+  validation: 'Validation',
+  extraction: 'Extraction',
+  analysis: 'Analysis',
 } as const;
 
 // Define phase order for progress calculation
-const PHASE_ORDER: CampaignCurrentPhaseEnum[] = [
-  CampaignCurrentPhaseEnum.discovery,
-  CampaignCurrentPhaseEnum.validation,
-  CampaignCurrentPhaseEnum.extraction,
-  CampaignCurrentPhaseEnum.analysis,
-];
+const PHASE_ORDER: CampaignPhase[] = ['discovery','validation','extraction','analysis'];
 
 // Memoized phase status icon component for better performance  
 type PhaseStatus = 'not_started' | 'in_progress' | 'completed' | 'failed' | 'paused';
@@ -67,12 +63,12 @@ export function CampaignProgress({ campaign, phaseExecutions, state }: CampaignP
   // Derive a per-phase status from overall status for UI continuity
   // Build a lookup from phase type to execution info when enriched data is provided
   const execByPhase = useMemo(() => {
-    const map = new Map<CampaignCurrentPhaseEnum, PhaseExecution>();
+    const map = new Map<CampaignPhase, PhaseExecution>();
     if (Array.isArray(phaseExecutions)) {
       for (const exec of phaseExecutions) {
-        // Last write wins; a future enhancement could sort by updatedAt
-        // @ts-expect-error phaseType enum is compatible with CampaignCurrentPhaseEnum
-        map.set(exec.phaseType as CampaignCurrentPhaseEnum, exec);
+        if (exec && typeof exec.phaseType === 'string' && phaseDisplayNames[exec.phaseType as CampaignPhase]) {
+          map.set(exec.phaseType as CampaignPhase, exec);
+        }
       }
     }
     return map;

@@ -181,8 +181,8 @@ class SecurityHardeningService {
           allViolations.push(...result.violations.map(v => `${key}: ${v}`));
         }
       } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-        // Recursively sanitize nested objects
-        const nestedResult = this.sanitizeNumericPayload(value, customBounds);
+        // Recursively sanitize nested objects (cast to record)
+        const nestedResult = this.sanitizeNumericPayload(value as Record<string, unknown>, customBounds);
         if (nestedResult.wasModified) {
           workingCopy[key] = nestedResult.value;
           wasModified = true;
@@ -235,7 +235,7 @@ class SecurityHardeningService {
         return; // Skip invalid points
       }
       
-      const sanitizedPoint = { ...point };
+      const sanitizedPoint: Record<string, unknown> = { ...point };
       
       // Sanitize numeric fields in forecast point
       ['value', 'lower', 'upper', 'p10', 'p50', 'p90'].forEach(field => {
@@ -256,16 +256,28 @@ class SecurityHardeningService {
       });
       
       // Validate timestamp
-      if (sanitizedPoint.timestamp) {
-        const timestamp = new Date(sanitizedPoint.timestamp);
-        if (isNaN(timestamp.getTime())) {
+      if (typeof sanitizedPoint.timestamp === 'string') {
+        const ts = new Date(sanitizedPoint.timestamp);
+        if (isNaN(ts.getTime())) {
           sanitizedPoint.timestamp = new Date().toISOString();
           wasModified = true;
           allViolations.push(`Point ${index}: Invalid timestamp corrected`);
         }
+      } else {
+        sanitizedPoint.timestamp = new Date().toISOString();
+        wasModified = true;
+        allViolations.push(`Point ${index}: Missing timestamp added`);
       }
       
-      sanitizedPoints.push(sanitizedPoint);
+      if (!('metricKey' in sanitizedPoint)) sanitizedPoint.metricKey = 'unknown_metric';
+      if (!('predictedValue' in sanitizedPoint)) {
+        const valCandidate = typeof sanitizedPoint['value'] === 'number' ? sanitizedPoint['value'] : 0;
+        sanitizedPoint.predictedValue = valCandidate;
+      }
+      if (!sanitizedPoint['timestamp'] || typeof sanitizedPoint['timestamp'] !== 'string') {
+        sanitizedPoint['timestamp'] = new Date().toISOString();
+      }
+      sanitizedPoints.push(sanitizedPoint as unknown as ForecastPoint);
     });
     
     return {

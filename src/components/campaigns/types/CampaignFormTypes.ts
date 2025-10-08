@@ -7,16 +7,13 @@
  * the new phase-centric architecture. These types are kept for backward
  * compatibility with existing legacy components that have not yet been migrated.
  */
-import type { 
-  CampaignResponseCurrentPhaseEnum
-} from '@/lib/api-client/models/campaign-response';
 // Legacy validation request types were removed from generated client; use lightweight placeholders.
 interface DNSValidationAPIRequest { personaIds?: string[]; }
 interface HTTPKeywordValidationRequest { keywordSetIds?: string[]; keywords?: string[]; }
 
 export type DomainGenerationPattern = "prefix_variable" | "suffix_variable" | "both_variable";
 export type DomainSourceSelectionMode = "none" | "upload" | "campaign_output";
-export type CampaignPhase = CampaignResponseCurrentPhaseEnum;
+export type CampaignPhase = 'discovery' | 'validation' | 'extraction' | 'analysis';
 
 // Import OpenAPI types for full sequence support (legacy)
 export type DNSValidationRequest = DNSValidationAPIRequest;

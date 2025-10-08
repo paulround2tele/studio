@@ -44,7 +44,7 @@ export function ensurePath(obj: Record<string, unknown>, segments: string[]): Re
     if (!(segment in current)) {
       current[segment] = {};
     }
-    current = current[segment];
+  current = current[segment] as Record<string, unknown>;
   }
   return current;
 }
@@ -106,15 +106,19 @@ export function applyPatchOp(root: Record<string, unknown>, op: StreamPatchOp): 
     }
 
     // Navigate to parent object
-    let current = root;
+    let current: Record<string, unknown> = root;
     for (let i = 0; i < pathSegments.length - 1; i++) {
       const segment = pathSegments[i];
       if (!segment) continue;
       
       if (!(segment in current)) {
-        current[segment] = {};
+        current[segment] = {} as Record<string, unknown>;
       }
-      current = current[segment];
+      const nextVal = current[segment];
+      if (!nextVal || typeof nextVal !== 'object') {
+        current[segment] = {} as Record<string, unknown>;
+      }
+      current = current[segment] as Record<string, unknown>;
     }
 
     const finalKey = pathSegments[pathSegments.length - 1];
@@ -131,13 +135,18 @@ export function applyPatchOp(root: Record<string, unknown>, op: StreamPatchOp): 
         delete current[finalKey];
         break;
       case 'inc':
-        current[finalKey] = (current[finalKey] || 0) + (typeof op.value === 'number' ? op.value : 1);
+        {
+          const existing = current[finalKey];
+          const base = typeof existing === 'number' ? existing : 0;
+          const delta = typeof op.value === 'number' ? op.value : 1;
+          current[finalKey] = base + delta;
+        }
         break;
       case 'append':
         if (!Array.isArray(current[finalKey])) {
-          current[finalKey] = [];
+          current[finalKey] = [] as unknown[];
         }
-        current[finalKey].push(op.value);
+        (current[finalKey] as unknown[]).push(op.value);
         break;
       default:
         return Err(`Unknown operation type: ${op && typeof op === 'object' && 'type' in op ? String(op.type) : 'undefined'}`);

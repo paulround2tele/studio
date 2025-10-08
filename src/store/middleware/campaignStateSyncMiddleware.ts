@@ -5,7 +5,6 @@ import type { Middleware } from '@reduxjs/toolkit';
 import { campaignApi } from '../api/campaignApi';
 import { phaseStarted } from '../slices/pipelineExecSlice';
 import { startPhaseTransition, completePhaseTransition, failPhaseTransition, setConnectionStatus } from '../slices/campaignSlice';
-import type { CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
 import { normalizeToApiPhase } from '@/lib/utils/phaseNames';
 import type { AppDispatch } from '../index';
 
@@ -15,10 +14,12 @@ export const campaignStateSyncMiddleware: Middleware = (store) => (next) => (act
 
   // Handle successful phase transitions
   if (campaignApi.endpoints.startPhaseStandalone.matchFulfilled(action)) {
-    const { meta } = action as typeof action & { meta: { arg: { originalArgs: { campaignId: string; phase: CampaignCurrentPhaseEnum } } } };
+  const { meta } = action as typeof action & { meta: { arg: { originalArgs: { campaignId: string; phase: string } } } };
     const campaignId = meta.arg.originalArgs.campaignId;
-    const phase = meta.arg.originalArgs.phase;
-    store.dispatch(phaseStarted({ campaignId, phase }));
+  const rawPhase = meta.arg.originalArgs.phase;
+  const allowed: ReadonlyArray<string> = ['discovery','validation','extraction','analysis'];
+  const phase = (allowed.includes(rawPhase) ? rawPhase : normalizeToApiPhase(rawPhase) || 'discovery') as 'discovery' | 'validation' | 'extraction' | 'analysis';
+  store.dispatch(phaseStarted({ campaignId, phase }));
     // Refetch campaigns list to sync broader state (no cast to any; dispatch returns a subscription handle)
   (store.dispatch as AppDispatch)(campaignApi.endpoints.getCampaignsStandalone.initiate());
     store.dispatch(completePhaseTransition());
@@ -50,7 +51,7 @@ export const performPhaseTransition = (campaignId: string, phase: string) => (di
   return (dispatch as AppDispatch)(
     campaignApi.endpoints.startPhaseStandalone.initiate({
       campaignId,
-      phase: (apiPhase || phase) as CampaignCurrentPhaseEnum,
+  phase: apiPhase || phase,
     })
   );
 };

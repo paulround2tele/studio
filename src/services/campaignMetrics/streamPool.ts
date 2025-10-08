@@ -291,21 +291,21 @@ class StreamPool {
     }
 
     // Check if this is a heartbeat message
-    if (messageData.type === 'heartbeat') {
+  if (messageData && typeof messageData === 'object' && (messageData as any).type === 'heartbeat') {
       // Update quality metrics from heartbeat
-      if (messageData.serverTime) {
-        const latency = now - new Date(messageData.serverTime).getTime();
+  if ((messageData as any).serverTime) {
+  const latency = now - new Date((messageData as any).serverTime).getTime();
         pool.qualityMetrics.latencyMs = latency;
       }
       return; // Don't forward heartbeat messages
     }
 
     // Phase 8: Handle differential updates
-    if (isDifferentialUpdatesEnabled() && messageData.type === 'differential_update' && pool.patchProcessor) {
+  if (isDifferentialUpdatesEnabled() && messageData && typeof messageData === 'object' && (messageData as any).type === 'differential_update' && pool.patchProcessor) {
       isDifferentialUpdate = true;
       
       try {
-        const patch: DifferentialPatch = messageData.patch;
+  const patch: DifferentialPatch = (messageData as any).patch;
         
         // Validate sequence number for ordering
         if (patch.sequenceNumber && patch.sequenceNumber <= pool.lastSequenceNumber) {
@@ -332,7 +332,7 @@ class StreamPool {
           // Create enhanced event with computed state
           const computedState = pool.patchProcessor.getCurrentState();
           const enhancedEvent = createMessageEvent({
-            ...messageData,
+            ...(messageData as any),
             computedState,
             isOptimistic: true
           });
@@ -360,10 +360,10 @@ class StreamPool {
     }
 
     // Handle full snapshot updates (reconciliation)
-    if (messageData.type === 'full_snapshot' && pool.patchProcessor) {
+  if (messageData && typeof messageData === 'object' && (messageData as any).type === 'full_snapshot' && pool.patchProcessor) {
       try {
         // Update base snapshot and clear optimistic queue
-        pool.patchProcessor.updateBaseSnapshot(messageData.snapshot);
+  pool.patchProcessor.updateBaseSnapshot((messageData as any).snapshot);
         pool.patchProcessor.clearPendingPatches();
         
         // Mark optimistic updates as confirmed/reconciled

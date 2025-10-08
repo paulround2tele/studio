@@ -280,6 +280,16 @@ class TelemetryService {
   }
 
   /**
+   * Backwards compatibility alias for older code paths that called telemetryService.emit(...)
+   * Prefer emitTelemetry going forward for clarity.
+   */
+  public emit(type: TelemetryEvent['type'], data: unknown): void {
+    // Accept unknown and coerce to object map if needed
+    const payload: Record<string, any> = (data && typeof data === 'object') ? (data as Record<string, any>) : { value: data };
+    this.emitTelemetry(type, payload);
+  }
+
+  /**
    * Emit timeline hydration event
    */
   public emitTimelineHydrate(data: TimelineHydrateEvent): void {

@@ -273,13 +273,14 @@ export function cspMiddleware(generateNonce = true) {
 
     if (generateNonce) {
       // Store nonce in res.locals for use in templates
-      res.locals.nonce = policy.generateNonce();
+  (res as any).locals = (res as any).locals || {};
+  (res as any).locals.nonce = policy.generateNonce();
     }
 
     // Set CSP headers
     const headers = policy.getHeaders();
     Object.entries(headers).forEach(([key, value]) => {
-      res.setHeader(key, value);
+  try { (res as any).setHeader?.(key, value); } catch { /* noop */ }
     });
 
     next();

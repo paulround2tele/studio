@@ -4,8 +4,8 @@ import { useSSE, type SSEEvent } from './useSSE';
 import { useAppDispatch } from '@/store/hooks';
 import { phaseStarted, phaseCompleted, phaseFailed } from '@/store/slices/pipelineExecSlice';
 import { campaignApi } from '@/store/api/campaignApi';
-import { PhaseStatusResponseStatusEnum, PhaseStatusResponsePhaseEnum, type PhaseStatusResponse } from '@/lib/api-client/models';
-import { ensurePhaseStatus } from '@/utils/phaseStatus';
+import type { PhaseStatusResponse } from '@/lib/api-client/models';
+import { ensurePhaseStatus, PipelinePhase, PhaseRunStatus } from '@/utils/phaseStatus';
 import type { PipelinePhaseKey } from '@/store/selectors/pipelineSelectors';
 import type { 
   CampaignSSEEventHandlers, 
@@ -25,29 +25,29 @@ import type { CampaignPhase } from '@/types/domain';
 // Map backend phase identifiers to internal pipeline phase keys used in selectors/ordering.
 // Backend examples: domain_generation (discovery), dns_validation (validation), http_validation (extraction), analytics/analysis.
 // Map backend raw identifiers to generated enum phases (falling back if unknown)
-const BACKEND_TO_INTERNAL_PHASE: Record<string, PhaseStatusResponsePhaseEnum> = {
-  domain_generation: PhaseStatusResponsePhaseEnum.discovery,
-  dns_validation: PhaseStatusResponsePhaseEnum.validation,
-  http_validation: PhaseStatusResponsePhaseEnum.extraction,
-  analysis: PhaseStatusResponsePhaseEnum.analysis,
-  analytics: PhaseStatusResponsePhaseEnum.analysis,
+const BACKEND_TO_INTERNAL_PHASE: Record<string, PipelinePhase> = {
+  domain_generation: 'discovery',
+  dns_validation: 'validation',
+  http_validation: 'extraction',
+  analysis: 'analysis',
+  analytics: 'analysis',
 };
 
-const mapPhase = (raw: string | undefined): PhaseStatusResponsePhaseEnum | string => {
+const mapPhase = (raw: string | undefined): PipelinePhase | string => {
   if (!raw || typeof raw !== 'string') return raw || 'unknown';
   return BACKEND_TO_INTERNAL_PHASE[raw] || raw;
 };
 
 // Coerce backend mapped phase to internal pipeline phase union when possible.
-const toPipelinePhase = (phase: string | PhaseStatusResponsePhaseEnum): PipelinePhaseKey | undefined => {
+const toPipelinePhase = (phase: string | PipelinePhase): PipelinePhaseKey | undefined => {
   switch (phase) {
-    case PhaseStatusResponsePhaseEnum.analysis:
+    case 'analysis':
       return 'analysis';
-    case PhaseStatusResponsePhaseEnum.discovery:
+    case 'discovery':
       return 'discovery';
-    case PhaseStatusResponsePhaseEnum.validation:
+    case 'validation':
       return 'validation';
-    case PhaseStatusResponsePhaseEnum.extraction:
+    case 'extraction':
       return 'extraction';
     default:
       return undefined;
@@ -226,12 +226,12 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
   // Event handler for all SSE events
   const handleSSEEvent = useCallback((event: SSEEvent) => {
     const dataObj = (event.data && typeof event.data === 'object') ? (event.data as Record<string, unknown>) : undefined;
-    const campaignIdFromEvent = event.campaign_id || (dataObj?.campaign_id as string | undefined);
-    
-    if (!campaignIdFromEvent) {
+    const campaignIdFromEventRaw = event.campaign_id || (dataObj?.campaign_id as string | undefined);
+    if (!campaignIdFromEventRaw || typeof campaignIdFromEventRaw !== 'string') {
       console.warn('⚠️ Received SSE event without campaign_id:', event);
       return;
     }
+    const campaignIdFromEvent = campaignIdFromEventRaw;
 
     switch (event.event) {
       case 'campaign_progress': {
@@ -256,8 +256,7 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
                               'getPhaseStatusStandalone',
                               { campaignId: campaignIdFromEvent, phase },
                               (draft) => {
-                                const ps = ensurePhaseStatus(draft as PhaseStatusResponse | undefined, phase as PhaseStatusResponsePhaseEnum);
-                                ps.status = PhaseStatusResponseStatusEnum.completed;
+                                const ps = ensurePhaseStatus(draft as PhaseStatusResponse | undefined, phase as PipelinePhase, 'completed');
                                 if (!ps.progress) {
                                   ps.progress = { totalItems: 0, processedItems: 0, successfulItems: 0, failedItems: 0, percentComplete: 100 };
                                 } else {
@@ -283,8 +282,7 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
                   'getPhaseStatusStandalone',
                   { campaignId: campaignIdFromEvent, phase },
                   (draft) => {
-                    const ps = ensurePhaseStatus(draft as PhaseStatusResponse | undefined, phase as PhaseStatusResponsePhaseEnum);
-                    ps.status = PhaseStatusResponseStatusEnum.running;
+                    const ps = ensurePhaseStatus(draft as PhaseStatusResponse | undefined, phase as PipelinePhase, 'running');
                     if (!ps.progress) {
                       ps.progress = { totalItems: 0, processedItems: 0, successfulItems: 0, failedItems: 0, percentComplete: 0 };
                     }
@@ -312,8 +310,7 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
                       'getPhaseStatusStandalone',
                       { campaignId: campaignIdFromEvent, phase },
                       (draft) => {
-                        const ps = ensurePhaseStatus(draft as PhaseStatusResponse | undefined, phase as PhaseStatusResponsePhaseEnum);
-                        ps.status = PhaseStatusResponseStatusEnum.completed;
+                        const ps = ensurePhaseStatus(draft as PhaseStatusResponse | undefined, phase as PipelinePhase, 'completed');
                         if (!ps.progress) {
                           ps.progress = { totalItems: 0, processedItems: 0, successfulItems: 0, failedItems: 0, percentComplete: 100 };
                         } else {
@@ -343,8 +340,7 @@ export function useCampaignSSE(options: UseCampaignSSEOptions = {}): UseCampaign
                   'getPhaseStatusStandalone',
                   { campaignId: campaignIdFromEvent, phase },
                   (draft) => {
-                    const ps = ensurePhaseStatus(draft as PhaseStatusWithError | undefined, phase as PhaseStatusResponsePhaseEnum) as PhaseStatusWithError;
-                    ps.status = PhaseStatusResponseStatusEnum.failed;
+                    const ps = ensurePhaseStatus(draft as PhaseStatusWithError | undefined, phase as PipelinePhase, 'failed') as PhaseStatusWithError;
                     ps.error = error;
                     if (!ps.progress) {
                       ps.progress = { totalItems: 0, processedItems: 0, successfulItems: 0, failedItems: 0, percentComplete: 0 };

@@ -20,7 +20,6 @@ import {
   Activity
 } from 'lucide-react';
 import type { CampaignResponse as Campaign } from '@/lib/api-client/models';
-import { CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum } from '@/lib/api-client/models';
 import { cn } from '@/lib/utils';
 
 // Streaming statistics interface for real-time updates
@@ -332,7 +331,7 @@ export const CampaignStatistics: React.FC<CampaignStatisticsProps> = ({
           {/* Estimated Completion intentionally omitted */}
 
           {/* Phase-centric architecture: detailed configuration stored in phase records */}
-            {campaign.currentPhase === CampaignCurrentPhaseEnum.discovery && (
+            {campaign.currentPhase === 'discovery' && (
             <div className="pt-4 border-t">
               <div className="text-xs text-muted-foreground mb-2">Current Phase</div>
               <div className="grid grid-cols-2 gap-4 text-sm">

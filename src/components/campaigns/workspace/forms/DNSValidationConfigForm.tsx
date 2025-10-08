@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PersonasApi, ProxiesApi, ProxyPoolsApi } from '@/lib/api-client';
 import { apiConfiguration } from '@/lib/api/config';
 import { PersonaType } from '@/lib/api-client/models/persona-type';
-import { PhaseStatusResponseStatusEnum, PhaseStatusResponsePhaseEnum } from '@/lib/api-client/models';
+// Removed phantom PhaseStatusResponse enums; use literals
 import { markConfigured } from '@/utils/phaseStatus';
 import type { PersonaResponse } from '@/lib/api-client/models/persona-response';
 import type { Proxy } from '@/lib/api-client/models/proxy';
@@ -142,11 +142,11 @@ export const DNSValidationConfigForm: React.FC<Props> = ({ campaignId, onConfigu
       };
       console.log('Final DNS configure payload (flattened):', configRequest);
       const res = await configurePhase({ campaignId, phase: 'validation', config: configRequest }).unwrap();
-  if (res?.status === PhaseStatusResponseStatusEnum.configured) {
+  if (res?.status === 'configured') {
         dispatch(campaignApi.util.updateQueryData(
           'getPhaseStatusStandalone',
           { campaignId, phase: 'validation' },
-          (draft) => markConfigured(draft, PhaseStatusResponsePhaseEnum.validation)
+          (draft) => markConfigured(draft, 'validation')
         ));
       }
       // Force authoritative refetch
