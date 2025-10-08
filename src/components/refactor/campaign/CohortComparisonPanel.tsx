@@ -199,7 +199,7 @@ export function CohortComparisonPanel({
         )}
 
         {canCompare && !loading && cohortMatrix && (
-          <Tabs value={viewType} onValueChange={setViewType as any} className="w-full">
+          <Tabs value={viewType} onValueChange={(value) => setViewType(value as 'curves' | 'benchmarks')} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="curves" className="flex items-center gap-2">
                 <LineChart className="w-4 h-4" />
@@ -376,7 +376,7 @@ function CampaignSummaryCard({
   selectedMetric,
   formatValue
 }: {
-  campaign: any;
+  campaign: CohortCampaignInput;
   selectedMetric: keyof AggregateSnapshot['aggregates'];
   formatValue: (value: number) => string;
 }) {

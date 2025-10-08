@@ -27,7 +27,8 @@ export function formToApiRequest(formValues: SimpleCampaignFormValues): CreateLe
   return {
     name: formValues.name,
     description: formValues.description,
-    configuration: undefined as any // Phase-centric: configuration added later
+    // Phase-centric: configuration added later via dashboard
+    configuration: undefined
   };
 }
 

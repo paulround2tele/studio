@@ -247,17 +247,38 @@ export function CampaignCreateWizard({ className }: CampaignCreateWizardProps) {
       } catch (startError: unknown) {
         console.warn(`Auto-start attempt ${attempt} failed:`, startError);
         
-        const anyErr = startError as any;
-        const status = anyErr?.status;
-        const code = anyErr?.data?.code;
-        const isRetryableError = status === 409 || status === 422 || code === 'CONFLICT' || code === 'BADREQUEST';
+        // Enhanced error message extraction with proper type checking
+        const extractErrorDetails = (e: unknown): { status?: number; code?: string; message: string } => {
+          if (!e || typeof e !== 'object') {
+            return { message: typeof e === 'string' ? e : 'Auto-start failed' };
+          }
+          
+          const errorObj = e as Record<string, unknown>;
+          const status = typeof errorObj.status === 'number' ? errorObj.status : undefined;
+          
+          let code: string | undefined;
+          let message: string;
+          
+          if (errorObj.data && typeof errorObj.data === 'object') {
+            const data = errorObj.data as Record<string, unknown>;
+            code = typeof data.code === 'string' ? data.code : undefined;
+            message = typeof data.message === 'string' ? data.message : 'Auto-start failed';
+          } else if (e instanceof Error) {
+            message = e.message;
+          } else {
+            message = 'Auto-start failed';
+          }
+          
+          return { status, code, message };
+        };
         
+        const { status, code, message } = extractErrorDetails(startError);
+        const isRetryableError = status === 409 || status === 422 || code === 'CONFLICT' || code === 'BADREQUEST';
         const isLastAttempt = attempt === MAX_RETRIES + 1;
         
         if (!isRetryableError || isLastAttempt) {
           // Final failure or non-retryable error
-          const errorMessage = anyErr?.data?.message || (startError instanceof Error ? startError.message : 'Auto-start failed');
-          showError(errorMessage, `Campaign "${campaignName}" was created successfully, but auto-start failed.`);
+          showError(message, `Campaign "${campaignName}" was created successfully, but auto-start failed.`);
           
           toast({
             title: "Campaign Created",

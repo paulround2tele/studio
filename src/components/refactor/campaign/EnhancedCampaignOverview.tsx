@@ -13,10 +13,11 @@ import { MetricsDebugPanel } from '@/components/refactor/campaign/MetricsDebugPa
 import { useEnhancedMetricsContext } from '@/hooks/useEnhancedMetricsContext';
 import { getMemoryStats } from '@/services/campaignMetrics/historyStore';
 import { getPerformanceStats, exportPerformanceData } from '@/services/campaignMetrics/metricsPerf';
+import type { DomainListItem } from '@/lib/api-client/models';
 
 interface EnhancedCampaignOverviewProps {
   campaignId: string;
-  domains: any[];
+  domains: DomainListItem[];
   className?: string;
 }
 

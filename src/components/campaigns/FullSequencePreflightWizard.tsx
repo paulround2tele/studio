@@ -28,7 +28,7 @@ export const FullSequencePreflightWizard: React.FC<Props> = ({ campaignId, onClo
         <div className="space-y-4">
           <p className="text-sm text-gray-600">Review phase readiness before chaining begins.</p>
           <ul className="space-y-2">
-            {phases.map((p: any) => (
+            {phases.map((p) => (
               <li key={p.key} className="flex items-center justify-between border rounded px-3 py-2 text-sm">
                 <span className="font-medium capitalize">{p.key}</span>
                 <span className="text-xs">{p.statusRaw || p.execState} {p.configState === 'valid' ? '✅' : '⚠️'}</span>

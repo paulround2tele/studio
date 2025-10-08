@@ -5,6 +5,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useCausalGraph, useFilteredCausalGraph, useCausalGraphStats } from '@/hooks/useCausalGraph';
+import type { CausalNode, CausalEdge } from '@/services/analytics/causalGraphService';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -79,7 +80,7 @@ export function CausalGraphPanel({
     console.log(`Pruned ${pruned} low-confidence edges`);
   };
 
-  const renderNodeCard = (node: any) => {
+  const renderNodeCard = (node: CausalNode) => {
     const connections = getNodeConnections(node.id);
     const isSelected = selectedNode === node.id;
     
@@ -110,7 +111,7 @@ export function CausalGraphPanel({
     );
   };
 
-  const renderEdgeList = (edges: any[], title: string, variant: 'default' | 'secondary' | 'outline') => (
+  const renderEdgeList = (edges: CausalEdge[], title: string, variant: 'default' | 'secondary' | 'outline') => (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <h4 className="font-medium text-sm">{title}</h4>

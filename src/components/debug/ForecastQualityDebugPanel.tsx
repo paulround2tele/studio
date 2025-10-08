@@ -364,7 +364,7 @@ export const ForecastQualityDebugPanel: React.FC<ForecastQualityDebugPanelProps>
                       <h4 className="text-sm font-medium mb-3">Alternative Models</h4>
                       {forecastDebug.forecastResult.modelInfo?.alternativeModels?.length > 0 ? (
                         <div className="space-y-2">
-                          {forecastDebug.forecastResult.modelInfo.alternativeModels.map((model: any, idx: number) => (
+                          {forecastDebug.forecastResult.modelInfo.alternativeModels.map((model, idx: number) => (
                             <div key={idx} className="flex justify-between items-center text-sm">
                               <span className="font-medium">{model.name}</span>
                               <span className="text-gray-600">{formatModelScore(model)}</span>
@@ -389,7 +389,7 @@ export const ForecastQualityDebugPanel: React.FC<ForecastQualityDebugPanelProps>
                             <span>Range</span>
                             <span>Quantiles</span>
                           </div>
-                          {forecastDebug.forecastResult.points.slice(0, 5).map((point: any, idx: number) => (
+                          {forecastDebug.forecastResult.points.slice(0, 5).map((point, idx: number) => (
                             <div key={idx} className="grid grid-cols-4 gap-2 text-sm">
                               <span>{new Date(point.timestamp).toLocaleDateString()}</span>
                               <span>{point.value.toFixed(2)}</span>
@@ -589,7 +589,7 @@ export const ForecastQualityDebugPanel: React.FC<ForecastQualityDebugPanelProps>
                   <div className="border border-gray-200 rounded p-4">
                     <h4 className="text-sm font-medium mb-3">Recent Actions</h4>
                     <div className="space-y-3">
-                      {auditDebug.recentEntries.map((entry: any, idx: number) => (
+                      {auditDebug.recentEntries.map((entry, idx: number) => (
                         <div key={entry.id || idx} className="border-b border-gray-100 last:border-b-0 pb-3 last:pb-0">
                           <div className="flex items-center justify-between mb-1">
                             <span className="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">
