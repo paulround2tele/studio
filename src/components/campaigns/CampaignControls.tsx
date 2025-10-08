@@ -70,16 +70,41 @@ const CampaignControls: React.FC<CampaignControlsProps> = ({ campaign, phaseExec
 
   // Legacy PhaseCard & gating logic fully removed; selectors + workspace drive flow.
 
-  const extractErrorMessage = (e: any): string => {
+  const extractErrorMessage = (e: unknown): string => {
     // Try common shapes: RTK Query error with data.message, axios-style response.data, or plain message
-    return (
-      e?.data?.message ||
-      e?.error ||
-      e?.message ||
-      e?.data?.error?.message ||
-      e?.response?.data?.message ||
-      'Unknown error'
-    );
+    if (!e || typeof e !== 'object') {
+      return typeof e === 'string' ? e : 'Unknown error';
+    }
+
+    // Check for data.message pattern (RTK Query)
+    if ('data' in e && e.data && typeof e.data === 'object') {
+      if ('message' in e.data && typeof e.data.message === 'string') {
+        return e.data.message;
+      }
+      if ('error' in e.data && e.data.error && typeof e.data.error === 'object' && 'message' in e.data.error) {
+        return String(e.data.error.message);
+      }
+    }
+
+    // Check for response.data pattern (Axios)  
+    if ('response' in e && e.response && typeof e.response === 'object' && 'data' in e.response) {
+      const responseData = e.response.data;
+      if (responseData && typeof responseData === 'object' && 'message' in responseData) {
+        return String(responseData.message);
+      }
+    }
+
+    // Check for direct error property
+    if ('error' in e && typeof e.error === 'string') {
+      return e.error;
+    }
+
+    // Check for direct message property
+    if ('message' in e && typeof e.message === 'string') {
+      return e.message;
+    }
+
+    return 'Unknown error';
   };
 
   // Legacy manual start handlers removed; handled by workspace primary action + auto-advance.

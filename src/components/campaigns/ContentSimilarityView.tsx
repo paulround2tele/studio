@@ -54,18 +54,31 @@ interface ContentSimilarityViewProps {
   onAnalysisComplete?: (updatedCampaign: Campaign) => void; // Callback to update parent campaign state
 }
 
-const getSimilarityBadgeVariant = (score: number) => {
-  if (score > 75) return "default" as any;
-  if (score > 50) return "secondary" as any;
-  if (score > 25) return "outline" as any;
-  return "destructive" as any;
+const getSimilarityBadgeVariant = (score: number): "default" | "secondary" | "destructive" | "outline" => {
+  if (score > 75) return "default";
+  if (score > 50) return "secondary";
+  if (score > 25) return "outline";
+  return "destructive";
 };
 
 export default function ContentSimilarityView({ campaign, onAnalysisComplete }: ContentSimilarityViewProps) {
-  // Now using proper generated types from OpenAPI schema
-  const extractedContent: ExtractedContentItem[] = (campaign as any).extractedContent || [];
-  const leads: LeadItem[] = Array.isArray((campaign as any).leads) ? (campaign as any).leads :
-                           Array.isArray((campaign as any).leadItems) ? (campaign as any).leadItems : [];
+  // Extract data with proper type guards
+  const extractedContent: ExtractedContentItem[] = 
+    (campaign && typeof campaign === 'object' && 'extractedContent' in campaign && Array.isArray(campaign.extractedContent)) 
+      ? campaign.extractedContent 
+      : [];
+  
+  const leads: LeadItem[] = (() => {
+    if (campaign && typeof campaign === 'object') {
+      if ('leads' in campaign && Array.isArray(campaign.leads)) {
+        return campaign.leads;
+      }
+      if ('leadItems' in campaign && Array.isArray(campaign.leadItems)) {
+        return campaign.leadItems;
+      }
+    }
+    return [];
+  })();
   const { toast } = useToast();
   const [analyzingContentId, setAnalyzingContentId] = useState<string | null>(null);
 

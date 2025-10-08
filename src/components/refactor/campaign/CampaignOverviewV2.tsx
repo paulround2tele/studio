@@ -54,8 +54,8 @@ function convertToMetricsInput(domains: CampaignDomain[]): DomainMetricsInput[] 
   return domains.map(domain => ({
     id: domain.id,
     domain_name: domain.domain_name,
-    dns_status: domain.dns_status as any,
-    http_status: domain.http_status as any,
+    dns_status: domain.dns_status || 'pending',
+    http_status: domain.http_status || 'pending',
     lead_score: domain.lead_score,
     created_at: domain.created_at,
     updated_at: domain.updated_at

@@ -47,7 +47,7 @@ export function CampaignModeToggle({
 }: CampaignModeToggleProps) {
   const _dispatch = useAppDispatch();
   const overviewSel = React.useMemo(()=>pipelineSelectors.overview(campaignId),[campaignId]);
-  const ov = useAppSelector(overviewSel as any) as ReturnType<typeof overviewSel>;
+  const ov = useAppSelector(overviewSel);
   const allConfigured = Boolean(ov?.config?.progress && ov.config.progress.configured === ov.config.progress.total);
   const { toast } = useToast();
   const [updateMode, { isLoading: pending }] = useUpdateCampaignModeMutation();

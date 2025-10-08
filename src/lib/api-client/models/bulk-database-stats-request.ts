@@ -56,8 +56,7 @@ export interface BulkDatabaseStatsRequest {
           
           boolean
     ;
-  // Allow additional arbitrary properties without enforcing nested object shape
-  [key: string]: unknown;
+  [key: string]: Record<string, unknown>;
 }
 
 

@@ -426,8 +426,8 @@ class DifferentialPrivacyService {
    * Emit noise telemetry
    */
   private emitNoiseEvent(data: DifferentialPrivacyNoiseEvent): void {
-    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
-      const telemetryService = (window as any).__telemetryService;
+    if (typeof window !== 'undefined' && window.__telemetryService) {
+      const telemetryService = window.__telemetryService;
       telemetryService.emit('differential_privacy_noise', data);
     }
   }

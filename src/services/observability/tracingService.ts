@@ -328,11 +328,14 @@ class TracingService {
       const result = operation();
       this.endSpan(spanId, 'completed');
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorDetails = error instanceof Error 
+        ? { message: error.message, stack: error.stack }
+        : { message: String(error) };
+      
       this.endSpan(spanId, 'error', {
-        message: error?.message || 'Unknown error',
-        stack: error?.stack,
-        code: error?.code
+        ...errorDetails,
+        code: error && typeof error === 'object' && 'code' in error ? String(error.code) : undefined
       });
       throw error;
     }
@@ -412,8 +415,8 @@ class TracingService {
       avgDuration
     };
 
-    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
-      const telemetryService = (window as any).__telemetryService;
+    if (typeof window !== 'undefined' && window.__telemetryService) {
+      const telemetryService = window.__telemetryService;
       telemetryService.emit('trace_span_stats', event);
     }
   }

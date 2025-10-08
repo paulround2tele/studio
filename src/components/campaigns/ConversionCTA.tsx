@@ -8,7 +8,7 @@ import type { PipelineRelatedRootState } from '@/store/types/pipelineState';
 
 export const ConversionCTA: React.FC<{ campaignId: string }> = ({ campaignId }) => {
   const overviewSel = React.useMemo(()=>pipelineSelectors.overview(campaignId),[campaignId]);
-  const ov = useAppSelector(overviewSel as any) as ReturnType<typeof overviewSel>;
+  const ov = useAppSelector(overviewSel);
   const allConfigured = ov?.config?.progress?.configured === ov?.config?.progress?.total;
   const dispatch = useAppDispatch();
   const fullSequence = useAppSelector(s => s.campaignUI?.byId?.[campaignId]?.fullSequenceMode);

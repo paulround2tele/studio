@@ -1,379 +1,18 @@
 {
-  "generatedAt": "2025-10-06T14:36:53.547Z",
-  "root": "/workspaces/studio",
-  "total": 327,
+  "generatedAt": "2025-10-07T15:24:01.966Z",
+  "root": "/home/runner/work/studio/studio",
+  "total": 156,
   "byPattern": {
-    "annotation": 207,
-    "cast": 120
+    "annotation": 126,
+    "cast": 30
   },
   "byLocationGroup": {
-    "app": 23,
-    "components": 67,
-    "other": 54,
-    "services": 171,
-    "store": 12
+    "components": 21,
+    "other": 29,
+    "services": 104,
+    "store": 2
   },
   "usages": [
-    {
-      "file": "src/app/campaigns/[id]/edit/page.tsx",
-      "line": 41,
-      "column": 55,
-      "pattern": "cast",
-      "code": ": (error && typeof error === 'object' && (error as any).data?.message)",
-      "locationGroup": "app",
-      "context": "? error"
-    },
-    {
-      "file": "src/app/campaigns/[id]/edit/page.tsx",
-      "line": 42,
-      "column": 58,
-      "pattern": "cast",
-      "code": "|| (error && typeof error === 'object' && (error as any).message)",
-      "locationGroup": "app",
-      "context": ": (error && typeof error === 'object' && (error as any).data?.message)"
-    },
-    {
-      "file": "src/app/keyword-sets/[id]/edit/page.tsx",
-      "line": 39,
-      "column": 31,
-      "pattern": "cast",
-      "code": "const payload = (resp as any)?.data?.data ?? (resp as any)?.data;",
-      "locationGroup": "app",
-      "context": "const resp = await keywordSetsApi.keywordSetsGet(params.id as string);"
-    },
-    {
-      "file": "src/app/keyword-sets/[id]/edit/page.tsx",
-      "line": 39,
-      "column": 60,
-      "pattern": "cast",
-      "code": "const payload = (resp as any)?.data?.data ?? (resp as any)?.data;",
-      "locationGroup": "app",
-      "context": "const resp = await keywordSetsApi.keywordSetsGet(params.id as string);"
-    },
-    {
-      "file": "src/app/keyword-sets/[id]/edit/page.tsx",
-      "line": 61,
-      "column": 68,
-      "pattern": "cast",
-      "code": "await keywordSetsApi.keywordSetsUpdate(params.id as string, data as any);",
-      "locationGroup": "app",
-      "context": "// Use the correct method name from the generated API"
-    },
-    {
-      "file": "src/app/keyword-sets/page.tsx",
-      "line": 29,
-      "column": 22,
-      "pattern": "cast",
-      "code": "const data = (resp as any)?.data?.data ?? (resp as any)?.data;",
-      "locationGroup": "app",
-      "context": "// Envelope may wrap the list; attempt minimal unwrap"
-    },
-    {
-      "file": "src/app/keyword-sets/page.tsx",
-      "line": 29,
-      "column": 51,
-      "pattern": "cast",
-      "code": "const data = (resp as any)?.data?.data ?? (resp as any)?.data;",
-      "locationGroup": "app",
-      "context": "// Envelope may wrap the list; attempt minimal unwrap"
-    },
-    {
-      "file": "src/app/personas/[id]/edit/page.tsx",
-      "line": 62,
-      "column": 26,
-      "pattern": "cast",
-      "code": "const data = (response as any)?.data ?? response;",
-      "locationGroup": "app",
-      "context": ""
-    },
-    {
-      "file": "src/app/personas/[id]/edit/page.tsx",
-      "line": 70,
-      "column": 29,
-      "pattern": "cast",
-      "code": "setPersona(data as any);",
-      "locationGroup": "app",
-      "context": "} else {"
-    },
-    {
-      "file": "src/app/personas/[id]/edit/page.tsx",
-      "line": 135,
-      "column": 37,
-      "pattern": "cast",
-      "code": "<PersonaForm persona={persona as any} isEditing={true} personaType={persona.personaType} />",
-      "locationGroup": "app",
-      "context": "/>"
-    },
-    {
-      "file": "src/app/personas/page.tsx",
-      "line": 194,
-      "column": 44,
-      "pattern": "cast",
-      "code": "const personaName = (response.data as any)?.personaId || 'Persona';",
-      "locationGroup": "app",
-      "context": "if (response.status >= 200) {"
-    },
-    {
-      "file": "src/app/personas/page.tsx",
-      "line": 219,
-      "column": 39,
-      "pattern": "cast",
-      "code": "const updated = response.data as any;",
-      "locationGroup": "app",
-      "context": "if (response.status >= 200) {"
-    },
-    {
-      "file": "src/app/personas/page.tsx",
-      "line": 280,
-      "column": 23,
-      "pattern": "cast",
-      "code": "} as any",
-      "locationGroup": "app",
-      "context": "maxRedirects: validatedData.maxRedirects"
-    },
-    {
-      "file": "src/app/personas/page.tsx",
-      "line": 287,
-      "column": 65,
-      "pattern": "cast",
-      "code": "case \"random_rotation\": return \"random\" as any;",
-      "locationGroup": "app",
-      "context": "switch (oldStrategy) {"
-    },
-    {
-      "file": "src/app/personas/page.tsx",
-      "line": 288,
-      "column": 69,
-      "pattern": "cast",
-      "code": "case \"weighted_rotation\": return \"weighted\" as any;",
-      "locationGroup": "app",
-      "context": "case \"random_rotation\": return \"random\" as any;"
-    },
-    {
-      "file": "src/app/personas/page.tsx",
-      "line": 289,
-      "column": 71,
-      "pattern": "cast",
-      "code": "case \"sequential_failover\": return \"priority\" as any;",
-      "locationGroup": "app",
-      "context": "case \"weighted_rotation\": return \"weighted\" as any;"
-    },
-    {
-      "file": "src/app/personas/page.tsx",
-      "line": 290,
-      "column": 55,
-      "pattern": "cast",
-      "code": "default: return \"round_robin\" as any;",
-      "locationGroup": "app",
-      "context": "case \"sequential_failover\": return \"priority\" as any;"
-    },
-    {
-      "file": "src/app/personas/page.tsx",
-      "line": 313,
-      "column": 23,
-      "pattern": "cast",
-      "code": "} as any,",
-      "locationGroup": "app",
-      "context": "rateLimitBurst: validatedData.config.rateLimitBurst ?? 10,"
-    },
-    {
-      "file": "src/app/personas/page.tsx",
-      "line": 317,
-      "column": 79,
-      "pattern": "cast",
-      "code": "const response = await personasApi.personasCreate(createPayload as any);",
-      "locationGroup": "app",
-      "context": "try {"
-    },
-    {
-      "file": "src/app/personas/page.tsx",
-      "line": 324,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "} catch (e: any) {",
-      "locationGroup": "app",
-      "context": "}"
-    },
-    {
-      "file": "src/app/proxies/page.tsx",
-      "line": 293,
-      "column": 72,
-      "pattern": "annotation",
-      "code": "const activeProxiesCount = Array.isArray(proxies) ? proxies.filter((p: any) => p?.isEnabled).length : 0;",
-      "locationGroup": "app",
-      "context": ""
-    },
-    {
-      "file": "src/app/proxies/page.tsx",
-      "line": 389,
-      "column": 70,
-      "pattern": "annotation",
-      "code": "{Array.isArray(proxies) && proxies.map((proxy: any) => {",
-      "locationGroup": "app",
-      "context": "<TableBody>"
-    },
-    {
-      "file": "src/app/proxies/page.tsx",
-      "line": 394,
-      "column": 44,
-      "pattern": "cast",
-      "code": "proxy={proxy as any}",
-      "locationGroup": "app",
-      "context": "key={proxy.id}"
-    },
-    {
-      "file": "src/components/CampaignProgressMonitor.tsx",
-      "line": 9,
-      "column": 46,
-      "pattern": "annotation",
-      "code": "onPhaseCompleted?: (phase: string, results?: any) => void;",
-      "locationGroup": "components",
-      "context": "onProgressUpdate?: (progress: CampaignProgress) => void;"
-    },
-    {
-      "file": "src/components/campaigns/CampaignControls.tsx",
-      "line": 73,
-      "column": 33,
-      "pattern": "annotation",
-      "code": "const extractErrorMessage = (e: any): string => {",
-      "locationGroup": "components",
-      "context": ""
-    },
-    {
-      "file": "src/components/campaigns/CampaignDashboard.tsx",
-      "line": 117,
-      "column": 17,
-      "pattern": "cast",
-      "code": "onSave(data as any);",
-      "locationGroup": "components",
-      "context": "const handleSave = (data: CampaignFormData) => {"
-    },
-    {
-      "file": "src/components/campaigns/CampaignDashboard.tsx",
-      "line": 122,
-      "column": 27,
-      "pattern": "cast",
-      "code": "onSaveAndStart(data as any);",
-      "locationGroup": "components",
-      "context": "if (onSaveAndStart) {"
-    },
-    {
-      "file": "src/components/campaigns/CampaignFormV2.tsx",
-      "line": 102,
-      "column": 19,
-      "pattern": "annotation",
-      "code": "} catch (error: any) {",
-      "locationGroup": "components",
-      "context": "}"
-    },
-    {
-      "file": "src/components/campaigns/CampaignProgressMonitor.tsx",
-      "line": 125,
-      "column": 47,
-      "pattern": "cast",
-      "code": "variant={progressInfo.statusColor as any}",
-      "locationGroup": "components",
-      "context": "<Badge"
-    },
-    {
-      "file": "src/components/campaigns/ContentSimilarityView.tsx",
-      "line": 58,
-      "column": 36,
-      "pattern": "cast",
-      "code": "if (score > 75) return \"default\" as any;",
-      "locationGroup": "components",
-      "context": "const getSimilarityBadgeVariant = (score: number) => {"
-    },
-    {
-      "file": "src/components/campaigns/ContentSimilarityView.tsx",
-      "line": 59,
-      "column": 38,
-      "pattern": "cast",
-      "code": "if (score > 50) return \"secondary\" as any;",
-      "locationGroup": "components",
-      "context": "if (score > 75) return \"default\" as any;"
-    },
-    {
-      "file": "src/components/campaigns/ContentSimilarityView.tsx",
-      "line": 60,
-      "column": 36,
-      "pattern": "cast",
-      "code": "if (score > 25) return \"outline\" as any;",
-      "locationGroup": "components",
-      "context": "if (score > 50) return \"secondary\" as any;"
-    },
-    {
-      "file": "src/components/campaigns/ContentSimilarityView.tsx",
-      "line": 61,
-      "column": 24,
-      "pattern": "cast",
-      "code": "return \"destructive\" as any;",
-      "locationGroup": "components",
-      "context": "if (score > 25) return \"outline\" as any;"
-    },
-    {
-      "file": "src/components/campaigns/ContentSimilarityView.tsx",
-      "line": 66,
-      "column": 62,
-      "pattern": "cast",
-      "code": "const extractedContent: ExtractedContentItem[] = (campaign as any).extractedContent || [];",
-      "locationGroup": "components",
-      "context": "// Now using proper generated types from OpenAPI schema"
-    },
-    {
-      "file": "src/components/campaigns/ContentSimilarityView.tsx",
-      "line": 67,
-      "column": 53,
-      "pattern": "cast",
-      "code": "const leads: LeadItem[] = Array.isArray((campaign as any).leads) ? (campaign as any).leads :",
-      "locationGroup": "components",
-      "context": "const extractedContent: ExtractedContentItem[] = (campaign as any).extractedContent || [];"
-    },
-    {
-      "file": "src/components/campaigns/ContentSimilarityView.tsx",
-      "line": 67,
-      "column": 80,
-      "pattern": "cast",
-      "code": "const leads: LeadItem[] = Array.isArray((campaign as any).leads) ? (campaign as any).leads :",
-      "locationGroup": "components",
-      "context": "const extractedContent: ExtractedContentItem[] = (campaign as any).extractedContent || [];"
-    },
-    {
-      "file": "src/components/campaigns/ContentSimilarityView.tsx",
-      "line": 68,
-      "column": 52,
-      "pattern": "cast",
-      "code": "Array.isArray((campaign as any).leadItems) ? (campaign as any).leadItems : [];",
-      "locationGroup": "components",
-      "context": "const leads: LeadItem[] = Array.isArray((campaign as any).leads) ? (campaign as any).leads :"
-    },
-    {
-      "file": "src/components/campaigns/ContentSimilarityView.tsx",
-      "line": 68,
-      "column": 83,
-      "pattern": "cast",
-      "code": "Array.isArray((campaign as any).leadItems) ? (campaign as any).leadItems : [];",
-      "locationGroup": "components",
-      "context": "const leads: LeadItem[] = Array.isArray((campaign as any).leads) ? (campaign as any).leads :"
-    },
-    {
-      "file": "src/components/campaigns/controls/CampaignModeToggle.tsx",
-      "line": 48,
-      "column": 11,
-      "pattern": "annotation",
-      "code": "const ov: any = useAppSelector(overviewSel as any);",
-      "locationGroup": "components",
-      "context": "const overviewSel = React.useMemo(()=>pipelineSelectors.overview(campaignId),[campaignId]);"
-    },
-    {
-      "file": "src/components/campaigns/controls/CampaignModeToggle.tsx",
-      "line": 48,
-      "column": 46,
-      "pattern": "cast",
-      "code": "const ov: any = useAppSelector(overviewSel as any);",
-      "locationGroup": "components",
-      "context": "const overviewSel = React.useMemo(()=>pipelineSelectors.overview(campaignId),[campaignId]);"
-    },
     {
       "file": "src/components/campaigns/FullSequencePreflightWizard.tsx",
       "line": 31,
@@ -382,42 +21,6 @@
       "code": "{phases.map((p: any) => (",
       "locationGroup": "components",
       "context": "<ul className=\"space-y-2\">"
-    },
-    {
-      "file": "src/components/campaigns/PipelineWorkspace.tsx",
-      "line": 53,
-      "column": 62,
-      "pattern": "cast",
-      "code": "await startPhase({ campaignId, phase: nextAction.phase as any });",
-      "locationGroup": "components",
-      "context": "if (nextAction.type === 'start') {"
-    },
-    {
-      "file": "src/components/campaigns/PipelineWorkspace.tsx",
-      "line": 55,
-      "column": 112,
-      "pattern": "cast",
-      "code": "dispatch(campaignApi.endpoints.getPhaseStatusStandalone.initiate({ campaignId, phase: nextAction.phase } as any));",
-      "locationGroup": "components",
-      "context": "// Force immediate status refetch for the started phase"
-    },
-    {
-      "file": "src/components/campaigns/PipelineWorkspace.tsx",
-      "line": 66,
-      "column": 48,
-      "pattern": "cast",
-      "code": "startPhase({ campaignId, phase: nextAuto as any }).finally(()=> {",
-      "locationGroup": "components",
-      "context": "pendingAutoStarts.current.add(nextAuto);"
-    },
-    {
-      "file": "src/components/campaigns/PipelineWorkspace.tsx",
-      "line": 164,
-      "column": 143,
-      "pattern": "cast",
-      "code": "<Button key={p} size=\"sm\" variant=\"destructive\" className=\"text-[10px] py-1\" onClick={()=>startPhase({ campaignId, phase: p as any })}>Retry {p}</Button>",
-      "locationGroup": "components",
-      "context": "{retryEligible.map(p => ("
     },
     {
       "file": "src/components/campaigns/types/SimpleCampaignFormTypes.ts",
@@ -429,134 +32,8 @@
       "context": "description: formValues.description,"
     },
     {
-      "file": "src/components/campaigns/workspace/CampaignOverviewCard.tsx",
-      "line": 30,
-      "column": 63,
-      "pattern": "cast",
-      "code": "const scoringProfileId: string | undefined = (enrichedTyped as any)?.scoringProfileId || (enrichedTyped as any)?.scoringProfile || undefined;",
-      "locationGroup": "components",
-      "context": "// Determine scoring profile id using known possible fields"
-    },
-    {
-      "file": "src/components/campaigns/workspace/CampaignOverviewCard.tsx",
-      "line": 30,
-      "column": 107,
-      "pattern": "cast",
-      "code": "const scoringProfileId: string | undefined = (enrichedTyped as any)?.scoringProfileId || (enrichedTyped as any)?.scoringProfile || undefined;",
-      "locationGroup": "components",
-      "context": "// Determine scoring profile id using known possible fields"
-    },
-    {
-      "file": "src/components/campaigns/workspace/CampaignOverviewCard.tsx",
-      "line": 33,
-      "column": 62,
-      "pattern": "cast",
-      "code": "const avgScore: number | undefined = typeof (enrichedTyped as any)?.averageScore === 'number'",
-      "locationGroup": "components",
-      "context": "const profileName = profileObj?.name || scoringProfileId || '—';"
-    },
-    {
-      "file": "src/components/campaigns/workspace/CampaignOverviewCard.tsx",
-      "line": 34,
-      "column": 22,
-      "pattern": "cast",
-      "code": "? (enrichedTyped as any).averageScore",
-      "locationGroup": "components",
-      "context": "const avgScore: number | undefined = typeof (enrichedTyped as any)?.averageScore === 'number'"
-    },
-    {
-      "file": "src/components/campaigns/workspace/CampaignOverviewCard.tsx",
-      "line": 35,
-      "column": 29,
-      "pattern": "cast",
-      "code": ": typeof (enrichedTyped as any)?.score === 'number'",
-      "locationGroup": "components",
-      "context": "? (enrichedTyped as any).averageScore"
-    },
-    {
-      "file": "src/components/campaigns/workspace/CampaignOverviewCard.tsx",
-      "line": 36,
-      "column": 24,
-      "pattern": "cast",
-      "code": "? (enrichedTyped as any).score",
-      "locationGroup": "components",
-      "context": ": typeof (enrichedTyped as any)?.score === 'number'"
-    },
-    {
-      "file": "src/components/campaigns/workspace/CampaignOverviewCard.tsx",
-      "line": 38,
-      "column": 67,
-      "pattern": "cast",
-      "code": "const lastRescoreAt: string | undefined = typeof (enrichedTyped as any)?.lastRescoreAt === 'string' ? (enrichedTyped as any).lastRescoreAt : undefined;",
-      "locationGroup": "components",
-      "context": ": undefined;"
-    },
-    {
-      "file": "src/components/campaigns/workspace/CampaignOverviewCard.tsx",
-      "line": 38,
-      "column": 120,
-      "pattern": "cast",
-      "code": "const lastRescoreAt: string | undefined = typeof (enrichedTyped as any)?.lastRescoreAt === 'string' ? (enrichedTyped as any).lastRescoreAt : undefined;",
-      "locationGroup": "components",
-      "context": ": undefined;"
-    },
-    {
       "file": "src/components/debug/ForecastQualityDebugPanel.tsx",
-      "line": 23,
-      "column": 12,
-      "pattern": "annotation",
-      "code": "snapshots: any[];",
-      "locationGroup": "components",
-      "context": "campaignId: string;"
-    },
-    {
-      "file": "src/components/debug/ForecastQualityDebugPanel.tsx",
-      "line": 29,
-      "column": 18,
-      "pattern": "annotation",
-      "code": "forecastResult?: any;",
-      "locationGroup": "components",
-      "context": "interface ForecastDebugState {"
-    },
-    {
-      "file": "src/components/debug/ForecastQualityDebugPanel.tsx",
-      "line": 35,
-      "column": 20,
-      "pattern": "annotation",
-      "code": "degradationState?: any;",
-      "locationGroup": "components",
-      "context": "interface DegradationDebugState {"
-    },
-    {
-      "file": "src/components/debug/ForecastQualityDebugPanel.tsx",
-      "line": 41,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "statistics?: any;",
-      "locationGroup": "components",
-      "context": "interface AuditDebugState {"
-    },
-    {
-      "file": "src/components/debug/ForecastQualityDebugPanel.tsx",
-      "line": 42,
-      "column": 16,
-      "pattern": "annotation",
-      "code": "recentEntries: any[];",
-      "locationGroup": "components",
-      "context": "statistics?: any;"
-    },
-    {
-      "file": "src/components/debug/ForecastQualityDebugPanel.tsx",
-      "line": 174,
-      "column": 34,
-      "pattern": "annotation",
-      "code": "const formatModelScore = (score: any) => {",
-      "locationGroup": "components",
-      "context": "// Format model score for display"
-    },
-    {
-      "file": "src/components/debug/ForecastQualityDebugPanel.tsx",
-      "line": 301,
+      "line": 367,
       "column": 95,
       "pattern": "annotation",
       "code": "{forecastDebug.forecastResult.modelInfo.alternativeModels.map((model: any, idx: number) => (",
@@ -565,7 +42,7 @@
     },
     {
       "file": "src/components/debug/ForecastQualityDebugPanel.tsx",
-      "line": 326,
+      "line": 392,
       "column": 86,
       "pattern": "annotation",
       "code": "{forecastDebug.forecastResult.points.slice(0, 5).map((point: any, idx: number) => (",
@@ -574,39 +51,12 @@
     },
     {
       "file": "src/components/debug/ForecastQualityDebugPanel.tsx",
-      "line": 526,
+      "line": 592,
       "column": 59,
       "pattern": "annotation",
       "code": "{auditDebug.recentEntries.map((entry: any, idx: number) => (",
       "locationGroup": "components",
       "context": "<div className=\"space-y-3\">"
-    },
-    {
-      "file": "src/components/proxyPools/ProxyPoolForm.tsx",
-      "line": 78,
-      "column": 62,
-      "pattern": "cast",
-      "code": "await proxyPoolsApi.proxyPoolsUpdate(pool.id, values as any);",
-      "locationGroup": "components",
-      "context": "if (isEditing && pool && pool.id) {"
-    },
-    {
-      "file": "src/components/proxyPools/ProxyPoolForm.tsx",
-      "line": 82,
-      "column": 53,
-      "pattern": "cast",
-      "code": "await proxyPoolsApi.proxyPoolsCreate(values as any);",
-      "locationGroup": "components",
-      "context": "} else {"
-    },
-    {
-      "file": "src/components/proxyPools/ProxyPoolList.tsx",
-      "line": 18,
-      "column": 43,
-      "pattern": "cast",
-      "code": "proxyPoolsList: async () => ({ data: [] as any[] }),",
-      "locationGroup": "components",
-      "context": "const proxyPoolsApi = {"
     },
     {
       "file": "src/components/refactor/analytics/CausalGraphPanel.tsx",
@@ -628,19 +78,10 @@
     },
     {
       "file": "src/components/refactor/campaign/CampaignCreateWizard.tsx",
-      "line": 178,
-      "column": 19,
-      "pattern": "annotation",
-      "code": "} catch (error: any) {",
-      "locationGroup": "components",
-      "context": ""
-    },
-    {
-      "file": "src/components/refactor/campaign/CampaignCreateWizard.tsx",
-      "line": 223,
-      "column": 26,
-      "pattern": "annotation",
-      "code": "} catch (startError: any) {",
+      "line": 250,
+      "column": 35,
+      "pattern": "cast",
+      "code": "const anyErr = startError as any;",
       "locationGroup": "components",
       "context": ""
     },
@@ -652,24 +93,6 @@
       "code": "function convertDomains(apiDomains: any[] | undefined | null): CampaignDomain[] {",
       "locationGroup": "components",
       "context": "// Convert API domains to our lightweight interface"
-    },
-    {
-      "file": "src/components/refactor/campaign/CampaignOverviewV2.tsx",
-      "line": 57,
-      "column": 35,
-      "pattern": "cast",
-      "code": "dns_status: domain.dns_status as any,",
-      "locationGroup": "components",
-      "context": "domain_name: domain.domain_name,"
-    },
-    {
-      "file": "src/components/refactor/campaign/CampaignOverviewV2.tsx",
-      "line": 58,
-      "column": 37,
-      "pattern": "cast",
-      "code": "http_status: domain.http_status as any,",
-      "locationGroup": "components",
-      "context": "dns_status: domain.dns_status as any,"
     },
     {
       "file": "src/components/refactor/campaign/CampaignOverviewV2.tsx",
@@ -753,24 +176,6 @@
       "context": "lastDeltas?: any[];"
     },
     {
-      "file": "src/components/refactor/campaign/PipelineBarContainer.tsx",
-      "line": 49,
-      "column": 24,
-      "pattern": "cast",
-      "code": "status: status as any,",
-      "locationGroup": "components",
-      "context": "phase: `DNS ${status}`,"
-    },
-    {
-      "file": "src/components/refactor/campaign/PipelineBarContainer.tsx",
-      "line": 62,
-      "column": 24,
-      "pattern": "cast",
-      "code": "status: status as any,",
-      "locationGroup": "components",
-      "context": "phase: `HTTP ${status}`,"
-    },
-    {
       "file": "src/components/refactor/experiments/BanditPanel.tsx",
       "line": 80,
       "column": 33,
@@ -796,105 +201,6 @@
       "code": "const renderArmCard = (arm: any) => {",
       "locationGroup": "components",
       "context": ""
-    },
-    {
-      "file": "src/components/refactor/viz/AdaptiveTimeline.tsx",
-      "line": 226,
-      "column": 43,
-      "pattern": "annotation",
-      "code": "const formatTooltip = useCallback((value: any, name: string, props: any) => {",
-      "locationGroup": "components",
-      "context": "// Format tooltip content"
-    },
-    {
-      "file": "src/components/refactor/viz/AdaptiveTimeline.tsx",
-      "line": 226,
-      "column": 69,
-      "pattern": "annotation",
-      "code": "const formatTooltip = useCallback((value: any, name: string, props: any) => {",
-      "locationGroup": "components",
-      "context": "// Format tooltip content"
-    },
-    {
-      "file": "src/components/ui/input.tsx",
-      "line": 45,
-      "column": 20,
-      "pattern": "annotation",
-      "code": "[key: string]: any;",
-      "locationGroup": "components",
-      "context": "id?: string;"
-    },
-    {
-      "file": "src/lib/api/transformers/campaign-transformers.ts",
-      "line": 7,
-      "column": 51,
-      "pattern": "annotation",
-      "code": "export function transformCampaignResponse(campaign: any): Campaign {",
-      "locationGroup": "other",
-      "context": "*/"
-    },
-    {
-      "file": "src/lib/api/transformers/campaign-transformers.ts",
-      "line": 15,
-      "column": 57,
-      "pattern": "annotation",
-      "code": "export function transformCampaignArrayResponse(campaigns: any[] | null | undefined): Campaign[] {",
-      "locationGroup": "other",
-      "context": "*/"
-    },
-    {
-      "file": "src/lib/hooks/useCachedAuth.tsx",
-      "line": 133,
-      "column": 47,
-      "pattern": "cast",
-      "code": "const userData: User | null = (response as any)?.data ?? (response as any) ?? null;",
-      "locationGroup": "other",
-      "context": "// Generated client returns AxiosResponse<User>"
-    },
-    {
-      "file": "src/lib/hooks/useCachedAuth.tsx",
-      "line": 133,
-      "column": 74,
-      "pattern": "cast",
-      "code": "const userData: User | null = (response as any)?.data ?? (response as any) ?? null;",
-      "locationGroup": "other",
-      "context": "// Generated client returns AxiosResponse<User>"
-    },
-    {
-      "file": "src/lib/hooks/useCachedAuth.tsx",
-      "line": 226,
-      "column": 18,
-      "pattern": "annotation",
-      "code": "const loginData: any = (response as any)?.data ?? response;",
-      "locationGroup": "other",
-      "context": "const response = await authApi.authLogin(loginRequest);"
-    },
-    {
-      "file": "src/lib/hooks/useCachedAuth.tsx",
-      "line": 226,
-      "column": 36,
-      "pattern": "cast",
-      "code": "const loginData: any = (response as any)?.data ?? response;",
-      "locationGroup": "other",
-      "context": "const response = await authApi.authLogin(loginRequest);"
-    },
-    {
-      "file": "src/lib/hooks/useCachedAuth.tsx",
-      "line": 232,
-      "column": 40,
-      "pattern": "cast",
-      "code": "const sessionUser = (loginData as any)?.User || (loginData as any)?.user;",
-      "locationGroup": "other",
-      "context": "// Extract user data from SessionResponse"
-    },
-    {
-      "file": "src/lib/hooks/useCachedAuth.tsx",
-      "line": 232,
-      "column": 68,
-      "pattern": "cast",
-      "code": "const sessionUser = (loginData as any)?.User || (loginData as any)?.user;",
-      "locationGroup": "other",
-      "context": "// Extract user data from SessionResponse"
     },
     {
       "file": "src/lib/hooks/usePaginatedDomains.ts",
@@ -1122,15 +428,6 @@
       "context": "// eslint-disable-next-line @typescript-eslint/no-explicit-any"
     },
     {
-      "file": "src/lib/utils/apiResponseHelpers.ts",
-      "line": 18,
-      "column": 30,
-      "pattern": "cast",
-      "code": "const axiosError = error as any;",
-      "locationGroup": "other",
-      "context": "if (error && typeof error === 'object' && 'response' in error) {"
-    },
-    {
       "file": "src/lib/utils/domainCalculation.ts",
       "line": 26,
       "column": 108,
@@ -1138,87 +435,6 @@
       "code": "const { patternType, characterSet, variableLength, prefixVariableLength, suffixVariableLength } = config as any;",
       "locationGroup": "other",
       "context": ""
-    },
-    {
-      "file": "src/lib/utils/memoization.ts",
-      "line": 14,
-      "column": 21,
-      "pattern": "annotation",
-      "code": "function deepEqual(a: any, b: any): boolean {",
-      "locationGroup": "other",
-      "context": "// eslint-disable-next-line @typescript-eslint/no-explicit-any"
-    },
-    {
-      "file": "src/lib/utils/memoization.ts",
-      "line": 14,
-      "column": 29,
-      "pattern": "annotation",
-      "code": "function deepEqual(a: any, b: any): boolean {",
-      "locationGroup": "other",
-      "context": "// eslint-disable-next-line @typescript-eslint/no-explicit-any"
-    },
-    {
-      "file": "src/lib/utils/memoization.ts",
-      "line": 60,
-      "column": 51,
-      "pattern": "annotation",
-      "code": "export function useDeepCallback<T extends (...args: any[]) => any>(",
-      "locationGroup": "other",
-      "context": "// eslint-disable-next-line @typescript-eslint/no-explicit-any"
-    },
-    {
-      "file": "src/lib/utils/sqlNullTransformers.ts",
-      "line": 280,
-      "column": 41,
-      "pattern": "cast",
-      "code": "return transformSqlNullInt32(value) as any;",
-      "locationGroup": "other",
-      "context": "if (isSqlNullInt32(value)) {"
-    },
-    {
-      "file": "src/lib/utils/sqlNullTransformers.ts",
-      "line": 284,
-      "column": 42,
-      "pattern": "cast",
-      "code": "return transformSqlNullString(value) as any;",
-      "locationGroup": "other",
-      "context": "if (isSqlNullString(value)) {"
-    },
-    {
-      "file": "src/lib/utils/sqlNullTransformers.ts",
-      "line": 288,
-      "column": 40,
-      "pattern": "cast",
-      "code": "return transformSqlNullTime(value) as any;",
-      "locationGroup": "other",
-      "context": "if (isSqlNullTime(value)) {"
-    },
-    {
-      "file": "src/lib/utils/sqlNullTransformers.ts",
-      "line": 292,
-      "column": 40,
-      "pattern": "cast",
-      "code": "return transformSqlNullBool(value) as any;",
-      "locationGroup": "other",
-      "context": "if (isSqlNullBool(value)) {"
-    },
-    {
-      "file": "src/lib/utils/sqlNullTransformers.ts",
-      "line": 296,
-      "column": 43,
-      "pattern": "cast",
-      "code": "return transformSqlNullFloat64(value) as any;",
-      "locationGroup": "other",
-      "context": "if (isSqlNullFloat64(value)) {"
-    },
-    {
-      "file": "src/lib/utils/sqlNullTransformers.ts",
-      "line": 300,
-      "column": 16,
-      "pattern": "cast",
-      "code": "return value as any;",
-      "locationGroup": "other",
-      "context": "// Return value as-is if it's not a SqlNull wrapper"
     },
     {
       "file": "src/lib/utils/toRtkError.ts",
@@ -1239,15 +455,6 @@
       "context": "details?: any;"
     },
     {
-      "file": "src/lib/utils/toRtkError.ts",
-      "line": 15,
-      "column": 31,
-      "pattern": "annotation",
-      "code": "export function toRtkError(err: any): NormalizedRtkError {",
-      "locationGroup": "other",
-      "context": "*/"
-    },
-    {
       "file": "src/lib/utils/typeGuards.ts",
       "line": 3,
       "column": 21,
@@ -1255,78 +462,6 @@
       "code": "* Replaces unsafe `as any` casts with proper runtime type checking",
       "locationGroup": "other",
       "context": "* Type Guards for API Response Validation"
-    },
-    {
-      "file": "src/lib/utils/typeSafetyPrimitives.ts",
-      "line": 37,
-      "column": 31,
-      "pattern": "annotation",
-      "code": "export function ensurePath(obj: any, segments: string[]): any {",
-      "locationGroup": "other",
-      "context": "*/"
-    },
-    {
-      "file": "src/lib/utils/typeSafetyPrimitives.ts",
-      "line": 37,
-      "column": 57,
-      "pattern": "annotation",
-      "code": "export function ensurePath(obj: any, segments: string[]): any {",
-      "locationGroup": "other",
-      "context": "*/"
-    },
-    {
-      "file": "src/lib/utils/typeSafetyPrimitives.ts",
-      "line": 101,
-      "column": 34,
-      "pattern": "annotation",
-      "code": "export function applyPatchOp(root: any, op: StreamPatchOp): Result<any, string> {",
-      "locationGroup": "other",
-      "context": "*/"
-    },
-    {
-      "file": "src/lib/utils/typeSafetyPrimitives.ts",
-      "line": 143,
-      "column": 51,
-      "pattern": "cast",
-      "code": "return Err(`Unknown operation type: ${(op as any).type}`);",
-      "locationGroup": "other",
-      "context": "default:"
-    },
-    {
-      "file": "src/lib/utils/typeSafetyPrimitives.ts",
-      "line": 155,
-      "column": 40,
-      "pattern": "annotation",
-      "code": "export function createMessageEvent(data: any): MessageEvent {",
-      "locationGroup": "other",
-      "context": "*/"
-    },
-    {
-      "file": "src/lib/utils/unwrapApiResponse.ts",
-      "line": 4,
-      "column": 16,
-      "pattern": "cast",
-      "code": "return (resp as any)?.data ?? (resp as T);",
-      "locationGroup": "other",
-      "context": "export function unwrapApiResponse<T>(resp: unknown): T | undefined {"
-    },
-    {
-      "file": "src/services/analytics/causalGraphService.ts",
-      "line": 450,
-      "column": 50,
-      "pattern": "cast",
-      "code": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {",
-      "locationGroup": "services",
-      "context": "// Integrate with existing telemetry service if available"
-    },
-    {
-      "file": "src/services/analytics/causalGraphService.ts",
-      "line": 451,
-      "column": 40,
-      "pattern": "cast",
-      "code": "const telemetryService = (window as any).__telemetryService;",
-      "locationGroup": "services",
-      "context": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {"
     },
     {
       "file": "src/services/campaignMetrics/auditLogService.ts",
@@ -1363,168 +498,6 @@
       "code": "newValue?: any;",
       "locationGroup": "services",
       "context": "oldValue?: any;"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 97,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "snapshots: any[],",
-      "locationGroup": "services",
-      "context": "campaignId: string,"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 99,
-      "column": 17,
-      "pattern": "annotation",
-      "code": "anomalies?: any[];",
-      "locationGroup": "services",
-      "context": "context: {"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 100,
-      "column": 17,
-      "pattern": "annotation",
-      "code": "forecasts?: any[];",
-      "locationGroup": "services",
-      "context": "anomalies?: any[];"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 101,
-      "column": 22,
-      "pattern": "annotation",
-      "code": "cohortInsights?: any[];",
-      "locationGroup": "services",
-      "context": "forecasts?: any[];"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 160,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "snapshots: any[]",
-      "locationGroup": "services",
-      "context": "campaignId: string,"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 202,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "snapshots: any[],",
-      "locationGroup": "services",
-      "context": "campaignId: string,"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 235,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "anomalies: any[],",
-      "locationGroup": "services",
-      "context": "private generateAnomalyAugmentedRecommendations("
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 236,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "snapshots: any[],",
-      "locationGroup": "services",
-      "context": "anomalies: any[],"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 287,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "snapshots: any[],",
-      "locationGroup": "services",
-      "context": "private generateClientHeuristicRecommendations("
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 288,
-      "column": 12,
-      "pattern": "annotation",
-      "code": "context: any",
-      "locationGroup": "services",
-      "context": "snapshots: any[],"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 474,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "snapshots: any[],",
-      "locationGroup": "services",
-      "context": "campaignId: string,"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 476,
-      "column": 4,
-      "pattern": "annotation",
-      "code": "): any[] {",
-      "locationGroup": "services",
-      "context": "config: ExperimentalRecommendationConfig"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 481,
-      "column": 39,
-      "pattern": "annotation",
-      "code": "private categorizeRecommendation(rec: any): EnhancedRecommendation['category'] {",
-      "locationGroup": "services",
-      "context": ""
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 491,
-      "column": 32,
-      "pattern": "annotation",
-      "code": "private calculatePriority(rec: any): number {",
-      "locationGroup": "services",
-      "context": ""
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 497,
-      "column": 29,
-      "pattern": "annotation",
-      "code": "private estimateImpact(rec: any): EnhancedRecommendation['estimatedImpact'] {",
-      "locationGroup": "services",
-      "context": ""
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 505,
-      "column": 29,
-      "pattern": "annotation",
-      "code": "private makeActionable(rec: any): EnhancedRecommendation['actionable'] {",
-      "locationGroup": "services",
-      "context": ""
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 541,
-      "column": 12,
-      "pattern": "annotation",
-      "code": "snapshots: any[],",
-      "locationGroup": "services",
-      "context": "campaignId: string,"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedRecommendationService.ts",
-      "line": 542,
-      "column": 11,
-      "pattern": "annotation",
-      "code": "context?: any,",
-      "locationGroup": "services",
-      "context": "snapshots: any[],"
     },
     {
       "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
@@ -1725,42 +698,6 @@
       "context": "): Promise<Array<{ modelId: string; points: any[] }>> {"
     },
     {
-      "file": "src/services/campaignMetrics/healthFabricService.ts",
-      "line": 62,
-      "column": 10,
-      "pattern": "annotation",
-      "code": "value: any;",
-      "locationGroup": "services",
-      "context": "operator: 'gt' | 'lt' | 'eq' | 'gte' | 'lte';"
-    },
-    {
-      "file": "src/services/campaignMetrics/healthFabricService.ts",
-      "line": 107,
-      "column": 12,
-      "pattern": "annotation",
-      "code": "oldValue?: any;",
-      "locationGroup": "services",
-      "context": "domain: string;"
-    },
-    {
-      "file": "src/services/campaignMetrics/healthFabricService.ts",
-      "line": 108,
-      "column": 12,
-      "pattern": "annotation",
-      "code": "newValue?: any;",
-      "locationGroup": "services",
-      "context": "oldValue?: any;"
-    },
-    {
-      "file": "src/services/campaignMetrics/healthFabricService.ts",
-      "line": 589,
-      "column": 67,
-      "pattern": "annotation",
-      "code": "private getHealthFieldValue(health: DomainHealth, field: string): any {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
       "file": "src/services/campaignMetrics/historyStore.ts",
       "line": 280,
       "column": 43,
@@ -1894,15 +831,6 @@
       "code": "declare const process: any;",
       "locationGroup": "services",
       "context": "// Declare process and global for Node.js environment"
-    },
-    {
-      "file": "src/services/campaignMetrics/progressStream.ts",
-      "line": 172,
-      "column": 42,
-      "pattern": "annotation",
-      "code": "private handleSSEError(reject: (reason?: any) => void): void {",
-      "locationGroup": "services",
-      "context": "*/"
     },
     {
       "file": "src/services/campaignMetrics/recommendationScoreService.ts",
@@ -2074,24 +1002,6 @@
       "code": "export function sanitizeString(input: any, maxLength?: number): SanitizationResult<string> {",
       "locationGroup": "services",
       "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/serverAdapter.ts",
-      "line": 79,
-      "column": 48,
-      "pattern": "annotation",
-      "code": "export function validateServerResponse(response: any): response is ServerMetricsResponse {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/serverAdapter.ts",
-      "line": 114,
-      "column": 59,
-      "pattern": "annotation",
-      "code": "export function logServerWarning(message: string, details?: any) {",
-      "locationGroup": "services",
-      "context": ""
     },
     {
       "file": "src/services/campaignMetrics/snapshotCompactionService.ts",
@@ -2274,123 +1184,6 @@
       "context": "movers?: any;"
     },
     {
-      "file": "src/services/collab/draftStore.ts",
-      "line": 25,
-      "column": 8,
-      "pattern": "annotation",
-      "code": "value: any;",
-      "locationGroup": "services",
-      "context": "operation: 'set' | 'delete' | 'array_append' | 'array_remove' | 'merge';"
-    },
-    {
-      "file": "src/services/collab/draftStore.ts",
-      "line": 56,
-      "column": 15,
-      "pattern": "annotation",
-      "code": "localValue: any;",
-      "locationGroup": "services",
-      "context": "field: string;"
-    },
-    {
-      "file": "src/services/collab/draftStore.ts",
-      "line": 57,
-      "column": 16,
-      "pattern": "annotation",
-      "code": "remoteValue: any;",
-      "locationGroup": "services",
-      "context": "localValue: any;"
-    },
-    {
-      "file": "src/services/collab/draftStore.ts",
-      "line": 58,
-      "column": 15,
-      "pattern": "annotation",
-      "code": "resolution: any;",
-      "locationGroup": "services",
-      "context": "remoteValue: any;"
-    },
-    {
-      "file": "src/services/collab/draftStore.ts",
-      "line": 346,
-      "column": 66,
-      "pattern": "annotation",
-      "code": "private getFieldValue(data: Record<string, any>, field: string): any {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/collab/draftStore.ts",
-      "line": 364,
-      "column": 72,
-      "pattern": "annotation",
-      "code": "private setFieldValue(data: Record<string, any>, field: string, value: any): void {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/collab/draftStore.ts",
-      "line": 410,
-      "column": 15,
-      "pattern": "annotation",
-      "code": "localValue: any,",
-      "locationGroup": "services",
-      "context": "field: string,"
-    },
-    {
-      "file": "src/services/collab/draftStore.ts",
-      "line": 411,
-      "column": 16,
-      "pattern": "annotation",
-      "code": "remoteValue: any,",
-      "locationGroup": "services",
-      "context": "localValue: any,"
-    },
-    {
-      "file": "src/services/collab/draftStore.ts",
-      "line": 414,
-      "column": 4,
-      "pattern": "annotation",
-      "code": "): any {",
-      "locationGroup": "services",
-      "context": "remoteTimestamp: number"
-    },
-    {
-      "file": "src/services/experimentation/banditService.ts",
-      "line": 527,
-      "column": 50,
-      "pattern": "cast",
-      "code": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {",
-      "locationGroup": "services",
-      "context": "private emitDecisionTelemetry(decision: BanditDecisionEvent): void {"
-    },
-    {
-      "file": "src/services/experimentation/banditService.ts",
-      "line": 528,
-      "column": 40,
-      "pattern": "cast",
-      "code": "const telemetryService = (window as any).__telemetryService;",
-      "locationGroup": "services",
-      "context": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {"
-    },
-    {
-      "file": "src/services/experimentation/banditService.ts",
-      "line": 537,
-      "column": 50,
-      "pattern": "cast",
-      "code": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {",
-      "locationGroup": "services",
-      "context": "private emitRewardTelemetry(reward: BanditRewardEvent): void {"
-    },
-    {
-      "file": "src/services/experimentation/banditService.ts",
-      "line": 538,
-      "column": 40,
-      "pattern": "cast",
-      "code": "const telemetryService = (window as any).__telemetryService;",
-      "locationGroup": "services",
-      "context": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {"
-    },
-    {
       "file": "src/services/i18n/i18nService.ts",
       "line": 435,
       "column": 16,
@@ -2401,57 +1194,12 @@
     },
     {
       "file": "src/services/i18n/i18nService.ts",
-      "line": 494,
-      "column": 52,
-      "pattern": "cast",
-      "code": "if (typeof window !== 'undefined' && (window as any).telemetryService) {",
-      "locationGroup": "services",
-      "context": "// Emit telemetry"
-    },
-    {
-      "file": "src/services/i18n/i18nService.ts",
-      "line": 495,
-      "column": 17,
-      "pattern": "cast",
-      "code": "(window as any).telemetryService.emitTelemetry('i18n_locale_loaded', {",
-      "locationGroup": "services",
-      "context": "if (typeof window !== 'undefined' && (window as any).telemetryService) {"
-    },
-    {
-      "file": "src/services/i18n/i18nService.ts",
       "line": 750,
       "column": 27,
       "pattern": "annotation",
       "code": "const countKeys = (obj: any): number => {",
       "locationGroup": "services",
       "context": ""
-    },
-    {
-      "file": "src/services/observability/tracingService.ts",
-      "line": 331,
-      "column": 19,
-      "pattern": "annotation",
-      "code": "} catch (error: any) {",
-      "locationGroup": "services",
-      "context": "return result;"
-    },
-    {
-      "file": "src/services/observability/tracingService.ts",
-      "line": 415,
-      "column": 50,
-      "pattern": "cast",
-      "code": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {",
-      "locationGroup": "services",
-      "context": ""
-    },
-    {
-      "file": "src/services/observability/tracingService.ts",
-      "line": 416,
-      "column": 40,
-      "pattern": "cast",
-      "code": "const telemetryService = (window as any).__telemetryService;",
-      "locationGroup": "services",
-      "context": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {"
     },
     {
       "file": "src/services/perf/taskSchedulerService.ts",
@@ -2616,42 +1364,6 @@
       "context": "*/"
     },
     {
-      "file": "src/services/perf/wasmAccelerationService.ts",
-      "line": 518,
-      "column": 50,
-      "pattern": "cast",
-      "code": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {",
-      "locationGroup": "services",
-      "context": "private emitKernelLoadedEvent(kernels: string[]): void {"
-    },
-    {
-      "file": "src/services/perf/wasmAccelerationService.ts",
-      "line": 519,
-      "column": 40,
-      "pattern": "cast",
-      "code": "const telemetryService = (window as any).__telemetryService;",
-      "locationGroup": "services",
-      "context": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {"
-    },
-    {
-      "file": "src/services/perf/wasmAccelerationService.ts",
-      "line": 528,
-      "column": 50,
-      "pattern": "cast",
-      "code": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {",
-      "locationGroup": "services",
-      "context": "private emitFallbackEvent(reason: string): void {"
-    },
-    {
-      "file": "src/services/perf/wasmAccelerationService.ts",
-      "line": 529,
-      "column": 40,
-      "pattern": "cast",
-      "code": "const telemetryService = (window as any).__telemetryService;",
-      "locationGroup": "services",
-      "context": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {"
-    },
-    {
       "file": "src/services/policy/policyEngine.ts",
       "line": 59,
       "column": 8,
@@ -2679,150 +1391,6 @@
       "context": "const fieldParts = field.split('.');"
     },
     {
-      "file": "src/services/privacy/differentialPrivacyService.ts",
-      "line": 429,
-      "column": 50,
-      "pattern": "cast",
-      "code": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {",
-      "locationGroup": "services",
-      "context": "private emitNoiseEvent(data: DifferentialPrivacyNoiseEvent): void {"
-    },
-    {
-      "file": "src/services/privacy/differentialPrivacyService.ts",
-      "line": 430,
-      "column": 40,
-      "pattern": "cast",
-      "code": "const telemetryService = (window as any).__telemetryService;",
-      "locationGroup": "services",
-      "context": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {"
-    },
-    {
-      "file": "src/services/privacy/privacyRedactionService.ts",
-      "line": 33,
-      "column": 11,
-      "pattern": "annotation",
-      "code": "redacted: any;",
-      "locationGroup": "services",
-      "context": "export interface RedactionResult {"
-    },
-    {
-      "file": "src/services/privacy/privacyRedactionService.ts",
-      "line": 84,
-      "column": 20,
-      "pattern": "annotation",
-      "code": "redactPayload(obj: any, policy?: PrivacyPolicy): RedactionResult {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/privacy/privacyRedactionService.ts",
-      "line": 185,
-      "column": 20,
-      "pattern": "annotation",
-      "code": "redactValue(value: any, fieldPath: string, level: PrivacyLevel = 'public'): { redacted: any; applied: boolean } {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/privacy/privacyRedactionService.ts",
-      "line": 185,
-      "column": 89,
-      "pattern": "annotation",
-      "code": "redactValue(value: any, fieldPath: string, level: PrivacyLevel = 'public'): { redacted: any; applied: boolean } {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/privacy/privacyRedactionService.ts",
-      "line": 202,
-      "column": 27,
-      "pattern": "annotation",
-      "code": "private redactObject(obj: any, policy: PrivacyPolicy, applied: RedactionEntry[], path: string): any {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/privacy/privacyRedactionService.ts",
-      "line": 202,
-      "column": 97,
-      "pattern": "annotation",
-      "code": "private redactObject(obj: any, policy: PrivacyPolicy, applied: RedactionEntry[], path: string): any {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/privacy/privacyRedactionService.ts",
-      "line": 227,
-      "column": 19,
-      "pattern": "annotation",
-      "code": "const result: any = {};",
-      "locationGroup": "services",
-      "context": "if (typeof obj === 'object') {"
-    },
-    {
-      "file": "src/services/privacy/privacyRedactionService.ts",
-      "line": 297,
-      "column": 35,
-      "pattern": "annotation",
-      "code": "private applyRedactionRule(value: any, rule: PrivacyRule): any {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/privacy/privacyRedactionService.ts",
-      "line": 297,
-      "column": 60,
-      "pattern": "annotation",
-      "code": "private applyRedactionRule(value: any, rule: PrivacyRule): any {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/privacy/privacyRedactionService.ts",
-      "line": 317,
-      "column": 33,
-      "pattern": "annotation",
-      "code": "private performRedaction(value: any, rule: PrivacyRule): string {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/privacy/privacyRedactionService.ts",
-      "line": 329,
-      "column": 26,
-      "pattern": "annotation",
-      "code": "private hashValue(value: any, salt?: string): string {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/privacy/privacyRedactionService.ts",
-      "line": 347,
-      "column": 26,
-      "pattern": "annotation",
-      "code": "private maskValue(value: any, rule: PrivacyRule): string {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/privacy/privacyRedactionService.ts",
-      "line": 433,
-      "column": 50,
-      "pattern": "cast",
-      "code": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {",
-      "locationGroup": "services",
-      "context": "private emitRedactionTelemetry(data: PrivacyRedactionAppliedEvent): void {"
-    },
-    {
-      "file": "src/services/privacy/privacyRedactionService.ts",
-      "line": 434,
-      "column": 40,
-      "pattern": "cast",
-      "code": "const telemetryService = (window as any).__telemetryService;",
-      "locationGroup": "services",
-      "context": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {"
-    },
-    {
       "file": "src/services/simulation/scenarioEngine.ts",
       "line": 77,
       "column": 22,
@@ -2830,51 +1398,6 @@
       "code": "assumedCausalGraph?: any; // Reference to causal graph if available",
       "locationGroup": "services",
       "context": "baselineMetrics: Record<string, number>;"
-    },
-    {
-      "file": "src/services/summarization/summarizationService.ts",
-      "line": 579,
-      "column": 50,
-      "pattern": "cast",
-      "code": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {",
-      "locationGroup": "services",
-      "context": "private emitSummaryEvent(data: SemanticSummaryGeneratedEvent): void {"
-    },
-    {
-      "file": "src/services/summarization/summarizationService.ts",
-      "line": 580,
-      "column": 40,
-      "pattern": "cast",
-      "code": "const telemetryService = (window as any).__telemetryService;",
-      "locationGroup": "services",
-      "context": "if (typeof window !== 'undefined' && (window as any).__telemetryService) {"
-    },
-    {
-      "file": "src/store/api/campaignApi.ts",
-      "line": 35,
-      "column": 23,
-      "pattern": "cast",
-      "code": "const maybe = (resp as any)?.data ?? resp;",
-      "locationGroup": "store",
-      "context": "const unwrap = <T>(resp: unknown): T | undefined => {"
-    },
-    {
-      "file": "src/store/api/campaignApi.ts",
-      "line": 268,
-      "column": 48,
-      "pattern": "cast",
-      "code": "const response = await (campaignsApi as any).campaignsModeUpdate(campaignId, { mode });",
-      "locationGroup": "store",
-      "context": "try {"
-    },
-    {
-      "file": "src/store/api/campaignApi.ts",
-      "line": 286,
-      "column": 36,
-      "pattern": "cast",
-      "code": "const fn = (campaignsApi as any).campaignsDomainScoreBreakdown as ((id: string, domain: string) => Promise<unknown>) | undefined;",
-      "locationGroup": "store",
-      "context": "try {"
     },
     {
       "file": "src/store/api/cleanCampaignApi.ts",
@@ -2886,51 +1409,6 @@
       "context": "// - Manual unwrapping of { success, data } envelopes"
     },
     {
-      "file": "src/store/api/monitoringApi.ts",
-      "line": 67,
-      "column": 35,
-      "pattern": "annotation",
-      "code": "transformResponse: (response: any) => (response?.data ?? response) as SystemHealth,",
-      "locationGroup": "store",
-      "context": "query: () => '/health',"
-    },
-    {
-      "file": "src/store/api/monitoringApi.ts",
-      "line": 74,
-      "column": 35,
-      "pattern": "annotation",
-      "code": "transformResponse: (response: any) => (response?.data ?? response) as ResourceMetrics,",
-      "locationGroup": "store",
-      "context": "query: () => '/stats',"
-    },
-    {
-      "file": "src/store/api/monitoringApi.ts",
-      "line": 91,
-      "column": 35,
-      "pattern": "annotation",
-      "code": "transformResponse: (response: any) => (response?.data ?? response) as CampaignResourceMetrics,",
-      "locationGroup": "store",
-      "context": "query: (campaignId) => `/campaigns/${campaignId}`,"
-    },
-    {
-      "file": "src/store/api/monitoringApi.ts",
-      "line": 100,
-      "column": 35,
-      "pattern": "annotation",
-      "code": "transformResponse: (response: any) => (response?.data ?? response) as CleanupStatus,",
-      "locationGroup": "store",
-      "context": "query: () => '/cleanup/status',"
-    },
-    {
-      "file": "src/store/api/monitoringApi.ts",
-      "line": 110,
-      "column": 35,
-      "pattern": "annotation",
-      "code": "transformResponse: (response: any) => ((response?.data ?? response) || { message: 'OK' }) as { message: string },",
-      "locationGroup": "store",
-      "context": "}),"
-    },
-    {
       "file": "src/store/selectors/pipelineSelectors.ts",
       "line": 26,
       "column": 60,
@@ -2938,24 +1416,6 @@
       "code": "// Access RTK Query slice with explicit indexing to avoid 'as any'",
       "locationGroup": "store",
       "context": "const selectCampaignUIById = (id: string) => createSelector(selectCampaignUiSlice, slice => slice.byId?.[id]);"
-    },
-    {
-      "file": "src/store/selectors/pipelineSelectors.ts",
-      "line": 140,
-      "column": 75,
-      "pattern": "cast",
-      "code": "const runnableIdx = PIPELINE_PHASE_ORDER.indexOf(nextRunnable.key as any);",
-      "locationGroup": "store",
-      "context": "const firstMissingIdx = PIPELINE_PHASE_ORDER.indexOf(firstMissing);"
-    },
-    {
-      "file": "src/store/selectors/pipelineSelectors.ts",
-      "line": 231,
-      "column": 9,
-      "pattern": "cast",
-      "code": "}, {} as any)",
-      "locationGroup": "store",
-      "context": "return acc;"
     }
   ],
   "notes": [

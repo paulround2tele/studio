@@ -86,6 +86,7 @@ Any proposed exemption must include a narrowing plan & link to an issue; update 
 |------|--------|-----------|
 | 2025-10-02 | Introduced inventory & governance doc | Prevent regression into ad-hoc wrapper types |
 | 2025-10-03 | Elevated any enforcement; added scan-any audit & CI scripts | Begin formal remediation (Phase 1) |
+| 2025-10-07 | Phase 4 low-severity remediation: 237→156 instances (34% reduction) | Major cleanup of catch clauses, window casting, form data, component props, service parameters |
 
 ## Future Actions
 - Generate a union `BulkOperationResult` once backend stabilizes field names (`processedCount` vs `domainsProcessed`).

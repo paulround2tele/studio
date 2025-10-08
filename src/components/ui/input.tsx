@@ -42,8 +42,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       defaultValue?: string | number | readonly string[];
       onChange?: React.ChangeEventHandler<HTMLInputElement>;
       id?: string;
-      [key: string]: any;
-    };
+    } & Record<string, unknown>;
   const isControlled = typeof onChange === 'function';
   // react-hook-form register provides onChange & ref without value for uncontrolled mode.
   // We must NOT force a value ('') or typing breaks. Only pass value if explicitly provided.

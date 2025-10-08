@@ -8,6 +8,13 @@ import { AlertCircle, CheckCircle, Clock, Pause } from 'lucide-react';
 import type { CampaignResponse as Campaign, CampaignResponseCurrentPhaseEnum as CampaignCurrentPhaseEnum, CampaignResponseStatusEnum as CampaignPhaseStatusEnum } from '@/lib/api-client/models';
 import { normalizeStatus, getStatusColor } from '@/lib/utils/statusMapping';
 
+// Helper function to ensure valid badge variants
+function getValidBadgeVariant(color: string): "default" | "secondary" | "destructive" | "outline" {
+  const validVariants = ["default", "secondary", "destructive", "outline"] as const;
+  type ValidVariant = typeof validVariants[number];
+  return validVariants.includes(color as ValidVariant) ? color as ValidVariant : "default";
+}
+
 interface CampaignProgressMonitorProps {
   campaign: Campaign;
   onCampaignUpdate?: (updatedCampaign: Partial<Campaign>) => void;
@@ -122,7 +129,7 @@ const CampaignProgressMonitor = memo(({
             </span>
           </div>
           <Badge 
-            variant={progressInfo.statusColor as any}
+            variant={getValidBadgeVariant(progressInfo.statusColor)}
             className="text-xs"
           >
             {progressInfo.normalizedStatus}

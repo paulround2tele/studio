@@ -447,8 +447,8 @@ class CausalGraphService {
    */
   private emitTelemetry(data: CausalGraphUpdateEvent): void {
     // Integrate with existing telemetry service if available
-    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
-      const telemetryService = (window as any).__telemetryService;
+    if (typeof window !== 'undefined' && window.__telemetryService) {
+      const telemetryService = window.__telemetryService;
       telemetryService.emit('causal_graph_update', data);
     }
   }

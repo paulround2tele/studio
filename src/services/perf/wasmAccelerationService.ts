@@ -515,8 +515,8 @@ class WasmAccelerationService {
    * Emit kernel loaded telemetry
    */
   private emitKernelLoadedEvent(kernels: string[]): void {
-    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
-      const telemetryService = (window as any).__telemetryService;
+    if (typeof window !== 'undefined' && window.__telemetryService) {
+      const telemetryService = window.__telemetryService;
       telemetryService.emit('wasm_kernel_loaded', { kernels });
     }
   }
@@ -525,8 +525,8 @@ class WasmAccelerationService {
    * Emit fallback telemetry
    */
   private emitFallbackEvent(reason: string): void {
-    if (typeof window !== 'undefined' && (window as any).__telemetryService) {
-      const telemetryService = (window as any).__telemetryService;
+    if (typeof window !== 'undefined' && window.__telemetryService) {
+      const telemetryService = window.__telemetryService;
       telemetryService.emit('wasm_kernel_fallback', { reason });
     }
   }

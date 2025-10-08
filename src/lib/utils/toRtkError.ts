@@ -12,20 +12,36 @@ interface NormalizedRtkError {
  * Normalizes heterogeneous error shapes (Axios error, Fetch error, plain Error, string)
  * into a consistent object consumable by RTK Query and UI toasts.
  */
-export function toRtkError(err: any): NormalizedRtkError {
+export function toRtkError(err: unknown): NormalizedRtkError {
   if (!err) return { message: 'Unknown error', raw: err };
 
-  // Axios style
-  if (err.isAxiosError) {
-    const status = err.response?.status;
-    const data = err.response?.data;
-    const envelope = data?.error || data?.data || data; // allow backend envelope variants
-    const message = envelope?.message || data?.message || err.message || 'Request failed';
+  // Axios style - check for isAxiosError property
+  if (err && typeof err === 'object' && 'isAxiosError' in err && err.isAxiosError) {
+    const status = err && typeof err === 'object' && 'response' in err && 
+                   err.response && typeof err.response === 'object' && 'status' in err.response 
+                   ? Number(err.response.status) : undefined;
+    
+    const data = err && typeof err === 'object' && 'response' in err && 
+                 err.response && typeof err.response === 'object' && 'data' in err.response 
+                 ? err.response.data : undefined;
+    
+    // Extract message with proper type checking
+    let message = 'Request failed';
+    if (data && typeof data === 'object') {
+      if ('message' in data && typeof data.message === 'string') {
+        message = data.message;
+      } else if ('error' in data && data.error && typeof data.error === 'object' && 'message' in data.error) {
+        message = String(data.error.message);
+      }
+    } else if (err && typeof err === 'object' && 'message' in err && typeof err.message === 'string') {
+      message = err.message;
+    }
+
     return {
       message,
       status,
-      code: envelope?.code || data?.code,
-      details: envelope?.details || envelope?.errors || data?.errors,
+      code: data && typeof data === 'object' && 'code' in data ? String(data.code) : undefined,
+      details: data && typeof data === 'object' && 'details' in data ? data.details : undefined,
       raw: err,
     };
   }

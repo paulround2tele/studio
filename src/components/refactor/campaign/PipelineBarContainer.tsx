@@ -46,7 +46,7 @@ function generatePipelineSegments(domains: CampaignDomain[]): PipelineSegment[] 
     if (count > 0) {
       segments.push({
         phase: `DNS ${status}`,
-        status: status as any,
+        status: status,
         count,
         percentage: Math.round((count / totalDomains) * 100),
         color: STATUS_COLORS[status as keyof typeof STATUS_COLORS] || STATUS_COLORS.pending
@@ -59,7 +59,7 @@ function generatePipelineSegments(domains: CampaignDomain[]): PipelineSegment[] 
     if (count > 0) {
       segments.push({
         phase: `HTTP ${status}`,
-        status: status as any,
+        status: status,
         count,
         percentage: Math.round((count / totalDomains) * 100),
         color: STATUS_COLORS[status as keyof typeof STATUS_COLORS] || STATUS_COLORS.pending

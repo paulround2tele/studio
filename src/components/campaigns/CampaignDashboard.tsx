@@ -114,12 +114,26 @@ export function CampaignDashboard({
   });
 
   const handleSave = (data: CampaignFormData) => {
-    onSave(data as any);
+    // Transform form data to Campaign shape
+    const campaignData: Campaign = {
+      ...data,
+      id: data.id || '',
+      // Ensure required Campaign fields are present
+      status: data.status || 'draft',
+      progress: data.progress || { phase: 'discovery', percentage: 0 }
+    };
+    onSave(campaignData);
   };
 
   const handleSaveAndStart = (data: CampaignFormData) => {
     if (onSaveAndStart) {
-      onSaveAndStart(data as any);
+      const campaignData: Campaign = {
+        ...data,
+        id: data.id || '',
+        status: data.status || 'running',
+        progress: data.progress || { phase: 'discovery', percentage: 0 }
+      };
+      onSaveAndStart(campaignData);
     }
   };
 
