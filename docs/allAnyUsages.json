@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2025-10-08T12:31:38.049Z",
+  "generatedAt": "2025-10-08T12:35:38.393Z",
   "root": "/home/runner/work/studio/studio",
-  "total": 58,
+  "total": 41,
   "byPattern": {
-    "annotation": 54,
+    "annotation": 37,
     "cast": 4
   },
   "byLocationGroup": {
     "other": 1,
-    "services": 55,
+    "services": 38,
     "store": 2
   },
   "usages": [
@@ -175,78 +175,6 @@
       "context": "const firstAgg: Record<string, unknown> = firstSnapshot ? (firstSnapshot as AggregateSnapshot).aggregates as unknown as Record<string, unknown> : {};"
     },
     {
-      "file": "src/services/campaignMetrics/streamPool.ts",
-      "line": 93,
-      "column": 23,
-      "pattern": "annotation",
-      "code": "private baseSnapshot: any = {};",
-      "locationGroup": "services",
-      "context": "class DifferentialPatchProcessor {"
-    },
-    {
-      "file": "src/services/campaignMetrics/streamPool.ts",
-      "line": 99,
-      "column": 49,
-      "pattern": "annotation",
-      "code": "applyPatch(patch: DifferentialPatch, baseData?: any): any {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/streamPool.ts",
-      "line": 99,
-      "column": 55,
-      "pattern": "annotation",
-      "code": "applyPatch(patch: DifferentialPatch, baseData?: any): any {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/streamPool.ts",
-      "line": 117,
-      "column": 29,
-      "pattern": "annotation",
-      "code": "private applyChange(target: any, change: StreamPatchOp): void {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/streamPool.ts",
-      "line": 127,
-      "column": 30,
-      "pattern": "annotation",
-      "code": "updateBaseSnapshot(snapshot: any): void {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/streamPool.ts",
-      "line": 134,
-      "column": 20,
-      "pattern": "annotation",
-      "code": "getCurrentState(): any {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/streamPool.ts",
-      "line": 282,
-      "column": 20,
-      "pattern": "annotation",
-      "code": "let messageData: any;",
-      "locationGroup": "services",
-      "context": ""
-    },
-    {
-      "file": "src/services/campaignMetrics/streamPool.ts",
-      "line": 541,
-      "column": 53,
-      "pattern": "annotation",
-      "code": "private emitTelemetryEvent(eventType: string, data: any): void {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
       "file": "src/services/campaignMetrics/telemetryService.ts",
       "line": 135,
       "column": 14,
@@ -263,87 +191,6 @@
       "code": "newValue?: any;",
       "locationGroup": "services",
       "context": "oldValue?: any;"
-    },
-    {
-      "file": "src/services/campaignMetrics/workerCoordinator.ts",
-      "line": 21,
-      "column": 14,
-      "pattern": "annotation",
-      "code": "aggregates?: any;",
-      "locationGroup": "services",
-      "context": "includeMovers?: boolean;"
-    },
-    {
-      "file": "src/services/campaignMetrics/workerCoordinator.ts",
-      "line": 22,
-      "column": 20,
-      "pattern": "annotation",
-      "code": "classifiedCounts?: any;",
-      "locationGroup": "services",
-      "context": "aggregates?: any;"
-    },
-    {
-      "file": "src/services/campaignMetrics/workerCoordinator.ts",
-      "line": 23,
-      "column": 10,
-      "pattern": "annotation",
-      "code": "movers?: any;",
-      "locationGroup": "services",
-      "context": "classifiedCounts?: any;"
-    },
-    {
-      "file": "src/services/campaignMetrics/workerCoordinator.ts",
-      "line": 24,
-      "column": 10,
-      "pattern": "annotation",
-      "code": "deltas?: any;",
-      "locationGroup": "services",
-      "context": "movers?: any;"
-    },
-    {
-      "file": "src/services/campaignMetrics/workerCoordinator.ts",
-      "line": 39,
-      "column": 19,
-      "pattern": "annotation",
-      "code": "resolve: (result: any) => void;",
-      "locationGroup": "services",
-      "context": "message: ExtendedWorkerMessage;"
-    },
-    {
-      "file": "src/services/campaignMetrics/workerCoordinator.ts",
-      "line": 345,
-      "column": 13,
-      "pattern": "annotation",
-      "code": "aggregates: any;",
-      "locationGroup": "services",
-      "context": "): Promise<{"
-    },
-    {
-      "file": "src/services/campaignMetrics/workerCoordinator.ts",
-      "line": 346,
-      "column": 19,
-      "pattern": "annotation",
-      "code": "classifiedCounts: any;",
-      "locationGroup": "services",
-      "context": "aggregates: any;"
-    },
-    {
-      "file": "src/services/campaignMetrics/workerCoordinator.ts",
-      "line": 347,
-      "column": 10,
-      "pattern": "annotation",
-      "code": "movers?: any;",
-      "locationGroup": "services",
-      "context": "classifiedCounts: any;"
-    },
-    {
-      "file": "src/services/campaignMetrics/workerCoordinator.ts",
-      "line": 348,
-      "column": 10,
-      "pattern": "annotation",
-      "code": "deltas?: any;",
-      "locationGroup": "services",
-      "context": "movers?: any;"
     },
     {
       "file": "src/services/i18n/i18nService.ts",

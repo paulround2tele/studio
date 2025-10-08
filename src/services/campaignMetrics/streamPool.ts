@@ -90,13 +90,13 @@ interface StreamPoolConfig {
  * Phase 8: Differential patch processor for optimistic updates
  */
 class DifferentialPatchProcessor {
-  private baseSnapshot: any = {};
+  private baseSnapshot: Record<string, unknown> = {};
   private pendingPatches = new Map<string, DifferentialPatch>();
 
   /**
    * Apply a differential patch to create updated data
    */
-  applyPatch(patch: DifferentialPatch, baseData?: any): any {
+  applyPatch(patch: DifferentialPatch, baseData?: Record<string, unknown>): Record<string, unknown> {
     const target = baseData || this.baseSnapshot;
     const result = JSON.parse(JSON.stringify(target)); // Deep clone
     
@@ -114,7 +114,7 @@ class DifferentialPatchProcessor {
   /**
    * Apply a single change operation
    */
-  private applyChange(target: any, change: StreamPatchOp): void {
+  private applyChange(target: Record<string, unknown>, change: StreamPatchOp): void {
     const result = applyPatchOp(target, change);
     if (!result.ok) {
       console.warn('[DifferentialPatchProcessor] Failed to apply change:', change, result.error);
@@ -124,14 +124,14 @@ class DifferentialPatchProcessor {
   /**
    * Update base snapshot for future patch applications
    */
-  updateBaseSnapshot(snapshot: any): void {
+  updateBaseSnapshot(snapshot: Record<string, unknown>): void {
     this.baseSnapshot = JSON.parse(JSON.stringify(snapshot));
   }
 
   /**
    * Get current computed state after applying all pending patches
    */
-  getCurrentState(): any {
+  getCurrentState(): Record<string, unknown> {
     let current = this.baseSnapshot;
     
     // Apply patches in sequence order
@@ -279,7 +279,7 @@ class StreamPool {
     pool.missedHeartbeats = 0;
     pool.qualityMetrics.updateCount++;
 
-    let messageData: any;
+    let messageData: unknown;
     let isDifferentialUpdate = false;
     
     // Parse message
@@ -538,7 +538,7 @@ class StreamPool {
   /**
    * Emit telemetry event (stub for Phase 5 telemetry service)
    */
-  private emitTelemetryEvent(eventType: string, data: any): void {
+  private emitTelemetryEvent(eventType: string, data: unknown): void {
     // This will be implemented when telemetry service is available
     if (typeof window !== 'undefined') {
       const w = window as unknown as { __telemetryService?: { emitTelemetry: (e: string, d: unknown) => void } };

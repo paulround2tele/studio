@@ -121,7 +121,7 @@ export function CampaignDashboard({
       description: data.description,
       status: campaign?.status || 'draft',
       configuration: campaign?.configuration || {},
-      progress: campaign?.progress || { phase: 'discovery', percentage: 0 },
+      progress: campaign?.progress || { percentage: 0 },
       createdAt: campaign?.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       currentPhase: campaign?.currentPhase || 'discovery'
@@ -137,15 +137,11 @@ export function CampaignDashboard({
         description: data.description,
         status: 'running',
         configuration: campaign?.configuration || {},
-        progress: { phase: 'discovery', percentage: 0 },
+        progress: { percentage: 0 },
         createdAt: campaign?.createdAt || new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         startedAt: new Date().toISOString(),
         currentPhase: 'discovery'
-        ...data,
-        id: data.id || '',
-        status: data.status || 'running',
-        progress: data.progress || { phase: 'discovery', percentage: 0 }
       };
       onSaveAndStart(campaignData);
     }
