@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2025-10-08T08:52:06.865Z",
+  "generatedAt": "2025-10-08T08:57:07.207Z",
   "root": "/home/runner/work/studio/studio",
-  "total": 94,
+  "total": 83,
   "byPattern": {
-    "annotation": 90,
+    "annotation": 79,
     "cast": 4
   },
   "byLocationGroup": {
     "other": 1,
-    "services": 91,
+    "services": 80,
     "store": 2
   },
   "usages": [
@@ -20,69 +20,6 @@
       "code": "* Replaces unsafe `as any` casts with proper runtime type checking",
       "locationGroup": "other",
       "context": "* Type Guards for API Response Validation"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
-      "line": 12,
-      "column": 22,
-      "pattern": "annotation",
-      "code": "declare const process: any;",
-      "locationGroup": "services",
-      "context": "// Declare process for Node.js environment variables"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
-      "line": 103,
-      "column": 11,
-      "pattern": "annotation",
-      "code": "schema: any,",
-      "locationGroup": "services",
-      "context": "generateSchemaHash("
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
-      "line": 134,
-      "column": 19,
-      "pattern": "annotation",
-      "code": "expectedSchema: any,",
-      "locationGroup": "services",
-      "context": "payload: T,"
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
-      "line": 199,
-      "column": 12,
-      "pattern": "annotation",
-      "code": "payload: any,",
-      "locationGroup": "services",
-      "context": "signPayload("
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
-      "line": 243,
-      "column": 12,
-      "pattern": "annotation",
-      "code": "payload: any,",
-      "locationGroup": "services",
-      "context": "verifyPayloadSignature("
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
-      "line": 541,
-      "column": 9,
-      "pattern": "annotation",
-      "code": "data: any,",
-      "locationGroup": "services",
-      "context": "private validateSchemaStructure("
-    },
-    {
-      "file": "src/services/campaignMetrics/enhancedSecurityHardeningService.ts",
-      "line": 542,
-      "column": 11,
-      "pattern": "annotation",
-      "code": "schema: any,",
-      "locationGroup": "services",
-      "context": "data: any,"
     },
     {
       "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
@@ -101,24 +38,6 @@
       "code": "const first: any = value[0];",
       "locationGroup": "services",
       "context": "if (Array.isArray(value) && value.length > 0) {"
-    },
-    {
-      "file": "src/services/campaignMetrics/forecastBlendService.ts",
-      "line": 227,
-      "column": 52,
-      "pattern": "annotation",
-      "code": "modelForecasts: Array<{ modelId: string; points: any[] }>",
-      "locationGroup": "services",
-      "context": "metricKey: string,"
-    },
-    {
-      "file": "src/services/campaignMetrics/forecastBlendService.ts",
-      "line": 377,
-      "column": 52,
-      "pattern": "annotation",
-      "code": "modelForecasts: Array<{ modelId: string; points: any[] }>",
-      "locationGroup": "services",
-      "context": "horizon: number,"
     },
     {
       "file": "src/services/campaignMetrics/forecastService.ts",
@@ -221,15 +140,6 @@
     },
     {
       "file": "src/services/campaignMetrics/offlineResilienceService.ts",
-      "line": 9,
-      "column": 22,
-      "pattern": "annotation",
-      "code": "declare const process: any;",
-      "locationGroup": "services",
-      "context": "// Declare process for Node.js environment variables"
-    },
-    {
-      "file": "src/services/campaignMetrics/offlineResilienceService.ts",
       "line": 41,
       "column": 10,
       "pattern": "annotation",
@@ -263,15 +173,6 @@
       "code": "private calculateContextHash(event: any): string {",
       "locationGroup": "services",
       "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/performanceGuardrailsService.ts",
-      "line": 9,
-      "column": 22,
-      "pattern": "annotation",
-      "code": "declare const process: any;",
-      "locationGroup": "services",
-      "context": "// Declare process and global for Node.js environment"
     },
     {
       "file": "src/services/campaignMetrics/recommendationScoreService.ts",
