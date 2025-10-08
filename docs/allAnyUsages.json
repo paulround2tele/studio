@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2025-10-08T12:18:35.253Z",
+  "generatedAt": "2025-10-08T12:26:44.432Z",
   "root": "/home/runner/work/studio/studio",
-  "total": 83,
+  "total": 74,
   "byPattern": {
-    "annotation": 79,
+    "annotation": 70,
     "cast": 4
   },
   "byLocationGroup": {
     "other": 1,
-    "services": 80,
+    "services": 71,
     "store": 2
   },
   "usages": [
@@ -22,42 +22,6 @@
       "context": "* Type Guards for API Response Validation"
     },
     {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 788,
-      "column": 54,
-      "pattern": "annotation",
-      "code": "private filterByTimeRange<T extends { [key: string]: any }>(data: T[] | undefined, timeRange?: { start: string; end: string }): T[] | undefined {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/exportV5EvolutionService.ts",
-      "line": 811,
-      "column": 20,
-      "pattern": "annotation",
-      "code": "const first: any = value[0];",
-      "locationGroup": "services",
-      "context": "if (Array.isArray(value) && value.length > 0) {"
-    },
-    {
-      "file": "src/services/campaignMetrics/forecastService.ts",
-      "line": 1168,
-      "column": 43,
-      "pattern": "annotation",
-      "code": "): Promise<Array<{ modelId: string; points: any[] }>> {",
-      "locationGroup": "services",
-      "context": "options: ClientForecastOptions"
-    },
-    {
-      "file": "src/services/campaignMetrics/forecastService.ts",
-      "line": 1169,
-      "column": 56,
-      "pattern": "annotation",
-      "code": "const modelForecasts: Array<{ modelId: string; points: any[] }> = [];",
-      "locationGroup": "services",
-      "context": "): Promise<Array<{ modelId: string; points: any[] }>> {"
-    },
-    {
       "file": "src/services/campaignMetrics/historyStore.ts",
       "line": 280,
       "column": 43,
@@ -65,51 +29,6 @@
       "code": "entries: parsed.entries.map((entry: any) => ({",
       "locationGroup": "services",
       "context": "const history: CampaignHistory = {"
-    },
-    {
-      "file": "src/services/campaignMetrics/metricsPerf.ts",
-      "line": 15,
-      "column": 10,
-      "pattern": "annotation",
-      "code": "detail?: any;",
-      "locationGroup": "services",
-      "context": "timestamp: number;"
-    },
-    {
-      "file": "src/services/campaignMetrics/metricsPerf.ts",
-      "line": 44,
-      "column": 43,
-      "pattern": "annotation",
-      "code": "export function mark(name: string, detail?: any): void {",
-      "locationGroup": "services",
-      "context": "*/"
-    },
-    {
-      "file": "src/services/campaignMetrics/metricsPerf.ts",
-      "line": 172,
-      "column": 10,
-      "pattern": "annotation",
-      "code": "detail?: any",
-      "locationGroup": "services",
-      "context": "fn: () => T,"
-    },
-    {
-      "file": "src/services/campaignMetrics/metricsPerf.ts",
-      "line": 201,
-      "column": 10,
-      "pattern": "annotation",
-      "code": "detail?: any",
-      "locationGroup": "services",
-      "context": "fn: () => Promise<T>,"
-    },
-    {
-      "file": "src/services/campaignMetrics/metricsPerf.ts",
-      "line": 306,
-      "column": 63,
-      "pattern": "annotation",
-      "code": "export function emitPerformanceEvent(eventName: string, detail: any): void {",
-      "locationGroup": "services",
-      "context": "*/"
     },
     {
       "file": "src/services/campaignMetrics/mlRecommendationsService.ts",

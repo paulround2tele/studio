@@ -250,7 +250,7 @@ export function SSEDebugPanel({
                   </div>
                   {entry.event.campaign_id && (
                     <div className="text-xs opacity-75 mb-1">
-                      Campaign: {entry.event.campaign_id}
+                      Campaign: {String(entry.event.campaign_id)}
                     </div>
                   )}
                   <pre className="text-xs overflow-x-auto whitespace-pre-wrap">
