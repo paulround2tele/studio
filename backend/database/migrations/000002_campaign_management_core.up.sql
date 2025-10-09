@@ -186,6 +186,20 @@ CREATE TABLE IF NOT EXISTS campaign_phases (
 );
 
 -- Indexes for campaign management core
+-- Ensure current_phase column exists in case the table pre-existed without it (idempotent safeguard)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name='lead_generation_campaigns') THEN
+        IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name='lead_generation_campaigns' AND column_name='current_phase'
+        ) THEN
+            ALTER TABLE lead_generation_campaigns ADD COLUMN current_phase phase_type_enum;
+            RAISE NOTICE 'Added missing column lead_generation_campaigns.current_phase (safeguard in migration 000002)';
+        END IF;
+    END IF;
+END; $$;
+
 CREATE INDEX IF NOT EXISTS idx_lead_generation_campaigns_user_id ON lead_generation_campaigns(user_id);
 CREATE INDEX IF NOT EXISTS idx_lead_generation_campaigns_current_phase ON lead_generation_campaigns(current_phase);
 CREATE INDEX IF NOT EXISTS idx_lead_generation_campaigns_phase_status ON lead_generation_campaigns(phase_status);
