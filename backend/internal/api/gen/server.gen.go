@@ -155,6 +155,14 @@ const (
 	StepByStep   CampaignModeEnum = "step_by_step"
 )
 
+// Defines values for CampaignPhaseEnum.
+const (
+	CampaignPhaseEnumAnalysis   CampaignPhaseEnum = "analysis"
+	CampaignPhaseEnumDiscovery  CampaignPhaseEnum = "discovery"
+	CampaignPhaseEnumExtraction CampaignPhaseEnum = "extraction"
+	CampaignPhaseEnumValidation CampaignPhaseEnum = "validation"
+)
+
 // Defines values for CampaignPhasesStatusResponsePhasesPhase.
 const (
 	CampaignPhasesStatusResponsePhasesPhaseAnalysis   CampaignPhasesStatusResponsePhasesPhase = "analysis"
@@ -512,30 +520,6 @@ const (
 	CampaignsPhaseExecutionPutParamsPhaseTypeDiscovery  CampaignsPhaseExecutionPutParamsPhaseType = "discovery"
 	CampaignsPhaseExecutionPutParamsPhaseTypeExtraction CampaignsPhaseExecutionPutParamsPhaseType = "extraction"
 	CampaignsPhaseExecutionPutParamsPhaseTypeValidation CampaignsPhaseExecutionPutParamsPhaseType = "validation"
-)
-
-// Defines values for CampaignsPhaseConfigureParamsPhase.
-const (
-	CampaignsPhaseConfigureParamsPhaseAnalysis   CampaignsPhaseConfigureParamsPhase = "analysis"
-	CampaignsPhaseConfigureParamsPhaseDiscovery  CampaignsPhaseConfigureParamsPhase = "discovery"
-	CampaignsPhaseConfigureParamsPhaseExtraction CampaignsPhaseConfigureParamsPhase = "extraction"
-	CampaignsPhaseConfigureParamsPhaseValidation CampaignsPhaseConfigureParamsPhase = "validation"
-)
-
-// Defines values for CampaignsPhaseStartParamsPhase.
-const (
-	CampaignsPhaseStartParamsPhaseAnalysis   CampaignsPhaseStartParamsPhase = "analysis"
-	CampaignsPhaseStartParamsPhaseDiscovery  CampaignsPhaseStartParamsPhase = "discovery"
-	CampaignsPhaseStartParamsPhaseExtraction CampaignsPhaseStartParamsPhase = "extraction"
-	CampaignsPhaseStartParamsPhaseValidation CampaignsPhaseStartParamsPhase = "validation"
-)
-
-// Defines values for CampaignsPhaseStatusParamsPhase.
-const (
-	CampaignsPhaseStatusParamsPhaseAnalysis   CampaignsPhaseStatusParamsPhase = "analysis"
-	CampaignsPhaseStatusParamsPhaseDiscovery  CampaignsPhaseStatusParamsPhase = "discovery"
-	CampaignsPhaseStatusParamsPhaseExtraction CampaignsPhaseStatusParamsPhase = "extraction"
-	CampaignsPhaseStatusParamsPhaseValidation CampaignsPhaseStatusParamsPhase = "validation"
 )
 
 // Defines values for CampaignsPhaseStopParamsPhase.
@@ -1036,6 +1020,13 @@ type CampaignMetricsResponse struct {
 // CampaignModeEnum defines model for CampaignModeEnum.
 type CampaignModeEnum string
 
+// CampaignModeUpdateResponse Response model for campaign mode update operation.
+type CampaignModeUpdateResponse struct {
+	CampaignId openapi_types.UUID `json:"campaignId"`
+	Mode       CampaignModeEnum   `json:"mode"`
+	UpdatedAt  time.Time          `json:"updatedAt"`
+}
+
 // CampaignMomentumResponse defines model for CampaignMomentumResponse.
 type CampaignMomentumResponse struct {
 	Histogram  []int `json:"histogram"`
@@ -1048,6 +1039,9 @@ type CampaignMomentumResponse struct {
 		Domain string  `json:"domain"`
 	} `json:"moversUp"`
 }
+
+// CampaignPhaseEnum Canonical campaign phase identifier
+type CampaignPhaseEnum string
 
 // CampaignPhasesStatusResponse Consolidated phase status list plus overall progress
 type CampaignPhasesStatusResponse struct {
@@ -2329,15 +2323,6 @@ type CampaignsPhaseExecutionGetParamsPhaseType string
 // CampaignsPhaseExecutionPutParamsPhaseType defines parameters for CampaignsPhaseExecutionPut.
 type CampaignsPhaseExecutionPutParamsPhaseType string
 
-// CampaignsPhaseConfigureParamsPhase defines parameters for CampaignsPhaseConfigure.
-type CampaignsPhaseConfigureParamsPhase string
-
-// CampaignsPhaseStartParamsPhase defines parameters for CampaignsPhaseStart.
-type CampaignsPhaseStartParamsPhase string
-
-// CampaignsPhaseStatusParamsPhase defines parameters for CampaignsPhaseStatus.
-type CampaignsPhaseStatusParamsPhase string
-
 // CampaignsPhaseStopParamsPhase defines parameters for CampaignsPhaseStop.
 type CampaignsPhaseStopParamsPhase string
 
@@ -3416,7 +3401,8 @@ func (t PersonaConfigDetails) AsPersonaConfigHttp() (PersonaConfigHttp, error) {
 
 // FromPersonaConfigHttp overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigHttp
 func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error {
-	v.PersonaType = "http"
+	httpType := PersonaConfigHttpPersonaTypeHttp
+	v.PersonaType = &httpType
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -3424,7 +3410,8 @@ func (t *PersonaConfigDetails) FromPersonaConfigHttp(v PersonaConfigHttp) error 
 
 // MergePersonaConfigHttp performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigHttp
 func (t *PersonaConfigDetails) MergePersonaConfigHttp(v PersonaConfigHttp) error {
-	v.PersonaType = "http"
+	httpType := PersonaConfigHttpPersonaTypeHttp
+	v.PersonaType = &httpType
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -3444,7 +3431,8 @@ func (t PersonaConfigDetails) AsPersonaConfigDns() (PersonaConfigDns, error) {
 
 // FromPersonaConfigDns overwrites any union data inside the PersonaConfigDetails as the provided PersonaConfigDns
 func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
-	v.PersonaType = "dns"
+	dnsType := PersonaConfigDnsPersonaTypeDns
+	v.PersonaType = &dnsType
 	b, err := json.Marshal(v)
 	t.union = b
 	return err
@@ -3452,7 +3440,8 @@ func (t *PersonaConfigDetails) FromPersonaConfigDns(v PersonaConfigDns) error {
 
 // MergePersonaConfigDns performs a merge with any union data inside the PersonaConfigDetails, using the provided PersonaConfigDns
 func (t *PersonaConfigDetails) MergePersonaConfigDns(v PersonaConfigDns) error {
-	v.PersonaType = "dns"
+	dnsType := PersonaConfigDnsPersonaTypeDns
+	v.PersonaType = &dnsType
 	b, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -3719,13 +3708,13 @@ type ServerInterface interface {
 	CampaignsPhaseExecutionPut(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phaseType CampaignsPhaseExecutionPutParamsPhaseType)
 	// Configure campaign phase
 	// (POST /campaigns/{campaignId}/phases/{phase}/configure)
-	CampaignsPhaseConfigure(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignsPhaseConfigureParamsPhase)
+	CampaignsPhaseConfigure(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum)
 	// Start campaign phase
 	// (POST /campaigns/{campaignId}/phases/{phase}/start)
-	CampaignsPhaseStart(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignsPhaseStartParamsPhase)
+	CampaignsPhaseStart(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum)
 	// Get phase status
 	// (GET /campaigns/{campaignId}/phases/{phase}/status)
-	CampaignsPhaseStatus(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignsPhaseStatusParamsPhase)
+	CampaignsPhaseStatus(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum)
 	// Stop campaign phase
 	// (POST /campaigns/{campaignId}/phases/{phase}/stop)
 	CampaignsPhaseStop(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignsPhaseStopParamsPhase)
@@ -4232,19 +4221,19 @@ func (_ Unimplemented) CampaignsPhaseExecutionPut(w http.ResponseWriter, r *http
 
 // Configure campaign phase
 // (POST /campaigns/{campaignId}/phases/{phase}/configure)
-func (_ Unimplemented) CampaignsPhaseConfigure(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignsPhaseConfigureParamsPhase) {
+func (_ Unimplemented) CampaignsPhaseConfigure(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Start campaign phase
 // (POST /campaigns/{campaignId}/phases/{phase}/start)
-func (_ Unimplemented) CampaignsPhaseStart(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignsPhaseStartParamsPhase) {
+func (_ Unimplemented) CampaignsPhaseStart(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
 // Get phase status
 // (GET /campaigns/{campaignId}/phases/{phase}/status)
-func (_ Unimplemented) CampaignsPhaseStatus(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignsPhaseStatusParamsPhase) {
+func (_ Unimplemented) CampaignsPhaseStatus(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -5949,7 +5938,7 @@ func (siw *ServerInterfaceWrapper) CampaignsPhaseConfigure(w http.ResponseWriter
 	}
 
 	// ------------- Path parameter "phase" -------------
-	var phase CampaignsPhaseConfigureParamsPhase
+	var phase CampaignPhaseEnum
 
 	err = runtime.BindStyledParameterWithOptions("simple", "phase", chi.URLParam(r, "phase"), &phase, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -5989,7 +5978,7 @@ func (siw *ServerInterfaceWrapper) CampaignsPhaseStart(w http.ResponseWriter, r 
 	}
 
 	// ------------- Path parameter "phase" -------------
-	var phase CampaignsPhaseStartParamsPhase
+	var phase CampaignPhaseEnum
 
 	err = runtime.BindStyledParameterWithOptions("simple", "phase", chi.URLParam(r, "phase"), &phase, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -6029,7 +6018,7 @@ func (siw *ServerInterfaceWrapper) CampaignsPhaseStatus(w http.ResponseWriter, r
 	}
 
 	// ------------- Path parameter "phase" -------------
-	var phase CampaignsPhaseStatusParamsPhase
+	var phase CampaignPhaseEnum
 
 	err = runtime.BindStyledParameterWithOptions("simple", "phase", chi.URLParam(r, "phase"), &phase, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
 	if err != nil {
@@ -10729,9 +10718,7 @@ type CampaignsModeUpdateResponseObject interface {
 	VisitCampaignsModeUpdateResponse(w http.ResponseWriter) error
 }
 
-type CampaignsModeUpdate200JSONResponse struct {
-	Mode *CampaignModeEnum `json:"mode,omitempty"`
-}
+type CampaignsModeUpdate200JSONResponse CampaignModeUpdateResponse
 
 func (response CampaignsModeUpdate200JSONResponse) VisitCampaignsModeUpdateResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
@@ -10976,8 +10963,8 @@ func (response CampaignsPhaseExecutionPut500JSONResponse) VisitCampaignsPhaseExe
 }
 
 type CampaignsPhaseConfigureRequestObject struct {
-	CampaignId openapi_types.UUID                 `json:"campaignId"`
-	Phase      CampaignsPhaseConfigureParamsPhase `json:"phase"`
+	CampaignId openapi_types.UUID `json:"campaignId"`
+	Phase      CampaignPhaseEnum  `json:"phase"`
 	Body       *CampaignsPhaseConfigureJSONRequestBody
 }
 
@@ -11033,8 +11020,8 @@ func (response CampaignsPhaseConfigure500JSONResponse) VisitCampaignsPhaseConfig
 }
 
 type CampaignsPhaseStartRequestObject struct {
-	CampaignId openapi_types.UUID             `json:"campaignId"`
-	Phase      CampaignsPhaseStartParamsPhase `json:"phase"`
+	CampaignId openapi_types.UUID `json:"campaignId"`
+	Phase      CampaignPhaseEnum  `json:"phase"`
 }
 
 type CampaignsPhaseStartResponseObject interface {
@@ -11107,8 +11094,8 @@ func (response CampaignsPhaseStart500JSONResponse) VisitCampaignsPhaseStartRespo
 }
 
 type CampaignsPhaseStatusRequestObject struct {
-	CampaignId openapi_types.UUID              `json:"campaignId"`
-	Phase      CampaignsPhaseStatusParamsPhase `json:"phase"`
+	CampaignId openapi_types.UUID `json:"campaignId"`
+	Phase      CampaignPhaseEnum  `json:"phase"`
 }
 
 type CampaignsPhaseStatusResponseObject interface {
@@ -18053,7 +18040,7 @@ func (sh *strictHandler) CampaignsPhaseExecutionPut(w http.ResponseWriter, r *ht
 }
 
 // CampaignsPhaseConfigure operation middleware
-func (sh *strictHandler) CampaignsPhaseConfigure(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignsPhaseConfigureParamsPhase) {
+func (sh *strictHandler) CampaignsPhaseConfigure(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
 	var request CampaignsPhaseConfigureRequestObject
 
 	request.CampaignId = campaignId
@@ -18087,7 +18074,7 @@ func (sh *strictHandler) CampaignsPhaseConfigure(w http.ResponseWriter, r *http.
 }
 
 // CampaignsPhaseStart operation middleware
-func (sh *strictHandler) CampaignsPhaseStart(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignsPhaseStartParamsPhase) {
+func (sh *strictHandler) CampaignsPhaseStart(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
 	var request CampaignsPhaseStartRequestObject
 
 	request.CampaignId = campaignId
@@ -18114,7 +18101,7 @@ func (sh *strictHandler) CampaignsPhaseStart(w http.ResponseWriter, r *http.Requ
 }
 
 // CampaignsPhaseStatus operation middleware
-func (sh *strictHandler) CampaignsPhaseStatus(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignsPhaseStatusParamsPhase) {
+func (sh *strictHandler) CampaignsPhaseStatus(w http.ResponseWriter, r *http.Request, campaignId openapi_types.UUID, phase CampaignPhaseEnum) {
 	var request CampaignsPhaseStatusRequestObject
 
 	request.CampaignId = campaignId

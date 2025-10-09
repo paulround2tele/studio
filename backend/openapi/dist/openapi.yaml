@@ -3233,12 +3233,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            enum:
-              - discovery
-              - validation
-              - extraction
-              - analysis
+            $ref: '#/components/schemas/CampaignPhaseEnum'
       responses:
         '200':
           description: OK
@@ -3269,12 +3264,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            enum:
-              - discovery
-              - validation
-              - extraction
-              - analysis
+            $ref: '#/components/schemas/CampaignPhaseEnum'
       requestBody:
         required: true
         content:
@@ -3313,12 +3303,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
-            enum:
-              - discovery
-              - validation
-              - extraction
-              - analysis
+            $ref: '#/components/schemas/CampaignPhaseEnum'
       responses:
         '200':
           description: Started
@@ -3378,10 +3363,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  mode:
-                    $ref: '#/components/schemas/CampaignModeEnum'
+                $ref: '#/components/schemas/CampaignModeUpdateResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -6526,6 +6508,14 @@ components:
             $ref: '#/components/schemas/PhaseExecution'
       required:
         - campaign
+    CampaignPhaseEnum:
+      type: string
+      description: Canonical campaign phase identifier
+      enum:
+        - discovery
+        - validation
+        - extraction
+        - analysis
     PhaseStatusResponse:
       type: object
       properties:
@@ -6616,6 +6606,22 @@ components:
           description: Keyword sets for extraction phase
       required:
         - configuration
+    CampaignModeUpdateResponse:
+      type: object
+      description: Response model for campaign mode update operation.
+      properties:
+        mode:
+          $ref: '#/components/schemas/CampaignModeEnum'
+        campaignId:
+          type: string
+          format: uuid
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - mode
+        - campaignId
+        - updatedAt
     CampaignPhasesStatusResponse:
       type: object
       description: Consolidated phase status list plus overall progress
@@ -7598,6 +7604,8 @@ components:
       additionalProperties: true
     CampaignSseEventType:
       type: string
+      discriminator:
+        propertyName: type
       description: Enumerated server-sent campaign event names.
       enum:
         - analysis_reuse_enrichment
@@ -7609,7 +7617,101 @@ components:
         - phase_started
         - phase_completed
         - phase_failed
-        - campaign_completed
+    CreateCampaignConfiguration:
+      type: object
+      description: Configuration fragment accepted at campaign creation time.
+      properties:
+        generationStrategy:
+          type: string
+          enum:
+            - pattern
+            - list
+            - seed_keywords
+        pattern:
+          type: string
+        initialDomains:
+          type: array
+          items:
+            type: string
+        seedKeywords:
+          type: array
+          items:
+            type: string
+      additionalProperties: false
+    ProxyConfigurationRequest:
+      type: object
+      properties:
+        poolId:
+          type: string
+          format: uuid
+        isEnabled:
+          type: boolean
+        authMode:
+          type: string
+          enum:
+            - none
+            - basic
+            - bearer
+        maxFailures:
+          type: integer
+        cooldownSeconds:
+          type: integer
+      required:
+        - poolId
+    ProxyConfigurationResponse:
+      allOf:
+        - $ref: '#/components/schemas/Proxy'
+        - type: object
+          properties:
+            configurationApplied:
+              type: boolean
+    PersonaUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        isEnabled:
+          type: boolean
+        configDetails:
+          $ref: '#/components/schemas/PersonaConfigDetails'
+      additionalProperties: false
+    BulkOperationStatusResponse:
+      type: object
+      properties:
+        operationId:
+          type: string
+        status:
+          type: string
+          enum:
+            - queued
+            - running
+            - completed
+            - failed
+            - cancelled
+        progress:
+          type: object
+          properties:
+            processed:
+              type: integer
+            total:
+              type: integer
+          required:
+            - processed
+            - total
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - operationId
+        - status
+        - progress
     CampaignSseEventPayload:
       description: Union of possible JSON payload shapes emitted via campaign SSE stream.
       oneOf:

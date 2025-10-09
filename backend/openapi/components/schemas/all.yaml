@@ -1087,7 +1087,7 @@ BulkOperationStatusResponse:
     startedAt: { type: string, format: date-time, nullable: true }
     completedAt: { type: string, format: date-time, nullable: true }
   required: [operationId, status, progress]
-    - campaign_completed
+
 AnalysisReuseEnrichmentEvent:
   type: object
   description: Analysis phase reused existing feature vectors.
